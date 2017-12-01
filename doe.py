@@ -1,9 +1,7 @@
 """Design of Experiment methods. """
 
-from util_.read_file_params import read_param_file
 import scipy.stats as stats
-import numpy as np
-from util_.gfunctions import *
+from modelist import *
 import os
 import sys
 import copy
@@ -129,9 +127,8 @@ class SampleMethods:
     #                                         Latin hypercube sampling  (lhs)
     ########################################################################################################################
 
-
     class LHS:
-        def __init__(self, ndim, nsamples=None, distribution,  criterion='classic', iterations=100, dist_metric='euclidean'):
+        def __init__(self, ndim, distribution, nsamples=None,  criterion='classic', iterations=100, dist_metric='euclidean'):
 
             """
             A class that can be used to create Latin Hypercube Sampling for an experimental design. These points should

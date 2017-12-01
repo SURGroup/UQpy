@@ -1,10 +1,6 @@
 from functools import partial
-from util_.doe_new import SampleMethods
-from util_.ModelEval import RunModel
-from util_.doe_new import Strata
-import scipy.stats as stats
-from util_.ListOfModels import *
-from matplotlib import pyplot as plt
+from doe import *
+from main_model import RunModel
 
 
 '''

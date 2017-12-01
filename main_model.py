@@ -1,5 +1,5 @@
-from util_.doe_new import Strata
-from util_.ListOfModels import *
+from doe import Strata
+from modelist import *
 
 
 class RunModel:
