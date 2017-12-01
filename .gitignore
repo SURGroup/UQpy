@@ -115,6 +115,7 @@ fabric.properties
  .idea/modules.xml
  .idea/UncertaintyQuantification.iml
  .idea/vcs.xml
+ .idea/workspace.xml
 # *.ipr
 
 # Sonarlint plugin
