@@ -3,7 +3,8 @@ from doe import *
 from main_model import RunModel
 
 
-'''
+print()
+''''
 distribution
 dimension
 parameters

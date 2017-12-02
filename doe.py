@@ -1,5 +1,5 @@
 """Design of Experiment methods. """
-
+from library import *
 import scipy.stats as stats
 from modelist import *
 import os
@@ -182,9 +182,7 @@ class SampleMethods:
                 criterion = input("Choose from classic, centered, maximin, correlate:")
 
             while True:
-
-
-            self.criterion = criterion
+                self.criterion = criterion
 
             while dist_metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
                                       'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching',
@@ -468,10 +466,10 @@ class SampleMethods:
             # hstack -
 
 
-        ########################################################################################################################
-        ########################################################################################################################
-        #                                         Markov Chain Monte Carlo  (MCMC)
-        ########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+#                                         Markov Chain Monte Carlo  (MCMC)
+########################################################################################################################
 
     class MCMC:
         # TODO: MDS - Add documentation to this subclass
@@ -706,94 +704,18 @@ class SampleMethods:
 
                     self.samples[i+1, :] = x1
 
-            # Reject the samples using njump to reduce the correlation
-            self.samples = self.samples[0:self.nsamples * self.njump:self.njump]
+                # Reject the samples using njump to reduce the correlation
+                self.samples = self.samples[0:self.nsamples * self.njump:self.njump]
 
 
             # TODO: MDS - Add affine invariant ensemble MCMC
 
             # TODO: MDS - Add Gibbs Sampler
 
-
 ########################################################################################################################
 ########################################################################################################################
-
-class SamplePoints:
-    def __init__(self, generator=None, number=None, interpreter=None, model=None, gfunction=None, Type='scalar'):
-
-        """
-        A class that creates objects defining the sample points. In order to use this class we need to have an object of
-        the SamplingClass which will contain all the probabilistic characteristics of our model.
-
-        Each object (family of sample points) of this class has the following properties:
-
-        1. Coordinates of the sampling points in the probability space U[0, 1] (Coords)
-        2. Coordinates of the sampling points  in the original parameter space (scaledCoords)
-
-        In case a model needs to be evaluated at these points we need to provide:
-
-        1. An interpreter (i.e. python code, matlab code, commercial packages)
-        2. The name of the model that we are going to solve
-        If model= None then no function evaluation is performed at these points
-        3. The type of the response we are going to get (i.e. scalar, vector, matrix)
-
-        Thus, the object also has:
-
-        3. The corresponding model evaluations for each sampling points
-
-        :param generator:
-        :param number:
-        :param interpreter:
-        :param model:
-        :param Type:
-        """
-        if generator is None:
-            raise NotImplementedError('A sample method class is not provided')
-        else:
-            self.generator = generator
-            self.model = model
-            self.gfunction = gfunction
-            self.coordinates, self.scaledCoords = self.find_coordinates(number)
-            if self.model is not None:
-                self.functionValue = self.run_model(Type, interpreter)
-
-    def find_coordinates(self, nsamples):
-
-        """
-        This is the part where we sample the parameter space according to the method
-        :return:
-        """
-
-        if self.generator.method == 'mcs':
-            coords = self.generator.mcs(nsamples, scale=False)
-            scaledCoords = self.generator.mcs(nsamples, scale=True)
-        else:
-            raise NotImplementedError('The method is not supported ')
-
-        return coords, scaledCoords
-
-    def run_model(self, Type, interpreter):
-        """
-        This is the part where we run the model
-        :return:
-        """
-        if interpreter is None:
-
-            self.functionValue = None
-
-        elif interpreter == 'python':
-            read_models(self.model)
-
-            self.functionValue = self.gfunction(self.scaledCoords, Type)
-
-        else:
-            raise NotImplementedError('Only analytical functions in python are supported')
-
-        return self.functionValue
-
-
-        ########################################################################################################################
-
+#                                         Class Strata
+########################################################################################################################
 
 class Strata:
     def __init__(self, nstrata=None, input_file=None, origins=None, widths=None):
