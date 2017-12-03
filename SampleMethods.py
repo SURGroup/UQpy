@@ -346,27 +346,21 @@ class SampleMethods:
 
     class PSS:
         """
-        PSS method generates a partially stratified sample set on U(0,1) as described in:
+        This class generates a partially stratified sample set on U(0,1) as described in:
         Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
 
-        :param pss_design: Vector defining the subdomains to be used.\n
+        :param pss_design: Vector defining the subdomains to be used.
                            Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]. \n
                            Note: The sum of the values in the pss_design vector equals the dimension of the problem.
-        :param pss_stratum: Vector defining how each dimension should be stratified. \n
+        :param pss_stratum: Vector defining how each dimension should be stratified.
                             Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625].\n
                             Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
         :return: pss_samples: Generated samples Array (nSamples x nRVs)
         :type pss_design: int
-        :type pss_pss_stratum: int
+        :type pss_stratum: int
 
         Created by: Jiaxin Zhang
         Last modified: 12/03/2017
-
-        Example
-        -------
-        ::
-        pss_design = [2,2,1]
-        pss_pss_stratum = [25,25,625]
         """
 
         # TODO: Jiaxin - Add documentation to this subclass
@@ -376,38 +370,22 @@ class SampleMethods:
 
         def __init__(self, pss_design=None, pss_stratum=None):
             """
-            PSS method generates a partially stratified sample set on U(0,1) as described in:
+            This class generates a partially stratified sample set on U(0,1) as described in:
             Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
 
-            :param pss_design: Vector defining the subdomains to be used.\n
+            :param pss_design: Vector defining the subdomains to be used.
                                Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]. \n
                                Note: The sum of the values in the pss_design vector equals the dimension of the problem.
-            :param pss_stratum: Vector defining how each dimension should be stratified. \n
+            :param pss_stratum: Vector defining how each dimension should be stratified.
                                 Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625].\n
                                 Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
             :return: pss_samples: Generated samples Array (nSamples x nRVs)
             :type pss_design: int
-            :type pss_pss_stratum: int
+            :type pss_stratum: int
 
             Created by: Jiaxin Zhang
             Last modified: 12/03/2017
-
-            Example
-            -------
-            ::
-            pss_design = [2,2,1]
-            pss_pss_stratum = [25,25,625]
-
-
             """
-            '''
-            Created by: Jiaxin Zhang
-            Last modified: 11/19/2017
-            Last modified by: Jiaxin Zhang
-
-            Last modified: 11/27/2017 - Add the class of PSS and check of pss design and samples
-            Last modified by: Jiaxin Zhang
-            '''
 
             # Check that the PSS design is valid
             if len(pss_design) != len(pss_stratum):
