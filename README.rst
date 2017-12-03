@@ -16,7 +16,7 @@ Description
 ===========
 
 UQpy is a numerical tool for performing uncertainty quantification using
-advanced Monte Carlo simulation methods using python 3.
+using python.
 
 Requirements
 ----
@@ -25,12 +25,7 @@ Requirements
             
                 Python >= 3.6.2
                 Git >= 2.13.1
-
-Description
-===========
-
-UQpy is a numerical tool for performing uncertainty quantification using
-using python 3. 
+ 
 
 Supported methods
 -----------------
@@ -46,7 +41,7 @@ Installation
 
 This will check for all the necessary packages. It will create the virtual environment SURG_UQenv and install  its dependencies. In order to deactivate the virtual environment type
 
-            * Steps ::
+            * ::
 
                         $git clone https://github.com/SURGroup/UQpy.git
                         $cd UQpy
