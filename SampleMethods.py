@@ -280,7 +280,8 @@ class SampleMethods:
     class PSS:
         """
         This class generates a partially stratified sample set on U(0,1) as described in:
-        Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
+        Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and
+        System Safety. 148: 96-108
 
         :param pss_design: Vector defining the subdomains to be used.
                            Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]. \n
@@ -446,7 +447,7 @@ class SampleMethods:
         """
 
         def __init__(self, nsamples=5000, dim=2, x0=np.zeros(2), MCMC_algorithm='MH', proposal='Normal',
-                     params=np.ones(2), target=None, njump=1, marginal_parameters=np.identity(2)):
+                     params=np.ones(2), target=None, njump=1, marginal_parameters=[[0, 1],[0, 1]]):
 
             """This class generates samples from arbitrary algorithm using Metropolis Hasting(MH) or
             Modified Metroplis Hasting Algorithm.
