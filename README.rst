@@ -5,12 +5,13 @@ Uncertainty Quantification using python (UQpy)
 
 :Date: December 2017
 :Authors: Michael Shields, Dimitris G.. Giovanis, Aakash Bangalore
+:Jiaxin Jhang, Lohit, Mohit
 :Contact: michael.shields@jhu.edu, dgiovan1@jhu.edu
 :Web site: https://github.com/SURGroup/UQpy.git
 :Documentation:  
 :Copyright: This document has been placed in the public domain.
 :License: UQpy is released under the GNU General Public Licence.
-:Version: 0.0.1
+:Version: 0.1.0
 
 Description
 ===========
