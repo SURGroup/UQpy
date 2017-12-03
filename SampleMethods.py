@@ -353,43 +353,57 @@ class SampleMethods:
     #     return pss_samples
 
     class PSS:
+        """
+        Brief - PSS method generates a partially stratified sample set on U(0,1) as described in:
+        Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
+
+        Detailed description
+
+        :param pss_design: Vector defining the subdomains to be used.
+                           Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]
+                           Note: The sum of the values in the pss_design vector equals the dimension of the problem.
+        :param pss_stratum: Vector defining how each dimension should be stratified.
+                            Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625]
+                            Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
+        :return: pss_samples: Generated samples Array (nSamples x nRVs)
+        :type pss_design: int
+              pss_pss_stratum: int
+        """
+
         # TODO: Jiaxin - Add documentation to this subclass
         # TODO: the pss_design = [[1,4], [2,5], [3]] - then reorder the sequence of RVs
-        # TODO: PSS class
         # TODO: Add the sample check and pss_design check in the beginning
-        # TODO
+
 
         def __init__(self, pss_design=None, pss_stratum=None):
+            """
+            Brief - PSS method generates a partially stratified sample set on U(0,1) as described in:
+            Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
 
+            Detailed description
+
+            :param pss_design: Vector defining the subdomains to be used.
+                               Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]
+                               Note: The sum of the values in the pss_design vector equals the dimension of the problem.
+            :param pss_stratum: Vector defining how each dimension should be stratified.
+                                Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625]
+                                Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
+            :return: pss_samples: Generated samples Array (nSamples x nRVs)
+            :type pss_design: int
+                  pss_pss_stratum: int
+            """
             '''
-                pss function generates a partially stratified sample set on U(0,1) as described in:
-                Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
+            Created by: Jiaxin Zhang
+            Last modified: 11/19/2017
+            Last modified by: Jiaxin Zhang
 
-                :param pss_design: Vector defining the subdomains to be used
-                    Example: 5D problem with 2x2D + 1x1D subdomains
-                    pss_design = [2,2,1]
-                    Note: The sum of the values in the pss_design vector equals the dimension of the problem.
-
-                :param pss_stratum: Vector defining how each dimension should be stratified
-                    Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples
-                    pss_strata = [25,25,625]
-                    Note: pss_strata(i)^pss_design(i) = number of samples (for all i)
-                :return: pss_samples: Generated samples
-                    Array (nSamples x nRVs)
-
-                Created by: Jiaxin Zhang
-                Last modified: 11/19/2017
-                Last modified by: Jiaxin Zhang
-
-                Last modified: 11/27/2017 - Add the class of PSS and check of pss design and samples
-                Last modified by: Jiaxin Zhang
-
-                '''
+            Last modified: 11/27/2017 - Add the class of PSS and check of pss design and samples
+            Last modified by: Jiaxin Zhang
+            '''
 
             # Check that the PSS design is valid
             if len(pss_design) != len(pss_stratum):
                 print('Input vectors "pss_design" and "pss_strata" must be the same length')
-                print('test')
 
             # sample check
             sample_check = np.zeros((len(pss_stratum), len(pss_design)))
@@ -424,11 +438,6 @@ class SampleMethods:
 
             self.samples = pss_samples
             # TODO: Create a list that contains all element info - parent structure
-            # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
-            # hstack -
-
-            # Test1 12032017 - push any changes with commit to development branches
-
 
     ########################################################################################################################
     ########################################################################################################################
