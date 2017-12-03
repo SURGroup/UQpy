@@ -299,6 +299,7 @@ class SampleMethods:
         # TODO: Jiaxin - Add documentation to this subclass
         # TODO: the pss_design = [[1,4], [2,5], [3]] - then reorder the sequence of RVs
         # TODO: Add the sample check and pss_design check in the beginning
+        # TODO: Create a list that contains all element info - parent structure
 
 
         def __init__(self, pss_design=None, pss_stratum=None):
@@ -343,10 +344,7 @@ class SampleMethods:
                 n_stratum = pss_stratum[i] * np.ones(pss_design[i], dtype=np.int)
 
                 ss = Strata(nstrata=n_stratum)
-                # print(ss)
-                # use the class of STS
                 ss = SampleMethods.STS(strata=ss)
-                # print(ss_samples)
 
                 index = list(range(col, col + pss_design[i]))
                 pss_samples[:, index] = ss.samples
@@ -355,8 +353,6 @@ class SampleMethods:
                 col = col + pss_design[i]
 
             self.samples = pss_samples
-            # TODO: Create a list that contains all element info - parent structure
-            # update the recent local changes to the development 1
 
     ########################################################################################################################
     ########################################################################################################################
