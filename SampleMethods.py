@@ -427,7 +427,7 @@ class SampleMethods:
             # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
             # hstack -
 
-            # Test 12032017 - push any changes with commit to development branches
+            # Test1 12032017 - push any changes with commit to development branches
 
 
     ########################################################################################################################
