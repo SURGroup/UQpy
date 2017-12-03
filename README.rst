@@ -21,8 +21,10 @@ advanced Monte Carlo simulation methods using python 3.
 Note
 ----
 
-   Requirements: Python >= 3.6.2
-   Git >= 2.13.1
+            * Requirements::
+            
+                           Python >= 3.6.2
+                           Git >= 2.13.1
 
 Description
 ===========
@@ -53,7 +55,7 @@ This will check for all the necessary packages. It will create the virtual envir
 
 In order to use matplotlib within SURG_UQenv
 
-            * Steps ::
+            * ::
             
                       $cd ~/.matplotlib
                       $nano matplotlibrc
