@@ -70,4 +70,4 @@ Installed packages:
 5. scikit-learn
 
 .. |logo| image:: logo.jpg
-    :target: https://gihub.com/SURGroup/chaospy
+    :target: https://gihub.com/SURGroup/UQpy
