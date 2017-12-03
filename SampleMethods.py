@@ -1,6 +1,5 @@
 """Design of Experiment methods. """
 from library import *
-import scipy.stats as stats
 from modelist import *
 import os
 import sys
@@ -281,10 +280,10 @@ class SampleMethods:
             # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
             # hstack -
 
-            ########################################################################################################################
-            ########################################################################################################################
-            #                                         Partially Stratified Sampling (PSS)
-            ########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+#                                         Partially Stratified Sampling (PSS)
+########################################################################################################################
 
 
     # def pss(self, pss_design=None, pss_stratum=None):
@@ -392,12 +391,11 @@ class SampleMethods:
                 print('test')
 
             # sample check
-            sample_check = np.zeros((len(pss_stratum), len(pss_design)))
+            sample_check = np.zeros((len(pss_stratum), len(pss_design)), dtype=np.int)
             for i in range(len(pss_stratum)):
                 for j in range(len(pss_design)):
                     sample_check[i, j] = pss_stratum[i] ** pss_design[j]
 
-            print(sample_check)
             if np.max(sample_check) != np.min(sample_check):
                 print('All dimensions must have the same number of samples/strata. '
                       'Check to ensure that all values of pss_strata.^pss_design are equal.')
@@ -411,10 +409,8 @@ class SampleMethods:
                 n_stratum = pss_stratum[i] * np.ones(pss_design[i], dtype=np.int)
 
                 ss = Strata(nstrata=n_stratum)
-                # print(ss)
                 # use the class of STS
                 ss = SampleMethods.STS(strata=ss)
-                # print(ss_samples)
 
                 index = list(range(col, col + pss_design[i]))
                 pss_samples[:, index] = ss.samples
@@ -475,8 +471,8 @@ class SampleMethods:
 
         # def __init__(self, proposal='None', mu='None', sigma='None', x='None'):
 
-        def __init__(self, nsamples=5000, dim=None, x0=None, method=None, proposal=None, params=None, target=None,
-                     njump=None, Marginal_target=None):
+        def __init__(self, nsamples=100, dim=2, x0=np.zeros(2), MCMC_algorithm='MH', proposal='Normal', params=np.ones(2), target=None,
+                     njump=1, marginal_parameters=[[0, 1],[ 2, 5]]):
             """
                     Class generates the random samples from the target distribution using Markov Chain Monte Carlo
                     (MCMC) method.
@@ -538,12 +534,12 @@ class SampleMethods:
                 else:
                     dim = dim
 
-            if method is None:
-                method = 'MH'
+            if MCMC_algorithm is None:
+                MCMC_algorithm = 'MH'
                 print('\n**WARNING**\nThe Metropolis-Hasting algorithm is used to generate sample')
             else:
-                if method in ['MH', 'MMH', 'GIBBS']:
-                    method = method
+                if MCMC_algorithm in ['MH', 'MMH', 'GIBBS']:
+                    MCMC_algorithm = MCMC_algorithm
                 else:
                     print("\n**ERROR**\nSelect one of the following methods: ['MH', 'MMH', 'GIBBS']")
                     return
@@ -586,13 +582,13 @@ class SampleMethods:
 
             self.nsamples = np.int32(nsamples)
             self.dim = dim
-            self.method = method
+            self.method = MCMC_algorithm
             self.proposal = proposal
             self.params = params
             self.target = target
             self.rejects = 0
             self.njump = njump
-            self.Marginal_target = Marginal_target
+            self.marginal_parameters = marginal_parameters
 
             def pdf(x, F):
                 if F[0] == 'Normal':
@@ -694,7 +690,7 @@ class SampleMethods:
                             xm = np.random.uniform(low=self.samples[i, j] - self.params[j] / 2,
                                                    high=self.samples[i, j] + self.params[j] / 2, size=1)
 
-                        b = pdf(xm, self.Marginal_target[j])/pdf(x1[j], self.Marginal_target[j])
+                        b = self.target(xm, self.marginal_parameters[j]) / self.target(x1[j], self.marginal_parameters[j])
                         if b >= 1:
                             x1[j] = xm
 
