@@ -1,6 +1,6 @@
 from functools import partial
-from doe import *
-from main_model import RunModel
+from SampleMethods import *
+from RunModel import RunModel
 
 
 print()
@@ -93,7 +93,7 @@ sm = SampleMethods(dimension=dimension, distribution=distribution, parameters=pa
 mcs = sm.MCS(10, dimension=2)
 g0 = RunModel(generator=sm, input=mcs.samples, model=model)
 
-samples = '/Users/dimitrisgiovanis/Desktop/UQ_algorithms/util_/samples.txt'
+samples = 'samples.txt'
 g1 = RunModel(generator=sm, input=samples, model=model)
 
 
