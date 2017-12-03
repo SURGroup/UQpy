@@ -126,7 +126,6 @@ class SampleMethods:
 ########################################################################################################################
 #                                         Latin hypercube sampling  (LHS)
 ########################################################################################################################
-
     class LHS:
         """
         A class that can be used to create Latin Hypercube Sampling for an experimental design. These points should
@@ -142,7 +141,7 @@ class SampleMethods:
                         i) random - completely random \n
                         ii) centered - points only at the centre \n
                         iii) maximin - maximising the minimum distance between points \n
-                        iv) correlate - minimizing the correlation between the points \n
+                        iv) correlate - minimizing the correlation between the points
         :type criterion: str
 
         :param iterations: The number of iteration to run. Only for maximin, correlate and criterion
@@ -151,7 +150,7 @@ class SampleMethods:
         :param dist_metric: The distance metric to use. Supported metrics are 
                         'braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', \n
                         'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', \n
-                        'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', \n
+                        'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean',
                         'yule'.
         :type dist_metric: str
 
@@ -485,44 +484,44 @@ class SampleMethods:
                 A scalar value defining the number of random samples that needs to be generate using MCMC.
                 Default value: nsample is 1000.
 
-            :param dim:
-                A scalar value defining the dimension of target density function.
+        :param dim:
+            A scalar value defining the dimension of target density function.
 
-            :param x0:
-                A scalar value defining the initial mean value of proposed density.
-                Default value: x0 is zero row vector of size dim.
-                Example: x0 = 0
-                Starts sampling using proposed density with mean equal to 0.
+        :param x0:
+            A scalar value defining the initial mean value of proposed density.
+            Default value: x0 is zero row vector of size dim.
+            Example: x0 = 0
+            Starts sampling using proposed density with mean equal to 0.
 
-            :param MCMC_algorithm:
-                A string defining the algorithm used to generate random samples.
-                Default value: method is 'MH'.
-                method = MH : Use Metropolis-Hasting Algorithm
-                method = MMH : Use Modified Metropolis-Hasting Algorithm
-                method = GIBBS : Use Gibbs Sampling Algorithm
-            :type MCMC_algorithm: str
+        :param MCMC_algorithm:
+            A string defining the algorithm used to generate random samples.
+            Default value: method is 'MH'.
+            method = MH : Use Metropolis-Hasting Algorithm
+            method = MMH : Use Modified Metropolis-Hasting Algorithm
+            method = GIBBS : Use Gibbs Sampling Algorithm
+        :type MCMC_algorithm: str
 
-            :param proposal:
-                A string defining the type of proposed density function
-                proposal = Normal : Normal distribution will be used to generate new estimates
-                proposal = Uniform : Uniform distribution will be used to generate new estimates
-            :type proposal: str
+        :param proposal:
+            A string defining the type of proposed density function
+            proposal = Normal : Normal distribution will be used to generate new estimates
+            proposal = Uniform : Uniform distribution will be used to generate new estimates
+        :type proposal: str
 
-            :param params:
-                An array defining the Covariance matrix of the proposed density function.
-                Multivariate Uniform distribution : An array of size 'dim'
-                Multivariate Normal distribution: Either an array of size 'dim' or array of size 'dim x dim'
-                Default: params is unit row vector
+        :param params:
+            An array defining the Covariance matrix of the proposed density function.
+            Multivariate Uniform distribution : An array of size 'dim'
+            Multivariate Normal distribution: Either an array of size 'dim' or array of size 'dim x dim'
+            Default: params is unit row vector
 
-            :param target:
-                An function defining the target distribution of generated samples using MCMC.
+        :param target:
+            An function defining the target distribution of generated samples using MCMC.
 
-            :param njump:
-                A scalar value defining the number of samples rejected to reduce the correlation between
-                generated samples.
+        :param njump:
+            A scalar value defining the number of samples rejected to reduce the correlation between
+            generated samples.
 
-            Created by: Mohit S. Chauhan
-            Last modified: 11/17/2017
+        Created by: Mohit S. Chauhan
+        Last modified: 11/17/2017
 
         """
 
