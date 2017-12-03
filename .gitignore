@@ -111,7 +111,11 @@ fabric.properties
 
 # *.iml
 # modules.xml
-# .idea/misc.xml
+ .idea/misc.xml
+ .idea/modules.xml
+ .idea/UQpy.iml
+ .idea/vcs.xml
+ .idea/workspace.xml
 # *.ipr
 
 # Sonarlint plugin
