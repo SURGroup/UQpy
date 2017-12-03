@@ -1,5 +1,6 @@
-from doe import Strata
-from modelist import *
+from SampleMethods import Strata
+from RunModel import *
+import numpy as np
 
 
 class RunModel:

@@ -1,11 +1,6 @@
 # Read parameter file
 import os
 
-planned_methods_list = ['mcs', 'lhs', 'quasi_mcs', 'lss', 'dt', 'voronoi', 'mcmc', 'stratified']
-
-implemented_methods_list = ['mcs', 'lhs']
-
-
 def read_param_file(filename):
     """
     Reads input file, interprets it and runs necessary code
@@ -54,6 +49,9 @@ def read_method(s):
     :param s: string which should be the sampling method keyword
     :return: The string s if it a supported method or None if the string s is not a supported sampling method
     """
+    planned_methods_list = ['mcs', 'lhs', 'quasi_mcs', 'lss', 'dt', 'voronoi', 'mcmc', 'stratified']
+    implemented_methods_list = ['mcs', 'lhs']
+    
     check_method_string = isinstance(s, str)  # This checks if the method is a string
     if not check_method_string:
         return
