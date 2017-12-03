@@ -33,14 +33,24 @@ sm = SampleMethods(dimension=dimension, distribution=distribution, method=method
 
 # MCMC Code Block#
 def normpdf(x):
-   return stats.norm.pdf(x, 0, 1)
-def mvnpdf(x):
-    return stats.multivariate_normal.pdf(x,mean=np.zeros(2),cov=np.identity(2))
+    return stats.norm.pdf(x, 0, 1)
 
-cov = np.identity(2)
-x_start = np.zeros(2)
-mcmc = sm.MCMC(nsamples=1000, dim=2, x0 = x_start, method='MH', proposal='Normal', params=cov, target=mvnpdf, njump=10)
-print()
+
+def mvnpdf(x):
+    return stats.multivariate_normal.pdf(x, mean=np.zeros(d), cov=np.identity(d))
+
+
+def marginal(x, mp):
+    return stats.norm.pdf(x, mp[0], mp[1])
+
+
+d = 2        # dimension
+marginal_parameters = [[0, 1], [2, 5]]
+Cov = np.ones(d)
+x_start = 1.5*np.ones(d)
+# MT = [['Normal', 0, 1], ['beta', 2, 2, 1, 1]]
+mcmc = sm.MCMC(nsamples=10000, dim=d, x0=x_start, method='MMH', proposal='Normal', params=Cov, target=marginal,
+               target_params=marginal_parameters, njump=10)
 
 #plt.plot(mcmc.samples[:,0],mcmc.samples[:,1],'x')
 # plt.hist(mcmc.samples,bins=50)

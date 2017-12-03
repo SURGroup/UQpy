@@ -477,7 +477,7 @@ class SampleMethods:
         # def __init__(self, proposal='None', mu='None', sigma='None', x='None'):
 
         def __init__(self, nsamples=5000, dim=None, x0=None, method=None, proposal=None, params=None, target=None,
-                     njump=None, Marginal_target=None):
+                     target_params=None, njump=None):
             """
                     Class generates the random samples from the target distribution using Markov Chain Monte Carlo
                     (MCMC) method.
@@ -527,7 +527,6 @@ class SampleMethods:
             # TODO: Mohit - Bring target and marginal PDF inside the class
 
             # TODO: Mohit - Add error checks for target and marginal PDFs
-
 
             if dim is None:
                 dim = np.size(x0)
@@ -593,9 +592,11 @@ class SampleMethods:
             self.target = target
             self.rejects = 0
             self.njump = njump
-            self.Marginal_target = Marginal_target
+            self.target_params = target_params
 
-            def pdf(x, F):
+            # self.Marginal_target = Marginal_target
+            '''
+                        def pdf(x, F):
                 if F[0] == 'Normal':
                     # F[1] = mean, F[2] = variance
                     return stats.norm.pdf(x, F[1], F[2])
@@ -634,7 +635,7 @@ class SampleMethods:
                     return stats.weibull_min.pdf(x, F[1], F[2], F[3])
                 elif F[0] == 'weibull_max':
                     return stats.weibull_max.pdf(x, F[1], F[2], F[3])
-
+            '''
 
             # Changing the array of param into a diagonal matrix
             if self.proposal == "Normal":
@@ -695,7 +696,8 @@ class SampleMethods:
                             xm = np.random.uniform(low=self.samples[i, j] - self.params[j] / 2,
                                                    high=self.samples[i, j] + self.params[j] / 2, size=1)
 
-                        b = pdf(xm, self.Marginal_target[j])/pdf(x1[j], self.Marginal_target[j])
+                        b = self.target(xm, self.target_params[j]) / self.target(x1[j], self.target_params[j])
+                        # b = pdf(xm, self.Marginal_target[j])/pdf(x1[j], self.Marginal_target[j])
                         if b >= 1:
                             x1[j] = xm
 
@@ -704,13 +706,13 @@ class SampleMethods:
 
                     self.samples[i+1, :] = x1
 
-                # Reject the samples using njump to reduce the correlation
-                self.samples = self.samples[0:self.nsamples * self.njump:self.njump]
-
+            # Reject the samples using njump to reduce the correlation
+            self.samples = self.samples[0:self.nsamples * self.njump:self.njump]
 
             # TODO: MDS - Add affine invariant ensemble MCMC
 
             # TODO: MDS - Add Gibbs Sampler
+
 
 ########################################################################################################################
 ########################################################################################################################
