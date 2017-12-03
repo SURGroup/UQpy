@@ -4,7 +4,7 @@ from RunModel import RunModel
 import matplotlib.pyplot as plt
 
 
-print()
+print("Started test")
 ''''
 distribution
 dimension
@@ -123,20 +123,18 @@ f1 = RunModel(generator=sm, method='sts', model=model, sts_input=[2, 3])
 
 # MCMC Block  ###########################################################################################
 
-mcmc = sm.MCMC(nsamples=1000, dim=dimension, x0=x_start, MCMC_algorithm='MMH', proposal='Normal', params=cov,
-               target=marginal, marginal_parameters=MT, njump=10)
+mcmc = sm.MCMC(nsamples=1000, dim=dimension, x0=x_start, MCMC_algorithm='MMH', proposal='Normal', params=cov, target=marginal,
+               marginal_parameters=MT, njump=10)
 plt.plot(mcmc.samples[:, 0], mcmc.samples[:, 1], 'x')
 plt.show()
 h0 = RunModel(generator=sm, input=mcmc.samples, model=model)
-print()
+print("Ran MCMC")
 
 # LHS Block ###########################################################################################
 lhs = sm.LHS(ndim=3, nsamples=100, criterion='random')
 x0 = RunModel(generator=sm, input=lhs.samples, model=model)
 
-
-
-print()
+print("Ran LHS")
 
 
 
