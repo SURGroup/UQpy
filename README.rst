@@ -3,6 +3,8 @@
 Uncertainty Quantification using python (UQpy)
 *******************************************
 
+|logo|
+
 :Authors:  
 :Contributors: 
 :Contact: michael.shields@jhu.edu, dgiovan1@jhu.edu
