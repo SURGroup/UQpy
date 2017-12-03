@@ -1,7 +1,7 @@
 from functools import partial
-from doe import *
+from SampleMethods import *
 import matplotlib.pyplot as plt
-from main_model import RunModel
+from RunModel import RunModel
 
 
 print()
