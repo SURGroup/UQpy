@@ -119,7 +119,9 @@ mcmc = sm.MCMC(nsamples=1000, dim=2, proposal ='uniform', target=mvnpdf)
 h0 = RunModel(generator=sm, input=mcmc.samples, model=model)
 print()
 
-
+# LHS Block ###########################################################################################
+lhs = sm.LHS(ndim=3, nsamples=100, criterion='random')
+x0 = RunModel(generator=sm, input=lhs.samples, model=model)
 
 
 

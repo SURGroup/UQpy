@@ -75,6 +75,7 @@ class SampleMethods:
                 return
             else:
                 return int(self.dimension)
+
             for i in range(self.dimension):
                 self.distribution.append('uniform')
 
@@ -93,7 +94,6 @@ class SampleMethods:
 
         else:
             self.parameters = self.parameters
-
 
     ########################################################################################################################
     #                                         Monte Carlo simulation
@@ -128,7 +128,7 @@ class SampleMethods:
     ########################################################################################################################
 
     class LHS:
-        def __init__(self, ndim, distribution, nsamples=None,  criterion='classic', iterations=100, dist_metric='euclidean'):
+        def __init__(self, ndim, nsamples=None, criterion='classic', iterations=100, dist_metric='euclidean'):
 
             """
             A class that can be used to create Latin Hypercube Sampling for an experimental design. These points should
@@ -166,7 +166,7 @@ class SampleMethods:
                 except ValueError:
                     print('Invalid number of dimensions (ndim). Enter again')
             if nsamples is None:
-                nsamples = ndim
+                nsamples = np.int32(ndim)
 
             while True:
                 try:
@@ -179,10 +179,9 @@ class SampleMethods:
 
             while criterion not in ['random', 'centered', 'maximin', 'correlate', 'correlate_cond']:
                 print('Invalid criterion requested')
-                criterion = input("Choose from classic, centered, maximin, correlate:")
+                criterion = input("Choose from random, centered, maximin, correlate:")
 
-            while True:
-                self.criterion = criterion
+            self.criterion = criterion
 
             while dist_metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
                                       'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching',
@@ -225,7 +224,7 @@ class SampleMethods:
             for i in range(self.ndim):
                 points[:, i] = u[:, i] * (self.b - self.a) + self.a
 
-            for j in range(self.ndim):51
+            for j in range(self.ndim):
                 order = np.random.permutation(self.nsamples)
                 points[:, j] = points[order, j]
             return points
@@ -270,22 +269,21 @@ class SampleMethods:
             for _ in range(self.iterations):
                 points_try = self.random()
                 points = np.matrix(points_try)
-                points1 = np.transpose(points)*points
-                cond = np.linalg.eig(points1)[0][0]/np.linalg.eig(points1)[0][-1]
+                points1 = np.transpose(points) * points
+                cond = np.linalg.eig(points1)[0][0] / np.linalg.eig(points1)[0][-1]
                 if cond < min_cond:
                     min_cond = cond
                     points = copy.deepcopy(points_try)
             return points
 
+    # TODO: Create a list that contains all element info - parent structure
+    # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
+    # hstack -
 
-            # TODO: Create a list that contains all element info - parent structure
-            # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
-            # hstack -
-
-            ########################################################################################################################
-            ########################################################################################################################
-            #                                         Partially Stratified Sampling (PSS)
-            ########################################################################################################################
+    ########################################################################################################################
+    ########################################################################################################################
+    #                                         Partially Stratified Sampling (PSS)
+    ########################################################################################################################
 
 
     # def pss(self, pss_design=None, pss_stratum=None):
@@ -428,7 +426,6 @@ class SampleMethods:
             # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
             # hstack -
 
-
     ########################################################################################################################
     ########################################################################################################################
     #                                         Stratified Sampling  (sts)
@@ -465,11 +462,10 @@ class SampleMethods:
             # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
             # hstack -
 
-
-########################################################################################################################
-########################################################################################################################
-#                                         Markov Chain Monte Carlo  (MCMC)
-########################################################################################################################
+        ########################################################################################################################
+        ########################################################################################################################
+        #                                         Markov Chain Monte Carlo  (MCMC)
+        ########################################################################################################################
 
     class MCMC:
         # TODO: MDS - Add documentation to this subclass
@@ -635,7 +631,6 @@ class SampleMethods:
                 elif F[0] == 'weibull_max':
                     return stats.weibull_max.pdf(x, F[1], F[2], F[3])
 
-
             # Changing the array of param into a diagonal matrix
             if self.proposal == "Normal":
                 if self.params.shape[0] or self.params.shape[1] is 1:
@@ -650,7 +645,7 @@ class SampleMethods:
 
             # Classical Metropolis Hastings Algorithm with symmetric proposal density
             if self.method is 'MH':
-                for i in range(self.nsamples * self.njump-1):
+                for i in range(self.nsamples * self.njump - 1):
 
                     # Generating new sample using proposed density
                     if self.proposal is 'Normal':
@@ -695,22 +690,23 @@ class SampleMethods:
                             xm = np.random.uniform(low=self.samples[i, j] - self.params[j] / 2,
                                                    high=self.samples[i, j] + self.params[j] / 2, size=1)
 
-                        b = pdf(xm, self.Marginal_target[j])/pdf(x1[j], self.Marginal_target[j])
+                        b = pdf(xm, self.Marginal_target[j]) / pdf(x1[j], self.Marginal_target[j])
                         if b >= 1:
                             x1[j] = xm
 
                         elif np.random.random() < b:
                             x1[j] = xm
 
-                    self.samples[i+1, :] = x1
+                    self.samples[i + 1, :] = x1
 
                 # Reject the samples using njump to reduce the correlation
                 self.samples = self.samples[0:self.nsamples * self.njump:self.njump]
 
 
-            # TODO: MDS - Add affine invariant ensemble MCMC
+                # TODO: MDS - Add affine invariant ensemble MCMC
 
-            # TODO: MDS - Add Gibbs Sampler
+                # TODO: MDS - Add Gibbs Sampler
+
 
 ########################################################################################################################
 ########################################################################################################################
