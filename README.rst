@@ -10,7 +10,7 @@ Uncertainty Quantification using python (UQpy)
 :Web site: https://github.com/SURGroup/UQpy.git
 :Documentation:  
 :Copyright: This document has been placed in the public domain.
-:License: UQpy is released under the GNU General Public Licence.
+:License: UQpy is released under the ?
 :Version: 0.1.0
 
 Description
