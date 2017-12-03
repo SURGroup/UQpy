@@ -8,15 +8,14 @@ advanced Monte Carlo simulation methods using python 3.
 # Requirements: Python >= 3.6.2
 # Git >= 2.13.1
 
-Installation
+Installation of the virtual environment 
 ------------
 
- $git clone https://github.com/SURGroup/UQpy.git
- $cd UQpy
- $python3 setup_.py   
- $virtualenv SURG_UQenv
- $source SURG_UQenv/bin/activate
- $pip3 install -r requirements.txt
+    git clone https://github.com/SURGroup/UQpy.git
+    cd UQpy
+    python3 setup_.py   
+    source SURG_UQenv/bin/activate
+    pip3 install -r requirements.txt
 
 This will check for all the necessary packages. It will create the virtual environment SURG_UQenv and install  its dependencies. In order to deactivate the virtual environment type 
 
@@ -30,11 +29,10 @@ This will check for all the necessary packages. It will create the virtual envir
 
 In order to use matplotlib within SURG_UQenv
 
-  $ cd ~/.matplotlib
-    $ nano matplotlibrc
+    cd ~/.matplotlib
+    nano matplotlibrc
 
-And then, type
-
+And type:
     backend: TkAgg
 
 
