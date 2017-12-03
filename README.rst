@@ -19,7 +19,7 @@ UQpy is a numerical tool for performing uncertainty quantification using
 using python.
 
 Requirements
-----
+------------
 
             * ::
             
@@ -30,11 +30,10 @@ Requirements
 Supported methods
 -----------------
 
-            * ::
-                1. Monte Carlo simulation (MCS), 
-                2. Latin hypercube sampling (LHS), 
-                3. Markov Chain Monte Carlo simulation (MCMC) 
-                4. Partially stratified sampling (PSS).
+1. Monte Carlo simulation (MCS), 
+2. Latin hypercube sampling (LHS), 
+3. Markov Chain Monte Carlo simulation (MCMC) 
+4. Partially stratified sampling (PSS).
 
 Installation
 ------------
@@ -60,7 +59,7 @@ In order to use matplotlib within SURG_UQenv
 
 
 Installed packages:
-------------------------------------------------------------
+------------------
 
 1. numpy
 2. scipy
