@@ -1,4 +1,6 @@
-"""Design of Experiment methods. """
+"""
+Contains classes necessary for sampling methods in UQpy
+"""
 from library import *
 import scipy.stats as stats
 from modelist import *
@@ -9,6 +11,10 @@ from scipy.spatial.distance import pdist
 
 
 class SampleMethods:
+    """
+    Contains functionality for all supported sampling methods in UQpy.
+    """
+
     def __init__(self, distribution=None, dimension=None, parameters=None, method=None,
                  input_file=None, input_dir=None, save_format=None, save_name=None, lhs_params=None,
                  lss_params=None, mcmc_params=None):
@@ -129,11 +135,12 @@ class SampleMethods:
 
     class LHS:
         """
-        A class that can be used to create Latin Hypercube Sampling for an experimental design. These points should
-        be transformed from U space back into the X space.
+        A class that can be used to create Latin Hypercube Sampling for an experimental design.
+
+        These points should be transformed from U space back into the X space.
 
         :param ndim: The number of dimensions for the experimental design.
-        :type: int
+        :type ndim: int
 
         :param nsamples: The number of samples to be generated.
         :type nsamples: int
@@ -352,9 +359,11 @@ class SampleMethods:
         :param pss_design: Vector defining the subdomains to be used.\n
                            Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]. \n
                            Note: The sum of the values in the pss_design vector equals the dimension of the problem.
+
         :param pss_stratum: Vector defining how each dimension should be stratified. \n
                             Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625].\n
                             Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
+
         :return: pss_samples: Generated samples Array (nSamples x nRVs)
         :type pss_design: int
         :type pss_pss_stratum: int
@@ -382,10 +391,13 @@ class SampleMethods:
             :param pss_design: Vector defining the subdomains to be used.\n
                                Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]. \n
                                Note: The sum of the values in the pss_design vector equals the dimension of the problem.
+
             :param pss_stratum: Vector defining how each dimension should be stratified. \n
                                 Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625].\n
                                 Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
+
             :return: pss_samples: Generated samples Array (nSamples x nRVs)
+
             :type pss_design: int
             :type pss_pss_stratum: int
 
@@ -491,23 +503,23 @@ class SampleMethods:
 
     class MCMC:
 
-        """Markov Chain Monte Carlo
-
-        This class generates samples from arbitrary algorithm using Metropolis Hasting(MH) or Modified Metroplis
+        """This class generates samples from arbitrary distributions using Metropolis Hasting(MH) or Modified Metroplis
         Hasting Algorithm.
 
-        :param nsamples: A scalar value defining the number of random samples that needs to be generate using MCMC.
-        Default value of nsample is 1000.
+        :param nsamples: A scalar value defining the number of random samples that needs to be
+        generate using MCMC. Default value of nsample is 1000.
         :type nsamples: int
 
         :param dim: A scalar value defining the dimension of target density function.
         :type dim: int
 
-        :param x0: A scalar value defining the initial mean value of proposed density. Default value: x0 is zero row
-        vector of size dim. Example: x0 = 0, Starts sampling using proposed density with mean equal to 0.
+        :param x0: A scalar value defining the initial mean value of proposed density. \n
+        Default value: x0 is zero row vector of size dim. \n
+        Example: x0 = 0, Starts sampling using proposed density with mean equal to 0.
         :type x0: array
 
-        :param MCMC_algorithm: A string defining the algorithm used to generate random samples. Default value: method is 'MH'.
+        :param MCMC_algorithm: A string defining the algorithm used to generate random samples. \n
+        Default value: method is 'MH'.
         Example: MCMC_algorithm = MH : Use Metropolis-Hasting Algorithm
         MCMC_algorithm = MMH : Use Modified Metropolis-Hasting Algorithm
         MCMC_algorithm = GIBBS : Use Gibbs Sampling Algorithm
@@ -518,19 +530,20 @@ class SampleMethods:
         proposal = Uniform : Uniform distribution will be used to generate new estimates
         :type proposal: str
 
-        :param params: An array defining the Covariance matrix of the proposed density function. Multivariate Uniform
-        distribution : An array of size 'dim'. Multivariate Normal distribution: Either an array of size 'dim' or array
-        of size 'dim x dim'. Default: params is unit row vector
+        :param params: An array defining the Covariance matrix of the proposed density function. \n
+        Multivariate Uniform distribution : An array of size 'dim'. Multivariate Normal distribution: \n
+        Either an array of size 'dim' or array of size 'dim x dim'. \n
+        Default: params is unit row vector
         :type proposal: matrix
 
         :param target: An function defining the target distribution of generated samples using MCMC.
 
-        :param njump: A scalar value defining the number of samples rejected to reduce the correlation between
-        generated samples.
+        :param njump: A scalar value defining the number of samples rejected to reduce the correlation \n
+        between generated samples.
         :type njump: int
 
         Created by: Mohit S. Chauhan
-        Last modified: 11/17/2017
+        Last modified: 12/03/2017
 
         """
 
@@ -541,7 +554,7 @@ class SampleMethods:
             Modified Metroplis Hasting Algorithm.
 
             :param nsamples: A scalar value defining the number of random samples that needs to be \n
-            generate using MCMC. Default value of nsample is 1000.
+            generate using MCMC. Default value of nsamples is 1000.
             :type nsamples: int
 
             :param dim: A scalar value defining the dimension of target density function.

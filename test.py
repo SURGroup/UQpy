@@ -4,7 +4,7 @@ from RunModel import RunModel
 import matplotlib.pyplot as plt
 
 
-print("Started test")
+print("Started test ")
 ''''
 distribution
 dimension
