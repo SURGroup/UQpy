@@ -40,13 +40,13 @@ Note
 Installation
 ------------
 
-            * item text::
+            * Steps ::
 
-                        git clone https://github.com/SURGroup/UQpy.git
-                        cd UQpy
-                        python3 setup_.py   
-                        source SURG_UQenv/bin/activate
-                        pip3 install -r requirements.txt
+                        $git clone https://github.com/SURGroup/UQpy.git
+                        $cd UQpy
+                        $python3 setup_.py   
+                        $source SURG_UQenv/bin/activate
+                        $pip3 install -r requirements.txt
 
 
 
@@ -55,17 +55,17 @@ This will check for all the necessary packages. It will create the virtual envir
 SURG_UQenv environment has the following packages installed:
 ------------------------------------------------------------
 
-   1. numpy
-   2. scipy
-   3. matplotlib
-   4. pyDOE     
-   5. scikit-learn
+1. numpy
+2. scipy
+3. matplotlib
+4. pyDOE     
+5. scikit-learn
 
 In order to use matplotlib within SURG_UQenv
 
-    cd ~/.matplotlib
-    nano matplotlibrc
-
-And type:
-    backend: TkAgg
+            * Steps ::
+            
+                      $cd ~/.matplotlib
+                      $nano matplotlibrc
+                      type: "backend: TkAgg"
 
