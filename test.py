@@ -1,6 +1,7 @@
 from functools import partial
 from SampleMethods import *
 from RunModel import RunModel
+import matplotlib.pyplot as plt
 
 
 print()
@@ -81,7 +82,14 @@ def mvnpdf(x):
     return stats.multivariate_normal.pdf(x, mean=np.zeros(2), cov=np.identity(2))
 
 
+def marginal(x, mp):
+    return stats.norm.pdf(x, mp[0], mp[1])
+
+
 dimension = 2
+x_start = np.zeros(dimension)
+cov = np.ones(dimension)
+MT = [[0, 1], [2, 5]]
 distribution = ['Uniform', 'Uniform']
 parameters = [[0, 1], [2, 3]]
 model = partial(model_ko2d)
@@ -115,7 +123,10 @@ f1 = RunModel(generator=sm, method='sts', model=model, sts_input=[2, 3])
 
 # MCMC Block  ###########################################################################################
 
-mcmc = sm.MCMC(nsamples=1000, dim=2, proposal ='uniform', target=mvnpdf)
+mcmc = sm.MCMC(nsamples=1000, dim=dimension, x0=x_start, method='MMH', proposal='Normal', params=cov, target=marginal,
+               Marginal_parameters=MT, njump=10)
+plt.plot(mcmc.samples[:, 0], mcmc.samples[:, 1], 'x')
+plt.show()
 h0 = RunModel(generator=sm, input=mcmc.samples, model=model)
 print()
 

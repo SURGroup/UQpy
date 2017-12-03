@@ -423,6 +423,8 @@ class SampleMethods:
             # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
             # hstack -
 
+            # Test1 12032017 - push any changes with commit to development branches
+
 
     ########################################################################################################################
     ########################################################################################################################
@@ -472,7 +474,7 @@ class SampleMethods:
         # def __init__(self, proposal='None', mu='None', sigma='None', x='None'):
 
         def __init__(self, nsamples=5000, dim=None, x0=None, method=None, proposal=None, params=None, target=None,
-                     njump=None, Marginal_target=None):
+                     njump=None, Marginal_parameters=None):
             """
                     Class generates the random samples from the target distribution using Markov Chain Monte Carlo
                     (MCMC) method.
@@ -588,7 +590,7 @@ class SampleMethods:
             self.target = target
             self.rejects = 0
             self.njump = njump
-            self.Marginal_target = Marginal_target
+            self.Marginal_parameters = Marginal_parameters
 
             def pdf(x, F):
                 if F[0] == 'Normal':
@@ -690,7 +692,7 @@ class SampleMethods:
                             xm = np.random.uniform(low=self.samples[i, j] - self.params[j] / 2,
                                                    high=self.samples[i, j] + self.params[j] / 2, size=1)
 
-                        b = pdf(xm, self.Marginal_target[j])/pdf(x1[j], self.Marginal_target[j])
+                        b = self.target(xm, self.Marginal_parameters[j]) / self.target(x1[j], self.Marginal_parameters[j])
                         if b >= 1:
                             x1[j] = xm
 
