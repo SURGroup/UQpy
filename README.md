@@ -4,7 +4,7 @@ UQpy
 UQpy is a numerical tool for performing uncertainty quantification using
 advanced Monte Carlo simulation methods using python 3.
 
-# Requirements: Python >= 3.6.2
+Requirements: Python >= 3.6.2
 # Git >= 2.13.1
 
 Installation
@@ -33,5 +33,4 @@ In order to use matplotlib within SURG_UQenv
 
 And type:
     backend: TkAgg
-
 
