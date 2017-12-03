@@ -40,11 +40,15 @@ Note
 Installation
 ------------
 
-    git clone https://github.com/SURGroup/UQpy.git
-    cd UQpy
-    python3 setup_.py   
-    source SURG_UQenv/bin/activate
-    pip3 install -r requirements.txt
+            * item text::
+
+                        git clone https://github.com/SURGroup/UQpy.git
+                        cd UQpy
+                        python3 setup_.py   
+                        source SURG_UQenv/bin/activate
+                        pip3 install -r requirements.txt
+
+
 
 This will check for all the necessary packages. It will create the virtual environment SURG_UQenv and install  its dependencies. In order to deactivate the virtual environment type 
 
