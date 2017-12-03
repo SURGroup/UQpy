@@ -122,83 +122,75 @@ class SampleMethods:
 
             return np.random.rand(n, self.dimension)
 
-    ########################################################################################################################
-    ########################################################################################################################
-    #                                         Latin hypercube sampling  (lhs)
-    ########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+#                                         Latin hypercube sampling  (LHS)
+########################################################################################################################
 
     class LHS:
-        def __init__(self, ndim, nsamples=None,  criterion='classic', iterations=100, dist_metric='euclidean'):
+        """
+        A class that can be used to create Latin Hypercube Sampling for an experimental design. These points should
+        be transformed from U space back into the X space.
 
-            """
-            A class that can be used to create Latin Hypercube Sampling for an experimental design. These points should
-            be transformed from U space back into the X space.
+        :param ndim: The number of dimensions for the experimental design.
+        :type: int
 
-            :param ndim(int) - number of dimensions in the experimental design
-            
-            :param nsamples(int) - number of samples to be generated
-            
-            :param distribution(list) - A list containing the details of the distribution in all the dimensions
-            
-            :param criterion(str) - the criterion to be used while generating the points, valid criterion are
-                            i) classic - completely random 
-                            ii) centered - points only at the centre of respective cuts
-                            iii) maximin - maximising the minimum distance between points
-                            iv) correlate - minimizing the correlation between the points
-            
-            : param iterations(int) - the number of iteration to run for maximin, correlate and correlate_cond criterion,
-            only active with these criterion
-             
-            : param dist_metric - Distance metric to be used in the case of 
-                            'braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice',
-                            'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski',
-                            'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean',
-                            'yule'.
-             
-            created on : 11/19/2017 LV
-            last modified on: 11/28/2017 LV
-            """
+        :param nsamples: The number of samples to be generated.
+        :type nsamples: int
 
-            while True:
-                try:
-                    self.ndim = np.int32(ndim)
-                    break
-                except ValueError:
-                    print('Invalid number of dimensions (ndim). Enter again')
+        :param criterion: The criterion for generating sample points \n
+                        i) random - completely random \n
+                        ii) centered - points only at the centre \n
+                        iii) maximin - maximising the minimum distance between points \n
+                        iv) correlate - minimizing the correlation between the points \n
+        :type criterion: str
+
+        :param iterations: The number of iteration to run. Only for maximin, correlate and criterion
+        :type iterations: int
+
+        :param dist_metric: The distance metric to use. Supported metrics are 
+                        'braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', \n
+                        'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', \n
+                        'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', \n
+                        'yule'.
+        :type dist_metric: str
+
+        """
+
+        def __init__(self, ndim, nsamples=None,  criterion='random', iterations=100, dist_metric='euclidean'):
+            try:
+                self.ndim = np.int32(ndim)
+            except ValueError:
+                print('Invalid value for ndim. Must be an integer.')
+
             if nsamples is None:
                 nsamples = ndim
 
-            while True:
-                try:
-                    self.nsamples = np.int32(nsamples)
-                    break
-                except ValueError:
-                    print('Invalid number of samples (nsamples). Enter again')
+            try:
+                self.nsamples = np.int32(nsamples)
+            except ValueError:
+                print('Invalid value for nsamples. Must be an integer.')
 
             self.samples = None
 
-            while criterion not in ['random', 'centered', 'maximin', 'correlate', 'correlate_cond']:
-                print('Invalid criterion requested')
-                criterion = input("Choose from classic, centered, maximin, correlate:")
+            if criterion not in ['random', 'centered', 'maximin', 'correlate', 'correlate_cond']:
+                sys.exit('Invalid criterion requested.')
 
             self.criterion = criterion
 
-            while dist_metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
+            if dist_metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
                                       'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching',
                                       'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener',
                                       'sokalsneath', 'sqeuclidean', 'yule']:
-                print('Invalid distance metric requested')
-                criterion = input("Choose a valid one(check documentation):")
+                sys.exit('Invalid distance metric requested.')
 
             self.dist_metric = dist_metric
 
-            if criterion in ['maximin', 'correlate', 'correlate_cond']:
-                while True:
-                    try:
-                        self.iterations = np.int32(iterations)
-                        break
-                    except ValueError:
-                        print('Invalid number of iterations (iterations). Enter again')
+            if criterion in ['maximin', 'correlate']:
+                try:
+                    self.iterations = np.int32(iterations)
+                except ValueError:
+                    print('Invalid value for iterations.')
 
                 print('Running for ' + str(self.iterations) + ' iterations')
 
@@ -214,10 +206,13 @@ class SampleMethods:
                 self.samples = self.maximin()
             elif self.criterion == 'correlate':
                 self.samples = self.correlate()
-            elif self.criterion == 'correlate_cond':
-                self.samples = self.correlate_cond()
 
         def random(self):
+            """
+            
+            :return: The samples points for the random LHS design
+            
+            """
             u = np.random.rand(self.nsamples, self.ndim)
             points = np.zeros_like(u)
 
@@ -230,6 +225,11 @@ class SampleMethods:
             return points
 
         def centered(self):
+            """
+            
+            :return: The samples points for the centered LHS design
+            
+            """
             points = np.zeros([self.nsamples, self.ndim])
             centers = (self.a + self.b) / 2
 
@@ -238,6 +238,11 @@ class SampleMethods:
             return points
 
         def maximin(self):
+            """
+            
+            :return: The samples points for the Minimax LHS design 
+            
+            """
             maximin_dist = 0
             points = self.random()
             for _ in range(self.iterations):
@@ -250,6 +255,11 @@ class SampleMethods:
             return points
 
         def correlate(self):
+            """
+            
+            :return: The samples points for the minimum correlated LHS design
+             
+            """
             min_corr = np.inf
             points = self.random()
             for _ in range(self.iterations):
@@ -263,28 +273,10 @@ class SampleMethods:
             print('Achieved minimum correlation of ', min_corr)
             return points
 
-        def correlate_cond(self):
-            min_cond = np.inf
-            points = self.random()
-            for _ in range(self.iterations):
-                points_try = self.random()
-                points = np.matrix(points_try)
-                points1 = np.transpose(points)*points
-                cond = np.linalg.eig(points1)[0][0]/np.linalg.eig(points1)[0][-1]
-                if cond < min_cond:
-                    min_cond = cond
-                    points = copy.deepcopy(points_try)
-            return points
-
-
-            # TODO: Create a list that contains all element info - parent structure
-            # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
-            # hstack -
-
-            ########################################################################################################################
-            ########################################################################################################################
-            #                                         Partially Stratified Sampling (PSS)
-            ########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+#                                         Partially Stratified Sampling (PSS)
+########################################################################################################################
 
 
     # def pss(self, pss_design=None, pss_stratum=None):
@@ -353,43 +345,57 @@ class SampleMethods:
     #     return pss_samples
 
     class PSS:
+        """
+        Brief - PSS method generates a partially stratified sample set on U(0,1) as described in:
+        Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
+
+        Detailed description
+
+        :param pss_design: Vector defining the subdomains to be used.
+                           Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]
+                           Note: The sum of the values in the pss_design vector equals the dimension of the problem.
+        :param pss_stratum: Vector defining how each dimension should be stratified.
+                            Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625]
+                            Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
+        :return: pss_samples: Generated samples Array (nSamples x nRVs)
+        :type pss_design: int
+              pss_pss_stratum: int
+        """
+
         # TODO: Jiaxin - Add documentation to this subclass
         # TODO: the pss_design = [[1,4], [2,5], [3]] - then reorder the sequence of RVs
-        # TODO: PSS class
         # TODO: Add the sample check and pss_design check in the beginning
-        # TODO
+
 
         def __init__(self, pss_design=None, pss_stratum=None):
+            """
+            Brief - PSS method generates a partially stratified sample set on U(0,1) as described in:
+            Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
 
+            Detailed description
+
+            :param pss_design: Vector defining the subdomains to be used.
+                               Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]
+                               Note: The sum of the values in the pss_design vector equals the dimension of the problem.
+            :param pss_stratum: Vector defining how each dimension should be stratified.
+                                Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625]
+                                Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
+            :return: pss_samples: Generated samples Array (nSamples x nRVs)
+            :type pss_design: int
+                  pss_pss_stratum: int
+            """
             '''
-                pss function generates a partially stratified sample set on U(0,1) as described in:
-                Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
+            Created by: Jiaxin Zhang
+            Last modified: 11/19/2017
+            Last modified by: Jiaxin Zhang
 
-                :param pss_design: Vector defining the subdomains to be used
-                    Example: 5D problem with 2x2D + 1x1D subdomains
-                    pss_design = [2,2,1]
-                    Note: The sum of the values in the pss_design vector equals the dimension of the problem.
-
-                :param pss_stratum: Vector defining how each dimension should be stratified
-                    Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples
-                    pss_strata = [25,25,625]
-                    Note: pss_strata(i)^pss_design(i) = number of samples (for all i)
-                :return: pss_samples: Generated samples
-                    Array (nSamples x nRVs)
-
-                Created by: Jiaxin Zhang
-                Last modified: 11/19/2017
-                Last modified by: Jiaxin Zhang
-
-                Last modified: 11/27/2017 - Add the class of PSS and check of pss design and samples
-                Last modified by: Jiaxin Zhang
-
-                '''
+            Last modified: 11/27/2017 - Add the class of PSS and check of pss design and samples
+            Last modified by: Jiaxin Zhang
+            '''
 
             # Check that the PSS design is valid
             if len(pss_design) != len(pss_stratum):
                 print('Input vectors "pss_design" and "pss_strata" must be the same length')
-                print('test')
 
             # sample check
             sample_check = np.zeros((len(pss_stratum), len(pss_design)))
@@ -424,9 +430,7 @@ class SampleMethods:
 
             self.samples = pss_samples
             # TODO: Create a list that contains all element info - parent structure
-            # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
-            # hstack -
-
+            # update the recent local changes to the development 1
 
     ########################################################################################################################
     ########################################################################################################################
