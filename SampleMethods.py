@@ -403,7 +403,6 @@ class SampleMethods:
                 for j in range(len(pss_design)):
                     sample_check[i, j] = pss_stratum[i] ** pss_design[j]
 
-            print(sample_check)
             if np.max(sample_check) != np.min(sample_check):
                 print('All dimensions must have the same number of samples/strata. '
                       'Check to ensure that all values of pss_strata.^pss_design are equal.')
