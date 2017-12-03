@@ -25,7 +25,7 @@ Note
    Git >= 2.13.1
 
 Description
-=======
+===========
 
 UQpy is a numerical tool for performing uncertainty quantification using
 using python 3. 
@@ -39,6 +39,7 @@ Note
 
 Installation
 ------------
+
     git clone https://github.com/SURGroup/UQpy.git
     cd UQpy
     python3 setup_.py   
@@ -48,7 +49,7 @@ Installation
 This will check for all the necessary packages. It will create the virtual environment SURG_UQenv and install  its dependencies. In order to deactivate the virtual environment type 
 
 SURG_UQenv environment has the following packages installed:
-------------
+------------------------------------------------------------
 
 1. numpy
 2. scipy
