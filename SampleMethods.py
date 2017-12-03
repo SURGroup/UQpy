@@ -1,6 +1,4 @@
-"""
-Contains classes necessary for sampling methods in UQpy
-"""
+"""Design of Experiment methods. """
 from library import *
 import scipy.stats as stats
 from modelist import *
@@ -11,10 +9,6 @@ from scipy.spatial.distance import pdist
 
 
 class SampleMethods:
-    """
-    Contains functionality for all supported sampling methods in UQpy.
-    """
-
     def __init__(self, distribution=None, dimension=None, parameters=None, method=None,
                  input_file=None, input_dir=None, save_format=None, save_name=None, lhs_params=None,
                  lss_params=None, mcmc_params=None):
@@ -135,12 +129,11 @@ class SampleMethods:
 
     class LHS:
         """
-        A class that can be used to create Latin Hypercube Sampling for an experimental design.
-
-        These points should be transformed from U space back into the X space.
+        A class that can be used to create Latin Hypercube Sampling for an experimental design. These points should
+        be transformed from U space back into the X space.
 
         :param ndim: The number of dimensions for the experimental design.
-        :type ndim: int
+        :type: int
 
         :param nsamples: The number of samples to be generated.
         :type nsamples: int
@@ -284,142 +277,49 @@ class SampleMethods:
 ########################################################################################################################
 #                                         Partially Stratified Sampling (PSS)
 ########################################################################################################################
-
-
-    # def pss(self, pss_design=None, pss_stratum=None):
-    #
-    #     '''
-    #     pss function generates a partially stratified sample set on U(0,1) as described in:
-    #     Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
-    #
-    #     :param pss_design: Vector defining the subdomains to be used
-    #         Example: 5D problem with 2x2D + 1x1D subdomains
-    #         pss_design = [2,2,1]
-    #         Note: The sum of the values in the pss_design vector equals the dimension of the problem.
-    #
-    #     :param pss_stratum: Vector defining how each dimension should be stratified
-    #         Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples
-    #         pss_strata = [25,25,625]
-    #         Note: pss_strata(i)^pss_design(i) = number of samples (for all i)
-    #     :return: pss_samples: Generated samples
-    #         Array (nSamples x nRVs)
-    #
-    #     Created by: Jiaxin Zhang
-    #     Last modified: 11/19/2017
-    #     Last modified by: Jiaxin Zhang
-    #
-    #     '''
-    #     # TODO: the pss_design = [[1,4], [2,5], [3]] - then reorder the sequence of RVs
-    #     # TODO: PSS class
-    #
-    #     n_dim = np.sum(pss_design)
-    #     n_samples = pss_stratum[0]**pss_design[0]
-    #     pss_samples = np.zeros((n_samples, n_dim))
-    #
-    #     # Check that the PSS design is valid
-    #     if len(pss_design) != len(pss_stratum):
-    #         print('Input vectors "pss_design" and "pss_strata" must be the same length')
-    #
-    #     # sample check
-    #     sample_check = np.zeros((len(pss_stratum), len(pss_design)))
-    #     for i in range(len(pss_stratum)):
-    #         for j in range(len(pss_design)):
-    #             sample_check[i, j] = pss_stratum[i] ** pss_design[j]
-    #
-    #     print(sample_check)
-    #     if np.max(sample_check) != np.min(sample_check):
-    #         print('All dimensions must have the same number of samples/strata. '
-    #               'Check to ensure that all values of pss_strata.^pss_design are equal.')
-    #
-    #     col = 0
-    #     for i in range(len(pss_design)):
-    #         n_stratum = pss_stratum[i]*np.ones(pss_design[i], dtype=np.int)
-    #
-    #         ss = Strata(nstrata=n_stratum)
-    #         ss_samples = SampleMethods.sts(self, strata=ss)
-    #         # print(ss_samples.shape)
-    #
-    #         index = list(range(col, col+pss_design[i]))
-    #         # print(index)
-    #         # print(pss_samples.shape)
-    #         pss_samples[:, index] = ss_samples
-    #         # print(np.random.permutation(n_samples))
-    #         # print(pss_samples)
-    #         arr = np.arange(n_samples).reshape((n_samples, 1))
-    #         pss_samples[:, index] = pss_samples[np.random.permutation(arr), index]
-    #         col = col + pss_design[i]
-    #
-    #     return pss_samples
-
     class PSS:
         """
-        PSS method generates a partially stratified sample set on U(0,1) as described in:
+        This class generates a partially stratified sample set on U(0,1) as described in:
         Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
 
-        :param pss_design: Vector defining the subdomains to be used.\n
+        :param pss_design: Vector defining the subdomains to be used.
                            Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]. \n
                            Note: The sum of the values in the pss_design vector equals the dimension of the problem.
-
-        :param pss_stratum: Vector defining how each dimension should be stratified. \n
+        :param pss_stratum: Vector defining how each dimension should be stratified.
                             Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625].\n
                             Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
-
         :return: pss_samples: Generated samples Array (nSamples x nRVs)
         :type pss_design: int
-        :type pss_pss_stratum: int
+        :type pss_stratum: int
 
         Created by: Jiaxin Zhang
         Last modified: 12/03/2017
-
-        Example
-        -------
-        ::
-        pss_design = [2,2,1]
-        pss_pss_stratum = [25,25,625]
         """
 
         # TODO: Jiaxin - Add documentation to this subclass
         # TODO: the pss_design = [[1,4], [2,5], [3]] - then reorder the sequence of RVs
         # TODO: Add the sample check and pss_design check in the beginning
+        # TODO: Create a list that contains all element info - parent structure
 
 
         def __init__(self, pss_design=None, pss_stratum=None):
             """
-            PSS method generates a partially stratified sample set on U(0,1) as described in:
+            This class generates a partially stratified sample set on U(0,1) as described in:
             Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
 
-            :param pss_design: Vector defining the subdomains to be used.\n
+            :param pss_design: Vector defining the subdomains to be used.
                                Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]. \n
                                Note: The sum of the values in the pss_design vector equals the dimension of the problem.
-
-            :param pss_stratum: Vector defining how each dimension should be stratified. \n
+            :param pss_stratum: Vector defining how each dimension should be stratified.
                                 Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625].\n
                                 Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
-
             :return: pss_samples: Generated samples Array (nSamples x nRVs)
-
             :type pss_design: int
-            :type pss_pss_stratum: int
+            :type pss_stratum: int
 
             Created by: Jiaxin Zhang
             Last modified: 12/03/2017
-
-            Example
-            -------
-            ::
-            pss_design = [2,2,1]
-            pss_pss_stratum = [25,25,625]
-
-
             """
-            '''
-            Created by: Jiaxin Zhang
-            Last modified: 11/19/2017
-            Last modified by: Jiaxin Zhang
-
-            Last modified: 11/27/2017 - Add the class of PSS and check of pss design and samples
-            Last modified by: Jiaxin Zhang
-            '''
 
             # Check that the PSS design is valid
             if len(pss_design) != len(pss_stratum):
@@ -444,10 +344,7 @@ class SampleMethods:
                 n_stratum = pss_stratum[i] * np.ones(pss_design[i], dtype=np.int)
 
                 ss = Strata(nstrata=n_stratum)
-                # print(ss)
-                # use the class of STS
                 ss = SampleMethods.STS(strata=ss)
-                # print(ss_samples)
 
                 index = list(range(col, col + pss_design[i]))
                 pss_samples[:, index] = ss.samples
@@ -456,8 +353,6 @@ class SampleMethods:
                 col = col + pss_design[i]
 
             self.samples = pss_samples
-            # TODO: Create a list that contains all element info - parent structure
-            # update the recent local changes to the development 1
 
     ########################################################################################################################
     ########################################################################################################################
@@ -503,23 +398,23 @@ class SampleMethods:
 
     class MCMC:
 
-        """This class generates samples from arbitrary distributions using Metropolis Hasting(MH) or Modified Metroplis
+        """Markov Chain Monte Carlo
+
+        This class generates samples from arbitrary algorithm using Metropolis Hasting(MH) or Modified Metroplis
         Hasting Algorithm.
 
-        :param nsamples: A scalar value defining the number of random samples that needs to be
-        generate using MCMC. Default value of nsample is 1000.
+        :param nsamples: A scalar value defining the number of random samples that needs to be generate using MCMC.
+        Default value of nsample is 1000.
         :type nsamples: int
 
         :param dim: A scalar value defining the dimension of target density function.
         :type dim: int
 
-        :param x0: A scalar value defining the initial mean value of proposed density. \n
-        Default value: x0 is zero row vector of size dim. \n
-        Example: x0 = 0, Starts sampling using proposed density with mean equal to 0.
+        :param x0: A scalar value defining the initial mean value of proposed density. Default value: x0 is zero row
+        vector of size dim. Example: x0 = 0, Starts sampling using proposed density with mean equal to 0.
         :type x0: array
 
-        :param MCMC_algorithm: A string defining the algorithm used to generate random samples. \n
-        Default value: method is 'MH'.
+        :param MCMC_algorithm: A string defining the algorithm used to generate random samples. Default value: method is 'MH'.
         Example: MCMC_algorithm = MH : Use Metropolis-Hasting Algorithm
         MCMC_algorithm = MMH : Use Modified Metropolis-Hasting Algorithm
         MCMC_algorithm = GIBBS : Use Gibbs Sampling Algorithm
@@ -530,20 +425,19 @@ class SampleMethods:
         proposal = Uniform : Uniform distribution will be used to generate new estimates
         :type proposal: str
 
-        :param params: An array defining the Covariance matrix of the proposed density function. \n
-        Multivariate Uniform distribution : An array of size 'dim'. Multivariate Normal distribution: \n
-        Either an array of size 'dim' or array of size 'dim x dim'. \n
-        Default: params is unit row vector
+        :param params: An array defining the Covariance matrix of the proposed density function. Multivariate Uniform
+        distribution : An array of size 'dim'. Multivariate Normal distribution: Either an array of size 'dim' or array
+        of size 'dim x dim'. Default: params is unit row vector
         :type proposal: matrix
 
         :param target: An function defining the target distribution of generated samples using MCMC.
 
-        :param njump: A scalar value defining the number of samples rejected to reduce the correlation \n
-        between generated samples.
+        :param njump: A scalar value defining the number of samples rejected to reduce the correlation between
+        generated samples.
         :type njump: int
 
         Created by: Mohit S. Chauhan
-        Last modified: 12/03/2017
+        Last modified: 11/17/2017
 
         """
 
@@ -554,7 +448,7 @@ class SampleMethods:
             Modified Metroplis Hasting Algorithm.
 
             :param nsamples: A scalar value defining the number of random samples that needs to be \n
-            generate using MCMC. Default value of nsamples is 1000.
+            generate using MCMC. Default value of nsample is 1000.
             :type nsamples: int
 
             :param dim: A scalar value defining the dimension of target density function.
