@@ -1,7 +1,7 @@
 from functools import partial
 from SampleMethods import *
-import matplotlib.pyplot as plt
 from RunModel import RunModel
+import matplotlib.pyplot as plt
 
 
 print()
@@ -34,24 +34,14 @@ sm = SampleMethods(dimension=dimension, distribution=distribution, method=method
 
 # MCMC Code Block#
 def normpdf(x):
-    return stats.norm.pdf(x, 0, 1)
-
-
+   return stats.norm.pdf(x, 0, 1)
 def mvnpdf(x):
-    return stats.multivariate_normal.pdf(x, mean=np.zeros(d), cov=np.identity(d))
+    return stats.multivariate_normal.pdf(x,mean=np.zeros(2),cov=np.identity(2))
 
-
-def marginal(x, mp):
-    return stats.norm.pdf(x, mp[0], mp[1])
-
-
-d = 2        # dimension
-marginal_parameters = [[0, 1], [2, 5]]
-Cov = np.ones(d)
-x_start = 1.5*np.ones(d)
-# MT = [['Normal', 0, 1], ['beta', 2, 2, 1, 1]]
-mcmc = sm.MCMC(nsamples=10000, dim=d, x0=x_start, method='MMH', proposal='Normal', params=Cov, target=marginal,
-               target_params=marginal_parameters, njump=10)
+cov = np.identity(2)
+x_start = np.zeros(2)
+mcmc = sm.MCMC(nsamples=1000, dim=2, x0 = x_start, method='MH', proposal='Normal', params=cov, target=mvnpdf, njump=10)
+print()
 
 #plt.plot(mcmc.samples[:,0],mcmc.samples[:,1],'x')
 # plt.hist(mcmc.samples,bins=50)
@@ -97,20 +87,21 @@ def marginal(x, mp):
 
 
 dimension = 2
-marginal_parameters = [[0, 1], [2, 5]]
-Cov = np.ones(dimension)
 x_start = np.zeros(dimension)
+cov = np.ones(dimension)
+MT = [[0, 1], [2, 5]]
 distribution = ['Uniform', 'Uniform']
 parameters = [[0, 1], [2, 3]]
 model = partial(model_ko2d)
 
 sm = SampleMethods(dimension=dimension, distribution=distribution, parameters=parameters)
+
 # Monte Carlo Simulation Block #########################################################################################
 
 mcs = sm.MCS(10, dimension=2)
 g0 = RunModel(generator=sm, input=mcs.samples, model=model)
 
-samples = '/Users/dimitrisgiovanis/Desktop/UQ_algorithms/util_/samples.txt'
+samples = 'samples.txt'
 g1 = RunModel(generator=sm, input=samples, model=model)
 
 
@@ -132,14 +123,16 @@ f1 = RunModel(generator=sm, method='sts', model=model, sts_input=[2, 3])
 
 # MCMC Block  ###########################################################################################
 
-mcmc = sm.MCMC(nsamples=10000, dim=dimension, x0=x_start, method='MMH', proposal='Normal', params=Cov, target=marginal,
-               target_params=marginal_parameters, njump=10)
+mcmc = sm.MCMC(nsamples=1000, dim=dimension, x0=x_start, method='MMH', proposal='Normal', params=cov, target=marginal,
+               Marginal_parameters=MT, njump=10)
 plt.plot(mcmc.samples[:, 0], mcmc.samples[:, 1], 'x')
 plt.show()
 h0 = RunModel(generator=sm, input=mcmc.samples, model=model)
 print()
 
-
+# LHS Block ###########################################################################################
+lhs = sm.LHS(ndim=3, nsamples=100, criterion='random')
+x0 = RunModel(generator=sm, input=lhs.samples, model=model)
 
 
 
