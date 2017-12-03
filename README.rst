@@ -6,7 +6,7 @@ Uncertainty Quantification using python (UQpy)
 :Authors:  
 :Contributors: 
 :Contact: michael.shields@jhu.edu, dgiovan1@jhu.edu
-:Web site: https://github.com/SURGroup/UQpy.git
+:Web site: https://sites.google.com/site/jhusurg/
 :Documentation:  
 :Copyright: 
 :License: UQpy is released under the ...
