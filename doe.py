@@ -516,6 +516,10 @@ class SampleMethods:
                     :param target:
                         An function defining the target distribution of generated samples using MCMC.
 
+                    :param target_params:
+                        Rectangular matrix containing the parameters of target marginal distribution corresponding to
+                        each random variable
+
                     :param njump:
                         A scalar value defining the number of samples rejected to reduce the correlation between
                         generated samples.
