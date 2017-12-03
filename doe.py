@@ -225,7 +225,7 @@ class SampleMethods:
             for i in range(self.ndim):
                 points[:, i] = u[:, i] * (self.b - self.a) + self.a
 
-            for j in range(self.ndim):51
+            for j in range(self.ndim):
                 order = np.random.permutation(self.nsamples)
                 points[:, j] = points[order, j]
             return points
