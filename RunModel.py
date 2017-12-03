@@ -6,7 +6,7 @@ import numpy as np
 class RunModel:
 
     def __init__(self, generator=None, input=None, nsamples=None, method=None, interpreter=None, model=None, Type=None, \
-                 sts_input=None):
+                 sts_input=None, lhs_criterion='random', MCMC_algorithm='MH', target=None, pss_design=None, pss_stratum=None):
 
         """
         Class of methods used in order to evaluate a model (FEM, PDE, e.t.c)
@@ -30,7 +30,9 @@ class RunModel:
 
         3. Stratified Sampling  (sts)
 
-        4.  Markov Chain Monte Carlo simulation (mcmc)
+        4. Partially stratified sampling (pss)
+
+        5.  Markov Chain Monte Carlo simulation (mcmc)
 
         :param nsamples: Number of model evaluations. Provided only if input=None
 
@@ -72,7 +74,8 @@ class RunModel:
                 self.samples = mcs.samples
             elif self.method == 'lhs':
                 self.nsamples = int(nsamples)
-                self.samples = sm.lhs()
+                lhs = sm.LHS(self.dimension, self.nsamples, criterion=lhs_criterion)
+                self.samples = lhs.samples
             elif self.method == 'sts':
                 is_string = isinstance(sts_input, str)
                 if is_string:
@@ -83,7 +86,17 @@ class RunModel:
                 self.samples = ss.samples
                 print()
             elif self.method == 'mcmc':
-                self.samples = sm.mcmc(self.nsamples, self.dimension)
+                self.algorithm = MCMC_algorithm
+                self.target = target
+                self.nsamples = int(nsamples)
+                mcmc = sm.MCMC(nsamples = self.nsamples, target=self.target, MCMC_algorithm=self.algorithm)
+                self.samples = mcmc.samples
+            elif self.method == 'pss':
+                self.pss_design = pss_design
+                self.pss_stratum = pss_stratum
+                self.nsamples = max(pss_stratum)
+                pss = sm.PSS(pss_design=self.pss_design, pss_stratum=self.pss_stratum)
+                self.samples = pss.samples
         elif is_string:
             self.samples = np.loadtxt(input, dtype=np.float32, delimiter=' ')
             self.nsamples = self.samples.shape[0]
@@ -124,54 +137,3 @@ class RunModel:
 
         return geval
 
-
-
-
-
-
-
-
-
-
-
-
-'''
-
-        1. The number of samples to generate (integer)
-        2. Whether the random numbers are on [0, 1) or we transform them to the original parameter space
-           scale = False:  Keep the random numbers on [0, 1]
-           scale = True:  transform to the original space using the inverse of the cumulative distribution
-           The default value is False
-
-        If no number is provided then the default number of mc simulations Nmc is set to 100
-        The generated samples for all random variables are gather in a list  (len = number of random variables)
-        Each element of the list contains the realizations of each random variable (array type with size = Nmc )
-
-        Output: a list containing the realizations of the random variables
-            else:
-                us = []
-                for i in range(self.dimension):
-        
-                    if self.distribution[i] == 'Uniform':
-                        if self.dimension == 1:
-                            a = self.parameters[0]
-                            b = self.parameters[1]
-                        else:
-                            a = self.parameters[i][0]
-                            b = self.parameters[i][1]
-        
-                        us.append(a + (b - a) * u[:, i])
-        
-                    elif self.distribution[i] == 'Normal':
-                        a = self.parameters[i][0]
-                        b = self.parameters[i][1]
-                        us.append(a + (b - a) * stats.norm.ppf(u[:, i]))
-        
-                    else:
-                        raise RuntimeError('distribution not available')
-        
-                mcs = us
-        
-            return mcs
-
-'''
