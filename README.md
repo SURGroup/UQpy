@@ -1,11 +1,41 @@
-UQpy
-=======
+
+*******************************************
+Uncertainty Quantification using python (UQpy)
+*******************************************
+
+:Date: December 2017
+:Authors: Michael Shields, Dimitris G.. Giovanis, Aakash Bangalore
+:Contact: michael.shields@jhu.edu, dgiovan1@jhu.edu
+:Web site: http://github.com/hackl/pyre
+:Documentation: http://hackl.github.io/pyre/
+:Copyright: This document has been placed in the public domain.
+:License: UQpy is released under the GNU General Public Licence.
+:Version: 0.0.1
+
+Description
+===========
 
 UQpy is a numerical tool for performing uncertainty quantification using
 advanced Monte Carlo simulation methods using python 3.
 
-Requirements: Python >= 3.6.2
-# Git >= 2.13.1
+Note
+----
+
+   Requirements: Python >= 3.6.2
+   Git >= 2.13.1
+
+Description
+=======
+
+UQpy is a numerical tool for performing uncertainty quantification using
+using python 3. 
+
+Note
+----
+
+   At the moment only Monte Carlo simulation (MCS), Latin hypercube sampling (LHS), 
+   Markov Chain Monte Carlo simulation (MCMC) and partially stratified sampling (PSS).
+   More methods are coming soon.
 
 Installation
 ------------
