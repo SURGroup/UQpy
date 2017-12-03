@@ -470,170 +470,94 @@ class SampleMethods:
 #                                         Markov Chain Monte Carlo  (MCMC)
 ########################################################################################################################
 
-    class MCMC:
-        # TODO: MDS - Add documentation to this subclass
+    class MCMC(self, nsamples=1000, dim=2, x0=np.zeros(2), MCMC_algorithm='MH', proposal='Normal', params=np.ones(2),
+               target=None, njump=1, marginal_parameters=np.identity(2)):
 
-        # def __init__(self, proposal='None', mu='None', sigma='None', x='None'):
+        """Markov Chain Monte Carlo
 
-        def __init__(self, nsamples=5000, dim=None, x0=None, method=None, proposal=None, params=None, target=None,
-                     njump=None, Marginal_parameters=None):
+        This class generates samples from arbitrary algorithm using Metropolis Hasting(MH) or Modified Metroplis
+        Hasting Algorithm.
+
+        :param nsamples:
+                A scalar value defining the number of random samples that needs to be generate using MCMC.
+                Default value: nsample is 1000.
+
+            :param dim:
+                A scalar value defining the dimension of target density function.
+
+            :param x0:
+                A scalar value defining the initial mean value of proposed density.
+                Default value: x0 is zero row vector of size dim.
+                Example: x0 = 0
+                Starts sampling using proposed density with mean equal to 0.
+
+            :param MCMC_algorithm:
+                A string defining the algorithm used to generate random samples.
+                Default value: method is 'MH'.
+                method = MH : Use Metropolis-Hasting Algorithm
+                method = MMH : Use Modified Metropolis-Hasting Algorithm
+                method = GIBBS : Use Gibbs Sampling Algorithm
+            :type MCMC_algorithm: str
+
+            :param proposal:
+                A string defining the type of proposed density function
+                proposal = Normal : Normal distribution will be used to generate new estimates
+                proposal = Uniform : Uniform distribution will be used to generate new estimates
+            :type proposal: str
+
+            :param params:
+                An array defining the Covariance matrix of the proposed density function.
+                Multivariate Uniform distribution : An array of size 'dim'
+                Multivariate Normal distribution: Either an array of size 'dim' or array of size 'dim x dim'
+                Default: params is unit row vector
+
+            :param target:
+                An function defining the target distribution of generated samples using MCMC.
+
+            :param njump:
+                A scalar value defining the number of samples rejected to reduce the correlation between
+                generated samples.
+
+            Created by: Mohit S. Chauhan
+            Last modified: 11/17/2017
+
+        """
+
+        def __init__(self, nsamples=5000, dim=2, x0=np.zeros(2), MCMC_algorithm='MH', proposal='Normal', params=np.ones(2),
+                     target=None, njump=1, marginal_parameters=np.identity(2)):
+            """Class generates the random samples from the target distribution using Markov Chain Monte Carlo
+            (MCMC) method.
+
             """
-                    Class generates the random samples from the target distribution using Markov Chain Monte Carlo
-                    (MCMC) method.
-
-                    :param nsamples:
-                        A scalar value defining the number of random samples that needs to be generate using MCMC.
-                        Default value: nsample is 5000.
-
-                    :param dim:
-                        A scalar value defining the dimension of target density function.
-
-                    :param x0:
-                        A scalar value defining the initial mean value of proposed density.
-                        Default value: x0 is zero row vector of size dim.
-                        Example: x0 = 0
-                        Starts sampling using proposed density with mean equal to 0.
-
-                    :param method:
-                        A string defining the algorithm used to generate random samples.
-                        Default value: method is 'MH'.
-                        method = MH : Use Metropolis-Hasting Algorithm
-                        method = MMH : Use Modified Metropolis-Hasting Algorithm
-                        method = GIBBS : Use Gibbs Sampling Algorithm
-
-                    :param proposal:
-                        A string defining the type of proposed density function
-                        proposal = Normal : Normal distribution will be used to generate new estimates
-                        proposal = Uniform : Uniform distribution will be used to generate new estimates
-
-                    :param params:
-                        An array defining the Covariance matrix of the proposed density function.
-                        Multivariate Uniform distribution : An array of size 'dim'
-                        Multivariate Normal distribution: Either an array of size 'dim' or array of size 'dim x dim'
-                        Default: params is unit row vector
-
-                    :param target:
-                        An function defining the target distribution of generated samples using MCMC.
-
-                    :param njump:
-                        A scalar value defining the number of samples rejected to reduce the correlation between
-                        generated samples.
-
-                    Created by: Mohit S. Chauhan
-                    Last modified: 11/17/2017
-
-                    """
-            # TODO: Mohit - Bring target and marginal PDF inside the class
 
             # TODO: Mohit - Add error checks for target and marginal PDFs
 
+            try:
+                dim = np.int32(dim)
+            except ValueError:
+                print("Dimension should be an integer value. Try again...")
 
-            if dim is None:
-                dim = np.size(x0)
-                print('\n**WARNING**\nThe dimension is assumed to be same as size of initial value')
-            else:
-                if not is_integer(dim):
-                    print('\n**ERROR**\nThe dimension of target distribution should be an integer.')
-                    return
-                else:
-                    dim = dim
+            if MCMC_algorithm not in ['MH', 'MMH', 'GIBBS']:
+                sys.exit("Select one of the following algorithm: ['MH', 'MMH', 'GIBBS']")
 
-            if method is None:
-                method = 'MH'
-                print('\n**WARNING**\nThe Metropolis-Hasting algorithm is used to generate sample')
-            else:
-                if method in ['MH', 'MMH', 'GIBBS']:
-                    method = method
-                else:
-                    print("\n**ERROR**\nSelect one of the following methods: ['MH', 'MMH', 'GIBBS']")
-                    return
+            if proposal not in ['Normal', 'Uniform']:
+                sys.exit("Select one of the following proposed density: ['Normal', 'Uniform']")
 
-            if proposal is None:
-                proposal = 'Normal'
-                print('\n**WARNING**\nThe proposed density is assumed to be a Gaussian distribution')
-            else:
-                if proposal in ['Normal', 'Uniform']:
-                    proposal = proposal
-                else:
-                    print("\n**ERROR**\nSelect one of the following proposed density: ['Normal', 'Uniform']")
-                    return
+            if np.size(params) != np.size(x0):
+                sys.exit("Dimension of parameters of Covariance matrix and Initial value should be same")
 
-            if params is None:
-                params = np.identity(dim)
-                print('\n**WARNING**\nCovariance matrix of proposed density is assumed to be an identity matrix')
-            else:
-                if np.size(params) == np.size(x0):
-                    params = params
-                else:
-                    print("\n**ERROR**\nDimension of parameters of Covariance matrix and Initial value should be same")
-                    return
-
-            if x0 is None:
-                x0 = np.zeros(dim)
-                print('\n**WARNING**\nInitial value is assumed to be a zero row matrix')
-            else:
-                x0 = x0
-
-            if njump is None:
-                njump = 1
-                print('\n**WARNING**\nAll generated samples are accepted.')
-            else:
-                if not is_integer(njump):
-                    print('\n**ERROR**\nDefine an integer to reject generated samples.')
-                    return
-                else:
-                    njump = njump
+            if not is_integer(njump):
+                sys.exit("Define an integer to reject generated samples")
 
             self.nsamples = np.int32(nsamples)
             self.dim = dim
-            self.method = method
+            self.method = MCMC_algorithm
             self.proposal = proposal
             self.params = params
             self.target = target
             self.rejects = 0
             self.njump = njump
-            self.Marginal_parameters = Marginal_parameters
-
-            def pdf(x, F):
-                if F[0] == 'Normal':
-                    # F[1] = mean, F[2] = variance
-                    return stats.norm.pdf(x, F[1], F[2])
-                elif F[0] == 'Uniform':
-                    # F[1] = starting point, F[2] = length
-                    return stats.uniform.pdf(x, F[1], F[2])
-                elif F[0] == 'alpha':
-                    return stats.alpha.pdf(x, F[1], F[2], F[3])
-                elif F[0] == 'beta':
-                    return stats.beta.pdf(x, F[1], F[2], F[3], F[4])
-                elif F[0] == 'cauchy':
-                    return stats.cauchy.pdf(x, F[1], F[2])
-                elif F[0] == 'chi2':
-                    return stats.chi2.pdf(x, F[1], F[2], F[3])
-                elif F[0] == 'expon':
-                    return stats.expon.pdf(x, F[1], F[2])
-                elif F[0] == 'gamma':
-                    return stats.gamma.pdf(x, F[1], F[2], F[3])
-                elif F[0] == 'halfcauchy':
-                    return stats.halfcauchy.pdf(x, F[1], F[2])
-                elif F[0] == 'halfnorm':
-                    return stats.halfnorm.pdf(x, F[1], F[2])
-                elif F[0] == 'loggamma':
-                    return stats.loggamma.pdf(x, F[1], F[2], F[3])
-                elif F[0] == 'lognorm':
-                    return stats.lognorm.pdf(x, F[1], F[2], F[3])
-                elif F[0] == 'maxwell':
-                    return stats.maxwell.pdf(x, F[1], F[2])
-                elif F[0] == 'rayleigh':
-                    return stats.rayleigh.pdf(x, F[1], F[2])
-                elif F[0] == 'semicircular':
-                    return stats.semicircular.pdf(x, F[1], F[2])
-                elif F[0] == 'vonmises':
-                    return stats.vonmises.pdf(x, F[1], F[2], F[3])
-                elif F[0] == 'weibull_min':
-                    return stats.weibull_min.pdf(x, F[1], F[2], F[3])
-                elif F[0] == 'weibull_max':
-                    return stats.weibull_max.pdf(x, F[1], F[2], F[3])
-
+            self.Marginal_parameters = marginal_parameters
 
             # Changing the array of param into a diagonal matrix
             if self.proposal == "Normal":
