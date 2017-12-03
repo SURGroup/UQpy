@@ -69,3 +69,5 @@ Installed packages:
 4. pyDOE     
 5. scikit-learn
 
+.. |logo| image:: logo.jpg
+    :target: https://gihub.com/SURGroup/chaospy
