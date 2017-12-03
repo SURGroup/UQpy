@@ -18,7 +18,7 @@ Uncertainty Quantification using python (UQpy)
 Description
 ===========
 
-UQpy is a numerical tool for performing uncertainty quantification using
+UQpy is a numerical tool for performing uncertainty quantification
 using python.
 
 Supported methods
