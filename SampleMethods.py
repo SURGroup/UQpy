@@ -138,11 +138,11 @@ class SampleMethods:
         :param nsamples: The number of samples to be generated.
         :type nsamples: int
 
-        :param criterion: The criterion for generating sample points
-                        i) random - completely random 
-                        ii) centered - points only at the centre of respective cuts
-                        iii) maximin - maximising the minimum distance between points
-                        iv) correlate - minimizing the correlation between the points
+        :param criterion: The criterion for generating sample points \n
+                        i) random - completely random \n
+                        ii) centered - points only at the centre \n
+                        iii) maximin - maximising the minimum distance between points \n
+                        iv) correlate - minimizing the correlation between the points \n
         :type criterion: str
 
         :param iterations: The number of iteration to run. Only for maximin, correlate and criterion
