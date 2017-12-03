@@ -40,9 +40,9 @@ Requirements
 Installation
 ------------
 
-This will check for all the necessary packages. It will create the required virtual environment and install all its dependencies. In order to deactivate the virtual environment type
+This will check for all the necessary packages. It will create the required virtual environment and install all its dependencies. 
 
-            * ::
+            * Open terminal ::
 
                         $git clone https://github.com/SURGroup/UQpy.git
                         $cd UQpy
