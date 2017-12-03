@@ -42,10 +42,10 @@ Installation
 
 This will check for all the necessary packages. It will create the required virtual environment and install all its dependencies. 
 
-            * Open terminal ::
+            * ::
 
                         $git clone https://github.com/SURGroup/UQpy.git
-                        $cd UQpy
+                        $cd UQpy/
                         $python3 setup_.py   
                         $source SURG_UQenv/bin/activate
                         $pip3 install -r requirements.txt
