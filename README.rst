@@ -18,15 +18,6 @@ Description
 UQpy is a numerical tool for performing uncertainty quantification using
 using python.
 
-Requirements
-------------
-
-            * ::
-            
-                Python >= 3.6.2
-                Git >= 2.13.1
- 
-
 Supported methods
 -----------------
 
@@ -34,6 +25,16 @@ Supported methods
 2. Latin hypercube sampling (LHS), 
 3. Markov Chain Monte Carlo simulation (MCMC) 
 4. Partially stratified sampling (PSS).
+
+
+Requirements
+------------
+
+            * ::
+            
+                Python >= 3.6.2
+                Git >= 2.13.1
+
 
 Installation
 ------------
