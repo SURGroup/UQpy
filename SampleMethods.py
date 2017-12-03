@@ -474,8 +474,7 @@ class SampleMethods:
 #                                         Markov Chain Monte Carlo  (MCMC)
 ########################################################################################################################
 
-    class MCMC(self, nsamples=1000, dim=2, x0=np.zeros(2), MCMC_algorithm='MH', proposal='Normal', params=np.ones(2),
-               target=None, njump=1, marginal_parameters=np.identity(2)):
+    class MCMC:
 
         """Markov Chain Monte Carlo
 
