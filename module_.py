@@ -201,4 +201,13 @@ def def_model(_model):
         model = partial(model_zabaras)
     elif _model == 'model_ko2d':
         model = partial(model_ko2d)
+
     return model
+
+
+def def_target(target):
+    if target == 'mvnpdf':
+        target = partial(mvnpdf)
+    elif target == 'normpdf':
+        target = partial(normpdf)
+    return target

@@ -542,13 +542,13 @@ class SampleMethods:
                 for i in range(self.nsamples * self.njump - 1):
 
                     # Generating new sample using proposed density
-                    if self.proposal is 'Normal':
-                        if self.dim is 1:
+                    if self.proposal == 'Normal':
+                        if self.dim == 1:
                             x1 = np.random.normal(self.samples[i], self.params)
                         else:
                             x1 = np.random.multivariate_normal(self.samples[i, :], self.params)
 
-                    elif self.proposal is 'Uniform':
+                    elif self.proposal == 'Uniform':
                         x1 = np.random.uniform(low=self.samples[i] - self.params / 2,
                                                high=self.samples[i] + self.params / 2, size=self.dim)
 
@@ -577,10 +577,10 @@ class SampleMethods:
                     for j in range(self.dim):
 
                         # Generating new sample using proposed density
-                        if self.proposal is 'Normal':
+                        if self.proposal == 'Normal':
                             xm = np.random.normal(self.samples[i, j], self.params[j][j])
 
-                        elif self.proposal is 'Uniform':
+                        elif self.proposal == 'Uniform':
                             xm = np.random.uniform(low=self.samples[i, j] - self.params[j] / 2,
                                                    high=self.samples[i, j] + self.params[j] / 2, size=1)
 

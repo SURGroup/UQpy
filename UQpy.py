@@ -1,9 +1,9 @@
 from SampleMethods import *
 from RunModel import RunModel
-from module_ import handle_input_file, def_model
+from module_ import handle_input_file, def_model, def_target
 import matplotlib.pyplot as plt
 
-filename = sys.argv[1]
+filename = 'input_mcmc.txt'#sys.argv[1]
 
 current_dir = os.getcwd()
 
@@ -30,6 +30,7 @@ elif filename == 'input_sts.txt':
 os.chdir(current_dir)
 
 model = def_model(_model)
+target = def_target(target)
 sm = SampleMethods(dimension=dimension, distribution=distribution, parameters=parameters)
 
 path = os.path.join(os.sep, current_dir, 'results')
