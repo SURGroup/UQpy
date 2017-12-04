@@ -9,64 +9,32 @@ from scipy.spatial.distance import pdist
 
 
 class SampleMethods:
-    def __init__(self, distribution=None, dimension=None, parameters=None, method=None,
-                 input_file=None, input_dir=None, save_format=None, save_name=None, lhs_params=None,
-                 lss_params=None, mcmc_params=None):
-        """
-        :param distribution:
-        :param dimension:
-        :param parameters:
-        :param input_file:
-        :param input_dir:
-        :param save_format:
-        :param save_name:
+    """
+    A class that contains the information of the probability model.
 
-        """
-        self.input_file = input_file
+    :param distribution: Probability distribution function (pdf) of the random variables
+    :param dimension: Stochastic dimension of the problem (number of random variables)
+    :param parameters: Parameters of the pdf
+                        1. If pdf ~ Uniform :[lower, upper]
+                        2. If pdf ~ Normal  :[mean, std]
+    :param method:  Sampling method
 
-        if self.input_file is not None:
-            self.input_dir = input_dir
-            if self.input_dir is None:
-                raise RuntimeError('Error: Provide path for the input file')
-            else:
-                os.chdir(self.input_dir)
-                handle = read_param_file(self.input_file)
-                self.distribution = handle['distribution']
-                self.method = handle['method']
-                self.dimension = handle['dim']
-                self.parameters = handle['parameters']
-                self.nsamples = handle['number']
-                self.save_format = handle['save_format']
-                self.save_name = handle['save_name']
-                self.method = handle['method']
-                self.checks_ = self.checks_()
+    """
+    def __init__(self, distribution=None, dimension=None, parameters=None, method=None,):
+        self.method = method
+        self.distribution = distribution
+        self.dimension = dimension
+        self.parameters = parameters
+        self.checks_ = self._checks()
 
-        else:
-            self.method = method
-            self.distribution = distribution
-            self.dimension = dimension
-            self.parameters = parameters
-            self.lhs_params = lhs_params
-            self.lss_params = lss_params
-            self.mcmc_params = mcmc_params
-            self.save_format = save_format
-            self.save_name = save_name
-            self.input_dir = input_dir
-            self.checks_ = self.checks_()
-            # self.sts = self.sts(strata)
+    def _checks(self):
 
-    def checks_(self):
-
-        """
-        :return:
-
-        """
         if self.input_file is not None:
             self.method = read_method(self.method)
 
         if self.dimension is None and self.distribution is None:
             self.dimension = 1
-            self.distribution = 'uniform'
+            self.distribution = 'Uniform'
 
         if self.distribution is None and self.dimension > 1:
             self.distribution = []
@@ -76,7 +44,7 @@ class SampleMethods:
             else:
                 return int(self.dimension)
             for i in range(self.dimension):
-                self.distribution.append('uniform')
+                self.distribution.append('Uniform')
 
         elif self.dimension is None and self.distribution is not None:
             self.dimension = len(self.dist)
@@ -98,12 +66,14 @@ class SampleMethods:
     #                                         Monte Carlo simulation
     ########################################################################################################################
     class MCS:
+        """
+        A class used to perform brute force Monte Carlo sampling (MCS).
+
+        :param nsamples: Number of samples to be generated
+        :param dimension: Stochastic dimension of the problem (number of random variables)
+
+        """
         def __init__(self, nsamples=None, dimension=None):
-
-            """
-            :param nsamples:
-            """
-
             self.nsamples = nsamples
             self.dimension = dimension
             self.samples = self.run_mcs()
