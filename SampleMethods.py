@@ -129,8 +129,8 @@ class SampleMethods:
 
     class LHS:
         """
-        A class that can be used to create Latin Hypercube Sampling for an experimental design. These points should
-        be transformed from U space back into the X space.
+        A class that creates a Latin Hypercube Design for experiments. These points are generated on the U-space(cdf)
+        i.e. [0,1) and should be converted back to X-space(pdf) i.e. (-Inf , Inf) for a normal distribution.
 
         :param ndim: The number of dimensions for the experimental design.
         :type: int
