@@ -75,6 +75,7 @@ class SampleMethods:
                 return
             else:
                 return int(self.dimension)
+
             for i in range(self.dimension):
                 self.distribution.append('uniform')
 
@@ -445,8 +446,8 @@ class SampleMethods:
 
         """
 
-        def __init__(self, nsamples=5000, dim=2, x0=np.zeros(2), MCMC_algorithm='MH', proposal='Normal',
-                     params=np.ones(2), target=None, njump=1, marginal_parameters=np.identity(2)):
+        def __init__(self, nsamples=5000, dim=None, x0=None, MCMC_algorithm='MH', proposal='Normal',
+                     params=None, target=None, njump=1, marginal_parameters=None):
 
             """This class generates samples from arbitrary algorithm using Metropolis Hasting(MH) or
             Modified Metroplis Hasting Algorithm.
