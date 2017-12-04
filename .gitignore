@@ -226,5 +226,6 @@ venv.bak/
 
 # Exclude results folder
 results/
+examples/
 
 # End of https://www.gitignore.io/api/osx,matlab,python,pycharm
