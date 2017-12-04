@@ -12,7 +12,7 @@ nsamples = int(sys.argv[4])
 
 dimension = 2
 distribution_type = 'Uniform'
-method = 'sts'
+method = 'mcmc'
 nsamples = 100
 _model = model_zabaras
 
