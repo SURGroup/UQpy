@@ -8,37 +8,37 @@ import scipy.stats as stats
 #                                        List of models
 ########################################################################################################################
 
-def model_zabaras(points, Type):
-    d = 0.1
-    return 1. / (abs(0.3 - np.sum(points ** 2, axis=0)) + d)
+def model_func1(points):
+    """
+    Analytical function defined in :math:`[0,1]^2`.
+
+    :param points: Sample point to evaluate the model
+    :return: The value of the model at the sample point
+
+    Reference: http://dx.doi.org/10.1016/j.jcp.2009.01.006
+
+    """
+
+    return 1. / (abs(0.3 - np.sum(points ** 2, axis=0)) + 0.1)
 
 
-def model_runga(points):
+def model_runge(points):
+    """
+    Analytical function defined in :math:`[-1, 1]`.
+
+    :param points: Sample point to evaluate the model
+    :return: The value of the model at the sample point
+    """
 
     return 1. / (1 + 25 * points ** 2)
 
 
-def model_sinusoidal(points):
-
-    return np.sin(2.5 * points)
-
-
-def model_wave1d(points):  # wave function
-    t = 1
-    d = 0.55
-
-    if points < 0:
-        y = np.sin(2 * np.pi * (0.5 * points * t + d))
-    else:
-        y = np.sin(np.pi * (0.5 * points * t + d))
-
-    return y
-
-
 def model_mike1d(points):
     """
-    :param x:
-    :return:
+    One-dimensional Analytical function defined in :math:`[-1, 1]`.
+
+    :param points: Sample point to evaluate the model
+    :return: The value of the model at the sample point
     """
 
     jump = 50
@@ -52,8 +52,15 @@ def model_mike1d(points):
 
 def model_ko1d(points, Type):
     """
-    :param x:
-    :return:
+    Kraichnan–Orszag (K–O) 3-mode problem with one random variable defined in :math:`[-1, 1]`.
+
+    :param points:Sample point to evaluate the model
+    :param Type: (Optional)Type of the output:
+                 1. Scalar
+                 2. Vector
+                 3. Tensor
+            For this example the only option is Scalar
+    :return: The value of the model at the sample point
     """
 
     t = np.linspace(0, 10, 100)
@@ -141,7 +148,6 @@ def normpdf(x):
 
     """
     return stats.norm.pdf(x, 0, 1)
-
 
 def mvnpdf(x, dim):
     """ Multivariate normal density function used to generate samples using Metropolis-Hastings Algorithm

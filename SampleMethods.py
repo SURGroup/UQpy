@@ -62,9 +62,9 @@ class SampleMethods:
         else:
             self.parameters = self.parameters
 
-    ########################################################################################################################
-    #                                         Monte Carlo simulation
-    ########################################################################################################################
+########################################################################################################################
+#                                         Monte Carlo simulation
+########################################################################################################################
     class MCS:
         """
         A class used to perform brute force Monte Carlo sampling (MCS).
@@ -91,18 +91,20 @@ class SampleMethods:
 
             return np.random.rand(n, self.dimension)
 
-            ########################################################################################################################
-            ########################################################################################################################
-            #                                         Latin hypercube sampling  (LHS)
-            ########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+#                                         Latin hypercube sampling  (LHS)
+########################################################################################################################
 
     class LHS:
         """
-        A class that can be used to create Latin Hypercube Sampling for an experimental design. These points should
-        be transformed from U space back into the X space.
+        A class that creates a Latin Hypercube Design for experiments.
+        
+        These points are generated on the U-space(cdf) i.e. [0,1) and should be converted back to X-space(pdf) 
+        i.e. (-Inf , Inf) for a normal distribution.
 
         :param ndim: The number of dimensions for the experimental design.
-        :type: int
+        :type ndim: int
 
         :param nsamples: The number of samples to be generated.
         :type nsamples: int
@@ -168,15 +170,15 @@ class SampleMethods:
             self.b = cut[1:self.nsamples + 1]
 
             if self.criterion == 'random':
-                self.samples = self.random()
+                self.samples = self._random()
             elif self.criterion == 'centered':
-                self.samples = self.centered()
+                self.samples = self._centered()
             elif self.criterion == 'maximin':
-                self.samples = self.maximin()
+                self.samples = self._maximin()
             elif self.criterion == 'correlate':
-                self.samples = self.correlate()
+                self.samples = self._correlate()
 
-        def random(self):
+        def _random(self):
             """
 
             :return: The samples points for the random LHS design
@@ -193,7 +195,7 @@ class SampleMethods:
                 points[:, j] = points[order, j]
             return points
 
-        def centered(self):
+        def _centered(self):
             """
 
             :return: The samples points for the centered LHS design
@@ -206,7 +208,7 @@ class SampleMethods:
                 points[:, i] = np.random.permutation(centers)
             return points
 
-        def maximin(self):
+        def _maximin(self):
             """
 
             :return: The samples points for the Minimax LHS design
@@ -223,7 +225,7 @@ class SampleMethods:
             print('Achieved miximin distance of ', maximin_dist)
             return points
 
-        def correlate(self):
+        def _correlate(self):
             """
 
             :return: The samples points for the minimum correlated LHS design
@@ -242,10 +244,10 @@ class SampleMethods:
             print('Achieved minimum correlation of ', min_corr)
             return points
 
-            ########################################################################################################################
-            ########################################################################################################################
-            #                                         Partially Stratified Sampling (PSS)
-            ########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+#                                         Partially Stratified Sampling (PSS)
+########################################################################################################################
 
     class PSS:
         """
@@ -325,10 +327,10 @@ class SampleMethods:
 
             self.samples = pss_samples
 
-    ########################################################################################################################
-    ########################################################################################################################
-    #                                         Stratified Sampling  (sts)
-    ########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+#                                         Stratified Sampling  (sts)
+########################################################################################################################
 
 
     # def sts(self, strata):
@@ -362,10 +364,10 @@ class SampleMethods:
             # hstack -
 
 
-            ########################################################################################################################
-            ########################################################################################################################
-            #                                         Markov Chain Monte Carlo  (MCMC)
-            ########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+#                                         Markov Chain Monte Carlo  (MCMC)
+########################################################################################################################
 
     class MCMC:
 
