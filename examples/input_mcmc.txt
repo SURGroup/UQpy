@@ -1,0 +1,40 @@
+# model
+model_zabaras
+
+# method
+mcmc
+
+# number of samples
+1000
+
+# dimensions
+2
+
+# distribution
+Uniform
+Uniform
+
+# distribution parameters
+0 1
+0 2
+
+# initial seed
+0
+0
+
+# proposal distribution parameters
+1.0
+1.0
+
+# MCMC_algorithm
+MH
+
+# proposal distribution
+Uniform
+
+# target distribution
+mvnpdf
+
+# Samples to jump
+10
+

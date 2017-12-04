@@ -9,64 +9,32 @@ from scipy.spatial.distance import pdist
 
 
 class SampleMethods:
-    def __init__(self, distribution=None, dimension=None, parameters=None, method=None,
-                 input_file=None, input_dir=None, save_format=None, save_name=None, lhs_params=None,
-                 lss_params=None, mcmc_params=None):
-        """
-        :param distribution:
-        :param dimension:
-        :param parameters:
-        :param input_file:
-        :param input_dir:
-        :param save_format:
-        :param save_name:
+    """
+    A class that contains the information of the probability model.
 
-        """
-        self.input_file = input_file
+    :param distribution: Probability distribution function (pdf) of the random variables
+    :param dimension: Stochastic dimension of the problem (number of random variables)
+    :param parameters: Parameters of the pdf
+                        1. If pdf ~ Uniform :[lower, upper]
+                        2. If pdf ~ Normal  :[mean, std]
+    :param method:  Sampling method
 
-        if self.input_file is not None:
-            self.input_dir = input_dir
-            if self.input_dir is None:
-                raise RuntimeError('Error: Provide path for the input file')
-            else:
-                os.chdir(self.input_dir)
-                handle = read_param_file(self.input_file)
-                self.distribution = handle['distribution']
-                self.method = handle['method']
-                self.dimension = handle['dim']
-                self.parameters = handle['parameters']
-                self.nsamples = handle['number']
-                self.save_format = handle['save_format']
-                self.save_name = handle['save_name']
-                self.method = handle['method']
-                self.checks_ = self.checks_()
+    """
+    def __init__(self, distribution=None, dimension=None, parameters=None, method=None,):
+        self.method = method
+        self.distribution = distribution
+        self.dimension = dimension
+        self.parameters = parameters
+        self.checks_ = self._checks()
 
-        else:
-            self.method = method
-            self.distribution = distribution
-            self.dimension = dimension
-            self.parameters = parameters
-            self.lhs_params = lhs_params
-            self.lss_params = lss_params
-            self.mcmc_params = mcmc_params
-            self.save_format = save_format
-            self.save_name = save_name
-            self.input_dir = input_dir
-            self.checks_ = self.checks_()
-            # self.sts = self.sts(strata)
+    def _checks(self):
 
-    def checks_(self):
-
-        """
-        :return:
-
-        """
         if self.input_file is not None:
             self.method = read_method(self.method)
 
         if self.dimension is None and self.distribution is None:
             self.dimension = 1
-            self.distribution = 'uniform'
+            self.distribution = 'Uniform'
 
         if self.distribution is None and self.dimension > 1:
             self.distribution = []
@@ -76,7 +44,7 @@ class SampleMethods:
             else:
                 return int(self.dimension)
             for i in range(self.dimension):
-                self.distribution.append('uniform')
+                self.distribution.append('Uniform')
 
         elif self.dimension is None and self.distribution is not None:
             self.dimension = len(self.dist)
@@ -94,17 +62,18 @@ class SampleMethods:
         else:
             self.parameters = self.parameters
 
-
     ########################################################################################################################
     #                                         Monte Carlo simulation
     ########################################################################################################################
     class MCS:
+        """
+        A class used to perform brute force Monte Carlo sampling (MCS).
+
+        :param nsamples: Number of samples to be generated
+        :param dimension: Stochastic dimension of the problem (number of random variables)
+
+        """
         def __init__(self, nsamples=None, dimension=None):
-
-            """
-            :param nsamples:
-            """
-
             self.nsamples = nsamples
             self.dimension = dimension
             self.samples = self.run_mcs()
@@ -122,10 +91,10 @@ class SampleMethods:
 
             return np.random.rand(n, self.dimension)
 
-########################################################################################################################
-########################################################################################################################
-#                                         Latin hypercube sampling  (LHS)
-########################################################################################################################
+            ########################################################################################################################
+            ########################################################################################################################
+            #                                         Latin hypercube sampling  (LHS)
+            ########################################################################################################################
 
     class LHS:
         """
@@ -148,7 +117,7 @@ class SampleMethods:
         :param iterations: The number of iteration to run. Only for maximin, correlate and criterion
         :type iterations: int
 
-        :param dist_metric: The distance metric to use. Supported metrics are 
+        :param dist_metric: The distance metric to use. Supported metrics are
                         'braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', \n
                         'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', \n
                         'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', \n
@@ -157,7 +126,7 @@ class SampleMethods:
 
         """
 
-        def __init__(self, ndim, nsamples=None,  criterion='random', iterations=100, dist_metric='euclidean'):
+        def __init__(self, ndim, nsamples=None, criterion='random', iterations=100, dist_metric='euclidean'):
             try:
                 self.ndim = np.int32(ndim)
             except ValueError:
@@ -179,9 +148,9 @@ class SampleMethods:
             self.criterion = criterion
 
             if dist_metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
-                                      'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching',
-                                      'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener',
-                                      'sokalsneath', 'sqeuclidean', 'yule']:
+                                   'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching',
+                                   'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener',
+                                   'sokalsneath', 'sqeuclidean', 'yule']:
                 sys.exit('Invalid distance metric requested.')
 
             self.dist_metric = dist_metric
@@ -209,9 +178,9 @@ class SampleMethods:
 
         def random(self):
             """
-            
+
             :return: The samples points for the random LHS design
-            
+
             """
             u = np.random.rand(self.nsamples, self.ndim)
             points = np.zeros_like(u)
@@ -226,9 +195,9 @@ class SampleMethods:
 
         def centered(self):
             """
-            
+
             :return: The samples points for the centered LHS design
-            
+
             """
             points = np.zeros([self.nsamples, self.ndim])
             centers = (self.a + self.b) / 2
@@ -239,9 +208,9 @@ class SampleMethods:
 
         def maximin(self):
             """
-            
-            :return: The samples points for the Minimax LHS design 
-            
+
+            :return: The samples points for the Minimax LHS design
+
             """
             maximin_dist = 0
             points = self.random()
@@ -256,9 +225,9 @@ class SampleMethods:
 
         def correlate(self):
             """
-            
+
             :return: The samples points for the minimum correlated LHS design
-             
+
             """
             min_corr = np.inf
             points = self.random()
@@ -273,115 +242,59 @@ class SampleMethods:
             print('Achieved minimum correlation of ', min_corr)
             return points
 
-########################################################################################################################
-########################################################################################################################
-#                                         Partially Stratified Sampling (PSS)
-########################################################################################################################
-
-
-    # def pss(self, pss_design=None, pss_stratum=None):
-    #
-    #     '''
-    #     pss function generates a partially stratified sample set on U(0,1) as described in:
-    #     Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
-    #
-    #     :param pss_design: Vector defining the subdomains to be used
-    #         Example: 5D problem with 2x2D + 1x1D subdomains
-    #         pss_design = [2,2,1]
-    #         Note: The sum of the values in the pss_design vector equals the dimension of the problem.
-    #
-    #     :param pss_stratum: Vector defining how each dimension should be stratified
-    #         Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples
-    #         pss_strata = [25,25,625]
-    #         Note: pss_strata(i)^pss_design(i) = number of samples (for all i)
-    #     :return: pss_samples: Generated samples
-    #         Array (nSamples x nRVs)
-    #
-    #     Created by: Jiaxin Zhang
-    #     Last modified: 11/19/2017
-    #     Last modified by: Jiaxin Zhang
-    #
-    #     '''
-    #     # TODO: the pss_design = [[1,4], [2,5], [3]] - then reorder the sequence of RVs
-    #     # TODO: PSS class
-    #
-    #     n_dim = np.sum(pss_design)
-    #     n_samples = pss_stratum[0]**pss_design[0]
-    #     pss_samples = np.zeros((n_samples, n_dim))
-    #
-    #     # Check that the PSS design is valid
-    #     if len(pss_design) != len(pss_stratum):
-    #         print('Input vectors "pss_design" and "pss_strata" must be the same length')
-    #
-    #     # sample check
-    #     sample_check = np.zeros((len(pss_stratum), len(pss_design)))
-    #     for i in range(len(pss_stratum)):
-    #         for j in range(len(pss_design)):
-    #             sample_check[i, j] = pss_stratum[i] ** pss_design[j]
-    #
-    #     print(sample_check)
-    #     if np.max(sample_check) != np.min(sample_check):
-    #         print('All dimensions must have the same number of samples/strata. '
-    #               'Check to ensure that all values of pss_strata.^pss_design are equal.')
-    #
-    #     col = 0
-    #     for i in range(len(pss_design)):
-    #         n_stratum = pss_stratum[i]*np.ones(pss_design[i], dtype=np.int)
-    #
-    #         ss = Strata(nstrata=n_stratum)
-    #         ss_samples = SampleMethods.sts(self, strata=ss)
-    #         # print(ss_samples.shape)
-    #
-    #         index = list(range(col, col+pss_design[i]))
-    #         # print(index)
-    #         # print(pss_samples.shape)
-    #         pss_samples[:, index] = ss_samples
-    #         # print(np.random.permutation(n_samples))
-    #         # print(pss_samples)
-    #         arr = np.arange(n_samples).reshape((n_samples, 1))
-    #         pss_samples[:, index] = pss_samples[np.random.permutation(arr), index]
-    #         col = col + pss_design[i]
-    #
-    #     return pss_samples
+            ########################################################################################################################
+            ########################################################################################################################
+            #                                         Partially Stratified Sampling (PSS)
+            ########################################################################################################################
 
     class PSS:
+        """
+        This class generates a partially stratified sample set on U(0,1) as described in:
+        Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and
+        System Safety. 148: 96-108
+
+        :param pss_design: Vector defining the subdomains to be used.
+                           Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]. \n
+                           Note: The sum of the values in the pss_design vector equals the dimension of the problem.
+        :param pss_stratum: Vector defining how each dimension should be stratified.
+                            Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625].\n
+                            Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
+        :return: pss_samples: Generated samples Array (nSamples x nRVs)
+        :type pss_design: int
+        :type pss_stratum: int
+
+        Created by: Jiaxin Zhang
+        Last modified: 12/03/2017
+        """
+
         # TODO: Jiaxin - Add documentation to this subclass
         # TODO: the pss_design = [[1,4], [2,5], [3]] - then reorder the sequence of RVs
-        # TODO: PSS class
         # TODO: Add the sample check and pss_design check in the beginning
-        # TODO
+        # TODO: Create a list that contains all element info - parent structure
+
 
         def __init__(self, pss_design=None, pss_stratum=None):
+            """
+            This class generates a partially stratified sample set on U(0,1) as described in:
+            Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
 
-            '''
-                pss function generates a partially stratified sample set on U(0,1) as described in:
-                Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
+            :param pss_design: Vector defining the subdomains to be used.
+                               Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]. \n
+                               Note: The sum of the values in the pss_design vector equals the dimension of the problem.
+            :param pss_stratum: Vector defining how each dimension should be stratified.
+                                Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625].\n
+                                Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
+            :return: pss_samples: Generated samples Array (nSamples x nRVs)
+            :type pss_design: int
+            :type pss_stratum: int
 
-                :param pss_design: Vector defining the subdomains to be used
-                    Example: 5D problem with 2x2D + 1x1D subdomains
-                    pss_design = [2,2,1]
-                    Note: The sum of the values in the pss_design vector equals the dimension of the problem.
-
-                :param pss_stratum: Vector defining how each dimension should be stratified
-                    Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples
-                    pss_strata = [25,25,625]
-                    Note: pss_strata(i)^pss_design(i) = number of samples (for all i)
-                :return: pss_samples: Generated samples
-                    Array (nSamples x nRVs)
-
-                Created by: Jiaxin Zhang
-                Last modified: 11/19/2017
-                Last modified by: Jiaxin Zhang
-
-                Last modified: 11/27/2017 - Add the class of PSS and check of pss design and samples
-                Last modified by: Jiaxin Zhang
-
-                '''
+            Created by: Jiaxin Zhang
+            Last modified: 12/03/2017
+            """
 
             # Check that the PSS design is valid
             if len(pss_design) != len(pss_stratum):
                 print('Input vectors "pss_design" and "pss_strata" must be the same length')
-                print('test')
 
             # sample check
             sample_check = np.zeros((len(pss_stratum), len(pss_design)))
@@ -389,7 +302,6 @@ class SampleMethods:
                 for j in range(len(pss_design)):
                     sample_check[i, j] = pss_stratum[i] ** pss_design[j]
 
-            print(sample_check)
             if np.max(sample_check) != np.min(sample_check):
                 print('All dimensions must have the same number of samples/strata. '
                       'Check to ensure that all values of pss_strata.^pss_design are equal.')
@@ -403,10 +315,7 @@ class SampleMethods:
                 n_stratum = pss_stratum[i] * np.ones(pss_design[i], dtype=np.int)
 
                 ss = Strata(nstrata=n_stratum)
-                # print(ss)
-                # use the class of STS
                 ss = SampleMethods.STS(strata=ss)
-                # print(ss_samples)
 
                 index = list(range(col, col + pss_design[i]))
                 pss_samples[:, index] = ss.samples
@@ -415,12 +324,6 @@ class SampleMethods:
                 col = col + pss_design[i]
 
             self.samples = pss_samples
-            # TODO: Create a list that contains all element info - parent structure
-            # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
-            # hstack -
-
-            # Test1 12032017 - push any changes with commit to development branches
-
 
     ########################################################################################################################
     ########################################################################################################################
@@ -459,175 +362,138 @@ class SampleMethods:
             # hstack -
 
 
-########################################################################################################################
-########################################################################################################################
-#                                         Markov Chain Monte Carlo  (MCMC)
-########################################################################################################################
+            ########################################################################################################################
+            ########################################################################################################################
+            #                                         Markov Chain Monte Carlo  (MCMC)
+            ########################################################################################################################
 
     class MCMC:
-        # TODO: MDS - Add documentation to this subclass
 
-        # def __init__(self, proposal='None', mu='None', sigma='None', x='None'):
+        """This class generates samples from arbitrary algorithm using Metropolis-Hastings(MH) or
+        Modified Metropolis-Hastings Algorithm.
 
-        def __init__(self, nsamples=5000, dim=None, x0=None, method=None, proposal=None, params=None, target=None,
-                     njump=None, Marginal_parameters=None):
+        :param nsamples: A scalar value defining the number of random samples that needs to be
+                         generate using MCMC. Default value of nsample is 1000.
+        :type nsamples: int
+
+        :param dim: A scalar value defining the dimension of target density function.
+        :type dim: int
+
+        :param x0: A scalar value defining the initial mean value of proposed density.
+                   Default value: x0 is zero row vector of size dim.
+                   Example: x0 = 0, Starts sampling using proposed density with mean equal to 0.
+        :type x0: array
+
+        :param MCMC_algorithm: A string defining the algorithm used to generate random samples.
+                               Default value: method is 'MH'.
+                               Example: MCMC_algorithm = MH : Use Metropolis-Hastings Algorithm
+                               MCMC_algorithm = MMH : Use Modified Metropolis-Hastings Algorithm
+                               MCMC_algorithm = GIBBS : Use Gibbs Sampling Algorithm
+        :type MCMC_algorithm: str
+
+        :param proposal: A string defining the type of proposed density function. Example:
+                         proposal = Normal : Normal distribution will be used to generate new estimates
+                         proposal = Uniform : Uniform distribution will be used to generate new estimates
+        :type proposal: str
+
+        :param params: An array defining the Covariance matrix of the proposed density function.
+                       Multivariate Uniform distribution : An array of size 'dim'. Multivariate Normal distribution:
+                       Either an array of size 'dim' or array of size 'dim x dim'.
+                       Default: params is unit row vector
+        :type proposal: matrix
+
+        :param target: An function defining the target distribution of generated samples using MCMC.
+
+        :param njump: A scalar value defining the number of samples rejected to reduce the correlation
+                      between generated samples.
+        :type njump: int
+
+        :param marginal_parameters: A array containing parameters of target marginal distributions.
+        :type marginals_parameters: list
+
+        Created by: Mohit S. Chauhan
+        Last modified: 12/03/2017
+
+        """
+
+        def __init__(self, nsamples=5000, dim=2, x0=np.zeros(2), MCMC_algorithm='MH', proposal='Normal',
+                     params=np.ones(2), target=None, njump=1, marginal_parameters=[[0, 1], [0, 1]]):
+
+            """This class generates samples from arbitrary algorithm using Metropolis-Hastings(MH) or
+            Modified Metropolis-Hastings Algorithm.
+
+            :param nsamples: A scalar value defining the number of random samples that needs to be
+                             generate using MCMC. Default value of nsample is 1000.
+            :type nsamples: int
+
+            :param dim: A scalar value defining the dimension of target density function.
+            :type dim: int
+
+            :param x0: A scalar value defining the initial mean value of proposed density.
+                       Default value: x0 is zero row vector of size dim.
+                       Example: x0 = 0, Starts sampling using proposed density with mean equal to 0.
+            :type x0: array
+
+            :param MCMC_algorithm: A string defining the algorithm used to generate random samples.
+                                   Default value: method is 'MH'.
+                                   Example: MCMC_algorithm = MH : Use Metropolis-Hastings Algorithm
+                                   MCMC_algorithm = MMH : Use Modified Metropolis-Hastings Algorithm
+                                   MCMC_algorithm = GIBBS : Use Gibbs Sampling Algorithm
+            :type MCMC_algorithm: str
+
+            :param proposal: A string defining the type of proposed density function. Example:
+                             proposal = Normal : Normal distribution will be used to generate new estimates
+                             proposal = Uniform : Uniform distribution will be used to generate new estimates
+            :type proposal: str
+
+            :param params: An array defining the Covariance matrix of the proposed density function.
+                           Multivariate Uniform distribution : An array of size 'dim'. Multivariate Normal distribution:
+                           Either an array of size 'dim' or array of size 'dim x dim'.
+                           Default: params is unit row vector
+            :type proposal: matrix
+
+            :param target: An function defining the target distribution of generated samples using MCMC.
+
+            :param njump: A scalar value defining the number of samples rejected to reduce the correlation
+                          between generated samples.
+            :type njump: int
+
+            :param marginal_parameters: A array containing parameters of target marginal distributions.
+            :type marginals_parameters: list
+
+            Created by: Mohit S. Chauhan
+            Last modified: 12/03/2017
+
             """
-                    Class generates the random samples from the target distribution using Markov Chain Monte Carlo
-                    (MCMC) method.
-
-                    :param nsamples:
-                        A scalar value defining the number of random samples that needs to be generate using MCMC.
-                        Default value: nsample is 5000.
-
-                    :param dim:
-                        A scalar value defining the dimension of target density function.
-
-                    :param x0:
-                        A scalar value defining the initial mean value of proposed density.
-                        Default value: x0 is zero row vector of size dim.
-                        Example: x0 = 0
-                        Starts sampling using proposed density with mean equal to 0.
-
-                    :param method:
-                        A string defining the algorithm used to generate random samples.
-                        Default value: method is 'MH'.
-                        method = MH : Use Metropolis-Hasting Algorithm
-                        method = MMH : Use Modified Metropolis-Hasting Algorithm
-                        method = GIBBS : Use Gibbs Sampling Algorithm
-
-                    :param proposal:
-                        A string defining the type of proposed density function
-                        proposal = Normal : Normal distribution will be used to generate new estimates
-                        proposal = Uniform : Uniform distribution will be used to generate new estimates
-
-                    :param params:
-                        An array defining the Covariance matrix of the proposed density function.
-                        Multivariate Uniform distribution : An array of size 'dim'
-                        Multivariate Normal distribution: Either an array of size 'dim' or array of size 'dim x dim'
-                        Default: params is unit row vector
-
-                    :param target:
-                        An function defining the target distribution of generated samples using MCMC.
-
-                    :param njump:
-                        A scalar value defining the number of samples rejected to reduce the correlation between
-                        generated samples.
-
-                    Created by: Mohit S. Chauhan
-                    Last modified: 11/17/2017
-
-                    """
-            # TODO: Mohit - Bring target and marginal PDF inside the class
 
             # TODO: Mohit - Add error checks for target and marginal PDFs
 
+            try:
+                dim = np.int32(dim)
+            except ValueError:
+                print("Dimension should be an integer value. Try again...")
 
-            if dim is None:
-                dim = np.size(x0)
-                print('\n**WARNING**\nThe dimension is assumed to be same as size of initial value')
-            else:
-                if not is_integer(dim):
-                    print('\n**ERROR**\nThe dimension of target distribution should be an integer.')
-                    return
-                else:
-                    dim = dim
+            if MCMC_algorithm not in ['MH', 'MMH', 'GIBBS']:
+                sys.exit("Select one of the following algorithm: ['MH', 'MMH', 'GIBBS']")
 
-            if method is None:
-                method = 'MH'
-                print('\n**WARNING**\nThe Metropolis-Hasting algorithm is used to generate sample')
-            else:
-                if method in ['MH', 'MMH', 'GIBBS']:
-                    method = method
-                else:
-                    print("\n**ERROR**\nSelect one of the following methods: ['MH', 'MMH', 'GIBBS']")
-                    return
+            if proposal not in ['Normal', 'Uniform']:
+                sys.exit("Select one of the following proposed density: ['Normal', 'Uniform']")
 
-            if proposal is None:
-                proposal = 'Normal'
-                print('\n**WARNING**\nThe proposed density is assumed to be a Gaussian distribution')
-            else:
-                if proposal in ['Normal', 'Uniform']:
-                    proposal = proposal
-                else:
-                    print("\n**ERROR**\nSelect one of the following proposed density: ['Normal', 'Uniform']")
-                    return
+            if np.size(params) != np.size(x0):
+                sys.exit("Dimension of parameters of Covariance matrix and Initial value should be same")
 
-            if params is None:
-                params = np.identity(dim)
-                print('\n**WARNING**\nCovariance matrix of proposed density is assumed to be an identity matrix')
-            else:
-                if np.size(params) == np.size(x0):
-                    params = params
-                else:
-                    print("\n**ERROR**\nDimension of parameters of Covariance matrix and Initial value should be same")
-                    return
-
-            if x0 is None:
-                x0 = np.zeros(dim)
-                print('\n**WARNING**\nInitial value is assumed to be a zero row matrix')
-            else:
-                x0 = x0
-
-            if njump is None:
-                njump = 1
-                print('\n**WARNING**\nAll generated samples are accepted.')
-            else:
-                if not is_integer(njump):
-                    print('\n**ERROR**\nDefine an integer to reject generated samples.')
-                    return
-                else:
-                    njump = njump
+            if not is_integer(njump):
+                sys.exit("Define an integer to reject generated samples")
 
             self.nsamples = np.int32(nsamples)
             self.dim = dim
-            self.method = method
+            self.method = MCMC_algorithm
             self.proposal = proposal
             self.params = params
             self.target = target
             self.rejects = 0
             self.njump = njump
-            self.Marginal_parameters = Marginal_parameters
-
-            def pdf(x, F):
-                if F[0] == 'Normal':
-                    # F[1] = mean, F[2] = variance
-                    return stats.norm.pdf(x, F[1], F[2])
-                elif F[0] == 'Uniform':
-                    # F[1] = starting point, F[2] = length
-                    return stats.uniform.pdf(x, F[1], F[2])
-                elif F[0] == 'alpha':
-                    return stats.alpha.pdf(x, F[1], F[2], F[3])
-                elif F[0] == 'beta':
-                    return stats.beta.pdf(x, F[1], F[2], F[3], F[4])
-                elif F[0] == 'cauchy':
-                    return stats.cauchy.pdf(x, F[1], F[2])
-                elif F[0] == 'chi2':
-                    return stats.chi2.pdf(x, F[1], F[2], F[3])
-                elif F[0] == 'expon':
-                    return stats.expon.pdf(x, F[1], F[2])
-                elif F[0] == 'gamma':
-                    return stats.gamma.pdf(x, F[1], F[2], F[3])
-                elif F[0] == 'halfcauchy':
-                    return stats.halfcauchy.pdf(x, F[1], F[2])
-                elif F[0] == 'halfnorm':
-                    return stats.halfnorm.pdf(x, F[1], F[2])
-                elif F[0] == 'loggamma':
-                    return stats.loggamma.pdf(x, F[1], F[2], F[3])
-                elif F[0] == 'lognorm':
-                    return stats.lognorm.pdf(x, F[1], F[2], F[3])
-                elif F[0] == 'maxwell':
-                    return stats.maxwell.pdf(x, F[1], F[2])
-                elif F[0] == 'rayleigh':
-                    return stats.rayleigh.pdf(x, F[1], F[2])
-                elif F[0] == 'semicircular':
-                    return stats.semicircular.pdf(x, F[1], F[2])
-                elif F[0] == 'vonmises':
-                    return stats.vonmises.pdf(x, F[1], F[2], F[3])
-                elif F[0] == 'weibull_min':
-                    return stats.weibull_min.pdf(x, F[1], F[2], F[3])
-                elif F[0] == 'weibull_max':
-                    return stats.weibull_max.pdf(x, F[1], F[2], F[3])
-
+            self.Marginal_parameters = marginal_parameters
 
             # Changing the array of param into a diagonal matrix
             if self.proposal == "Normal":
@@ -641,23 +507,23 @@ class SampleMethods:
             self.samples = np.empty([self.nsamples * self.njump, self.dim])
             self.samples[0] = x0
 
-            # Classical Metropolis Hastings Algorithm with symmetric proposal density
-            if self.method is 'MH':
-                for i in range(self.nsamples * self.njump-1):
+            # Classical Metropolis-Hastings Algorithm with symmetric proposal density
+            if self.method == 'MH':
+                for i in range(self.nsamples * self.njump - 1):
 
                     # Generating new sample using proposed density
-                    if self.proposal is 'Normal':
-                        if self.dim is 1:
+                    if self.proposal == 'Normal':
+                        if self.dim == 1:
                             x1 = np.random.normal(self.samples[i], self.params)
                         else:
                             x1 = np.random.multivariate_normal(self.samples[i, :], self.params)
 
-                    elif self.proposal is 'Uniform':
+                    elif self.proposal == 'Uniform':
                         x1 = np.random.uniform(low=self.samples[i] - self.params / 2,
                                                high=self.samples[i] + self.params / 2, size=self.dim)
 
                     # Ratio of probability of new sample to previous sample
-                    a = self.target(x1) / self.target(self.samples[i, :])
+                    a = self.target(x1, self.dim) / self.target(self.samples[i, :], self.dim)
 
                     # Accept the generated sample, if probability of new sample is higher than previous sample
                     if a >= 1:
@@ -671,9 +537,9 @@ class SampleMethods:
                     else:
                         self.samples[i + 1] = self.samples[i]
                         self.rejects += 1
-
-            # Modified Metropolis Hastings Algorithm with symmetric proposal density
-            elif self.method is 'MMH':
+                print()
+            # Modified Metropolis-Hastings Algorithm with symmetric proposal density
+            elif self.method == 'MMH':
                 for i in range(self.nsamples * self.njump - 1):
 
                     # Samples generated from marginal PDFs will be stored in x1
@@ -681,29 +547,31 @@ class SampleMethods:
                     for j in range(self.dim):
 
                         # Generating new sample using proposed density
-                        if self.proposal is 'Normal':
+                        if self.proposal == 'Normal':
                             xm = np.random.normal(self.samples[i, j], self.params[j][j])
 
-                        elif self.proposal is 'Uniform':
+                        elif self.proposal == 'Uniform':
                             xm = np.random.uniform(low=self.samples[i, j] - self.params[j] / 2,
                                                    high=self.samples[i, j] + self.params[j] / 2, size=1)
 
-                        b = self.target(xm, self.Marginal_parameters[j]) / self.target(x1[j], self.Marginal_parameters[j])
+                        b = self.target(xm, self.Marginal_parameters[j]) / self.target(x1[j],
+                                                                                       self.Marginal_parameters[j])
                         if b >= 1:
                             x1[j] = xm
 
                         elif np.random.random() < b:
                             x1[j] = xm
 
-                    self.samples[i+1, :] = x1
+                    self.samples[i + 1, :] = x1
 
                 # Reject the samples using njump to reduce the correlation
                 self.samples = self.samples[0:self.nsamples * self.njump:self.njump]
 
 
-            # TODO: MDS - Add affine invariant ensemble MCMC
+                # TODO: MDS - Add affine invariant ensemble MCMC
 
-            # TODO: MDS - Add Gibbs Sampler
+                # TODO: MDS - Add Gibbs Sampler
+
 
 ########################################################################################################################
 ########################################################################################################################

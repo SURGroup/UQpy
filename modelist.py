@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.integrate as integrate
+import scipy.stats as stats
 
 
 ########################################################################################################################
@@ -126,3 +127,19 @@ def pend(y, t=0):
 def model_reliability(u, Type):
     a = 3
     return a - np.sum(u, axis=0) / np.sqrt(u.size)
+
+
+########################################################################################################################
+########################################################################################################################
+#                                        List of distribution
+########################################################################################################################
+
+def normpdf(x):
+    return stats.norm.pdf(x, 0, 1)
+
+
+def mvnpdf(x, dim):
+    return stats.multivariate_normal.pdf(x, mean=np.zeros(dim), cov=np.identity(dim))
+
+def marginal(x, mp):
+    return stats.norm.pdf(x, mp[0], mp[1])
