@@ -75,6 +75,7 @@ class SampleMethods:
                 return
             else:
                 return int(self.dimension)
+
             for i in range(self.dimension):
                 self.distribution.append('uniform')
 
@@ -399,8 +400,8 @@ class SampleMethods:
 
     class MCMC:
 
-        """This class generates samples from arbitrary algorithm using Metropolis Hasting(MH) or
-        Modified Metroplis Hasting Algorithm.
+        """This class generates samples from arbitrary algorithm using Metropolis-Hastings(MH) or
+        Modified Metroplis-Hastings Algorithm.
 
         :param nsamples: A scalar value defining the number of random samples that needs to be
         generate using MCMC. Default value of nsample is 1000.
@@ -416,8 +417,8 @@ class SampleMethods:
 
         :param MCMC_algorithm: A string defining the algorithm used to generate random samples.
         Default value: method is 'MH'.
-        Example: MCMC_algorithm = MH : Use Metropolis-Hasting Algorithm
-        MCMC_algorithm = MMH : Use Modified Metropolis-Hasting Algorithm
+        Example: MCMC_algorithm = MH : Use Metropolis-Hastings Algorithm
+        MCMC_algorithm = MMH : Use Modified Metropolis-Hastings Algorithm
         MCMC_algorithm = GIBBS : Use Gibbs Sampling Algorithm
         :type MCMC_algorithm: str
 
@@ -439,7 +440,7 @@ class SampleMethods:
         :type njump: int
 
         :param marginal_parameters: A array containing parameters of target marginal distributions.
-        :type marginals_parameters: matrix
+        :type marginals_parameters: list
 
         Created by: Mohit S. Chauhan
         Last modified: 12/03/2017
@@ -447,10 +448,10 @@ class SampleMethods:
         """
 
         def __init__(self, nsamples=5000, dim=2, x0=np.zeros(2), MCMC_algorithm='MH', proposal='Normal',
-                     params=np.ones(2), target=None, njump=1, marginal_parameters=[[0, 1],[0, 1]]):
+                     params=np.ones(2), target=None, njump=1, marginal_parameters=[[0, 1], [0, 1]]):
 
-            """This class generates samples from arbitrary algorithm using Metropolis Hasting(MH) or
-            Modified Metroplis Hasting Algorithm.
+            """This class generates samples from arbitrary algorithm using Metropolis-Hastings(MH) or
+            Modified Metropolis-Hastings Algorithm.
 
             :param nsamples: A scalar value defining the number of random samples that needs to be
             generate using MCMC. Default value of nsample is 1000.
@@ -466,8 +467,8 @@ class SampleMethods:
 
             :param MCMC_algorithm: A string defining the algorithm used to generate random samples.
             Default value: method is 'MH'.
-            Example: MCMC_algorithm = MH : Use Metropolis-Hasting Algorithm
-            MCMC_algorithm = MMH : Use Modified Metropolis-Hasting Algorithm
+            Example: MCMC_algorithm = MH : Use Metropolis-Hastings Algorithm
+            MCMC_algorithm = MMH : Use Modified Metropolis-Hastings Algorithm
             MCMC_algorithm = GIBBS : Use Gibbs Sampling Algorithm
             :type MCMC_algorithm: str
 
@@ -489,7 +490,7 @@ class SampleMethods:
             :type njump: int
 
             :param marginal_parameters: A array containing parameters of target marginal distributions.
-            :type marginals_parameters: matrix
+            :type marginals_parameters: list
 
             Created by: Mohit S. Chauhan
             Last modified: 12/03/2017
@@ -511,6 +512,12 @@ class SampleMethods:
 
             if np.size(params) != np.size(x0):
                 sys.exit("Dimension of parameters of Covariance matrix and Initial value should be same")
+
+            if np.size(x0) != dim:
+                sys.exit("Dimension of Initial value vector (x0) is not correct")
+
+            if len(marginal_parameters) != dim:
+                sys.exit("Dimension of list of parameters of Target Marginal Distribution is not correct")
 
             if not is_integer(njump):
                 sys.exit("Define an integer to reject generated samples")
@@ -537,7 +544,7 @@ class SampleMethods:
             self.samples = np.empty([self.nsamples * self.njump, self.dim])
             self.samples[0] = x0
 
-            # Classical Metropolis Hastings Algorithm with symmetric proposal density
+            # Classical Metropolis-Hastings Algorithm with symmetric proposal density
             if self.method is 'MH':
                 for i in range(self.nsamples * self.njump-1):
 
@@ -553,7 +560,7 @@ class SampleMethods:
                                                high=self.samples[i] + self.params / 2, size=self.dim)
 
                     # Ratio of probability of new sample to previous sample
-                    a = self.target(x1) / self.target(self.samples[i, :])
+                    a = self.target(x1, self.dim) / self.target(self.samples[i, :], self.dim)
 
                     # Accept the generated sample, if probability of new sample is higher than previous sample
                     if a >= 1:
@@ -568,7 +575,7 @@ class SampleMethods:
                         self.samples[i + 1] = self.samples[i]
                         self.rejects += 1
 
-            # Modified Metropolis Hastings Algorithm with symmetric proposal density
+            # Modified Metropolis-Hastings Algorithm with symmetric proposal density
             elif self.method is 'MMH':
                 for i in range(self.nsamples * self.njump - 1):
 
