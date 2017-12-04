@@ -538,7 +538,7 @@ class SampleMethods:
             self.samples[0] = x0
 
             # Classical Metropolis Hastings Algorithm with symmetric proposal density
-            if self.method is 'MH':
+            if self.method == 'MH':
                 for i in range(self.nsamples * self.njump - 1):
 
                     # Generating new sample using proposed density
@@ -553,7 +553,7 @@ class SampleMethods:
                                                high=self.samples[i] + self.params / 2, size=self.dim)
 
                     # Ratio of probability of new sample to previous sample
-                    a = self.target(x1) / self.target(self.samples[i, :])
+                    a = self.target(x1, self.dim) / self.target(self.samples[i, :], self.dim)
 
                     # Accept the generated sample, if probability of new sample is higher than previous sample
                     if a >= 1:
@@ -567,9 +567,9 @@ class SampleMethods:
                     else:
                         self.samples[i + 1] = self.samples[i]
                         self.rejects += 1
-
+                print()
             # Modified Metropolis Hastings Algorithm with symmetric proposal density
-            elif self.method is 'MMH':
+            elif self.method == 'MMH':
                 for i in range(self.nsamples * self.njump - 1):
 
                     # Samples generated from marginal PDFs will be stored in x1
