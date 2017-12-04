@@ -30,7 +30,7 @@ Uniform
 MH
 
 # proposal distribution
-uniform
+Uniform
 
 # target distribution
 mvnpdf

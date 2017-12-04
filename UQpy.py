@@ -3,7 +3,7 @@ from RunModel import RunModel
 from module_ import handle_input_file, def_model
 import matplotlib.pyplot as plt
 
-filename = sys.argv[1]
+filename = 'input_mcmc.txt' #sys.argv[1]
 
 current_dir = os.getcwd()
 
@@ -45,7 +45,7 @@ elif method == 'lhs':
     subpath = os.path.join(os.sep, path, 'lhs')
 
 elif method == 'mcmc':
-    g = RunModel(generator=sm, nsamples=nsamples, method=method, model=model,  x0=x0,MCMC_algorithm=MCMC_algorithm,params=params,target=target, jump=jump)
+    g = RunModel(generator=sm, nsamples=nsamples, method=method, model=model,  x0=x0, MCMC_algorithm=MCMC_algorithm, proposal=proposal, params=params, target=target, jump=jump)
     subpath = os.path.join(os.sep, path, 'mcmc')
 
 elif method == 'pss':

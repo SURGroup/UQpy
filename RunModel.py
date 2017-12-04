@@ -6,7 +6,7 @@ import numpy as np
 class RunModel:
 
     def __init__(self, generator=None, input=None, nsamples=None, method=None, interpreter=None, model=None, Type=None, \
-                 sts_input=None, lhs_criterion='random', MCMC_algorithm='MH', target=None, pss_design=None, pss_stratum=None, \
+                 sts_input=None, lhs_criterion='random', MCMC_algorithm='MH', proposal=None, target=None, pss_design=None, pss_stratum=None, \
                  x0=None, params=None, jump=None):
 
         """
@@ -93,7 +93,8 @@ class RunModel:
                 self.x0 = x0
                 self.params = params
                 self.jump = jump
-                mcmc = sm.MCMC(nsamples = self.nsamples, target=self.target, x0=self.x0, MCMC_algorithm=self.algorithm, params = self.params, njump= self.jump)
+                self.proposal = proposal
+                mcmc = sm.MCMC(nsamples = self.nsamples, target=self.target, x0=self.x0, MCMC_algorithm=self.algorithm, proposal=self.proposal, params = self.params, njump= self.jump)
                 self.samples = mcmc.samples
             elif self.method == 'pss':
                 self.pss_design = pss_design
