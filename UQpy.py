@@ -3,7 +3,7 @@ from RunModel import RunModel
 from module_ import handle_input_file, def_model
 import matplotlib.pyplot as plt
 
-filename = 'input_mcmc.txt'#sys.argv[1]
+filename = sys.argv[1]
 
 current_dir = os.getcwd()
 
