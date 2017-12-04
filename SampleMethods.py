@@ -369,47 +369,47 @@ class SampleMethods:
 
     class MCMC:
 
-        """This class generates samples from arbitrary algorithm using Metropolis Hasting(MH) or
-        Modified Metroplis Hasting Algorithm.
+        """This class generates samples from arbitrary algorithm using Metropolis-Hastings(MH) or
+        Modified Metropolis-Hastings Algorithm.
 
         :param nsamples: A scalar value defining the number of random samples that needs to be
-        generate using MCMC. Default value of nsample is 1000.
+                         generate using MCMC. Default value of nsample is 1000.
         :type nsamples: int
 
         :param dim: A scalar value defining the dimension of target density function.
         :type dim: int
 
         :param x0: A scalar value defining the initial mean value of proposed density.
-        Default value: x0 is zero row vector of size dim.
-        Example: x0 = 0, Starts sampling using proposed density with mean equal to 0.
+                   Default value: x0 is zero row vector of size dim.
+                   Example: x0 = 0, Starts sampling using proposed density with mean equal to 0.
         :type x0: array
 
         :param MCMC_algorithm: A string defining the algorithm used to generate random samples.
-        Default value: method is 'MH'.
-        Example: MCMC_algorithm = MH : Use Metropolis-Hasting Algorithm
-        MCMC_algorithm = MMH : Use Modified Metropolis-Hasting Algorithm
-        MCMC_algorithm = GIBBS : Use Gibbs Sampling Algorithm
+                               Default value: method is 'MH'.
+                               Example: MCMC_algorithm = MH : Use Metropolis-Hastings Algorithm
+                               MCMC_algorithm = MMH : Use Modified Metropolis-Hastings Algorithm
+                               MCMC_algorithm = GIBBS : Use Gibbs Sampling Algorithm
         :type MCMC_algorithm: str
 
         :param proposal: A string defining the type of proposed density function. Example:
-        proposal = Normal : Normal distribution will be used to generate new estimates
-        proposal = Uniform : Uniform distribution will be used to generate new estimates
+                         proposal = Normal : Normal distribution will be used to generate new estimates
+                         proposal = Uniform : Uniform distribution will be used to generate new estimates
         :type proposal: str
 
         :param params: An array defining the Covariance matrix of the proposed density function.
-        Multivariate Uniform distribution : An array of size 'dim'. Multivariate Normal distribution:
-        Either an array of size 'dim' or array of size 'dim x dim'.
-        Default: params is unit row vector
+                       Multivariate Uniform distribution : An array of size 'dim'. Multivariate Normal distribution:
+                       Either an array of size 'dim' or array of size 'dim x dim'.
+                       Default: params is unit row vector
         :type proposal: matrix
 
         :param target: An function defining the target distribution of generated samples using MCMC.
 
         :param njump: A scalar value defining the number of samples rejected to reduce the correlation
-        between generated samples.
+                      between generated samples.
         :type njump: int
 
         :param marginal_parameters: A array containing parameters of target marginal distributions.
-        :type marginals_parameters: matrix
+        :type marginals_parameters: list
 
         Created by: Mohit S. Chauhan
         Last modified: 12/03/2017
@@ -419,47 +419,47 @@ class SampleMethods:
         def __init__(self, nsamples=5000, dim=2, x0=np.zeros(2), MCMC_algorithm='MH', proposal='Normal',
                      params=np.ones(2), target=None, njump=1, marginal_parameters=[[0, 1], [0, 1]]):
 
-            """This class generates samples from arbitrary algorithm using Metropolis Hasting(MH) or
-            Modified Metroplis Hasting Algorithm.
+            """This class generates samples from arbitrary algorithm using Metropolis-Hastings(MH) or
+            Modified Metropolis-Hastings Algorithm.
 
             :param nsamples: A scalar value defining the number of random samples that needs to be
-            generate using MCMC. Default value of nsample is 1000.
+                             generate using MCMC. Default value of nsample is 1000.
             :type nsamples: int
 
             :param dim: A scalar value defining the dimension of target density function.
             :type dim: int
 
             :param x0: A scalar value defining the initial mean value of proposed density.
-            Default value: x0 is zero row vector of size dim.
-            Example: x0 = 0, Starts sampling using proposed density with mean equal to 0.
+                       Default value: x0 is zero row vector of size dim.
+                       Example: x0 = 0, Starts sampling using proposed density with mean equal to 0.
             :type x0: array
 
             :param MCMC_algorithm: A string defining the algorithm used to generate random samples.
-            Default value: method is 'MH'.
-            Example: MCMC_algorithm = MH : Use Metropolis-Hasting Algorithm
-            MCMC_algorithm = MMH : Use Modified Metropolis-Hasting Algorithm
-            MCMC_algorithm = GIBBS : Use Gibbs Sampling Algorithm
+                                   Default value: method is 'MH'.
+                                   Example: MCMC_algorithm = MH : Use Metropolis-Hastings Algorithm
+                                   MCMC_algorithm = MMH : Use Modified Metropolis-Hastings Algorithm
+                                   MCMC_algorithm = GIBBS : Use Gibbs Sampling Algorithm
             :type MCMC_algorithm: str
 
             :param proposal: A string defining the type of proposed density function. Example:
-            proposal = Normal : Normal distribution will be used to generate new estimates
-            proposal = Uniform : Uniform distribution will be used to generate new estimates
+                             proposal = Normal : Normal distribution will be used to generate new estimates
+                             proposal = Uniform : Uniform distribution will be used to generate new estimates
             :type proposal: str
 
             :param params: An array defining the Covariance matrix of the proposed density function.
-            Multivariate Uniform distribution : An array of size 'dim'. Multivariate Normal distribution:
-            Either an array of size 'dim' or array of size 'dim x dim'.
-            Default: params is unit row vector
+                           Multivariate Uniform distribution : An array of size 'dim'. Multivariate Normal distribution:
+                           Either an array of size 'dim' or array of size 'dim x dim'.
+                           Default: params is unit row vector
             :type proposal: matrix
 
             :param target: An function defining the target distribution of generated samples using MCMC.
 
             :param njump: A scalar value defining the number of samples rejected to reduce the correlation
-            between generated samples.
+                          between generated samples.
             :type njump: int
 
             :param marginal_parameters: A array containing parameters of target marginal distributions.
-            :type marginals_parameters: matrix
+            :type marginals_parameters: list
 
             Created by: Mohit S. Chauhan
             Last modified: 12/03/2017
@@ -507,7 +507,7 @@ class SampleMethods:
             self.samples = np.empty([self.nsamples * self.njump, self.dim])
             self.samples[0] = x0
 
-            # Classical Metropolis Hastings Algorithm with symmetric proposal density
+            # Classical Metropolis-Hastings Algorithm with symmetric proposal density
             if self.method == 'MH':
                 for i in range(self.nsamples * self.njump - 1):
 
@@ -538,7 +538,7 @@ class SampleMethods:
                         self.samples[i + 1] = self.samples[i]
                         self.rejects += 1
                 print()
-            # Modified Metropolis Hastings Algorithm with symmetric proposal density
+            # Modified Metropolis-Hastings Algorithm with symmetric proposal density
             elif self.method == 'MMH':
                 for i in range(self.nsamples * self.njump - 1):
 
