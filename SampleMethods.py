@@ -168,15 +168,15 @@ class SampleMethods:
             self.b = cut[1:self.nsamples + 1]
 
             if self.criterion == 'random':
-                self.samples = self.random()
+                self.samples = self._random()
             elif self.criterion == 'centered':
-                self.samples = self.centered()
+                self.samples = self._centered()
             elif self.criterion == 'maximin':
-                self.samples = self.maximin()
+                self.samples = self._maximin()
             elif self.criterion == 'correlate':
-                self.samples = self.correlate()
+                self.samples = self._correlate()
 
-        def random(self):
+        def _random(self):
             """
 
             :return: The samples points for the random LHS design
@@ -193,7 +193,7 @@ class SampleMethods:
                 points[:, j] = points[order, j]
             return points
 
-        def centered(self):
+        def _centered(self):
             """
 
             :return: The samples points for the centered LHS design
@@ -206,7 +206,7 @@ class SampleMethods:
                 points[:, i] = np.random.permutation(centers)
             return points
 
-        def maximin(self):
+        def _maximin(self):
             """
 
             :return: The samples points for the Minimax LHS design
@@ -223,7 +223,7 @@ class SampleMethods:
             print('Achieved miximin distance of ', maximin_dist)
             return points
 
-        def correlate(self):
+        def _correlate(self):
             """
 
             :return: The samples points for the minimum correlated LHS design
