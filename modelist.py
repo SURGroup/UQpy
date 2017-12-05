@@ -165,7 +165,7 @@ def mvnpdf(x, dim):
 def marginal(x, mp):
     """
     Marginal target density used to generate samples using Modified Metropolis-Hastings Algorithm
-    
+
     :math:`f(x) = \\frac{1}{\\sqrt{2\\pi\\sigma}}\\exp{-\\frac{1}{2}{\\frac{x-\\mu}{\\sigma}}^2}`
 
     """
