@@ -70,7 +70,7 @@ plt.scatter(g.samples[:, 0], g.samples[:, 1])
 plt.savefig('samples.png')
 
 plt.figure()
-n, bins, patches = plt.hist(g.samples, 50, normed=1, facecolor='g', alpha=0.75)
+n, bins, patches = plt.hist(g.eval, 50, normed=1, facecolor='g', alpha=0.75)
 plt.title('Histogram')
 plt.savefig('histogram.png')
 
