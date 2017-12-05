@@ -59,11 +59,13 @@ def model_ko1d(points, Type):
     Kraichnan–Orszag (K–O) 3-mode problem with one random variable defined in :math:`[-1, 1]`.
 
     :param points:Sample point to evaluate the model
+
     :param Type: (Optional)Type of the output:
                  1. Scalar
                  2. Vector
                  3. Tensor
-            For this example the only option is Scalar
+                 For this example the only option is Scalar
+
     :return: The value of the model at the sample point
     """
 
