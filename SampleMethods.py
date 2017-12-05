@@ -1,4 +1,4 @@
-"""Design of Experiment methods. """
+"""This module contains functionality for all the supported sampling methods in UQpy."""
 from library import *
 import scipy.stats as stats
 from modelist import *
@@ -261,12 +261,10 @@ class SampleMethods:
         :param pss_stratum: Vector defining how each dimension should be stratified.
                             Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625].\n
                             Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
-        :return: pss_samples: Generated samples Array (nSamples x nRVs)
+        :return: Generated samples Array (nSamples x nRVs)
         :type pss_design: int
         :type pss_stratum: int
 
-        Created by: Jiaxin Zhang
-        Last modified: 12/03/2017
         """
 
         # TODO: Jiaxin - Add documentation to this subclass
@@ -371,7 +369,7 @@ class SampleMethods:
 
     class MCMC:
 
-        """This class generates samples from arbitrary algorithm using Metropolis-Hastings(MH) or
+        """This class generates samples from arbitrary distributions using Metropolis-Hastings(MH) or
         Modified Metropolis-Hastings Algorithm.
 
         :param nsamples: A scalar value defining the number of random samples that needs to be
@@ -412,9 +410,6 @@ class SampleMethods:
 
         :param marginal_parameters: A array containing parameters of target marginal distributions.
         :type marginals_parameters: list
-
-        Created by: Mohit S. Chauhan
-        Last modified: 12/03/2017
 
         """
 
@@ -581,41 +576,78 @@ class SampleMethods:
 ########################################################################################################################
 
 class Strata:
+    """
+    Class defines a rectilinear stratification of the n-dimensional unit hypercube with N strata
+
+    :param nstrata: An array of dimension 1 x n defining the number of strata in each of the n dimensions
+                    Creates an equal stratification with strata widths equal to 1/nstrata
+                    The total number of strata, N, is the product of the terms of nstrata
+                    Example:
+                    nstrata = [2, 3, 2] creates a 3d stratification with:
+                    2 strata in dimension 0 with stratum widths 1/2
+                    3 strata in dimension 1 with stratum widths 1/3
+                    2 strata in dimension 2 with stratum widths 1/2
+    :type nstrata: array-like
+
+    :param input_file: File path to input file specifying stratum origins and stratum widths
+    :type input_file: str
+
+
+    :param origins: An array of dimension N x n specifying the origins of all strata
+                    The origins of the strata are the coordinates of the stratum orthotope nearest the global origin
+                    Example - A 2D stratification with 2 strata in each dimension
+                    origins = [[0, 0]
+                    [0, 0.5]
+                    [0.5, 0]
+                    [0.5, 0.5]]
+
+    :type origins: array-like
+
+    :param widths: An array of dimension N x n specifying the widths of all strata in each dimension
+                   Example - A 2D stratification with 2 strata in each dimension
+                   widths = [[0.5, 0.5]
+                   [0.5, 0.5]
+                   [0.5, 0.5]
+                   [0.5, 0.5]]
+    :type widths: array-like
+
+    """
     def __init__(self, nstrata=None, input_file=None, origins=None, widths=None):
 
         """
         Class defines a rectilinear stratification of the n-dimensional unit hypercube with N strata
 
-        :param nstrata: array-like
-            An array of dimension 1 x n defining the number of strata in each of the n dimensions
-            Creates an equal stratification with strata widths equal to 1/nstrata
-            The total number of strata, N, is the product of the terms of nstrata
-            Example -
-            nstrata = [2, 3, 2] creates a 3d stratification with:
-                2 strata in dimension 0 with stratum widths 1/2
-                3 strata in dimension 1 with stratum widths 1/3
-                2 strata in dimension 2 with stratum widths 1/2
+        :param nstrata: An array of dimension 1 x n defining the number of strata in each of the n dimensions
+                        Creates an equal stratification with strata widths equal to 1/nstrata
+                        The total number of strata, N, is the product of the terms of nstrata
+                        Example:
+                        nstrata = [2, 3, 2] creates a 3d stratification with:
+                        2 strata in dimension 0 with stratum widths 1/2
+                        3 strata in dimension 1 with stratum widths 1/3
+                        2 strata in dimension 2 with stratum widths 1/2
+        :type nstrata: array-like
 
-        :param input_file: string
-            File path to input file specifying stratum origins and stratum witdths
-            See documentation ######## for input file format
+        :param input_file: File path to input file specifying stratum origins and stratum widths
+        :type input_file: str
 
-        :param origins: array-like
-            An array of dimension N x n specifying the origins of all strata
-            The origins of the strata are the coordinates of the stratum orthotope nearest the global origin
-            Example - A 2D stratification with 2 strata in each dimension
-            origins = [[0, 0]
-                       [0, 0.5]
-                       [0.5, 0]
+
+        :param origins: An array of dimension N x n specifying the origins of all strata
+                        The origins of the strata are the coordinates of the stratum orthotope nearest the global origin
+                        Example - A 2D stratification with 2 strata in each dimension
+                        origins = [[0, 0]
+                        [0, 0.5]
+                        [0.5, 0]
+                        [0.5, 0.5]]
+
+        :type origins: array-like
+
+        :param widths: An array of dimension N x n specifying the widths of all strata in each dimension
+                       Example - A 2D stratification with 2 strata in each dimension
+                       widths = [[0.5, 0.5]
+                       [0.5, 0.5]
+                       [0.5, 0.5]
                        [0.5, 0.5]]
-
-        :param widths: array-like
-            An array of dimension N x n specifying the widths of all strata in each dimension
-            Example - A 2D stratification with 2 strata in each dimension
-            widths = [[0.5, 0.5]
-                      [0.5, 0.5]
-                      [0.5, 0.5]
-                      [0.5, 0.5]]
+        :type widths: array-like
 
         Created by: Michael D. Shields
         Last modified: 11/4/2017
@@ -666,19 +698,13 @@ class Strata:
         """
         Create a general full-factorial design
 
-        Parameters
-        ----------
-        levels : array-like
-            An array of integers that indicate the number of levels of each input
-            design factor.
+        :param levels: An array of integers that indicate the number of levels of each input
+                       design factor.
+        :type levels: array-like
 
-        Returns
-        -------
-        mat : 2d-array
-            The design matrix with coded levels 0 to k-1 for a k-level factor
+        :return: The design matrix  as a 2-d array with coded levels 0 to k-1 for a k-level factor
 
-        Example
-        -------
+        Example:
         ::
 
             >>> fullfact([2, 4, 3])

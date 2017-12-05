@@ -12,6 +12,8 @@ def model_func1(points):
     """
     Analytical function defined in :math:`[0,1]^2`.
 
+    :math:`model\_func1 = \\frac{1}{|0.3 - \\Sigma{({points}^2})| + 0.1}`
+
     :param points: Sample point to evaluate the model
     :return: The value of the model at the sample point
 
@@ -25,6 +27,8 @@ def model_func1(points):
 def model_runge(points):
     """
     Analytical function defined in :math:`[-1, 1]`.
+
+    :math:`model\_runge = \\frac{1}{1 + 25*({points}^2)}`
 
     :param points: Sample point to evaluate the model
     :return: The value of the model at the sample point
@@ -161,7 +165,7 @@ def mvnpdf(x, dim):
 def marginal(x, mp):
     """ Marginal target density used to generate samples using Modified Metropolis-Hastings Algorithm
 
-    `..math:: f(x) = \frac{1}{(2*\pi*\sigma)^(1/2)}*exp(-\frac{1}{2}*(\frac{x-\mu}{\sigma})^2)
+    :math:`f(x) = \\frac{1}{\\sqrt{2\\pi\\sigma}}\\exp{-\\frac{1}{2}{\\frac{x-\\mu}{\\sigma}}^2}`
 
     """
     return stats.norm.pdf(x, mp[0], mp[1])
