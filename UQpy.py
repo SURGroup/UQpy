@@ -2,6 +2,8 @@ from SampleMethods import *
 from RunModel import RunModel
 from module_ import handle_input_file, def_model, def_target
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
 
 filename = sys.argv[1]
 
@@ -14,6 +16,7 @@ os.chdir(path)
 
 if filename == 'input_mcmc.txt':
     _model, method, nsamples, dimension, distribution, parameters, x0, MCMC_algorithm, params,proposal, target, jump = handle_input_file(filename)
+    target = def_target(target)
 
 elif filename == 'input_lhs.txt':
     _model, method, nsamples, dimension, distribution, parameters, lhs_criterion, dist_metric,iterations = handle_input_file(filename)
@@ -30,8 +33,7 @@ elif filename == 'input_sts.txt':
 os.chdir(current_dir)
 
 model = def_model(_model)
-target = def_target(target)
-sm = SampleMethods(dimension=dimension, distribution=distribution, parameters=parameters)
+sm = SampleMethods(dimension=dimension, distribution=distribution, parameters=parameters, method=method)
 
 path = os.path.join(os.sep, current_dir, 'results')
 os.makedirs(path, exist_ok=True)
@@ -66,6 +68,17 @@ np.savetxt('model.txt', g.eval)
 plt.figure()
 plt.scatter(g.samples[:, 0], g.samples[:, 1])
 plt.savefig('samples.png')
+
+plt.figure()
+n, bins, patches = plt.hist(g.samples, 50, normed=1, facecolor='g', alpha=0.75)
+plt.title('Histogram')
+plt.savefig('histogram.png')
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(g.samples[:, 0], g.samples[:, 1], g.eval, c='r', s=2)
+plt.gca().invert_xaxis()
+plt.savefig('model.png')
 
 
 os.chdir(current_dir)

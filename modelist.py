@@ -8,7 +8,7 @@ import scipy.stats as stats
 #                                        List of models
 ########################################################################################################################
 
-def model_func1(points):
+def model_zabaras(points, Type):
     """
     Analytical function defined in :math:`[0,1]^2`.
 
@@ -19,7 +19,7 @@ def model_func1(points):
 
     """
 
-    return 1. / (abs(0.3 - np.sum(points ** 2, axis=0)) + 0.1)
+    return 1. / (abs(0.3 - np.sum(points ** 2, axis=0)) + 0.01)
 
 
 def model_runge(points):

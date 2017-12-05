@@ -5,7 +5,7 @@ model_zabaras
 mcs
 
 # number of samples
-1000
+10000
 
 # dimensions
 2
@@ -16,4 +16,4 @@ Uniform
 
 # distribution parameters (lower, upper)/(mean, std)
 0 1
-1 2
+0 1

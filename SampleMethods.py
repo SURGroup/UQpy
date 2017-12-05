@@ -20,47 +20,11 @@ class SampleMethods:
     :param method:  Sampling method
 
     """
-    def __init__(self, distribution=None, dimension=None, parameters=None, method=None,):
+    def __init__(self, distribution=None, dimension=None, parameters=None, method=None):
         self.method = method
         self.distribution = distribution
         self.dimension = dimension
         self.parameters = parameters
-        self.checks_ = self._checks()
-
-    def _checks(self):
-
-        if self.input_file is not None:
-            self.method = read_method(self.method)
-
-        if self.dimension is None and self.distribution is None:
-            self.dimension = 1
-            self.distribution = 'Uniform'
-
-        if self.distribution is None and self.dimension > 1:
-            self.distribution = []
-            if not is_integer(self.dimension):  # Check if the number is an integer
-                print('\n**ERROR**\nThe number of samples should be an integer.')
-                return
-            else:
-                return int(self.dimension)
-            for i in range(self.dimension):
-                self.distribution.append('Uniform')
-
-        elif self.dimension is None and self.distribution is not None:
-            self.dimension = len(self.dist)
-        else:
-            if self.dimension != len(self.distribution):
-                raise ValueError("number of dimensions"
-                                 " must be equal to the number of provided distributions.(%d != %d)"
-                                 % (len(self.distribution), self.dimension))
-
-        if self.parameters is None:
-            self.parameters = []
-            for i in range(self.dimension):
-                self.parameters.append([0, 1])
-
-        else:
-            self.parameters = self.parameters
 
 ########################################################################################################################
 #                                         Monte Carlo simulation
@@ -537,7 +501,9 @@ class SampleMethods:
                     else:
                         self.samples[i + 1] = self.samples[i]
                         self.rejects += 1
-                print()
+                # Reject the samples using njump to reduce the correlation
+                self.samples = self.samples[0:self.nsamples * self.njump:self.njump]
+
             # Modified Metropolis-Hastings Algorithm with symmetric proposal density
             elif self.method == 'MMH':
                 for i in range(self.nsamples * self.njump - 1):

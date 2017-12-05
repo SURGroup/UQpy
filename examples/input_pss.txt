@@ -16,13 +16,13 @@ Uniform
 
 # distribution parameters
 0 1
-1 2
+0 1
 
 # pss design
-2
-2
+1
+1
 
 # pss strata
-25
-25
+10000
+10000
 

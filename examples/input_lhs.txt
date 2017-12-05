@@ -5,7 +5,7 @@ model_zabaras
 lhs
 
 # number of samples
-1000
+10000
 
 # dimensions
 2

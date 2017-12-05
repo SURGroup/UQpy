@@ -16,9 +16,9 @@ Uniform
 
 # distribution parameters
 0 1
-1 2
+0 1
 
 # sts design
-10
-10
+100
+100
 

@@ -94,7 +94,7 @@ class RunModel:
                 self.params = params
                 self.jump = jump
                 self.proposal = proposal
-                mcmc = sm.MCMC(nsamples = self.nsamples, target=self.target, x0=self.x0, MCMC_algorithm=self.algorithm, proposal=self.proposal, params = self.params, njump= self.jump)
+                mcmc = sm.MCMC(nsamples=self.nsamples, target=self.target, x0=self.x0, MCMC_algorithm=self.algorithm, proposal=self.proposal, params = self.params, njump= self.jump)
                 self.samples = mcmc.samples
             elif self.method == 'pss':
                 self.pss_design = pss_design
