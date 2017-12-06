@@ -19,7 +19,7 @@ Note
 ====
 
 UQpy is currently in initial development and therefore should not be
-considered stable.as 
+considered as a stable release.
 
 Description
 ===========
