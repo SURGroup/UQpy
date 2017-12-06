@@ -15,6 +15,12 @@ Uncertainty Quantification using python (UQpy)
 :Date: December 2017
 :Version: 0.1.0
 
+Note
+====
+
+UQpy is currently in initial development and therefore should not be
+considered stable.as 
+
 Description
 ===========
 
