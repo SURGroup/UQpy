@@ -5,7 +5,7 @@ Uncertainty Quantification using python (UQpy)
 
 |logo|
 
-:Authors: Michael D. Shields, Dimitrios Giovannis, Aakash Bangalore Satish
+:Authors: Michael D. Shields, Dimitrios Giovanis, Aakash Bangalore Satish
 :Contributors: Jiaxin Zhang, Lohit Vandanapu, Mohit Singh Chauhan
 :Contact: michael.shields@jhu.edu, dgiovan1@jhu.edu
 :Web site: www.ce.jhu.edu/surg
