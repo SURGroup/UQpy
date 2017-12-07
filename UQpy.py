@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
-filename = 'input_SuS.txt' #sys.argv[1]
+filename = 'input_sts.txt' #sys.argv[1]
 
 current_dir = os.getcwd()
 

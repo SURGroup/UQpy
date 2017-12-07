@@ -4,7 +4,7 @@ from modelist import *
 
 
 def handle_input_file(filename):
-
+    # TODO: Find a more clever way to do this
     if filename == 'input_mcs.txt':
         with open(filename, "r") as file:
             r_ = 0

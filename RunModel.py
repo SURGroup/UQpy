@@ -86,7 +86,6 @@ class RunModel:
                     ss = SampleMethods.STS(strata=Strata(nstrata=sts_input))
                 self.nsamples = ss.samples.shape[0]
                 self.samples = ss.samples
-                self.dimension = self.nsamples.shape[1]
                 print()
             elif self.method == 'mcmc':
                 self.algorithm = MCMC_algorithm
@@ -97,7 +96,9 @@ class RunModel:
                 self.params = params
                 self.jump = jump
                 self.proposal = proposal
-                mcmc = SampleMethods.MCMC(nsamples=self.nsamples, target=self.target, x0=self.x0, MCMC_algorithm=self.algorithm, proposal=self.proposal, params = self.params, njump= self.jump)
+                mcmc = SampleMethods.MCMC(nsamples=self.nsamples, target=self.target, x0=self.x0,
+                                          MCMC_algorithm=self.algorithm, proposal=self.proposal,
+                                          params = self.params, njump= self.jump)
                 self.samples = mcmc.samples
             elif self.method == 'pss':
                 self.pss_design = pss_design
@@ -105,7 +106,7 @@ class RunModel:
                 self.nsamples = max(pss_stratum)
                 pss = SampleMethods.PSS(pss_design=self.pss_design, pss_stratum=self.pss_stratum)
                 self.samples = pss.samples
-                self.dimension = self.nsamples.shape[1]
+                self.dimension = self.pss_design[0]
         elif is_string:
             self.samples = np.loadtxt(input, dtype=np.float32, delimiter=' ')
             self.nsamples = self.samples.shape[0]
