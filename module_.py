@@ -195,12 +195,69 @@ def handle_input_file(filename):
 
         return _model, method, nsamples, dimension, distribution, parameters, sts_input
 
+    elif filename == 'input_SuS.txt':
+        with open(filename, "r") as file:
+            r_ = 0
+            distribution = []
+            parameters = []
+            x0 = []
+            params = []
+            marginal_param = []
+            for row in [line.split() for line in file if not line.strip().startswith('#')]:
+                if len(row) != 0:
+                    if r_ == 0:
+                        _model = row[0]
+                        r_ = r_ + 1
+                    elif r_ == 1:
+                        method = row[0]
+                        r_ = r_ + 1
+                    elif r_ == 2:
+                        nsamples_per_subset = int(row[0])
+                        r_ = r_ + 1
+                    elif r_ == 3:
+                        dimension = int(row[0])
+                        r_ = r_ + 1
+                    elif 4 <= r_ <= 4 + dimension - 1:
+                        distribution.append(row[0])
+                        r_ = r_ + 1
+                    elif 4 + dimension <= r_ <= 4 + 2 * dimension - 1:
+                        marginal_param.append([np.float32(row[0]), np.float32(row[1])])
+                        r_ = r_ + 1
+                    elif 4 + 2 * dimension <= r_ <= 3 + 3 * dimension:
+                        params.append(np.float32(row[0]))
+                        r_ = r_ + 1
+                    elif r_ == 3 + 3 * dimension + 1:
+                        MCMC_algorithm = row[0]
+                        r_ = r_ + 1
+                    elif r_ == 3 + 3 * dimension + 2:
+                        proposal_pdf = row[0]
+                        r_ = r_ + 1
+                    elif r_ == 3 + 3 * dimension + 3:
+                        proposal_width = row[0]
+                        r_ = r_ + 1
+                    elif r_ == 3 + 3 * dimension + 4:
+                        target = row[0]
+                        r_ = r_ + 1
+                    elif r_ == 3 + 3 * dimension + 5:
+                        p0 = np.float32(row[0])
+                        r_ = r_ + 1
+                    elif r_ == 3 + 3 * dimension + 6:
+                        Yf = np.float32(row[0])
+
+
+        params = np.array(params)
+        marginal_param = np.array(marginal_param)
+
+        return _model, method, nsamples_per_subset, dimension, distribution, MCMC_algorithm, params, proposal_pdf, proposal_width, target, p0, Yf, marginal_param
+
 
 def def_model(_model):
     if _model == 'model_zabaras':
         model = partial(model_zabaras)
     elif _model == 'model_ko2d':
         model = partial(model_ko2d)
+    elif _model == 'model_reliability':
+        model = partial(model_reliability)
 
     return model
 
@@ -210,4 +267,8 @@ def def_target(target):
         target = partial(mvnpdf)
     elif target == 'normpdf':
         target = partial(normpdf)
+    elif target == 'marginal':
+        target = partial(marginal)
     return target
+
+

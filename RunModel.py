@@ -1,11 +1,12 @@
 from SampleMethods import Strata
+from  SampleMethods import *
 from RunModel import *
 import numpy as np
 
 
 class RunModel:
 
-    def __init__(self, generator=None, input=None, nsamples=None, method=None, interpreter=None, model=None, Type=None, \
+    def __init__(self, input=None, dimension=None, nsamples=None, method=None, interpreter=None, model=None, Type=None, \
                  sts_input=None, lhs_criterion='random', MCMC_algorithm='MH', proposal=None, target=None, pss_design=None, pss_stratum=None, \
                  x0=None, params=None, jump=None):
 
@@ -66,42 +67,45 @@ class RunModel:
 
         is_string = isinstance(input, str)
         if input is None:
-            sm = generator
             self.method = method
-            self.dimension = sm.dimension
             if self.method == 'mcs':
                 self.nsamples = int(nsamples)
-                mcs = sm.MCS(self.nsamples, self.dimension)
+                self.dimension = dimension
+                mcs = SampleMethods.MCS(self.nsamples, self.dimension)
                 self.samples = mcs.samples
             elif self.method == 'lhs':
                 self.nsamples = int(nsamples)
-                lhs = sm.LHS(self.dimension, self.nsamples, criterion=lhs_criterion)
+                self.dimension = dimension
+                lhs = SampleMethods.LHS(self.dimension, self.nsamples, criterion=lhs_criterion)
                 self.samples = lhs.samples
             elif self.method == 'sts':
                 is_string = isinstance(sts_input, str)
                 if is_string:
-                    ss = sm.STS(strata=Strata(input_file=sts_input))
+                    ss = SampleMethods.STS(strata=Strata(input_file=sts_input))
                 else:
-                    ss = sm.STS(strata=Strata(nstrata=sts_input))
+                    ss = SampleMethods.STS(strata=Strata(nstrata=sts_input))
                 self.nsamples = ss.samples.shape[0]
                 self.samples = ss.samples
+                self.dimension = self.nsamples.shape[1]
                 print()
             elif self.method == 'mcmc':
                 self.algorithm = MCMC_algorithm
                 self.target = target
                 self.nsamples = int(nsamples)
+                self.dimension = dimension
                 self.x0 = x0
                 self.params = params
                 self.jump = jump
                 self.proposal = proposal
-                mcmc = sm.MCMC(nsamples=self.nsamples, target=self.target, x0=self.x0, MCMC_algorithm=self.algorithm, proposal=self.proposal, params = self.params, njump= self.jump)
+                mcmc = SampleMethods.MCMC(nsamples=self.nsamples, target=self.target, x0=self.x0, MCMC_algorithm=self.algorithm, proposal=self.proposal, params = self.params, njump= self.jump)
                 self.samples = mcmc.samples
             elif self.method == 'pss':
                 self.pss_design = pss_design
                 self.pss_stratum = pss_stratum
                 self.nsamples = max(pss_stratum)
-                pss = sm.PSS(pss_design=self.pss_design, pss_stratum=self.pss_stratum)
+                pss = SampleMethods.PSS(pss_design=self.pss_design, pss_stratum=self.pss_stratum)
                 self.samples = pss.samples
+                self.dimension = self.nsamples.shape[1]
         elif is_string:
             self.samples = np.loadtxt(input, dtype=np.float32, delimiter=' ')
             self.nsamples = self.samples.shape[0]

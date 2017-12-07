@@ -1,11 +1,12 @@
 from SampleMethods import *
 from RunModel import RunModel
 from module_ import handle_input_file, def_model, def_target
+from Reliability import ReliabilityMethods
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
-filename = sys.argv[1]
+filename = 'input_SuS.txt' #sys.argv[1]
 
 current_dir = os.getcwd()
 
@@ -30,34 +31,45 @@ elif filename == 'input_pss.txt':
 elif filename == 'input_sts.txt':
     _model, method, nsamples, dimension, distribution, parameters, sts_input = handle_input_file(filename)
 
+elif filename == 'input_SuS.txt':
+    _model, method, nsamples_per_subset, dimension, distribution,  MCMC_algorithm, params,proposal, proposal_width, target, conditional_prob, Yf, marginal_param = handle_input_file(filename)
+
+
+
 os.chdir(current_dir)
 
 model = def_model(_model)
-sm = SampleMethods(dimension=dimension, distribution=distribution, parameters=parameters, method=method)
 
 path = os.path.join(os.sep, current_dir, 'results')
 os.makedirs(path, exist_ok=True)
 os.chdir(path)
 
 if method == 'mcs':
-    g = RunModel(generator=sm,   nsamples=nsamples,  method=method,  model=model)
+    g = RunModel(nsamples=nsamples, dimension=dimension, method=method,  model=model)
     subpath = os.path.join(os.sep, path, 'mcs')
 
 elif method == 'lhs':
-    g = RunModel(generator=sm,  nsamples=nsamples,  method=method,  model=model, lhs_criterion='random')
+    g = RunModel(nsamples=nsamples, dimension=dimension, method=method,  model=model, lhs_criterion='random')
     subpath = os.path.join(os.sep, path, 'lhs')
 
 elif method == 'mcmc':
-    g = RunModel(generator=sm, nsamples=nsamples, method=method, model=model,  x0=x0, MCMC_algorithm=MCMC_algorithm, proposal=proposal, params=params, target=target, jump=jump)
+    target = def_target(target)
+    g = RunModel(nsamples=nsamples, dimension=dimension, method=method, model=model,  x0=x0, MCMC_algorithm=MCMC_algorithm, proposal=proposal, params=params, target=target, jump=jump)
     subpath = os.path.join(os.sep, path, 'mcmc')
 
 elif method == 'pss':
-    g = RunModel(generator=sm,  method=method, model=model,   pss_design=pss_design, pss_stratum=pss_stratum)
+    g = RunModel(method=method, dimension=dimension, model=model,   pss_design=pss_design, pss_stratum=pss_stratum)
     subpath = os.path.join(os.sep, path, 'pss')
 
 elif method == 'sts':
-    g = RunModel(generator=sm,  method=method, model = model, sts_input=sts_input)
+    g = RunModel(method=method, dimension=dimension, model = model, sts_input=sts_input)
     subpath = os.path.join(os.sep, path, 'sts')
+
+elif method == 'SuS':
+    target = def_target(target)
+    g = ReliabilityMethods.SubsetSimulation(dimension=dimension, nsamples_per_subset=nsamples_per_subset,  model=model,  MCMC_algorithm=MCMC_algorithm, proposal=proposal, conditional_prob=conditional_prob, marginal_params=marginal_param, proposal_width=proposal_width, params=params, target=target, limit_state=Yf)
+    subpath = os.path.join(os.sep, path, 'SuS')
+
 
 os.makedirs(subpath, exist_ok=True)
 os.chdir(subpath)

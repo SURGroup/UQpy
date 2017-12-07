@@ -378,7 +378,7 @@ class SampleMethods:
 
         """
 
-        def __init__(self, nsamples=5000, dim=2, x0=np.zeros(2), MCMC_algorithm='MH', proposal='Normal',
+        def __init__(self, nsamples=5000, dimension=2, x0=np.zeros(2), MCMC_algorithm='MH', proposal='Normal',
                      params=np.ones(2), target=None, njump=1, marginal_parameters=[[0, 1], [0, 1]]):
 
             """This class generates samples from arbitrary algorithm using Metropolis-Hastings(MH) or
@@ -431,7 +431,7 @@ class SampleMethods:
             # TODO: Mohit - Add error checks for target and marginal PDFs
 
             try:
-                dim = np.int32(dim)
+                dim = np.int32(dimension)
             except ValueError:
                 print("Dimension should be an integer value. Try again...")
 
