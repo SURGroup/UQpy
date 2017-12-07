@@ -9,7 +9,7 @@ Uncertainty Quantification using python (UQpy)
 :Contributors: Jiaxin Zhang, Lohit Vandanapu, Mohit Singh Chauhan
 :Contact: michael.shields@jhu.edu, dgiovan1@jhu.edu
 :Web site: www.ce.jhu.edu/surg
-:Documentation:  
+:Documentation: http://uqpy-docs-v0.readthedocs.io/en/latest/
 :Copyright: SURG, 2017
 :License: 
 :Date: December 2017
