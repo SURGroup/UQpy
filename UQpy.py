@@ -16,11 +16,13 @@ os.chdir(path)
 
 
 if filename == 'input_mcmc.txt':
-    _model, method, nsamples, dimension, distribution, parameters, x0, MCMC_algorithm, params,proposal, target, jump = handle_input_file(filename)
+    _model, method, nsamples, dimension, distribution, parameters, x0, MCMC_algorithm, params,proposal, target, \
+    jump = handle_input_file(filename)
     target = def_target(target)
 
 elif filename == 'input_lhs.txt':
-    _model, method, nsamples, dimension, distribution, parameters, lhs_criterion, dist_metric,iterations = handle_input_file(filename)
+    _model, method, nsamples, dimension, distribution, parameters, lhs_criterion, dist_metric,\
+    iterations = handle_input_file(filename)
 
 elif filename == 'input_mcs.txt':
     _model, method, nsamples, dimension, distribution, parameters = handle_input_file(filename)
@@ -32,7 +34,8 @@ elif filename == 'input_sts.txt':
     _model, method, nsamples, dimension, distribution, parameters, sts_input = handle_input_file(filename)
 
 elif filename == 'input_SuS.txt':
-    _model, method, nsamples_per_subset, dimension, distribution,  MCMC_algorithm, params,proposal, proposal_width, target, conditional_prob, Yf, marginal_param = handle_input_file(filename)
+    _model, method, nsamples_per_subset, dimension, distribution,  MCMC_algorithm, params,proposal, proposal_width, \
+    target, conditional_prob, Yf, marginal_param = handle_input_file(filename)
 
 
 
@@ -54,7 +57,8 @@ elif method == 'lhs':
 
 elif method == 'mcmc':
     target = def_target(target)
-    g = RunModel(nsamples=nsamples, dimension=dimension, method=method, model=model,  x0=x0, MCMC_algorithm=MCMC_algorithm, proposal=proposal, params=params, target=target, jump=jump)
+    g = RunModel(nsamples=nsamples, dimension=dimension, method=method, model=model,  x0=x0,
+                 MCMC_algorithm=MCMC_algorithm, proposal=proposal, params=params, target=target, jump=jump)
     subpath = os.path.join(os.sep, path, 'mcmc')
 
 elif method == 'pss':
@@ -67,7 +71,10 @@ elif method == 'sts':
 
 elif method == 'SuS':
     target = def_target(target)
-    g = ReliabilityMethods.SubsetSimulation(dimension=dimension, nsamples_per_subset=nsamples_per_subset,  model=model,  MCMC_algorithm=MCMC_algorithm, proposal=proposal, conditional_prob=conditional_prob, marginal_params=marginal_param, proposal_width=proposal_width, params=params, target=target, limit_state=Yf)
+    g = ReliabilityMethods.SubsetSimulation(dimension=dimension, nsamples_per_subset=nsamples_per_subset,  model=model,
+                                            MCMC_algorithm=MCMC_algorithm, proposal=proposal,
+                                            conditional_prob=conditional_prob, marginal_params=marginal_param,
+                                            proposal_width=proposal_width, params=params, target=target, limit_state=Yf)
     subpath = os.path.join(os.sep, path, 'SuS')
 
 

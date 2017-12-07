@@ -5,10 +5,14 @@ from RunModel import RunModel
 
 class ReliabilityMethods:
     """
-    A class used to perform reliability analysis
+    A class containing methods used to perform reliability analysis
 
     """
 
+########################################################################################################################
+########################################################################################################################
+#                                        Subset Simulation (Sus)
+########################################################################################################################
     class SubsetSimulation:
         """
         A class used to perform Subset Simulation.
@@ -25,10 +29,15 @@ class ReliabilityMethods:
             :param pf:  Probability of failure
             :param limit_state: Failure criterion
 
+        Created by: Dimitris G. Giovanis
+        Last modified: 08/12/2017
+        Last modified by: Dimitris G. Giovanis
+
         """
 
-        def __init__(self, dimension=None, nsamples_per_subset=None, conditional_prob=None, model=None,\
-                     MCMC_algorithm=None, params=None, proposal=None, proposal_width=None, target=None, limit_state=None, marginal_params=None):
+        def __init__(self, dimension=None, nsamples_per_subset=None, conditional_prob=None, model=None,
+                     MCMC_algorithm=None, params=None, proposal=None, proposal_width=None, target=None,
+                     limit_state=None, marginal_params=None):
 
             self.nsamples_per_subset = nsamples_per_subset
             self.dimension = dimension
@@ -41,30 +50,30 @@ class ReliabilityMethods:
             self.width = proposal_width
             self.limitState = limit_state
             self.marginal_params = marginal_params
-            self.pf, self.samples, self.eval = self.RunSuS()
+            self.pf, self.samples, self.eval = self.run_SuS()
             print()
 
-        def RunSuS(self):
-            R = np.eye(self.dimension)  # Correlation matrix
+            # TODO: DG - Add coefficient of variation estimator for subset simulation
 
+        def run_SuS(self):
             step = 0
             theta_u = np.zeros(shape=(self.nsamples_per_subset, self.dimension))
             Ymc = np.zeros(self.nsamples_per_subset)
             y = []
-            cov = []
             p = []
 
             for i in range(self.nsamples_per_subset):
                 theta_u[i, :] = np.random.randn(self.dimension)
-                model = RunModel(dimension=self.dimension, input=theta_u[i, :].reshape(1, self.dimension), model=self.model)
-                Ymc[i]= model.eval
+                model = RunModel(dimension=self.dimension, input=theta_u[i, :].reshape(1, self.dimension),
+                                 model=self.model)
+                Ymc[i] = model.eval
 
             ytemp, thetanew, M = self.threshold0value(theta_u, Ymc)
             y.append(ytemp)
 
             while y[-1] > self.limitState:
 
-                [thetanewest, Y] = self.Subset_step(thetanew, y[-1], M)
+                [thetanewest, Y] = self.subset_step(thetanew, y[-1], M)
                 step = step + 1
                 ytemp, thetanew, M = self.threshold0value(thetanewest, Y)
                 y.append(ytemp)
@@ -73,7 +82,7 @@ class ReliabilityMethods:
 
             return np.prod(p), thetanew, M
 
-        def Subset_step(self, thetanew, y, M):
+        def subset_step(self, thetanew, y, M):
 
             subgermU = thetanew
             subgermG = M
@@ -93,7 +102,8 @@ class ReliabilityMethods:
                     candidate = mcmc.samples[j, :]
                     check_ = np.array_equal(seed_i.reshape(1, self.dimension), candidate)
                     if check_ is not True:
-                        model = RunModel(dimension=self.dimension, input=candidate.reshape(1, self.dimension), model=self.model)
+                        model = RunModel(dimension=self.dimension, input=candidate.reshape(1, self.dimension),
+                                         model=self.model)
                         allG = model.eval
                         if allG > y:
                             val_i = val_i
@@ -108,8 +118,6 @@ class ReliabilityMethods:
                 subsetG = np.concatenate([subsetG, subtempg], axis=0)
 
             return subsetU, subsetG
-
-
 
             return U, G
 
