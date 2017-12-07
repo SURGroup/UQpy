@@ -15,8 +15,11 @@ class SampleMethods:
     :param distribution: Probability distribution function (pdf) of the random variables
     :param dimension: Stochastic dimension of the problem (number of random variables)
     :param parameters: Parameters of the pdf
-                        1. If pdf ~ Uniform :[lower, upper]
-                        2. If pdf ~ Normal  :[mean, std]
+    
+                       1. If pdf ~ Uniform :[lower, upper]
+    
+                       2. If pdf ~ Normal  :[mean, std]
+    
     :param method:  Sampling method
 
     """
@@ -109,20 +112,28 @@ class SampleMethods:
         :param nsamples: The number of samples to be generated.
         :type nsamples: int
 
-        :param criterion: The criterion for generating sample points \n
-                        i) random - completely random \n
-                        ii) centered - points only at the centre \n
-                        iii) maximin - maximising the minimum distance between points \n
-                        iv) correlate - minimizing the correlation between the points \n
+        :param criterion: The criterion for generating sample points
+        
+                        i) random - completely random
+        
+                        ii) centered - points only at the centre
+        
+                        iii) maximin - maximising the minimum distance between points
+        
+                        iv) correlate - minimizing the correlation between the points
+        
         :type criterion: str
 
         :param iterations: The number of iteration to run. Only for maximin, correlate and criterion
         :type iterations: int
 
         :param dist_metric: The distance metric to use. Supported metrics are
-                        'braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', \n
-                        'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', \n
-                        'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', \n
+                        'braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice',
+        
+                        'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski',
+        
+                        'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean',
+        
                         'yule'.
         :type dist_metric: str
 
@@ -256,11 +267,17 @@ class SampleMethods:
         System Safety. 148: 96-108
 
         :param pss_design: Vector defining the subdomains to be used.
-                           Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]. \n
+        
+                           Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1].
+        
                            Note: The sum of the values in the pss_design vector equals the dimension of the problem.
+        
         :param pss_stratum: Vector defining how each dimension should be stratified.
-                            Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625].\n
+        
+                            Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625].
+        
                             Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
+        
         :return: Generated samples Array (nSamples x nRVs)
         :type pss_design: int
         :type pss_stratum: int
@@ -373,42 +390,64 @@ class SampleMethods:
         Modified Metropolis-Hastings Algorithm.
 
         :param nsamples: A scalar value defining the number of random samples that needs to be
-                         generate using MCMC. Default value of nsample is 1000.
+                         generate using MCMC. 
+        
+                         Default value of nsample is 1000.
+        
         :type nsamples: int
 
         :param dim: A scalar value defining the dimension of target density function.
         :type dim: int
 
         :param x0: A scalar value defining the initial mean value of proposed density.
+        
                    Default value: x0 is zero row vector of size dim.
+        
                    Example: x0 = 0, Starts sampling using proposed density with mean equal to 0.
+        
         :type x0: array
 
         :param MCMC_algorithm: A string defining the algorithm used to generate random samples.
+        
                                Default value: method is 'MH'.
+        
                                Example: MCMC_algorithm = MH : Use Metropolis-Hastings Algorithm
+        
                                MCMC_algorithm = MMH : Use Modified Metropolis-Hastings Algorithm
+        
                                MCMC_algorithm = GIBBS : Use Gibbs Sampling Algorithm
+        
         :type MCMC_algorithm: str
 
-        :param proposal: A string defining the type of proposed density function. Example:
+        :param proposal: A string defining the type of proposed density function. 
+        
+                         Example:
                          proposal = Normal : Normal distribution will be used to generate new estimates
+        
                          proposal = Uniform : Uniform distribution will be used to generate new estimates
+        
         :type proposal: str
 
         :param params: An array defining the Covariance matrix of the proposed density function.
-                       Multivariate Uniform distribution : An array of size 'dim'. Multivariate Normal distribution:
+        
+                       Multivariate Uniform distribution : An array of size 'dim'. 
+                       
+                       Multivariate Normal distribution:
                        Either an array of size 'dim' or array of size 'dim x dim'.
+        
                        Default: params is unit row vector
+        
         :type proposal: matrix
 
         :param target: An function defining the target distribution of generated samples using MCMC.
 
         :param njump: A scalar value defining the number of samples rejected to reduce the correlation
                       between generated samples.
+        
         :type njump: int
 
         :param marginal_parameters: A array containing parameters of target marginal distributions.
+        
         :type marginals_parameters: list
 
         """
@@ -580,35 +619,50 @@ class Strata:
     Class defines a rectilinear stratification of the n-dimensional unit hypercube with N strata
 
     :param nstrata: An array of dimension 1 x n defining the number of strata in each of the n dimensions
+    
                     Creates an equal stratification with strata widths equal to 1/nstrata
+    
                     The total number of strata, N, is the product of the terms of nstrata
+    
                     Example:
+    
                     nstrata = [2, 3, 2] creates a 3d stratification with:
+    
                     2 strata in dimension 0 with stratum widths 1/2
+    
                     3 strata in dimension 1 with stratum widths 1/3
+    
                     2 strata in dimension 2 with stratum widths 1/2
+    
     :type nstrata: array-like
 
     :param input_file: File path to input file specifying stratum origins and stratum widths
+    
     :type input_file: str
 
 
     :param origins: An array of dimension N x n specifying the origins of all strata
+    
                     The origins of the strata are the coordinates of the stratum orthotope nearest the global origin
-                    Example - A 2D stratification with 2 strata in each dimension
-                    origins = [[0, 0]
-                    [0, 0.5]
-                    [0.5, 0]
-                    [0.5, 0.5]]
+    
+                    Example - A 2D stratification with 2 strata in each dimension: ::
+    
+                        origins = [[0, 0]
+                        [0, 0.5]
+                        [0.5, 0]
+                        [0.5, 0.5]]
 
     :type origins: array-like
 
     :param widths: An array of dimension N x n specifying the widths of all strata in each dimension
-                   Example - A 2D stratification with 2 strata in each dimension
-                   widths = [[0.5, 0.5]
-                   [0.5, 0.5]
-                   [0.5, 0.5]
-                   [0.5, 0.5]]
+    
+                   Example - A 2D stratification with 2 strata in each dimension: ::
+    
+                       widths = [[0.5, 0.5]
+                       [0.5, 0.5]
+                       [0.5, 0.5]
+                       [0.5, 0.5]]
+    
     :type widths: array-like
 
     """
@@ -700,6 +754,7 @@ class Strata:
 
         :param levels: An array of integers that indicate the number of levels of each input
                        design factor.
+        
         :type levels: array-like
 
         :return: The design matrix  as a 2-d array with coded levels 0 to k-1 for a k-level factor

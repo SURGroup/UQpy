@@ -138,6 +138,10 @@ def pend(y, t=0):
 
 
 def model_reliability(u, Type):
+    """
+    :param u:
+    :param Type: 
+    """
     a = 3
     return a - np.sum(u, axis=0) / np.sqrt(u.size)
 

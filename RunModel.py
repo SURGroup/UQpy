@@ -1,9 +1,62 @@
+"""
+This module contains functionality for evaluating models.
+"""
+
 from SampleMethods import Strata
 from RunModel import *
 import numpy as np
 
 
 class RunModel:
+    
+    """
+    Class of methods used in order to evaluate a model (FEM, PDE, etc.)
+
+    :param generator: Class of sampling methods
+    :param input: This class takes as input the sample points at which the model will be evaluated
+                  either as an
+    
+                  a) np.array([n, dim])
+    
+                  b) .txt input file under the name 'samples.txt'.
+
+    :param method: If no input is provided then generate the sample points generated with the following methods:
+    
+                   1. Monte Carlo simulation (mcs)
+    
+                   2. Latin hypercube sampling (lhs)
+    
+                   3. Stratified Sampling  (sts)
+    
+                   4. Partially stratified sampling (pss)
+    
+                   5.  Markov Chain Monte Carlo simulation (mcmc)
+
+    :param nsamples: Number of model evaluations. Provided only if input=None
+
+    :param interpreter: The type of interpreter used to run the model. If interpreter=None then python is assumed.
+
+                        1. python
+
+                        2. matlab
+
+                        3. commercial packages (Abaqus, Ansys, e.t.c)
+
+    :param model: Provides the name of the model. If model=None then the program is terminated.
+
+    :param Type: Type of output depending its form
+
+                 Options:
+
+                 1. scalar
+
+                 2. vector
+
+                 3. tensor
+
+                 If Type=None then a scalar quantity is assumed.
+
+    """
 
     def __init__(self, generator=None, input=None, nsamples=None, method=None, interpreter=None, model=None, Type=None, \
                  sts_input=None, lhs_criterion='random', MCMC_algorithm='MH', proposal=None, target=None, pss_design=None, pss_stratum=None, \
