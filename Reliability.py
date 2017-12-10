@@ -30,7 +30,7 @@ class ReliabilityMethods:
             :param limit_state: Failure criterion
 
         Created by: Dimitris G. Giovanis
-        Last modified: 08/12/2017
+        Last modified: 12/08/2017
         Last modified by: Dimitris G. Giovanis
 
         """

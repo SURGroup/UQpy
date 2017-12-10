@@ -2,6 +2,7 @@ from SampleMethods import *
 from RunModel import RunModel
 from module_ import handle_input_file, def_model, def_target
 from Reliability import ReliabilityMethods
+from Surrogates import SurrogateModels
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -76,6 +77,26 @@ elif method == 'SuS':
                                             conditional_prob=conditional_prob, marginal_params=marginal_param,
                                             proposal_width=proposal_width, params=params, target=target, limit_state=Yf)
     subpath = os.path.join(os.sep, path, 'SuS')
+
+
+'''
+Test Polynomial Chaos
+'''
+PC = SurrogateModels.PolynomialChaos(dimension=dimension, input=g.samples[:200, :], output=g.eval[:200], order=2)
+test_index = 140
+pc_tilde = SurrogateModels.PolynomialChaos.PCpredictor(PC, g.samples[:test_index, :])
+error_pc = abs(g.eval[:test_index]-pc_tilde)
+
+'''
+Test Gaussian Process
+'''
+
+GP = SurrogateModels.GaussianProcess(input=g.samples[:200, :], output=g.eval[:200])
+
+gp_tilde, gp_std = SurrogateModels.GaussianProcess.GPredictor(GP, g.samples[:test_index, :])
+error_gp = abs(g.eval[:test_index]-gp_tilde)
+
+print()
 
 
 os.makedirs(subpath, exist_ok=True)
