@@ -1,13 +1,13 @@
 from SampleMethods import *
 from RunModel import RunModel
-from module_ import handle_input_file, def_model, def_target
+from module_ import handle_input_file, def_model, def_target, readfile
 from Reliability import ReliabilityMethods
 from Surrogates import SurrogateModels
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
-filename = 'input_sts.txt' #sys.argv[1]
+filename = 'input_mcmc.txt' #sys.argv[1]
 
 current_dir = os.getcwd()
 
@@ -16,9 +16,13 @@ os.makedirs(path, exist_ok=True)
 os.chdir(path)
 
 
+input = readfile(filename)
+
+
 if filename == 'input_mcmc.txt':
     _model, method, nsamples, dimension, distribution, parameters, x0, MCMC_algorithm, params,proposal, target, \
     jump = handle_input_file(filename)
+
     target = def_target(target)
 
 elif filename == 'input_lhs.txt':
@@ -27,6 +31,7 @@ elif filename == 'input_lhs.txt':
 
 elif filename == 'input_mcs.txt':
     _model, method, nsamples, dimension, distribution, parameters = handle_input_file(filename)
+
 
 elif filename == 'input_pss.txt':
     _model, method, nsamples, dimension, distribution, parameters, pss_design, pss_stratum=handle_input_file(filename)
@@ -37,6 +42,9 @@ elif filename == 'input_sts.txt':
 elif filename == 'input_SuS.txt':
     _model, method, nsamples_per_subset, dimension, distribution,  MCMC_algorithm, params,proposal, proposal_width, \
     target, conditional_prob, Yf, marginal_param = handle_input_file(filename)
+
+elif filename == 'UQpy_input.txt':
+    input = readfile(filename)
 
 
 
@@ -49,6 +57,7 @@ os.makedirs(path, exist_ok=True)
 os.chdir(path)
 
 if method == 'mcs':
+    samples_mcs = SampleMethods.MCS(nsamples, dimension)
     g = RunModel(nsamples=nsamples, dimension=dimension, method=method,  model=model)
     subpath = os.path.join(os.sep, path, 'mcs')
 

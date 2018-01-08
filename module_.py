@@ -2,253 +2,84 @@ import numpy as np
 from functools import partial
 from modelist import *
 
+def readfile(filename):
+    lines_ = []
+    mydict = {}
+    count = -1
+    for line in open(filename):
+        rec = line.strip()
+        count = count + 1
+        if rec.startswith('#'):
+            lines_.append(count)
 
-def handle_input_file(filename):
-    # TODO: Find a more clever way to do this
-    if filename == 'input_mcs.txt':
-        with open(filename, "r") as file:
-            r_ = 0
-            distribution = []
-            parameters = []
-            for row in [line.split() for line in file if not line.strip().startswith('#')]:
-                if len(row) != 0:
-                    if r_ == 0:
-                        _model = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 1:
-                        method = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 2:
-                        nsamples = int(row[0])
-                        r_ = r_ + 1
-                    elif r_ == 3:
-                        dimension = int(row[0])
-                        r_ = r_ + 1
-                    elif 4 <= r_ <= 4+dimension-1:
-                        distribution.append(row[0])
-                        r_ = r_ + 1
-                    elif 4+dimension <= r_ <= 4+2*dimension-1:
-                        parameters.append([np.float32(row[0]), np.float32(row[1])])
-        parameters = np.array(parameters)
-        return _model, method, nsamples, dimension, distribution, parameters
+    f = open(filename)
+    lines = f.readlines()
 
-    elif filename == 'input_lhs.txt':
-        with open(filename, "r") as file:
-            r_ = 0
-            distribution = []
-            parameters = []
-            for row in [line.split() for line in file if not line.strip().startswith('#')]:
-                if len(row) != 0:
-                    if r_ == 0:
-                        _model = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 1:
-                        method = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 2:
-                        nsamples = int(row[0])
-                        r_ = r_ + 1
-                    elif r_ == 3:
-                        dimension = int(row[0])
-                        r_ = r_ + 1
-                    elif 4 <= r_ <= 4+dimension-1:
-                        distribution.append(row[0])
-                        r_ = r_ + 1
-                    elif 4+dimension <= r_ <= 4+2*dimension-1:
-                        parameters.append([np.float32(row[0]), np.float32(row[1])])
-                        r_ = r_ + 1
-                    elif r_ == 4+2*dimension:
-                        lhs_criterion = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 4+2*dimension + 1:
-                        dist_metric = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 4+2*dimension + 2:
-                        iterations = int(row[0])
-        parameters = np.array(parameters)
-
-        return _model, method, nsamples, dimension, distribution, parameters, lhs_criterion, dist_metric, iterations
-
-    elif filename == 'input_mcmc.txt':
-        with open(filename, "r") as file:
-            r_ = 0
-            distribution = []
-            parameters = []
-            x0 = []
+    for i in range(len(lines_)):
+        title = lines[lines_[i]][1:-1]
+        # General parameters
+        if title == 'Method':
+            mydict[title] = lines[lines_[i]+1][:-1]
+            print()
+        elif title == 'Stochastic dimension':
+            mydict[title] = int(lines[lines_[i] + 1][:-1])
+        elif title == 'Probability distribution (pdf)':
+            dist = []
+            for k in range(mydict['Stochastic dimension']):
+                dist.append(lines[lines_[i]+k+1][:-1])
+            mydict[title] = dist
+        elif title == 'Probability distribution parameters':
             params = []
-            for row in [line.split() for line in file if not line.strip().startswith('#')]:
-                if len(row) != 0:
-                    if r_ == 0:
-                        _model = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 1:
-                        method = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 2:
-                        nsamples = int(row[0])
-                        r_ = r_ + 1
-                    elif r_ == 3:
-                        dimension = int(row[0])
-                        r_ = r_ + 1
-                    elif 4 <= r_ <= 4+dimension-1:
-                        distribution.append(row[0])
-                        r_ = r_ + 1
-                    elif 4+dimension <= r_ <= 4+2*dimension-1:
-                        parameters.append([np.float32(row[0]), np.float32(row[1])])
-                        r_ = r_ + 1
-                    elif 4+2*dimension <= r_ <= 3+3*dimension:
-                        x0.append(np.float32(row[0]))
-                        r_ = r_ + 1
-                    elif 4+3*dimension <= r_ <=3+4*dimension:
-                        params.append(np.float32(row[0]))
-                        r_ = r_ + 1
-                    elif r_ == 3+4*dimension + 1:
-                        MCMC_algorithm = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 3+4*dimension + 2:
-                        proposal = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 3+4*dimension + 3:
-                        target = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 3+4*dimension + 4:
-                        jump = int(row[0])
-
-        x0 = np.array(x0)
-        parameters = np.array(parameters)
-        params = np.array(params)
-
-        return _model, method, nsamples, dimension, distribution, parameters, x0, MCMC_algorithm, params, proposal, target, jump
-
-    elif filename == 'input_pss.txt':
-        with open(filename, "r") as file:
-            r_ = 0
-            distribution = []
-            parameters = []
+            for k in range(mydict['Stochastic dimension']):
+                params.append([np.float32(lines[lines_[i]+k+1][0]), np.float32(lines[lines_[i]+k+1][2])])
+            mydict[title] = params
+        elif title == 'Model':
+            mydict[title] = lines[lines_[i] + 1][:-1]
+        elif title == 'Number of Samples':
+            mydict[title] = lines[lines_[i] + 1][:-1]
+        # Latin Hypercube parameters
+        elif title == 'LHS criterion':
+            mydict[title] = lines[lines_[i] + 1][:-1]
+        elif title == 'distance metric':
+            mydict[title] = lines[lines_[i] + 1][:-1]
+        elif title == 'iterations':
+            mydict[title] = lines[lines_[i] + 1][:-1]
+        # partially stratified sampling
+        elif title == 'PSS design':
             pss_design = []
-            pss_stratum = []
-            for row in [line.split() for line in file if not line.strip().startswith('#')]:
-                if len(row) != 0:
-                    if r_ == 0:
-                        _model = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 1:
-                        method = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 2:
-                        r_ = r_ + 1
-                    elif r_ == 3:
-                        dimension = int(row[0])
-                        r_ = r_ + 1
-                    elif 4 <= r_ <= 4+dimension-1:
-                        distribution.append(row[0])
-                        r_ = r_ + 1
-                    elif 4+dimension <= r_ <= 4+2*dimension-1:
-                        parameters.append([np.float32(row[0]), np.float32(row[1])])
-                        r_ = r_ + 1
-                    elif 4 + 2 * dimension <= r_ <= 3 + 3 * dimension:
-                        pss_design.append(int(row[0]))
-                        r_ = r_ + 1
-                    elif 4 + 3 * dimension <= r_ <= 3 + 4 * dimension:
-                        pss_stratum.append(int(row[0]))
-                        r_ = r_ + 1
+            for k in range(mydict['Stochastic dimension']):
+                pss_design.append(int(lines[lines_[i]+k+1][0]))
+            mydict[title] = pss_design
+        elif title == 'PSS strata':
+            pss_strata = []
+            for k in range(mydict['Stochastic dimension']):
+                pss_strata.append(int(lines[lines_[i]+k+1][0]))
+            mydict[title] = pss_strata
+        # stratified sampling
+        elif title == 'STS design':
+            sts_design = []
+            for k in range(mydict['Stochastic dimension']):
+                sts_design.append(int(lines[lines_[i]+k+1][0]))
+            mydict[title] = sts_design
+        # Markov Chain Monte Carlo simulation
+        elif title == 'MCMC algorithm':
+            mydict[title] = lines[lines_[i] + 1][:-1]
+        elif title == 'Proposal distribution':
+            mydict[title] = lines[lines_[i] + 1][:-1]
+        elif title == 'Target distribution':
+            mydict[title] = lines[lines_[i] + 1][:-1]
+        elif title == 'Burn in samples':
+            mydict[title] = int(lines[lines_[i] + 1][:-1])
+        # Subset Simulation
+        elif title == 'Width of proposal distribution':
+            mydict[title] = np.float32(lines[lines_[i] + 1][:-1])
+        elif title == 'Conditional probability':
+            mydict[title] = np.float32(lines[lines_[i] + 1][:-1])
+        elif title == 'Failure criterion':
+            mydict[title] = np.float32(lines[lines_[i] + 1][:-1])
+        # Stochastic Reduced Order Models (SROM)
 
-        parameters = np.array(parameters)
-        pss_design = np.array(pss_design)
-        pss_stratum = np.array(pss_stratum)
-        nsamples = np.prod(pss_design)
-
-        return _model, method, nsamples, dimension, distribution, parameters, pss_design, pss_stratum
-
-    elif filename == 'input_sts.txt':
-        with open(filename, "r") as file:
-            r_ = 0
-            distribution = []
-            parameters = []
-            sts_input = []
-            for row in [line.split() for line in file if not line.strip().startswith('#')]:
-                if len(row) != 0:
-                    if r_ == 0:
-                        _model = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 1:
-                        method = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 2:
-                        r_ = r_ + 1
-                    elif r_ == 3:
-                        dimension = int(row[0])
-                        r_ = r_ + 1
-                    elif 4 <= r_ <= 4+dimension-1:
-                        distribution.append(row[0])
-                        r_ = r_ + 1
-                    elif 4+dimension <= r_ <= 4+2*dimension-1:
-                        parameters.append([np.float32(row[0]), np.float32(row[1])])
-                        r_ = r_ + 1
-                    elif 4 + 2 * dimension <= r_ <= 3 + 3 * dimension:
-                        sts_input.append(int(row[0]))
-                        r_ = r_ + 1
-
-        parameters = np.array(parameters)
-        sts_input = np.array(sts_input)
-        nsamples = np.prod(sts_input)
-
-        return _model, method, nsamples, dimension, distribution, parameters, sts_input
-
-    elif filename == 'input_SuS.txt':
-        with open(filename, "r") as file:
-            r_ = 0
-            distribution = []
-            parameters = []
-            x0 = []
-            params = []
-            marginal_param = []
-            for row in [line.split() for line in file if not line.strip().startswith('#')]:
-                if len(row) != 0:
-                    if r_ == 0:
-                        _model = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 1:
-                        method = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 2:
-                        nsamples_per_subset = int(row[0])
-                        r_ = r_ + 1
-                    elif r_ == 3:
-                        dimension = int(row[0])
-                        r_ = r_ + 1
-                    elif 4 <= r_ <= 4 + dimension - 1:
-                        distribution.append(row[0])
-                        r_ = r_ + 1
-                    elif 4 + dimension <= r_ <= 4 + 2 * dimension - 1:
-                        marginal_param.append([np.float32(row[0]), np.float32(row[1])])
-                        r_ = r_ + 1
-                    elif 4 + 2 * dimension <= r_ <= 3 + 3 * dimension:
-                        params.append(np.float32(row[0]))
-                        r_ = r_ + 1
-                    elif r_ == 3 + 3 * dimension + 1:
-                        MCMC_algorithm = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 3 + 3 * dimension + 2:
-                        proposal_pdf = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 3 + 3 * dimension + 3:
-                        proposal_width = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 3 + 3 * dimension + 4:
-                        target = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 3 + 3 * dimension + 5:
-                        p0 = np.float32(row[0])
-                        r_ = r_ + 1
-                    elif r_ == 3 + 3 * dimension + 6:
-                        Yf = np.float32(row[0])
-
-
-        params = np.array(params)
-        marginal_param = np.array(marginal_param)
-
-        return _model, method, nsamples_per_subset, dimension, distribution, MCMC_algorithm, params, proposal_pdf, proposal_width, target, p0, Yf, marginal_param
+    return mydict
 
 
 def def_model(_model):

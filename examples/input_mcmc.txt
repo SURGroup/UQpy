@@ -1,40 +1,32 @@
-# model
+#Model
 model_zabaras
 
-# method
+#Method
 mcmc
 
-# number of samples
+#Number of Samples
 1000
 
-# dimensions
+#Stochastic dimension
 2
 
-# distribution
+#Probability distribution (pdf)
 Uniform
 Uniform
 
-# distribution parameters
+#Probability distribution parameters
 0 1
 0 1
 
-# initial seed
-0
-0
-
-# proposal distribution parameters
-1.0
-1.0
-
-# MCMC_algorithm
+#MCMC_algorithm
 MH
 
-# proposal distribution
+#Proposal distribution
 Uniform
 
-# target distribution
+#Target distribution
 mvnpdf
 
-# Samples to jump
+#Burn in samples
 10
 

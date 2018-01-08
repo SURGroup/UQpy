@@ -1,28 +1,28 @@
-# model
+#Model
 model_zabaras
 
-# method
+#Method
 pss
 
-# number of samples
+#Number of Samples
 1000
 
-# dimensions
+#Stochastic dimension
 2
 
-# distribution
+#Probability distribution (pdf)
 Uniform
 Uniform
 
-# distribution parameters
+#Probability distribution parameters
 0 1
 0 1
 
-# pss design
+#PSS design
 1
 1
 
-# pss strata
+#PSS strata
 10000
 10000
 
