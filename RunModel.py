@@ -1,13 +1,14 @@
 from SampleMethods import Strata
 from RunModel import *
 import numpy as np
+import scipy.stats as stats
 
 
 class RunModel:
 
     def __init__(self, generator=None, input=None, nsamples=None, method=None, interpreter=None, model=None, Type=None, \
                  sts_input=None, lhs_criterion='random', MCMC_algorithm='MH', proposal=None, target=None, pss_design=None, pss_stratum=None, \
-                 x0=None, params=None, jump=None):
+                 x0=None, params=None, jump=None, moments=None, properties=None, weights_errors=None, weights_samples=None):
 
         """
         Class of methods used in order to evaluate a model (FEM, PDE, e.t.c)
@@ -94,7 +95,7 @@ class RunModel:
                 self.params = params
                 self.jump = jump
                 self.proposal = proposal
-                mcmc = sm.MCMC(nsamples=self.nsamples, target=self.target, x0=self.x0, MCMC_algorithm=self.algorithm, proposal=self.proposal, params = self.params, njump= self.jump)
+                mcmc = sm.MCMC(nsamples=self.nsamples, target=self.target, x0=self.x0, MCMC_algorithm=self.algorithm, proposal=self.proposal, params=self.params, njump=self.jump)
                 self.samples = mcmc.samples
             elif self.method == 'pss':
                 self.pss_design = pss_design
@@ -102,6 +103,22 @@ class RunModel:
                 self.nsamples = max(pss_stratum)
                 pss = sm.PSS(pss_design=self.pss_design, pss_stratum=self.pss_stratum)
                 self.samples = pss.samples
+            elif self.method == 'srom':
+                is_string = isinstance(sts_input, str)
+                if is_string:
+                    ss = sm.STS(strata=Strata(input_file=sts_input))
+                else:
+                    ss = sm.STS(strata=Strata(nstrata=sts_input))
+                self.nsamples = ss.samples.shape[0]
+                self.samples = stats.gamma.ppf(ss.samples, 2, loc=1, scale=3)
+                self.properties = properties
+                self.moments = moments
+                self.weights_errors = weights_errors
+                self.weights_samples = weights_samples
+                srom = sm.SROM(samples=self.samples, nsamples=self.nsamples, marginal=sm.distribution,
+                               moments=self.moments, weights_errors=self.weights_errors,
+                               weights_function=self.weights_samples, properties=self.properties)
+                self.probability = srom.probability
         elif is_string:
             self.samples = np.loadtxt(input, dtype=np.float32, delimiter=' ')
             self.nsamples = self.samples.shape[0]
@@ -128,7 +145,10 @@ class RunModel:
         else:
             self.Type = Type
 
-        self.eval = self.run_model()
+        if self.method == 'srom':
+            self.eval, self.mcs = self.eigenvalues()
+        else:
+            self.eval = self.run_model()
 
     def run_model(self):
 
@@ -142,3 +162,27 @@ class RunModel:
 
         return geval
 
+
+    def eigenvalues(self):
+
+        if self.interpreter == 'python' and self.Type == 'scalar':
+            srom_eigen = np.zeros([self.nsamples, self.dimension])
+            for i in range(self.nsamples):
+                srom_eigen[i] = self.model(self.samples[i, :])
+
+        else:
+            raise NotImplementedError('Only python interpreter supported so far and only for scalars')
+
+        n_mcs = 1000
+        X_mcs = np.random.gamma(shape=2, scale=3, size=[n_mcs, self.dimension]) + np.ones([n_mcs, self.dimension])
+        lm_mcs = np.empty([n_mcs, self.dimension])
+        for i in range(n_mcs):
+            x = X_mcs[i, :]
+            Coeff = [-1, x[0] + 2 * x[1], -(x[0] * x[1] + 2 * x[0] * x[2] + 3 * x[1] * x[2] + x[2] ** 2),
+                     (x[0] * x[1] * x[2] + (x[0] + x[1]) * x[2])]
+            lm_mcs[i, :] = np.roots(Coeff)
+
+        p = np.transpose(np.matrix(self.probability))
+        com = np.append(srom_eigen, p, 1)
+        srom_eigen = com[np.argsort(com[:, 0].flatten())]
+        return srom_eigen, lm_mcs

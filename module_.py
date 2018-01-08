@@ -195,13 +195,60 @@ def handle_input_file(filename):
 
         return _model, method, nsamples, dimension, distribution, parameters, sts_input
 
+    elif filename == 'input_srom.txt':
+        with open(filename, "r") as file:
+            r_ = 0
+            distribution = []
+            moments = []
+            sts_input = []
+            properties = []
+            weights_samples = []
+            weights_errors = []
+            for row in [line.split() for line in file if not line.strip().startswith('#')]:
+                if len(row) != 0:
+                    if r_ == 0:
+                        _model = row[0]
+                        r_ = r_ + 1
+                    elif r_ == 1:
+                        method = row[0]
+                        r_ = r_ + 1
+                    elif r_ == 2:
+                        dimension = int(row[0])
+                        r_ = r_ + 1
+                    elif 3 <= r_ <= 3+dimension-1:
+                        sts_input.append(int(row[0]))
+                        r_ = r_ + 1
+                    elif 3+dimension <= r_ <= 3+2*dimension-1:
+                        distribution.append(row[0])
+                        r_ = r_ + 1
+                    elif 3 + 2 * dimension <= r_ <= 3 + 2 * dimension + 1:
+                        moments.append([np.float32(row[0]), np.float32(row[1]), np.float32(row[2])])
+                        r_ = r_ + 1
+                    elif 3 + 2 * dimension + 2 <= r_ <= 3 + 2 * dimension + 4:
+                        properties.append(int(row[0]))
+                        r_ = r_ + 1
+                    elif 3 + 2 * dimension + 5 <= r_ <= 3 + 2 * dimension + 7:
+                        weights_errors.append(np.float32(row[0]))
+                        r_ = r_ + 1
+                    elif 3 + 2 * dimension + 8 <= r_:
+                        weights_samples.append(np.float32(row[0]))
+                        r_ = r_ + 1
+
+        moments = np.array(moments)
+        sts_input = np.array(sts_input)
+        nsamples = np.prod(sts_input)
+        parameters = 'None'
+
+        return _model, method, nsamples, dimension, distribution, sts_input, moments, parameters, properties, weights_errors, weights_samples
+
 
 def def_model(_model):
     if _model == 'model_zabaras':
         model = partial(model_zabaras)
     elif _model == 'model_ko2d':
         model = partial(model_ko2d)
-
+    elif _model == 'model_eigenvalues':
+        model = partial(model_eigenvalues)
     return model
 
 
@@ -210,4 +257,11 @@ def def_target(target):
         target = partial(mvnpdf)
     elif target == 'normpdf':
         target = partial(normpdf)
+    elif target == 'SROM1':
+        target = partial(SROM1)
+    elif target == 'SROM2':
+        target = partial(SROM2)
+    elif target == 'SROM3':
+        target = partial(SROM3)
     return target
+

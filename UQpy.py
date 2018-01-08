@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
-filename = sys.argv[1]
+filename = 'input_srom.txt'
 
 current_dir = os.getcwd()
 
@@ -29,6 +29,10 @@ elif filename == 'input_pss.txt':
 
 elif filename == 'input_sts.txt':
     _model, method, nsamples, dimension, distribution, parameters, sts_input = handle_input_file(filename)
+
+elif filename == 'input_srom.txt':
+    _model, method, nsamples, dimension, distribution, sts_input, moments, parameters, properties, weights_errors, \
+    weights_samples = handle_input_file(filename)
 
 os.chdir(current_dir)
 
@@ -56,29 +60,46 @@ elif method == 'pss':
     subpath = os.path.join(os.sep, path, 'pss')
 
 elif method == 'sts':
-    g = RunModel(generator=sm,  method=method, model = model, sts_input=sts_input)
+    g = RunModel(generator=sm,  method=method, model=model, sts_input=sts_input)
     subpath = os.path.join(os.sep, path, 'sts')
+
+elif method == 'srom':
+    g = RunModel(generator=sm, method=method, model=model, sts_input=sts_input, moments=moments, properties=properties, weights_errors=weights_errors, weights_samples=weights_samples)
+    subpath = os.path.join(os.sep, path, 'srom')
 
 os.makedirs(subpath, exist_ok=True)
 os.chdir(subpath)
 
-np.savetxt('samples.txt', g.samples, delimiter=' ')
-np.savetxt('model.txt', g.eval)
 
-plt.figure()
-plt.scatter(g.samples[:, 0], g.samples[:, 1])
-plt.savefig('samples.png')
+if method == 'srom':
+    g.eval = np.reshape(g.eval, (27, 4))
+    g.eval = g.eval[np.argsort(g.eval[:, 0].flatten())]
+    g.eval = np.reshape(g.eval, (27, 4))
+    plt.plot(g.eval[:, 0], np.reshape(np.cumsum(g.eval[:, 3]), [27, 1]), label='Approximate')
+    counts, bin_edges = np.histogram(g.mcs[:, 0], bins=100, normed=True)
+    cdf = np.cumsum(counts)
+    cdf = (1 / cdf[np.size(counts) - 1]) * cdf
+    plt.plot(bin_edges[1:], cdf, label='Exact')
+    legend = plt.legend(loc='upper right', shadow=True)
+    plt.savefig('eigen.png')
+else:
+    np.savetxt('samples.txt', g.samples, delimiter=' ')
+    np.savetxt('model.txt', g.eval)
 
-plt.figure()
-n, bins, patches = plt.hist(g.eval, 50, normed=1, facecolor='g', alpha=0.75)
-plt.title('Histogram')
-plt.savefig('histogram.png')
+    plt.figure()
+    plt.scatter(g.samples[:, 0], g.samples[:, 1])
+    plt.savefig('samples.png')
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.scatter(g.samples[:, 0], g.samples[:, 1], g.eval, c='r', s=2)
-plt.gca().invert_xaxis()
-plt.savefig('model.png')
+    plt.figure()
+    n, bins, patches = plt.hist(g.eval[:, 0], 50, normed=1, facecolor='g', alpha=0.75)
+    plt.title('Histogram')
+    plt.savefig('histogram.png')
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(g.samples[:, 0], g.samples[:, 1], g.samples[:, 2], c='r', s=2)
+    plt.gca().invert_xaxis()
+    plt.savefig('model.png')
 
 
 os.chdir(current_dir)

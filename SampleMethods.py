@@ -7,6 +7,8 @@ import os
 import sys
 import copy
 from scipy.spatial.distance import pdist
+from scipy import optimize
+from module_ import def_target
 
 
 class SampleMethods:
@@ -535,6 +537,86 @@ class SampleMethods:
                 # TODO: MDS - Add affine invariant ensemble MCMC
 
                 # TODO: MDS - Add Gibbs Sampler
+
+
+########################################################################################################################
+########################################################################################################################
+#                                         Stochastic Reduced Order Model  (SROM)                                       #
+########################################################################################################################
+########################################################################################################################
+
+    class SROM:
+
+        # TODO: Mohit - Write the documentation for the class
+
+        def __init__(self, samples=None, nsamples=None, marginal=None, moments=None, weights_errors=None, weights_function=None,
+                     properties=[1, 1, 0]):
+            """
+
+            :param samples:
+            :param marginal:
+            :param moments:
+            :param weights_errors:
+            :param weights_function: An matrix (nsamples+3 x dimension) containing weights correponding to function
+            value for each dimension
+            :param properties:
+            """
+
+            # TODO: Mohit - Add error checks
+            # TODO: Mohit - Transform sample from [0,1] into range of marginals
+            dimension = np.size(marginal)
+            if np.size(weights_function) == 0:
+                weights_function = (1/nsamples)*np.ones([nsamples+3, dimension])
+                weights_function[nsamples:nsamples+moments.shape[0], :] = moments
+
+            self.samples = samples
+            self.marginal = marginal
+            self.moments = moments
+            self.weights_errors = weights_errors
+            self.weights_function = weights_function
+            self.properties = properties
+
+            # TODO: Mohit - Define default calculation for moments
+            def f(p, samples, w, mar, n, d, m, alpha):
+                e1 = 0.
+                e2 = 0.
+                e3 = 0.
+                samples = np.matrix(samples)
+                p = np.transpose(np.matrix(p))
+                com = np.append(samples, p, 1)
+                for j in range(d):
+                    srt = com[np.argsort(com[:, j].flatten())]
+                    s = srt[0, :, j]
+                    a = srt[0, :, d]
+                    A = np.cumsum(a)
+                    marginal = def_target(mar[j])
+                    for i in range(n):
+                        e1 = + w[i, j] * (A[0, i] - marginal(s[0, i])) ** 2
+
+                    e2 =+ (w[i+1, j]) * (np.sum(np.transpose(p) * samples[:, j]) - m[0,j]) ** 2
+                    #e2 =+ (w[i+2, j]) * (np.sum(np.transpose(p) * (np.transpose(samples[:, j])*samples[:, j])) - m[2,j]) ** 2
+                    # TODO: Mohit - Add error corresponding to correlation.
+                return alpha[0]*e1 + alpha[1]*e2 + alpha[2]*e3
+
+            def constraint(p):
+                return np.sum(p) - 1
+
+            def constraint2(p):
+                n = np.size(p)
+                return np.ones(n) - p
+
+            def constraint3(p):
+                n = np.size(p)
+                return p - np.zeros(n)
+
+            cons = ({'type': 'eq', 'fun': constraint}, {'type': 'ineq', 'fun': constraint2},
+                    {'type': 'ineq', 'fun': constraint3})
+
+            P = optimize.minimize(f, np.zeros(nsamples),
+                                  args=(self.samples, self.weights_function, self.marginal, nsamples, dimension, self.moments, self.weights_errors),
+                                  constraints=cons, method='SLSQP')
+
+            self.probability = P.x
 
 
 ########################################################################################################################

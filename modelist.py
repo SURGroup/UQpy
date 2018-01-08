@@ -142,6 +142,11 @@ def model_reliability(u, Type):
     return a - np.sum(u, axis=0) / np.sqrt(u.size)
 
 
+
+def model_eigenvalues(X):
+    coeff = [-1, X[0] + 2 * X[1], -(X[0] * X[1] + 2 * X[0] * X[2] + 3 * X[1] * X[2] + X[2] ** 2),
+             (X[0] * X[1] * X[2] + (X[0] + X[1]) * X[2])]
+    return np.roots(coeff)
 ########################################################################################################################
 ########################################################################################################################
 #                                        List of distribution
@@ -170,3 +175,15 @@ def marginal(x, mp):
 
     """
     return stats.norm.pdf(x, mp[0], mp[1])
+
+
+def SROM1(x):
+    return stats.gamma.cdf(x, 2, loc=1, scale=3)
+
+
+def SROM2 (x):
+    return stats.gamma.cdf(x, 2, loc=1, scale=3)
+
+
+def SROM3(x):
+    return stats.gamma.cdf(x, 2, loc=1, scale=3)
