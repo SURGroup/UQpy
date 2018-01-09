@@ -225,7 +225,7 @@ venv.bak/
 .mypy_cache/
 
 # Exclude results folder
-results/
-examples/
+examples/results
 
 # End of https://www.gitignore.io/api/osx,matlab,python,pycharm
+logo/
