@@ -1,6 +1,6 @@
 from SampleMethods import *
 from RunModel import RunModel
-from module_ import handle_input_file, def_model, def_target, readfile
+from module_ import def_model, def_target, readfile
 from Reliability import ReliabilityMethods
 from Surrogates import SurrogateModels
 import matplotlib.pyplot as plt
@@ -10,7 +10,6 @@ from mpl_toolkits.mplot3d import Axes3D
 filename = 'input_mcmc.txt' #sys.argv[1]
 
 current_dir = os.getcwd()
-
 path = os.path.join(os.sep, current_dir, 'examples')
 os.makedirs(path, exist_ok=True)
 os.chdir(path)

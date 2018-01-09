@@ -19,6 +19,6 @@ Uniform
 0 1
 
 #STS design
-100
-100
+10
+10
 

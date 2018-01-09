@@ -18,15 +18,23 @@ Uniform
 0 1
 0 1
 
-#MCMC_algorithm
+#MCMC algorithm
 MH
 
 #Proposal distribution
-Uniform
+Normal
+
+#Proposal distribution parameters
+1
+1
 
 #Target distribution
 mvnpdf
 
-#Burn in samples
+#Marginal target distribution parameters
+0 1
+0 1
+
+#Burn-in samples
 10
 

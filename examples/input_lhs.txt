@@ -5,7 +5,7 @@ model_zabaras
 lhs
 
 #Number of Samples
-100
+1000
 
 #Stochastic dimension
 2

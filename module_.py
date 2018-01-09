@@ -2,6 +2,7 @@ import numpy as np
 from functools import partial
 from modelist import *
 
+
 def readfile(filename):
     lines_ = []
     mydict = {}
@@ -36,7 +37,7 @@ def readfile(filename):
         elif title == 'Model':
             mydict[title] = lines[lines_[i] + 1][:-1]
         elif title == 'Number of Samples':
-            mydict[title] = lines[lines_[i] + 1][:-1]
+            mydict[title] = int(lines[lines_[i] + 1][:-1])
         # Latin Hypercube parameters
         elif title == 'LHS criterion':
             mydict[title] = lines[lines_[i] + 1][:-1]
@@ -53,24 +54,36 @@ def readfile(filename):
         elif title == 'PSS strata':
             pss_strata = []
             for k in range(mydict['Stochastic dimension']):
-                pss_strata.append(int(lines[lines_[i]+k+1][0]))
+                pss_strata.append(int(lines[lines_[i]+k+1][:-1]))
             mydict[title] = pss_strata
         # stratified sampling
         elif title == 'STS design':
             sts_design = []
             for k in range(mydict['Stochastic dimension']):
-                sts_design.append(int(lines[lines_[i]+k+1][0]))
+                sts_design.append(int(lines[lines_[i]+k+1][:-1]))
             mydict[title] = sts_design
         # Markov Chain Monte Carlo simulation
         elif title == 'MCMC algorithm':
             mydict[title] = lines[lines_[i] + 1][:-1]
         elif title == 'Proposal distribution':
             mydict[title] = lines[lines_[i] + 1][:-1]
+        elif title == 'Proposal distribution parameters':
+            proposal_params = []
+            for k in range(mydict['Stochastic dimension']):
+                proposal_params.append(np.float32(lines[lines_[i]+k+1][0]))
+            mydict[title] = proposal_params
         elif title == 'Target distribution':
             mydict[title] = lines[lines_[i] + 1][:-1]
-        elif title == 'Burn in samples':
+        elif title == 'Burn-in samples':
             mydict[title] = int(lines[lines_[i] + 1][:-1])
+        elif title == 'Marginal target distribution parameters':
+            marg_params = []
+            for k in range(mydict['Stochastic dimension']):
+                marg_params.append([np.float32(lines[lines_[i]+k+1][0]), np.float32(lines[lines_[i]+k+1][2])])
+            mydict[title] = marg_params
         # Subset Simulation
+        elif title == 'Number of Samples per subset':
+            mydict[title] = int(lines[lines_[i] + 1][:-1])
         elif title == 'Width of proposal distribution':
             mydict[title] = np.float32(lines[lines_[i] + 1][:-1])
         elif title == 'Conditional probability':

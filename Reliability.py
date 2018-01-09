@@ -35,27 +35,28 @@ class ReliabilityMethods:
 
         """
 
-        def __init__(self, dimension=None, nsamples_per_subset=None, conditional_prob=None, model=None,
-                     MCMC_algorithm=None, params=None, proposal=None, proposal_width=None, target=None,
+        def __init__(self, sm=None, rm=None, dimension=None, nsamples_per_subset=None, conditional_prob=None, model=None,
+                     MCMC_algorithm=None, proposal_params=None, proposal=None, proposal_width=None, target=None, jump=None,
                      limit_state=None, marginal_params=None):
 
             self.nsamples_per_subset = nsamples_per_subset
             self.dimension = dimension
             self.p0 = conditional_prob
+            self.jump = jump
             self.model = model
-            self.params = params
+            self.proposal_params = proposal_params
             self.method = MCMC_algorithm
             self.proposal = proposal
             self.target = target
             self.width = proposal_width
             self.limitState = limit_state
             self.marginal_params = marginal_params
-            self.pf, self.samples, self.eval = self.run_SuS()
-            print()
+            self.pf, self.xi, self.v = self.run_SuS(rm, sm)
+
 
             # TODO: DG - Add coefficient of variation estimator for subset simulation
 
-        def run_SuS(self):
+        def run_SuS(self, rm, sm):
             step = 0
             theta_u = np.zeros(shape=(self.nsamples_per_subset, self.dimension))
             Ymc = np.zeros(self.nsamples_per_subset)
@@ -64,16 +65,15 @@ class ReliabilityMethods:
 
             for i in range(self.nsamples_per_subset):
                 theta_u[i, :] = np.random.randn(self.dimension)
-                model = RunModel(dimension=self.dimension, input=theta_u[i, :].reshape(1, self.dimension),
-                                 model=self.model)
-                Ymc[i] = model.eval
+                model = rm.Evaluate(rm, theta_u[i, :].reshape(1, self.dimension))
+                Ymc[i] = model.v
 
             ytemp, thetanew, M = self.threshold0value(theta_u, Ymc)
             y.append(ytemp)
 
             while y[-1] > self.limitState:
 
-                [thetanewest, Y] = self.subset_step(thetanew, y[-1], M)
+                [thetanewest, Y] = self.subset_step(sm, rm, thetanew, y[-1], M)
                 step = step + 1
                 ytemp, thetanew, M = self.threshold0value(thetanewest, Y)
                 y.append(ytemp)
@@ -82,7 +82,7 @@ class ReliabilityMethods:
 
             return np.prod(p), thetanew, M
 
-        def subset_step(self, thetanew, y, M):
+        def subset_step(self, sm, rm, thetanew, y, M):
 
             subgermU = thetanew
             subgermG = M
@@ -95,16 +95,15 @@ class ReliabilityMethods:
             for i in range(nchains):
                 seed_i = subgermU[i, :]
                 val_i = subgermG[i]
-                mcmc = SampleMethods.MCMC(nsamples=nr, x0=seed_i, dimension=self.dimension,
-                                          MCMC_algorithm=self.method, proposal=self.proposal,
-                                          marginal_parameters=self.marginal_params, target=self.target)
+                mcmc = sm.MCMC(sm, nr, target=self.target, x0=seed_i, MCMC_algorithm=self.method, proposal=self.proposal,
+                               params=self.proposal_params, marginal_parameters=self.marginal_params, njump=self.jump)
+
                 for j in range(nr):
-                    candidate = mcmc.samples[j, :]
+                    candidate = mcmc.xi[j, :]
                     check_ = np.array_equal(seed_i.reshape(1, self.dimension), candidate)
                     if check_ is not True:
-                        model = RunModel(dimension=self.dimension, input=candidate.reshape(1, self.dimension),
-                                         model=self.model)
-                        allG = model.eval
+                        model = rm.Evaluate(rm, candidate.reshape(1, self.dimension))
+                        allG = model.v
                         if allG > y:
                             val_i = val_i
                             seed_i = seed_i
