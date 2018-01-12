@@ -206,7 +206,6 @@ class README:
         return 'OK'
 
 
-
 def def_model(_model):
     if _model == 'model_zabaras':
         model = partial(model_zabaras)
