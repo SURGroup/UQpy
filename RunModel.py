@@ -11,7 +11,6 @@ class RunModel:
     :param Type: Scalar, Vector, Output
 
 
-
     Created by: Dimitris G. Giovanis
     Last modified: 1/8/2017
     Last modified by: Dimitris G. Giovanis

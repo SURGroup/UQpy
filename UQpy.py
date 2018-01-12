@@ -1,90 +1,137 @@
 from SampleMethods import *
 from RunModel import RunModel
-from module_ import def_model, def_target, readfile
+from module_ import def_model, def_target, README
 from Reliability import ReliabilityMethods
 from Surrogates import SurrogateModels
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
-
-filename = 'input_mcmc.txt' #sys.argv[1]
+filename = sys.argv[1]
 
 current_dir = os.getcwd()
 path = os.path.join(os.sep, current_dir, 'examples')
 os.makedirs(path, exist_ok=True)
 os.chdir(path)
 
-
-input = readfile(filename)
-
-
-if filename == 'input_mcmc.txt':
-    _model, method, nsamples, dimension, distribution, parameters, x0, MCMC_algorithm, params,proposal, target, \
-    jump = handle_input_file(filename)
-
-    target = def_target(target)
-
-elif filename == 'input_lhs.txt':
-    _model, method, nsamples, dimension, distribution, parameters, lhs_criterion, dist_metric,\
-    iterations = handle_input_file(filename)
-
-elif filename == 'input_mcs.txt':
-    _model, method, nsamples, dimension, distribution, parameters = handle_input_file(filename)
-
-
-elif filename == 'input_pss.txt':
-    _model, method, nsamples, dimension, distribution, parameters, pss_design, pss_stratum=handle_input_file(filename)
-
-elif filename == 'input_sts.txt':
-    _model, method, nsamples, dimension, distribution, parameters, sts_input = handle_input_file(filename)
-
-elif filename == 'input_SuS.txt':
-    _model, method, nsamples_per_subset, dimension, distribution,  MCMC_algorithm, params,proposal, proposal_width, \
-    target, conditional_prob, Yf, marginal_param = handle_input_file(filename)
-
-elif filename == 'UQpy_input.txt':
-    input = readfile(filename)
-
-
-
-os.chdir(current_dir)
-
-model = def_model(_model)
-
-path = os.path.join(os.sep, current_dir, 'results')
-os.makedirs(path, exist_ok=True)
-os.chdir(path)
+input = README(filename)
+method = input.data['Method']
 
 if method == 'mcs':
-    samples_mcs = SampleMethods.MCS(nsamples, dimension)
-    g = RunModel(nsamples=nsamples, dimension=dimension, method=method,  model=model)
-    subpath = os.path.join(os.sep, path, 'mcs')
+    nsamples = input.data['Number of Samples']
+    dim = input.data['Stochastic dimension']
+    pdf = input.data['Probability distribution (pdf)']
+    pdf_params = input.data['Probability distribution parameters']
+
+    sm = SampleMethods(distribution=pdf, dimension=dim, parameters=pdf_params, method=method)
+    mcs = sm.MCS(sm, nsamples, dim)
+
+    if 'Model' in input.data:
+        model = def_model(input.data['Model'])
+        rm = RunModel(model=model)
+        fx = rm.Evaluate(rm, mcs.samples)
 
 elif method == 'lhs':
-    g = RunModel(nsamples=nsamples, dimension=dimension, method=method,  model=model, lhs_criterion='random')
-    subpath = os.path.join(os.sep, path, 'lhs')
+    nsamples = input.data['Number of Samples']
+    dim = input.data['Stochastic dimension']
+    pdf = input.data['Probability distribution (pdf)']
+    pdf_params = input.data['Probability distribution parameters']
+    lhs_criterion = input.data['LHS criterion']
+    lhs_metric = input.data['distance metric']
+    lhs_iter = input.data['iterations']
 
-elif method == 'mcmc':
-    target = def_target(target)
-    g = RunModel(nsamples=nsamples, dimension=dimension, method=method, model=model,  x0=x0,
-                 MCMC_algorithm=MCMC_algorithm, proposal=proposal, params=params, target=target, jump=jump)
-    subpath = os.path.join(os.sep, path, 'mcmc')
+    sm = SampleMethods(distribution=pdf, dimension=dim, parameters=pdf_params, method=method)
+    lhs = sm.LHS(sm, dimension=dim, nsamples=nsamples, lhs_criterion=lhs_criterion, lhs_iter=lhs_iter,
+                 lhs_metric=lhs_metric)
+
+    if 'Model' in input.data:
+        model = def_model(input.data['Model'])
+        rm = RunModel(model=model)
+        fx = rm.Evaluate(rm, lhs.samples)
+
 
 elif method == 'pss':
-    g = RunModel(method=method, dimension=dimension, model=model,   pss_design=pss_design, pss_stratum=pss_stratum)
-    subpath = os.path.join(os.sep, path, 'pss')
+    nsamples = input.data['Number of Samples']
+    dim = input.data['Stochastic dimension']
+    pdf = input.data['Probability distribution (pdf)']
+    pdf_params = input.data['Probability distribution parameters']
+    pss_design = input.data['PSS design']
+    pss_strata = input.data['PSS strata']
+
+    sm = SampleMethods(distribution=pdf, dimension=dim, parameters=pdf_params, method=method)
+    pss = sm.PSS(pss_design=pss_design, pss_strata=pss_strata)
+
+    if 'Model' in input.data:
+        model = def_model(input.data['Model'])
+        rm = RunModel(model=model)
+        fx = rm.Evaluate(rm, pss.samples)
+
 
 elif method == 'sts':
-    g = RunModel(method=method, dimension=dimension, model = model, sts_input=sts_input)
-    subpath = os.path.join(os.sep, path, 'sts')
+
+    nsamples = input.data['Number of Samples']
+    dim = input.data['Stochastic dimension']
+    pdf = input.data['Probability distribution (pdf)']
+    pdf_params = input.data['Probability distribution parameters']
+    sts_design = input.data['STS design']
+
+    sm = SampleMethods(distribution=pdf, dimension=dim, parameters=pdf_params, method=method)
+    sts = sm.STS(sm, strata=Strata(nstrata=sts_design))
+
+    if 'Model' in input.data:
+        model = def_model(input.data['Model'])
+        rm = RunModel(model=model)
+        fx = rm.Evaluate(rm, sts.samples)
+
+elif method == 'mcmc':
+    nsamples = input.data['Number of Samples']
+    dim = input.data['Stochastic dimension']
+    pdf = input.data['Probability distribution (pdf)']
+    pdf_params = input.data['Probability distribution parameters']
+    pdf_proposal = input.data['Proposal distribution']
+    pdf__proposal_params = np.array(input.data['Proposal distribution parameters'])
+    pdf_target = def_target(input.data['Target distribution'])
+    pdf_target_parameters = np.array(input.data['Marginal target distribution parameters'])
+    mcmc_seed = np.array(input.data['Initial seed'])
+    mcmc_algorithm = input.data['MCMC algorithm']
+    mcmc_burnIn = input.data['Burn-in samples']
+
+    sm = SampleMethods(distribution=pdf, dimension=dim, parameters=pdf_params, method=method)
+    mcmc = sm.MCMC(sm, number=nsamples, pdf_target=pdf_target, mcmc_algorithm=mcmc_algorithm, pdf_proposal=pdf_proposal,
+                   pdf_proposal_params=pdf__proposal_params, mcmc_seed=mcmc_seed,
+                   pdf_target_params=pdf_target_parameters, mcmc_burnIn=mcmc_burnIn)
+
+    if 'Model' in input.data:
+        model = def_model(input.data['Model'])
+        rm = RunModel(model=model)
+        fx = rm.Evaluate(rm, mcmc.samples)
+
 
 elif method == 'SuS':
-    target = def_target(target)
-    g = ReliabilityMethods.SubsetSimulation(dimension=dimension, nsamples_per_subset=nsamples_per_subset,  model=model,
-                                            MCMC_algorithm=MCMC_algorithm, proposal=proposal,
-                                            conditional_prob=conditional_prob, marginal_params=marginal_param,
-                                            proposal_width=proposal_width, params=params, target=target, limit_state=Yf)
-    subpath = os.path.join(os.sep, path, 'SuS')
+    model = def_model(input.data['Model'])
+    nsamples_ss = input.data['Number of Samples per subset']
+    dim = input.data['Stochastic dimension']
+    pdf = input.data['Probability distribution (pdf)']
+    pdf_params = input.data['Probability distribution parameters']
+    pdf_proposal = input.data['Proposal distribution']
+    pdf_proposal_params = np.array(input.data['Proposal distribution parameters'])
+    pdf_proposal_width = input.data['Width of proposal distribution']
+    p0_cond = input.data['Conditional probability']
+    fail = input.data['Failure criterion']
+    pdf_target = def_target(input.data['Target distribution'])
+    pdf_target_params = np.array(input.data['Marginal target distribution parameters'])
+    mcmc_burnIn = input.data['Burn-in samples']
+    mcmc_algorithm = input.data['MCMC algorithm']
+
+    sm = SampleMethods(distribution=pdf, dimension=d, parameters=pdf_params, method=method)
+    rm = RunModel(model=model)
+
+    SuS = ReliabilityMethods.SubsetSimulation(sm, rm, dimension=dim, nsamples_per_subset=nsamples_ss, model=model,
+                                        mcmc_algorithm=mcmc_algorithm, pdf_proposal=pdf_proposal,
+                                        p0_cond=p0_cond, pdf_target_params=pdf_target_params, mcmc_burnIn=mcmc_burnIn,
+                                        pdf_proposal_width=pdf_proposal_width, pdf_proposal_params=pdf_proposal_params,
+                                        pdf_target=pdf_target, fail=fail)
+
+
+
 
 
 '''

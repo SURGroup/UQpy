@@ -35,23 +35,24 @@ class ReliabilityMethods:
 
         """
 
-        def __init__(self, sm=None, rm=None, dimension=None, nsamples_per_subset=None, conditional_prob=None, model=None,
-                     MCMC_algorithm=None, proposal_params=None, proposal=None, proposal_width=None, target=None, jump=None,
-                     limit_state=None, marginal_params=None):
+        def __init__(self, sm=None, rm=None, dimension=None, nsamples_ss=None, p0_cond=None, model=None,
+                     mcmc_algorithm=None, pdf_proposal_params=None, pdf_proposal=None, pdf_proposal_width=None, \
+                     pdf_target=None, mcmc_burnIn=None,
+                     fail=None, pdf_target_params=None):
 
-            self.nsamples_per_subset = nsamples_per_subset
+            self.nsamples_ss = nsamples_ss
             self.dimension = dimension
-            self.p0 = conditional_prob
-            self.jump = jump
+            self.p0_cond = p0_cond
+            self.burnIn = mcmc_burnIn
             self.model = model
-            self.proposal_params = proposal_params
-            self.method = MCMC_algorithm
-            self.proposal = proposal
-            self.target = target
-            self.width = proposal_width
-            self.limitState = limit_state
-            self.marginal_params = marginal_params
-            self.pf, self.xi, self.v = self.run_SuS(rm, sm)
+            self.pdf_proposal_params = pdf_proposal_params
+            self.algorithm = mcmc_algorithm
+            self.pdf_proposal = pdf_proposal
+            self.pdf_target = pdf_target
+            self.pdf_proposal_width = pdf_proposal_width
+            self.fail = fail
+            self.marginal_params = pdf_target_params
+            self.pf, self.samples, self.solution = self.run_SuS(rm, sm)
 
 
             # TODO: DG - Add coefficient of variation estimator for subset simulation
