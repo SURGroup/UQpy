@@ -580,6 +580,7 @@ class SampleMethods:
             def f(p, samples, w, mar, n, d, m, alpha):
                 e1 = 0.
                 e2 = 0.
+                e22 = 0.
                 e3 = 0.
                 samples = np.matrix(samples)
                 p = np.transpose(np.matrix(p))
@@ -594,9 +595,9 @@ class SampleMethods:
                         e1 = + w[i, j] * (A[0, i] - marginal(s[0, i])) ** 2
 
                     e2 =+ (w[i+1, j]) * (np.sum(np.transpose(p) * samples[:, j]) - m[0,j]) ** 2
-                    #e2 =+ (w[i+2, j]) * (np.sum(np.transpose(p) * (np.transpose(samples[:, j])*samples[:, j])) - m[2,j]) ** 2
+                    # e22 =+ (w[i+2, j]) * (np.sum(np.array(p) * (np.array(samples[:, j])*np.array(samples[:,j]))) - m[1,j]) ** 2
                     # TODO: Mohit - Add error corresponding to correlation.
-                return alpha[0]*e1 + alpha[1]*e2 + alpha[2]*e3
+                return alpha[0]*e1 + alpha[1]*(e2+e22) + alpha[2]*e3
 
             def constraint(p):
                 return np.sum(p) - 1
