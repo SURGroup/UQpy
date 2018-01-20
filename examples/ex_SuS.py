@@ -1,9 +1,8 @@
-from SampleMethods import *
-from RunModel import RunModel
-from module_ import def_model, def_target, readfile
+from UQpyLibraries.SampleMethods import *
+from various.RunModel import RunModel
+from various.module_ import def_model, def_target, readfile
 import matplotlib.pyplot as plt
-from Reliability import ReliabilityMethods
-from mpl_toolkits.mplot3d import Axes3D
+from UQpyLibraries.Reliability import ReliabilityMethods
 
 filename = 'input_SuS.txt'
 data = readfile(filename)

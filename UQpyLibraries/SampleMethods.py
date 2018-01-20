@@ -1,15 +1,12 @@
 """This module contains functionality for all the sampling methods supported in UQpy."""
 
-from library import *
-import scipy.stats as stats
-from modelist import *
-import os
+from various.modelist import *
 import sys
 import copy
 from scipy.spatial.distance import pdist
 
 
-class SampleMethods:
+class runSamplingMethods:
     """
     A class that contains the information of the probability model.
 
@@ -21,11 +18,10 @@ class SampleMethods:
     :param method:  Sampling method
 
     """
-    def __init__(self, distribution=None, dimension=None, parameters=None, method=None):
-        self.method = method
-        self.distribution = distribution
+    def __init__(self, distribution=None, dimension=None, parameters=None):
+        self.pdf = distribution
         self.dimension = dimension
-        self.parameters = parameters
+        self.pdf_params = parameters
 
 ########################################################################################################################
 #                                         Monte Carlo simulation
@@ -86,14 +82,18 @@ class SampleMethods:
 
         """
 
-        def __init__(self, generator=None, dimension=2, number=None, lhs_criterion=None, lhs_iter=None, lhs_metric=None):
-            self.generator = generator
-            self.nsamples = number
-            self.lhs_criterion = lhs_criterion
-            self.lhs_metric = lhs_metric
-            self.lhs_iter = lhs_iter
+        def __init__(self, generator=None, data=None):
 
-            print('Running for ' + str(self.iterations) + ' iterations')
+            self.generator = generator
+            self.nsamples = data['Number of Samples']
+            self.ndim = self.generator.dimension
+            self.pdf = self.generator.pdf
+            self.pdf_params = self.generator.pdf_params
+            self.lhs_criterion = data['LHS criterion']
+            self.lhs_metric = data['distance metric']
+            self.lhs_iter = data['iterations']
+
+            print('Running LHS for ' + str(self.lhs_iter) + ' iterations')
 
             cut = np.linspace(0, 1, self.nsamples + 1)
             self.a = cut[:self.nsamples]
@@ -147,7 +147,7 @@ class SampleMethods:
             """
             maximin_dist = 0
             samples = self.random()
-            for _ in range(self.iterations):
+            for _ in range(self.lhs_iter):
                 samples_try = self.random()
                 d = pdist(samples_try, metric=self.lhs_metric)
                 if maximin_dist < np.min(d):

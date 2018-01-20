@@ -1,6 +1,4 @@
-from collections import Counter
-from SampleMethods import *
-from RunModel import RunModel
+from UQpyLibraries.SampleMethods import *
 
 
 class ReliabilityMethods:
