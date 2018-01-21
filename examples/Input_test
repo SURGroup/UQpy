@@ -1,0 +1,25 @@
+#Method
+lhs
+
+#Number of Samples
+10
+
+#Stochastic dimension
+2
+
+#Probability distribution (pdf)
+Uniform
+Uniform
+
+#Probability distribution parameters
+0 1
+1 2
+
+#LHS criterion
+centered
+
+#distance metric
+euclidean
+
+#iterations
+1000

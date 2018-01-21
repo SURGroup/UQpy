@@ -18,7 +18,7 @@ if __name__ == '__main__':
                         dest="InputFile", action="store",
                         help="specify *.txt file with probabilistic parameters")
 
-    parser.add_argument("--ModelFile", dest="ModelFile", action="store",
+    parser.add_argument("--modelFile", dest="ModelFile", action="store",
                         default=None, help="specify a bash script file for running the model")
 
     parser.add_argument("--Input_dir", dest="Input_directory", action="store",

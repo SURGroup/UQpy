@@ -4,6 +4,8 @@ from various.modelist import *
 import sys
 import copy
 from scipy.spatial.distance import pdist
+from UQpyLibraries.PDFs import pdf
+from functools import partial
 
 
 class runSamplingMethods:
@@ -34,10 +36,14 @@ class runSamplingMethods:
         :param dimension: Stochastic dimension of the problem (number of random variables)
 
         """
-        def __init__(self, generator=None, number=None, dimension=None):
+        def __init__(self, generator=None, data=None):
+
+            self.samples = self.run_mcs()
             self.generator = generator
-            self.nsamples = number
-            self.dim = dimension
+            self.nsamples = data['Number of Samples']
+            self.ndim = self.generator.dimension
+            self.pdf = self.generator.pdf
+            self.pdf_params = self.generator.pdf_params
             self.samples = self.run_mcs()
 
         # TODO: transform random variables according to generator.distribution
@@ -192,7 +198,8 @@ class runSamplingMethods:
                            Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]. \n
                            Note: The sum of the values in the pss_design vector equals the dimension of the problem.
         :param pss_stratum: Vector defining how each dimension should be stratified.
-                            Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625].\n
+                            Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using
+                             pss_pss_stratum = [25,25,625].\n
                             Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
         :return: pss_samples: Generated samples Array (nSamples x nRVs)
         :type pss_design: int
@@ -205,16 +212,18 @@ class runSamplingMethods:
         # TODO: Add the sample check and pss_design check in the beginning
         # TODO: Create a list that contains all element info - parent structure
 
-        def __init__(self, pss_design=None, pss_strata=None):
+        def __init__(self, generator=None, data=None):
             """
             This class generates a partially stratified sample set on U(0,1) as described in:
-            Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
+            Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability
+             Engineering and System Safety. 148: 96-108
 
             :param pss_design: Vector defining the subdomains to be used.
                                Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]. \n
                                Note: The sum of the values in the pss_design vector equals the dimension of the problem.
             :param pss_stratum: Vector defining how each dimension should be stratified.
-                                Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using pss_pss_stratum = [25,25,625].\n
+                                Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using
+                                pss_pss_stratum = [25,25,625].\n
                                 Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
             :return: pss_samples: Generated samples Array (nSamples x nRVs)
             :type pss_design: int
@@ -223,37 +232,46 @@ class runSamplingMethods:
             Created by: Jiaxin Zhang
             Last modified: 12/03/2017
             """
+            self.generator = generator
+            self.nsamples = data['Number of Samples']
+            self.ndim = self.generator.dimension
+            self.pdf = self.generator.pdf
+            self.pdf_params = self.generator.pdf_params
+            self.pss_design = data['PSS design']
+            self.pss_strata = data['PSS strata']
 
             # Check that the PSS design is valid
-            if len(pss_design) != len(pss_strata):
+            if len(self.pss_design) != len(self.pss_strata):
                 print('Input vectors "pss_design" and "pss_strata" must be the same length')
+                sys.exit()
 
             # sample check
-            sample_check = np.zeros((len(pss_strata), len(pss_design)))
-            for i in range(len(pss_strata)):
-                for j in range(len(pss_design)):
-                    sample_check[i, j] = pss_strata[i] ** pss_design[j]
+            sample_check = np.zeros((len(self.pss_strata), len(self.pss_design)))
+            for i in range(len(self.pss_strata)):
+                for j in range(len(self.pss_design)):
+                    sample_check[i, j] = self.pss_strata[i] ** self.pss_design[j]
 
             if np.max(sample_check) != np.min(sample_check):
                 print('All dimensions must have the same number of samples/strata. '
                       'Check to ensure that all values of pss_strata.^pss_design are equal.')
+                sys.exit()
 
-            n_dim = np.sum(pss_design)
-            n_samples = pss_strata[0] ** pss_design[0]
+            n_dim = np.sum(self.pss_design)
+            n_samples = self.pss_strata[0] ** self.pss_design[0]
             self.samples = np.zeros((n_samples, n_dim))
 
             col = 0
-            for i in range(len(pss_design)):
-                n_stratum = pss_strata[i] * np.ones(pss_design[i], dtype=np.int)
+            for i in range(len(self.pss_design)):
+                n_stratum = self.pss_strata[i] * np.ones(self.pss_design[i], dtype=np.int)
 
                 ss = Strata(nstrata=n_stratum)
-                ss = SampleMethods.STS(strata=ss)
+                ss = runSamplingMethods.STS(strata=ss)
 
-                index = list(range(col, col + pss_design[i]))
+                index = list(range(col, col + self.pss_design[i]))
                 self.samples[:, index] = ss.samples
                 arr = np.arange(n_samples).reshape((n_samples, 1))
                 self.samples[:, index] = self.samples[np.random.permutation(arr), index]
-                col = col + pss_design[i]
+                col = col + self.pss_design[i]
 
 
 ########################################################################################################################
@@ -261,35 +279,31 @@ class runSamplingMethods:
 #                                         Stratified Sampling  (sts)
 ########################################################################################################################
 
-
-    # def sts(self, strata):
-    #
-    #     # x = strata.origins.shape[1]
-    #     samples = np.empty([strata.origins.shape[0],strata.origins.shape[1]],dtype=np.float32)
-    #     for i in range(0,strata.origins.shape[0]):
-    #         for j in range(0,strata.origins.shape[1]):
-    #             samples[i,j] = np.random.uniform(strata.origins[i,j],strata.origins[i,j]+strata.widths[i,j])
-    #
-    #     self.samples = samples
-
     class STS:
         # TODO: MDS - Add documentation to this subclass
-        def __init__(self, generator=None,  strata=None):
+        def __init__(self, generator=None,  data=None):
+
+            self.generator = generator
+            self.sts_design = data['STS design']
+            self.strata.origins, self.strata.widths, self.strata.weights = Strata(nstrata=self.sts_design)
 
             # x = strata.origins.shape[1]
-            self.samples = np.empty([strata.origins.shape[0], strata.origins.shape[1]], dtype=np.float32)
-            for i in range(0, strata.origins.shape[0]):
-                for j in range(0, strata.origins.shape[1]):
-                    self.samples[i, j] = np.random.uniform(strata.origins[i, j], strata.origins[i, j] + strata.widths[i, j])
+            self.samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
+            for i in range(0, self.strata.origins.shape[0]):
+                for j in range(0, self.strata.origins.shape[1]):
+                    self.samples[i, j] = np.random.uniform(self.strata.origins[i, j],
+                                                           self.strata.origins[i, j] + self.strata.widths[i, j])
 
-            self.origins = strata.origins
-            self.widths = strata.widths
-            self.weights = strata.weights
+            self.origins = self.strata.origins
+            self.widths = self.strata.widths
+            self.weights = self.strata.weights
             # self.elements = [self.origins, self.widths, self.weights, self.samples]
 
             # TODO: Create a list that contains all element info - parent structure
             # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
-            # hstack -
+            # hstack
+
+
 
 ########################################################################################################################
 ########################################################################################################################
@@ -342,9 +356,7 @@ class runSamplingMethods:
 
         """
 
-        def __init__(self, generator=None, number=5000, dimension=2, mcmc_seed=None, mcmc_algorithm=None,
-                     pdf_proposal=None, pdf_proposal_params=None, pdf_target=None, pdf_target_paramrs=None,
-                     mcmc_burnIn=None):
+        def __init__(self, data):
 
             """This class generates samples from arbitrary algorithm using Metropolis-Hastings(MH) or
             Modified Metropolis-Hastings Algorithm.
@@ -395,47 +407,52 @@ class runSamplingMethods:
 
             # TODO: Mohit - Add error checks for target and marginal PDFs
 
-            self.nsamples = number
-            self.dim = dimension
-            self.mcmc_algorithm = mcmc_algorithm
-            self.pdf_proposal = pdf_proposal
-            self.pdf_proposal_params = pdf_proposal_params
-            self.pdf_target = pdf_target
-            self.pdf_target_params = pdf_target_paramrs
+            self.nsamples = data['Number of Samples']
+            self.ndim = data['Number of Samples']
+            self.pdf_proposal = data['Proposal distribution']
+            self.pdf_proposal_params = np.array(data['Proposal distribution parameters'])
+            self.pdf_target_params = np.array(data['Marginal target distribution parameters'])
+            self.mcmc_algorithm = data['MCMC algorithm']
+            self.mcmc_burnIn = data['Burn-in samples']
+            if 'MCMC seed' in data:
+                self.mcmc_seed = np.array(data['MCMC seed'])
+            else:
+                self.mcmc_seed = np.zeros(self.ndim)
+
             self.rejects = 0
-            self.mcmc_seed = mcmc_seed
-            self.mcmc_burnIn = mcmc_burnIn
+            pdf_target_type = data['Target distribution']
+            self.pdf_target = pdf(pdf_target_type)
 
             # Changing the array of param into a diagonal matrix
 
-            if self.proposal == "Normal":
-                if self.params.shape[0] or self.params.shape[1] is 1:
-                    self.params = np.diag(self.params)
+            if self.pdf_proposal == "Normal":
+                if self.pdf_proposal_params.shape[0] or self.pdf_proposal_params.shape[1] is 1:
+                    self.pdf_proposal_params = np.diag(self.pdf_proposal_params)
 
             # TODO: MDS - If x0 is not provided, start at the mode of the target distribution (if available)
             # if x0 is None:
 
             # Defining a matrix to store the generated samples
-            self.samples = np.empty([self.nsamples * self.njump, self.dim])
-            self.samples[0] = x0
+            self.samples = np.empty([self.nsamples * self.mcmc_burnIn, self.ndim])
+            self.samples[0] = self.mcmc_seed
 
             # Classical Metropolis-Hastings Algorithm with symmetric proposal density
-            if self.method == 'MH':
-                for i in range(self.nsamples * self.njump - 1):
+            if self.mcmc_algorithm == 'MH':
+                for i in range(self.nsamples * self.mcmc_burnIn - 1):
 
                     # Generating new sample using proposed density
-                    if self.proposal == 'Normal':
-                        if self.dim == 1:
-                            x1 = np.random.normal(self.samples[i], self.params)
+                    if self.pdf_proposal == 'Normal':
+                        if self.ndim == 1:
+                            x1 = np.random.normal(self.samples[i], self.pdf_proposal_params)
                         else:
-                            x1 = np.random.multivariate_normal(self.samples[i, :], self.params)
+                            x1 = np.random.multivariate_normal(self.samples[i, :], self.pdf_proposal_params)
 
-                    elif self.proposal == 'Uniform':
-                        x1 = np.random.uniform(low=self.samples[i] - self.params / 2,
-                                               high=self.samples[i] + self.params / 2, size=self.dim)
+                    elif self.pdf_proposal == 'Uniform':
+                        x1 = np.random.uniform(low=self.samples[i] - self.pdf_proposal_params / 2,
+                                               high=self.samples[i] + self.pdf_proposal_params / 2, size=self.ndim)
 
                     # Ratio of probability of new sample to previous sample
-                    a = self.target(x1, self.dim) / self.target(self.samples[i, :], self.dim)
+                    a = self.pdf_target(x1, self.ndim) / self.pdf_target(self.samples[i, :], self.ndim)
 
                     # Accept the generated sample, if probability of new sample is higher than previous sample
                     if a >= 1:
@@ -449,27 +466,27 @@ class runSamplingMethods:
                     else:
                         self.samples[i + 1] = self.samples[i]
                         self.rejects += 1
-                # Reject the samples using njump to reduce the correlation
-                self.xi = self.samples[0:self.nsamples * self.njump:self.njump]
+                # Reject the samples using mcmc_burnIn to reduce the correlation
+                self.xi = self.samples[0:self.nsamples * self.mcmc_burnIn:self.mcmc_burnIn]
 
             # Modified Metropolis-Hastings Algorithm with symmetric proposal density
-            elif self.method == 'MMH':
-                for i in range(self.nsamples * self.njump - 1):
+            elif self.mcmc_algorithm == 'MMH':
+                for i in range(self.nsamples * self.mcmc_burnIn - 1):
 
                     # Samples generated from marginal PDFs will be stored in x1
                     x1 = self.samples[i, :]
-                    for j in range(self.dim):
+                    for j in range(self.ndim):
 
                         # Generating new sample using proposed density
-                        if self.proposal == 'Normal':
-                            xm = np.random.normal(self.samples[i, j], self.params[j][j])
+                        if self.pdf_proposal == 'Normal':
+                            xm = np.random.normal(self.samples[i, j], self.pdf_proposal_params[j][j])
 
-                        elif self.proposal == 'Uniform':
-                            xm = np.random.uniform(low=self.samples[i, j] - self.params[j] / 2,
-                                                   high=self.samples[i, j] + self.params[j] / 2, size=1)
+                        elif self.pdf_proposal == 'Uniform':
+                            xm = np.random.uniform(low=self.samples[i, j] - self.pdf_proposal_params[j] / 2,
+                                                   high=self.samples[i, j] + self.pdf_proposal_params[j] / 2, size=1)
 
-                        b = self.target(xm, self.Marginal_parameters[j]) / self.target(x1[j],
-                                                                                       self.Marginal_parameters[j])
+                        b = self.pdf_target(xm, self.pdf_target_params[j]) / self.pdf_target(x1[j],
+                                                                                       self.pdf_target_params[j])
                         if b >= 1:
                             x1[j] = xm
 
@@ -479,7 +496,7 @@ class runSamplingMethods:
                     self.samples[i + 1, :] = x1
 
                 # Reject the samples using njump to reduce the correlation
-                self.xi = self.samples[0:self.nsamples * self.njump:self.njump]
+                self.xi = self.samples[0:self.nsamples * self.mcmc_burnIn:self.mcmc_burnIn]
 
 
                 # TODO: MDS - Add affine invariant ensemble MCMC
@@ -528,7 +545,7 @@ class Strata:
 
     """
 
-    def __init__(self,  nstrata=None, input_file=None, origins=None, widths=None):
+    def __init__(self, nstrata=None, input_file=None, origins=None, widths=None):
 
         """
         Class defines a rectilinear stratification of the n-dimensional unit hypercube with N strata
@@ -569,6 +586,7 @@ class Strata:
         Last modified by: Michael D. Shields
 
         """
+
         self.input_file = input_file
         self.nstrata = nstrata
         self.origins = origins

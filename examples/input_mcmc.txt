@@ -1,6 +1,3 @@
-#Model
-model_zabaras
-
 #Method
 mcmc
 
@@ -10,19 +7,11 @@ mcmc
 #Stochastic dimension
 2
 
-#Probability distribution (pdf)
-Uniform
-Uniform
-
-#Probability distribution parameters
-0 1
-0 1
-
 #MCMC algorithm
 MH
 
 #Proposal distribution
-Normal
+Uniform
 
 #Proposal distribution parameters
 1
