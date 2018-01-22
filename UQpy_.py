@@ -48,7 +48,7 @@ if __name__ == '__main__':
             args.Output_directory = path
 
         # Import UQpy library
-        from UQpyLibraries import UQpy_commandLine
+        from UQpyLibraries import UQpyModules
 
         # Exectute UQpy
-        UQpy_commandLine.runCommandLine(args)
+        UQpyModules.RunCommandLine(args)

@@ -7,7 +7,7 @@ from scipy.spatial.distance import pdist
 from UQpyLibraries.PDFs import pdf
 from functools import partial
 
-
+'''
 class runSamplingMethods:
     """
     A class that contains the information of the probability model.
@@ -20,167 +20,184 @@ class runSamplingMethods:
     :param method:  Sampling method
 
     """
-    def __init__(self, distribution=None, dimension=None, parameters=None):
+    def __init__(self, distribution=None,  parameters=None, method=None):
         self.pdf = distribution
-        self.dimension = dimension
         self.pdf_params = parameters
+        self.method = method
+
+    def get_method(self):
+        return self.method
+
+'''
 
 ########################################################################################################################
 #                                         Monte Carlo simulation
 ########################################################################################################################
-    class MCS:
-        """
-        A class used to perform brute force Monte Carlo sampling (MCS).
 
-        :param nsamples: Number of samples to be generated
-        :param dimension: Stochastic dimension of the problem (number of random variables)
 
-        """
-        def __init__(self, generator=None, data=None):
+class MCS:
+    """
+    A class used to perform brute force Monte Carlo sampling (MCS).
 
-            self.generator = generator
-            self.nsamples = data['Number of Samples']
-            self.ndim = self.generator.dimension
-            self.pdf = self.generator.pdf
-            self.pdf_params = self.generator.pdf_params
-            self.samples = self.run_mcs()
+    :param nsamples: Number of samples to be generated
+    :param dimension: Stochastic dimension of the problem (number of random variables)
 
-        # TODO: transform random variables according to generator.distribution
-        def run_mcs(self):
-            return np.random.rand(self.nsamples, self.ndim)
+    """
+    def __init__(self, pdf=None,  pdf_params=None,  nsamples=None):
+        self.nsamples = nsamples
+        self.pdf = pdf
+        self.pdf_params = pdf_params
+        self.check_consistency()
+        self.dimension = len(pdf)
+        self.samples = self.run_mcs()
+
+    # TODO: transform random variables according to generator.distribution
+    def run_mcs(self):
+
+        return np.random.rand(self.nsamples, self.dimension)
+
+    def check_consistency(self):
+        if len(self.pdf) != len(self.pdf_params):
+            raise NotImplementedError("Incompatible dimensions")
+
 
 ########################################################################################################################
 ########################################################################################################################
 #                                         Latin hypercube sampling  (LHS)
 ########################################################################################################################
 
-    class LHS:
+class LHS:
+    """
+    A class that creates a Latin Hypercube Design for experiments.
+
+    These points are generated on the U-space(cdf) i.e. [0,1) and should be converted back to X-space(pdf)
+    i.e. (-Inf , Inf) for a normal distribution.
+
+    :param ndim: The number of dimensions for the experimental design.
+    :type ndim: int
+
+    :param nsamples: The number of samples to be generated.
+    :type nsamples: int
+
+    :param criterion: The criterion for generating sample points \n
+                    i) random - completely random \n
+                    ii) centered - points only at the centre \n
+                    iii) maximin - maximising the minimum distance between points \n
+                    iv) correlate - minimizing the correlation between the points \n
+    :type criterion: str
+
+    :param iterations: The number of iteration to run. Only for maximin, correlate and criterion
+    :type iterations: int
+
+    :param dist_metric: The distance metric to use. Supported metrics are
+                    'braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', \n
+                    'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', \n
+                    'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', \n
+                    'yule'.
+    :type dist_metric: str
+
+    """
+
+    def __init__(self, pdf=None, pdf_params=None, lhs_criterion=None, lhs_metric=None, lhs_iter=None, nsamples=None):
+
+        self.nsamples = nsamples
+        self.pdf = pdf
+        self.pdf_params = pdf_params
+        self.check_consistency()
+        self.dimension = len(pdf)
+        self.lhs_criterion = lhs_criterion
+        self.lhs_metric = lhs_metric
+        self.lhs_iter = lhs_iter
+
+        print('Running LHS for ' + str(self.lhs_iter) + ' iterations')
+
+        cut = np.linspace(0, 1, self.nsamples + 1)
+        self.a = cut[:self.nsamples]
+        self.b = cut[1:self.nsamples + 1]
+
+        if self.lhs_criterion == 'random':
+            self.samples = self._random()
+        elif self.lhs_criterion == 'centered':
+            self.samples = self._centered()
+        elif self.lhs_criterion == 'maximin':
+            self.samples = self._maximin()
+        elif self.lhs_criterion == 'correlate':
+            self.samples = self._correlate()
+
+    def _random(self):
         """
-        A class that creates a Latin Hypercube Design for experiments.
-        
-        These points are generated on the U-space(cdf) i.e. [0,1) and should be converted back to X-space(pdf) 
-        i.e. (-Inf , Inf) for a normal distribution.
-
-        :param ndim: The number of dimensions for the experimental design.
-        :type ndim: int
-
-        :param nsamples: The number of samples to be generated.
-        :type nsamples: int
-
-        :param criterion: The criterion for generating sample points \n
-                        i) random - completely random \n
-                        ii) centered - points only at the centre \n
-                        iii) maximin - maximising the minimum distance between points \n
-                        iv) correlate - minimizing the correlation between the points \n
-        :type criterion: str
-
-        :param iterations: The number of iteration to run. Only for maximin, correlate and criterion
-        :type iterations: int
-
-        :param dist_metric: The distance metric to use. Supported metrics are
-                        'braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', \n
-                        'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', \n
-                        'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', \n
-                        'yule'.
-        :type dist_metric: str
+        :return: The samples points for the random LHS design
 
         """
+        u = np.random.rand(self.nsamples, self.dimension)
+        samples = np.zeros_like(u)
 
-        def __init__(self, generator=None, data=None):
+        for i in range(self.dimension):
+            samples[:, i] = u[:, i] * (self.b - self.a) + self.a
 
-            self.generator = generator
-            self.nsamples = data['Number of Samples']
-            self.ndim = self.generator.dimension
-            self.pdf = self.generator.pdf
-            self.pdf_params = self.generator.pdf_params
-            self.lhs_criterion = data['LHS criterion']
-            self.lhs_metric = data['distance metric']
-            self.lhs_iter = data['iterations']
+        for j in range(self.dimension):
+            order = np.random.permutation(self.nsamples)
+            samples[:, j] = samples[order, j]
 
-            print('Running LHS for ' + str(self.lhs_iter) + ' iterations')
+        return samples
 
-            cut = np.linspace(0, 1, self.nsamples + 1)
-            self.a = cut[:self.nsamples]
-            self.b = cut[1:self.nsamples + 1]
+    def _centered(self):
+        """
 
-            if self.lhs_criterion == 'random':
-                self.samples = self._random()
-            elif self.lhs_criterion == 'centered':
-                self.samples = self._centered()
-            elif self.lhs_criterion == 'maximin':
-                self.samples = self._maximin()
-            elif self.lhs_criterion == 'correlate':
-                self.samples = self._correlate()
+        :return: The samples points for the centered LHS design
 
-        def _random(self):
-            """
-            :return: The samples points for the random LHS design
+        """
+        samples = np.zeros([self.nsamples, self.dimension])
+        centers = (self.a + self.b) / 2
 
-            """
-            u = np.random.rand(self.nsamples, self.ndim)
-            samples = np.zeros_like(u)
+        for i in range(self.dimension):
+            samples[:, i] = np.random.permutation(centers)
 
-            for i in range(self.ndim):
-                samples[:, i] = u[:, i] * (self.b - self.a) + self.a
+        return samples
 
-            for j in range(self.ndim):
-                order = np.random.permutation(self.nsamples)
-                samples[:, j] = samples[order, j]
+    def _maximin(self):
+        """
 
-            return samples
+        :return: The samples points for the Minimax LHS design
 
-        def _centered(self):
-            """
+        """
+        maximin_dist = 0
+        samples = self.random()
+        for _ in range(self.lhs_iter):
+            samples_try = self.random()
+            d = pdist(samples_try, metric=self.lhs_metric)
+            if maximin_dist < np.min(d):
+                maximin_dist = np.min(d)
+                points = copy.deepcopy(samples_try)
 
-            :return: The samples points for the centered LHS design
+        print('Achieved miximin distance of ', maximin_dist)
 
-            """
-            samples = np.zeros([self.nsamples, self.ndim])
-            centers = (self.a + self.b) / 2
+        return samples
 
-            for i in range(self.ndim):
-                samples[:, i] = np.random.permutation(centers)
+    def _correlate(self):
+        """
 
-            return samples
+        :return: The samples points for the minimum correlated LHS design
 
-        def _maximin(self):
-            """
+        """
+        min_corr = np.inf
+        samples = self.random()
+        for _ in range(self.lhs_iter):
+            samples_try = self.random()
+            R = np.corrcoef(np.transpose(samples_try))
+            np.fill_diagonal(R, 1)
+            R1 = R[R != 1]
+            if np.max(np.abs(R1)) < min_corr:
+                min_corr = np.max(np.abs(R1))
+                samples = copy.deepcopy(samples_try)
+        print('Achieved minimum correlation of ', min_corr)
+        return samples
 
-            :return: The samples points for the Minimax LHS design
+    def check_consistency(self):
+        if len(self.pdf) != len(self.pdf_params):
+            raise NotImplementedError("Incompatible dimensions")
 
-            """
-            maximin_dist = 0
-            samples = self.random()
-            for _ in range(self.lhs_iter):
-                samples_try = self.random()
-                d = pdist(samples_try, metric=self.lhs_metric)
-                if maximin_dist < np.min(d):
-                    maximin_dist = np.min(d)
-                    points = copy.deepcopy(samples_try)
-
-            print('Achieved miximin distance of ', maximin_dist)
-
-            return samples
-
-        def _correlate(self):
-            """
-
-            :return: The samples points for the minimum correlated LHS design
-
-            """
-            min_corr = np.inf
-            samples = self.random()
-            for _ in range(self.lhs_iter):
-                samples_try = self.random()
-                R = np.corrcoef(np.transpose(samples_try))
-                np.fill_diagonal(R, 1)
-                R1 = R[R != 1]
-                if np.max(np.abs(R1)) < min_corr:
-                    min_corr = np.max(np.abs(R1))
-                    samples = copy.deepcopy(samples_try)
-            print('Achieved minimum correlation of ', min_corr)
-            return samples
-
+'''
 ########################################################################################################################
 ########################################################################################################################
 #                                         Partially Stratified Sampling (PSS)
@@ -686,3 +703,5 @@ class Strata:
             H[:, i] = rng
 
         return H
+
+'''
