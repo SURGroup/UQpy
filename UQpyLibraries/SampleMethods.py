@@ -38,7 +38,6 @@ class runSamplingMethods:
         """
         def __init__(self, generator=None, data=None):
 
-            self.samples = self.run_mcs()
             self.generator = generator
             self.nsamples = data['Number of Samples']
             self.ndim = self.generator.dimension
@@ -48,8 +47,7 @@ class runSamplingMethods:
 
         # TODO: transform random variables according to generator.distribution
         def run_mcs(self):
-
-            return np.random.rand(self.nsamples, self.dim)
+            return np.random.rand(self.nsamples, self.ndim)
 
 ########################################################################################################################
 ########################################################################################################################

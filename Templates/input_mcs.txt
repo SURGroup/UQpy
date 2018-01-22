@@ -1,11 +1,8 @@
-#Model
-model_zabaras
-
 #Method
 mcs
 
 #Number of Samples
-10000
+10
 
 #Stochastic dimension
 2
