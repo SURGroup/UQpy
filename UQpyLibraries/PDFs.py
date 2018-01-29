@@ -37,3 +37,12 @@ def pdf(dist):
 
     elif dist == 'marginal':
         return partial(marginal)
+
+
+def transform_pdf(x, pdf, params):
+    x_trans = np.zeros(shape=(x.shape[0], x.shape[1]))
+    for i in range(x.shape[1]):
+            for j in range(x.shape[0]):
+                x_trans[j, i] = params[i][0] +(params[i][1]-params[i][0])*x[j, i]
+
+    return x_trans

@@ -14,18 +14,28 @@ if __name__ == '__main__':
     parser = ArgumentParser(description=UQpy_commandLine,
                             usage=UQpy_commandLine_Usage)
 
-    parser.add_argument("--workDir", dest="Working_directory", action="store",
-                        default=None, help="specify the directory of the input file")
+    parser.add_argument("--ModelDirectory", dest="Model_directory", action="store",
+                        default=None, help="Specify the location of the model's directory.")
 
-    parser.add_argument("--inputFile", default=None,
-                        dest="InputFile", action="store",
-                        help="specify *.txt file with probabilistic parameters")
+    parser.add_argument("--InputShellScript", default=None,
+                        dest="Input_Shell_Script", action="store",
+                        help="Specify the name of the shell script  *.sh used to transform  the output of UQpy"
+                             " (UQpyOut_*.txt file) into the appropriate model input file ")
 
-    parser.add_argument("--ModelFile", dest="ModelFile", action="store",
-                        default=None, help="specify a bash script file for running the model")
+    parser.add_argument("--OutputShellScript", default=None,
+                        dest="Output_Shell_Script", action="store",
+                        help="Specify the name of the shell script  *.sh used to transform  the output of the model"
+                             " into the appropriate UQpy input file (UQpyInp_*.txt) ")
 
-    parser.add_argument("--OutDir", dest="Output_directory", action="store",
-                        default=None, help="specify the directory where the results are stored")
+    parser.add_argument("--ModelShellScript", dest="Model", action="store",
+                        default=None, help="Specify the name of the shell script used for running the model")
+
+    parser.add_argument("--CPUs", dest="CPUs", action="store",
+                        default=1, type=int, help="Number of local cores to be used for the analysis")
+
+    parser.add_argument("--ClusterNodes", dest="nodes", action="store",
+                        default=1, type=int, help="Number of nodes to distribute the model evaluations in "
+                                                  "case of a cluster.")
 
     args, unknown = parser.parse_known_args()
 
@@ -34,21 +44,37 @@ if __name__ == '__main__':
         print(unknown)
 
     if len(sys.argv) > 1:
-        # Run command line version of UQpy
-        if args.InputFile is None:
-            print("Error:  No input file was selected")
+        if args.Model_directory is None:
+            print("Error: A model directory needs to be specified")
             sys.exit()
 
-        if args.Output_directory is None:
-            folder_name = 'simUQpyOut'
-            current_dir = os.getcwd()
-            path = os.path.join(os.sep, current_dir, folder_name)
-            os.makedirs(path, exist_ok=True)
-            print("Warning:  No output directory was defined -- The default is %k", path)
-            args.Output_directory = path
+        if args.Model is not None:
+            if args.Input_Shell_Script is None or args.Output_Shell_Script is None:
+                print("Error: Shell scripts for communication between UQpy and the model are required. Type --help"
+                      "for more information")
+                sys.exit()
+
+        if args.CPUs != 1:
+            import multiprocessing
+            np = multiprocessing.cpu_count()
+            if int(args.CPUs) > np:
+                print("Error: You have available {0:1d} CPUs. Start parallel computing  using {0:1d} CPUs".format(np))
+                args.CPUs = np
+            args.ParallelProcessing = True
+        else:
+            args.ParallelProcessing = False
+
+        # Create UQpy output directory
+        import shutil
+        folder_name = 'simUQpyOut'
+        current_dir = os.getcwd()
+        args.Output_directory = os.path.join(os.sep, current_dir, folder_name)
+        if os.path.exists(args.Output_directory):
+            shutil.rmtree(args.Output_directory)
+        os.makedirs(args.Output_directory, exist_ok=False)
 
         # Import UQpy library
         from UQpyLibraries import UQpyModules
 
-        # Exectute UQpy
+        # Execute UQpy
         UQpyModules.RunCommandLine(args)
