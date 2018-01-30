@@ -102,11 +102,39 @@ class README:
             elif title == 'Failure criterion':
                 mydict[title] = np.float32(lines[lines_[i] + 1][:-1])
             # Stochastic Reduced Order Models (SROM)
+            elif title == 'Sampling method':
+                mydict[title] = lines[lines_[i]+1][:-1]
+            elif title == 'Moments':
+                srom_moments = []
+                for j in range(lines_[i+1]-lines_[i]-2):
+                    line = lines[lines_[i] + j + 1]
+                    my_string_list = line.split()
+                    new_list = []
+                    for item in my_string_list:
+                        new_list.append(float(item))
+                    srom_moments.append(new_list)
+                mydict[title] = srom_moments
+            elif title == 'Properties to match':
+                prop = []
+                for k in range(lines_[i+1]-lines_[i]-2):
+                    prop.append(int(lines[lines_[i]+k+1][:-1]))
+                mydict[title] = prop
+            elif title == 'Error function weights':
+                weights_error = []
+                for k in range(lines_[i+1]-lines_[i]-2):
+                    weights_error.append(np.float32(lines[lines_[i]+k+1][:-1]))
+                mydict[title] = weights_error
+            elif title == 'Sample weights':
+                weights_sample = np.empty([lines_[i+1]-lines_[i]-2, mydict['Stochastic dimension']])
+                for j in range(lines_[i + 1] - lines_[i] - 2):
+                    for k in range(lines_[i+1]-lines_[i]-2):
+                        weights_sample[j, k] = (np.float32(lines[lines_[i] + j + 1][2*k]))
+                mydict[title] = weights_sample
 
         return mydict
 
     def error_checks(self):
-        if self.data['Method'] not in ['mcs', 'lhs', 'mcmc', 'pss', 'sts', 'SuS']:
+        if self.data['Method'] not in ['mcs', 'lhs', 'mcmc', 'pss', 'sts', 'srom', 'SuS']:
             raise NotImplementedError('Available sampling methods: 1. Monte Carlo (mcs), 2. Latin hypercube(lhs), '
                      '3. Markov chain Monte Carlo (mcmc), 4. Partially stratified (pss), 5. Stratified (sts).'
                      'Available reliability methods: 1. Subset simulation (Sus).')
@@ -213,6 +241,8 @@ def def_model(_model):
         model = partial(model_ko2d)
     elif _model == 'model_reliability':
         model = partial(model_reliability)
+    elif _model == 'model_eigenvalues':
+        model = partial(model_eigenvalues)
 
     return model
 
@@ -224,6 +254,12 @@ def def_target(target):
         target = partial(normpdf)
     elif target == 'marginal':
         target = partial(marginal)
+    elif target == 'srom1':
+        target = partial(srom1)
+    elif target == 'srom2':
+        target = partial(srom2)
+    elif target == 'srom3':
+        target = partial(srom3)
     return target
 
 

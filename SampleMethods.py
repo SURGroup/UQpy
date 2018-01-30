@@ -499,8 +499,8 @@ class SampleMethods:
 
         # TODO: Mohit - Write the documentation for the class
 
-        def __init__(self, samples=None, nsamples=None, marginal=None, moments=None, weights_errors=None, weights_function=None,
-                     properties=[1, 1, 0]):
+        def __init__(self, samples=None, nsamples=None, marginal=None, moments=None, weights_errors=None,
+                     weights_function=None, properties=[1, 1, 0]):
             """
 
             :param samples:
@@ -517,13 +517,18 @@ class SampleMethods:
             dimension = np.size(marginal)
             if np.size(weights_function) == 0:
                 weights_function = (1/nsamples)*np.ones([nsamples+3, dimension])
-                weights_function[nsamples:nsamples+moments.shape[0], :] = moments
+            if np.size(moments) == 0:
+                sys.exit('Moments of marginal distribution are required')
+            else:
+                weights_function = weights_function.tolist()
+                for i in range(int(np.size(moments)/np.size(moments[0]))):
+                    weights_function.append(moments[i])
 
             self.samples = samples
             self.marginal = marginal
-            self.moments = moments
+            self.moments = np.array(moments)
             self.weights_errors = weights_errors
-            self.weights_function = weights_function
+            self.weights_function = np.array(weights_function)
             self.properties = properties
 
             # TODO: Mohit - Define default calculation for moments

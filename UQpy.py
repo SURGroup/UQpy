@@ -5,7 +5,7 @@ from Reliability import ReliabilityMethods
 from Surrogates import SurrogateModels
 import matplotlib.pyplot as plt
 
-filename = sys.argv[1]
+filename = 'input_srom.txt'
 
 current_dir = os.getcwd()
 path = os.path.join(os.sep, current_dir, 'examples')
@@ -104,6 +104,40 @@ elif method == 'mcmc':
         rm = RunModel(model=model)
         fx = rm.Evaluate(rm, mcmc.samples)
 
+elif method == 'srom':
+    dim = Readme.data['Stochastic dimension']
+    nsamples = Readme.data['Number of Samples']
+    pdf = Readme.data['Probability distribution (pdf)']
+    moments = Readme.data['Moments']
+    prop = Readme.data['Properties to match']
+    weights_error = Readme.data['Error function weights']
+    weights_samples = Readme.data['Sample weights']
+    sampling_method = Readme.data['Sampling method']
+    if sampling_method == 'sts':
+        sts_design = Readme.data['STS design']
+        sm = SampleMethods(distribution=pdf, dimension=dim, method=method)
+        SS = sm.STS(sm, strata=Strata(nstrata=sts_design))
+        SS.samples = stats.gamma.ppf(SS.samples, 2, loc=1, scale=3)
+    elif sampling_method == 'mcmc':
+        pdf_params = Readme.data['Probability distribution parameters']
+        pdf_proposal = Readme.data['Proposal distribution']
+        pdf__proposal_params = np.array(Readme.data['Proposal distribution parameters'])
+        pdf_target = def_target(Readme.data['Target distribution'])
+        pdf_target_parameters = np.array(Readme.data['Marginal target distribution parameters'])
+        mcmc_seed = np.array(Readme.data['Initial seed'])
+        mcmc_algorithm = Readme.data['MCMC algorithm']
+        mcmc_burnIn = Readme.data['Burn-in samples']
+        sm = SampleMethods(distribution=pdf, dimension=dim, parameters=pdf_params, method=method)
+        SS = sm.MCMC(sm, number=nsamples, pdf_target=pdf_target, mcmc_algorithm=mcmc_algorithm,
+                     pdf_proposal=pdf_proposal, pdf_proposal_params=pdf__proposal_params, mcmc_seed=mcmc_seed,
+                     pdf_target_params=pdf_target_parameters, mcmc_burnIn=mcmc_burnIn)
+
+    srom = sm.SROM(samples=SS.samples, nsamples=nsamples, marginal=sm.distribution, moments=moments,
+                   weights_errors=weights_error, weights_function=weights_samples, properties=prop)
+    if 'Model' in Readme.data:
+        model = def_model(Readme.data['Model'])
+        rm = RunModel(model=model)
+        fx = rm.Eigenvalue(rm, srom.samples, dim, srom.probability)
 
 elif method == 'SuS':
     model = def_model(Readme.data['Model'])

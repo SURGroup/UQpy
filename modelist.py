@@ -142,7 +142,6 @@ def model_reliability(u, Type):
     return a - np.sum(u, axis=0) / np.sqrt(u.size)
 
 
-
 def model_eigenvalues(X):
     coeff = [-1, X[0] + 2 * X[1], -(X[0] * X[1] + 2 * X[0] * X[2] + 3 * X[1] * X[2] + X[2] ** 2),
              (X[0] * X[1] * X[2] + (X[0] + X[1]) * X[2])]
@@ -152,12 +151,14 @@ def model_eigenvalues(X):
 #                                        List of distribution
 ########################################################################################################################
 
+
 def normpdf(x):
     """ Normal density function used to generate samples using Metropolis-Hastings Algorithm
      :math: `f(x) = \\frac{1}{(2*\\pi*\\sigma)^(1/2)}*exp(-\\frac{1}{2}*(\\frac{x-\\mu}{\\sigma})^2)`
 
     """
     return stats.norm.pdf(x, 0, 1)
+
 
 def mvnpdf(x, dim):
     """ Multivariate normal density function used to generate samples using Metropolis-Hastings Algorithm
@@ -177,13 +178,14 @@ def marginal(x, mp):
     return stats.norm.pdf(x, mp[0], mp[1])
 
 
-def SROM1(x):
+def srom1(x):
     return stats.gamma.cdf(x, 2, loc=1, scale=3)
 
 
-def SROM2 (x):
+def srom2(x):
     return stats.gamma.cdf(x, 2, loc=1, scale=3)
 
 
-def SROM3(x):
+def srom3(x):
     return stats.gamma.cdf(x, 2, loc=1, scale=3)
+
