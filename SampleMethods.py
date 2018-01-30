@@ -40,23 +40,16 @@ class SampleMethods:
         :param dimension: Stochastic dimension of the problem (number of random variables)
 
         """
-        def __init__(self, nsamples=None, dimension=None):
-            self.nsamples = nsamples
-            self.dimension = dimension
+        def __init__(self, generator=None, number=None, dimension=None):
+            self.generator = generator
+            self.nsamples = number
+            self.dim = dimension
             self.samples = self.run_mcs()
 
+        # TODO: transform random variables according to generator.distribution
         def run_mcs(self):
 
-            if self.nsamples is None:
-                n = 100
-            else:
-                if not is_integer(self.nsamples):
-                    print('\n**ERROR**\nThe number of samples should be an integer.')
-                    return
-                else:
-                    n = self.nsamples
-
-            return np.random.rand(n, self.dimension)
+            return np.random.rand(self.nsamples, self.dim)
 
 ########################################################################################################################
 ########################################################################################################################
@@ -95,72 +88,44 @@ class SampleMethods:
 
         """
 
-        def __init__(self, ndim, nsamples=None, criterion='random', iterations=100, dist_metric='euclidean'):
-            try:
-                self.ndim = np.int32(ndim)
-            except ValueError:
-                print('Invalid value for ndim. Must be an integer.')
+        def __init__(self, generator=None, dimension=2, number=None, lhs_criterion=None, lhs_iter=None, lhs_metric=None):
+            self.generator = generator
+            self.nsamples = number
+            self.lhs_criterion = lhs_criterion
+            self.lhs_metric = lhs_metric
+            self.lhs_iter = lhs_iter
 
-            if nsamples is None:
-                nsamples = ndim
-
-            try:
-                self.nsamples = np.int32(nsamples)
-            except ValueError:
-                print('Invalid value for nsamples. Must be an integer.')
-
-            self.samples = None
-
-            if criterion not in ['random', 'centered', 'maximin', 'correlate', 'correlate_cond']:
-                sys.exit('Invalid criterion requested.')
-
-            self.criterion = criterion
-
-            if dist_metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
-                                   'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching',
-                                   'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener',
-                                   'sokalsneath', 'sqeuclidean', 'yule']:
-                sys.exit('Invalid distance metric requested.')
-
-            self.dist_metric = dist_metric
-
-            if criterion in ['maximin', 'correlate']:
-                try:
-                    self.iterations = np.int32(iterations)
-                except ValueError:
-                    print('Invalid value for iterations.')
-
-                print('Running for ' + str(self.iterations) + ' iterations')
+            print('Running for ' + str(self.iterations) + ' iterations')
 
             cut = np.linspace(0, 1, self.nsamples + 1)
             self.a = cut[:self.nsamples]
             self.b = cut[1:self.nsamples + 1]
 
-            if self.criterion == 'random':
+            if self.lhs_criterion == 'random':
                 self.samples = self._random()
-            elif self.criterion == 'centered':
+            elif self.lhs_criterion == 'centered':
                 self.samples = self._centered()
-            elif self.criterion == 'maximin':
+            elif self.lhs_criterion == 'maximin':
                 self.samples = self._maximin()
-            elif self.criterion == 'correlate':
+            elif self.lhs_criterion == 'correlate':
                 self.samples = self._correlate()
 
         def _random(self):
             """
-
             :return: The samples points for the random LHS design
 
             """
             u = np.random.rand(self.nsamples, self.ndim)
-            points = np.zeros_like(u)
+            samples = np.zeros_like(u)
 
             for i in range(self.ndim):
-                points[:, i] = u[:, i] * (self.b - self.a) + self.a
+                samples[:, i] = u[:, i] * (self.b - self.a) + self.a
 
             for j in range(self.ndim):
                 order = np.random.permutation(self.nsamples)
-                points[:, j] = points[order, j]
-            return points
+                samples[:, j] = samples[order, j]
+
+            return samples
 
         def _centered(self):
             """
@@ -168,12 +133,13 @@ class SampleMethods:
             :return: The samples points for the centered LHS design
 
             """
-            points = np.zeros([self.nsamples, self.ndim])
+            samples = np.zeros([self.nsamples, self.ndim])
             centers = (self.a + self.b) / 2
 
             for i in range(self.ndim):
-                points[:, i] = np.random.permutation(centers)
-            return points
+                samples[:, i] = np.random.permutation(centers)
+
+            return samples
 
         def _maximin(self):
             """
@@ -182,15 +148,17 @@ class SampleMethods:
 
             """
             maximin_dist = 0
-            points = self.random()
+            samples = self.random()
             for _ in range(self.iterations):
-                points_try = self.random()
-                d = pdist(points_try, metric=self.dist_metric)
+                samples_try = self.random()
+                d = pdist(samples_try, metric=self.lhs_metric)
                 if maximin_dist < np.min(d):
                     maximin_dist = np.min(d)
-                    points = copy.deepcopy(points_try)
+                    points = copy.deepcopy(samples_try)
+
             print('Achieved miximin distance of ', maximin_dist)
-            return points
+
+            return samples
 
         def _correlate(self):
             """
@@ -199,17 +167,17 @@ class SampleMethods:
 
             """
             min_corr = np.inf
-            points = self.random()
-            for _ in range(self.iterations):
-                points_try = self.random()
-                R = np.corrcoef(np.transpose(points_try))
+            samples = self.random()
+            for _ in range(self.lhs_iter):
+                samples_try = self.random()
+                R = np.corrcoef(np.transpose(samples_try))
                 np.fill_diagonal(R, 1)
                 R1 = R[R != 1]
                 if np.max(np.abs(R1)) < min_corr:
                     min_corr = np.max(np.abs(R1))
-                    points = copy.deepcopy(points_try)
+                    samples = copy.deepcopy(samples_try)
             print('Achieved minimum correlation of ', min_corr)
-            return points
+            return samples
 
 ########################################################################################################################
 ########################################################################################################################
@@ -239,8 +207,7 @@ class SampleMethods:
         # TODO: Add the sample check and pss_design check in the beginning
         # TODO: Create a list that contains all element info - parent structure
 
-
-        def __init__(self, pss_design=None, pss_stratum=None):
+        def __init__(self, pss_design=None, pss_strata=None):
             """
             This class generates a partially stratified sample set on U(0,1) as described in:
             Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and System Safety. 148: 96-108
@@ -260,37 +227,36 @@ class SampleMethods:
             """
 
             # Check that the PSS design is valid
-            if len(pss_design) != len(pss_stratum):
+            if len(pss_design) != len(pss_strata):
                 print('Input vectors "pss_design" and "pss_strata" must be the same length')
 
             # sample check
-            sample_check = np.zeros((len(pss_stratum), len(pss_design)))
-            for i in range(len(pss_stratum)):
+            sample_check = np.zeros((len(pss_strata), len(pss_design)))
+            for i in range(len(pss_strata)):
                 for j in range(len(pss_design)):
-                    sample_check[i, j] = pss_stratum[i] ** pss_design[j]
+                    sample_check[i, j] = pss_strata[i] ** pss_design[j]
 
             if np.max(sample_check) != np.min(sample_check):
                 print('All dimensions must have the same number of samples/strata. '
                       'Check to ensure that all values of pss_strata.^pss_design are equal.')
 
             n_dim = np.sum(pss_design)
-            n_samples = pss_stratum[0] ** pss_design[0]
-            pss_samples = np.zeros((n_samples, n_dim))
+            n_samples = pss_strata[0] ** pss_design[0]
+            self.samples = np.zeros((n_samples, n_dim))
 
             col = 0
             for i in range(len(pss_design)):
-                n_stratum = pss_stratum[i] * np.ones(pss_design[i], dtype=np.int)
+                n_stratum = pss_strata[i] * np.ones(pss_design[i], dtype=np.int)
 
                 ss = Strata(nstrata=n_stratum)
                 ss = SampleMethods.STS(strata=ss)
 
                 index = list(range(col, col + pss_design[i]))
-                pss_samples[:, index] = ss.samples
+                self.samples[:, index] = ss.samples
                 arr = np.arange(n_samples).reshape((n_samples, 1))
-                pss_samples[:, index] = pss_samples[np.random.permutation(arr), index]
+                self.samples[:, index] = self.samples[np.random.permutation(arr), index]
                 col = col + pss_design[i]
 
-            self.samples = pss_samples
 
 ########################################################################################################################
 ########################################################################################################################
@@ -310,15 +276,14 @@ class SampleMethods:
 
     class STS:
         # TODO: MDS - Add documentation to this subclass
-        def __init__(self, strata=None):
+        def __init__(self, generator=None,  strata=None):
 
             # x = strata.origins.shape[1]
-            samples = np.empty([strata.origins.shape[0], strata.origins.shape[1]], dtype=np.float32)
+            self.samples = np.empty([strata.origins.shape[0], strata.origins.shape[1]], dtype=np.float32)
             for i in range(0, strata.origins.shape[0]):
                 for j in range(0, strata.origins.shape[1]):
-                    samples[i, j] = np.random.uniform(strata.origins[i, j], strata.origins[i, j] + strata.widths[i, j])
+                    self.samples[i, j] = np.random.uniform(strata.origins[i, j], strata.origins[i, j] + strata.widths[i, j])
 
-            self.samples = samples
             self.origins = strata.origins
             self.widths = strata.widths
             self.weights = strata.weights
@@ -327,7 +292,6 @@ class SampleMethods:
             # TODO: Create a list that contains all element info - parent structure
             # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
             # hstack -
-
 
 ########################################################################################################################
 ########################################################################################################################
@@ -380,8 +344,9 @@ class SampleMethods:
 
         """
 
-        def __init__(self, nsamples=5000, dim=2, x0=np.zeros(2), MCMC_algorithm='MH', proposal='Normal',
-                     params=np.ones(2), target=None, njump=1, marginal_parameters=[[0, 1], [0, 1]]):
+        def __init__(self, generator=None, number=5000, dimension=2, mcmc_seed=None, mcmc_algorithm=None,
+                     pdf_proposal=None, pdf_proposal_params=None, pdf_target=None, pdf_target_paramrs=None,
+                     mcmc_burnIn=None):
 
             """This class generates samples from arbitrary algorithm using Metropolis-Hastings(MH) or
             Modified Metropolis-Hastings Algorithm.
@@ -432,34 +397,19 @@ class SampleMethods:
 
             # TODO: Mohit - Add error checks for target and marginal PDFs
 
-            try:
-                dim = np.int32(dim)
-            except ValueError:
-                print("Dimension should be an integer value. Try again...")
-
-            if MCMC_algorithm not in ['MH', 'MMH', 'GIBBS']:
-                sys.exit("Select one of the following algorithm: ['MH', 'MMH', 'GIBBS']")
-
-            if proposal not in ['Normal', 'Uniform']:
-                sys.exit("Select one of the following proposed density: ['Normal', 'Uniform']")
-
-            if np.size(params) != np.size(x0):
-                sys.exit("Dimension of parameters of Covariance matrix and Initial value should be same")
-
-            if not is_integer(njump):
-                sys.exit("Define an integer to reject generated samples")
-
-            self.nsamples = np.int32(nsamples)
-            self.dim = dim
-            self.method = MCMC_algorithm
-            self.proposal = proposal
-            self.params = params
-            self.target = target
+            self.nsamples = number
+            self.dim = dimension
+            self.mcmc_algorithm = mcmc_algorithm
+            self.pdf_proposal = pdf_proposal
+            self.pdf_proposal_params = pdf_proposal_params
+            self.pdf_target = pdf_target
+            self.pdf_target_params = pdf_target_paramrs
             self.rejects = 0
-            self.njump = njump
-            self.Marginal_parameters = marginal_parameters
+            self.mcmc_seed = mcmc_seed
+            self.mcmc_burnIn = mcmc_burnIn
 
             # Changing the array of param into a diagonal matrix
+
             if self.proposal == "Normal":
                 if self.params.shape[0] or self.params.shape[1] is 1:
                     self.params = np.diag(self.params)
@@ -502,7 +452,7 @@ class SampleMethods:
                         self.samples[i + 1] = self.samples[i]
                         self.rejects += 1
                 # Reject the samples using njump to reduce the correlation
-                self.samples = self.samples[0:self.nsamples * self.njump:self.njump]
+                self.xi = self.samples[0:self.nsamples * self.njump:self.njump]
 
             # Modified Metropolis-Hastings Algorithm with symmetric proposal density
             elif self.method == 'MMH':
@@ -531,7 +481,7 @@ class SampleMethods:
                     self.samples[i + 1, :] = x1
 
                 # Reject the samples using njump to reduce the correlation
-                self.samples = self.samples[0:self.nsamples * self.njump:self.njump]
+                self.xi = self.samples[0:self.nsamples * self.njump:self.njump]
 
 
                 # TODO: MDS - Add affine invariant ensemble MCMC
@@ -661,7 +611,7 @@ class Strata:
 
     """
 
-    def __init__(self, nstrata=None, input_file=None, origins=None, widths=None):
+    def __init__(self,  nstrata=None, input_file=None, origins=None, widths=None):
 
         """
         Class defines a rectilinear stratification of the n-dimensional unit hypercube with N strata
@@ -702,7 +652,6 @@ class Strata:
         Last modified by: Michael D. Shields
 
         """
-
         self.input_file = input_file
         self.nstrata = nstrata
         self.origins = origins

@@ -1,19 +1,19 @@
-# model
+#Model
 model_zabaras
 
-# method
+#Method
 mcs
 
-# number of samples
+#Number of Samples
 10000
 
-# dimensions
+#Stochastic dimension
 2
 
-# distribution
+#Probability distribution (pdf)
 Uniform
 Uniform
 
-# distribution parameters (lower, upper)/(mean, std)
+#Probability distribution parameters
 0 1
 0 1

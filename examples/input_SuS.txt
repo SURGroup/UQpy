@@ -1,35 +1,38 @@
 #Model
-model_zabaras
+model_reliability
 
 #Method
-mcmc
+SuS
 
-#Number of Samples
+#Number of Samples per subset
 1000
 
 #Stochastic dimension
 2
 
 #Probability distribution (pdf)
-Uniform
-Uniform
+Normal
+Normal
 
 #Probability distribution parameters
 0 1
 0 1
 
+#Proposal distribution parameters
+1.0
+1.0
+
 #MCMC algorithm
-MH
+MMH
 
 #Proposal distribution
-Normal
+Uniform
 
-#Proposal distribution parameters
-1
-1
+#Width of proposal distribution
+2
 
 #Target distribution
-mvnpdf
+marginal
 
 #Marginal target distribution parameters
 0 1
@@ -37,4 +40,11 @@ mvnpdf
 
 #Burn-in samples
 10
+
+#Conditional probability
+0.1
+
+#Failure criterion
+-2.0
+
 

@@ -1,245 +1,209 @@
 import numpy as np
 from functools import partial
 from modelist import *
+import sys
 
 
-def handle_input_file(filename):
+class README:
 
-    if filename == 'input_mcs.txt':
-        with open(filename, "r") as file:
-            r_ = 0
-            distribution = []
-            parameters = []
-            for row in [line.split() for line in file if not line.strip().startswith('#')]:
-                if len(row) != 0:
-                    if r_ == 0:
-                        _model = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 1:
-                        method = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 2:
-                        nsamples = int(row[0])
-                        r_ = r_ + 1
-                    elif r_ == 3:
-                        dimension = int(row[0])
-                        r_ = r_ + 1
-                    elif 4 <= r_ <= 4+dimension-1:
-                        distribution.append(row[0])
-                        r_ = r_ + 1
-                    elif 4+dimension <= r_ <= 4+2*dimension-1:
-                        parameters.append([np.float32(row[0]), np.float32(row[1])])
-        parameters = np.array(parameters)
-        return _model, method, nsamples, dimension, distribution, parameters
+    def __init__(self, input_file=None):
+        """
+        :param input_file:
+        """
+        self.filename = input_file
+        self.data = self.readfile()
+        self.check = self.error_checks()
 
-    elif filename == 'input_lhs.txt':
-        with open(filename, "r") as file:
-            r_ = 0
-            distribution = []
-            parameters = []
-            for row in [line.split() for line in file if not line.strip().startswith('#')]:
-                if len(row) != 0:
-                    if r_ == 0:
-                        _model = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 1:
-                        method = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 2:
-                        nsamples = int(row[0])
-                        r_ = r_ + 1
-                    elif r_ == 3:
-                        dimension = int(row[0])
-                        r_ = r_ + 1
-                    elif 4 <= r_ <= 4+dimension-1:
-                        distribution.append(row[0])
-                        r_ = r_ + 1
-                    elif 4+dimension <= r_ <= 4+2*dimension-1:
-                        parameters.append([np.float32(row[0]), np.float32(row[1])])
-                        r_ = r_ + 1
-                    elif r_ == 4+2*dimension:
-                        lhs_criterion = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 4+2*dimension + 1:
-                        dist_metric = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 4+2*dimension + 2:
-                        iterations = int(row[0])
-        parameters = np.array(parameters)
+    def readfile(self):
+        lines_ = []
+        mydict = {}
+        count = -1
+        for line in open(self.filename):
+            rec = line.strip()
+            count = count + 1
+            if rec.startswith('#'):
+                lines_.append(count)
 
-        return _model, method, nsamples, dimension, distribution, parameters, lhs_criterion, dist_metric, iterations
+        f = open(self.filename)
+        lines = f.readlines()
 
-    elif filename == 'input_mcmc.txt':
-        with open(filename, "r") as file:
-            r_ = 0
-            distribution = []
-            parameters = []
-            x0 = []
-            params = []
-            for row in [line.split() for line in file if not line.strip().startswith('#')]:
-                if len(row) != 0:
-                    if r_ == 0:
-                        _model = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 1:
-                        method = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 2:
-                        nsamples = int(row[0])
-                        r_ = r_ + 1
-                    elif r_ == 3:
-                        dimension = int(row[0])
-                        r_ = r_ + 1
-                    elif 4 <= r_ <= 4+dimension-1:
-                        distribution.append(row[0])
-                        r_ = r_ + 1
-                    elif 4+dimension <= r_ <= 4+2*dimension-1:
-                        parameters.append([np.float32(row[0]), np.float32(row[1])])
-                        r_ = r_ + 1
-                    elif 4+2*dimension <= r_ <= 3+3*dimension:
-                        x0.append(np.float32(row[0]))
-                        r_ = r_ + 1
-                    elif 4+3*dimension <= r_ <=3+4*dimension:
-                        params.append(np.float32(row[0]))
-                        r_ = r_ + 1
-                    elif r_ == 3+4*dimension + 1:
-                        MCMC_algorithm = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 3+4*dimension + 2:
-                        proposal = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 3+4*dimension + 3:
-                        target = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 3+4*dimension + 4:
-                        jump = int(row[0])
+        for i in range(len(lines_)):
+            title = lines[lines_[i]][1:-1]
+            # General parameters
+            if title == 'Method':
+                mydict[title] = lines[lines_[i]+1][:-1]
+                print()
+            elif title == 'Stochastic dimension':
+                mydict[title] = int(lines[lines_[i] + 1][:-1])
+            elif title == 'Probability distribution (pdf)':
+                dist = []
+                for k in range(mydict['Stochastic dimension']):
+                    dist.append(lines[lines_[i]+k+1][:-1])
+                mydict[title] = dist
+            elif title == 'Probability distribution parameters':
+                params = []
+                for k in range(mydict['Stochastic dimension']):
+                    params.append([np.float32(lines[lines_[i]+k+1][0]), np.float32(lines[lines_[i]+k+1][2])])
+                mydict[title] = params
+            elif title == 'Model':
+                mydict[title] = lines[lines_[i] + 1][:-1]
+            elif title == 'Number of Samples':
+                mydict[title] = int(lines[lines_[i] + 1][:-1])
+            # Latin Hypercube parameters
+            elif title == 'LHS criterion':
+                mydict[title] = lines[lines_[i] + 1][:-1]
+            elif title == 'distance metric':
+                mydict[title] = lines[lines_[i] + 1][:-1]
+            elif title == 'iterations':
+                mydict[title] = lines[lines_[i] + 1][:-1]
+            # partially stratified sampling
+            elif title == 'PSS design':
+                pss_design = []
+                for k in range(mydict['Stochastic dimension']):
+                    pss_design.append(int(lines[lines_[i]+k+1][0]))
+                mydict[title] = pss_design
+            elif title == 'PSS strata':
+                pss_strata = []
+                for k in range(mydict['Stochastic dimension']):
+                    pss_strata.append(int(lines[lines_[i]+k+1][:-1]))
+                mydict[title] = pss_strata
+            # stratified sampling
+            elif title == 'STS design':
+                sts_design = []
+                for k in range(mydict['Stochastic dimension']):
+                    sts_design.append(int(lines[lines_[i]+k+1][:-1]))
+                mydict[title] = sts_design
+            # Markov Chain Monte Carlo simulation
+            elif title == 'MCMC algorithm':
+                mydict[title] = lines[lines_[i] + 1][:-1]
+            elif title == 'Proposal distribution':
+                mydict[title] = lines[lines_[i] + 1][:-1]
+            elif title == 'Proposal distribution parameters':
+                proposal_params = []
+                for k in range(mydict['Stochastic dimension']):
+                    proposal_params.append(np.float32(lines[lines_[i]+k+1][0]))
+                mydict[title] = proposal_params
+            elif title == 'Target distribution':
+                mydict[title] = lines[lines_[i] + 1][:-1]
+            elif title == 'Burn-in samples':
+                mydict[title] = int(lines[lines_[i] + 1][:-1])
+            elif title == 'Marginal target distribution parameters':
+                marg_params = []
+                for k in range(mydict['Stochastic dimension']):
+                    marg_params.append([np.float32(lines[lines_[i]+k+1][0]), np.float32(lines[lines_[i]+k+1][2])])
+                mydict[title] = marg_params
+            # Subset Simulation
+            elif title == 'Number of Samples per subset':
+                mydict[title] = int(lines[lines_[i] + 1][:-1])
+            elif title == 'Width of proposal distribution':
+                mydict[title] = np.float32(lines[lines_[i] + 1][:-1])
+            elif title == 'Conditional probability':
+                mydict[title] = np.float32(lines[lines_[i] + 1][:-1])
+            elif title == 'Failure criterion':
+                mydict[title] = np.float32(lines[lines_[i] + 1][:-1])
+            # Stochastic Reduced Order Models (SROM)
 
-        x0 = np.array(x0)
-        parameters = np.array(parameters)
-        params = np.array(params)
+        return mydict
 
-        return _model, method, nsamples, dimension, distribution, parameters, x0, MCMC_algorithm, params, proposal, target, jump
+    def error_checks(self):
+        if self.data['Method'] not in ['mcs', 'lhs', 'mcmc', 'pss', 'sts', 'SuS']:
+            raise NotImplementedError('Available sampling methods: 1. Monte Carlo (mcs), 2. Latin hypercube(lhs), '
+                     '3. Markov chain Monte Carlo (mcmc), 4. Partially stratified (pss), 5. Stratified (sts).'
+                     'Available reliability methods: 1. Subset simulation (Sus).')
 
-    elif filename == 'input_pss.txt':
-        with open(filename, "r") as file:
-            r_ = 0
-            distribution = []
-            parameters = []
-            pss_design = []
-            pss_stratum = []
-            for row in [line.split() for line in file if not line.strip().startswith('#')]:
-                if len(row) != 0:
-                    if r_ == 0:
-                        _model = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 1:
-                        method = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 2:
-                        r_ = r_ + 1
-                    elif r_ == 3:
-                        dimension = int(row[0])
-                        r_ = r_ + 1
-                    elif 4 <= r_ <= 4+dimension-1:
-                        distribution.append(row[0])
-                        r_ = r_ + 1
-                    elif 4+dimension <= r_ <= 4+2*dimension-1:
-                        parameters.append([np.float32(row[0]), np.float32(row[1])])
-                        r_ = r_ + 1
-                    elif 4 + 2 * dimension <= r_ <= 3 + 3 * dimension:
-                        pss_design.append(int(row[0]))
-                        r_ = r_ + 1
-                    elif 4 + 3 * dimension <= r_ <= 3 + 4 * dimension:
-                        pss_stratum.append(int(row[0]))
-                        r_ = r_ + 1
+        if self.data['Method'] == 'mcs':
+            if len(self.data['Probability distribution (pdf)']) != self.data['Stochastic dimension']:
+                sys.exit('Error: Incompatible dimensions.')
 
-        parameters = np.array(parameters)
-        pss_design = np.array(pss_design)
-        pss_stratum = np.array(pss_stratum)
-        nsamples = np.prod(pss_design)
+        elif self.data['Method'] == 'lhs':
+            if len(self.data['Probability distribution (pdf)']) != self.data['Stochastic dimension']:
+                sys.exit('Error: Incompatible dimensions.')
 
-        return _model, method, nsamples, dimension, distribution, parameters, pss_design, pss_stratum
+            if 'LHS criterion' not in self.data:
+                self.data['LHS criterion'] = 'random'
+            elif self.data['LHS criterion'] not in ['random', 'centered', 'maximin', 'correlate', 'correlate_cond']:
+                sys.exit('Invalid LHS criterion requested.')
 
-    elif filename == 'input_sts.txt':
-        with open(filename, "r") as file:
-            r_ = 0
-            distribution = []
-            parameters = []
-            sts_input = []
-            for row in [line.split() for line in file if not line.strip().startswith('#')]:
-                if len(row) != 0:
-                    if r_ == 0:
-                        _model = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 1:
-                        method = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 2:
-                        r_ = r_ + 1
-                    elif r_ == 3:
-                        dimension = int(row[0])
-                        r_ = r_ + 1
-                    elif 4 <= r_ <= 4+dimension-1:
-                        distribution.append(row[0])
-                        r_ = r_ + 1
-                    elif 4+dimension <= r_ <= 4+2*dimension-1:
-                        parameters.append([np.float32(row[0]), np.float32(row[1])])
-                        r_ = r_ + 1
-                    elif 4 + 2 * dimension <= r_ <= 3 + 3 * dimension:
-                        sts_input.append(int(row[0]))
-                        r_ = r_ + 1
+            if 'distance metric' not in self.data:
+                self.data['distance metric'] = 'euclidean'
+            elif self.data['distance metric'] not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
+                                       'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching',
+                                       'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener',
+                                       'sokalsneath', 'sqeuclidean', 'yule']:
+                sys.exit('Invalid LHS distance metric requested.')
 
-        parameters = np.array(parameters)
-        sts_input = np.array(sts_input)
-        nsamples = np.prod(sts_input)
+            if 'iterations' not in self.data:
+                self.data['iterations'] = 1000
 
-        return _model, method, nsamples, dimension, distribution, parameters, sts_input
+        elif self.data['Method'] == 'pss':
+            if self.data['PSS design'] not in self.data:
+                sys.exit('PSS design required.')
+            else:
+                if len(self.data['PSS design']) != self.data['Stochastic dimension']:
+                    sys.exit('Error: Incompatible dimensions.')
 
-    elif filename == 'input_srom.txt':
-        with open(filename, "r") as file:
-            r_ = 0
-            distribution = []
-            moments = []
-            sts_input = []
-            properties = []
-            weights_samples = []
-            weights_errors = []
-            for row in [line.split() for line in file if not line.strip().startswith('#')]:
-                if len(row) != 0:
-                    if r_ == 0:
-                        _model = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 1:
-                        method = row[0]
-                        r_ = r_ + 1
-                    elif r_ == 2:
-                        dimension = int(row[0])
-                        r_ = r_ + 1
-                    elif 3 <= r_ <= 3+dimension-1:
-                        sts_input.append(int(row[0]))
-                        r_ = r_ + 1
-                    elif 3+dimension <= r_ <= 3+2*dimension-1:
-                        distribution.append(row[0])
-                        r_ = r_ + 1
-                    elif 3 + 2 * dimension <= r_ <= 3 + 2 * dimension + 1:
-                        moments.append([np.float32(row[0]), np.float32(row[1]), np.float32(row[2])])
-                        r_ = r_ + 1
-                    elif 3 + 2 * dimension + 2 <= r_ <= 3 + 2 * dimension + 4:
-                        properties.append(int(row[0]))
-                        r_ = r_ + 1
-                    elif 3 + 2 * dimension + 5 <= r_ <= 3 + 2 * dimension + 7:
-                        weights_errors.append(np.float32(row[0]))
-                        r_ = r_ + 1
-                    elif 3 + 2 * dimension + 8 <= r_:
-                        weights_samples.append(np.float32(row[0]))
-                        r_ = r_ + 1
+            if self.data['PSS strata'] not in self.data:
+                sys.exit('PSS strata required.')
+            else:
+                if len(self.data['PSS strata']) != self.data['Stochastic dimension']:
+                    sys.exit('Error: Incompatible dimensions.')
 
-        moments = np.array(moments)
-        sts_input = np.array(sts_input)
-        nsamples = np.prod(sts_input)
-        parameters = 'None'
+        elif self.data['Method'] == 'sts':
+            if self.data['STS design'] not in self.data:
+                sys.exit('STS design required.')
+            else:
+                if len(self.data['STS design']) != self.data['Stochastic dimension']:
+                    sys.exit('Error: Incompatible dimensions.')
 
-        return _model, method, nsamples, dimension, distribution, sts_input, moments, parameters, properties, weights_errors, weights_samples
+        elif self.data['Method'] == 'mcmc' or self.data['Method'] == 'SuS':
+            if 'MCMC algorithm' not in self.data:
+                sys.exit('MCMC algorthm required')
+            else:
+                if self.data['MCMC algorithm'] not in ['MH', 'MMH']:
+                    sys.exit('Algorithm not applicable. Select one of: 1. MH, 2. MMH')
+
+            if 'Proposal distribution' not in self.data:
+                sys.exit('Proposal distribution required')
+            else:
+                if self.data['Proposal distribution'] not in ['Normal', 'Uniform']:
+                    sys.exit('Algorithm not applicable. Select one of: 1. Normal, 2. Uniform')
+
+            if 'Target distribution' not in self.data:
+                sys.exit('Target distribution required')
+            else:
+                print()
+                # TODO: DG - We need to have a library of available  target distributions
+            if 'Marginal target distribution parameters' not in self.data:
+                sys.exit('Define marginal distribution parameters')
+            else:
+                if len(self.data['Marginal target distribution parameters']) != self.data['Stochastic dimension']:
+                    sys.exit('Error: Incompatible dimensions.')
+
+            if 'Burn-in samples' not in self.data:
+                self.data['Burn-in samples'] = 1
+
+        elif self.data['Method'] == 'SuS':
+            if 'Number of Samples per subset' not in self.data:
+                sys.exit('Define number of samples per subset')
+
+            if 'Conditional probability' not in self.data:
+                raise ValueError('Define conditional probability. Default will be set to 0.1')
+                mydict['Conditional probability'] = 0.1
+            else:
+                if self.data['Conditional probability'] >= 1.0:
+                    sys.exit('Conditional Probability must be lower of 1.0')
+
+            if 'Width of proposal distribution' not in self.data:
+                raise ValueError('Define width of proposal distribution. Default will be set to 2.')
+                mydict['Width of proposal distribution'] = 2.0
+
+            if 'Failure criterion' not in self.data:
+                sys.exit('Define failure criterion')
+
+            if 'Model' not in self.data:
+                sys.exit('A numerical model is required')
+
+        return 'OK'
 
 
 def def_model(_model):
@@ -247,8 +211,9 @@ def def_model(_model):
         model = partial(model_zabaras)
     elif _model == 'model_ko2d':
         model = partial(model_ko2d)
-    elif _model == 'model_eigenvalues':
-        model = partial(model_eigenvalues)
+    elif _model == 'model_reliability':
+        model = partial(model_reliability)
+
     return model
 
 
@@ -257,11 +222,8 @@ def def_target(target):
         target = partial(mvnpdf)
     elif target == 'normpdf':
         target = partial(normpdf)
-    elif target == 'SROM1':
-        target = partial(SROM1)
-    elif target == 'SROM2':
-        target = partial(SROM2)
-    elif target == 'SROM3':
-        target = partial(SROM3)
+    elif target == 'marginal':
+        target = partial(marginal)
     return target
+
 

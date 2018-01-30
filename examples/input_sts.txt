@@ -1,24 +1,24 @@
-# model
+#Model
 model_zabaras
 
-# method
+#Method
 sts
 
-# number of samples
+#Number of Samples
 1000
 
-# dimensions
+#Stochastic dimension
 2
 
-# distribution
+#Probability distribution (pdf)
 Uniform
 Uniform
 
-# distribution parameters
+#Probability distribution parameters
 0 1
 0 1
 
-# sts design
-100
-100
+#STS design
+10
+10
 

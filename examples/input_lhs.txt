@@ -1,28 +1,28 @@
-# model
+#Model
 model_zabaras
 
-# method
+#Method
 lhs
 
-# number of samples
-10000
+#Number of Samples
+1000
 
-# dimensions
+#Stochastic dimension
 2
 
-# distribution
+#Probability distribution (pdf)
 Uniform
 Uniform
 
-# distribution parameters
+#Probability distribution parameters
 0 1
 1 2
 
-# LHS criterion
-random
+#LHS criterion
+centered
 
-# distance metric
+#distance metric
 euclidean
 
-# iterations
+#iterations
 1000
