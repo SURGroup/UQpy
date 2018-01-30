@@ -42,11 +42,11 @@ class RunCommandLine:
         # Read  UQpy parameter file
         from UQpyLibraries import ReadInputFile
 
-        if not os.path.isfile('UQpyParams.txt'):
+        if not os.path.isfile('UQpy_Params.txt'):
             print("Error: UQpy parameters file does not exist")
             sys.exit()
         else:
-            data = ReadInputFile.readfile('UQpyParams.txt')
+            data = ReadInputFile.readfile('UQpy_Params.txt')
 
         ################################################################################################################
         # Initialize the requested UQpy method: Check if all necessary parameters are defined in the UQpyParams.txt file

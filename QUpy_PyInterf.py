@@ -16,5 +16,4 @@ x = SampleMethods.MCMC(pdf_target='mvnpdf', mcmc_algorithm='MH', pdf_proposal='U
                        pdf_proposal_width=2, pdf_target_params=[[0, 1], [0, 1]])
 
 print(x.samples)
-model = run_model('./bash_test.sh', 'examples', 'simUQpyOut')
 print()
