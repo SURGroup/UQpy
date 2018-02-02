@@ -171,14 +171,14 @@ class RunModel:
         model_script = './{}'.format(self.model_script)
 
         # Load the UQpyOut.txt
-        values = np.loadtxt('Samples_Chunk_{}.txt'.format(j+1), dtype=np.float32)
-        index = np.loadtxt('Samples_Chunk_index_{}.txt'.format(j+1))
+        values = np.loadtxt('Samples_Chunk_cores{}.txt'.format(j+1), dtype=np.float32)
+        index = np.loadtxt('Samples_Chunk_index_cores{}.txt'.format(j+1))
 
         ModelEval = []
         if self.CPUs_reduced is True:
 
             # Write each value of UQpyOut.txt into a *.txt file
-
+            print('malakas')
             np.savetxt('TEMP_val_{0}.txt'.format(index), values, newline=' ', delimiter=',',  fmt='%0.5f')
 
             # Run the Input_Shell_Script.sh in order to create the input file for the model
@@ -278,8 +278,30 @@ def chunk_samples_cores(data, samples, args):
             else:
                 lines = range(np.sum(size[:i]), np.sum(size[:i+1]))
 
-            np.savetxt('Samples_Chunk_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
-            np.savetxt('Samples_Chunk_index_{0}.txt'.format(i+1), lines)
+            np.savetxt('Samples_Chunk_cores{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
+            np.savetxt('Samples_Chunk_index_cores{0}.txt'.format(i+1), lines)
+
+
+def chunk_samples_nodes(data, samples, args):
+
+    header = ', '.join(data['Names of random variables'])
+
+    # In case of cluster divide the samples into chunks in order to sent to each processor
+    chunks = args.nodes
+    size = np.array([np.ceil(samples.shape[0]/chunks) for i in range(args.CPUs)]).astype(int)
+    dif = np.sum(size) - samples.shape[0]
+    count = 0
+    for k in range(dif):
+        size[count] = size[count] - 1
+        count = count + 1
+    for i in range(args.CPUs):
+        if i == 0:
+            lines = range(0, size[i])
+        else:
+            lines = range(np.sum(size[:i]), np.sum(size[:i+1]))
+
+        np.savetxt('Samples_Chunk_Nodes{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
+        np.savetxt('Samples_Chunk_index_Nodes{0}.txt'.format(i+1), lines)
 
 
 def init_sm(data):
