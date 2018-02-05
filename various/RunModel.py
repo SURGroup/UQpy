@@ -1,6 +1,4 @@
-from SampleMethods import Strata
-from  SampleMethods import *
-from RunModel import *
+from various.RunModel import *
 import numpy as np
 
 

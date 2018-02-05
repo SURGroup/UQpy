@@ -1,6 +1,5 @@
-import numpy as np
 from functools import partial
-from modelist import *
+from various.modelist import *
 import sys
 
 

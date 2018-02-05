@@ -1,9 +1,7 @@
-from SampleMethods import *
-from RunModel import RunModel
-from module_ import def_model, def_target, README
-from Reliability import ReliabilityMethods
-from Surrogates import SurrogateModels
-import matplotlib.pyplot as plt
+from UQpyLibraries.SampleMethods import *
+from various.RunModel import RunModel
+from various.module_ import def_model, def_target, README
+from UQpyLibraries.Reliability import ReliabilityMethods
 
 filename = 'input_srom.txt'
 

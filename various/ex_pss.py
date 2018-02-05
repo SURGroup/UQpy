@@ -1,10 +1,9 @@
-from SampleMethods import *
-from RunModel import RunModel
-from module_ import def_model, def_target, readfile
+from UQpyLibraries.SampleMethods import *
+from various.RunModel import RunModel
+from various.module_ import def_model, readfile
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
-filename = 'input_lhs.txt'
+filename = 'input_pss.txt'
 data = readfile(filename)
 
 # extract input data
@@ -14,9 +13,9 @@ N = data['Number of Samples']
 d = data['Stochastic dimension']
 pdf = data['Probability distribution (pdf)']
 pdf_params = data['Probability distribution parameters']
-LHS_criterion = data['LHS criterion']
-dist_metric = data['distance metric']
-iterations = data['iterations']
+pss_design= data['PSS design']
+pss_stratum = data['PSS strata']
+
 
 current_dir = os.getcwd()
 path = os.path.join(os.sep, current_dir, 'results')
@@ -33,19 +32,28 @@ Initialize
 sm = SampleMethods(distribution=pdf, dimension=d, parameters=pdf_params, method=method)
 rm = RunModel(model=model)
 
-lhs = sm.LHS(sm, d, N, LHS_criterion, iterations, dist_metric)
-fx = rm.Evaluate(rm, lhs.xi)
+
+'''
+Run code
+'''
+
+pss = sm.PSS(pss_design=pss_design, pss_stratum=pss_stratum)
+fx = rm.Evaluate(rm, pss.xi)
 
 
-subpath = os.path.join(os.sep, path, 'lhs')
+'''
+Plots
+'''
+
+subpath = os.path.join(os.sep, path, 'pss')
 os.makedirs(subpath, exist_ok=True)
 os.chdir(subpath)
 
-np.savetxt('samples.txt', lhs.xi, delimiter=' ')
+np.savetxt('samples.txt', pss.xi, delimiter=' ')
 np.savetxt('model.txt', fx.v)
 
 plt.figure()
-plt.scatter(lhs.xi[:, 0], lhs.xi[:, 1])
+plt.scatter(pss.xi[:, 0], pss.xi[:, 1])
 plt.savefig('samples.png')
 
 plt.figure()
@@ -55,7 +63,7 @@ plt.savefig('histogram.png')
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.scatter(lhs.xi[:, 0], lhs.xi[:, 1], fx.v, c='r', s=2)
+ax.scatter(pss.xi[:, 0], pss.xi[:, 1], fx.v, c='r', s=2)
 plt.gca().invert_xaxis()
 plt.savefig('model.png')
 

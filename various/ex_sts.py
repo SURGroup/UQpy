@@ -1,8 +1,7 @@
-from SampleMethods import *
-from RunModel import RunModel
-from module_ import def_model, def_target, readfile
+from UQpyLibraries.SampleMethods import *
+from various.RunModel import RunModel
+from various.module_ import def_model, readfile
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 filename = 'input_sts.txt'
 data = readfile(filename)
