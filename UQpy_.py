@@ -34,7 +34,7 @@ if __name__ == '__main__':
                         default=0, type=int, help="Number of local cores to be used for the analysis")
 
     parser.add_argument("--ClusterNodes", dest="nodes", action="store",type=int,
-                        default=0, help="Number of nodes to distribute the model evaluations in "
+                        default=1, help="Number of nodes to distribute the model evaluations in "
                         "case of a cluster.")
 
     args, unknown = parser.parse_known_args()
@@ -58,16 +58,6 @@ if __name__ == '__main__':
                 print("Error: Shell scripts for communication between UQpy and the model are required. Type --help"
                       "for more information")
                 sys.exit()
-
-        if args.CPUs != 0:
-            import multiprocessing
-            np = multiprocessing.cpu_count()
-            if int(args.CPUs) > np:
-                print("Error: You have available {0:1d} CPUs. Start parallel computing  using {0:1d} CPUs".format(np))
-                args.CPUs = np
-            args.ParallelProcessing = True
-        else:
-            args.ParallelProcessing = False
 
         # Create UQpy output directory
         import shutil

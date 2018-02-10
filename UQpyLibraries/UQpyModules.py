@@ -64,7 +64,7 @@ class RunCommandLine:
         ################################################################################################################
         # Split the samples into chunks in order to sent to each processor in case of parallel computing, else save them
         # into file UQpyOut.txt
-        if self.args.ParallelProcessing is True:
+        if self.args.CPUs != 0:
             if samples.shape[0] < self.args.CPUs:
                 self.args.CPUs = samples.shape[0]
                 self.args.CPUs_reduced = True
@@ -123,10 +123,19 @@ class RunModel:
         self.output_script = output_script
         self.current_dir = os.getcwd()
         self.CPUs_reduced = cpu_red
-        if self.CPUs == 1:
-            self.values = self.run_model()
-        else:
+
+        if self.CPUs != 0:
+            import multiprocessing
+            np = multiprocessing.cpu_count()
+            if int(self.CPUs) > np:
+                print("Error: You have available {0:1d} CPUs. Start parallel computing  using {0:1d} CPUs".format(np))
+                self.CPUs = np
+            self.ParallelProcessing = True
             self.values = self.multi_core()
+
+        else:
+            self.ParallelProcessing = False
+            self.values = self.run_model()
 
     def run_model(self):
         import time
@@ -171,14 +180,13 @@ class RunModel:
         model_script = './{}'.format(self.model_script)
 
         # Load the UQpyOut.txt
-        values = np.loadtxt('Samples_Chunk_cores{}.txt'.format(j+1), dtype=np.float32)
-        index = np.loadtxt('Samples_Chunk_index_cores{}.txt'.format(j+1))
+        values = np.loadtxt('LocalChunk_{0}.txt'.format(j+1), dtype=np.float32)
+        index = np.loadtxt('LocalChunk_index_{0}.txt'.format(j+1))
 
         ModelEval = []
         if self.CPUs_reduced is True:
 
             # Write each value of UQpyOut.txt into a *.txt file
-            print('malakas')
             np.savetxt('TEMP_val_{0}.txt'.format(index), values, newline=' ', delimiter=',',  fmt='%0.5f')
 
             # Run the Input_Shell_Script.sh in order to create the input file for the model
@@ -262,8 +270,8 @@ def chunk_samples_cores(data, samples, args):
     chunks = args.CPUs
     if args.CPUs_reduced is True:
         for i in range(args.CPUs):
-            np.savetxt('Samples_Chunk_{0}.txt'.format(i+1), samples[range(i-1, i), :], header=str(header), fmt='%0.5f')
-            np.savetxt('Samples_Chunk_index_{0}.txt'.format(i+1), np.array(i).reshape(1,))
+            np.savetxt('LocalChunk_{0}.txt'.format(i+1), samples[range(i-1, i), :], header=str(header), fmt='%0.5f')
+            np.savetxt('LocalChunk_index_{0}.txt'.format(i+1), np.array(i).reshape(1,))
 
     else:
         size = np.array([np.ceil(samples.shape[0]/chunks) for i in range(args.CPUs)]).astype(int)
@@ -278,8 +286,8 @@ def chunk_samples_cores(data, samples, args):
             else:
                 lines = range(np.sum(size[:i]), np.sum(size[:i+1]))
 
-            np.savetxt('Samples_Chunk_cores{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
-            np.savetxt('Samples_Chunk_index_cores{0}.txt'.format(i+1), lines)
+            np.savetxt('LocalChunk_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
+            np.savetxt('LocalChunk_index_{0}.txt'.format(i+1), lines)
 
 
 def chunk_samples_nodes(data, samples, args):
@@ -288,20 +296,20 @@ def chunk_samples_nodes(data, samples, args):
 
     # In case of cluster divide the samples into chunks in order to sent to each processor
     chunks = args.nodes
-    size = np.array([np.ceil(samples.shape[0]/chunks) for i in range(args.CPUs)]).astype(int)
+    size = np.array([np.ceil(samples.shape[0]/chunks) for i in range(args.nodes)]).astype(int)
     dif = np.sum(size) - samples.shape[0]
     count = 0
     for k in range(dif):
         size[count] = size[count] - 1
         count = count + 1
-    for i in range(args.CPUs):
+    for i in range(args.nodes):
         if i == 0:
             lines = range(0, size[i])
         else:
             lines = range(np.sum(size[:i]), np.sum(size[:i+1]))
 
-        np.savetxt('Samples_Chunk_Nodes{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
-        np.savetxt('Samples_Chunk_index_Nodes{0}.txt'.format(i+1), lines)
+        np.savetxt('ClusterChunk_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
+        np.savetxt('ClusterChunk_index_{0}.txt'.format(i+1), lines)
 
 
 def init_sm(data):
