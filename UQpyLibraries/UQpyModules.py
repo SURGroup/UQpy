@@ -3,6 +3,7 @@ import os
 import sys
 import shutil
 from UQpyLibraries.SampleMethods import transform_pdf
+import warnings
 
 
 class RunCommandLine:
@@ -332,10 +333,10 @@ def init_sm(data):
     # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
     # Optional:
 
-    if 'Method' in data.keys() is 'mcs':
+    if data['Method'] == 'mcs':
         if 'Number of Samples' not in data.keys():
             data['Number of Samples'] = None
-            raise Warning("Number of samples not provided. Default number is 100")
+            warnings.warn("Number of samples not provided. Default number is 100")
         if 'Probability distribution (pdf)' not in data.keys():
             raise NotImplementedError("Probability distribution not provided")
         elif 'Probability distribution parameters' not in data.keys():
@@ -346,23 +347,23 @@ def init_sm(data):
     # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
     # Optional: 1. Criterion, 2. Metric, 3. Iterations
 
-    if 'Method' in data.keys() is 'lhs':
-        if 'Number of Samples' not in data.keys():
+    if data['Method'] == 'lhs':
+        if 'Number of Samples' not in data:
             data['Number of Samples'] = None
-            raise Warning("Number of samples not provided. Default number is 100")
-        if 'Probability distribution (pdf)' not in data.keys():
+            warnings.warn("Number of samples not provided. Default number is 100")
+        if 'Probability distribution (pdf)' not in data:
             raise NotImplementedError("Probability distribution not provided")
-        if 'Probability distribution parameters' not in data.keys():
+        if 'Probability distribution parameters' not in data:
             raise NotImplementedError("Probability distribution parameters not provided")
-        if 'LHS criterion' not in data.keys():
+        if 'LHS criterion' not in data:
             data['LHS criterion'] = None
-            raise Warning("LHS criterion not defined. The default is centered")
-        if 'distance metric' not in data.keys():
+            warnings.warn("LHS criterion not defined. The default is centered")
+        if 'distance metric' not in data:
             data['distance metric'] = None
-            raise Warning("Distance metric for the LHS not defined. The default is Euclidean")
-        if 'iterations' not in data.keys():
+            warnings.warn("Distance metric for the LHS not defined. The default is Euclidean")
+        if 'iterations' not in data:
             data['iterations'] = None
-            raise Warning("Iterations for the LHS not defined. The default number is 1000")
+            warnings.warn("Iterations for the LHS not defined. The default number is 1000")
 
         ################################################################################################################
         # Markov Chain Monte Carlo simulation block.
@@ -373,11 +374,14 @@ def init_sm(data):
     if 'Method' in data.keys() is 'mcmc':
         if 'Number of Samples' not in data.keys():
             data['Number of Samples'] = None
-            raise Warning("Number of samples not provided. Default number is 100")
+            warnings.warn("Number of samples not provided. Default number is 100")
+
         if 'MCMC algorithm' not in data.keys():
-            raise NotImplementedError("MCMC algorithm not provided")
-        elif data['MCMC algorithm'] not in ['MH', 'MMH']:
-            raise Warning("MCMC algorithm not provided. The Metropolis-Hastings algorithm will be used")
+            warnings.warn("MCMC algorithm not provided. The Metropolis-Hastings algorithm will be used")
+        else:
+            if data['MCMC algorithm'] not in ['MH', 'MMH']:
+                warnings.warn("MCMC algorithm not available. The Metropolis-Hastings algorithm will be used")
+
         if 'Proposal distribution' not in data.keys():
             raise NotImplementedError("Proposal distribution not provided")
         if 'Proposal distribution parameters' not in data.keys():
@@ -388,7 +392,7 @@ def init_sm(data):
             raise NotImplementedError("Target distribution parameters not provided")
         if 'Burn-in samples' not in data.keys():
             data['Burn-in samples'] = None
-            raise Warning("Number of samples to skip in order to avoid burn-in not provided."
+            warnings.warn("Number of samples to skip in order to avoid burn-in not provided."
                           "The default will be set equal to 1")
 
         ################################################################################################################
