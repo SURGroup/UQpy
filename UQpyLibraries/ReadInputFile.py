@@ -158,5 +158,55 @@ def readfile(filename):
             mydict[title] = np.float32(lines[lines_[i] + 1][:-1])
         elif title == 'Failure criterion':
             mydict[title] = np.float32(lines[lines_[i] + 1][:-1])
+        # Stochastic Reduced Order Model
+        elif title == 'Moments':
+            seed = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    x = lines[lines_[i] + j + 1]
+                    seed.append(np.float32(x.split(" ")))
+                    j = j + 1
+            mydict[title] = seed
+        elif title == 'Error function weights':
+            seed = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    x = lines[lines_[i] + j + 1]
+                    seed.append(np.float32(x.split(" ")))
+                    j = j + 1
+            mydict[title] = seed
+        elif title == 'Sample weights':
+            seed = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    x = lines[lines_[i] + j + 1]
+                    seed.append(np.float32(x.split(" ")))
+                    j = j + 1
+            mydict[title] = seed
+        elif title == 'Properties to match':
+            seed = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    x = lines[lines_[i] + j + 1]
+                    seed.append(np.float32(x.split(" ")))
+                    j = j + 1
+            mydict[title] = seed
+
 
     return mydict

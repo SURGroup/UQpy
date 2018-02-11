@@ -65,6 +65,7 @@ if __name__ == '__main__':
             args.ParallelProcessing = False
 
         # Create UQpy output directory
+        print(args.Model_directory)
         import shutil
         folder_name = 'simUQpyOut'
         current_dir = os.getcwd()

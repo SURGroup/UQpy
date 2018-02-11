@@ -1,11 +1,5 @@
-#Model
-model_eigenvalues
-
 #Method
 srom
-
-#Stochastic dimension
-3
 
 #Probability distribution (pdf)
 srom1

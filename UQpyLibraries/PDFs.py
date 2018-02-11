@@ -28,6 +28,10 @@ def marginal(x, mp):
     return stats.norm.pdf(x, mp[0], mp[1])
 
 
+def srom(x):
+    return stats.gamma.cdf(x, 2, loc=1, scale=3)
+
+
 def pdf(dist):
     if dist == 'mvnpdf':
         return partial(mvnpdf)
@@ -37,6 +41,15 @@ def pdf(dist):
 
     elif dist == 'marginal':
         return partial(marginal)
+
+    elif dist == 'srom1':
+        return partial(srom)
+
+    elif dist == 'srom2':
+        return partial(srom)
+
+    elif dist == 'srom3':
+        return partial(srom)
 
 
 def transform_pdf(x, pdf, params):

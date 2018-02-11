@@ -6,6 +6,8 @@ import copy
 from scipy.spatial.distance import pdist
 from UQpyLibraries.PDFs import *
 from functools import partial
+from scipy import optimize
+from UQpyLibraries.PDFs import pdf
 
 '''
 class runSamplingMethods:
@@ -99,7 +101,7 @@ class LHS:
     """
 
     def __init__(self, pdf=None, pdf_params=None, lhs_criterion='random', lhs_metric='euclidean',
-                 lhs_iter=1000, nsamples=10):
+                 lhs_iter=1000, nsamples=100):
 
         self.nsamples = nsamples
         self.pdf = pdf
@@ -708,4 +710,92 @@ class MCMC:
             # TODO: MDS - Add affine invariant ensemble MCMC
 
             # TODO: MDS - Add Gibbs Sampler
+
+
+
+########################################################################################################################
+########################################################################################################################
+#                                         Stochastic Reduced Order Model  (SROM)                                       #
+########################################################################################################################
+########################################################################################################################
+
+class SROM:
+
+    # TODO: Mohit - Write the documentation for the class
+
+    def __init__(self, samples=None, nsamples=None, marginal=None, moments=None, weights_errors=None,
+                 weights_function=None, properties=[1, 1, 0]):
+        """
+
+        :param samples:
+        :param marginal:
+        :param moments:
+        :param weights_errors:
+        :param weights_function: An matrix (nsamples+3 x dimension) containing weights correponding to function
+        value for each dimension
+        :param properties:
+        """
+
+        # TODO: Mohit - Add error checks
+        # TODO: Mohit - Transform sample from [0,1] into range of marginals
+        dimension = np.size(marginal)
+        if np.size(weights_function) == 0:
+            weights_function = (1/nsamples)*np.ones([nsamples+3, dimension])
+        if np.size(moments) == 0:
+            sys.exit('Moments of marginal distribution are required')
+        else:
+            weights_function = weights_function.tolist()
+            for i in range(int(np.size(moments)/np.size(moments[0]))):
+                weights_function.append(moments[i])
+
+        self.samples = samples
+        self.marginal = marginal
+        self.moments = np.array(moments)
+        self.weights_errors = weights_errors
+        self.weights_function = np.array(weights_function)
+        self.properties = properties
+
+        # TODO: Mohit - Define default calculation for moments
+        def f(p, samples, w, mar, n, d, m, alpha):
+            e1 = 0.
+            e2 = 0.
+            e22 = 0.
+            e3 = 0.
+            samples = np.matrix(samples)
+            p = np.transpose(np.matrix(p))
+            com = np.append(samples, p, 1)
+            for j in range(d):
+                srt = com[np.argsort(com[:, j].flatten())]
+                s = srt[0, :, j]
+                a = srt[0, :, d]
+                A = np.cumsum(a)
+                marginal = def_target(mar[j])
+                for i in range(n):
+                    e1 = + w[i, j] * (A[0, i] - marginal(s[0, i])) ** 2
+
+                e2 =+ (w[i+1, j]) * (np.sum(np.transpose(p) * samples[:, j]) - m[0,j]) ** 2
+                # e22 =+ (w[i+2, j]) * (np.sum(np.array(p) * (np.array(samples[:, j])*np.array(samples[:,j]))) - m[1,j]) ** 2
+                # TODO: Mohit - Add error corresponding to correlation.
+            return alpha[0]*e1 + alpha[1]*(e2+e22) + alpha[2]*e3
+
+        def constraint(p):
+            return np.sum(p) - 1
+
+        def constraint2(p):
+            n = np.size(p)
+            return np.ones(n) - p
+
+        def constraint3(p):
+            n = np.size(p)
+            return p - np.zeros(n)
+
+        cons = ({'type': 'eq', 'fun': constraint}, {'type': 'ineq', 'fun': constraint2},
+                {'type': 'ineq', 'fun': constraint3})
+
+        P = optimize.minimize(f, np.zeros(nsamples),
+                              args=(self.samples, self.weights_function, self.marginal, nsamples, dimension, self.moments, self.weights_errors),
+                              constraints=cons, method='SLSQP')
+
+        self.probability = P.x
+
 

@@ -14,6 +14,6 @@ x = SampleMethods.PSS(pdf=['Uniform', 'Uniform'], pdf_params=[[0, 1], [0, 1]], p
 
 x = SampleMethods.MCMC(pdf_target='mvnpdf', mcmc_algorithm='MH', pdf_proposal='Uniform',
                        pdf_proposal_width=2, pdf_target_params=[[0, 1], [0, 1]])
-
+x= SampleMethods.SROM()
 print(x.samples)
 print()
