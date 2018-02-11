@@ -3,6 +3,7 @@ import os
 import sys
 import shutil
 from UQpyLibraries.SampleMethods import transform_pdf
+import warnings
 
 
 class RunCommandLine:
@@ -64,7 +65,7 @@ class RunCommandLine:
         ################################################################################################################
         # Split the samples into chunks in order to sent to each processor in case of parallel computing, else save them
         # into file UQpyOut.txt
-        if self.args.ParallelProcessing is True:
+        if self.args.CPUs != 0:
             if samples.shape[0] < self.args.CPUs:
                 self.args.CPUs = samples.shape[0]
                 self.args.CPUs_reduced = True
@@ -123,10 +124,19 @@ class RunModel:
         self.output_script = output_script
         self.current_dir = os.getcwd()
         self.CPUs_reduced = cpu_red
-        if self.CPUs == 1:
-            self.values = self.run_model()
-        else:
+
+        if self.CPUs != 0:
+            import multiprocessing
+            np = multiprocessing.cpu_count()
+            if int(self.CPUs) > np:
+                print("Error: You have available {0:1d} CPUs. Start parallel computing  using {0:1d} CPUs".format(np))
+                self.CPUs = np
+            self.ParallelProcessing = True
             self.values = self.multi_core()
+
+        else:
+            self.ParallelProcessing = False
+            self.values = self.run_model()
 
     def run_model(self):
         import time
@@ -171,14 +181,13 @@ class RunModel:
         model_script = './{}'.format(self.model_script)
 
         # Load the UQpyOut.txt
-        values = np.loadtxt('Samples_Chunk_{}.txt'.format(j+1), dtype=np.float32)
-        index = np.loadtxt('Samples_Chunk_index_{}.txt'.format(j+1))
+        values = np.loadtxt('LocalChunk_{0}.txt'.format(j+1), dtype=np.float32)
+        index = np.loadtxt('LocalChunk_index_{0}.txt'.format(j+1))
 
         ModelEval = []
         if self.CPUs_reduced is True:
 
             # Write each value of UQpyOut.txt into a *.txt file
-
             np.savetxt('TEMP_val_{0}.txt'.format(index), values, newline=' ', delimiter=',',  fmt='%0.5f')
 
             # Run the Input_Shell_Script.sh in order to create the input file for the model
@@ -262,8 +271,8 @@ def chunk_samples_cores(data, samples, args):
     chunks = args.CPUs
     if args.CPUs_reduced is True:
         for i in range(args.CPUs):
-            np.savetxt('Samples_Chunk_{0}.txt'.format(i+1), samples[range(i-1, i), :], header=str(header), fmt='%0.5f')
-            np.savetxt('Samples_Chunk_index_{0}.txt'.format(i+1), np.array(i).reshape(1,))
+            np.savetxt('LocalChunk_{0}.txt'.format(i+1), samples[range(i-1, i), :], header=str(header), fmt='%0.5f')
+            np.savetxt('LocalChunk_index_{0}.txt'.format(i+1), np.array(i).reshape(1,))
 
     else:
         size = np.array([np.ceil(samples.shape[0]/chunks) for i in range(args.CPUs)]).astype(int)
@@ -278,8 +287,30 @@ def chunk_samples_cores(data, samples, args):
             else:
                 lines = range(np.sum(size[:i]), np.sum(size[:i+1]))
 
-            np.savetxt('Samples_Chunk_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
-            np.savetxt('Samples_Chunk_index_{0}.txt'.format(i+1), lines)
+            np.savetxt('LocalChunk_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
+            np.savetxt('LocalChunk_index_{0}.txt'.format(i+1), lines)
+
+
+def chunk_samples_nodes(data, samples, args):
+
+    header = ', '.join(data['Names of random variables'])
+
+    # In case of cluster divide the samples into chunks in order to sent to each processor
+    chunks = args.nodes
+    size = np.array([np.ceil(samples.shape[0]/chunks) for i in range(args.nodes)]).astype(int)
+    dif = np.sum(size) - samples.shape[0]
+    count = 0
+    for k in range(dif):
+        size[count] = size[count] - 1
+        count = count + 1
+    for i in range(args.nodes):
+        if i == 0:
+            lines = range(0, size[i])
+        else:
+            lines = range(np.sum(size[:i]), np.sum(size[:i+1]))
+
+        np.savetxt('ClusterChunk_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
+        np.savetxt('ClusterChunk_index_{0}.txt'.format(i+1), lines)
 
 
 def init_sm(data):
@@ -303,10 +334,10 @@ def init_sm(data):
     # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
     # Optional:
 
-    if 'Method' in data.keys() is 'mcs':
+    if data['Method'] == 'mcs':
         if 'Number of Samples' not in data.keys():
             data['Number of Samples'] = None
-            raise Warning("Number of samples not provided. Default number is 100")
+            warnings.warn("Number of samples not provided. Default number is 100")
         if 'Probability distribution (pdf)' not in data.keys():
             raise NotImplementedError("Probability distribution not provided")
         elif 'Probability distribution parameters' not in data.keys():
@@ -317,23 +348,23 @@ def init_sm(data):
     # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
     # Optional: 1. Criterion, 2. Metric, 3. Iterations
 
-    if 'Method' in data.keys() is 'lhs':
-        if 'Number of Samples' not in data.keys():
+    if data['Method'] == 'lhs':
+        if 'Number of Samples' not in data:
             data['Number of Samples'] = None
-            raise Warning("Number of samples not provided. Default number is 100")
-        if 'Probability distribution (pdf)' not in data.keys():
+            warnings.warn("Number of samples not provided. Default number is 100")
+        if 'Probability distribution (pdf)' not in data:
             raise NotImplementedError("Probability distribution not provided")
-        if 'Probability distribution parameters' not in data.keys():
+        if 'Probability distribution parameters' not in data:
             raise NotImplementedError("Probability distribution parameters not provided")
-        if 'LHS criterion' not in data.keys():
+        if 'LHS criterion' not in data:
             data['LHS criterion'] = None
-            raise Warning("LHS criterion not defined. The default is centered")
-        if 'distance metric' not in data.keys():
+            warnings.warn("LHS criterion not defined. The default is centered")
+        if 'distance metric' not in data:
             data['distance metric'] = None
-            raise Warning("Distance metric for the LHS not defined. The default is Euclidean")
-        if 'iterations' not in data.keys():
+            warnings.warn("Distance metric for the LHS not defined. The default is Euclidean")
+        if 'iterations' not in data:
             data['iterations'] = None
-            raise Warning("Iterations for the LHS not defined. The default number is 1000")
+            warnings.warn("Iterations for the LHS not defined. The default number is 1000")
 
         ################################################################################################################
         # Markov Chain Monte Carlo simulation block.
@@ -344,11 +375,14 @@ def init_sm(data):
     if 'Method' in data.keys() is 'mcmc':
         if 'Number of Samples' not in data.keys():
             data['Number of Samples'] = None
-            raise Warning("Number of samples not provided. Default number is 100")
+            warnings.warn("Number of samples not provided. Default number is 100")
+
         if 'MCMC algorithm' not in data.keys():
-            raise NotImplementedError("MCMC algorithm not provided")
-        elif data['MCMC algorithm'] not in ['MH', 'MMH']:
-            raise Warning("MCMC algorithm not provided. The Metropolis-Hastings algorithm will be used")
+            warnings.warn("MCMC algorithm not provided. The Metropolis-Hastings algorithm will be used")
+        else:
+            if data['MCMC algorithm'] not in ['MH', 'MMH']:
+                warnings.warn("MCMC algorithm not available. The Metropolis-Hastings algorithm will be used")
+
         if 'Proposal distribution' not in data.keys():
             raise NotImplementedError("Proposal distribution not provided")
         if 'Proposal distribution parameters' not in data.keys():
@@ -359,7 +393,7 @@ def init_sm(data):
             raise NotImplementedError("Target distribution parameters not provided")
         if 'Burn-in samples' not in data.keys():
             data['Burn-in samples'] = None
-            raise Warning("Number of samples to skip in order to avoid burn-in not provided."
+            warnings.warn("Number of samples to skip in order to avoid burn-in not provided."
                           "The default will be set equal to 1")
 
         ################################################################################################################

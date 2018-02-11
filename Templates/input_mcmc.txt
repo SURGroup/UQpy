@@ -4,9 +4,6 @@ mcmc
 #Number of Samples
 1000
 
-#Stochastic dimension
-2
-
 #MCMC algorithm
 MH
 

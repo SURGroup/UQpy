@@ -31,11 +31,11 @@ if __name__ == '__main__':
                         default=None, help="Specify the name of the shell script used for running the model")
 
     parser.add_argument("--CPUs", dest="CPUs", action="store",
-                        default=1, type=int, help="Number of local cores to be used for the analysis")
+                        default=0, type=int, help="Number of local cores to be used for the analysis")
 
-    parser.add_argument("--ClusterNodes", dest="nodes", action="store",
-                        default=1, type=int, help="Number of nodes to distribute the model evaluations in "
-                                                  "case of a cluster.")
+    parser.add_argument("--ClusterNodes", dest="nodes", action="store",type=int,
+                        default=1, help="Number of nodes to distribute the model evaluations in "
+                        "case of a cluster.")
 
     args, unknown = parser.parse_known_args()
 
@@ -49,20 +49,15 @@ if __name__ == '__main__':
             sys.exit()
 
         if args.Model is not None:
-            if args.Input_Shell_Script is None or args.Output_Shell_Script is None:
+            if args.Input_Shell_Script is None:
                 print("Error: Shell scripts for communication between UQpy and the model are required. Type --help"
                       "for more information")
                 sys.exit()
 
-        if args.CPUs != 1:
-            import multiprocessing
-            np = multiprocessing.cpu_count()
-            if int(args.CPUs) > np:
-                print("Error: You have available {0:1d} CPUs. Start parallel computing  using {0:1d} CPUs".format(np))
-                args.CPUs = np
-            args.ParallelProcessing = True
-        else:
-            args.ParallelProcessing = False
+            elif args.Output_Shell_Script is None:
+                print("Error: Shell scripts for communication between UQpy and the model are required. Type --help"
+                      "for more information")
+                sys.exit()
 
         # Create UQpy output directory
         print(args.Model_directory)
