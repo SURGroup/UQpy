@@ -2,7 +2,6 @@ import os
 import sys
 from argparse import ArgumentParser
 
-
 UQpy_commandLine = \
 UQpy_commandLine_Usage = """python UQpy.py --{options}"""
 

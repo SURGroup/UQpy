@@ -103,7 +103,7 @@ class RunCommandLine:
                 full_file_name = os.path.join(self.args.WorkingDir, file_name)
                 shutil.copy(full_file_name, self.args.Output_directory)
 
-        shutil.rmtree(self.args.WorkingDir)
+        #shutil.rmtree(self.args.WorkingDir)
         print("\nSuccessful execution of UQpy\n\n")
 
 
@@ -157,6 +157,7 @@ class RunModel:
                 np.savetxt(f, values[i, :], fmt='%0.5f')
 
             # Run the Input_Shell_Script.sh in order to create the input file for the model
+            input_script = './{0} {1}'.format(self.input_script, i)
             os.system(input_script)
 
             # Run the Model.sh in order to run the model
@@ -178,7 +179,6 @@ class RunModel:
         j = args
 
         # Define the executable shell scripts for the model
-        model_script = './{}'.format(self.model_script)
 
         # Load the UQpyOut.txt
         values = np.loadtxt('LocalChunk_{0}.txt'.format(j+1), dtype=np.float32)
@@ -195,6 +195,7 @@ class RunModel:
             os.system(input_script)
 
             # Run the Model.sh in order to run the model
+            model_script = './{0} {1}'.format(self.model_script, index)
             os.system(model_script)
 
             # Run the Output_Shell_Script.sh  in order to create the input file of the model for UQpy
@@ -214,20 +215,21 @@ class RunModel:
                 lock.acquire()  # will block if lock is already held
 
                 # Write each value of UQpyOut.txt into a *.txt file
-                np.savetxt('TEMP_val_{0}.txt'.format(i), values[count, :],  newline=' ', delimiter=',',  fmt='%0.5f')
+                np.savetxt('TEMP_val_{0}.txt'.format(int(i)), values[count, :],  newline=' ', delimiter=',',  fmt='%0.5f')
 
                 # Run the Input_Shell_Script.sh in order to create the input file for the model
-                input_script = './{0} {1}'.format(self.input_script, i)
+                input_script = './{0} {1}'.format(self.input_script, int(i))
                 os.system(input_script)
 
                 # Run the Model.sh in order to run the model
+                model_script = './{0} {1}'.format(self.model_script, int(i))
                 os.system(model_script)
 
                 # Run the Output_Shell_Script.sh  in order to create the input file of the model for UQpy
-                output_script = './{0} {1}'.format(self.output_script, i)
+                output_script = './{0} {1}'.format(self.output_script, int(i))
                 os.system(output_script)
 
-                ModelEval.append(np.loadtxt('UQpyInput_{0}.txt'.format(i), dtype=np.float32))
+                ModelEval.append(np.loadtxt('UQpyInput_{0}.txt'.format(int(i)), dtype=np.float32))
                 count = count + 1
                 lock.release()
 
