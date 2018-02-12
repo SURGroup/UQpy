@@ -32,6 +32,10 @@ def srom(x):
     return stats.gamma.cdf(x, 2, loc=1, scale=3)
 
 
+def Uniform(x):
+    return stats.uniform.cdf(x, loc=0, scale=1)
+
+
 def pdf(dist):
     if dist == 'mvnpdf':
         return partial(mvnpdf)
@@ -50,6 +54,9 @@ def pdf(dist):
 
     elif dist == 'srom3':
         return partial(srom)
+
+    elif dist == 'Uniform':
+        return partial(Uniform)
 
 
 def transform_pdf(x, pdf, params):

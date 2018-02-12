@@ -507,6 +507,7 @@ class Strata:
         for i in range(n):
             range_repeat //= levels[i]
             lvl = []
+            print(levels, i)
             for j in range(levels[i]):
                 lvl += [j] * level_repeat
             rng = lvl * range_repeat
@@ -739,8 +740,8 @@ class SROM:
         # TODO: Mohit - Add error checks
         # TODO: Mohit - Transform sample from [0,1] into range of marginals
         dimension = np.size(marginal)
-        if np.size(weights_function) == 0:
-            weights_function = (1/nsamples)*np.ones([nsamples+3, dimension])
+        if weights_function is None:
+            weights_function = (1/nsamples)*np.ones([nsamples, dimension])
         if np.size(moments) == 0:
             sys.exit('Moments of marginal distribution are required')
         else:
@@ -769,7 +770,7 @@ class SROM:
                 s = srt[0, :, j]
                 a = srt[0, :, d]
                 A = np.cumsum(a)
-                marginal = def_target(mar[j])
+                marginal = pdf(mar[j])
                 for i in range(n):
                     e1 = + w[i, j] * (A[0, i] - marginal(s[0, i])) ** 2
 
