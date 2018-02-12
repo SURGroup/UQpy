@@ -1,14 +1,16 @@
 from UQpyLibraries.UQpyModules import *
 from UQpyLibraries import SampleMethods
+import matplotlib.pyplot as plt
+
+x = SampleMethods.MCS(pdf=['Uniform', 'Uniform'], pdf_params=[[0, 1], [0, 1]], nsamples=10)
 
 
-# x = SampleMethods.MCS(pdf=['Uniform', 'Uniform'], pdf_params=[[0, 1], [0, 1]], nsamples=10)
-#
-#
-# x = SampleMethods.LHS(pdf=['Uniform', 'Uniform'], pdf_params=[[0, 1], [0, 1]], nsamples=10)
+x = SampleMethods.LHS(pdf=['Uniform', 'Uniform'], pdf_params=[[0, 1], [0, 1]], nsamples=10)
 
 
-x = SampleMethods.STS(pdf=['Uniform', 'Uniform'], pdf_params=[[0, 1], [0, 1]], sts_design=[3, 3])
+x = SampleMethods.STS(pdf=['Uniform', 'Uniform'], pdf_params=[[0, 1], [0, 1]], sts_design=[10, 10])
+
+x = SampleMethods.PSS(pdf=['Uniform', 'Uniform'], pdf_params=[[0, 1], [0, 1]], pss_design=[2, 2], pss_strata=[5, 5])
 
 # x = SampleMethods.PSS(pdf=['Uniform', 'Uniform'], pdf_params=[[0, 1], [0, 1]], pss_design=[2, 2], pss_strata=[5, 5])
 #
@@ -18,3 +20,8 @@ x= SampleMethods.SROM(samples=x.samples, nsamples=9, marginal=['Uniform', 'Unifo
                  weights_function=None, properties=[1, 1, 0])
 print(x.samples)
 print()
+
+
+plt.figure()
+plt.scatter(x.samples[:, 0], x.samples[:, 1], marker='.')
+plt.show()

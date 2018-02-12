@@ -29,7 +29,7 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1][:-1]
+                    x = lines[lines_[i] + j + 1]
                     dist.append(x.split(" "))
                     j = j + 1
             mydict[title] = dist
@@ -53,7 +53,7 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1][:-1]
+                    x = lines[lines_[i] + j + 1]
                     params.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = params
@@ -75,8 +75,8 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1][:-1]
-                    pss_design.append(np.int(x.split(" ")))
+                    x = lines[lines_[i] + j + 1]
+                    pss_design.append(int(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
             mydict[title] = pss_design
         elif title == 'PSS strata':
@@ -87,11 +87,11 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1][:-1]
-                    pss_strata.append(np.int(x.split(" ")))
+                    x = lines[lines_[i] + j + 1]
+                    pss_strata.append(int(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
             mydict[title] = pss_strata
-        #stratified sampling
+        # stratified sampling
         elif title == 'STS design':
             sts_design = []
             j = 0
@@ -100,23 +100,10 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1][:-1]
-                    print(x.split())
-                    sts_design.append(np.float32(x.split(" ")))
+                    x = lines[lines_[i] + j + 1]
+                    sts_design.append(int(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
             mydict[title] = sts_design
-
-        # elif title == 'STS design':
-        #     sts_design = []
-        #     for j in range(lines_[i + 1] - lines_[i] - 2):
-        #         line = lines[lines_[i] + j + 1]
-        #         my_string_list = line.split()
-        #         new_list = []
-        #         for item in my_string_list:
-        #             new_list.append(int(item))
-        #         sts_design.append(new_list)
-        #     mydict[title] = sts_design
-
         # Markov Chain Monte Carlo simulation
         elif title == 'MCMC algorithm':
             mydict[title] = lines[lines_[i] + 1][:-1]
@@ -130,7 +117,7 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1][:-1]
+                    x = lines[lines_[i] + j + 1]
                     proposal_params.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = proposal_params
@@ -146,7 +133,7 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1][:-1]
+                    x = lines[lines_[i] + j + 1]
                     marg_params.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = marg_params
@@ -158,7 +145,7 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1][:-1]
+                    x = lines[lines_[i] + j + 1]
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
