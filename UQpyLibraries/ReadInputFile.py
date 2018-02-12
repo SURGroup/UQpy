@@ -76,7 +76,7 @@ def readfile(filename):
                     break
                 else:
                     x = lines[lines_[i] + j + 1]
-                    pss_design.append(np.int(x.split(" ")))
+                    pss_design.append(int(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
             mydict[title] = pss_design
         elif title == 'PSS strata':
@@ -88,7 +88,7 @@ def readfile(filename):
                     break
                 else:
                     x = lines[lines_[i] + j + 1]
-                    pss_strata.append(np.int(x.split(" ")))
+                    pss_strata.append(int(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
             mydict[title] = pss_strata
         # stratified sampling
@@ -101,9 +101,10 @@ def readfile(filename):
                     break
                 else:
                     x = lines[lines_[i] + j + 1]
-                    sts_design.append(np.int(x.split(" ")))
+                    sts_design.append(int(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
             mydict[title] = sts_design
+            print(sts_design)
         # Markov Chain Monte Carlo simulation
         elif title == 'MCMC algorithm':
             mydict[title] = lines[lines_[i] + 1][:-1]
