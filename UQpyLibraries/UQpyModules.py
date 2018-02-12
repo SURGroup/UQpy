@@ -157,7 +157,8 @@ class RunModel:
                 np.savetxt(f, values[i, :], fmt='%0.5f')
 
             # Run the Input_Shell_Script.sh in order to create the input file for the model
-            os.system(input_script)
+            join_script_inp = './{0} {1}'.format(self.input_script, i)
+            os.system(join_script_inp)
 
             # Run the Model.sh in order to run the model
             os.system(model_script)
@@ -492,6 +493,12 @@ def run_sm(data):
                    properties=data['Properties to match'])
     ################################################################################################################
     # Run stratified sampling
+
+    elif data['Method'] == 'sts':
+        from UQpyLibraries.SampleMethods import STS
+        print("\nRunning  %k \n", data['Method'])
+        rvs = STS(pdf=data['Probability distribution (pdf)'],
+                          pdf_params=data['Probability distribution parameters'], sts_design=np.array(data['STS design']))
 
     ################################################################################################################
     # Run ANY NEW METHOD HERE

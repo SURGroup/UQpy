@@ -507,7 +507,6 @@ class Strata:
         for i in range(n):
             range_repeat //= levels[i]
             lvl = []
-            print(levels, i)
             for j in range(levels[i]):
                 lvl += [j] * level_repeat
             rng = lvl * range_repeat
