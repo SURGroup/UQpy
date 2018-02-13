@@ -66,6 +66,11 @@ if __name__ == '__main__':
         if os.path.exists(args.Output_directory):
             shutil.rmtree(args.Output_directory)
         os.makedirs(args.Output_directory, exist_ok=False)
+        # Check if Output_directory already exists inside mModel directory
+        path = os.path.join(os.sep, args.Model_directory, folder_name)
+        if os.path.exists(path) and os.path.isdir(path):
+            shutil.rmtree(path)
+
 
         # Import UQpy library
         from UQpyLibraries import UQpyModules
