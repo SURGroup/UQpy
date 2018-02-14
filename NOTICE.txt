@@ -1,5 +1,5 @@
 Apache UQpy
-Copyright 2018 Dimitris Giovanis, Michael D. Shields
+Copyright 2018 SURG
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
