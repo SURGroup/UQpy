@@ -30,7 +30,7 @@ def readfile(filename):
                     break
                 else:
                     x = lines[lines_[i] + j + 1]
-                    dist.append(x.split(" "))
+                    dist.append(lines[lines_[i] + j + 1][:-1])
                     j = j + 1
             mydict[title] = dist
         elif title == 'Names of random variables':

@@ -51,7 +51,6 @@ def pdf(dist):
 
 def transform_pdf(x, pdf, params):
     x_trans = np.zeros(shape=(x.shape[0], x.shape[1]))
-    print(pdf[1])
     ###################################################################################
     # U(0, 1)  ---->  U(a, b)
 

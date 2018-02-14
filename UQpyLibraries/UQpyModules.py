@@ -60,8 +60,11 @@ class RunCommandLine:
         samples = transform_pdf(samples_01, data['Probability distribution (pdf)'],
                                 data['Probability distribution parameters'])
 
-        header = ', '.join(data['Names of random variables'])
-        np.savetxt('UQpyOut.txt', samples, header=str(header), fmt='%0.5f')
+        # Save the samples in a .txt file
+        save_txt(data['Names of random variables'], samples)
+
+        # Save the samples in a .csv file
+        save_csv(data['Names of random variables'], samples)
 
         ################################################################################################################
         # Split the samples into chunks in order to sent to each processor in case of parallel computing, else save them
@@ -97,7 +100,7 @@ class RunCommandLine:
                 file_new = file.replace("UQpyInput_", "Model_")
                 os.rename(file, file_new)
                 _files.append(file_new)
-            _files.append('UQpyOut.txt')
+            _files.append('UQpyOut.csv')
 
             for file_name in _files:
                 full_file_name = os.path.join(self.args.WorkingDir, file_name)
@@ -475,4 +478,25 @@ def run_sm(data):
     return rvs.samples
 
 
+def save_csv(headers, param_values):
 
+    index = np.array(range(1, param_values.shape[0] + 1)).astype(int)
+    param_values = np.hstack((index.reshape(index.shape[0], 1), param_values))
+    HEADER=[]
+    HEADER.append('Run')
+    for i in range(len(headers)):
+        HEADER.append(headers[i])
+    import csv
+    with open('UQpyOut.csv', "w") as output:
+        writer = csv.writer(output, lineterminator='\n')
+        writer.writerow(HEADER)
+        for val in param_values:
+            writer.writerow(val)
+
+
+def save_txt(headers, param_values):
+
+    index = np.array(range(1, param_values.shape[0] + 1)).astype(int)
+    param_values = np.hstack((index.reshape(index.shape[0], 1), param_values))
+    header = ', '.join(headers)
+    np.savetxt('UQpyOut.txt', param_values, header=str(header), fmt='%0.5f')
