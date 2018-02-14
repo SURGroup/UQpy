@@ -317,7 +317,7 @@ def init_sm(data):
 
     ################################################################################################################
     # Add available methods Here
-    valid_methods = ['mcs', 'lhs', 'mcmc', 'pss', 'sts', 'SuS']
+    valid_methods = ['mcs', 'lhs', 'mcmc', 'pss', 'sts', 'SuS', 'srom']
 
     ################################################################################################################
     # Check if requested method is available
@@ -401,9 +401,28 @@ def init_sm(data):
         # Optional:
 
         ################################################################################################################
-        # Stratified sampling (PSS) block.
+        # Stratified sampling (STS) block.
         # Necessary parameters:  1. pdf, 2. pdf parameters 3. sts design
         # Optional:
+
+        ################################################################################################################
+        # Stochastic Reduced Order Model (SROM) block.
+        # Necessary parameters:  1. marginal pdf, 2. moments 3. Error function weights
+        # Optional: 1. Properties to match 2. Error function weights
+
+        if data['Method'] == 'srom':
+            if 'Probability distribution (pdf)' not in data:
+                raise NotImplementedError("Probability distribution not provided")
+            if 'Moments' not in data:
+                raise NotImplementedError("Moments not provided")
+            if 'Error function weights' not in data:
+                raise NotImplementedError("Error function weights not provided")
+            if 'Properties to match' not in data:
+                data['Properties to match'] = None
+                warnings.warn("Properties to match not defined. The default is [1, 1, 0]")
+            if 'Error function weights' not in data:
+                data['Error function weights'] = None
+                warnings.warn("Error function weights not defined. The default is equal weights to each sample")
 
         ################################################################################################################
         # HERE YOU ADD CHECKS FOR ANY NEW METHOD ADDED
@@ -452,6 +471,11 @@ def run_sm(data):
                  mcmc_burnIn=data['Burn-in samples'])
     ################################################################################################################
     # Run stratified sampling
+    elif data['Method'] == 'sts':
+        from UQpyLibraries.SampleMethods import STS
+        print("\nRunning  %k \n", data['Method'])
+        rvs = STS(pdf=data['Probability distribution (pdf)'], pdf_params=data['Probability distribution parameters'],
+                  sts_design=data['STS design'])
 
     ################################################################################################################
     # Run ANY NEW METHOD HERE
