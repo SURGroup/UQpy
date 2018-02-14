@@ -478,6 +478,27 @@ def run_sm(data):
                   sts_design=data['STS design'])
 
     ################################################################################################################
+    # Run Stochastic Reduced Order Method
+
+    elif data['Method'] == 'srom':
+    from UQpyLibraries.SampleMethods import SROM
+    print("\nRunning  %k \n", data['Method'])
+    if data['Sampling method'] == 'sts':
+        from UQpyLibraries.SampleMethods import STS
+        sm = STS(pdf=data['Probability distribution (pdf)'],
+                 pdf_params=data['Probability distribution parameters'], sts_design=np.array(data['STS design']))
+    elif data['Sampling method'] == 'mcmc':
+        from UQpyLibraries.SampleMethods import MCMC
+        sm = MCMC(pdf_target=data['Target distribution'], mcmc_algorithm=data['MCMC algorithm'],
+                  pdf_proposal=data['Proposal distribution'],
+                  pdf_proposal_width=data['Proposal distribution width'],
+                  pdf_target_params=data['Target distribution parameters'], mcmc_seed=data['seed'],
+                  mcmc_burnIn=data['Burn-in samples'])
+    rvs = SROM(samples=sm.samples, nsamples=data['Number of Samples'],
+               marginal=data['Probability distribution (pdf)'], moments=data['Moments'],
+               weights_errors=data['Error function weights'], weights_function=data['Sample weights'],
+               properties=data['Properties to match'])
+    ################################################################################################################
     # Run ANY NEW METHOD HERE
 
     return rvs.samples
