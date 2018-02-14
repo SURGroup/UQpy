@@ -1,0 +1,18 @@
+#Method
+mcs
+
+#Number of Samples
+10
+
+#Stochastic dimension
+2
+
+#Probability distribution (pdf)
+Uniform
+Uniform
+
+#Probability distribution parameters
+0 1
+0 1
+
+#end

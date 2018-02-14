@@ -1,0 +1,28 @@
+#Method
+mcmc
+
+#Number of Samples
+1000
+
+#MCMC algorithm
+MH
+
+#Proposal distribution
+Uniform
+
+#Proposal distribution parameters
+1
+1
+
+#Target distribution
+mvnpdf
+
+#Marginal target distribution parameters
+0 1
+0 1
+
+#Burn-in samples
+10
+
+#end
+

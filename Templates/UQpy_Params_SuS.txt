@@ -1,0 +1,51 @@
+#Model
+model_reliability
+
+#Method
+SuS
+
+#Number of Samples per subset
+1000
+
+#Stochastic dimension
+2
+
+#Probability distribution (pdf)
+Normal
+Normal
+
+#Probability distribution parameters
+0 1
+0 1
+
+#Proposal distribution parameters
+1.0
+1.0
+
+#MCMC algorithm
+MMH
+
+#Proposal distribution
+Uniform
+
+#Width of proposal distribution
+2
+
+#Target distribution
+marginal
+
+#Marginal target distribution parameters
+0 1
+0 1
+
+#Burn-in samples
+10
+
+#Conditional probability
+0.1
+
+#Failure criterion
+-2.0
+
+#end
+
