@@ -51,18 +51,22 @@ def pdf(dist):
 
 def transform_pdf(x, pdf, params):
     x_trans = np.zeros(shape=(x.shape[0], x.shape[1]))
-
+    print(pdf[1])
     ###################################################################################
     # U(0, 1)  ---->  U(a, b)
 
     for i in range(x.shape[1]):
+        if pdf[i] == 'Uniform':
             for j in range(x.shape[0]):
-                x_trans[j, i] = params[i][0] + (params[i][1]-params[i][0]) * x[j, i]
+                     x_trans[j, i] = params[i][0] + (params[i][1]-params[i][0]) * x[j, i]
 
     ###################################################################################
-
     # U(0, 1)  ---->  N(μ, σ)
-    # TODO: Transform U(0, 1) to N(μ, σ)
+
+        elif pdf[i] == 'Normal':
+            for j in range(x.shape[0]):
+                    x_trans[j, i] = stats.norm.ppf(x[j, i], params[i][0], params[i][1])
+
     ####################################################################################
 
     # U(0, 1)  ---->  LN(μ, σ)
