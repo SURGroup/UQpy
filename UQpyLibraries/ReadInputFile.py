@@ -1,5 +1,4 @@
 import numpy as np
-import os
 
 
 def readfile(filename):
@@ -17,6 +16,7 @@ def readfile(filename):
 
     for i in range(len(lines_)):
         title = lines[lines_[i]][1:-1]
+        ################################################################################################################
         # General parameters
         if title == 'Method':
             mydict[title] = lines[lines_[i]+1][:-1]
@@ -59,6 +59,7 @@ def readfile(filename):
             mydict[title] = params
         elif title == 'Number of Samples':
             mydict[title] = int(lines[lines_[i] + 1][:-1])
+        ################################################################################################################
         # Latin Hypercube parameters
         elif title == 'LHS criterion':
             mydict[title] = lines[lines_[i] + 1][:-1]
@@ -66,7 +67,8 @@ def readfile(filename):
             mydict[title] = lines[lines_[i] + 1][:-1]
         elif title == 'iterations':
             mydict[title] = lines[lines_[i] + 1][:-1]
-        # partially stratified sampling
+        ################################################################################################################
+        #  partially stratified sampling
         elif title == 'PSS design':
             pss_design = []
             j = 0
@@ -91,7 +93,8 @@ def readfile(filename):
                     pss_strata.append(int(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
             mydict[title] = pss_strata
-        # stratified sampling
+        ################################################################################################################
+        #  stratified sampling
         elif title == 'STS design':
             sts_design = []
             j = 0
@@ -105,6 +108,7 @@ def readfile(filename):
                     j = j + 1
             mydict[title] = sts_design
             print(sts_design)
+        ################################################################################################################
         # Markov Chain Monte Carlo simulation
         elif title == 'MCMC algorithm':
             mydict[title] = lines[lines_[i] + 1][:-1]
@@ -150,6 +154,7 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
+        ################################################################################################################
         # Subset Simulation
         elif title == 'Number of Samples per subset':
             mydict[title] = int(lines[lines_[i] + 1][:-1])
