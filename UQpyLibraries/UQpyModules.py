@@ -13,7 +13,6 @@ class RunCommandLine:
         self.args = argparseobj
         ################################################################################################################
         # Create a unique temporary directory. Remove after completion.
-
         self.current_dir = os.getcwd()
         dir_path = os.path.join(self.current_dir, 'tmp')
         if os.path.exists(dir_path) and os.path.isdir(dir_path):
@@ -104,6 +103,8 @@ class RunCommandLine:
                 shutil.copy(full_file_name, self.args.Output_directory)
 
         shutil.rmtree(self.args.WorkingDir)
+        shutil.move(self.args.Output_directory, self.args.Model_directory)
+
         print("\nSuccessful execution of UQpy\n\n")
 
 
@@ -142,10 +143,6 @@ class RunModel:
         import time
         start_time = time.time()
 
-        # Define the executable shell scripts for the model
-        model_script = './{}'.format(self.model_script)
-        input_script = './{}'.format(self.input_script)
-
         # Load the UQpyOut.txt
         values = np.loadtxt('UQpyOut.txt', dtype=np.float32)
 
@@ -157,15 +154,16 @@ class RunModel:
                 np.savetxt(f, values[i, :], fmt='%0.5f')
 
             # Run the Input_Shell_Script.sh in order to create the input file for the model
-            input_script = './{0} {1}'.format(self.input_script, i)
-            os.system(input_script)
+            join_input_script = './{0} {1}'.format(self.input_script, i)
+            os.system(join_input_script)
 
             # Run the Model.sh in order to run the model
-            os.system(model_script)
+            join_model_script = './{0} {1}'.format(self.model_script, i)
+            os.system(join_model_script)
 
             # Run the Output_Shell_Script.sh  in order to create the input file of the model for UQpy
-            join_script = './{0} {1}'.format(self.output_script, i)
-            os.system(join_script)
+            join_output_script = './{0} {1}'.format(self.output_script, i)
+            os.system(join_output_script)
 
             ModelEval.append(np.loadtxt('UQpyInput_{}.txt'.format(i), dtype=np.float32))
 
@@ -179,7 +177,6 @@ class RunModel:
         j = args
 
         # Define the executable shell scripts for the model
-        model_script = './{}'.format(self.model_script)
 
         # Load the UQpyOut.txt
         values = np.loadtxt('LocalChunk_{0}.txt'.format(j+1), dtype=np.float32)
@@ -189,21 +186,21 @@ class RunModel:
         if self.CPUs_reduced is True:
 
             # Write each value of UQpyOut.txt into a *.txt file
-            np.savetxt('TEMP_val_{0}.txt'.format(index), values, newline=' ', delimiter=',',  fmt='%0.5f')
+            np.savetxt('TEMP_val_{0}.txt'.format(int(index)), values, newline=' ', delimiter=',',  fmt='%0.5f')
 
             # Run the Input_Shell_Script.sh in order to create the input file for the model
-            input_script = './{0} {1}'.format(self.input_script, index)
-            os.system(input_script)
+            join_input_script = './{0} {1}'.format(self.input_script, int(index))
+            os.system(join_input_script)
 
             # Run the Model.sh in order to run the model
-            model_script = './{0} {1}'.format(self.model_script, index)
-            os.system(model_script)
+            join_model_script = './{0} {1}'.format(self.model_script, int(index))
+            os.system(join_model_script)
 
             # Run the Output_Shell_Script.sh  in order to create the input file of the model for UQpy
-            output_script = './{0} {1}'.format(self.output_script, index)
-            os.system(output_script)
+            join_output_script = './{0} {1}'.format(self.output_script, int(index))
+            os.system(join_output_script)
 
-            ModelEval.append(np.loadtxt('UQpyInput_{0}.txt'.format(index), dtype=np.float32))
+            ModelEval.append(np.loadtxt('UQpyInput_{0}.txt'.format(int(index)), dtype=np.float32))
 
             if multi:
                 queue.put(ModelEval)
@@ -219,16 +216,16 @@ class RunModel:
                 np.savetxt('TEMP_val_{0}.txt'.format(int(i)), values[count, :],  newline=' ', delimiter=',',  fmt='%0.5f')
 
                 # Run the Input_Shell_Script.sh in order to create the input file for the model
-                input_script = './{0} {1}'.format(self.input_script, int(i))
-                os.system(input_script)
+                join_input_script = './{0} {1}'.format(self.input_script, int(i))
+                os.system(join_input_script)
 
                 # Run the Model.sh in order to run the model
-                model_script = './{0} {1}'.format(self.model_script, int(i))
-                os.system(model_script)
+                join_model_script = './{0} {1}'.format(self.model_script, int(i))
+                os.system(join_model_script)
 
                 # Run the Output_Shell_Script.sh  in order to create the input file of the model for UQpy
-                output_script = './{0} {1}'.format(self.output_script, int(i))
-                os.system(output_script)
+                join_output_script = './{0} {1}'.format(self.output_script, int(i))
+                os.system(join_output_script)
 
                 ModelEval.append(np.loadtxt('UQpyInput_{0}.txt'.format(int(i)), dtype=np.float32))
                 count = count + 1
@@ -320,8 +317,7 @@ def init_sm(data):
 
     ################################################################################################################
     # Add available methods Here
-    valid_methods = ['mcs', 'lhs', 'mcmc', 'pss', 'sts', 'SuS', 'srom']
-    print(data)
+    valid_methods = ['mcs', 'lhs', 'mcmc', 'pss', 'sts', 'SuS']
 
     ################################################################################################################
     # Check if requested method is available
@@ -375,7 +371,7 @@ def init_sm(data):
         #                        5. algorithm
         # Optional: 1. Seed, 2. Burn-in
 
-    if data['Method'] == 'mcmc':
+    if 'Method' in data.keys() is 'mcmc':
         if 'Number of Samples' not in data.keys():
             data['Number of Samples'] = None
             warnings.warn("Number of samples not provided. Default number is 100")
@@ -405,28 +401,9 @@ def init_sm(data):
         # Optional:
 
         ################################################################################################################
-        # Stratified sampling (STS) block.
+        # Stratified sampling (PSS) block.
         # Necessary parameters:  1. pdf, 2. pdf parameters 3. sts design
         # Optional:
-
-        ################################################################################################################
-        # Stochastic Reduced Order Model (SROM) block.
-        # Necessary parameters:  1. marginal pdf, 2. moments 3. Error function weights
-        # Optional: 1. Properties to match 2. Error function weights
-
-    if data['Method'] == 'srom':
-        if 'Probability distribution (pdf)' not in data:
-            raise NotImplementedError("Probability distribution not provided")
-        if 'Moments' not in data:
-            raise NotImplementedError("Moments not provided")
-        if 'Error function weights' not in data:
-            raise NotImplementedError("Error function weights not provided")
-        if 'Properties to match' not in data:
-            data['Properties to match'] = None
-            warnings.warn("Properties to match not defined. The default is [1, 1, 0]")
-        if 'Error function weights' not in data:
-            data['Error function weights'] = None
-            warnings.warn("Error function weights not defined. The default is equal weights to each sample")
 
         ################################################################################################################
         # HERE YOU ADD CHECKS FOR ANY NEW METHOD ADDED
@@ -474,33 +451,7 @@ def run_sm(data):
                  pdf_target_params=data['Target distribution parameters'], mcmc_seed=data['seed'],
                  mcmc_burnIn=data['Burn-in samples'])
     ################################################################################################################
-    # Run Stochastic Reduced Order Method
-
-    elif data['Method'] == 'srom':
-        from UQpyLibraries.SampleMethods import SROM
-        print("\nRunning  %k \n", data['Method'])
-        if data['Sampling method'] == 'sts':
-            from UQpyLibraries.SampleMethods import STS
-            sm = STS(pdf=data['Probability distribution (pdf)'],
-                          pdf_params=data['Probability distribution parameters'], sts_design=np.array(data['STS design']))
-        elif data['Sampling method'] == 'mcmc':
-            from UQpyLibraries.SampleMethods import MCMC
-            sm = MCMC(pdf_target=data['Target distribution'], mcmc_algorithm=data['MCMC algorithm'],
-                 pdf_proposal=data['Proposal distribution'], pdf_proposal_width=data['Proposal distribution width'],
-                 pdf_target_params=data['Target distribution parameters'], mcmc_seed=data['seed'],
-                 mcmc_burnIn=data['Burn-in samples'])
-        rvs = SROM(samples=sm.samples, nsamples=data['Number of Samples'],
-                   marginal=data['Probability distribution (pdf)'], moments=data['Moments'],
-                   weights_errors=data['Error function weights'], weights_function=data['Sample weights'],
-                   properties=data['Properties to match'])
-    ################################################################################################################
     # Run stratified sampling
-
-    elif data['Method'] == 'sts':
-        from UQpyLibraries.SampleMethods import STS
-        print("\nRunning  %k \n", data['Method'])
-        rvs = STS(pdf=data['Probability distribution (pdf)'],
-                          pdf_params=data['Probability distribution parameters'], sts_design=np.array(data['STS design']))
 
     ################################################################################################################
     # Run ANY NEW METHOD HERE
