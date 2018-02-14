@@ -11,7 +11,7 @@ Uncertainty Quantification using python (UQpy)
 :Web site: www.ce.jhu.edu/surg
 :Documentation: http://uqpy-docs-v0.readthedocs.io/en/latest/
 :Copyright: SURG, 2017
-:License: 
+:License:[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 :Date: December 2017
 :Version: 0.1.0
 
