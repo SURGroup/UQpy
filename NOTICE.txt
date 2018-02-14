@@ -1,5 +1,5 @@
-Apache [UQpy]
-Copyright [2018] [Dimitris Giovanis, Michael D. Shields]
+Apache UQpy
+Copyright 2018 Dimitris Giovanis, Michael D. Shields
 
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
