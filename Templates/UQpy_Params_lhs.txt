@@ -1,14 +1,8 @@
-#Model
-model_zabaras
-
 #Method
 lhs
 
 #Number of Samples
 1000
-
-#Stochastic dimension
-2
 
 #Probability distribution (pdf)
 Uniform
@@ -26,3 +20,5 @@ euclidean
 
 #iterations
 1000
+
+#end

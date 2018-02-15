@@ -55,8 +55,10 @@ class RunCommandLine:
         ################################################################################################################
         # Run the requested UQpy method and save the samples into file 'UQpyOut.txt'
         samples_01 = run_sm(data)
+
+        # Transform samples to the original parameter space
         samples = transform_pdf(samples_01, data['Probability distribution (pdf)'],
-                                 data['Probability distribution parameters'])
+                                data['Probability distribution parameters'])
 
         header = ', '.join(data['Names of random variables'])
         np.savetxt('UQpyOut.txt', samples, header=str(header), fmt='%0.5f')
@@ -65,7 +67,7 @@ class RunCommandLine:
         # Split the samples into chunks in order to sent to each processor in case of parallel computing, else save them
         # into file UQpyOut.txt
         if self.args.CPUs != 0:
-            if samples.shape[0] < self.args.CPUs:
+            if samples.shape[0] <= self.args.CPUs:
                 self.args.CPUs = samples.shape[0]
                 self.args.CPUs_reduced = True
                 print('The number of CPUs used is\n %', samples.shape[0])
@@ -111,11 +113,15 @@ class RunCommandLine:
 class RunModel:
 
     """
-    A class used to run the computational model
+    A class used to run the computational model.
 
-    param working_dir:  where the model is
-    :param output_dir:  where the results are stored
-    :param nCores:      number of threads for parallel computing
+    :param cpu:  Number of CPUs for parallel processing
+    :type cpu: int
+    :param model_script: UQpy_Model.sh script
+    :param input_script: UQpy_Input.sh script
+    :param output_script: UQpy_Output.sh script
+    :param cpu_red: Number of cores to be used
+
     """
     def __init__(self,  cpu=None, model_script=None, input_script=None, output_script=None, cpu_red=None):
 
@@ -128,10 +134,10 @@ class RunModel:
 
         if self.CPUs != 0:
             import multiprocessing
-            np = multiprocessing.cpu_count()
-            if int(self.CPUs) > np:
+            n_cpu = multiprocessing.cpu_count()
+            if self.CPUs > n_cpu:
                 print("Error: You have available {0:1d} CPUs. Start parallel computing  using {0:1d} CPUs".format(np))
-                self.CPUs = np
+                self.CPUs = n_cpu
             self.ParallelProcessing = True
             self.values = self.multi_core()
 
@@ -147,7 +153,7 @@ class RunModel:
         values = np.loadtxt('UQpyOut.txt', dtype=np.float32)
 
         print("\nEvaluating the model...\n")
-        ModelEval = []
+        model_eval = []
         for i in range(values.shape[0]):
             # Write each value of UQpyOut.txt into a *.txt file
             with open('TEMP_val_{0}.txt'.format(i), 'wb') as f:
@@ -165,11 +171,11 @@ class RunModel:
             join_output_script = './{0} {1}'.format(self.output_script, i)
             os.system(join_output_script)
 
-            ModelEval.append(np.loadtxt('UQpyInput_{}.txt'.format(i), dtype=np.float32))
+            model_eval.append(np.loadtxt('UQpyInput_{}.txt'.format(i), dtype=np.float32))
 
         end_time = time.time()
         print(end_time - start_time, "(sec)- Serial")
-        return ModelEval
+        return model_eval
 
     def run_parallel_model(self, args, multi=False, queue=0):
         import os
@@ -182,7 +188,7 @@ class RunModel:
         values = np.loadtxt('LocalChunk_{0}.txt'.format(j+1), dtype=np.float32)
         index = np.loadtxt('LocalChunk_index_{0}.txt'.format(j+1))
 
-        ModelEval = []
+        model_eval = []
         if self.CPUs_reduced is True:
 
             # Write each value of UQpyOut.txt into a *.txt file
@@ -200,10 +206,10 @@ class RunModel:
             join_output_script = './{0} {1}'.format(self.output_script, int(index))
             os.system(join_output_script)
 
-            ModelEval.append(np.loadtxt('UQpyInput_{0}.txt'.format(int(index)), dtype=np.float32))
+            model_eval.append(np.loadtxt('UQpyInput_{0}.txt'.format(int(index)), dtype=np.float32))
 
             if multi:
-                queue.put(ModelEval)
+                queue.put(model_eval)
 
         else:
             count = 0
@@ -213,7 +219,7 @@ class RunModel:
                 lock.acquire()  # will block if lock is already held
 
                 # Write each value of UQpyOut.txt into a *.txt file
-                np.savetxt('TEMP_val_{0}.txt'.format(int(i)), values[count, :],  newline=' ', delimiter=',',  fmt='%0.5f')
+                np.savetxt('TEMP_val_{0}.txt'.format(int(i)), values[count, :], newline=' ', delimiter=',', fmt='%0.5f')
 
                 # Run the Input_Shell_Script.sh in order to create the input file for the model
                 join_input_script = './{0} {1}'.format(self.input_script, int(i))
@@ -227,14 +233,14 @@ class RunModel:
                 join_output_script = './{0} {1}'.format(self.output_script, int(i))
                 os.system(join_output_script)
 
-                ModelEval.append(np.loadtxt('UQpyInput_{0}.txt'.format(int(i)), dtype=np.float32))
+                model_eval.append(np.loadtxt('UQpyInput_{0}.txt'.format(int(i)), dtype=np.float32))
                 count = count + 1
                 lock.release()
 
             if multi:
-                queue.put(ModelEval)
+                queue.put(model_eval)
 
-        return ModelEval
+        return model_eval
 
     def multi_core(self):
         from multiprocessing import Process
@@ -275,7 +281,7 @@ def chunk_samples_cores(data, samples, args):
             np.savetxt('LocalChunk_index_{0}.txt'.format(i+1), np.array(i).reshape(1,))
 
     else:
-        size = np.array([np.ceil(samples.shape[0]/chunks) for i in range(args.CPUs)]).astype(int)
+        size = np.array([np.ceil(samples.shape[0]/chunks) in range(args.CPUs)]).astype(int)
         dif = np.sum(size) - samples.shape[0]
         count = 0
         for k in range(dif):
@@ -285,7 +291,7 @@ def chunk_samples_cores(data, samples, args):
             if i == 0:
                 lines = range(0, size[i])
             else:
-                lines = range(np.sum(size[:i]), np.sum(size[:i+1]))
+                lines = range(int(np.sum(size[:i])), int(np.sum(size[:i+1])))
 
             np.savetxt('LocalChunk_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
             np.savetxt('LocalChunk_index_{0}.txt'.format(i+1), lines)
@@ -297,7 +303,7 @@ def chunk_samples_nodes(data, samples, args):
 
     # In case of cluster divide the samples into chunks in order to sent to each processor
     chunks = args.nodes
-    size = np.array([np.ceil(samples.shape[0]/chunks) for i in range(args.nodes)]).astype(int)
+    size = np.array([np.ceil(samples.shape[0]/chunks) in range(args.nodes)]).astype(int)
     dif = np.sum(size) - samples.shape[0]
     count = 0
     for k in range(dif):
@@ -307,7 +313,7 @@ def chunk_samples_nodes(data, samples, args):
         if i == 0:
             lines = range(0, size[i])
         else:
-            lines = range(np.sum(size[:i]), np.sum(size[:i+1]))
+            lines = range(int(np.sum(size[:i])), int(np.sum(size[:i+1])))
 
         np.savetxt('ClusterChunk_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
         np.savetxt('ClusterChunk_index_{0}.txt'.format(i+1), lines)
@@ -399,7 +405,7 @@ def init_sm(data):
         # Partially stratified sampling (PSS) block.
         # Necessary parameters:  1. pdf, 2. pdf parameters 3. pss design 3. pss strata
         # Optional:
-
+        # TODO: PSS block
         ################################################################################################################
         # Stratified sampling (STS) block.
         # Necessary parameters:  1. pdf, 2. pdf parameters 3. sts design
@@ -428,6 +434,7 @@ def init_sm(data):
         # HERE YOU ADD CHECKS FOR ANY NEW METHOD ADDED
         # Necessary parameters:
         # Optional:
+        # TODO: Subset Simulation block
 
 
 def run_sm(data):
@@ -437,8 +444,8 @@ def run_sm(data):
         from UQpyLibraries.SampleMethods import MCS
         print("\nRunning  %k \n", data['Method'])
         rvs = MCS(pdf=data['Probability distribution (pdf)'],
-                           pdf_params=data['Probability distribution parameters'],
-                           nsamples=data['Number of Samples'])
+                  pdf_params=data['Probability distribution parameters'],
+                  nsamples=data['Number of Samples'])
 
     ################################################################################################################
     # Run Latin Hypercube sampling
@@ -446,9 +453,9 @@ def run_sm(data):
         from UQpyLibraries.SampleMethods import LHS
         print("\nRunning  %k \n", data['Method'])
         rvs = LHS(pdf=data['Probability distribution (pdf)'],
-                           pdf_params=data['Probability distribution parameters'],
-                           nsamples=data['Number of Samples'], lhs_metric=data['distance metric'],
-                           lhs_iter=data['iterations'], lhs_criterion=data['LHS criterion'])
+                  pdf_params=data['Probability distribution parameters'],
+                  nsamples=data['Number of Samples'], lhs_metric=data['distance metric'],
+                  lhs_iter=data['iterations'], lhs_criterion=data['LHS criterion'])
 
     ################################################################################################################
     # Run partially stratified sampling
@@ -456,8 +463,8 @@ def run_sm(data):
         from UQpyLibraries.SampleMethods import PSS
         print("\nRunning  %k \n", data['Method'])
         rvs = PSS(pdf=data['Probability distribution (pdf)'],
-                           pdf_params=data['Probability distribution parameters'],
-                           pss_design=data['PSS design'], pss_strata=data['PSS strata'])
+                  pdf_params=data['Probability distribution parameters'],
+                  pss_design=data['PSS design'], pss_strata=data['PSS strata'])
 
     ################################################################################################################
     # Run Markov Chain Monte Carlo sampling
@@ -466,9 +473,9 @@ def run_sm(data):
         from UQpyLibraries.SampleMethods import MCMC
         print("\nRunning  %k \n", data['Method'])
         rvs = MCMC(pdf_target=data['Target distribution'], mcmc_algorithm=data['MCMC algorithm'],
-                 pdf_proposal=data['Proposal distribution'], pdf_proposal_width=data['Proposal distribution width'],
-                 pdf_target_params=data['Target distribution parameters'], mcmc_seed=data['seed'],
-                 mcmc_burnIn=data['Burn-in samples'])
+                   pdf_proposal=data['Proposal distribution'], pdf_proposal_width=data['Proposal distribution width'],
+                   pdf_target_params=data['Target distribution parameters'], mcmc_seed=data['seed'],
+                   mcmc_burnIn=data['Burn-in samples'])
     ################################################################################################################
     # Run stratified sampling
     elif data['Method'] == 'sts':
@@ -500,6 +507,7 @@ def run_sm(data):
                properties=data['Properties to match'])
     ################################################################################################################
     # Run ANY NEW METHOD HERE
+    # TODO: Subset Simulation
 
     return rvs.samples
 

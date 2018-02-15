@@ -1,5 +1,5 @@
 #Method
-pss
+sts
 
 #Number of Samples
 1000
@@ -12,11 +12,8 @@ Uniform
 0 1
 0 1
 
-#PSS design
-1
-1
+#STS design
+10
+10
 
-#PSS strata
-10000
-10000
-
+#end
