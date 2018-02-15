@@ -60,6 +60,13 @@ class RunCommandLine:
         samples = transform_pdf(samples_01, data['Probability distribution (pdf)'],
                                 data['Probability distribution parameters'])
 
+        if data['SROM'] is True:
+            from UQpyLibraries.SampleMethods import SROM
+            samples = SROM(samples=samples, nsamples=data['Number of Samples'],
+                       marginal=data['Probability distribution (pdf)'], moments=data['Moments'],
+                       weights_errors=data['Error function weights'], weights_function=data['Sample weights'],
+                   properties=data['Properties to match'])
+
         header = ', '.join(data['Names of random variables'])
         np.savetxt('UQpyOut.txt', samples, header=str(header), fmt='%0.5f')
 
@@ -390,12 +397,12 @@ def init_sm(data):
 
         if 'Proposal distribution' not in data.keys():
             raise NotImplementedError("Proposal distribution not provided")
-        if 'Proposal distribution parameters' not in data.keys():
+        if 'Proposal distribution width' not in data.keys():
             raise NotImplementedError("Proposal distribution parameters (width) not provided")
         if 'Target distribution' not in data.keys():
             raise NotImplementedError("Target distribution not provided")
-        if 'Marginal target distribution parameters' not in data.keys():
-            raise NotImplementedError("Target distribution parameters not provided")
+        # if 'Marginal target distribution parameters' not in data.keys():
+        #     raise NotImplementedError("Target distribution parameters not provided")
         if 'Burn-in samples' not in data.keys():
             data['Burn-in samples'] = None
             warnings.warn("Number of samples to skip in order to avoid burn-in not provided."
@@ -410,7 +417,7 @@ def init_sm(data):
         # Stratified sampling (STS) block.
         # Necessary parameters:  1. pdf, 2. pdf parameters 3. sts design
         # Optional:
-
+        # TODO: STS block
         ################################################################################################################
         # Stochastic Reduced Order Model (SROM) block.
         # Necessary parameters:  1. marginal pdf, 2. moments 3. Error function weights
@@ -484,27 +491,7 @@ def run_sm(data):
         rvs = STS(pdf=data['Probability distribution (pdf)'], pdf_params=data['Probability distribution parameters'],
                   sts_design=data['STS design'])
 
-    ################################################################################################################
-    # Run Stochastic Reduced Order Method
 
-    elif data['Method'] == 'srom':
-    from UQpyLibraries.SampleMethods import SROM
-    print("\nRunning  %k \n", data['Method'])
-    if data['Sampling method'] == 'sts':
-        from UQpyLibraries.SampleMethods import STS
-        sm = STS(pdf=data['Probability distribution (pdf)'],
-                 pdf_params=data['Probability distribution parameters'], sts_design=np.array(data['STS design']))
-    elif data['Sampling method'] == 'mcmc':
-        from UQpyLibraries.SampleMethods import MCMC
-        sm = MCMC(pdf_target=data['Target distribution'], mcmc_algorithm=data['MCMC algorithm'],
-                  pdf_proposal=data['Proposal distribution'],
-                  pdf_proposal_width=data['Proposal distribution width'],
-                  pdf_target_params=data['Target distribution parameters'], mcmc_seed=data['seed'],
-                  mcmc_burnIn=data['Burn-in samples'])
-    rvs = SROM(samples=sm.samples, nsamples=data['Number of Samples'],
-               marginal=data['Probability distribution (pdf)'], moments=data['Moments'],
-               weights_errors=data['Error function weights'], weights_function=data['Sample weights'],
-               properties=data['Properties to match'])
     ################################################################################################################
     # Run ANY NEW METHOD HERE
     # TODO: Subset Simulation

@@ -625,6 +625,7 @@ class MCMC:
         self.mcmc_algorithm = mcmc_algorithm
         self.mcmc_burnIn = mcmc_burnIn
         self.nsamples = nsamples
+        self.mcmc_seed = mcmc_seed
         self.ndim = len(pdf_target_params)
         if mcmc_seed is None:
             self.mcmc_seed = np.zeros(self.ndim)
@@ -634,8 +635,10 @@ class MCMC:
 
         # Changing the array of param into a diagonal matrix
         if self.pdf_proposal == "Normal":
-            if self.pdf_proposal_width.shape[0] or self.pdf_proposal_width.shape[1] is 1:
-                self.pdf_proposal_width = np.diag(self.pdf_proposal_width)
+            if self.ndim != 1:
+                print(self.pdf_proposal_width)
+                self.pdf_proposal_width = np.diag(np.array(self.pdf_proposal_width))
+                print(self.pdf_proposal_width)
 
         # TODO: MDS - If x0 is not provided, start at the mode of the target distribution (if available)
         # if x0 is None:
@@ -740,13 +743,17 @@ class SROM:
         # TODO: Mohit - Transform sample from [0,1] into range of marginals
         dimension = np.size(marginal)
         if weights_function is None:
-            weights_function = (1/nsamples)*np.ones([nsamples, dimension])
+            weights_function = (1 / nsamples) * np.ones([nsamples, dimension])
+        else:
+            if len(weights_function) == 0:
+                weights_function = (1/nsamples)*np.ones([nsamples, dimension])
+
         if np.size(moments) == 0:
             sys.exit('Moments of marginal distribution are required')
         else:
             weights_function = weights_function.tolist()
             for i in range(int(np.size(moments)/np.size(moments[0]))):
-                weights_function.append(moments[i])
+                weights_function.append(moments[i].tolist())
 
         self.samples = samples
         self.marginal = marginal
@@ -769,7 +776,7 @@ class SROM:
                 s = srt[0, :, j]
                 a = srt[0, :, d]
                 A = np.cumsum(a)
-                marginal = pdf(mar[j])
+                marginal = pdf(mar[j][0])
                 for i in range(n):
                     e1 = + w[i, j] * (A[0, i] - marginal(s[0, i])) ** 2
 

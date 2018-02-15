@@ -4,6 +4,9 @@ mcs
 #Number of Samples
 3
 
+#SROM
+No
+
 #Probability distribution (pdf)
 Uniform
 Uniform

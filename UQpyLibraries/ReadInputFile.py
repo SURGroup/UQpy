@@ -14,6 +14,7 @@ def readfile(filename):
 
     f = open(filename)
     lines = f.readlines()
+    print(lines, len(lines))
 
     for i in range(len(lines_)):
         title = lines[lines_[i]][1:-1]
@@ -30,7 +31,7 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1]
+                    x = lines[lines_[i] + j + 1][:-1]
                     dist.append(x.split(" "))
                     j = j + 1
             mydict[title] = dist
@@ -54,7 +55,7 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1]
+                    x = lines[lines_[i] + j + 1][:-1]
                     params.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = params
@@ -108,7 +109,6 @@ def readfile(filename):
                     sts_design.append(int(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
             mydict[title] = sts_design
-            print(sts_design)
         ################################################################################################################
         # Markov Chain Monte Carlo simulation
         elif title == 'MCMC algorithm':
@@ -217,5 +217,5 @@ def readfile(filename):
                     j = j + 1
             mydict[title] = seed
 
-
+    print(mydict)
     return mydict
