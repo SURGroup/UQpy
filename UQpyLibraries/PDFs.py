@@ -57,18 +57,106 @@ def transform_pdf(x, pdf, params):
     for i in range(x.shape[1]):
         if pdf[i] == 'Uniform':
             for j in range(x.shape[0]):
-                     x_trans[j, i] = params[i][0] + (params[i][1]-params[i][0]) * x[j, i]
+                     x_trans[j, i] = ppfUniform(x[j, i], params[i][0], params[i][1])
 
     ###################################################################################
     # U(0, 1)  ---->  N(μ, σ)
 
         elif pdf[i] == 'Normal':
             for j in range(x.shape[0]):
-                    x_trans[j, i] = stats.norm.ppf(x[j, i], params[i][0], params[i][1])
+                    x_trans[j, i] = ppfNormal(x[j, i], params[i][0], params[i][1])
 
     ####################################################################################
-
     # U(0, 1)  ---->  LN(μ, σ)
-    # TODO: Transform U(0, 1) to LN(μ, σ)
+
+        elif pdf[i] == 'Lognormal':
+            for j in range(x.shape[0]):
+                    x_trans[j, i] = ppfLognormal(x[j, i], params[i][0], params[i][1])
+
+    ####################################################################################
+    # U(0, 1)  ---->  Weibull(λ, κ)
+
+        elif pdf[i] == 'Weibull':
+            for j in range(x.shape[0]):
+                    x_trans[j, i] = ppfWeibull(x[j, i], params[i][0], params[i][1])
+
+    ####################################################################################
+    # U(0, 1)  ---->  Beta(q, r, a, b)
+
+        elif pdf[i] == 'Beta':
+            for j in range(x.shape[0]):
+                    x_trans[j, i] = ppfBeta(x[j, i], params[i][0], params[i][1], params[i][2], params[i][3])
+
+    ####################################################################################
+    # U(0, 1)  ---->  Exp(λ)
+
+        elif pdf[i] == 'Exponential':
+            for j in range(x.shape[0]):
+                x_trans[j, i] = ppfExponential(x[j, i], params[i][0])
 
     return x_trans
+
+########################################################################################################################
+#             Inverse pdf
+# ########################################################################################################################
+
+
+def ppfNormal(p, mu, sigma):
+    """Returns the evaluation of the percent point function (inverse cumulative
+    distribution) evaluated at the probability p with mean (mu) and
+    scale (sigma)."""
+    return stats.norm.ppf(p, loc=mu, scale=sigma)
+
+
+def ppfLognormal(p, mu, sigma):
+    """Returns the evaluation of the percent point function (inverse cumulative
+    distribution) evaluated at the probability p with mean (mu) and
+    scale (sigma)."""
+    epsilon = np.sqrt(np.log((sigma**2 + mu**2)/(mu**2)))
+    elamb = mu**2/(np.sqrt(mu**2+sigma**2))
+    return stats.lognorm.ppf(p, epsilon, scale=elamb)
+
+
+def ppfWeibull(p, lamb, k):
+    """Returns the evaluation of the percent point function (inverse cumulative
+    distribution) evaluated at the probability p with scale (lamb) and
+    shape (k) specified for a Weibull distribution."""
+
+    # PDF form of Weibull Distirubtion:
+    # f(x) = k/lamb * (x/lamb)**(k-1) * exp(-(x/lamb)**k)
+
+    # frechet_r is analogous to weibull-min, or standard weibull.
+    return stats.frechet_r.ppf(p, k, scale=lamb)
+
+
+def ppfUniform(p, a, b):
+    """Returns the evaluation of the percent point function (inverse cumulative
+    distribution) evaluated at the probability p for a Uniform distribution
+    with range (a,b). Usage:\n ppfUniform(a,b)"""
+    return a+p*(b-a)
+
+
+def ppfTriangular(p, a, c, b):
+    """Returns the evaluation of the percent point function (inverse cumulative
+    distribution) evaluated at the probability p for a triangular distribution.
+    Usage:\n ppfTriangular(p, a, c, b)"""
+    width = b-a
+    scaledMiddle = (c-a)/width
+    return stats.triang.ppf(p, scaledMiddle, loc=a, scale=width)
+
+
+def ppfBeta(p, q, r, a, b):
+    """Returns the evaluation of the percent point function (inverse cumulative
+    distribution) evaluated at the probability p for a Beta distribution.
+    Usage:\n ppfBeta(p, q, r, a, b)"""
+    width = b-a
+    return stats.beta.ppf(p, q, r, loc=a, scale=width)
+
+
+def ppfExponential(p, lamb):
+    """Returns the evaluation of the percent point function (inverse cumulative
+    distribution) evaluated at the probability p for an Exponential
+    distribution.  Usage:\n
+    ppfExponential(p, lamb)"""
+    scalE = 1.0/lamb
+    return stats.expon.ppf(p, scale=scalE)

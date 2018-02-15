@@ -34,7 +34,7 @@ class ReliabilityMethods:
         """
 
         def __init__(self, sm=None, rm=None, dimension=None, nsamples_ss=None, p0_cond=None, model=None,
-                     mcmc_algorithm=None, pdf_proposal_params=None, pdf_proposal=None, pdf_proposal_width=None, \
+                     mcmc_algorithm=None, pdf_proposal_params=None, pdf_proposal=None, pdf_proposal_width=None,
                      pdf_target=None, mcmc_burnIn=None,
                      fail=None, pdf_target_params=None):
 

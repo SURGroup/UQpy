@@ -26,7 +26,7 @@ if __name__ == '__main__':
                         help="Specify the name of the shell script  *.sh used to transform  the output of the model"
                              " into the appropriate UQpy input file (UQpyInp_*.txt) ")
 
-    parser.add_argument("--model", dest="Model", action="store",
+    parser.add_argument("--model", dest="Solver", action="store",
                         default=None, help="Specify the name of the shell script used for running the model")
 
     parser.add_argument("--CPUs", dest="CPUs", action="store",
@@ -47,7 +47,7 @@ if __name__ == '__main__':
             print("Error: A model directory needs to be specified")
             sys.exit()
 
-        if args.Model is not None:
+        if args.Solver is not None:
             if args.Input_Shell_Script is None:
                 print("Error: Shell scripts for communication between UQpy and the model are required. Type --help"
                       "for more information")
@@ -63,9 +63,11 @@ if __name__ == '__main__':
         folder_name = 'simUQpyOut'
         current_dir = os.getcwd()
         args.Output_directory = os.path.join(os.sep, current_dir, folder_name)
+
         if os.path.exists(args.Output_directory):
             shutil.rmtree(args.Output_directory)
         os.makedirs(args.Output_directory, exist_ok=False)
+
         # Check if Output_directory already exists inside Model directory
         path = os.path.join(os.sep, args.Model_directory, folder_name)
         if os.path.exists(path) and os.path.isdir(path):

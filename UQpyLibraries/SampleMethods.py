@@ -110,6 +110,7 @@ class LHS:
         self.lhs_metric = lhs_metric
         self.lhs_iter = lhs_iter
 
+        print(lhs_iter)
         print('Running LHS for ' + str(self.lhs_iter) + ' iterations')
 
         cut = np.linspace(0, 1, self.nsamples + 1)
@@ -564,8 +565,8 @@ class MCMC:
 
     """
 
-    def __init__(self, pdf_proposal=None, pdf_proposal_width=None, pdf_target=None, pdf_target_params=None,
-                 mcmc_algorithm='MH', mcmc_burnIn=1, nsamples=10, mcmc_seed=None):
+    def __init__(self, dim=None, pdf_proposal=None, pdf_proposal_width=None, pdf_target=None, pdf_target_params=None,
+                 mcmc_algorithm='MH', pdf_marg_target=None, pdf_marg_target_params=None, mcmc_burnIn=1, nsamples=10, mcmc_seed=None):
 
         """This class generates samples from arbitrary algorithm using Metropolis-Hastings(MH) or
         Modified Metropolis-Hastings Algorithm.
@@ -620,42 +621,44 @@ class MCMC:
         self.pdf_proposal_width = pdf_proposal_width
         self.pdf_target = pdf_target
         self.pdf_target_params = pdf_target_params    # mean and standard deviation
+        self.pdf_marg_target_params = pdf_marg_target_params
+        self.pdf_marg_target = pdf_marg_target
         self.mcmc_algorithm = mcmc_algorithm
         self.mcmc_burnIn = mcmc_burnIn
         self.nsamples = nsamples
-        self.ndim = len(pdf_target_params)
+        self.ndim = dim
+        self.mcmc_seed = mcmc_seed
         if mcmc_seed is None:
             self.mcmc_seed = np.zeros(self.ndim)
 
         self.rejects = 0
-        self.pdf_target = pdf(pdf_target)
-
         # Changing the array of param into a diagonal matrix
         if self.pdf_proposal == "Normal":
-            if self.pdf_proposal_width.shape[0] or self.pdf_proposal_width.shape[1] is 1:
-                self.pdf_proposal_width = np.diag(self.pdf_proposal_width)
+            if self.ndim != 1:
+                self.pdf_proposal_width = np.diag(np.array(self.pdf_proposal_width))
 
         # TODO: MDS - If x0 is not provided, start at the mode of the target distribution (if available)
         # if x0 is None:
 
-        # Defining a matrix to store the generated samples
+        # Defining an array to store the generated samples
         self.samples = np.zeros([self.nsamples * self.mcmc_burnIn, self.ndim])
-        self.samples[0] = self.mcmc_seed
+        self.samples[0, :] = self.mcmc_seed
 
         # Classical Metropolis-Hastings Algorithm with symmetric proposal density
         if self.mcmc_algorithm == 'MH':
+            self.pdf_target = pdf(pdf_target)
             for i in range(self.nsamples * self.mcmc_burnIn - 1):
-
                 # Generating new sample using proposed density
                 if self.pdf_proposal == 'Normal':
                     if self.ndim == 1:
-                        x1 = np.random.normal(self.samples[i], self.pdf_proposal_width)
+                        x1 = np.random.normal(self.samples[i, :], np.array(self.pdf_proposal_width))
                     else:
-                        x1 = np.random.multivariate_normal(self.samples[i, :], self.pdf_proposal_width)
+                        x1 = np.random.multivariate_normal(self.samples[i, :], np.array(self.pdf_proposal_width))
 
                 elif self.pdf_proposal == 'Uniform':
-                    x1 = np.random.uniform(low=self.samples[i] - self.pdf_proposal_width / 2,
-                                           high=self.samples[i] + self.pdf_proposal_width / 2, size=self.ndim)
+                    x1 = np.random.uniform(low=self.samples[i, :] - np.array(self.pdf_proposal_width) / 2,
+                                           high=self.samples[i, :] + np.array(self.pdf_proposal_width)/ 2,
+                                           size=self.ndim)
 
                 # Ratio of probability of new sample to previous sample
                 a = self.pdf_target(x1, self.ndim) / self.pdf_target(self.samples[i, :], self.ndim)
@@ -673,7 +676,8 @@ class MCMC:
                     self.samples[i + 1] = self.samples[i]
                     self.rejects += 1
             # Reject the samples using mcmc_burnIn to reduce the correlation
-            self.xi = self.samples[0:self.nsamples * self.mcmc_burnIn:self.mcmc_burnIn]
+            xi = self.samples[0:self.nsamples * self.mcmc_burnIn:self.mcmc_burnIn]
+            self.samples = xi
 
         # Modified Metropolis-Hastings Algorithm with symmetric proposal density
         elif self.mcmc_algorithm == 'MMH':
@@ -681,18 +685,19 @@ class MCMC:
 
                 # Samples generated from marginal PDFs will be stored in x1
                 x1 = self.samples[i, :]
-                for j in range(self.ndim):
 
+                for j in range(self.ndim):
+                    self.pdf_marg_target = pdf(pdf_marg_target[j])
                     # Generating new sample using proposed density
                     if self.pdf_proposal[j] == 'Normal':
-                        xm = np.random.normal(self.samples[i, j], self.pdf_proposal_width[j][j])
+                        xm = np.random.normal(self.samples[i, j], self.pdf_proposal_width[j])
 
                     elif self.pdf_proposal[j] == 'Uniform':
                         xm = np.random.uniform(low=self.samples[i, j] - self.pdf_proposal_width[j] / 2,
                                                high=self.samples[i, j] + self.pdf_proposal_width[j] / 2, size=1)
 
-                    b = self.pdf_target(xm, self.pdf_target_params[j]) / self.pdf_target(x1[j],
-                                                                                   self.pdf_target_params[j])
+                    b = self.pdf_marg_target(xm, self.pdf_marg_target_params[j]) / self.pdf_marg_target(x1[j],
+                                                                                   self.pdf_marg_target_params[j])
                     if b >= 1:
                         x1[j] = xm
 
@@ -702,8 +707,8 @@ class MCMC:
                 self.samples[i + 1, :] = x1
 
             # Reject the samples using njump to reduce the correlation
-            self.xi = self.samples[0:self.nsamples * self.mcmc_burnIn:self.mcmc_burnIn]
-
+            xi = self.samples[0:self.nsamples * self.mcmc_burnIn:self.mcmc_burnIn]
+            self.samples = xi
 
             # TODO: MDS - Add affine invariant ensemble MCMC
 

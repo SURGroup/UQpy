@@ -1,14 +1,8 @@
-#Model
-model_reliability
-
 #Method
 SuS
 
 #Number of Samples per subset
 1000
-
-#Stochastic dimension
-2
 
 #Probability distribution (pdf)
 Normal
