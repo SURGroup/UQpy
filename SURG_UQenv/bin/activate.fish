@@ -36,7 +36,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/Users/MichaelShields/Documents/GitHub/UQ_algorithms/SURG_UQenv"
+set -gx VIRTUAL_ENV "/Users/MichaelShields/Documents/GitHub/UQpy/SURG_UQenv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH

@@ -1,4 +1,4 @@
-#!/Users/MichaelShields/Documents/GitHub/UQ_algorithms/SURG_UQenv/bin/python
+#!/Users/MichaelShields/Documents/GitHub/UQpy/SURG_UQenv/bin/python
 
 import sys
 import getopt

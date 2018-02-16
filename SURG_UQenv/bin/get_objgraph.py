@@ -1,4 +1,4 @@
-#!/Users/MichaelShields/Documents/GitHub/UQ_algorithms/SURG_UQenv/bin/python3.6
+#!/Users/MichaelShields/Documents/GitHub/UQpy/SURG_UQenv/bin/python3.6
 #
 # Author: Mike McKerns (mmckerns @caltech and @uqfoundation)
 # Copyright (c) 2008-2016 California Institute of Technology.

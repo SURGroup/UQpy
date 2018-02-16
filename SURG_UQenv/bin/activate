@@ -40,7 +40,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/Users/MichaelShields/Documents/GitHub/UQ_algorithms/SURG_UQenv"
+VIRTUAL_ENV="/Users/MichaelShields/Documents/GitHub/UQpy/SURG_UQenv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
