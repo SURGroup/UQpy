@@ -1,0 +1,28 @@
+# model
+model_zabaras
+
+# method
+pss
+
+# number of samples
+1000
+
+# dimensions
+2
+
+# distribution
+Uniform
+Uniform
+
+# distribution parameters
+0 1
+0 1
+
+# pss design
+1
+1
+
+# pss strata
+10000
+10000
+

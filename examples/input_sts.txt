@@ -1,0 +1,24 @@
+# model
+model_zabaras
+
+# method
+sts
+
+# number of samples
+1000
+
+# dimensions
+2
+
+# distribution
+Uniform
+Uniform
+
+# distribution parameters
+0 1
+0 1
+
+# sts design
+100
+100
+
