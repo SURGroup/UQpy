@@ -1,0 +1,28 @@
+#Method
+pss
+
+#Number of Samples
+1000
+
+#Probability distribution (pdf)
+Uniform
+Uniform
+
+#Probability distribution parameters
+0 1
+0 1
+
+#PSS design
+1
+1
+
+#PSS strata
+100
+100
+
+#Names of random variables
+mu
+sigma
+
+
+#end

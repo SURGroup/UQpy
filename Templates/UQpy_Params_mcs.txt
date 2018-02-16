@@ -1,0 +1,19 @@
+#Method
+mcs
+
+#Number of Samples
+10
+
+#Probability distribution (pdf)
+Normal
+Uniform
+
+#Probability distribution parameters
+0 1
+0 1
+
+#Names of random variables
+mu
+sigma
+
+#end
