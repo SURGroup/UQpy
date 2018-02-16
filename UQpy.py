@@ -58,6 +58,17 @@ if __name__ == '__main__':
                       "for more information")
                 sys.exit()
 
+        # Check number of available cores
+        if args.CPUs != 0:
+            args.ParallelProcessing = True
+            import multiprocessing
+            n_cpu = multiprocessing.cpu_count()
+            if args.CPUs > n_cpu:
+                print("Error: You have available {0:1d} CPUs. Start parallel computing using {0:1d} CPUs".format(n_cpu))
+                args.CPUs = n_cpu
+        else:
+            args.ParallelProcessing = False
+
         # Create UQpy output directory
         import shutil
         folder_name = 'simUQpyOut'

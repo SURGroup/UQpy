@@ -41,6 +41,8 @@ marginal_pdf
 0 1
 0 1
 
+
+
 #Names of random variables
 mu
 sigma

@@ -1,9 +1,6 @@
-import numpy as np
 import os
-import sys
 import shutil
-from UQpyLibraries.SampleMethods import transform_pdf
-import warnings
+from UQpyLibraries.SampleMethods import *
 
 
 class RunCommandLine:
@@ -28,14 +25,6 @@ class RunCommandLine:
             if os.path.isfile(full_file_name):
                 shutil.copy(full_file_name, self.args.WorkingDir)
 
-        ################################################################################################################
-        # Run UQpy
-
-        print("\nExecuting UQpy...\n")
-        self.run_uq()
-
-    def run_uq(self):
-
         os.chdir(os.path.join(self.current_dir, self.args.WorkingDir))
 
         ################################################################################################################
@@ -49,6 +38,30 @@ class RunCommandLine:
             data = ReadInputFile.readfile('UQpy_Params.txt')
 
         ################################################################################################################
+        # Run UQpy
+
+        print("\nExecuting UQpy...\n")
+        ################################################################################################################
+        # Run Subset Simulation
+        if data['Method'] == 'SuS':
+            from UQpyLibraries.Reliability import SubsetSimulation
+            init_sm(data)
+            self.SuS = SubsetSimulation(self.args, data)
+        else:
+            self.run_uq(data)
+
+    def run_uq(self, data):
+
+        # Steps:
+        # Initialize the sampling method (Check if UQpy_Params.txt contains all the necessary information)
+        # Actually run the selected sampling method in U(0, 1) and transform to the original space
+        # Save the samples in a .txt (or .csv) file
+        # If a solver (black box model) is provided then:
+        #                              If parallel processing is selected: Split the samples into chunks
+        # Run the model
+        # Save the model evaluations
+
+        ################################################################################################################
         # Initialize the requested UQpy method: Check if all necessary parameters are defined in the UQpyParams.txt file
         init_sm(data)
 
@@ -56,7 +69,7 @@ class RunCommandLine:
         # Run the requested UQpy method and save the samples into file 'UQpyOut.txt'
         samples_01 = run_sm(data)
 
-        # Transform samples to the original parameter space
+        # Transform samples from U(0, 1) to the original parameter space
         if data['Method'] != 'mcmc':
             samples = transform_pdf(samples_01, data['Probability distribution (pdf)'],
                                     data['Probability distribution parameters'])
@@ -72,47 +85,45 @@ class RunCommandLine:
         ################################################################################################################
         # Split the samples into chunks in order to sent to each processor in case of parallel computing, else save them
         # into file UQpyOut.txt
-        if self.args.CPUs != 0:
+        if self.args.ParallelProcessing is True:
             if samples.shape[0] <= self.args.CPUs:
                 self.args.CPUs = samples.shape[0]
-                self.args.CPUs_reduced = True
+                self.args.CPUs_flag = True
                 print('The number of CPUs used is\n %', samples.shape[0])
             else:
-                self.args.CPUs_reduced = False
+                self.args.CPUs_flag = False
             chunk_samples_cores(data, samples, self.args)
         else:
-            self.args.CPUs_reduced = False
+            self.args.CPUs_flag = False
 
         ################################################################################################################
-        # If a model is provided then run it, else move the data to directory simUQpyOut/ , delete the temp/ directory
+        # If a model is provided then run it
+
+        if self.args.Solver is not None:
+            RunModel(self.args)
+
+        ################################################################################################################
+        # Move the data to directory simUQpyOut/ , delete the temp/ directory
         # and terminate the program
+        _files = []
+        _files.append('UQpyOut.csv')
+        _files.append('UQpyOut.txt')
 
-        if self.args.Solver is None:
-            full_file_name = os.path.join(self.args.WorkingDir, 'UQpyOut.txt')
-            if os.path.isfile(full_file_name):
-                shutil.copy(full_file_name, self.args.Output_directory)
-
-        else:
-            RunModel(model_script=self.args.Solver, input_script=self.args.Input_Shell_Script,
-                     output_script=self.args.Output_Shell_Script,
-                     cpu=self.args.CPUs, cpu_red=self.args.CPUs_reduced)
-
+        if self.args.Solver is not None:
             src_files = [filename for filename in os.listdir(self.args.WorkingDir) if filename.startswith("UQpyInput_")]
-            _files = []
             for file in src_files:
                 file_new = file.replace("UQpyInput_", "Model_")
                 os.rename(file, file_new)
                 _files.append(file_new)
-            _files.append('UQpyOut.csv')
-            _files.append('UQpyOut.txt')
 
-            for file_name in _files:
-                full_file_name = os.path.join(self.args.WorkingDir, file_name)
-                shutil.copy(full_file_name, self.args.Output_directory)
+        for file_name in _files:
+            full_file_name = os.path.join(self.args.WorkingDir, file_name)
+            shutil.copy(full_file_name, self.args.Output_directory)
 
         shutil.rmtree(self.args.WorkingDir)
         shutil.move(self.args.Output_directory, self.args.Model_directory)
 
+        ################################################################################################################
         print("\nSuccessful execution of UQpy\n\n")
 
 
@@ -121,34 +132,21 @@ class RunModel:
     """
     A class used to run the computational model.
 
-    :param cpu:  Number of CPUs for parallel processing
-    :type cpu: int
-    :param model_script: UQpy_Model.sh script
-    :param input_script: UQpy_Input.sh script
-    :param output_script: UQpy_Output.sh script
-    :param cpu_red: Number of cores to be used
-
+    :param args
     """
-    def __init__(self,  cpu=None, model_script=None, input_script=None, output_script=None, cpu_red=None):
+    def __init__(self, args):
 
-        self.CPUs = cpu
-        self.model_script = model_script
-        self.input_script = input_script
-        self.output_script = output_script
+        self.CPUs = args.CPUs
+        self.model_script = args.Solver
+        self.input_script = args.Input_Shell_Script
+        self.output_script = args.Output_Shell_Script
         self.current_dir = os.getcwd()
-        self.CPUs_reduced = cpu_red
+        self.CPUs_flag = args.CPUs_flag
+        parallel_processing = args.ParallelProcessing
 
-        if self.CPUs != 0:
-            import multiprocessing
-            n_cpu = multiprocessing.cpu_count()
-            if self.CPUs > n_cpu:
-                print("Error: You have available {0:1d} CPUs. Start parallel computing  using {0:1d} CPUs".format(np))
-                self.CPUs = n_cpu
-            self.ParallelProcessing = True
+        if parallel_processing is True:
             self.values = self.multi_core()
-
         else:
-            self.ParallelProcessing = False
             self.values = self.run_model()
 
     def run_model(self):
@@ -160,27 +158,52 @@ class RunModel:
 
         print("\nEvaluating the model...\n")
         model_eval = []
-        for i in range(values.shape[0]):
+
+        if self.CPUs_flag is True:
+            index = 1000
             # Write each value of UQpyOut.txt into a *.txt file
-            with open('TEMP_val_{0}.txt'.format(i), 'wb') as f:
-                np.savetxt(f, values[i, :], fmt='%0.5f')
+            np.savetxt('TEMP_val_{}.txt'.format(index), values, newline=' ', delimiter=',',  fmt='%0.5f')
 
             # Run the Input_Shell_Script.sh in order to create the input file for the model
-            join_input_script = './{0} {1}'.format(self.input_script, i)
+            join_input_script = './{0} {1}'.format(self.input_script, index)
             os.system(join_input_script)
 
             # Run the Model.sh in order to run the model
-            join_model_script = './{0} {1}'.format(self.model_script, i)
+            join_model_script = './{0} {1}'.format(self.model_script, index)
             os.system(join_model_script)
 
             # Run the Output_Shell_Script.sh  in order to create the input file of the model for UQpy
-            join_output_script = './{0} {1}'.format(self.output_script, i)
+            join_output_script = './{0} {1}'.format(self.output_script, index)
             os.system(join_output_script)
 
-            model_eval.append(np.loadtxt('UQpyInput_{}.txt'.format(i), dtype=np.float32))
+            model_eval = np.loadtxt('UQpyInput_{0}.txt'.format(index))
+            os.remove('UQpyInput_{0}.txt'.format(index))
 
-        end_time = time.time()
-        print(end_time - start_time, "(sec)- Serial")
+            end_time = time.time()
+            print(end_time - start_time, "(sec)")
+
+        else:
+            for i in range(values.shape[0]):
+                # Write each value of UQpyOut.txt into a *.txt file
+                with open('TEMP_val_{0}.txt'.format(i), 'wb') as f:
+                    np.savetxt(f, values[i, :], fmt='%0.5f')
+
+                # Run the Input_Shell_Script.sh in order to create the input file for the model
+                join_input_script = './{0} {1}'.format(self.input_script, i)
+                os.system(join_input_script)
+
+                # Run the Model.sh in order to run the model
+                join_model_script = './{0} {1}'.format(self.model_script, i)
+                os.system(join_model_script)
+
+                # Run the Output_Shell_Script.sh  in order to create the input file of the model for UQpy
+                join_output_script = './{0} {1}'.format(self.output_script, i)
+                os.system(join_output_script)
+
+                model_eval.append(np.loadtxt('UQpyInput_{}.txt'.format(i)))
+
+            end_time = time.time()
+            print(end_time - start_time, "(sec)- Serial")
         return model_eval
 
     def run_parallel_model(self, args, multi=False, queue=0):
@@ -195,7 +218,8 @@ class RunModel:
         index = np.loadtxt('LocalChunk_index_{0}.txt'.format(j+1))
 
         model_eval = []
-        if self.CPUs_reduced is True or index.size == 1:
+        # In case the requested number of cores in
+        if self.CPUs_flag is True or index.size == 1:
 
             # Write each value of UQpyOut.txt into a *.txt file
             np.savetxt('TEMP_val_{0}.txt'.format(int(index)), values, newline=' ', delimiter=',',  fmt='%0.5f')
@@ -281,7 +305,7 @@ def chunk_samples_cores(data, samples, args):
     header = ', '.join(data['Names of random variables'])
     # In case of parallel computing divide the samples into chunks in order to sent to each processor
     chunks = args.CPUs
-    if args.CPUs_reduced is True:
+    if args.CPUs_flag is True:
         for i in range(args.CPUs):
             np.savetxt('LocalChunk_{0}.txt'.format(i+1), samples[range(i-1, i), :], header=str(header), fmt='%0.5f')
             np.savetxt('LocalChunk_index_{0}.txt'.format(i+1), np.array(i).reshape(1,))
@@ -322,181 +346,6 @@ def chunk_samples_nodes(data, samples, args):
 
         np.savetxt('ClusterChunk_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
         np.savetxt('ClusterChunk_index_{0}.txt'.format(i+1), lines)
-
-
-def init_sm(data):
-
-    ################################################################################################################
-    # Add available methods Here
-    valid_methods = ['mcs', 'lhs', 'mcmc', 'pss', 'sts', 'SuS']
-
-    ################################################################################################################
-    # Check if requested method is available
-
-    if 'Method' in data.keys():
-        if data['Method'] not in valid_methods:
-            raise NotImplementedError("Method - %s not available" % data['Method'])
-    else:
-        raise NotImplementedError("No sampling method was provided")
-
-    ################################################################################################################
-    # Monte Carlo simulation block.
-    # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
-    # Optional:
-
-    if data['Method'] == 'mcs':
-        if 'Number of Samples' not in data.keys():
-            data['Number of Samples'] = None
-            warnings.warn("Number of samples not provided. Default number is 100")
-        if 'Probability distribution (pdf)' not in data.keys():
-            raise NotImplementedError("Probability distribution not provided")
-        elif 'Probability distribution parameters' not in data.keys():
-            raise NotImplementedError("Probability distribution parameters not provided")
-
-    ################################################################################################################
-    # Latin Hypercube simulation block.
-    # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
-    # Optional: 1. Criterion, 2. Metric, 3. Iterations
-
-    if data['Method'] == 'lhs':
-        if 'Number of Samples' not in data:
-            data['Number of Samples'] = None
-            warnings.warn("Number of samples not provided. Default number is 100")
-        if 'Probability distribution (pdf)' not in data:
-            raise NotImplementedError("Probability distribution not provided")
-        if 'Probability distribution parameters' not in data:
-            raise NotImplementedError("Probability distribution parameters not provided")
-        if 'LHS criterion' not in data:
-            data['LHS criterion'] = 'random'
-            warnings.warn("LHS criterion not defined. The default is centered")
-        if 'distance metric' not in data:
-            data['distance metric'] = 'euclidean'
-            warnings.warn("Distance metric for the LHS not defined. The default is Euclidean")
-        if 'iterations' not in data:
-            data['iterations'] = 1000
-            warnings.warn("Iterations for the LHS not defined. The default number is 1000")
-
-    ####################################################################################################################
-    # Markov Chain Monte Carlo simulation block.
-    # Necessary parameters:  1. Proposal pdf, 2. Probability pdf width, 3. Target pdf, 4. Target pdf parameters
-    #                        5. algorithm
-    # Optional: 1. Seed, 2. Burn-in
-
-    if data['Method'] == 'mcmc':
-        if 'Number of Samples' not in data:
-            data['Number of Samples'] = 100
-            warnings.warn("Number of samples not provided. Default number is 100")
-        if 'MCMC algorithm' not in data:
-            warnings.warn("MCMC algorithm not provided. The Metropolis-Hastings algorithm will be used")
-            data['MCMC algorithm'] = 'MH'
-        else:
-            if data['MCMC algorithm'] not in ['MH', 'MMH']:
-                warnings.warn("MCMC algorithm not available. The Metropolis-Hastings algorithm will be used")
-                data['MCMC algorithm'] = 'MH'
-        if 'Proposal distribution' not in data:
-            raise NotImplementedError("Proposal distribution not provided")
-        if 'Proposal distribution width' not in data:
-            raise NotImplementedError("Proposal distribution parameters (width) not provided")
-        if data['MCMC algorithm'] == 'MH':
-            if 'Number of random variables' not in data:
-                if 'Names of random variables ' not in data:
-                    raise NotImplementedError("Dimension of the problem not specified")
-                else:
-                    data['Number of random variables'] = len(data['Names of random variables'])
-            if 'Target distribution parameters' not in data:
-                raise NotImplementedError("Target distribution parameters not provided")
-        if data['MCMC algorithm'] == 'MMH':
-            if 'Marginal Target distribution parameters' not in data:
-                raise NotImplementedError("Marginal Target distribution parameters not provided")
-        if 'Burn-in samples' not in data:
-            data['Burn-in samples'] = 1
-            warnings.warn("Number of samples to skip in order to avoid burn-in not provided."
-                          "The default will be set equal to 1")
-        if 'seed' not in data:
-            data['seed'] = np.zeros(len(data['Names of random variables']))
-            warnings.warn("Chain will start from 0")
-
-    ################################################################################################################
-    # Partially stratified sampling (PSS) block.
-    # Necessary parameters:  1. pdf, 2. pdf parameters 3. pss design 3. pss strata
-    # Optional:
-    # TODO: PSS block
-    ################################################################################################################
-    # Stratified sampling (STS) block.
-    # Necessary parameters:  1. pdf, 2. pdf parameters 3. sts design
-    # Optional:
-    # TODO: STS block
-    ################################################################################################################
-    # HERE YOU ADD CHECKS FOR ANY NEW METHOD ADDED
-    # Necessary parameters:
-    # Optional:
-    # TODO: Subset Simulation block
-
-
-def run_sm(data):
-    ################################################################################################################
-    # Run Monte Carlo simulation
-    if data['Method'] == 'mcs':
-        from UQpyLibraries.SampleMethods import MCS
-        print("\nRunning  %k \n", data['Method'])
-        rvs = MCS(pdf=data['Probability distribution (pdf)'],
-                  pdf_params=data['Probability distribution parameters'],
-                  nsamples=data['Number of Samples'])
-
-    ################################################################################################################
-    # Run Latin Hypercube sampling
-    elif data['Method'] == 'lhs':
-        from UQpyLibraries.SampleMethods import LHS
-        print("\nRunning  %k \n", data['Method'])
-        rvs = LHS(pdf=data['Probability distribution (pdf)'],
-                  pdf_params=data['Probability distribution parameters'],
-                  nsamples=data['Number of Samples'], lhs_metric=data['distance metric'],
-                  lhs_iter=data['iterations'], lhs_criterion=data['LHS criterion'])
-
-    ################################################################################################################
-    # Run partially stratified sampling
-    elif data['Method'] == 'pss':
-        from UQpyLibraries.SampleMethods import PSS
-        print("\nRunning  %k \n", data['Method'])
-        rvs = PSS(pdf=data['Probability distribution (pdf)'],
-                  pdf_params=data['Probability distribution parameters'],
-                  pss_design=data['PSS design'], pss_strata=data['PSS strata'])
-
-    ################################################################################################################
-    # Run Markov Chain Monte Carlo sampling
-
-    elif data['Method'] == 'mcmc':
-        from UQpyLibraries.SampleMethods import MCMC
-        print("\nRunning  %k \n", data['Method'])
-        rvs = MCMC(dim=data['Number of random variables'], pdf_target=data['Target distribution'],
-                   mcmc_algorithm=data['MCMC algorithm'], pdf_proposal=data['Proposal distribution'],
-                   pdf_proposal_width=data['Proposal distribution width'],
-                   pdf_target_params=data['Target distribution parameters'], mcmc_seed=data['seed'],
-                   pdf_marg_target_params=data['Marginal Target distribution parameters'],
-                   pdf_marg_target=data['Marginal target distribution'],
-                   mcmc_burnIn=data['Burn-in samples'], nsamples=data['Number of Samples'])
-    ################################################################################################################
-    # Run stratified sampling
-    # TODO: PSS sampling
-
-    ################################################################################################################
-    # Run ANY NEW METHOD HERE
-    # TODO: STS sampling
-
-    elif data['Method'] == 'sts':
-        from UQpyLibraries.SampleMethods import STS
-        print("\nRunning  %k \n", data['Method'])
-        rvs = STS(pdf=data['Probability distribution (pdf)'],
-                  pdf_params=data['Probability distribution parameters'], sts_design=data['STS design'])
-
-    ################################################################################################################
-    # Run ANY NEW METHOD HERE
-    # TODO: ROM sampling
-
-    ################################################################################################################
-    # Run ANY NEW METHOD HERE
-    # TODO: Subset Simulation
-    return rvs.samples
 
 
 def save_csv(headers, param_values):

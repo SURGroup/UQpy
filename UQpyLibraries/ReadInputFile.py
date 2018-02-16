@@ -194,10 +194,29 @@ def readfile(filename):
         # Subset Simulation
         elif title == 'Number of Samples per subset':
             mydict[title] = int(lines[lines_[i] + 1][:-1])
-        elif title == 'Width of proposal distribution':
-            mydict[title] = np.float32(lines[lines_[i] + 1][:-1])
         elif title == 'Conditional probability':
             mydict[title] = np.float32(lines[lines_[i] + 1][:-1])
-        elif title == 'Failure criterion':
-            mydict[title] = np.float32(lines[lines_[i] + 1][:-1])
+        elif title == 'Limit-state':
+            ls = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    ls.append(np.float32(lines[lines_[i] + j + 1][:-1]))
+                    j = j + 1
+                mydict[title] = ls
+        elif title == 'Failure probability':
+            pf = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    pf.append(np.float32(lines[lines_[i] + j + 1][:-1]))
+                    j = j + 1
+                mydict[title] = pf
+
     return mydict

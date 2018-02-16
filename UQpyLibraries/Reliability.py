@@ -1,144 +1,143 @@
-from UQpyLibraries.SampleMethods import *
+from UQpyLibraries.UQpyModules import *
 
-
-class ReliabilityMethods:
-    """
-    A class containing methods used to perform reliability analysis
-
-    """
 
 ########################################################################################################################
 ########################################################################################################################
 #                                        Subset Simulation (Sus)
 ########################################################################################################################
-    class SubsetSimulation:
-        """
-        A class used to perform Subset Simulation.
+class SubsetSimulation:
+    """
+    A class used to perform Subset Simulation.
 
-            :param sm:
-            :param dimension: Stochastic dimension of the problem
-            :param nsamples_per_subset:  number of conditional samples per subset
-            :param conditional_prob:  conditional probability of each subset
-            :param model: Model to evaluate
-            :param mcmc: MCMC algorithm (MH/ MMH)
-            :param proposal: Type of proposal distribution
-            :param width_of_proposal:  width of proposal distribution
-            :param target:  target distribution
-            :param pf:  Probability of failure
-            :param limit_state: Failure criterion
+        :param sm:
+        :param dimension: Stochastic dimension of the problem
+        :param nsamples_per_subset:  number of conditional samples per subset
+        :param conditional_prob:  conditional probability of each subset
+        :param model: Model to evaluate
+        :param mcmc: MCMC algorithm (MH/ MMH)
+        :param proposal: Type of proposal distribution
+        :param width_of_proposal:  width of proposal distribution
+        :param target:  target distribution
+        :param pf:  Probability of failure
+        :param limit_state: Failure criterion
 
-        Created by: Dimitris G. Giovanis
-        Last modified: 12/08/2017
-        Last modified by: Dimitris G. Giovanis
+    Created by: Dimitris G. Giovanis
+    Last modified: 12/08/2017
+    Last modified by: Dimitris G. Giovanis
 
-        """
+    """
 
-        def __init__(self, sm=None, rm=None, dimension=None, nsamples_ss=None, p0_cond=None, model=None,
-                     mcmc_algorithm=None, pdf_proposal_params=None, pdf_proposal=None, pdf_proposal_width=None,
-                     pdf_target=None, mcmc_burnIn=None,
-                     fail=None, pdf_target_params=None):
+    def __init__(self, args, data):
 
-            self.nsamples_ss = nsamples_ss
-            self.dimension = dimension
-            self.p0_cond = p0_cond
-            self.burnIn = mcmc_burnIn
-            self.model = model
-            self.pdf_proposal_params = pdf_proposal_params
-            self.algorithm = mcmc_algorithm
-            self.pdf_proposal = pdf_proposal
-            self.pdf_target = pdf_target
-            self.pdf_proposal_width = pdf_proposal_width
-            self.fail = fail
-            self.marginal_params = pdf_target_params
-            self.pf, self.samples, self.solution = self.run_SuS(rm, sm)
+        self.nsamples_ss = data['Number of Samples per subset']
+        self.p0 = data['Conditional probability']
+        self.burnIn = data['Burn-in samples']
+        self.algorithm = data['MCMC algorithm']
+        self.pdf_proposal = data['Proposal distribution']
+        self.pdf_target_params = data['Marginal target distribution']
+        self.pdf_target = data['Marginal target distribution']
+        self.pdf_proposal_width = data['Proposal distribution width']
+        self.limitState = data['Limit-state']
+        self.names = data['Names of random variables']
+        self.dimension = data['Number of random variables']
 
+        args.CPUs_flag = True
+        args.ParallelProcessing = False
+        self.run_sus(args)
 
-            # TODO: DG - Add coefficient of variation estimator for subset simulation
+        # TODO: DG - Add coefficient of variation estimator for subset simulation
 
-        def run_SuS(self, rm, sm):
-            step = 0
-            theta_u = np.zeros(shape=(self.nsamples_per_subset, self.dimension))
-            Ymc = np.zeros(self.nsamples_per_subset)
-            y = []
-            p = []
+    def run_sus(self, args):
+        step = 0
+        theta_u = np.zeros(shape=(self.nsamples_ss, self.dimension))
+        y_mcs = np.zeros(self.nsamples_ss)
+        y = []
+        p = []
+        for i in range(self.nsamples_ss):
+            theta_u[i, :] = np.random.randn(self.dimension)
+            np.savetxt('UQpyOut.txt', theta_u[i, :], newline=' ', fmt='%0.5f')
+            x = RunModel(args)
+            y_mcs[i] = x.values
 
-            for i in range(self.nsamples_per_subset):
-                theta_u[i, :] = np.random.randn(self.dimension)
-                model = rm.Evaluate(rm, theta_u[i, :].reshape(1, self.dimension))
-                Ymc[i] = model.v
+        ytemp, theta_new, M = self.threshold0value(theta_u, y_mcs)
+        y.append(ytemp)
 
-            ytemp, thetanew, M = self.threshold0value(theta_u, Ymc)
+        while y[-1] > self.limitState:
+
+            [theta_newest, Y] = self.subset_step(args, theta_new, y[-1], M)
+            step = step + 1
+            ytemp, theta_new, M = self.threshold0value(theta_newest, Y)
             y.append(ytemp)
+            p.append(self.statistical(Y, y[-1]))
+            print()
 
-            while y[-1] > self.limitState:
+        return np.prod(p), theta_new, M
 
-                [thetanewest, Y] = self.subset_step(sm, rm, thetanew, y[-1], M)
-                step = step + 1
-                ytemp, thetanew, M = self.threshold0value(thetanewest, Y)
-                y.append(ytemp)
-                p.append(self.Statistical(Y, y[-1]))
-                print()
+    def subset_step(self, args, thetanew, y, M):
+        from UQpyLibraries.SampleMethods import MCMC
+        subgermU = thetanew
+        subgermG = M
+        nr = int(1 / self.p0)
+        nchains = int(self.nsamples_ss * self.p0)
+        subtempu = np.zeros(shape=(nr, self.dimension))
+        subtempg = np.zeros(nr)
+        subsetU = subgermU
+        subsetG = subgermG
+        for i in range(nchains):
+            seed_i = subgermU[i, :]
+            val_i = subgermG[i]
+            rvs = MCMC(dim=self.dimension, pdf_target=None,
+                       mcmc_algorithm=self.algorithm, pdf_proposal=self.pdf_proposal,
+                       pdf_proposal_width=self.pdf_proposal_width,
+                       pdf_target_params=None, mcmc_seed=seed_i,
+                       pdf_marg_target_params=self.pdf_target_params,
+                       pdf_marg_target=self.pdf_target,
+                       mcmc_burnIn=self.burnIn, nsamples=1)
 
-            return np.prod(p), thetanew, M
+            for j in range(nr):
+                candidate = rvs.samples[j, :]
+                check_ = np.array_equal(seed_i.reshape(1, self.dimension), candidate)
+                if check_ is not True:
+                    np.savetxt('UQpyOut.txt', candidate, newline=' ', fmt='%0.5f')
+                    x = RunModel(args)
+                    allG = x.values
+                    if allG > y:
+                        val_i = val_i
+                        seed_i = seed_i
+                    else:
+                        val_i = allG
+                        seed_i = candidate
 
-        def subset_step(self, sm, rm, thetanew, y, M):
+                subtempu[j, :] = seed_i
+                subtempg[j] = val_i
+            subsetU = np.concatenate([subsetU, subtempu], axis=0)
+            subsetG = np.concatenate([subsetG, subtempg], axis=0)
 
-            subgermU = thetanew
-            subgermG = M
-            nr = int(1 / self.p0)
-            nchains = int(self.nsamples_per_subset * self.p0)
-            subtempu = np.zeros(shape=(nr, self.dimension))
-            subtempg = np.zeros(nr)
-            subsetU = subgermU
-            subsetG = subgermG
-            for i in range(nchains):
-                seed_i = subgermU[i, :]
-                val_i = subgermG[i]
-                mcmc = sm.MCMC(sm, nr, target=self.target, x0=seed_i, MCMC_algorithm=self.method, proposal=self.proposal,
-                               params=self.proposal_params, marginal_parameters=self.marginal_params, njump=self.jump)
+        return subsetU, subsetG
 
-                for j in range(nr):
-                    candidate = mcmc.xi[j, :]
-                    check_ = np.array_equal(seed_i.reshape(1, self.dimension), candidate)
-                    if check_ is not True:
-                        model = rm.Evaluate(rm, candidate.reshape(1, self.dimension))
-                        allG = model.v
-                        if allG > y:
-                            val_i = val_i
-                            seed_i = seed_i
-                        else:
-                            val_i = allG
-                            seed_i = candidate
+        return U, G
 
-                    subtempu[j, :] = seed_i
-                    subtempg[j] = val_i
-                subsetU = np.concatenate([subsetU, subtempu], axis=0)
-                subsetG = np.concatenate([subsetG, subtempg], axis=0)
+    def threshold0value(self, theta, fmc):
 
-            return subsetU, subsetG
+        ncr = int(self.p0 * self.nsamples_ss)
+        fmc_sorted = np.sort(fmc, axis=0)
+        J = np.argsort(fmc, axis=0)
+        y = fmc_sorted[ncr]
+        M = fmc_sorted[:ncr]
+        JJ = J[:ncr]
 
-            return U, G
+        return y, theta[JJ, :], M
 
-        def threshold0value(self, theta, fmc):
+    def statistical(self, G, y):
+        if y > self.limitState:
 
-            ncr = int(self.p0 * self.nsamples_per_subset)
-            fmc_sorted = np.sort(fmc, axis=0)
-            J = np.argsort(fmc, axis=0)
-            y = fmc_sorted[ncr]
-            M = fmc_sorted[:ncr]
-            JJ = J[:ncr]
+            return self.p0
 
-            return y, theta[JJ, :], M
+        else:
+            I = np.array(np.where(G < self.limitState))
+            p = I.shape[0] / G.size
+            return p
 
-        def Statistical(self, G, y):
-            if y > self.limitState:
-
-                return self.p0
-
-            else:
-                I = np.array(np.where(G < self.limitState))
-                p = I.shape[0] / G.size
-                return p
 
 
 

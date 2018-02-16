@@ -1,34 +1,44 @@
 #Method
 SuS
 
+#Names of random variables
+mu
+sigma
+l
+
+#Number of random variables
+3
+
 #Number of Samples per subset
 1000
 
-#Probability distribution (pdf)
-Normal
-Normal
+#Proposal distribution
+Uniform
+Uniform
+Uniform
 
-#Probability distribution parameters
-0 1
-0 1
 
-#Proposal distribution parameters
-1.0
-1.0
+#Proposal distribution width
+2
+2
+2
 
 #MCMC algorithm
 MMH
 
-#Proposal distribution
-Uniform
-
-#Width of proposal distribution
-2
-
 #Target distribution
-marginal
 
-#Marginal target distribution parameters
+
+#Marginal target distribution
+marginal_pdf
+marginal_pdf
+marginal_pdf
+
+#Target distribution parameters
+
+
+#Marginal Target distribution parameters
+0 1
 0 1
 0 1
 
@@ -38,8 +48,10 @@ marginal
 #Conditional probability
 0.1
 
-#Failure criterion
--2.0
+#Failure probability
+
+#Limit-state
+1.7
+
 
 #end
-
