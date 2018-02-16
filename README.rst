@@ -54,7 +54,8 @@ This will check for all the necessary packages. It will create the required virt
 
                         $git clone https://github.com/SURGroup/UQpy.git
                         $cd UQpy/
-                        $python3 setup_.py   
+                        $python3 setup_.py  
+                        $virtualenv SURG_UQenv
                         $source SURG_UQenv/bin/activate
                         $pip3 install -r requirements.txt
  
