@@ -1,9 +1,6 @@
 #Method
 mcs
 
-#Number of Samples
-3
-
 #Probability distribution (pdf)
 Uniform
 Uniform
@@ -14,9 +11,13 @@ Normal
 0 60
 0 1
 
+#Number of Samples
+3
+
 #Names of random variables
 mu
 sigma
-l
+Shields
+
 
 #end

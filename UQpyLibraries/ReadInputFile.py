@@ -29,7 +29,6 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1]
                     dist.append(lines[lines_[i] + j + 1][:-1])
                     j = j + 1
             mydict[title] = dist
@@ -41,7 +40,6 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1]
                     names.append(lines[lines_[i] + j + 1][:-1])
                     j = j + 1
             mydict[title] = names
@@ -91,7 +89,6 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1]
                     pss_strata.append(int(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
             mydict[title] = pss_strata
@@ -105,7 +102,6 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1]
                     sts_design.append(int(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
             mydict[title] = sts_design
@@ -122,7 +118,6 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1]
                     proposal.append(lines[lines_[i] + j + 1][:-1])
                     j = j + 1
                 mydict[title] = proposal
@@ -134,7 +129,6 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1]
                     proposal_params.append(np.float32(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
             mydict[title] = proposal_params
@@ -162,7 +156,6 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1]
                     marg_target.append(lines[lines_[i] + j + 1][:-1])
                     j = j + 1
                 mydict[title] = marg_target
@@ -218,5 +211,14 @@ def readfile(filename):
                     pf.append(np.float32(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
                 mydict[title] = pf
+        ################################################################################################################
+        # ADD ANY NEW METHOD HERE
+
+        ################################################################################################################
+        # ADD ANY NEW METHOD HERE
+
+        ################################################################################################################
+        # ADD ANY NEW METHOD HERE
+
 
     return mydict

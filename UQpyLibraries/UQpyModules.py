@@ -44,10 +44,12 @@ class RunCommandLine:
         ################################################################################################################
         # Run Subset Simulation
         if data['Method'] == 'SuS':
+            self.args.Adaptive = True
             from UQpyLibraries.Reliability import SubsetSimulation
             init_sm(data)
             self.SuS = SubsetSimulation(self.args, data)
-        else:
+        elif data['Method'] in ['mcs', 'lhs', 'mcmc', 'pss', 'sts']:
+            self.args.Adaptive = False
             self.run_uq(data)
 
     def run_uq(self, data):
@@ -83,18 +85,14 @@ class RunCommandLine:
         save_csv(data['Names of random variables'], samples)
 
         ################################################################################################################
-        # Split the samples into chunks in order to sent to each processor in case of parallel computing, else save them
-        # into file UQpyOut.txt
+        # Split the samples into chunks in order to sent to each processor in case of parallel computing
+
         if self.args.ParallelProcessing is True:
             if samples.shape[0] <= self.args.CPUs:
                 self.args.CPUs = samples.shape[0]
                 self.args.CPUs_flag = True
                 print('The number of CPUs used is\n %', samples.shape[0])
-            else:
-                self.args.CPUs_flag = False
             chunk_samples_cores(data, samples, self.args)
-        else:
-            self.args.CPUs_flag = False
 
         ################################################################################################################
         # If a model is provided then run it
@@ -141,7 +139,7 @@ class RunModel:
         self.input_script = args.Input_Shell_Script
         self.output_script = args.Output_Shell_Script
         self.current_dir = os.getcwd()
-        self.CPUs_flag = args.CPUs_flag
+        self.Adaptive = args.Adaptive
         parallel_processing = args.ParallelProcessing
 
         if parallel_processing is True:
@@ -159,51 +157,30 @@ class RunModel:
         print("\nEvaluating the model...\n")
         model_eval = []
 
-        if self.CPUs_flag is True:
-            index = 1000
+        if self.Adaptive is True:
+            values = values.reshape(1, values.shape[1])
+
+        for i in range(values.shape[0]):
             # Write each value of UQpyOut.txt into a *.txt file
-            np.savetxt('TEMP_val_{}.txt'.format(index), values, newline=' ', delimiter=',',  fmt='%0.5f')
+            with open('TEMP_val_{0}.txt'.format(i), 'wb') as f:
+                np.savetxt(f, values[i, :], fmt='%0.5f')
 
             # Run the Input_Shell_Script.sh in order to create the input file for the model
-            join_input_script = './{0} {1}'.format(self.input_script, index)
+            join_input_script = './{0} {1}'.format(self.input_script, i)
             os.system(join_input_script)
 
             # Run the Model.sh in order to run the model
-            join_model_script = './{0} {1}'.format(self.model_script, index)
+            join_model_script = './{0} {1}'.format(self.model_script, i)
             os.system(join_model_script)
 
             # Run the Output_Shell_Script.sh  in order to create the input file of the model for UQpy
-            join_output_script = './{0} {1}'.format(self.output_script, index)
+            join_output_script = './{0} {1}'.format(self.output_script, i)
             os.system(join_output_script)
 
-            model_eval = np.loadtxt('UQpyInput_{0}.txt'.format(index))
-            os.remove('UQpyInput_{0}.txt'.format(index))
+            model_eval.append(np.loadtxt('UQpyInput_{}.txt'.format(i)))
 
-            end_time = time.time()
-            print(end_time - start_time, "(sec)")
-
-        else:
-            for i in range(values.shape[0]):
-                # Write each value of UQpyOut.txt into a *.txt file
-                with open('TEMP_val_{0}.txt'.format(i), 'wb') as f:
-                    np.savetxt(f, values[i, :], fmt='%0.5f')
-
-                # Run the Input_Shell_Script.sh in order to create the input file for the model
-                join_input_script = './{0} {1}'.format(self.input_script, i)
-                os.system(join_input_script)
-
-                # Run the Model.sh in order to run the model
-                join_model_script = './{0} {1}'.format(self.model_script, i)
-                os.system(join_model_script)
-
-                # Run the Output_Shell_Script.sh  in order to create the input file of the model for UQpy
-                join_output_script = './{0} {1}'.format(self.output_script, i)
-                os.system(join_output_script)
-
-                model_eval.append(np.loadtxt('UQpyInput_{}.txt'.format(i)))
-
-            end_time = time.time()
-            print(end_time - start_time, "(sec)- Serial")
+        end_time = time.time()
+        print('Total time:', end_time - start_time, "(sec)")
         return model_eval
 
     def run_parallel_model(self, args, multi=False, queue=0):
@@ -215,61 +192,43 @@ class RunModel:
 
         # Load the UQpyOut.txt
         values = np.loadtxt('LocalChunk_{0}.txt'.format(j+1), dtype=np.float32)
-        index = np.loadtxt('LocalChunk_index_{0}.txt'.format(j+1))
+        index = np.loadtxt('LocalChunk_index_{0}.txt'.format(j + 1))
+
+        if index.size == 1:
+            index = []
+            values = values.reshape(1, values.shape[0])
+            index.append(np.loadtxt('LocalChunk_index_{0}.txt'.format(j+1)))
+        else:
+            index = np.loadtxt('LocalChunk_index_{0}.txt'.format(j + 1))
 
         model_eval = []
-        # In case the requested number of cores in
-        if self.CPUs_flag is True or index.size == 1:
+        count = 0
+        for i in index:
+            lock = Lock()
+
+            lock.acquire()  # will block if lock is already held
 
             # Write each value of UQpyOut.txt into a *.txt file
-            np.savetxt('TEMP_val_{0}.txt'.format(int(index)), values, newline=' ', delimiter=',',  fmt='%0.5f')
+            np.savetxt('TEMP_val_{0}.txt'.format(int(i)), values[count, :], newline=' ', delimiter=',', fmt='%0.5f')
 
             # Run the Input_Shell_Script.sh in order to create the input file for the model
-            join_input_script = './{0} {1}'.format(self.input_script, int(index))
+            join_input_script = './{0} {1}'.format(self.input_script, int(i))
             os.system(join_input_script)
 
             # Run the Model.sh in order to run the model
-            join_model_script = './{0} {1}'.format(self.model_script, int(index))
+            join_model_script = './{0} {1}'.format(self.model_script, int(i))
             os.system(join_model_script)
 
             # Run the Output_Shell_Script.sh  in order to create the input file of the model for UQpy
-            join_output_script = './{0} {1}'.format(self.output_script, int(index))
+            join_output_script = './{0} {1}'.format(self.output_script, int(i))
             os.system(join_output_script)
 
-            model_eval.append(np.loadtxt('UQpyInput_{0}.txt'.format(int(index)), dtype=np.float32))
+            model_eval.append(np.loadtxt('UQpyInput_{0}.txt'.format(int(i)), dtype=np.float32))
+            count = count + 1
+            lock.release()
 
-            if multi:
-                queue.put(model_eval)
-
-        else:
-
-            count = 0
-            for i in index:
-                lock = Lock()
-
-                lock.acquire()  # will block if lock is already held
-
-                # Write each value of UQpyOut.txt into a *.txt file
-                np.savetxt('TEMP_val_{0}.txt'.format(int(i)), values[count, :], newline=' ', delimiter=',', fmt='%0.5f')
-
-                # Run the Input_Shell_Script.sh in order to create the input file for the model
-                join_input_script = './{0} {1}'.format(self.input_script, int(i))
-                os.system(join_input_script)
-
-                # Run the Model.sh in order to run the model
-                join_model_script = './{0} {1}'.format(self.model_script, int(i))
-                os.system(join_model_script)
-
-                # Run the Output_Shell_Script.sh  in order to create the input file of the model for UQpy
-                join_output_script = './{0} {1}'.format(self.output_script, int(i))
-                os.system(join_output_script)
-
-                model_eval.append(np.loadtxt('UQpyInput_{0}.txt'.format(int(i)), dtype=np.float32))
-                count = count + 1
-                lock.release()
-
-            if multi:
-                queue.put(model_eval)
+        if multi:
+            queue.put(model_eval)
 
         return model_eval
 
@@ -296,7 +255,7 @@ class RunModel:
         for j in jobs:
             j.join()
         end_time = time.time()
-        print(end_time - start_time, "(sec)-Parallel")
+        print('Total time:', end_time - start_time, "(sec)")
         return results
 
 

@@ -73,9 +73,9 @@ class SubsetSimulation:
 
         return np.prod(p), theta_new, M
 
-    def subset_step(self, args, thetanew, y, M):
+    def subset_step(self, args, theta_new, y, M):
         from UQpyLibraries.SampleMethods import MCMC
-        subgermU = thetanew
+        subgermU = theta_new
         subgermG = M
         nr = int(1 / self.p0)
         nchains = int(self.nsamples_ss * self.p0)
