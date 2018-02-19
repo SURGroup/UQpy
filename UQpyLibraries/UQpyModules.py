@@ -104,13 +104,13 @@ class RunCommandLine:
         # Move the data to directory simUQpyOut/ , delete the temp/ directory
         # and terminate the program
         _files = []
-        _files.append('UQpyOut.csv')
-        _files.append('UQpyOut.txt')
+        _files.append('UQpy_Samples.csv')
+        _files.append('UQpy_Samples.txt')
 
         if self.args.Solver is not None:
-            src_files = [filename for filename in os.listdir(self.args.WorkingDir) if filename.startswith("UQpyInput_")]
+            src_files = [filename for filename in os.listdir(self.args.WorkingDir) if filename.startswith("UQpy_eval_")]
             for file in src_files:
-                file_new = file.replace("UQpyInput_", "Model_")
+                file_new = file.replace("UQpy_eval_", "Model_")
                 os.rename(file, file_new)
                 _files.append(file_new)
 
@@ -152,7 +152,7 @@ class RunModel:
         start_time = time.time()
 
         # Load the UQpyOut.txt
-        values = np.loadtxt('UQpyOut.txt', dtype=np.float32)
+        values = np.loadtxt('UQpy_Samples.txt', dtype=np.float32)
 
         print("\nEvaluating the model...\n")
         model_eval = []
@@ -162,7 +162,7 @@ class RunModel:
 
         for i in range(values.shape[0]):
             # Write each value of UQpyOut.txt into a *.txt file
-            with open('TEMP_val_{0}.txt'.format(i), 'wb') as f:
+            with open('UQpy_run_{0}.txt'.format(i), 'wb') as f:
                 np.savetxt(f, values[i, :], fmt='%0.5f')
 
             # Run the Input_Shell_Script.sh in order to create the input file for the model
@@ -177,7 +177,7 @@ class RunModel:
             join_output_script = './{0} {1}'.format(self.output_script, i)
             os.system(join_output_script)
 
-            model_eval.append(np.loadtxt('UQpyInput_{}.txt'.format(i)))
+            model_eval.append(np.loadtxt('UQpy_eval_{}.txt'.format(i)))
 
         end_time = time.time()
         print('Total time:', end_time - start_time, "(sec)")
@@ -191,25 +191,25 @@ class RunModel:
         # Define the executable shell scripts for the model
 
         # Load the UQpyOut.txt
-        values = np.loadtxt('LocalChunk_{0}.txt'.format(j+1), dtype=np.float32)
-        index = np.loadtxt('LocalChunk_index_{0}.txt'.format(j + 1))
+        values = np.loadtxt('UQpy_Batch_{0}.txt'.format(j+1), dtype=np.float32)
+        index = np.loadtxt('UQpy_Batch_index_{0}.txt'.format(j + 1))
 
         if index.size == 1:
             index = []
             values = values.reshape(1, values.shape[0])
-            index.append(np.loadtxt('LocalChunk_index_{0}.txt'.format(j+1)))
+            index.append(np.loadtxt('UQpy_Batch_index_{0}.txt'.format(j+1)))
         else:
-            index = np.loadtxt('LocalChunk_index_{0}.txt'.format(j + 1))
+            index = np.loadtxt('UQpy_Batch_index_{0}.txt'.format(j + 1))
 
         model_eval = []
         count = 0
         for i in index:
             lock = Lock()
-
+            print(index)
             lock.acquire()  # will block if lock is already held
 
             # Write each value of UQpyOut.txt into a *.txt file
-            np.savetxt('TEMP_val_{0}.txt'.format(int(i)), values[count, :], newline=' ', delimiter=',', fmt='%0.5f')
+            np.savetxt('UQpy_run_{0}.txt'.format(int(i)), values[count, :], newline=' ', delimiter=',', fmt='%0.5f')
 
             # Run the Input_Shell_Script.sh in order to create the input file for the model
             join_input_script = './{0} {1}'.format(self.input_script, int(i))
@@ -223,7 +223,7 @@ class RunModel:
             join_output_script = './{0} {1}'.format(self.output_script, int(i))
             os.system(join_output_script)
 
-            model_eval.append(np.loadtxt('UQpyInput_{0}.txt'.format(int(i)), dtype=np.float32))
+            model_eval.append(np.loadtxt('UQpy_eval_{0}.txt'.format(int(i)), dtype=np.float32))
             count = count + 1
             lock.release()
 
@@ -266,8 +266,8 @@ def chunk_samples_cores(data, samples, args):
     chunks = args.CPUs
     if args.CPUs_flag is True:
         for i in range(args.CPUs):
-            np.savetxt('LocalChunk_{0}.txt'.format(i+1), samples[range(i-1, i), :], header=str(header), fmt='%0.5f')
-            np.savetxt('LocalChunk_index_{0}.txt'.format(i+1), np.array(i).reshape(1,))
+            np.savetxt('UQpy_Batch_{0}.txt'.format(i+1), samples[range(i-1, i), :], header=str(header), fmt='%0.5f')
+            np.savetxt('UQpy_Batch_index_{0}.txt'.format(i+1), np.array(i).reshape(1,))
 
     else:
         size = np.array([np.ceil(samples.shape[0]/chunks) for i in range(args.CPUs)]).astype(int)
@@ -281,8 +281,8 @@ def chunk_samples_cores(data, samples, args):
                 lines = range(size[i])
             else:
                 lines = range(int(np.sum(size[:i])), int(np.sum(size[:i+1])))
-            np.savetxt('LocalChunk_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
-            np.savetxt('LocalChunk_index_{0}.txt'.format(i+1), lines)
+            np.savetxt('UQpy_Batch_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
+            np.savetxt('UQpy_Batch_index_{0}.txt'.format(i+1), lines)
 
 
 def chunk_samples_nodes(data, samples, args):
@@ -303,8 +303,8 @@ def chunk_samples_nodes(data, samples, args):
         else:
             lines = range(int(np.sum(size[:i])), int(np.sum(size[:i+1])))
 
-        np.savetxt('ClusterChunk_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
-        np.savetxt('ClusterChunk_index_{0}.txt'.format(i+1), lines)
+        np.savetxt('UQpy_Batch_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
+        np.savetxt('UQpy_Batch_index_{0}.txt'.format(i+1), lines)
 
 
 def save_csv(headers, param_values):
@@ -316,7 +316,7 @@ def save_csv(headers, param_values):
     for i in range(len(headers)):
         HEADER.append(headers[i])
     import csv
-    with open('UQpyOut.csv', "w") as output:
+    with open('UQpy_Samples.csv', "w") as output:
         writer = csv.writer(output, lineterminator='\n')
         writer.writerow(HEADER)
         for val in param_values:
@@ -326,4 +326,4 @@ def save_csv(headers, param_values):
 def save_txt(headers, param_values):
 
     header = ', '.join(headers)
-    np.savetxt('UQpyOut.txt', param_values, header=str(header), fmt='%0.5f')
+    np.savetxt('UQpy_Samples.txt', param_values, header=str(header), fmt='%0.5f')
