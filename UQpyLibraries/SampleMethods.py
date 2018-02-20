@@ -7,7 +7,6 @@ import warnings
 
 
 def init_sm(data):
-
     ################################################################################################################
     # Add available sampling methods Here
     valid_methods = ['mcs', 'lhs', 'mcmc', 'pss', 'sts', 'SuS']
@@ -15,24 +14,23 @@ def init_sm(data):
     ################################################################################################################
     # Check if requested method is available
 
-    if 'Method' in data.keys():
+    if 'Method' in data:
         if data['Method'] not in valid_methods:
             raise NotImplementedError("Method - %s not available" % data['Method'])
     else:
         raise NotImplementedError("No sampling method was provided")
 
     ################################################################################################################
-    # Monte Carlo simulation block.
+    # Monte Carlo simulation checks.
     # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
-    # Optional:
+    # Optional: number of samples (default 100)
 
     if data['Method'] == 'mcs':
         if 'Number of Samples' not in data:
             data['Number of Samples'] = None
-            warnings.warn("Number of samples not provided. Default number is 100")
         if 'Probability distribution (pdf)' not in data:
             raise NotImplementedError("Probability distribution not provided")
-        elif 'Probability distribution parameters' not in data:
+        if 'Probability distribution parameters' not in data:
             raise NotImplementedError("Probability distribution parameters not provided")
 
     ################################################################################################################
@@ -43,20 +41,16 @@ def init_sm(data):
     if data['Method'] == 'lhs':
         if 'Number of Samples' not in data:
             data['Number of Samples'] = None
-            warnings.warn("Number of samples not provided. Default number is 100")
         if 'Probability distribution (pdf)' not in data:
             raise NotImplementedError("Probability distribution not provided")
         if 'Probability distribution parameters' not in data:
             raise NotImplementedError("Probability distribution parameters not provided")
         if 'LHS criterion' not in data:
-            data['LHS criterion'] = 'random'
-            warnings.warn("LHS criterion not defined. The default is centered")
+            data['LHS criterion'] = None
         if 'distance metric' not in data:
-            data['distance metric'] = 'euclidean'
-            warnings.warn("Distance metric for the LHS not defined. The default is Euclidean")
+            data['distance metric'] = None
         if 'iterations' not in data:
-            data['iterations'] = 1000
-            warnings.warn("Iterations for the LHS not defined. The default number is 1000")
+            data['iterations'] = None
 
     ####################################################################################################################
     # Markov Chain Monte Carlo simulation block.
@@ -65,45 +59,41 @@ def init_sm(data):
     # Optional: 1. Seed, 2. Burn-in
 
     if data['Method'] == 'mcmc':
-        if 'Number of Samples' not in data:
-            data['Number of Samples'] = 100
-            warnings.warn("Number of samples not provided. Default number is 100")
-        if 'MCMC algorithm' not in data:
-            warnings.warn("MCMC algorithm not provided. The Metropolis-Hastings algorithm will be used")
-            data['MCMC algorithm'] = 'MH'
-        else:
-            if data['MCMC algorithm'] not in ['MH', 'MMH']:
-                warnings.warn("MCMC algorithm not available. The Metropolis-Hastings algorithm will be used")
-                data['MCMC algorithm'] = 'MH'
-        if 'Proposal distribution' not in data:
-            raise NotImplementedError("Proposal distribution not provided")
-        if 'Proposal distribution width' not in data:
-            raise NotImplementedError("Proposal distribution parameters (width) not provided")
-        if data['MCMC algorithm'] == 'MH':
-            if 'Number of random variables' not in data:
-                if 'Names of random variables ' not in data:
-                    raise NotImplementedError("Dimension of the problem not specified")
-                else:
-                    data['Number of random variables'] = len(data['Names of random variables'])
-            if 'Target distribution parameters' not in data:
-                raise NotImplementedError("Target distribution parameters not provided")
-        if data['MCMC algorithm'] == 'MMH':
-            if 'Marginal Target distribution parameters' not in data:
-                raise NotImplementedError("Marginal Target distribution parameters not provided")
-            if 'Number of random variables' not in data:
-                raise NotImplementedError("Dimension of the problem not specified")
-        if 'Burn-in samples' not in data:
-            data['Burn-in samples'] = 1
-            warnings.warn("Number of samples to skip in order to avoid burn-in not provided."
-                          "The default will be set equal to 1")
+        if 'Names of random variables' not in data:
+            raise NotImplementedError('Number of random variables cannot be defined. Specify names of random variables')
         if 'seed' not in data:
             data['seed'] = np.zeros(len(data['Names of random variables']))
-            warnings.warn("n-dimensional seed: [0, 0, ..., 0]")
+        if 'skip' not in data:
+            data['skip'] = None
+        if 'Proposal distribution' not in data:
+            data['Proposal distribution'] = None
+        else:
+            print(data['Proposal distribution'])
+            if data['Proposal distribution'] not in ['Uniform', 'Normal']:
+                raise ValueError('Invalid Proposal distribution type. Available distributions: Uniform, Normal')
+
+        if 'Target distribution' not in data:
+            data['Target distribution'] = None
+        else:
+            if data['Target distribution'] not in ['multivariate_pdf', 'marginal_pdf', 'normal_pdf']:
+                raise ValueError('InvalidTarget distribution type. Available distributions: multivariate_pdf, '
+                                 'marginal_pdf,'
+                                 'normal_pdf')
+
+        if 'Target distribution parameters' not in data:
+            data['Target distribution parameters'] = None
+
+        if 'Proposal distribution width' not in data:
+            data['Proposal distribution width'] = None
+
+        if 'MCMC algorithm' not in data:
+            data['MCMC algorithm'] = None
 
     ################################################################################################################
     # Partially stratified sampling (PSS) block.
     # Necessary parameters:  1. pdf, 2. pdf parameters 3. pss design 3. pss strata
     # Optional:
+
     if data['Method'] == 'pss':
         if 'Probability distribution (pdf)' not in data:
             raise NotImplementedError("Probability distribution not provided")
@@ -118,6 +108,7 @@ def init_sm(data):
     # Stratified sampling (STS) block.
     # Necessary parameters:  1. pdf, 2. pdf parameters 3. sts design
     # Optional:
+
     if data['Method'] == 'sts':
         if 'Probability distribution (pdf)' not in data:
             raise NotImplementedError("Probability distribution not provided")
@@ -133,6 +124,8 @@ def init_sm(data):
     # Optional: 1. Seed, 2. Burn-in
 
     if data['Method'] == 'SuS':
+        if 'Number of samples' not in data:
+            data['Number of samples'] = None
         if 'Number of Samples' not in data:
             data['Number of Samples'] = 100
             warnings.warn("Number of samples not provided. Default number is 100")
@@ -175,6 +168,7 @@ def init_sm(data):
     #
     #
 
+
 ########################################################################################################################
 ########################################################################################################################
 ########################################################################################################################
@@ -184,108 +178,113 @@ def run_sm(data):
     ################################################################################################################
     # Run Monte Carlo simulation
     if data['Method'] == 'mcs':
-        from UQpyLibraries.SampleMethods import MCS
         print("\nRunning  %k \n", data['Method'])
-        rvs = MCS(pdf=data['Probability distribution (pdf)'],
+        rvs = MCS(pdf_type=data['Probability distribution (pdf)'],
                   pdf_params=data['Probability distribution parameters'],
                   nsamples=data['Number of Samples'])
+        return rvs
 
     ################################################################################################################
     # Run Latin Hypercube sampling
     elif data['Method'] == 'lhs':
-        from UQpyLibraries.SampleMethods import LHS
         print("\nRunning  %k \n", data['Method'])
-        rvs = LHS(pdf=data['Probability distribution (pdf)'],
+        rvs = LHS(pdf_type=data['Probability distribution (pdf)'],
                   pdf_params=data['Probability distribution parameters'],
                   nsamples=data['Number of Samples'], lhs_metric=data['distance metric'],
                   lhs_iter=data['iterations'], lhs_criterion=data['LHS criterion'])
+        return rvs
 
     ################################################################################################################
     # Run partially stratified sampling
     elif data['Method'] == 'pss':
-        from UQpyLibraries.SampleMethods import PSS
         print("\nRunning  %k \n", data['Method'])
-        rvs = PSS(pdf=data['Probability distribution (pdf)'],
+        rvs = PSS(pdf_type=data['Probability distribution (pdf)'],
                   pdf_params=data['Probability distribution parameters'],
                   pss_design=data['PSS design'], pss_strata=data['PSS strata'])
-
-    ################################################################################################################
-    # Run Markov Chain Monte Carlo sampling
-
-    elif data['Method'] == 'mcmc':
-        from UQpyLibraries.SampleMethods import MCMC
-        print("\nRunning  %k \n", data['Method'])
-        rvs = MCMC(dim=data['Number of random variables'], pdf_target=data['Target distribution'],
-                   mcmc_algorithm=data['MCMC algorithm'], pdf_proposal=data['Proposal distribution'],
-                   pdf_proposal_width=data['Proposal distribution width'],
-                   pdf_target_params=data['Target distribution parameters'], mcmc_seed=data['seed'],
-                   pdf_marg_target_params=data['Marginal Target distribution parameters'],
-                   pdf_marg_target=data['Marginal target distribution'],
-                   mcmc_burnIn=data['Burn-in samples'], nsamples=data['Number of Samples'])
-    ################################################################################################################
-    # Run stratified sampling
-
-    elif data['Method'] == 'pss':
-        from UQpyLibraries.SampleMethods import PSS
-        print("\nRunning  %k \n", data['Method'])
-        rvs = PSS(pdf=data['Probability distribution (pdf)'],
-                  pdf_params=data['Probability distribution parameters'], pss_design=data['STS design'],
-                  pss_strata=data['PSS strata'])
+        return rvs
 
     ################################################################################################################
     # Run STS sampling
 
     elif data['Method'] == 'sts':
-        from UQpyLibraries.SampleMethods import STS
         print("\nRunning  %k \n", data['Method'])
-        rvs = STS(pdf=data['Probability distribution (pdf)'],
+        rvs = STS(pdf_type=data['Probability distribution (pdf)'],
                   pdf_params=data['Probability distribution parameters'], sts_design=data['STS design'])
+        return rvs
 
+    ################################################################################################################
+    # Run Markov Chain Monte Carlo sampling
+
+    elif data['Method'] == 'mcmc':
+        print("\nRunning  %k \n", data['Method'])
+        rvs = MCMC(dimension=len(data['Names of random variables']), pdf_target_type=data['Target distribution'],
+                   algorithm=data['MCMC algorithm'], pdf_proposal_type=data['Proposal distribution'],
+                   pdf_proposal_width=data['Proposal distribution width'],
+                   pdf_target_params=data['Target distribution parameters'], seed=data['seed'],
+                   skip=data['skip'], nsamples=data['Number of Samples'])
+        return rvs
 
     ################################################################################################################
     # Run ANY NEW METHOD HERE
 
-
-
     ################################################################################################################
     # Run ANY NEW METHOD HERE
 
-
-    return rvs.samples
-
-########################################################################################################################
-########################################################################################################################
-########################################################################################################################
 
 ########################################################################################################################
 ########################################################################################################################
 #                                         Monte Carlo simulation
 ########################################################################################################################
 
+
 class MCS:
     """
     A class used to perform brute force Monte Carlo sampling (MCS).
 
     :param nsamples: Number of samples to be generated
-    :param pdf: Type of Distribution
+    :type nsamples: int
+    :param pdf_type: Type of Distributions
+    :type pdf_type: list
     :param pdf_params: Distribution parameters
+    :type pdf_params: list
 
     """
-    def __init__(self, pdf=None,  pdf_params=None,  nsamples=10):
+
+    def __init__(self, pdf_type=None, pdf_params=None, nsamples=None):
 
         self.nsamples = nsamples
-        self.pdf = pdf
+        self.pdf_type = pdf_type
         self.pdf_params = pdf_params
-        self.check_consistency()
-        self.dimension = len(pdf)
-        self.samples = self.run_mcs()
+        self.init_mcs()
+        self.dimension = len(self.pdf_type)
+        self.samplesU01, self.samples = self.run_mcs()
 
     def run_mcs(self):
 
-        return np.random.rand(self.nsamples, self.dimension)
+        samples = np.random.rand(self.nsamples, self.dimension)
+        samples_u_to_x = transform_pdf(samples, self.pdf_type, self.pdf_params)
 
-    def check_consistency(self):
-        if len(self.pdf) != len(self.pdf_params):
+        return samples, samples_u_to_x
+
+    ################################################################################################################
+    # Monte Carlo simulation checks.
+    # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
+    # Optional: number of samples (default 100)
+
+    def init_mcs(self):
+        if self.nsamples is None:
+            self.nsamples = 100
+            warnings.warn("Number of samples not provided. Default number is 100")
+        if self.pdf_type is None:
+            raise NotImplementedError("Probability distribution not provided")
+        else:
+            for i in self.pdf_type:
+                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential']:
+                    raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
+                                              "'Beta', 'Exponential' ")
+        if self.pdf_params is None:
+            raise NotImplementedError("Probability distribution parameters not provided")
+        if len(self.pdf_type) != len(self.pdf_params):
             raise NotImplementedError("Incompatible dimensions")
 
 
@@ -301,60 +300,70 @@ class LHS:
     These points are generated on the U-space(cdf) i.e. [0,1) and should be converted back to X-space(pdf)
     i.e. (-Inf , Inf) for a normal distribution.
 
-    :param ndim: The number of dimensions for the experimental design.
-    :type ndim: int
+    :param pdf_type: Probability distribution of the parameters
+    :type pdf_type: list
 
-    :param nsamples: The number of samples to be generated.
-    :type nsamples: int
+    :param pdf_params: Probability distribution parameters
+    :type pdf_params: list
 
-    :param criterion: The criterion for generating sample points \n
-                    i) random - completely random \n
-                    ii) centered - points only at the centre \n
-                    iii) maximin - maximising the minimum distance between points \n
-                    iv) correlate - minimizing the correlation between the points \n
-    :type criterion: str
+    :param lhs_criterion: The criterion for generating sample points
+                           Options:
+                                    1. random - completely random \n
+                                    2. centered - points only at the centre \n
+                                    3. maximin - maximising the minimum distance between points \n
+                                    4. correlate - minimizing the correlation between the points \n
+    :type lhs_criterion: str
 
-    :param iterations: The number of iteration to run. Only for maximin, correlate and criterion
-    :type iterations: int
+    :param lhs_iter: The number of iteration to run. Only for maximin, correlate and criterion
+    :type lhs_iter: int
 
-    :param dist_metric: The distance metric to use. Supported metrics are
-                    'braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', \n
-                    'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', \n
-                    'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', \n
-                    'yule'.
-    :type dist_metric: str
+    :param lhs_metric: The distance metric to use. Supported metrics are
+                        'braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', \n
+                        'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', \n
+                        'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', \n
+                        'yule'.
+    :type lhs_metric: str
 
     """
 
-    def __init__(self, pdf=None, pdf_params=None, lhs_criterion='random', lhs_metric='euclidean',
-                 lhs_iter=1000, nsamples=10):
+    def __init__(self, pdf_type=None, pdf_params=None, lhs_criterion=None, lhs_metric=None,
+                 lhs_iter=None, nsamples=None):
 
         self.nsamples = nsamples
-        self.pdf = pdf
+        self.pdf_type = pdf_type
         self.pdf_params = pdf_params
-        self.check_consistency()
-        self.dimension = len(pdf)
         self.lhs_criterion = lhs_criterion
         self.lhs_metric = lhs_metric
         self.lhs_iter = lhs_iter
+        self.init_lhs()
+        self.samplesU01, self.samples = self.run_lhs()
 
-        print(lhs_iter)
+    def run_lhs(self):
+
         print('Running LHS for ' + str(self.lhs_iter) + ' iterations')
 
         cut = np.linspace(0, 1, self.nsamples + 1)
-        self.a = cut[:self.nsamples]
-        self.b = cut[1:self.nsamples + 1]
+        a = cut[:self.nsamples]
+        b = cut[1:self.nsamples + 1]
 
         if self.lhs_criterion == 'random':
-            self.samples = self._random()
+            samples = self._random(a, b)
+            samples_u_to_x = transform_pdf(samples, self.pdf_type, self.pdf_params)
+            return samples, samples_u_to_x
         elif self.lhs_criterion == 'centered':
-            self.samples = self._centered()
+            samples = self._centered(a, b)
+            samples_u_to_x = transform_pdf(samples, self.pdf_type, self.pdf_params)
+            return samples, samples_u_to_x
         elif self.lhs_criterion == 'maximin':
-            self.samples = self._maximin()
+            samples = self._maximin(a, b)
+            samples_u_to_x = transform_pdf(samples, self.pdf_type, self.pdf_params)
+            return samples, samples_u_to_x
         elif self.lhs_criterion == 'correlate':
-            self.samples = self._correlate()
+            samples = self._correlate(a, b)
+            samples_u_to_x = transform_pdf(samples, self.pdf_type, self.pdf_params)
+            return samples, samples_u_to_x
 
-    def _random(self):
+    def _random(self, a, b):
         """
         :return: The samples points for the random LHS design
 
@@ -363,7 +372,7 @@ class LHS:
         samples = np.zeros_like(u)
 
         for i in range(self.dimension):
-            samples[:, i] = u[:, i] * (self.b - self.a) + self.a
+            samples[:, i] = u[:, i] * (b - a) + a
 
         for j in range(self.dimension):
             order = np.random.permutation(self.nsamples)
@@ -371,49 +380,48 @@ class LHS:
 
         return samples
 
-    def _centered(self):
+    def _centered(self, a, b):
         """
 
         :return: The samples points for the centered LHS design
 
         """
         samples = np.zeros([self.nsamples, self.dimension])
-        centers = (self.a + self.b) / 2
+        centers = (a + b) / 2
 
         for i in range(self.dimension):
             samples[:, i] = np.random.permutation(centers)
 
         return samples
 
-    def _maximin(self):
+    def _maximin(self, a, b):
         """
-
         :return: The samples points for the Minimax LHS design
 
         """
         maximin_dist = 0
-        samples = self.random()
+        samples = self._random(a, b)
         for _ in range(self.lhs_iter):
-            samples_try = self.random()
+            samples_try = self._random(a, b)
             d = pdist(samples_try, metric=self.lhs_metric)
             if maximin_dist < np.min(d):
                 maximin_dist = np.min(d)
-                points = copy.deepcopy(samples_try)
+                samples = copy.deepcopy(samples_try)
 
         print('Achieved miximin distance of ', maximin_dist)
 
         return samples
 
-    def _correlate(self):
+    def _correlate(self, a, b):
         """
 
         :return: The samples points for the minimum correlated LHS design
 
         """
         min_corr = np.inf
-        samples = self.random()
+        samples = self._random(a, b)
         for _ in range(self.lhs_iter):
-            samples_try = self.random()
+            samples_try = self._random(a, b)
             R = np.corrcoef(np.transpose(samples_try))
             np.fill_diagonal(R, 1)
             R1 = R[R != 1]
@@ -423,9 +431,54 @@ class LHS:
         print('Achieved minimum correlation of ', min_corr)
         return samples
 
-    def check_consistency(self):
-        if len(self.pdf) != len(self.pdf_params):
+    ################################################################################################################
+    # Latin hypercube checks.
+    # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
+    # Optional: number of samples (default 100), criterion, metric, iterations
+
+    def init_lhs(self):
+
+        if self.nsamples is None:
+            self.nsamples = 100
+            warnings.warn("Number of samples not provided. Default number is 100")
+
+        if self.pdf_type is None:
+            raise NotImplementedError("Probability distribution not provided")
+        else:
+            for i in self.pdf_type:
+                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential']:
+                    raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
+                                              "'Beta', 'Exponential' ")
+        if self.pdf_params is None:
+            raise NotImplementedError("Probability distribution parameters not provided")
+        if len(self.pdf_type) != len(self.pdf_params):
             raise NotImplementedError("Incompatible dimensions")
+        else:
+            self.dimension = len(self.pdf_type)
+
+        if self.lhs_criterion is None:
+            self.lhs_criterion = 'random'
+            warnings.warn("LHS criterion not defined. The default is random")
+        else:
+            if self.lhs_criterion not in ['random', 'centered', 'maximin', 'correlate']:
+                raise NotImplementedError("Supported lhs criteria: 'random', 'centered', 'maximin', 'correlate'")
+
+        if self.lhs_metric is None:
+            self.lhs_metric = 'euclidean'
+            warnings.warn("Distance metric for the LHS not defined. The default is Euclidean")
+        else:
+            if self.lhs_metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
+                                       'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis',
+                                       'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean',
+                                       'sokalmichener', 'sokalsneath', 'sqeuclidean']:
+                raise NotImplementedError("Supported lhs criteria: 'braycurtis', 'canberra', 'chebyshev', 'cityblock',"
+                                          " 'correlation', 'cosine','dice', 'euclidean', 'hamming', 'jaccard', "
+                                          "'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto',"
+                                          "'russellrao', 'seuclidean','sokalmichener', 'sokalsneath', 'sqeuclidean'")
+
+        if self.lhs_iter is None:
+            self.lhs_iter = 1000
+            warnings.warn("Iterations for the LHS not defined. The default number is 1000")
 
 
 ########################################################################################################################
@@ -442,13 +495,13 @@ class PSS:
     :param pss_design: Vector defining the subdomains to be used.
                        Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]. \n
                        Note: The sum of the values in the pss_design vector equals the dimension of the problem.
-    :param pss_stratum: Vector defining how each dimension should be stratified.
+    :param pss_strata: Vector defining how each dimension should be stratified.
                         Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using
                          pss_pss_stratum = [25,25,625].\n
                         Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
     :return: pss_samples: Generated samples Array (nSamples x nRVs)
-    :type pss_design: int
-    :type pss_stratum: int
+    :type pss_design: list
+    :type pss_strata: list
 
     Created by: Jiaxin Zhang
     Last modified: 24/01/2018 by D.G. Giovanis
@@ -460,54 +513,60 @@ class PSS:
     # TODO: Add the sample check and pss_design check in the beginning
     # TODO: Create a list that contains all element info - parent structure
 
-    def __init__(self, pdf=None, pdf_params=None, pss_design=None, pss_strata=None):
+    def __init__(self, pdf_type=None, pdf_params=None, pss_design=None, pss_strata=None):
 
-        """
-        This class generates a partially stratified sample set on U(0,1) as described in:
-        Shields, M.D. and Zhang, J. "The generalization of Latin hypercube sampling" Reliability Engineering and
-        System Safety. 148: 96-108
-
-        :param pss_design: Vector defining the subdomains to be used.
-                           Example: 5D problem with 2x2D + 1x1D subdomains using pss_design = [2,2,1]. \n
-                           Note: The sum of the values in the pss_design vector equals the dimension of the problem.
-        :param pss_stratum: Vector defining how each dimension should be stratified.
-                            Example: 5D problem with 2x2D + 1x1D subdomains with 625 samples using
-                             pss_pss_stratum = [25,25,625].\n
-                            Note: pss_pss_stratum(i)^pss_design(i) = number of samples (for all i)
-        :return: pss_samples: Generated samples Array (nSamples x nRVs)
-        :type pss_design: int
-        :type pss_stratum: int
-
-        Created by: Jiaxin Zhang
-        Last modified: 24/01/2018 by D.G. Giovanis
-
-        """
-
-        self.pdf = pdf
+        self.pdf_type = pdf_type
         self.pdf_params = pdf_params
         self.pss_design = pss_design
         self.pss_strata = pss_strata
+        self.dimension = np.sum(self.pss_design)
+        self.init_pss()
+        self.nsamples = self.pss_strata[0] ** self.pss_design[0]
+        self.samplesU01, self.samples = self.run_pss()
 
-        n_dim = np.sum(self.pss_design)
-        n_samples = self.pss_strata[0] ** self.pss_design[0]
-        self.samples = np.zeros((n_samples, n_dim))
-
+    def run_pss(self):
+        samples = np.zeros((self.nsamples, self.dimension))
+        samples_u_to_x = np.zeros((self.nsamples, self.dimension))
         col = 0
         for i in range(len(self.pss_design)):
             n_stratum = self.pss_strata[i] * np.ones(self.pss_design[i], dtype=np.int)
-
-            sts = STS(self.pdf, self.pdf_params, n_stratum)
+            sts = STS(pdf_type=self.pdf_type, pdf_params=self.pdf_params, sts_design=n_stratum, pss_=True)
             index = list(range(col, col + self.pss_design[i]))
-            self.samples[:, index] = sts.samples
-            arr = np.arange(n_samples).reshape((n_samples, 1))
-            self.samples[:, index] = self.samples[np.random.permutation(arr), index]
+            samples[:, index] = sts.samplesU01
+            samples_u_to_x[:, index] = sts.samples
+            arr = np.arange(self.nsamples).reshape((self.nsamples, 1))
+            samples[:, index] = samples[np.random.permutation(arr), index]
+            samples_u_to_x[:, index] = samples_u_to_x[np.random.permutation(arr), index]
             col = col + self.pss_design[i]
 
-    def check_consistency(self):
-        if len(self.pss_design) != len(self.pss_strata):
-            raise ValueError('Input vectors "pss_design" and "pss_strata" must be the same length')
+        return samples, samples_u_to_x
 
-        # sample check
+    ################################################################################################################
+    # Partially Stratified sampling (PSS) checks.
+    # Necessary parameters:  1. pdf, 2. pdf parameters 3. pss design 4. pss strata
+    # Optional:
+
+    def init_pss(self):
+
+        if self.pdf_type is None:
+            raise NotImplementedError("Probability distribution not provided")
+        else:
+            for i in self.pdf_type:
+                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential']:
+                    raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
+                                              "'Beta', 'Exponential' ")
+        if self.pdf_params is None:
+            raise NotImplementedError("Probability distribution parameters not provided")
+
+        if self.pss_design is None or self.pss_strata is None:
+            raise NotImplementedError("PSS design or strata not provided")
+        else:
+            if len(self.pss_design) != len(self.pss_strata):
+                raise ValueError('Input vectors "pss_design" and "pss_strata" must be the same length')
+
+        if self.dimension != len(self.pdf_type):
+            raise ValueError('Incompatible number of random variables and distributions')
+
         sample_check = np.zeros((len(self.pss_strata), len(self.pss_design)))
         for i in range(len(self.pss_strata)):
             for j in range(len(self.pss_design)):
@@ -525,42 +584,64 @@ class PSS:
 class STS:
     # TODO: MDS - Add documentation to this subclass
 
-    def __init__(self, pdf=None, pdf_params=None, sts_design=None):
+    def __init__(self, pdf_type=None, pdf_params=None, sts_design=None, pss_=None):
         """
 
-        :param pdf:
+        :param pdf_type:
         :param pdf_params:
         :param sts_design:
-
+        :param pss_: Flag indicating whether STS is used in the framework of PSS
         Last modified: 24/01/2018 by D.G. Giovanis
         """
 
-        self.pdf = pdf
+        self.pdf_type = pdf_type
         self.pdf_params = pdf_params
         self.sts_design = sts_design
+        if pss_ is None:
+            self.init_sts()
         strata = Strata(nstrata=self.sts_design)
         self.origins = strata.origins
         self.widths = strata.widths
         self.weights = strata.weights
+        self.samplesU01, self.samples = self.run_sts()
 
-        # x = strata.origins.shape[1]
-        self.samples = np.empty([self.origins.shape[0], self.origins.shape[1]], dtype=np.float32)
+    def run_sts(self):
+        samples = np.empty([self.origins.shape[0], self.origins.shape[1]], dtype=np.float32)
         for i in range(0, self.origins.shape[0]):
             for j in range(0, self.origins.shape[1]):
-                self.samples[i, j] = np.random.uniform(self.origins[i, j],
-                                                       self.origins[i, j] + self.widths[i, j])
+                samples[i, j] = np.random.uniform(self.origins[i, j], self.origins[i, j] + self.widths[i, j])
+        samples_u_to_x = transform_pdf(samples, self.pdf_type, self.pdf_params)
+        return samples, samples_u_to_x
 
+    def init_sts(self):
 
-        # self.elements = [self.origins, self.widths, self.weights, self.samples]
+        if self.pdf_type is None:
+            raise NotImplementedError("Probability distribution not provided")
+        else:
+            for i in self.pdf_type:
+                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential']:
+                    raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
+                                              "'Beta', 'Exponential' ")
+        if self.pdf_params is None:
+            raise NotImplementedError("Probability distribution parameters not provided")
+
+        if self.sts_design is None:
+            raise NotImplementedError("PSS design or strata not provided")
+
+        if len(self.sts_design) != len(self.pdf_type):
+            raise ValueError('Incompatible number of random variables and distributions')
 
         # TODO: Create a list that contains all element info - parent structure
         # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
         # hstack
 
+
 ########################################################################################################################
 ########################################################################################################################
 #                                         Class Strata
 ########################################################################################################################
+
+
 class Strata:
     """
     Define a rectilinear stratification of the n-dimensional unit hypercube with N strata.
@@ -676,7 +757,6 @@ class Strata:
             self.widths = np.divide(np.ones(self.origins.shape), self.nstrata)
             self.weights = np.prod(self.widths, axis=1)
 
-
     def fullfact(self, levels):
 
         # TODO: MDS - Acknowledge the source here.
@@ -742,207 +822,188 @@ class Strata:
 
         return H
 
+
 ########################################################################################################################
 ########################################################################################################################
 #                                         Markov Chain Monte Carlo  (MCMC)
 ########################################################################################################################
+
 
 class MCMC:
 
     """This class generates samples from arbitrary algorithm using Metropolis-Hastings(MH) or
     Modified Metropolis-Hastings Algorithm.
 
-    :param nsamples: A scalar value defining the number of random samples that needs to be
-                     generate using MCMC. Default value of nsample is 1000.
-    :type nsamples: int
 
-    :param dim: A scalar value defining the dimension of target density function.
+    :param dim:  A scalar value defining the dimension of target density function.
     :type dim: int
 
-    :param x0: A scalar value defining the initial mean value of proposed density.
-               Default value: x0 is zero row vector of size dim.
-               Example: x0 = 0, Starts sampling using proposed density with mean equal to 0.
-    :type x0: array
+    :param pdf_proposal_type: Type of proposed density function. Example:
+                     'Normal' : Normal distribution will be used to generate new estimates
+                     'Uniform' : Uniform distribution will be used to generate new estimates
+    :type pdf_proposal_type: str
 
-    :param MCMC_algorithm: A string defining the algorithm used to generate random samples.
-                           Default value: method is 'MH'.
-                           Example: MCMC_algorithm = MH : Use Metropolis-Hastings Algorithm
-                           MCMC_algorithm = MMH : Use Modified Metropolis-Hastings Algorithm
-                           MCMC_algorithm = GIBBS : Use Gibbs Sampling Algorithm
-    :type MCMC_algorithm: str
+    :param pdf_proposal_width: Width of the proposal distribution
+    :type pdf_proposal_width: float
 
-    :param proposal: A string defining the type of proposed density function. Example:
-                     proposal = Normal : Normal distribution will be used to generate new estimates
-                     proposal = Uniform : Uniform distribution will be used to generate new estimates
-    :type proposal: str
+    :param pdf_target_type: Type of target density function. Example:
+                     'Normal' : Normal density function used to generate samples using the MH Algorithm
+                     'Multivariate Normal' : Multivariate normal density function used to generate samples using MH
+                     'Marginal': Marginal target density used to generate samples using MMH
+    :type pdf_proposal_type: str
 
-    :param params: An array defining the Covariance matrix of the proposed density function.
-                   Multivariate Uniform distribution : An array of size 'dim'. Multivariate Normal distribution:
-                   Either an array of size 'dim' or array of size 'dim x dim'.
-                   Default: params is unit row vector
-    :type proposal: matrix
 
-    :param target: An function defining the target distribution of generated samples using MCMC.
+    :param pdf_target_params: Properties of the target density function (mean, variance)
+    :type pdf_target_params: list
 
-    :param njump: A scalar value defining the number of samples rejected to reduce the correlation
-                  between generated samples.
-    :type njump: int
+    :param algorithm:  Algorithm used to generate random samples.
+                       Default value: method is 'MH'.
+                       Example: MCMC_algorithm = MH : Use Metropolis-Hastings Algorithm
+                       MCMC_algorithm = MMH : Use Modified Metropolis-Hastings Algorithm
+                       MCMC_algorithm = GIBBS : Use Gibbs Sampling Algorithm
+    :type algorithm: str
 
-    :param marginal_parameters: A array containing parameters of target marginal distributions.
-    :type marginals_parameters: list
+    :param skip: Number of samples rejected to reduce the correlation
+                     between generated samples.
+    :type: skip: int
+
+    :param nsamples: Number of samples to generate
+    :type nsamples: int
+
+    :param seed: Seed of the Markov chain
+    :type seed: list
 
     """
 
-    def __init__(self, dim=None, pdf_proposal=None, pdf_proposal_width=None, pdf_target=None, pdf_target_params=None,
-                 mcmc_algorithm='MH', pdf_marg_target=None, pdf_marg_target_params=None, mcmc_burnIn=1, nsamples=10,
-                 mcmc_seed=None):
-
-        """This class generates samples from arbitrary algorithm using Metropolis-Hastings(MH) or
-        Modified Metropolis-Hastings Algorithm.
-
-        :param nsamples: A scalar value defining the number of random samples that needs to be
-                         generate using MCMC. Default value of nsample is 1000.
-        :type nsamples: int
-
-        :param dim: A scalar value defining the dimension of target density function.
-        :type dim: int
-
-        :param x0: A scalar value defining the initial mean value of proposed density.
-                   Default value: x0 is zero row vector of size dim.
-                   Example: x0 = 0, Starts sampling using proposed density with mean equal to 0.
-        :type x0: array
-
-        :param MCMC_algorithm: A string defining the algorithm used to generate random samples.
-                               Default value: method is 'MH'.
-                               Example: MCMC_algorithm = MH : Use Metropolis-Hastings Algorithm
-                               MCMC_algorithm = MMH : Use Modified Metropolis-Hastings Algorithm
-                               MCMC_algorithm = GIBBS : Use Gibbs Sampling Algorithm
-        :type MCMC_algorithm: str
-
-        :param proposal: A string defining the type of proposed density function. Example:
-                         proposal = Normal : Normal distribution will be used to generate new estimates
-                         proposal = Uniform : Uniform distribution will be used to generate new estimates
-        :type proposal: str
-
-        :param params: An array defining the Covariance matrix of the proposed density function.
-                       Multivariate Uniform distribution : An array of size 'dim'. Multivariate Normal distribution:
-                       Either an array of size 'dim' or array of size 'dim x dim'.
-                       Default: params is unit row vector
-        :type proposal: matrix
-
-        :param target: An function defining the target distribution of generated samples using MCMC.
-
-        :param njump: A scalar value defining the number of samples rejected to reduce the correlation
-                      between generated samples.
-        :type njump: int
-
-        :param marginal_parameters: A array containing parameters of target marginal distributions.
-        :type marginals_parameters: list
-
-        Created by: Mohit S. Chauhan
-        Last modified: 12/03/2017
-
-        """
+    def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_width=None, pdf_target_type=None,
+                 pdf_target_params=None, algorithm=None,   skip=None, nsamples=None, seed=None):
 
         # TODO: Mohit - Add error checks for target and marginal PDFs
 
-        self.pdf_proposal = pdf_proposal
+        self.pdf_proposal_type = pdf_proposal_type
         self.pdf_proposal_width = pdf_proposal_width
-        self.pdf_target = pdf_target
-        self.pdf_target_params = pdf_target_params    # mean and standard deviation
-        self.pdf_marg_target_params = pdf_marg_target_params
-        self.pdf_marg_target = pdf_marg_target
-        self.mcmc_algorithm = mcmc_algorithm
-        self.mcmc_burnIn = mcmc_burnIn
+        self.pdf_target_type = pdf_target_type
+        self.pdf_target_params = pdf_target_params
+        self.algorithm = algorithm
+        self.skip = skip
         self.nsamples = nsamples
-        self.ndim = dim
-        self.mcmc_seed = mcmc_seed
-        if mcmc_seed is None:
-            self.mcmc_seed = np.zeros(self.ndim)
+        self.dimension = dimension
+        self.seed = seed
+        self.init_mcmc()
+        self.samples = self.run_mcmc()
 
-        self.rejects = 0
+    def run_mcmc(self):
+        rejects = 0
         # Changing the array of param into a diagonal matrix
-        if self.pdf_proposal == "Normal":
-            if self.ndim != 1:
-                self.pdf_proposal_width = np.diag(np.array(self.pdf_proposal_width))
 
         # TODO: MDS - If x0 is not provided, start at the mode of the target distribution (if available)
         # if x0 is None:
 
         # Defining an array to store the generated samples
-        self.samples = np.zeros([self.nsamples * self.mcmc_burnIn, self.ndim])
-        self.samples[0, :] = self.mcmc_seed
+        samples = np.zeros([self.nsamples * self.skip, self.dimension])
+        samples[0, :] = self.seed
 
+        ################################################################################################################
         # Classical Metropolis-Hastings Algorithm with symmetric proposal density
-        if self.mcmc_algorithm == 'MH':
-            self.pdf_target = pdf(pdf_target)
-            for i in range(self.nsamples * self.mcmc_burnIn - 1):
-                # Generating new sample using proposed density
-                if self.pdf_proposal == 'Normal':
-                    if self.ndim == 1:
-                        x1 = np.random.normal(self.samples[i, :], np.array(self.pdf_proposal_width))
+        if self.algorithm == 'MH':
+
+            pdf_ = pdf(self.pdf_target_type)
+
+            for i in range(self.nsamples * self.skip - 1):
+                if self.pdf_proposal_type == 'Normal':
+                    if self.dimension == 1:
+                        proposal = np.random.normal(samples[i, :], np.array(self.pdf_proposal_width))
                     else:
-                        x1 = np.random.multivariate_normal(self.samples[i, :], np.array(self.pdf_proposal_width))
+                        pdf_proposal_width = np.diag(np.array(self.pdf_proposal_width))
+                        proposal = np.random.multivariate_normal(samples[i, :], np.array(pdf_proposal_width))
 
-                elif self.pdf_proposal == 'Uniform':
-                    x1 = np.random.uniform(low=self.samples[i, :] - np.array(self.pdf_proposal_width) / 2,
-                                           high=self.samples[i, :] + np.array(self.pdf_proposal_width)/ 2,
-                                           size=self.ndim)
+                elif self.pdf_proposal_type == 'Uniform':
 
-                # Ratio of probability of new sample to previous sample
-                a = self.pdf_target(x1, self.ndim) / self.pdf_target(self.samples[i, :], self.ndim)
+                    proposal = np.random.uniform(low=samples[i, :] - np.array(self.pdf_proposal_width) / 2,
+                                                 high=samples[i, :] + np.array(self.pdf_proposal_width) / 2,
+                                                 size=self.dimension)
 
-                # Accept the generated sample, if probability of new sample is higher than previous sample
-                if a >= 1:
-                    self.samples[i + 1] = x1
+                p_proposal = pdf_(proposal, self.dimension)
+                p_current = pdf_(samples[i, :], self.dimension)
+                p_accept = p_proposal / p_current
 
-                # Accept the generated sample with probability a, if a < 1
-                elif np.random.random() < a:
-                    self.samples[i + 1] = x1
+                accept = np.random.random() < p_accept
 
-                # Reject the generated sample and accept the previous sample
+                if accept:
+                    samples[i + 1, :] = proposal
                 else:
-                    self.samples[i + 1] = self.samples[i]
-                    self.rejects += 1
-            # Reject the samples using mcmc_burnIn to reduce the correlation
-            xi = self.samples[0:self.nsamples * self.mcmc_burnIn:self.mcmc_burnIn]
-            self.samples = xi
+                    samples[i + 1, :] = samples[i, :]
+                    rejects += 1
 
+        ################################################################################################################
         # Modified Metropolis-Hastings Algorithm with symmetric proposal density
-        elif self.mcmc_algorithm == 'MMH':
-            for i in range(self.nsamples * self.mcmc_burnIn - 1):
+        elif self.algorithm == 'MMH':
 
-                # Samples generated from marginal PDFs will be stored in x1
-                x1 = self.samples[i, :]
+            for i in range(self.nsamples * self.skip - 1):
+                for j in range(self.dimension):
 
-                for j in range(self.ndim):
-                    self.pdf_marg_target = pdf(pdf_marg_target[j])
-                    # Generating new sample using proposed density
-                    if self.pdf_proposal[j] == 'Normal':
-                        xm = np.random.normal(self.samples[i, j], self.pdf_proposal_width[j])
+                    pdf_ = pdf(self.pdf_target_type)
 
-                    elif self.pdf_proposal[j] == 'Uniform':
-                        xm = np.random.uniform(low=self.samples[i, j] - self.pdf_proposal_width[j] / 2,
-                                               high=self.samples[i, j] + self.pdf_proposal_width[j] / 2, size=1)
+                    if self.pdf_proposal_type == 'Normal':
+                        proposal = np.random.normal(samples[i, j], self.pdf_proposal_width)
 
-                    b = self.pdf_marg_target(xm, self.pdf_marg_target_params[j]) / self.pdf_marg_target(x1[j],
-                                                                                   self.pdf_marg_target_params[j])
-                    if b >= 1:
-                        x1[j] = xm
+                    elif self.pdf_proposal_type == 'Uniform':
 
-                    elif np.random.random() < b:
-                        x1[j] = xm
+                        proposal = np.random.uniform(low=samples[i, j] - self.pdf_proposal_width / 2,
+                                                     high=samples[i, j] + self.pdf_proposal_width / 2, size=1)
 
-                self.samples[i + 1, :] = x1
+                    p_proposal = pdf_(proposal, self.pdf_target_params)
+                    p_current = pdf_(samples[i, j], self.pdf_target_params)
+                    p_accept = p_proposal / p_current
 
-            # Reject the samples using njump to reduce the correlation
-            xi = self.samples[0:self.nsamples * self.mcmc_burnIn:self.mcmc_burnIn]
-            self.samples = xi
+                    accept = np.random.random() < p_accept
+
+                    if accept:
+                        samples[i + 1, j] = proposal
+                    else:
+                        samples[i + 1, j] = samples[i, j]
+
+        return samples[0:self.nsamples * self.skip:self.skip]
 
             # TODO: MDS - Add affine invariant ensemble MCMC
-
             # TODO: MDS - Add Gibbs Sampler
 
+    def init_mcmc(self):
+
+        if self.nsamples is None:
+            raise NotImplementedError('Number of samples not defined.')
+        if self.seed is None:
+            self.seed = np.zeros(self.dimension)
+        if self.skip is None:
+            self.skip = 1
+        if self.pdf_proposal_type is None:
+            self.pdf_target_type = 'Uniform'
+        if self.pdf_proposal_type not in ['Uniform', 'Normal']:
+            raise ValueError('Invalid Proposal distribution type. Available distributions: Uniform, Normal')
+        if self.pdf_target_type is None:
+            self.pdf_target_type = 'marginal_pdf'
+        if self.pdf_target_type not in ['multivariate_pdf', 'marginal_pdf', 'normal_pdf']:
+            raise ValueError('InvalidTarget distribution type. Available distributions: multivariate_pdf, marginal_pdf,'
+                             'normal_pdf')
+        if self.pdf_target_params is None:
+            warnings.warn('Target parameters not defined. Default values are  [0, 1]')
+            self.pdf_target_params = [0, 1]
+
+        if self.pdf_proposal_width is None:
+            warnings.warn('Proposal width not defined. Default value is 2')
+            self.pdf_proposal_width = 2
+
+        if self.algorithm is None:
+            if self.pdf_target_type is not None:
+                if self.pdf_target_type in ['marginal_pdf']:
+                    warnings.warn('MCMC algorithm not defined. The MMH will be used')
+                    self.algorithm = 'MMH'
+                elif self.pdf_target_type in ['multivariate_pdf', 'normal_pdf']:
+                    warnings.warn('MCMC algorithm not defined. The MH will be used')
+                    self.algorithm = 'MH'
+        else:
+            if self.algorithm not in ['MH', 'MMH']:
+                raise NotImplementedError('Invalid MCMC algorithm. Select from: MH, MMH')
 
 ########################################################################################################################
 ########################################################################################################################

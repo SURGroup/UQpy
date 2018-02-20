@@ -1,23 +1,29 @@
 #Method
-mcs
-
-#Probability distribution (pdf)
-Uniform
-Uniform
-Normal
-
-#Probability distribution parameters
-500 700
-0 60
-0 1
-
-#Number of Samples
-3
+mcmc
 
 #Names of random variables
 mu
 sigma
-Shields
+l
+
+
+#Proposal distribution
+Uniform
+
+#Number of Samples
+20
+
+#Proposal distribution width
+2
+
+#MCMC algorithm
+MMH
+
+#Target distribution
+marginal_pdf
+
+#Target distribution parameters
+0 1
 
 
 #end

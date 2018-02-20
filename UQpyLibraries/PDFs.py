@@ -8,7 +8,7 @@ import numpy as np
 ########################################################################################################################
 
 
-def normal_pdf(x):
+def normal_pdf(x, dim):
     """ Normal density function used to generate samples using the Metropolis-Hastings Algorithm
      :math: `f(x) = \\frac{1}{(2*\\pi*\\sigma)^(1/2)}*exp(-\\frac{1}{2}*(\\frac{x-\\mu}{\\sigma})^2)`
 

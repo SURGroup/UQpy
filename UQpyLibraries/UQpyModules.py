@@ -69,30 +69,23 @@ class RunCommandLine:
 
         ################################################################################################################
         # Run the requested UQpy method and save the samples into file 'UQpyOut.txt'
-        samples_01 = run_sm(data)
-
-        # Transform samples from U(0, 1) to the original parameter space
-        if data['Method'] != 'mcmc':
-            samples = transform_pdf(samples_01, data['Probability distribution (pdf)'],
-                                    data['Probability distribution parameters'])
-        else:
-            samples = samples_01
+        rvs = run_sm(data)
 
         # Save the samples in a .txt file
-        save_txt(data['Names of random variables'], samples)
+        save_txt(data['Names of random variables'], rvs.samples)
 
         # Save the samples in a .csv file
-        save_csv(data['Names of random variables'], samples)
+        save_csv(data['Names of random variables'], rvs.samples)
 
         ################################################################################################################
         # Split the samples into chunks in order to sent to each processor in case of parallel computing
 
         if self.args.ParallelProcessing is True:
-            if samples.shape[0] <= self.args.CPUs:
-                self.args.CPUs = samples.shape[0]
+            if rvs.samples.shape[0] <= self.args.CPUs:
+                self.args.CPUs = rvs.samples.shape[0]
                 self.args.CPUs_flag = True
-                print('The number of CPUs used is\n %', samples.shape[0])
-            chunk_samples_cores(data, samples, self.args)
+                print('The number of CPUs used is\n %', rvs.samples.shape[0])
+            chunk_samples_cores(data, rvs.samples, self.args)
 
         ################################################################################################################
         # If a model is provided then run it
@@ -205,7 +198,6 @@ class RunModel:
         count = 0
         for i in index:
             lock = Lock()
-            print(index)
             lock.acquire()  # will block if lock is already held
 
             # Write each value of UQpyOut.txt into a *.txt file
@@ -264,7 +256,7 @@ def chunk_samples_cores(data, samples, args):
     header = ', '.join(data['Names of random variables'])
     # In case of parallel computing divide the samples into chunks in order to sent to each processor
     chunks = args.CPUs
-    if args.CPUs_flag is True:
+    if args.Adaptive is True:
         for i in range(args.CPUs):
             np.savetxt('UQpy_Batch_{0}.txt'.format(i+1), samples[range(i-1, i), :], header=str(header), fmt='%0.5f')
             np.savetxt('UQpy_Batch_index_{0}.txt'.format(i+1), np.array(i).reshape(1,))
