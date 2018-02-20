@@ -739,6 +739,7 @@ class Strata:
 
 class MCMC:
 
+
     """This class generates samples from arbitrary algorithm using Metropolis-Hastings(MH) or
     Modified Metropolis-Hastings Algorithm.
 
@@ -783,9 +784,10 @@ class MCMC:
 
     """
 
-    def __init__(self, dim=None, pdf_proposal=None, pdf_proposal_width=None, pdf_target=None, pdf_target_params=None,
-                 mcmc_algorithm='MH', pdf_marg_target=None, pdf_marg_target_params=None, mcmc_burnIn=1, nsamples=10,
+    def __init__(self, dim=None, pdf_proposal=None, pdf_proposal_params=None, pdf_target=None, pdf_target_params=None,
+                 mcmc_algorithm='MH', pdf_marg_target=None, pdf_marg_target_params=None, mcmc_burnIn=0, nsamples=10,
                  mcmc_seed=None):
+
 
         """This class generates samples from arbitrary algorithm using Metropolis-Hastings(MH) or
         Modified Metropolis-Hastings Algorithm.
@@ -837,7 +839,7 @@ class MCMC:
         # TODO: Mohit - Add error checks for target and marginal PDFs
 
         self.pdf_proposal = pdf_proposal
-        self.pdf_proposal_width = pdf_proposal_width
+        self.pdf_proposal_params = pdf_proposal_params
         self.pdf_target = pdf_target
         self.pdf_target_params = pdf_target_params    # mean and standard deviation
         self.pdf_marg_target_params = pdf_marg_target_params
@@ -852,35 +854,39 @@ class MCMC:
 
         self.rejects = 0
         # Changing the array of param into a diagonal matrix
-        if self.pdf_proposal == "Normal":
-            if self.ndim != 1:
-                self.pdf_proposal_width = np.diag(np.array(self.pdf_proposal_width))
+        # if self.pdf_proposal == "Normal":
+        #     if self.ndim != 1:
+        #         self.pdf_proposal_params = np.diag(np.array(self.pdf_proposal_params))
 
         # TODO: MDS - If x0 is not provided, start at the mode of the target distribution (if available)
+        # TODO: MDS - Add burn in and jumping length
         # if x0 is None:
 
         # Defining an array to store the generated samples
-        self.samples = np.zeros([self.nsamples * self.mcmc_burnIn, self.ndim])
+        self.samples = np.zeros([self.nsamples, self.ndim])
         self.samples[0, :] = self.mcmc_seed
 
         # Classical Metropolis-Hastings Algorithm with symmetric proposal density
         if self.mcmc_algorithm == 'MH':
-            self.pdf_target = pdf(pdf_target)
-            for i in range(self.nsamples * self.mcmc_burnIn - 1):
-                # Generating new sample using proposed density
+            for i in range(self.nsamples-1):
+
+                # Generate new candidate sample from proposed density
                 if self.pdf_proposal == 'Normal':
                     if self.ndim == 1:
-                        x1 = np.random.normal(self.samples[i, :], np.array(self.pdf_proposal_width))
+                        x1 = np.random.normal(self.samples[i, :], np.diag(np.array(self.pdf_proposal_params)))
                     else:
-                        x1 = np.random.multivariate_normal(self.samples[i, :], np.array(self.pdf_proposal_width))
+                        x1 = np.random.multivariate_normal(self.samples[i, :],
+                                                           np.diag(np.array(self.pdf_proposal_params)))
 
                 elif self.pdf_proposal == 'Uniform':
-                    x1 = np.random.uniform(low=self.samples[i, :] - np.array(self.pdf_proposal_width) / 2,
-                                           high=self.samples[i, :] + np.array(self.pdf_proposal_width)/ 2,
+                    x1 = np.random.uniform(low=self.samples[i, :] - np.array(self.pdf_proposal_params) / 2,
+                                           high=self.samples[i, :] + np.array(self.pdf_proposal_params)/ 2,
                                            size=self.ndim)
 
-                # Ratio of probability of new sample to previous sample
-                a = self.pdf_target(x1, self.ndim) / self.pdf_target(self.samples[i, :], self.ndim)
+
+                # Ratio of probability of new sample to probability of previous sample
+                a = self.pdf_target(x1,self.pdf_target_params) / \
+                    self.pdf_target(self.samples[i, :], self.pdf_target_params)
 
                 # Accept the generated sample, if probability of new sample is higher than previous sample
                 if a >= 1:
@@ -894,6 +900,8 @@ class MCMC:
                 else:
                     self.samples[i + 1] = self.samples[i]
                     self.rejects += 1
+
+
             # Reject the samples using mcmc_burnIn to reduce the correlation
             xi = self.samples[0:self.nsamples * self.mcmc_burnIn:self.mcmc_burnIn]
             self.samples = xi
