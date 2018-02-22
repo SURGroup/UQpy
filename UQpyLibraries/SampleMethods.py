@@ -77,8 +77,7 @@ def init_sm(data):
         else:
             if data['Target distribution'] not in ['multivariate_pdf', 'marginal_pdf', 'normal_pdf']:
                 raise ValueError('InvalidTarget distribution type. Available distributions: multivariate_pdf, '
-                                 'marginal_pdf,'
-                                 'normal_pdf')
+                                 'marginal_pdf')
 
         if 'Target distribution parameters' not in data:
             data['Target distribution parameters'] = None
@@ -116,47 +115,6 @@ def init_sm(data):
             raise NotImplementedError("Probability distribution parameters not provided")
         if 'STS design' not in data:
             raise NotImplementedError("STS design not provided")
-
-    ####################################################################################################################
-    # Subset Simulation simulation block.
-    # Necessary MCMC parameters:  1. Proposal pdf, 2. Probability pdf width, 3. Target pdf, 4. Target pdf parameters
-    #                        5. algorithm
-    # Optional: 1. Seed, 2. Burn-in
-
-    if data['Method'] == 'SuS':
-        if 'Number of samples' not in data:
-            data['Number of samples'] = None
-        if 'Number of Samples' not in data:
-            data['Number of Samples'] = 100
-            warnings.warn("Number of samples not provided. Default number is 100")
-        if 'MCMC algorithm' not in data:
-            warnings.warn("MCMC algorithm not provided. The Metropolis-Hastings algorithm will be used")
-            data['MCMC algorithm'] = 'MH'
-        else:
-            if data['MCMC algorithm'] not in ['MH', 'MMH']:
-                warnings.warn("MCMC algorithm not available. The Metropolis-Hastings algorithm will be used")
-                data['MCMC algorithm'] = 'MH'
-        if 'Proposal distribution' not in data:
-            raise NotImplementedError("Proposal distribution not provided")
-        if 'Proposal distribution width' not in data:
-            raise NotImplementedError("Proposal distribution parameters (width) not provided")
-        if data['MCMC algorithm'] == 'MH':
-            if 'Number of random variables' not in data:
-                if 'Names of random variables ' not in data:
-                    raise NotImplementedError("Dimension of the problem not specified")
-                else:
-                    data['Number of random variables'] = len(data['Names of random variables'])
-            if 'Target distribution parameters' not in data:
-                raise NotImplementedError("Target distribution parameters not provided")
-        if data['MCMC algorithm'] == 'MMH':
-            if 'Marginal Target distribution parameters' not in data:
-                raise NotImplementedError("Marginal Target distribution parameters not provided")
-            if 'Number of random variables' not in data:
-                raise NotImplementedError("Dimension of the problem not specified")
-        if 'Burn-in samples' not in data:
-            data['Burn-in samples'] = 1
-            warnings.warn("Number of samples to skip in order to avoid burn-in not provided."
-                          "The default will be set equal to 1")
 
     ####################################################################################################################
     # Check any NEW METHOD HERE
@@ -262,7 +220,7 @@ class MCS:
     def run_mcs(self):
 
         samples = np.random.rand(self.nsamples, self.dimension)
-        samples_u_to_x = transform_pdf(samples, self.pdf_type, self.pdf_params)
+        samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
 
         return samples, samples_u_to_x
 
@@ -348,19 +306,19 @@ class LHS:
 
         if self.lhs_criterion == 'random':
             samples = self._random(a, b)
-            samples_u_to_x = transform_pdf(samples, self.pdf_type, self.pdf_params)
+            samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
             return samples, samples_u_to_x
         elif self.lhs_criterion == 'centered':
             samples = self._centered(a, b)
-            samples_u_to_x = transform_pdf(samples, self.pdf_type, self.pdf_params)
+            samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
             return samples, samples_u_to_x
         elif self.lhs_criterion == 'maximin':
             samples = self._maximin(a, b)
-            samples_u_to_x = transform_pdf(samples, self.pdf_type, self.pdf_params)
+            samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
             return samples, samples_u_to_x
         elif self.lhs_criterion == 'correlate':
             samples = self._correlate(a, b)
-            samples_u_to_x = transform_pdf(samples, self.pdf_type, self.pdf_params)
+            samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
             return samples, samples_u_to_x
 
     def _random(self, a, b):
@@ -610,7 +568,7 @@ class STS:
         for i in range(0, self.origins.shape[0]):
             for j in range(0, self.origins.shape[1]):
                 samples[i, j] = np.random.uniform(self.origins[i, j], self.origins[i, j] + self.widths[i, j])
-        samples_u_to_x = transform_pdf(samples, self.pdf_type, self.pdf_params)
+        samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
         return samples, samples_u_to_x
 
     def init_sts(self):
@@ -835,8 +793,8 @@ class MCMC:
     Modified Metropolis-Hastings Algorithm.
 
 
-    :param dim:  A scalar value defining the dimension of target density function.
-    :type dim: int
+    :param dimension:  A scalar value defining the dimension of target density function.
+    :type dimension: int
 
     :param pdf_proposal_type: Type of proposed density function. Example:
                      'Normal' : Normal distribution will be used to generate new estimates
@@ -912,25 +870,25 @@ class MCMC:
             for i in range(self.nsamples * self.skip - 1):
                 if self.pdf_proposal_type == 'Normal':
                     if self.dimension == 1:
-                        proposal = np.random.normal(samples[i, :], np.array(self.pdf_proposal_width))
+                        candidate = np.random.normal(samples[i, :], np.array(self.pdf_proposal_width))
                     else:
                         pdf_proposal_width = np.diag(np.array(self.pdf_proposal_width))
-                        proposal = np.random.multivariate_normal(samples[i, :], np.array(pdf_proposal_width))
+                        candidate = np.random.multivariate_normal(samples[i, :], np.array(pdf_proposal_width))
 
                 elif self.pdf_proposal_type == 'Uniform':
 
-                    proposal = np.random.uniform(low=samples[i, :] - np.array(self.pdf_proposal_width) / 2,
-                                                 high=samples[i, :] + np.array(self.pdf_proposal_width) / 2,
-                                                 size=self.dimension)
+                    candidate = np.random.uniform(low=samples[i, :] - np.array(self.pdf_proposal_width) / 2,
+                                                  high=samples[i, :] + np.array(self.pdf_proposal_width) / 2,
+                                                  size=self.dimension)
 
-                p_proposal = pdf_(proposal, self.dimension)
+                p_proposal = pdf_(candidate, self.dimension)
                 p_current = pdf_(samples[i, :], self.dimension)
                 p_accept = p_proposal / p_current
 
                 accept = np.random.random() < p_accept
 
                 if accept:
-                    samples[i + 1, :] = proposal
+                    samples[i + 1, :] = candidate
                 else:
                     samples[i + 1, :] = samples[i, :]
                     rejects += 1
@@ -945,28 +903,28 @@ class MCMC:
                     pdf_ = pdf(self.pdf_target_type)
 
                     if self.pdf_proposal_type == 'Normal':
-                        proposal = np.random.normal(samples[i, j], self.pdf_proposal_width)
+                        candidate = np.random.normal(samples[i, j], self.pdf_proposal_width)
 
                     elif self.pdf_proposal_type == 'Uniform':
 
-                        proposal = np.random.uniform(low=samples[i, j] - self.pdf_proposal_width / 2,
-                                                     high=samples[i, j] + self.pdf_proposal_width / 2, size=1)
+                        candidate = np.random.uniform(low=samples[i, j] - self.pdf_proposal_width / 2,
+                                                      high=samples[i, j] + self.pdf_proposal_width / 2, size=1)
 
-                    p_proposal = pdf_(proposal, self.pdf_target_params)
+                    p_proposal = pdf_(candidate, self.pdf_target_params)
                     p_current = pdf_(samples[i, j], self.pdf_target_params)
                     p_accept = p_proposal / p_current
 
                     accept = np.random.random() < p_accept
 
                     if accept:
-                        samples[i + 1, j] = proposal
+                        samples[i + 1, j] = candidate
                     else:
                         samples[i + 1, j] = samples[i, j]
 
         return samples[0:self.nsamples * self.skip:self.skip]
 
-            # TODO: MDS - Add affine invariant ensemble MCMC
-            # TODO: MDS - Add Gibbs Sampler
+        # TODO: MDS - Add affine invariant ensemble MCMC
+        # TODO: MDS - Add Gibbs Sampler
 
     def init_mcmc(self):
 
@@ -982,9 +940,8 @@ class MCMC:
             raise ValueError('Invalid Proposal distribution type. Available distributions: Uniform, Normal')
         if self.pdf_target_type is None:
             self.pdf_target_type = 'marginal_pdf'
-        if self.pdf_target_type not in ['multivariate_pdf', 'marginal_pdf', 'normal_pdf']:
-            raise ValueError('InvalidTarget distribution type. Available distributions: multivariate_pdf, marginal_pdf,'
-                             'normal_pdf')
+        if self.pdf_target_type not in ['multivariate_pdf', 'marginal_pdf']:
+            raise ValueError('InvalidTarget distribution type. Available distributions: multivariate_pdf, marginal_pdf')
         if self.pdf_target_params is None:
             warnings.warn('Target parameters not defined. Default values are  [0, 1]')
             self.pdf_target_params = [0, 1]

@@ -1,17 +1,28 @@
 #Method
-mcmc
+SuS
 
 #Names of random variables
-mu
-sigma
-l
+E
+I
 
+#Probability distribution (pdf)
+Normal
+Normal
+
+
+#Probability distribution parameters
+3000000 300000
+0.001 0.00005
+
+
+#Number of random variables
+2
+
+#Number of Samples per subset
+1000
 
 #Proposal distribution
 Uniform
-
-#Number of Samples
-20
 
 #Proposal distribution width
 2
@@ -24,6 +35,12 @@ marginal_pdf
 
 #Target distribution parameters
 0 1
+
+#Conditional probability
+0.1
+
+#Limit-state
+2.35
 
 
 #end

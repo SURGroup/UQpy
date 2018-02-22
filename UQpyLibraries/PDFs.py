@@ -1,4 +1,5 @@
 import scipy.stats as stats
+from scipy.special import erf
 from functools import partial
 import numpy as np
 
@@ -7,21 +8,15 @@ import numpy as np
 #        Define the probability distribution of the random parameters
 ########################################################################################################################
 
-
-def normal_pdf(x, dim):
-    """ Normal density function used to generate samples using the Metropolis-Hastings Algorithm
-     :math: `f(x) = \\frac{1}{(2*\\pi*\\sigma)^(1/2)}*exp(-\\frac{1}{2}*(\\frac{x-\\mu}{\\sigma})^2)`
-
-    """
-    return stats.norm.pdf(x, 0, 1)
-
-
 def multivariate_pdf(x, dim):
     """ Multivariate normal density function used to generate samples using the Metropolis-Hastings Algorithm
     :math: `f(x_{1},...,x_{k}) = \\frac{1}{((2*\\pi)^{k}*\\Sigma)^(1/2)}*exp(-\\frac{1}{2}*(x-\\mu)^{T}*\\Sigma^{-1}*(x-\\mu))`
 
     """
-    return stats.multivariate_normal.pdf(x, mean=np.zeros(dim), cov=np.identity(dim))
+    if dim == 1:
+        return stats.norm.pdf(x, 0, 1)
+    else:
+        return stats.multivariate_normal.pdf(x, mean=np.zeros(dim), cov=np.identity(dim))
 
 
 def marginal_pdf(x, mp):
@@ -38,18 +33,15 @@ def pdf(dist):
     if dist == 'multivariate_pdf':
         return partial(multivariate_pdf)
 
-    elif dist == 'normal_pdf':
-        return partial(normal_pdf)
-
     elif dist == 'marginal_pdf':
         return partial(marginal_pdf)
 
 ########################################################################################################################
-#        Transform the random parameters to the original space
+#        Transform the random parameters from U(0, 1) to the original space
 ########################################################################################################################
 
 
-def transform_pdf(x, pdf, params):
+def inv_cdf(x, pdf, params):
     x_trans = np.zeros(shape=(x.shape[0], x.shape[1]))
     ###################################################################################
     # U(0, 1)  ---->  U(a, b)
@@ -57,35 +49,35 @@ def transform_pdf(x, pdf, params):
     for i in range(x.shape[1]):
         if pdf[i] == 'Uniform':
             for j in range(x.shape[0]):
-                     x_trans[j, i] = ppfUniform(x[j, i], params[i][0], params[i][1])
+                x_trans[j, i] = ppfUniform(x[j, i], params[i][0], params[i][1])
 
     ###################################################################################
     # U(0, 1)  ---->  N(μ, σ)
 
         elif pdf[i] == 'Normal':
             for j in range(x.shape[0]):
-                    x_trans[j, i] = ppfNormal(x[j, i], params[i][0], params[i][1])
+                x_trans[j, i] = ppfNormal(x[j, i], params[i][0], params[i][1])
 
     ####################################################################################
     # U(0, 1)  ---->  LN(μ, σ)
 
         elif pdf[i] == 'Lognormal':
             for j in range(x.shape[0]):
-                    x_trans[j, i] = ppfLognormal(x[j, i], params[i][0], params[i][1])
+                x_trans[j, i] = ppfLognormal(x[j, i], params[i][0], params[i][1])
 
     ####################################################################################
     # U(0, 1)  ---->  Weibull(λ, κ)
 
         elif pdf[i] == 'Weibull':
             for j in range(x.shape[0]):
-                    x_trans[j, i] = ppfWeibull(x[j, i], params[i][0], params[i][1])
+                x_trans[j, i] = ppfWeibull(x[j, i], params[i][0], params[i][1])
 
     ####################################################################################
     # U(0, 1)  ---->  Beta(q, r, a, b)
 
         elif pdf[i] == 'Beta':
             for j in range(x.shape[0]):
-                    x_trans[j, i] = ppfBeta(x[j, i], params[i][0], params[i][1], params[i][2], params[i][3])
+                x_trans[j, i] = ppfBeta(x[j, i], params[i][0], params[i][1], params[i][2], params[i][3])
 
     ####################################################################################
     # U(0, 1)  ---->  Exp(λ)
@@ -160,3 +152,11 @@ def ppfExponential(p, lamb):
     ppfExponential(p, lamb)"""
     scalE = 1.0/lamb
     return stats.expon.ppf(p, scale=scalE)
+
+
+def normal_to_uniform(u, a, b):
+    x = np.zeros(shape=(u.shape[0], u.shape[1]))
+    for i in range(u.shape[1]):
+        p = 0.5 + erf(((u[:, i] - 0) / 1) / np.sqrt(2)) / 2
+        x[:, i] = a + (b - a) * p
+    return x

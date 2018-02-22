@@ -1,6 +1,6 @@
-from UQpyLibraries.UQpyModules import *
+from UQpyLibraries import Reliability
 from UQpyLibraries import SampleMethods
-import matplotlib.pyplot as plt
+
 
 x_mcs = SampleMethods.MCS(pdf_type=['Uniform', 'Normal'], pdf_params=[[1, 4], [0, 1]])
 
