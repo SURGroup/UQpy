@@ -122,6 +122,24 @@ def init_sm(data):
         if 'STS design' not in data:
             raise NotImplementedError("STS design not provided")
 
+    ################################################################################################################
+    # Stochastic Reduced Order Model (SROM) block.
+    # Necessary parameters:  1. marginal pdf, 2. moments 3. Error function weights
+    # Optional: 1. Properties to match 2. Error function weights
+
+    if 'SROM' in data:
+        if data['SROM'] is True:
+            if 'Moments' not in data:
+                raise NotImplementedError("Moments not provided")
+            if 'Error function weights' not in data:
+                raise NotImplementedError("Error function weights not provided")
+            if 'Properties to match' not in data:
+                data['Properties to match'] = None
+                warnings.warn("Properties to match not defined. The default is [1, 1, 0]")
+            if 'Error function weights' not in data:
+                data['Error function weights'] = None
+                warnings.warn("Error function weights not defined. The default is equal weights to each sample")
+
     ####################################################################################################################
     # Check any NEW METHOD HERE
     #
@@ -146,7 +164,6 @@ def run_sm(data):
         rvs = MCS(pdf_type=data['Probability distribution (pdf)'],
                   pdf_params=data['Probability distribution parameters'],
                   nsamples=data['Number of Samples'])
-        return rvs
 
     ################################################################################################################
     # Run Latin Hypercube sampling
@@ -156,7 +173,6 @@ def run_sm(data):
                   pdf_params=data['Probability distribution parameters'],
                   nsamples=data['Number of Samples'], lhs_metric=data['distance metric'],
                   lhs_iter=data['iterations'], lhs_criterion=data['LHS criterion'])
-        return rvs
 
     ################################################################################################################
     # Run partially stratified sampling
@@ -165,7 +181,6 @@ def run_sm(data):
         rvs = PSS(pdf_type=data['Probability distribution (pdf)'],
                   pdf_params=data['Probability distribution parameters'],
                   pss_design=data['PSS design'], pss_strata=data['PSS strata'])
-        return rvs
 
     ################################################################################################################
     # Run STS sampling
@@ -174,7 +189,6 @@ def run_sm(data):
         print("\nRunning  %k \n", data['Method'])
         rvs = STS(pdf_type=data['Probability distribution (pdf)'],
                   pdf_params=data['Probability distribution parameters'], sts_design=data['STS design'])
-        return rvs
 
     ################################################################################################################
     # Run Markov Chain Monte Carlo sampling
@@ -186,13 +200,23 @@ def run_sm(data):
                    pdf_proposal_width=data['Proposal distribution width'],
                    pdf_target_params=data['Target distribution parameters'], seed=data['seed'],
                    skip=data['skip'], nsamples=data['Number of Samples'])
-        return rvs
+
+    ################################################################################################################
+    # Run ANY NEW METHOD HERE
+    if 'SROM' in data:
+        if data['SROM'] == 'Yes':
+            print("\nApplying  %k \n", 'SROM')
+            rvs = SROM(samples=rvs.samples, nsamples=data['Number of Samples'], marginal=data['Probability distribution (pdf)'],
+                       moments=data['Moments'], weights_errors=data['Error function weights'],
+                       weights_function=data['Sample weights'], properties=data['Properties to match'],
+                       params=data['Probability distribution parameters'])
 
     ################################################################################################################
     # Run ANY NEW METHOD HERE
 
     ################################################################################################################
     # Run ANY NEW METHOD HERE
+    return rvs
 
 
 ########################################################################################################################
@@ -243,9 +267,9 @@ class MCS:
             raise NotImplementedError("Probability distribution not provided")
         else:
             for i in self.pdf_type:
-                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential']:
+                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
                     raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential' ")
+                                              "'Beta', 'Exponential' , 'Gamma'")
         if self.pdf_params is None:
             raise NotImplementedError("Probability distribution parameters not provided")
         if len(self.pdf_type) != len(self.pdf_params):
@@ -413,9 +437,9 @@ class LHS:
             raise NotImplementedError("Probability distribution not provided")
         else:
             for i in self.pdf_type:
-                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential']:
+                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
                     raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential' ")
+                                              "'Beta', 'Exponential', 'Gamma' ")
         if self.pdf_params is None:
             raise NotImplementedError("Probability distribution parameters not provided")
         if len(self.pdf_type) != len(self.pdf_params):
@@ -519,9 +543,9 @@ class PSS:
             raise NotImplementedError("Probability distribution not provided")
         else:
             for i in self.pdf_type:
-                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential']:
+                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
                     raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential' ")
+                                              "'Beta', 'Exponential', 'Gamma' ")
         if self.pdf_params is None:
             raise NotImplementedError("Probability distribution parameters not provided")
 
@@ -586,9 +610,9 @@ class STS:
             raise NotImplementedError("Probability distribution not provided")
         else:
             for i in self.pdf_type:
-                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential']:
+                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
                     raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential' ")
+                                              "'Beta', 'Exponential', 'Gamma' ")
         if self.pdf_params is None:
             raise NotImplementedError("Probability distribution parameters not provided")
 
@@ -1004,7 +1028,6 @@ class SROM:
         dimension = np.size(marginal)
         if weights_function is None or len(weights_function) == 0:
             weights_function = np.ones([nsamples, dimension])
-            # weights_function = (1 / nsamples) * np.ones([nsamples, dimension])
 
         if np.size(moments) == 0:
             sys.exit('Moments of marginal distribution are required')
@@ -1039,10 +1062,9 @@ class SROM:
                 for i in range(n):
                     e1 = + w[i, j] * (A[0, i] - marginal(s[0, i], para[j])) ** 2
 
-                e2 =+ ((1/w[i+1, j])**2) * (np.sum(np.transpose(p) * samples[:, j]) - m[0,j]) ** 2
-                e22 = + ((1/w[i+2, j])**2) * (np.sum(np.array(p) * (np.array(samples[:, j])*np.array(samples[:,j]))) - m[1,j]) ** 2
+                e2 = + ((1/w[n, j])**2) * (np.sum(np.transpose(p) * samples[:, j]) - m[0, j]) ** 2
+                e22 = + ((1/w[n+1, j])**2) * (np.sum(np.array(p) * (np.array(samples[:, j])*np.array(samples[:,j]))) - m[1,j]) ** 2
                 # TODO: Mohit - Add error corresponding to correlation.
-
             return alpha[0]*e1 + alpha[1]*(e2+e22) + alpha[2]*e3
 
         def constraint(p):

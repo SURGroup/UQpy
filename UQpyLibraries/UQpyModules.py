@@ -72,24 +72,11 @@ class RunCommandLine:
         ################################################################################################################
         # Run the requested UQpy method and save the samples into file 'UQpyOut.txt'
         rvs = run_sm(data)
-        samples_01 = run_sm(data)
-        # Transform samples to the original parameter space
-        if data['Method'] != 'mcmc':
-            samples = transform_pdf(samples_01, data['Probability distribution (pdf)'],
-                                    data['Probability distribution parameters'])
-        else:
-            samples = samples_01
+
         if 'SROM' in data:
             if data['SROM'] == 'Yes':
-                from UQpyLibraries.SampleMethods import SROM
-                print("\nRunning  %k \n", 'SROM')
-                srom = SROM(samples=samples, nsamples=data['Number of Samples'],
-                               marginal=data['Probability distribution (pdf)'], moments=data['Moments'],
-                               weights_errors=data['Error function weights'], weights_function=data['Sample weights'],
-                               properties=data['Properties to match'],
-                               params=data['Probability distribution parameters'])
                 header = ', '.join('Weights')
-                np.savetxt('UQpyOut_weights.txt', srom.probability, header=str(header), fmt='%0.5f')
+                np.savetxt('UQpyOut_weights.txt', rvs.probability, header=str(header), fmt='%0.5f')
 
         # Save the samples in a .txt file
         save_txt(data['Names of random variables'], rvs.samples)
@@ -120,6 +107,9 @@ class RunCommandLine:
         _files = list()
         _files.append('UQpy_Samples.csv')
         _files.append('UQpy_Samples.txt')
+        if 'SROM' in data:
+            if data['SROM'] == 'Yes':
+                _files.append('UQpyOut_weights.txt')
 
         if self.args.Solver is not None:
             src_files = [filename for filename in os.listdir(self.args.WorkingDir) if filename.startswith("UQpy_eval_")]
@@ -166,11 +156,6 @@ class RunCommandLine:
         _files.append('UQpy_Samples.csv')
         _files.append('UQpy_Samples.txt')
         _files.append('PF.txt')
-            _files.append('UQpyOut.csv')
-            _files.append('UQpyOut.txt')
-            if 'SROM' in data:
-                if data['SROM'] == 'Yes':
-                    _files.append('UQpyOut_weights.txt')
 
         for file_name in _files:
             full_file_name = os.path.join(self.args.WorkingDir, file_name)
@@ -282,7 +267,7 @@ class RunModel:
             os.system(join_output_script)
 
             model_eval = np.loadtxt('UQpy_eval_{0}.txt'.format(int(i)))
-            os.remove('UQpy_eval_{0}.txt'.format(i))
+            #os.remove('UQpy_eval_{0}.txt'.format(int(i)))
             count = count + 1
             lock.release()
 
@@ -366,201 +351,6 @@ def chunk_samples_nodes(data, samples, args):
         np.savetxt('UQpy_Batch_index_{0}.txt'.format(i+1), lines)
         np.savetxt('ClusterChunk_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
         np.savetxt('ClusterChunk_index_{0}.txt'.format(i+1), lines)
-
-
-def init_sm(data):
-
-    ################################################################################################################
-    # Add available methods Here
-    valid_methods = ['mcs', 'lhs', 'mcmc', 'pss', 'sts', 'SuS', 'srom']
-
-    ################################################################################################################
-    # Check if requested method is available
-
-    if 'Method' in data.keys():
-        if data['Method'] not in valid_methods:
-            raise NotImplementedError("Method - %s not available" % data['Method'])
-    else:
-        raise NotImplementedError("No sampling method was provided")
-
-    ################################################################################################################
-    # Monte Carlo simulation block.
-    # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
-    # Optional:
-
-    if data['Method'] == 'mcs':
-        if 'Number of Samples' not in data.keys():
-            data['Number of Samples'] = None
-            warnings.warn("Number of samples not provided. Default number is 100")
-        if 'Probability distribution (pdf)' not in data.keys():
-            raise NotImplementedError("Probability distribution not provided")
-        elif 'Probability distribution parameters' not in data.keys():
-            raise NotImplementedError("Probability distribution parameters not provided")
-
-    ################################################################################################################
-    # Latin Hypercube simulation block.
-    # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
-    # Optional: 1. Criterion, 2. Metric, 3. Iterations
-
-    if data['Method'] == 'lhs':
-        if 'Number of Samples' not in data:
-            data['Number of Samples'] = None
-            warnings.warn("Number of samples not provided. Default number is 100")
-        if 'Probability distribution (pdf)' not in data:
-            raise NotImplementedError("Probability distribution not provided")
-        if 'Probability distribution parameters' not in data:
-            raise NotImplementedError("Probability distribution parameters not provided")
-        if 'LHS criterion' not in data:
-            data['LHS criterion'] = 'random'
-            warnings.warn("LHS criterion not defined. The default is centered")
-        if 'distance metric' not in data:
-            data['distance metric'] = 'euclidean'
-            warnings.warn("Distance metric for the LHS not defined. The default is Euclidean")
-        if 'iterations' not in data:
-            data['iterations'] = 1000
-            warnings.warn("Iterations for the LHS not defined. The default number is 1000")
-
-    ####################################################################################################################
-    # Markov Chain Monte Carlo simulation block.
-    # Necessary parameters:  1. Proposal pdf, 2. Probability pdf width, 3. Target pdf, 4. Target pdf parameters
-    #                        5. algorithm
-    # Optional: 1. Seed, 2. Burn-in
-
-    if data['Method'] == 'mcmc':
-        if 'Number of Samples' not in data:
-            data['Number of Samples'] = 100
-            warnings.warn("Number of samples not provided. Default number is 100")
-        if 'MCMC algorithm' not in data:
-            warnings.warn("MCMC algorithm not provided. The Metropolis-Hastings algorithm will be used")
-            data['MCMC algorithm'] = 'MH'
-        else:
-            if data['MCMC algorithm'] not in ['MH', 'MMH']:
-                warnings.warn("MCMC algorithm not available. The Metropolis-Hastings algorithm will be used")
-                data['MCMC algorithm'] = 'MH'
-        if 'Proposal distribution' not in data:
-            raise NotImplementedError("Proposal distribution not provided")
-        if 'Proposal distribution width' not in data:
-            raise NotImplementedError("Proposal distribution parameters (width) not provided")
-        if data['MCMC algorithm'] == 'MH':
-            if 'Number of random variables' not in data:
-                if 'Names of random variables ' not in data:
-                    raise NotImplementedError("Dimension of the problem not specified")
-                else:
-                    data['Number of random variables'] = len(data['Names of random variables'])
-            if 'Target distribution parameters' not in data:
-                raise NotImplementedError("Target distribution parameters not provided")
-        if data['MCMC algorithm'] == 'MMH':
-            if 'Marginal Target distribution parameters' not in data:
-                raise NotImplementedError("Marginal Target distribution parameters not provided")
-        if 'Burn-in samples' not in data:
-            data['Burn-in samples'] = 1
-            warnings.warn("Number of samples to skip in order to avoid burn-in not provided."
-                          "The default will be set equal to 1")
-        if 'seed' not in data:
-            data['seed'] = np.zeros(len(data['Names of random variables']))
-            warnings.warn("Chain will start from 0")
-
-    ################################################################################################################
-    # Partially stratified sampling (PSS) block.
-    # Necessary parameters:  1. pdf, 2. pdf parameters 3. pss design 3. pss strata
-    # Optional:
-    # TODO: PSS block
-    ################################################################################################################
-    # Stratified sampling (STS) block.
-    # Necessary parameters:  1. pdf, 2. pdf parameters 3. sts design
-    # Optional:
-    # TODO: STS block
-    ################################################################################################################
-    # HERE YOU ADD CHECKS FOR ANY NEW METHOD ADDED
-    # Necessary parameters:
-    # Optional:
-    # TODO: Subset Simulation block
-    ################################################################################################################
-    # Stochastic Reduced Order Model (SROM) block.
-    # Necessary parameters:  1. marginal pdf, 2. moments 3. Error function weights
-    # Optional: 1. Properties to match 2. Error function weights
-
-    if 'SROM' in data:
-        if data['SROM'] is True:
-            if 'Probability distribution (pdf)' not in data:
-                raise NotImplementedError("Probability distribution not provided")
-            if 'Moments' not in data:
-                raise NotImplementedError("Moments not provided")
-            if 'Error function weights' not in data:
-                raise NotImplementedError("Error function weights not provided")
-            if 'Properties to match' not in data:
-                data['Properties to match'] = None
-                warnings.warn("Properties to match not defined. The default is [1, 1, 0]")
-            if 'Error function weights' not in data:
-                data['Error function weights'] = None
-                warnings.warn("Error function weights not defined. The default is equal weights to each sample")
-
-
-def run_sm(data):
-    ################################################################################################################
-    # Run Monte Carlo simulation
-    if data['Method'] == 'mcs':
-        from UQpyLibraries.SampleMethods import MCS
-        print("\nRunning  %k \n", data['Method'])
-        rvs = MCS(pdf=data['Probability distribution (pdf)'],
-                  pdf_params=data['Probability distribution parameters'],
-                  nsamples=data['Number of Samples'])
-
-    ################################################################################################################
-    # Run Latin Hypercube sampling
-    elif data['Method'] == 'lhs':
-        from UQpyLibraries.SampleMethods import LHS
-        print("\nRunning  %k \n", data['Method'])
-        rvs = LHS(pdf=data['Probability distribution (pdf)'],
-                  pdf_params=data['Probability distribution parameters'],
-                  nsamples=data['Number of Samples'], lhs_metric=data['distance metric'],
-                  lhs_iter=data['iterations'], lhs_criterion=data['LHS criterion'])
-
-    ################################################################################################################
-    # Run partially stratified sampling
-    elif data['Method'] == 'pss':
-        from UQpyLibraries.SampleMethods import PSS
-        print("\nRunning  %k \n", data['Method'])
-        rvs = PSS(pdf=data['Probability distribution (pdf)'],
-                  pdf_params=data['Probability distribution parameters'],
-                  pss_design=data['PSS design'], pss_strata=data['PSS strata'])
-
-    ################################################################################################################
-    # Run Markov Chain Monte Carlo sampling
-
-    elif data['Method'] == 'mcmc':
-        from UQpyLibraries.SampleMethods import MCMC
-        print("\nRunning  %k \n", data['Method'])
-        rvs = MCMC(dim=data['Number of random variables'], pdf_target=data['Target distribution'],
-                   mcmc_algorithm=data['MCMC algorithm'], pdf_proposal=data['Proposal distribution'],
-                   pdf_proposal_width=data['Proposal distribution width'],
-                   pdf_target_params=data['Target distribution parameters'], mcmc_seed=data['seed'],
-                   pdf_marg_target_params=data['Marginal Target distribution parameters'],
-                   pdf_marg_target=data['Marginal target distribution'],
-                   mcmc_burnIn=data['Burn-in samples'], nsamples=data['Number of Samples'])
-    ################################################################################################################
-    # Run stratified sampling
-    # TODO: PSS sampling
-
-    ################################################################################################################
-    # Run ANY NEW METHOD HERE
-    # TODO: STS sampling
-
-    elif data['Method'] == 'sts':
-        from UQpyLibraries.SampleMethods import STS
-        print("\nRunning  %k \n", data['Method'])
-        rvs = STS(pdf=data['Probability distribution (pdf)'],
-                  pdf_params=data['Probability distribution parameters'], sts_design=data['STS design'])
-
-    ################################################################################################################
-    # Run ANY NEW METHOD HERE
-    # TODO: ROM sampling
-
-    ################################################################################################################
-    # Run ANY NEW METHOD HERE
-    # TODO: Subset Simulation
-
-    return rvs.samples
 
 
 def save_csv(headers, param_values):

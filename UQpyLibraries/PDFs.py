@@ -29,6 +29,10 @@ def marginal_pdf(x, mp):
     return stats.norm.pdf(x, mp[0], mp[1])
 
 
+def Gamma(x, params):
+    return stats.gamma.cdf(x, params[0], loc=params[1], scale=params[2])
+
+
 def pdf(dist):
     if dist == 'multivariate_pdf':
         return partial(multivariate_pdf)
@@ -36,16 +40,12 @@ def pdf(dist):
     elif dist == 'marginal_pdf':
         return partial(marginal_pdf)
 
-########################################################################################################################
-#        Transform the random parameters from U(0, 1) to the original space
-########################################################################################################################
-
     elif dist == 'Gamma':
         return partial(Gamma)
 
-    elif dist == 'Uniform':
-        return partial(Uniform)
-
+########################################################################################################################
+#        Transform the random parameters from U(0, 1) to the original space
+########################################################################################################################
 
 def inv_cdf(x, pdf, params):
     x_trans = np.zeros(shape=(x.shape[0], x.shape[1]))
