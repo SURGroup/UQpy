@@ -16,4 +16,8 @@ Uniform
 10
 10
 
+#Names of random variables
+mu
+sigma
+
 #end

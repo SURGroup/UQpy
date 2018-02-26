@@ -1,5 +1,4 @@
 import numpy as np
-import os
 
 
 def readfile(filename):
@@ -14,7 +13,6 @@ def readfile(filename):
 
     f = open(filename)
     lines = f.readlines()
-    print(lines, len(lines))
 
     for i in range(len(lines_)):
         title = lines[lines_[i]][1:-1]
@@ -31,8 +29,8 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1][:-1]
-                    dist.append(x.split(" "))
+                    x = lines[lines_[i] + j + 1]
+                    dist.append(lines[lines_[i] + j + 1][:-1])
                     j = j + 1
             mydict[title] = dist
         elif title == 'Names of random variables':
@@ -55,11 +53,13 @@ def readfile(filename):
                 if not testline:
                     break
                 else:
-                    x = lines[lines_[i] + j + 1][:-1]
+                    x = lines[lines_[i] + j + 1]
                     params.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = params
         elif title == 'Number of Samples':
+            mydict[title] = int(lines[lines_[i] + 1][:-1])
+        elif title == 'Number of random variables':
             mydict[title] = int(lines[lines_[i] + 1][:-1])
         ################################################################################################################
         # Latin Hypercube parameters
@@ -109,12 +109,23 @@ def readfile(filename):
                     sts_design.append(int(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
             mydict[title] = sts_design
+            print(sts_design)
         ################################################################################################################
         # Markov Chain Monte Carlo simulation
         elif title == 'MCMC algorithm':
             mydict[title] = lines[lines_[i] + 1][:-1]
         elif title == 'Proposal distribution':
-            mydict[title] = lines[lines_[i] + 1][:-1]
+            proposal = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    x = lines[lines_[i] + j + 1]
+                    proposal.append(lines[lines_[i] + j + 1][:-1])
+                    j = j + 1
+                mydict[title] = proposal
         elif title == 'Proposal distribution width':
             proposal_params = []
             j = 0
@@ -124,7 +135,7 @@ def readfile(filename):
                     break
                 else:
                     x = lines[lines_[i] + j + 1]
-                    proposal_params.append(np.float32(x.split(" ")))
+                    proposal_params.append(np.float32(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
             mydict[title] = proposal_params
         elif title == 'Target distribution':
@@ -132,7 +143,7 @@ def readfile(filename):
         elif title == 'Burn-in samples':
             mydict[title] = int(lines[lines_[i] + 1][:-1])
         elif title == 'Target distribution parameters':
-            marg_params = []
+            target_params = []
             j = 0
             while j >= 0:
                 testline = lines[lines_[i] + j + 1].strip()
@@ -140,9 +151,33 @@ def readfile(filename):
                     break
                 else:
                     x = lines[lines_[i] + j + 1]
-                    marg_params.append(np.float32(x.split(" ")))
+                    target_params.append(np.float32(x.split(" ")))
                     j = j + 1
-            mydict[title] = marg_params
+            mydict[title] = target_params
+        elif title == 'Marginal target distribution':
+            marg_target = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    x = lines[lines_[i] + j + 1]
+                    marg_target.append(lines[lines_[i] + j + 1][:-1])
+                    j = j + 1
+                mydict[title] = marg_target
+        elif title == 'Marginal Target distribution parameters':
+            marg_target_params = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    x = lines[lines_[i] + j + 1]
+                    marg_target_params.append(np.float32(x.split(" ")))
+                    j = j + 1
+            mydict[title] = marg_target_params
         elif title == 'seed':
             seed = []
             j = 0

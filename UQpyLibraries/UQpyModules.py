@@ -57,8 +57,11 @@ class RunCommandLine:
         samples_01 = run_sm(data)
 
         # Transform samples to the original parameter space
-        samples = transform_pdf(samples_01, data['Probability distribution (pdf)'],
-                                data['Probability distribution parameters'])
+        if data['Method'] != 'mcmc':
+            samples = transform_pdf(samples_01, data['Probability distribution (pdf)'],
+                                    data['Probability distribution parameters'])
+        else:
+            samples = samples_01
 
         if data['SROM'] is True:
             from UQpyLibraries.SampleMethods import SROM
@@ -67,8 +70,13 @@ class RunCommandLine:
                        weights_errors=data['Error function weights'], weights_function=data['Sample weights'],
                    properties=data['Properties to match'])
 
-        header = ', '.join(data['Names of random variables'])
-        np.savetxt('UQpyOut.txt', samples, header=str(header), fmt='%0.5f')
+
+        # Save the samples in a .txt file
+        save_txt(data['Names of random variables'], samples)
+
+        # Save the samples in a .csv file
+        save_csv(data['Names of random variables'], samples)
+
 
         ################################################################################################################
         # Split the samples into chunks in order to sent to each processor in case of parallel computing, else save them
@@ -84,18 +92,17 @@ class RunCommandLine:
         else:
             self.args.CPUs_reduced = False
 
-
         ################################################################################################################
         # If a model is provided then run it, else move the data to directory simUQpyOut/ , delete the temp/ directory
         # and terminate the program
 
-        if self.args.Model is None:
+        if self.args.Solver is None:
             full_file_name = os.path.join(self.args.WorkingDir, 'UQpyOut.txt')
             if os.path.isfile(full_file_name):
                 shutil.copy(full_file_name, self.args.Output_directory)
 
         else:
-            RunModel(model_script=self.args.Model, input_script=self.args.Input_Shell_Script,
+            RunModel(model_script=self.args.Solver, input_script=self.args.Input_Shell_Script,
                      output_script=self.args.Output_Shell_Script,
                      cpu=self.args.CPUs, cpu_red=self.args.CPUs_reduced)
 
@@ -105,6 +112,7 @@ class RunCommandLine:
                 file_new = file.replace("UQpyInput_", "Model_")
                 os.rename(file, file_new)
                 _files.append(file_new)
+            _files.append('UQpyOut.csv')
             _files.append('UQpyOut.txt')
 
             for file_name in _files:
@@ -196,7 +204,7 @@ class RunModel:
         index = np.loadtxt('LocalChunk_index_{0}.txt'.format(j+1))
 
         model_eval = []
-        if self.CPUs_reduced is True:
+        if self.CPUs_reduced is True or index.size == 1:
 
             # Write each value of UQpyOut.txt into a *.txt file
             np.savetxt('TEMP_val_{0}.txt'.format(int(index)), values, newline=' ', delimiter=',',  fmt='%0.5f')
@@ -219,6 +227,7 @@ class RunModel:
                 queue.put(model_eval)
 
         else:
+
             count = 0
             for i in index:
                 lock = Lock()
@@ -279,7 +288,6 @@ class RunModel:
 def chunk_samples_cores(data, samples, args):
 
     header = ', '.join(data['Names of random variables'])
-
     # In case of parallel computing divide the samples into chunks in order to sent to each processor
     chunks = args.CPUs
     if args.CPUs_reduced is True:
@@ -288,7 +296,7 @@ def chunk_samples_cores(data, samples, args):
             np.savetxt('LocalChunk_index_{0}.txt'.format(i+1), np.array(i).reshape(1,))
 
     else:
-        size = np.array([np.ceil(samples.shape[0]/chunks) in range(args.CPUs)]).astype(int)
+        size = np.array([np.ceil(samples.shape[0]/chunks) for i in range(args.CPUs)]).astype(int)
         dif = np.sum(size) - samples.shape[0]
         count = 0
         for k in range(dif):
@@ -296,10 +304,9 @@ def chunk_samples_cores(data, samples, args):
             count = count + 1
         for i in range(args.CPUs):
             if i == 0:
-                lines = range(0, size[i])
+                lines = range(size[i])
             else:
                 lines = range(int(np.sum(size[:i])), int(np.sum(size[:i+1])))
-
             np.savetxt('LocalChunk_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
             np.savetxt('LocalChunk_index_{0}.txt'.format(i+1), lines)
 
@@ -369,45 +376,70 @@ def init_sm(data):
         if 'Probability distribution parameters' not in data:
             raise NotImplementedError("Probability distribution parameters not provided")
         if 'LHS criterion' not in data:
-            data['LHS criterion'] = None
+            data['LHS criterion'] = 'random'
             warnings.warn("LHS criterion not defined. The default is centered")
         if 'distance metric' not in data:
-            data['distance metric'] = None
+            data['distance metric'] = 'euclidean'
             warnings.warn("Distance metric for the LHS not defined. The default is Euclidean")
         if 'iterations' not in data:
-            data['iterations'] = None
+            data['iterations'] = 1000
             warnings.warn("Iterations for the LHS not defined. The default number is 1000")
 
-        ################################################################################################################
-        # Markov Chain Monte Carlo simulation block.
-        # Necessary parameters:  1. Proposal pdf, 2. Probability pdf width, 3. Target pdf, 4. Target pdf parameters
-        #                        5. algorithm
-        # Optional: 1. Seed, 2. Burn-in
+    ####################################################################################################################
+    # Markov Chain Monte Carlo simulation block.
+    # Necessary parameters:  1. Proposal pdf, 2. Probability pdf width, 3. Target pdf, 4. Target pdf parameters
+    #                        5. algorithm
+    # Optional: 1. Seed, 2. Burn-in
 
-    if 'Method' in data.keys() is 'mcmc':
-        if 'Number of Samples' not in data.keys():
-            data['Number of Samples'] = None
+    if data['Method'] == 'mcmc':
+        if 'Number of Samples' not in data:
+            data['Number of Samples'] = 100
             warnings.warn("Number of samples not provided. Default number is 100")
-
-        if 'MCMC algorithm' not in data.keys():
+        if 'MCMC algorithm' not in data:
             warnings.warn("MCMC algorithm not provided. The Metropolis-Hastings algorithm will be used")
+            data['MCMC algorithm'] = 'MH'
         else:
             if data['MCMC algorithm'] not in ['MH', 'MMH']:
                 warnings.warn("MCMC algorithm not available. The Metropolis-Hastings algorithm will be used")
-
-        if 'Proposal distribution' not in data.keys():
+                data['MCMC algorithm'] = 'MH'
+        if 'Proposal distribution' not in data:
             raise NotImplementedError("Proposal distribution not provided")
-        if 'Proposal distribution width' not in data.keys():
+        if 'Proposal distribution width' not in data:
             raise NotImplementedError("Proposal distribution parameters (width) not provided")
-        if 'Target distribution' not in data.keys():
-            raise NotImplementedError("Target distribution not provided")
-        # if 'Marginal target distribution parameters' not in data.keys():
-        #     raise NotImplementedError("Target distribution parameters not provided")
-        if 'Burn-in samples' not in data.keys():
-            data['Burn-in samples'] = None
+        if data['MCMC algorithm'] == 'MH':
+            if 'Number of random variables' not in data:
+                if 'Names of random variables ' not in data:
+                    raise NotImplementedError("Dimension of the problem not specified")
+                else:
+                    data['Number of random variables'] = len(data['Names of random variables'])
+            if 'Target distribution parameters' not in data:
+                raise NotImplementedError("Target distribution parameters not provided")
+        if data['MCMC algorithm'] == 'MMH':
+            if 'Marginal Target distribution parameters' not in data:
+                raise NotImplementedError("Marginal Target distribution parameters not provided")
+        if 'Burn-in samples' not in data:
+            data['Burn-in samples'] = 1
             warnings.warn("Number of samples to skip in order to avoid burn-in not provided."
                           "The default will be set equal to 1")
+        if 'seed' not in data:
+            data['seed'] = np.zeros(len(data['Names of random variables']))
+            warnings.warn("Chain will start from 0")
 
+    ################################################################################################################
+    # Partially stratified sampling (PSS) block.
+    # Necessary parameters:  1. pdf, 2. pdf parameters 3. pss design 3. pss strata
+    # Optional:
+    # TODO: PSS block
+    ################################################################################################################
+    # Stratified sampling (STS) block.
+    # Necessary parameters:  1. pdf, 2. pdf parameters 3. sts design
+    # Optional:
+    # TODO: STS block
+    ################################################################################################################
+    # HERE YOU ADD CHECKS FOR ANY NEW METHOD ADDED
+    # Necessary parameters:
+    # Optional:
+    # TODO: Subset Simulation block
         ################################################################################################################
         # Partially stratified sampling (PSS) block.
         # Necessary parameters:  1. pdf, 2. pdf parameters 3. pss design 3. pss strata
@@ -479,18 +511,30 @@ def run_sm(data):
     elif data['Method'] == 'mcmc':
         from UQpyLibraries.SampleMethods import MCMC
         print("\nRunning  %k \n", data['Method'])
-        rvs = MCMC(pdf_target=data['Target distribution'], mcmc_algorithm=data['MCMC algorithm'],
-                   pdf_proposal=data['Proposal distribution'], pdf_proposal_width=data['Proposal distribution width'],
+        rvs = MCMC(dim=data['Number of random variables'], pdf_target=data['Target distribution'],
+                   mcmc_algorithm=data['MCMC algorithm'], pdf_proposal=data['Proposal distribution'],
+                   pdf_proposal_width=data['Proposal distribution width'],
                    pdf_target_params=data['Target distribution parameters'], mcmc_seed=data['seed'],
-                   mcmc_burnIn=data['Burn-in samples'])
+                   pdf_marg_target_params=data['Marginal Target distribution parameters'],
+                   pdf_marg_target=data['Marginal target distribution'],
+                   mcmc_burnIn=data['Burn-in samples'], nsamples=data['Number of Samples'])
     ################################################################################################################
     # Run stratified sampling
+    # TODO: PSS sampling
+
+    ################################################################################################################
+    # Run ANY NEW METHOD HERE
+    # TODO: STS sampling
+
     elif data['Method'] == 'sts':
         from UQpyLibraries.SampleMethods import STS
         print("\nRunning  %k \n", data['Method'])
-        rvs = STS(pdf=data['Probability distribution (pdf)'], pdf_params=data['Probability distribution parameters'],
-                  sts_design=data['STS design'])
+        rvs = STS(pdf=data['Probability distribution (pdf)'],
+                  pdf_params=data['Probability distribution parameters'], sts_design=data['STS design'])
 
+    ################################################################################################################
+    # Run ANY NEW METHOD HERE
+    # TODO: ROM sampling
 
     ################################################################################################################
     # Run ANY NEW METHOD HERE
@@ -499,4 +543,23 @@ def run_sm(data):
     return rvs.samples
 
 
+def save_csv(headers, param_values):
 
+    index = np.array(range(1, param_values.shape[0] + 1)).astype(int)
+    param_values = np.hstack((index.reshape(index.shape[0], 1), param_values))
+    HEADER=[]
+    HEADER.append('Run')
+    for i in range(len(headers)):
+        HEADER.append(headers[i])
+    import csv
+    with open('UQpyOut.csv', "w") as output:
+        writer = csv.writer(output, lineterminator='\n')
+        writer.writerow(HEADER)
+        for val in param_values:
+            writer.writerow(val)
+
+
+def save_txt(headers, param_values):
+
+    header = ', '.join(headers)
+    np.savetxt('UQpyOut.txt', param_values, header=str(header), fmt='%0.5f')

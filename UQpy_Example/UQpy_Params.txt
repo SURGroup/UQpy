@@ -10,12 +10,12 @@ No
 #Probability distribution (pdf)
 Uniform
 Uniform
-Uniform
+Normal
 
 #Probability distribution parameters
 500 700
 0 60
-0 19
+0 1
 
 #Names of random variables
 mu

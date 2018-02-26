@@ -17,7 +17,12 @@ Uniform
 1
 
 #PSS strata
-10000
-10000
+100
+100
+
+#Names of random variables
+mu
+sigma
+
 
 #end
