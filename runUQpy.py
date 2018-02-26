@@ -1,26 +1,21 @@
-from UQpyLibraries.UQpyModules import *
+from UQpyLibraries import Reliability
 from UQpyLibraries import SampleMethods
-import matplotlib.pyplot as plt
-
-#x = SampleMethods.MCS(pdf=['Uniform', 'Uniform'], pdf_params=[[0, 1], [0, 1]], nsamples=150)
 
 
-#x = SampleMethods.LHS(pdf=['Uniform', 'Uniform'], pdf_params=[[0, 1], [0, 1]], nsamples=250, lhs_criterion='centered')
+x_mcs = SampleMethods.MCS(pdf_type=['Uniform', 'Normal'], pdf_params=[[1, 4], [0, 1]])
 
-x = SampleMethods.STS(pdf=['Uniform', 'Uniform'], pdf_params=[[0, 1], [0, 1]], sts_design=[10, 10])
 
-#x = SampleMethods.PSS(pdf=['Uniform', 'Uniform'], pdf_params=[[0, 1], [0, 1]], pss_design=[2, 2], pss_strata=[5, 5])
+x_lhs = SampleMethods.LHS(pdf_type=['Uniform', 'Normal'], pdf_params=[[0, 1], [0, 1]], lhs_criterion='correlate')
 
-#x = SampleMethods.MCMC(pdf_target='multivariate_pdf', mcmc_algorithm='MH', pdf_proposal='Normal',
-                       #pdf_proposal_width=[1, 1], pdf_target_params=[[0, 1], [0, 1]])
+x_sts = SampleMethods.STS(pdf_type=['Uniform', 'Normal'], pdf_params=[[0, 1], [0, 1]], sts_design=[10, 10])
+
+
+x_pss = SampleMethods.PSS(pdf_type=['Uniform', 'Normal'], pdf_params=[[0, 1], [0, 1]], pss_design=[1, 1],
+                          pss_strata=[5, 5])
 
 x = SampleMethods.SROM(samples=x.samples, nsamples=9, marginal=['Uniform', 'Uniform'], moments=[[0, 1], [2, 3]],
                        weights_errors=[1, 0.2, 0], weights_function=None, properties=[1, 1, 0])
 
-print(x.samples)
-print()
+x_mcmc = SampleMethods.MCMC(dimension=2, pdf_proposal_type='Uniform', pdf_target_type='marginal_pdf', skip=10,
+                            nsamples=100)
 
-
-plt.figure()
-plt.scatter(x.samples[:, 0], x.samples[:, 1], marker='.')
-plt.show()
