@@ -34,12 +34,12 @@ def marginal_pdf(x, mp):
     return stats.norm.pdf(x, mp[0], mp[1])
 
 
-def srom(x):
-    return stats.gamma.cdf(x, 2, loc=1, scale=3)
+def Gamma(x, params):
+    return stats.gamma.cdf(x, params[0], loc=params[1], scale=params[2])
 
 
-def Uniform(x):
-    return stats.uniform.cdf(x, loc=0, scale=1)
+def Uniform(x, params):
+    return stats.uniform.cdf(x, loc=params[0], scale=params[1])
 
 
 def pdf(dist):
@@ -56,14 +56,8 @@ def pdf(dist):
 #        Transform the random parameters to the original space
 ########################################################################################################################
 
-    elif dist == 'srom1':
-        return partial(srom)
-
-    elif dist == 'srom2':
-        return partial(srom)
-
-    elif dist == 'srom3':
-        return partial(srom)
+    elif dist == 'Gamma':
+        return partial(Gamma)
 
     elif dist == 'Uniform':
         return partial(Uniform)
@@ -113,6 +107,13 @@ def transform_pdf(x, pdf, params):
         elif pdf[i] == 'Exponential':
             for j in range(x.shape[0]):
                 x_trans[j, i] = ppfExponential(x[j, i], params[i][0])
+
+    ####################################################################################
+    # U(0, 1)  ---->  Gamma(λ-shape, shift, scale )
+
+        elif pdf[i] == 'Gamma':
+            for j in range(x.shape[0]):
+                x_trans[j, i] = ppfGamma(x[j, i], params[i][0], params[i][1], params[i][2])
 
     return x_trans
 
@@ -180,3 +181,11 @@ def ppfExponential(p, lamb):
     ppfExponential(p, lamb)"""
     scalE = 1.0/lamb
     return stats.expon.ppf(p, scale=scalE)
+
+
+def ppfGamma(p, shape, shift, scale):
+    """Returns the evaluation of the percent point function (inverse cumulative
+    distribution) evaluated at the probability p for an Gamma
+    distribution.  Usage:\n
+    ppfGamma(p, shape, shift, scale)"""
+    return stats.gamma.ppf(p, shape, loc=shift, scale=scale)

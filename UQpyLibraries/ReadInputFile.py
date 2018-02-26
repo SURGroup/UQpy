@@ -20,7 +20,6 @@ def readfile(filename):
         # General parameters
         if title == 'Method':
             mydict[title] = lines[lines_[i]+1][:-1]
-            print()
         elif title == 'Probability distribution (pdf)':
             dist = []
             j = 0
@@ -109,7 +108,6 @@ def readfile(filename):
                     sts_design.append(int(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
             mydict[title] = sts_design
-            print(sts_design)
         ################################################################################################################
         # Markov Chain Monte Carlo simulation
         elif title == 'MCMC algorithm':
@@ -202,7 +200,10 @@ def readfile(filename):
             mydict[title] = np.float32(lines[lines_[i] + 1][:-1])
         elif title == 'Sampling method':
             mydict[title] = lines[lines_[i] + 1][:-1]
+        ################################################################################################################
         # Stochastic Reduced Order Model
+        elif title == 'SROM':
+            mydict[title] = lines[lines_[i] + 1][:-1]
         elif title == 'Moments':
             seed = []
             j = 0
@@ -252,5 +253,4 @@ def readfile(filename):
                     j = j + 1
             mydict[title] = seed
 
-    print(mydict)
     return mydict

@@ -55,21 +55,23 @@ class RunCommandLine:
         ################################################################################################################
         # Run the requested UQpy method and save the samples into file 'UQpyOut.txt'
         samples_01 = run_sm(data)
-
         # Transform samples to the original parameter space
         if data['Method'] != 'mcmc':
             samples = transform_pdf(samples_01, data['Probability distribution (pdf)'],
                                     data['Probability distribution parameters'])
         else:
             samples = samples_01
-
-        if data['SROM'] is True:
-            from UQpyLibraries.SampleMethods import SROM
-            samples = SROM(samples=samples, nsamples=data['Number of Samples'],
-                       marginal=data['Probability distribution (pdf)'], moments=data['Moments'],
-                       weights_errors=data['Error function weights'], weights_function=data['Sample weights'],
-                   properties=data['Properties to match'])
-
+        if 'SROM' in data:
+            if data['SROM'] == 'Yes':
+                from UQpyLibraries.SampleMethods import SROM
+                print("\nRunning  %k \n", 'SROM')
+                srom = SROM(samples=samples, nsamples=data['Number of Samples'],
+                               marginal=data['Probability distribution (pdf)'], moments=data['Moments'],
+                               weights_errors=data['Error function weights'], weights_function=data['Sample weights'],
+                               properties=data['Properties to match'],
+                               params=data['Probability distribution parameters'])
+                header = ', '.join('Weights')
+                np.savetxt('UQpyOut_weights.txt', srom.probability, header=str(header), fmt='%0.5f')
 
         # Save the samples in a .txt file
         save_txt(data['Names of random variables'], samples)
@@ -114,6 +116,9 @@ class RunCommandLine:
                 _files.append(file_new)
             _files.append('UQpyOut.csv')
             _files.append('UQpyOut.txt')
+            if 'SROM' in data:
+                if data['SROM'] == 'Yes':
+                    _files.append('UQpyOut_weights.txt')
 
             for file_name in _files:
                 full_file_name = os.path.join(self.args.WorkingDir, file_name)
@@ -440,22 +445,13 @@ def init_sm(data):
     # Necessary parameters:
     # Optional:
     # TODO: Subset Simulation block
-        ################################################################################################################
-        # Partially stratified sampling (PSS) block.
-        # Necessary parameters:  1. pdf, 2. pdf parameters 3. pss design 3. pss strata
-        # Optional:
-        # TODO: PSS block
-        ################################################################################################################
-        # Stratified sampling (STS) block.
-        # Necessary parameters:  1. pdf, 2. pdf parameters 3. sts design
-        # Optional:
-        # TODO: STS block
-        ################################################################################################################
-        # Stochastic Reduced Order Model (SROM) block.
-        # Necessary parameters:  1. marginal pdf, 2. moments 3. Error function weights
-        # Optional: 1. Properties to match 2. Error function weights
+    ################################################################################################################
+    # Stochastic Reduced Order Model (SROM) block.
+    # Necessary parameters:  1. marginal pdf, 2. moments 3. Error function weights
+    # Optional: 1. Properties to match 2. Error function weights
 
-        if data['Method'] == 'srom':
+    if 'SROM' in data:
+        if data['SROM'] is True:
             if 'Probability distribution (pdf)' not in data:
                 raise NotImplementedError("Probability distribution not provided")
             if 'Moments' not in data:
@@ -468,12 +464,6 @@ def init_sm(data):
             if 'Error function weights' not in data:
                 data['Error function weights'] = None
                 warnings.warn("Error function weights not defined. The default is equal weights to each sample")
-
-        ################################################################################################################
-        # HERE YOU ADD CHECKS FOR ANY NEW METHOD ADDED
-        # Necessary parameters:
-        # Optional:
-        # TODO: Subset Simulation block
 
 
 def run_sm(data):

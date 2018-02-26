@@ -728,7 +728,7 @@ class SROM:
     # TODO: Mohit - Write the documentation for the class
 
     def __init__(self, samples=None, nsamples=None, marginal=None, moments=None, weights_errors=None,
-                 weights_function=None, properties=[1, 1, 0]):
+                 weights_function=None, properties=[1, 1, 0], params=None):
         """
 
         :param samples:
@@ -741,30 +741,28 @@ class SROM:
         """
 
         # TODO: Mohit - Add error checks
-        # TODO: Mohit - Transform sample from [0,1] into range of marginals
         dimension = np.size(marginal)
-        if weights_function is None:
-            weights_function = (1 / nsamples) * np.ones([nsamples, dimension])
-        else:
-            if len(weights_function) == 0:
-                weights_function = (1/nsamples)*np.ones([nsamples, dimension])
+        if weights_function is None or len(weights_function) == 0:
+            weights_function = np.ones([nsamples, dimension])
+            # weights_function = (1 / nsamples) * np.ones([nsamples, dimension])
 
         if np.size(moments) == 0:
             sys.exit('Moments of marginal distribution are required')
         else:
             weights_function = weights_function.tolist()
             for i in range(int(np.size(moments)/np.size(moments[0]))):
-                weights_function.append(moments[i].tolist())
+                weights_function.append(moments[i])
 
         self.samples = samples
         self.marginal = marginal
         self.moments = np.array(moments)
-        self.weights_errors = weights_errors
+        self.weights_errors = np.array(weights_errors).astype('float64')
         self.weights_function = np.array(weights_function)
         self.properties = properties
+        self.params = params
 
         # TODO: Mohit - Define default calculation for moments
-        def f(p, samples, w, mar, n, d, m, alpha):
+        def f(p, samples, w, mar, n, d, m, alpha, para):
             e1 = 0.
             e2 = 0.
             e22 = 0.
@@ -777,13 +775,14 @@ class SROM:
                 s = srt[0, :, j]
                 a = srt[0, :, d]
                 A = np.cumsum(a)
-                marginal = pdf(mar[j][0])
+                marginal = pdf(mar[j])
                 for i in range(n):
-                    e1 = + w[i, j] * (A[0, i] - marginal(s[0, i])) ** 2
+                    e1 = + w[i, j] * (A[0, i] - marginal(s[0, i], para[j])) ** 2
 
-                e2 =+ (w[i+1, j]) * (np.sum(np.transpose(p) * samples[:, j]) - m[0,j]) ** 2
-                # e22 =+ (w[i+2, j]) * (np.sum(np.array(p) * (np.array(samples[:, j])*np.array(samples[:,j]))) - m[1,j]) ** 2
+                e2 =+ ((1/w[i+1, j])**2) * (np.sum(np.transpose(p) * samples[:, j]) - m[0,j]) ** 2
+                e22 = + ((1/w[i+2, j])**2) * (np.sum(np.array(p) * (np.array(samples[:, j])*np.array(samples[:,j]))) - m[1,j]) ** 2
                 # TODO: Mohit - Add error corresponding to correlation.
+
             return alpha[0]*e1 + alpha[1]*(e2+e22) + alpha[2]*e3
 
         def constraint(p):
@@ -799,11 +798,15 @@ class SROM:
 
         cons = ({'type': 'eq', 'fun': constraint}, {'type': 'ineq', 'fun': constraint2},
                 {'type': 'ineq', 'fun': constraint3})
-
         P = optimize.minimize(f, np.zeros(nsamples),
-                              args=(self.samples, self.weights_function, self.marginal, nsamples, dimension, self.moments, self.weights_errors),
+                              args=(self.samples, self.weights_function, self.marginal, nsamples, dimension, self.moments, self.weights_errors, self.params),
                               constraints=cons, method='SLSQP')
 
         self.probability = P.x
-
+        # mergelist = []
+        # for i in range(nsamples):
+        #     row = self.samples[i]+[self.probability[i]]
+        #     mergelist.append(row)
+        #
+        # self.samples = mergelist
 

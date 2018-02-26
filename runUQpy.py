@@ -11,10 +11,10 @@ x = SampleMethods.STS(pdf=['Uniform', 'Uniform'], pdf_params=[[0, 1], [0, 1]], s
 
 #x = SampleMethods.PSS(pdf=['Uniform', 'Uniform'], pdf_params=[[0, 1], [0, 1]], pss_design=[2, 2], pss_strata=[5, 5])
 
-x = SampleMethods.MCMC(pdf_target='multivariate_pdf', mcmc_algorithm='MH', pdf_proposal='Normal',
-                       pdf_proposal_width=[1, 1], pdf_target_params=[[0, 1], [0, 1]])
+#x = SampleMethods.MCMC(pdf_target='multivariate_pdf', mcmc_algorithm='MH', pdf_proposal='Normal',
+                       #pdf_proposal_width=[1, 1], pdf_target_params=[[0, 1], [0, 1]])
 
-x = SampleMethods.SROM(samples=x.samples, nsamples=9, marginal=['Uniform', 'Uniform'], moments=[[0, 1], [0, 1]],
+x = SampleMethods.SROM(samples=x.samples, nsamples=9, marginal=['Uniform', 'Uniform'], moments=[[0, 1], [2, 3]],
                        weights_errors=[1, 0.2, 0], weights_function=None, properties=[1, 1, 0])
 
 print(x.samples)
