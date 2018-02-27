@@ -14,112 +14,149 @@ def init_sm(data):
     ################################################################################################################
     # Check if requested method is available
 
-    if 'Method' in data:
-        if data['Method'] not in valid_methods:
-            raise NotImplementedError("Method - %s not available" % data['Method'])
+    if 'method' in data:
+        if data['method'] not in valid_methods:
+            raise NotImplementedError("method - %s not available" % data['method'])
     else:
         raise NotImplementedError("No sampling method was provided")
 
     ################################################################################################################
-    # Monte Carlo simulation checks.
-    # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
-    # Optional: number of samples (default 100)
+    # Monte Carlo simulation block.
+    # Mandatory properties(4): 1. Number of parameters, 2. distribution, 3. distribution parameters 4. Number of samples
+    # Optional properties(0):
 
-    if data['Method'] == 'mcs':
-        if 'Number of Samples' not in data:
-            data['Number of Samples'] = None
-        if 'Probability distribution (pdf)' not in data:
+    if data['method'] == 'mcs':
+
+        # Mandatory
+        if 'number of samples' not in data:
+            data['number of samples'] = None
+        if 'distribution type' not in data:
             raise NotImplementedError("Probability distribution not provided")
-        if 'Probability distribution parameters' not in data:
+        if 'distribution parameters' not in data:
             raise NotImplementedError("Probability distribution parameters not provided")
+        if 'number of parameters' not in data:
+            data['number of parameters'] = None
 
     ################################################################################################################
     # Latin Hypercube simulation block.
-    # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
-    # Optional: 1. Criterion, 2. Metric, 3. Iterations
+    # Mandatory properties(4): 1. Number of parameters, 2. distribution, 3. distribution parameters 4. Number of samples
+    # Optional properties(3):  1. Criterion, 2. Metric, 3. Iterations
 
-    if data['Method'] == 'lhs':
-        if 'Number of Samples' not in data:
-            data['Number of Samples'] = None
-        if 'Probability distribution (pdf)' not in data:
+    if data['method'] == 'lhs':
+        # Mandatory
+        if 'number of parameters' not in data:
+            data['number of parameters'] = None
+        if 'number of samples' not in data:
+            data['number of samples'] = None
+        if 'distribution type' not in data:
             raise NotImplementedError("Probability distribution not provided")
-        if 'Probability distribution parameters' not in data:
+        if 'distribution parameters' not in data:
             raise NotImplementedError("Probability distribution parameters not provided")
-        if 'LHS criterion' not in data:
-            data['LHS criterion'] = None
-        if 'distance metric' not in data:
-            data['distance metric'] = None
+
+        # Optional
+        if 'criterion' not in data:
+            data['criterion'] = None
+        if 'distance' not in data:
+            data['distance'] = None
         if 'iterations' not in data:
             data['iterations'] = None
 
     ####################################################################################################################
     # Markov Chain Monte Carlo simulation block.
-    # Necessary parameters:  1. Proposal pdf, 2. Probability pdf width, 3. Target pdf, 4. Target pdf parameters
-    #                        5. algorithm
-    # Optional: 1. Seed, 2. Burn-in
+    # Mandatory properties(4):  1. target distribution, 2. target distribution parameters, 3. Number of samples,
+    #                           4. Number of parameters
+    #  Optional properties(5): 1. Proposal distribution, 2. proposal width, 3. Seed, 4. skip samples (avoid burn-in),
+    #                          5. algorithm
 
-    if data['Method'] == 'mcmc':
-        if 'Names of random variables' not in data:
-            raise NotImplementedError('Number of random variables cannot be defined. Specify names of random variables')
+    if data['method'] == 'mcmc':
+        # Mandatory
+        if 'number of parameters' not in data:
+            raise NotImplementedError('Number of parameters not defined')
+        if 'target distribution' not in data:
+            raise NotImplementedError("Target distribution not defined")
+        else:
+            if data['target distribution'] not in ['multivariate_pdf', 'marginal_pdf', 'normal_pdf']:
+                raise ValueError('Invalid Target distribution type. Available distributions: multivariate_pdf, '
+                                 'marginal_pdf')
+        if 'target distribution parameters' not in data:
+            raise NotImplementedError("Target distribution parameters not defined")
+        if 'number of samples' not in data:
+            raise NotImplementedError('Number of samples not defined')
+
+        # Optional
         if 'seed' not in data:
-            data['seed'] = np.zeros(len(data['Names of random variables']))
+            data['seed'] = None
         if 'skip' not in data:
             data['skip'] = None
-        if 'Proposal distribution' not in data:
-            data['Proposal distribution'] = None
+        if 'proposal distribution' not in data:
+            data['proposal distribution'] = None
         else:
-            print(data['Proposal distribution'])
-            if data['Proposal distribution'] not in ['Uniform', 'Normal']:
+            if data['proposal distribution'] not in ['Uniform', 'Normal']:
                 raise ValueError('Invalid Proposal distribution type. Available distributions: Uniform, Normal')
 
-        if 'Target distribution' not in data:
-            data['Target distribution'] = None
-        else:
-            if data['Target distribution'] not in ['multivariate_pdf', 'marginal_pdf', 'normal_pdf']:
-                raise ValueError('InvalidTarget distribution type. Available distributions: multivariate_pdf, '
-                                 'marginal_pdf')
+        if 'proposal distribution width' not in data:
+            data['proposal distribution width'] = None
 
-        if 'Target distribution parameters' not in data:
-            data['Target distribution parameters'] = None
-
-        if 'Proposal distribution width' not in data:
-            data['Proposal distribution width'] = None
-
-        if 'MCMC algorithm' not in data:
-            data['MCMC algorithm'] = None
+        if 'algorithm' not in data:
+            data['algorithm'] = None
 
     ################################################################################################################
-    # Partially stratified sampling (PSS) block.
-    # Necessary parameters:  1. pdf, 2. pdf parameters 3. pss design 3. pss strata
-    # Optional:
+    # Partially stratified sampling  block.
+    # Mandatory properties (4):  1. distribution, 2. distribution parameters, 3. design, 4. strata
+    # Optional properties(1): 1. Number of parameters
 
-    if data['Method'] == 'pss':
-        if 'Probability distribution (pdf)' not in data:
+    if data['method'] == 'pss':
+
+        # Mandatory
+        if 'distribution type' not in data:
             raise NotImplementedError("Probability distribution not provided")
-        elif 'Probability distribution parameters' not in data:
+        elif 'distribution parameters' not in data:
             raise NotImplementedError("Probability distribution parameters not provided")
-        if 'PSS design' not in data:
+        if 'design' not in data:
             raise NotImplementedError("PSS design not provided")
-        if 'PSS strata' not in data:
+        if 'strata' not in data:
             raise NotImplementedError("PSS strata not provided")
 
-    ################################################################################################################
-    # Stratified sampling (STS) block.
-    # Necessary parameters:  1. pdf, 2. pdf parameters 3. sts design
-    # Optional:
+        # Optional
+        if 'number of parameters' not in data:
+            data['number of parameters'] = None
 
-    if data['Method'] == 'sts':
-        if 'Probability distribution (pdf)' not in data:
+    ################################################################################################################
+    # Stratified sampling block.
+    # Mandatory properties(3):  1. distribution, 2. distribution parameters, 3. design
+    # Optional properties(1): 1. Number of parameters
+
+    if data['method'] == 'sts':
+        # Mandatory
+        if 'distribution type' not in data:
             raise NotImplementedError("Probability distribution not provided")
-        elif 'Probability distribution parameters' not in data:
+        elif 'distribution parameters' not in data:
             raise NotImplementedError("Probability distribution parameters not provided")
-        if 'STS design' not in data:
+        if 'design' not in data:
             raise NotImplementedError("STS design not provided")
 
+        # Optional
+        if 'number of parameters' not in data:
+            data['number of parameters'] = None
+
     ####################################################################################################################
-    # Check any NEW METHOD HERE
-    #
-    #
+    # Stochastic reduced order model block
+    # Mandatory properties(2):  1. moments, 2. error function weights
+    # Optional properties(2): 1.properties to match, 2. sample weights
+
+    if 'SROM' in data and data['SROM'] is True:
+
+        # Mandatory
+        if 'moments' not in data:
+            raise NotImplementedError("Moments not provided")
+        if 'error function weights' not in data:
+            raise NotImplementedError("Error function weights not provided")
+
+        # Optional
+        if 'properties to match' not in data:
+            data['properties to match'] = None
+        if 'sample weights' not in data:
+            data['sample weights'] = None
 
     ####################################################################################################################
     # Check any NEW METHOD HERE
@@ -135,58 +172,171 @@ def init_sm(data):
 def run_sm(data):
     ################################################################################################################
     # Run Monte Carlo simulation
-    if data['Method'] == 'mcs':
-        print("\nRunning  %k \n", data['Method'])
-        rvs = MCS(pdf_type=data['Probability distribution (pdf)'],
-                  pdf_params=data['Probability distribution parameters'],
-                  nsamples=data['Number of Samples'])
-        return rvs
+    if data['method'] == 'mcs':
+        print("\nRunning  %k \n", data['method'])
+        rvs = MCS(dimension=data['number of parameters'], pdf_type=data['distribution type'],
+                  pdf_params=data['distribution parameters'],
+                  nsamples=data['number of samples'])
 
     ################################################################################################################
     # Run Latin Hypercube sampling
-    elif data['Method'] == 'lhs':
-        print("\nRunning  %k \n", data['Method'])
-        rvs = LHS(pdf_type=data['Probability distribution (pdf)'],
-                  pdf_params=data['Probability distribution parameters'],
-                  nsamples=data['Number of Samples'], lhs_metric=data['distance metric'],
-                  lhs_iter=data['iterations'], lhs_criterion=data['LHS criterion'])
-        return rvs
+    elif data['method'] == 'lhs':
+        print("\nRunning  %k \n", data['method'])
+        rvs = LHS(dimension=data['number of parameters'], pdf_type=data['distribution type'],
+                  pdf_params=data['distribution parameters'],
+                  nsamples=data['number of samples'], lhs_metric=data['distance'],
+                  lhs_iter=data['iterations'], lhs_criterion=data['criterion'])
 
     ################################################################################################################
     # Run partially stratified sampling
-    elif data['Method'] == 'pss':
-        print("\nRunning  %k \n", data['Method'])
-        rvs = PSS(pdf_type=data['Probability distribution (pdf)'],
-                  pdf_params=data['Probability distribution parameters'],
-                  pss_design=data['PSS design'], pss_strata=data['PSS strata'])
-        return rvs
+    elif data['method'] == 'pss':
+        print("\nRunning  %k \n", data['method'])
+        rvs = PSS(dimension=data['number of parameters'], pdf_type=data['distribution type'],
+                  pdf_params=data['distribution parameters'],
+                  pss_design=data['design'], pss_strata=data['strata'])
 
     ################################################################################################################
     # Run STS sampling
 
-    elif data['Method'] == 'sts':
-        print("\nRunning  %k \n", data['Method'])
-        rvs = STS(pdf_type=data['Probability distribution (pdf)'],
-                  pdf_params=data['Probability distribution parameters'], sts_design=data['STS design'])
-        return rvs
+    elif data['method'] == 'sts':
+        print("\nRunning  %k \n", data['method'])
+        rvs = STS(dimension=data['number of parameters'], pdf_type=data['distribution type'],
+                  pdf_params=data['distribution parameters'], sts_design=data['design'])
 
     ################################################################################################################
     # Run Markov Chain Monte Carlo sampling
 
-    elif data['Method'] == 'mcmc':
-        print("\nRunning  %k \n", data['Method'])
-        rvs = MCMC(dimension=len(data['Names of random variables']), pdf_target_type=data['Target distribution'],
-                   algorithm=data['MCMC algorithm'], pdf_proposal_type=data['Proposal distribution'],
-                   pdf_proposal_width=data['Proposal distribution width'],
-                   pdf_target_params=data['Target distribution parameters'], seed=data['seed'],
-                   skip=data['skip'], nsamples=data['Number of Samples'])
-        return rvs
+    elif data['method'] == 'mcmc':
+        print("\nRunning  %k \n", data['method'])
+        rvs = MCMC(dimension=data['number of parameters'], pdf_target_type=data['target distribution'],
+                   algorithm=data['algorithm'], pdf_proposal_type=data['proposal distribution'],
+                   pdf_proposal_width=data['proposal distribution width'],
+                   pdf_target_params=data['target distribution parameters'], seed=data['seed'],
+                   skip=data['skip'], nsamples=data['number of samples'])
+
+    ################################################################################################################
+    # Run SROM to the samples
+
+    if 'SROM' in data and data['SROM'] == 'Yes':
+        print("\nImplementing SROM to samples")
+        rvs = SROM(samples=rvs.samples, pdf_type=data['distribution type'], moments=data['moments'],
+                   weights_errors=data['error function weights'], weights_function=data['sample weights'],
+                   properties=data['properties to match'], pdf_params=data['distribution parameters'])
 
     ################################################################################################################
     # Run ANY NEW METHOD HERE
 
-    ################################################################################################################
-    # Run ANY NEW METHOD HERE
+    return rvs
+
+########################################################################################################################
+########################################################################################################################
+#                                         Stochastic reduced order model
+########################################################################################################################
+
+class SROM:
+
+    # TODO: Mohit - Write the documentation for the class
+
+    def __init__(self, samples=None,  pdf_type=None, moments=None, weights_errors=None,
+                 weights_function=None, properties=None, pdf_params=None):
+        """
+        :param samples:
+        :type
+        :param pdf_type:
+        :type
+        :param moments:
+        :type
+
+        :param weights_errors:
+        :type
+
+        :param weights_function:
+        :type weights_function: list
+
+        :param properties:
+        :type
+        :param pdf_params: list
+        :type pdf_params: list
+        """
+
+        # TODO: Mohit - Add error checks
+
+        self.samples = samples
+        self.pdf_type = pdf_type
+        self.moments = moments
+        self.weights_errors = weights_errors
+        self.weight_function = weights_function
+        self.properties = properties
+        self.pdf_params = pdf_params
+        self.dimension = len(self.pdf_type)
+        self.nsamples = samples.shape[0]
+        self.init_srom()
+        weights = self.run_srom()
+        print(weights.shape)
+        self.samples = np.concatenate([self.samples, weights.reshape(weights.shape[0], 1)], axis=1)
+
+    def run_srom(self):
+        from scipy import optimize
+
+        def f(p_, samples, w, mar, n, d, m, alpha, para):
+            e1 = 0.
+            e2 = 0.
+            e22 = 0.
+            e3 = 0.
+            samples = np.matrix(samples)
+            p_ = np.transpose(np.matrix(p_))
+            com = np.append(samples, p_, 1)
+            for j in range(d):
+                srt = com[np.argsort(com[:, j].flatten())]
+                s = srt[0, :, j]
+                a = srt[0, :, d]
+                A = np.cumsum(a)
+                marginal = pdf(mar[j])
+                for i in range(n):
+                    e1 = + w[i, j] * (A[0, i] - marginal(s[0, i], para[j])) ** 2
+
+                e2 = + ((1 / w[i + 1, j]) ** 2) * (np.sum(np.transpose(p_) * samples[:, j]) - m[0, j]) ** 2
+                e22 = + ((1 / w[i + 2, j]) ** 2) * (
+                        np.sum(np.array(p_) * (np.array(samples[:, j]) * np.array(samples[:, j]))) - m[1, j]) ** 2
+
+            return alpha[0] * e1 + alpha[1] * (e2 + e22) + alpha[2] * e3
+
+        def constraint(x):
+            return np.sum(x) - 1
+
+        def constraint2(y):
+            n = np.size(y)
+            return np.ones(n) - y
+
+        def constraint3(z):
+            n = np.size(z)
+            return z - np.zeros(n)
+
+        cons = ({'type': 'eq', 'fun': constraint}, {'type': 'ineq', 'fun': constraint2},
+                {'type': 'ineq', 'fun': constraint3})
+
+        p_ = optimize.minimize(f, np.zeros(self.nsamples),
+                              args=(self.samples, self.weight_function, self.pdf_type, self.nsamples, self.dimension,
+                              self.moments, self.weights_errors, self.pdf_params),
+                              constraints=cons, method='SLSQP')
+
+        return p_.x
+
+    def init_srom(self):
+
+        self.moments = np.array(self.moments)
+        self.weights_errors = np.array(self.weights_errors).astype(np.float64)
+
+        if self.samples is None:
+            raise NotImplementedError('Samples not provided for SROM')
+
+        if self.properties is None:
+            self.properties = [1, 1, 0]
+
+        if self.weight_function is None or len(self.weight_function) == 0:
+            temp_weights_function = np.ones(shape=(self.samples.shape[0], self.dimension))
+            print(temp_weights_function)
+            self.weight_function = np.concatenate([temp_weights_function, self.moments], axis=0)
 
 
 ########################################################################################################################
@@ -194,11 +344,11 @@ def run_sm(data):
 #                                         Monte Carlo simulation
 ########################################################################################################################
 
-
 class MCS:
     """
     A class used to perform brute force Monte Carlo sampling (MCS).
 
+    :param dimension: Number of parameters
     :param nsamples: Number of samples to be generated
     :type nsamples: int
     :param pdf_type: Type of Distributions
@@ -208,42 +358,61 @@ class MCS:
 
     """
 
-    def __init__(self, pdf_type=None, pdf_params=None, nsamples=None):
+    def __init__(self, dimension=None, pdf_type=None, pdf_params=None, nsamples=None):
 
+        self.dimension = dimension
         self.nsamples = nsamples
         self.pdf_type = pdf_type
         self.pdf_params = pdf_params
         self.init_mcs()
-        self.dimension = len(self.pdf_type)
         self.samplesU01, self.samples = self.run_mcs()
 
     def run_mcs(self):
 
         samples = np.random.rand(self.nsamples, self.dimension)
         samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
-
         return samples, samples_u_to_x
 
     ################################################################################################################
     # Monte Carlo simulation checks.
-    # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
-    # Optional: number of samples (default 100)
+    # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters 3. Number of samples
+    # Optional: dimension, names of random variables
 
     def init_mcs(self):
         if self.nsamples is None:
-            self.nsamples = 100
-            warnings.warn("Number of samples not provided. Default number is 100")
+            raise NotImplementedError("Number of samples not provided")
         if self.pdf_type is None:
             raise NotImplementedError("Probability distribution not provided")
         else:
             for i in self.pdf_type:
-                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential']:
+                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
                     raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential' ")
+                                              "'Beta', 'Exponential', 'Gamma' ")
         if self.pdf_params is None:
             raise NotImplementedError("Probability distribution parameters not provided")
-        if len(self.pdf_type) != len(self.pdf_params):
-            raise NotImplementedError("Incompatible dimensions")
+
+        if self.dimension is None:
+            if len(self.pdf_type) != len(self.pdf_params):
+                raise NotImplementedError("Incompatible dimensions")
+            else:
+                self.dimension = len(self.pdf_type)
+        else:
+            import itertools
+            from itertools import chain
+
+            if len(self.pdf_type) == 1 and len(self.pdf_params) == self.dimension:
+                self.pdf_type = list(itertools.repeat(self.pdf_type, self.dimension))
+                self.pdf_type  =  list(chain.from_iterable(self.pdf_type))
+            elif len(self.pdf_params) == 1 and len(self.pdf_type) == self.dimension:
+                self.pdf_params = list(itertools.repeat(self.pdf_params, self.dimension))
+                self.pdf_params = list(chain.from_iterable(self.pdf_params))
+            elif len(self.pdf_params) == 1 and len(self.pdf_type) == 1:
+                self.pdf_params = list(itertools.repeat(self.pdf_params, self.dimension))
+                self.pdf_type = list(itertools.repeat(self.pdf_type, self.dimension))
+                self.pdf_type = list(chain.from_iterable(self.pdf_type))
+                self.pdf_params = list(chain.from_iterable(self.pdf_params))
+            elif len(self.pdf_type) != len(self.pdf_params):
+                raise NotImplementedError("Incompatible dimensions")
 
 
 ########################################################################################################################
@@ -284,9 +453,10 @@ class LHS:
 
     """
 
-    def __init__(self, pdf_type=None, pdf_params=None, lhs_criterion=None, lhs_metric=None,
+    def __init__(self, dimension=None, pdf_type=None, pdf_params=None, lhs_criterion=None, lhs_metric=None,
                  lhs_iter=None, nsamples=None):
 
+        self.dimension = dimension
         self.nsamples = nsamples
         self.pdf_type = pdf_type
         self.pdf_params = pdf_params
@@ -397,33 +567,49 @@ class LHS:
     def init_lhs(self):
 
         if self.nsamples is None:
-            self.nsamples = 100
-            warnings.warn("Number of samples not provided. Default number is 100")
+            raise NotImplementedError("Number of samples not provided")
 
         if self.pdf_type is None:
             raise NotImplementedError("Probability distribution not provided")
         else:
             for i in self.pdf_type:
-                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential']:
+                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
                     raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential' ")
+                                              "'Beta', 'Exponential', 'Gamma' ")
         if self.pdf_params is None:
             raise NotImplementedError("Probability distribution parameters not provided")
-        if len(self.pdf_type) != len(self.pdf_params):
-            raise NotImplementedError("Incompatible dimensions")
+
+        if self.dimension is None:
+            if len(self.pdf_type) != len(self.pdf_params):
+                raise NotImplementedError("Incompatible dimensions")
+            else:
+                self.dimension = len(self.pdf_type)
         else:
-            self.dimension = len(self.pdf_type)
+            import itertools
+            from itertools import chain
+
+            if len(self.pdf_type) == 1 and len(self.pdf_params) == self.dimension:
+                self.pdf_type = list(itertools.repeat(self.pdf_type, self.dimension))
+                self.pdf_type = list(chain.from_iterable(self.pdf_type))
+            elif len(self.pdf_params) == 1 and len(self.pdf_type) == self.dimension:
+                self.pdf_params = list(itertools.repeat(self.pdf_params, self.dimension))
+                self.pdf_params = list(chain.from_iterable(self.pdf_params))
+            elif len(self.pdf_params) == 1 and len(self.pdf_type) == 1:
+                self.pdf_params = list(itertools.repeat(self.pdf_params, self.dimension))
+                self.pdf_type = list(itertools.repeat(self.pdf_type, self.dimension))
+                self.pdf_type = list(chain.from_iterable(self.pdf_type))
+                self.pdf_params = list(chain.from_iterable(self.pdf_params))
+            elif len(self.pdf_type) != len(self.pdf_params):
+                raise NotImplementedError("Incompatible dimensions")
 
         if self.lhs_criterion is None:
             self.lhs_criterion = 'random'
-            warnings.warn("LHS criterion not defined. The default is random")
         else:
             if self.lhs_criterion not in ['random', 'centered', 'maximin', 'correlate']:
                 raise NotImplementedError("Supported lhs criteria: 'random', 'centered', 'maximin', 'correlate'")
 
         if self.lhs_metric is None:
             self.lhs_metric = 'euclidean'
-            warnings.warn("Distance metric for the LHS not defined. The default is Euclidean")
         else:
             if self.lhs_metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
                                        'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis',
@@ -434,9 +620,10 @@ class LHS:
                                           "'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto',"
                                           "'russellrao', 'seuclidean','sokalmichener', 'sokalsneath', 'sqeuclidean'")
 
-        if self.lhs_iter is None:
+        if self.lhs_iter is None or self.lhs_iter == 0:
             self.lhs_iter = 1000
-            warnings.warn("Iterations for the LHS not defined. The default number is 1000")
+        elif self.lhs_iter is not None:
+            self.lhs_iter = int(self.lhs_iter)
 
 
 ########################################################################################################################
@@ -471,13 +658,13 @@ class PSS:
     # TODO: Add the sample check and pss_design check in the beginning
     # TODO: Create a list that contains all element info - parent structure
 
-    def __init__(self, pdf_type=None, pdf_params=None, pss_design=None, pss_strata=None):
+    def __init__(self, dimension=None, pdf_type=None, pdf_params=None, pss_design=None, pss_strata=None):
 
         self.pdf_type = pdf_type
         self.pdf_params = pdf_params
         self.pss_design = pss_design
         self.pss_strata = pss_strata
-        self.dimension = np.sum(self.pss_design)
+        self.dimension = dimension
         self.init_pss()
         self.nsamples = self.pss_strata[0] ** self.pss_design[0]
         self.samplesU01, self.samples = self.run_pss()
@@ -510,9 +697,9 @@ class PSS:
             raise NotImplementedError("Probability distribution not provided")
         else:
             for i in self.pdf_type:
-                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential']:
+                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
                     raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential' ")
+                                              "'Beta', 'Exponential', 'Gamma' ")
         if self.pdf_params is None:
             raise NotImplementedError("Probability distribution parameters not provided")
 
@@ -522,9 +709,6 @@ class PSS:
             if len(self.pss_design) != len(self.pss_strata):
                 raise ValueError('Input vectors "pss_design" and "pss_strata" must be the same length')
 
-        if self.dimension != len(self.pdf_type):
-            raise ValueError('Incompatible number of random variables and distributions')
-
         sample_check = np.zeros((len(self.pss_strata), len(self.pss_design)))
         for i in range(len(self.pss_strata)):
             for j in range(len(self.pss_design)):
@@ -532,6 +716,29 @@ class PSS:
 
         if np.max(sample_check) != np.min(sample_check):
             raise ValueError('All dimensions must have the same number of samples/strata.')
+
+        if self.dimension is None:
+            self.dimension = np.sum(self.pss_design)
+        else:
+            if self.dimension != np.sum(self.pss_design):
+                raise NotImplementedError("Incompatible dimensions")
+
+        import itertools
+        from itertools import chain
+
+        if len(self.pdf_type) == 1 and len(self.pdf_params) == self.dimension:
+            self.pdf_type = list(itertools.repeat(self.pdf_type, self.dimension))
+            self.pdf_type  =  list(chain.from_iterable(self.pdf_type))
+        elif len(self.pdf_params) == 1 and len(self.pdf_type) == self.dimension:
+            self.pdf_params = list(itertools.repeat(self.pdf_params, self.dimension))
+            self.pdf_params = list(chain.from_iterable(self.pdf_params))
+        elif len(self.pdf_params) == 1 and len(self.pdf_type) == 1:
+            self.pdf_params = list(itertools.repeat(self.pdf_params, self.dimension))
+            self.pdf_type = list(itertools.repeat(self.pdf_type, self.dimension))
+            self.pdf_type = list(chain.from_iterable(self.pdf_type))
+            self.pdf_params = list(chain.from_iterable(self.pdf_params))
+        elif len(self.pdf_type) != len(self.pdf_params):
+            raise NotImplementedError("Incompatible dimensions")
 
 
 ########################################################################################################################
@@ -541,17 +748,17 @@ class PSS:
 
 class STS:
     # TODO: MDS - Add documentation to this subclass
+    """
+    :param dimension:
+    :param pdf_type:
+    :param pdf_params:
+    :param sts_design:
+    :param pss_:
+    """
 
-    def __init__(self, pdf_type=None, pdf_params=None, sts_design=None, pss_=None):
-        """
+    def __init__(self, dimension=None, pdf_type=None, pdf_params=None, sts_design=None, pss_=None):
 
-        :param pdf_type:
-        :param pdf_params:
-        :param sts_design:
-        :param pss_: Flag indicating whether STS is used in the framework of PSS
-        Last modified: 24/01/2018 by D.G. Giovanis
-        """
-
+        self.dimension = dimension
         self.pdf_type = pdf_type
         self.pdf_params = pdf_params
         self.sts_design = sts_design
@@ -577,17 +784,37 @@ class STS:
             raise NotImplementedError("Probability distribution not provided")
         else:
             for i in self.pdf_type:
-                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential']:
+                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
                     raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential' ")
+                                              "'Beta', 'Exponential', 'Gamma' ")
         if self.pdf_params is None:
             raise NotImplementedError("Probability distribution parameters not provided")
 
         if self.sts_design is None:
             raise NotImplementedError("PSS design or strata not provided")
 
-        if len(self.sts_design) != len(self.pdf_type):
-            raise ValueError('Incompatible number of random variables and distributions')
+        if self.dimension is None:
+            self.dimension = len(self.sts_design)
+        else:
+            if self.dimension != len(self.sts_design):
+                raise NotImplementedError("Incompatible dimensions")
+
+        import itertools
+        from itertools import chain
+
+        if len(self.pdf_type) == 1 and len(self.pdf_params) == self.dimension:
+            self.pdf_type = list(itertools.repeat(self.pdf_type, self.dimension))
+            self.pdf_type = list(chain.from_iterable(self.pdf_type))
+        elif len(self.pdf_params) == 1 and len(self.pdf_type) == self.dimension:
+            self.pdf_params = list(itertools.repeat(self.pdf_params, self.dimension))
+            self.pdf_params = list(chain.from_iterable(self.pdf_params))
+        elif len(self.pdf_params) == 1 and len(self.pdf_type) == 1:
+            self.pdf_params = list(itertools.repeat(self.pdf_params, self.dimension))
+            self.pdf_type = list(itertools.repeat(self.pdf_type, self.dimension))
+            self.pdf_type = list(chain.from_iterable(self.pdf_type))
+            self.pdf_params = list(chain.from_iterable(self.pdf_params))
+        elif len(self.pdf_type) != len(self.pdf_params):
+            raise NotImplementedError("Incompatible dimensions")
 
         # TODO: Create a list that contains all element info - parent structure
         # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
@@ -935,7 +1162,7 @@ class MCMC:
         if self.skip is None:
             self.skip = 1
         if self.pdf_proposal_type is None:
-            self.pdf_target_type = 'Uniform'
+            self.pdf_proposal_type = 'Uniform'
         if self.pdf_proposal_type not in ['Uniform', 'Normal']:
             raise ValueError('Invalid Proposal distribution type. Available distributions: Uniform, Normal')
         if self.pdf_target_type is None:
@@ -943,20 +1170,16 @@ class MCMC:
         if self.pdf_target_type not in ['multivariate_pdf', 'marginal_pdf']:
             raise ValueError('InvalidTarget distribution type. Available distributions: multivariate_pdf, marginal_pdf')
         if self.pdf_target_params is None:
-            warnings.warn('Target parameters not defined. Default values are  [0, 1]')
             self.pdf_target_params = [0, 1]
 
         if self.pdf_proposal_width is None:
-            warnings.warn('Proposal width not defined. Default value is 2')
             self.pdf_proposal_width = 2
 
         if self.algorithm is None:
             if self.pdf_target_type is not None:
                 if self.pdf_target_type in ['marginal_pdf']:
-                    warnings.warn('MCMC algorithm not defined. The MMH will be used')
                     self.algorithm = 'MMH'
                 elif self.pdf_target_type in ['multivariate_pdf', 'normal_pdf']:
-                    warnings.warn('MCMC algorithm not defined. The MH will be used')
                     self.algorithm = 'MH'
         else:
             if self.algorithm not in ['MH', 'MMH']:

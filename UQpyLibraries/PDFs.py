@@ -33,13 +33,24 @@ def pdf(dist):
     if dist == 'multivariate_pdf':
         return partial(multivariate_pdf)
 
+    if dist == 'Gamma':
+        return partial(Gamma)
+
     elif dist == 'marginal_pdf':
         return partial(marginal_pdf)
+
+
+########################################################################################################################
+#        Define the cumulative distribution of the random parameters
+########################################################################################################################
+
+def Gamma(x, params):
+    return stats.gamma.cdf(x, params[0], loc=params[1], scale=params[2])
+
 
 ########################################################################################################################
 #        Transform the random parameters from U(0, 1) to the original space
 ########################################################################################################################
-
 
 def inv_cdf(x, pdf, params):
     x_trans = np.zeros(shape=(x.shape[0], x.shape[1]))
@@ -86,7 +97,15 @@ def inv_cdf(x, pdf, params):
             for j in range(x.shape[0]):
                 x_trans[j, i] = ppfExponential(x[j, i], params[i][0])
 
+    ####################################################################################
+    # U(0, 1)  ---->  Gamma(λ-shape, shift, scale )
+
+        elif pdf[i] == 'Gamma':
+            for j in range(x.shape[0]):
+                x_trans[j, i] = ppfGamma(x[j, i], params[i][0], params[i][1], params[i][2])
+
     return x_trans
+
 
 ########################################################################################################################
 #             Inverse pdf
@@ -152,6 +171,14 @@ def ppfExponential(p, lamb):
     ppfExponential(p, lamb)"""
     scalE = 1.0/lamb
     return stats.expon.ppf(p, scale=scalE)
+
+
+def ppfGamma(p, shape, shift, scale):
+    """Returns the evaluation of the percent point function (inverse cumulative
+    distribution) evaluated at the probability p for an Gamma
+    distribution.  Usage:\n
+    ppfGamma(p, shape, shift, scale)"""
+    return stats.gamma.ppf(p, shape, loc=shift, scale=scale)
 
 
 def normal_to_uniform(u, a, b):

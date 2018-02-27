@@ -1,46 +1,26 @@
-#Method
-SuS
+#method
+mcmc
 
-#Names of random variables
-E
-I
-
-#Probability distribution (pdf)
-Normal
-Normal
-
-
-#Probability distribution parameters
-3000000 300000
-0.001 0.00005
-
-
-#Number of random variables
-2
-
-#Number of Samples per subset
-1000
+#number of parameters
+3
 
 #Proposal distribution
 Uniform
 
+#number of samples
+20
+
 #Proposal distribution width
 2
 
-#MCMC algorithm
+#algorithm
 MMH
 
-#Target distribution
+#target distribution
 marginal_pdf
 
-#Target distribution parameters
+#target distribution parameters
 0 1
-
-#Conditional probability
-0.1
-
-#Limit-state
-2.35
 
 
 #end

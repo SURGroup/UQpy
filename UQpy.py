@@ -1,6 +1,5 @@
-import os
-import sys
 from argparse import ArgumentParser
+from UQpyLibraries.UQpyModules import *
 
 UQpy_commandLine = \
 UQpy_commandLine_Usage = """python UQpy.py --{options}"""
@@ -58,34 +57,5 @@ if __name__ == '__main__':
                       "for more information")
                 sys.exit()
 
-        # Check number of available cores
-        if args.CPUs != 0:
-            args.ParallelProcessing = True
-            import multiprocessing
-            n_cpu = multiprocessing.cpu_count()
-            if args.CPUs > n_cpu:
-                print("Error: You have available {0:1d} CPUs. Start parallel computing using {0:1d} CPUs".format(n_cpu))
-                args.CPUs = n_cpu
-        else:
-            args.ParallelProcessing = False
-
-        # Create UQpy output directory
-        import shutil
-        folder_name = 'simUQpyOut'
-        current_dir = os.getcwd()
-        args.Output_directory = os.path.join(os.sep, current_dir, folder_name)
-
-        if os.path.exists(args.Output_directory):
-            shutil.rmtree(args.Output_directory)
-        os.makedirs(args.Output_directory, exist_ok=False)
-
-        # Check if Output_directory already exists inside Model directory
-        path = os.path.join(os.sep, args.Model_directory, folder_name)
-        if os.path.exists(path) and os.path.isdir(path):
-            shutil.rmtree(path)
-
-        # Import UQpy library
-        from UQpyLibraries import UQpyModules
-
-        # Execute UQpy
-        UQpyModules.RunCommandLine(args)
+        from UQpyLibraries.UQpyModules import RunCommandLine
+        RunCommandLine(args)

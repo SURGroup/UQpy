@@ -1,37 +1,21 @@
 import os
 import shutil
 from UQpyLibraries.SampleMethods import *
-from UQpyLibraries.Reliability import  *
+from UQpyLibraries.Reliability import *
 
 
 class RunCommandLine:
 
     def __init__(self, argparseobj):
-
+        os.system('clear')
         self.args = argparseobj
-        ################################################################################################################
-        # Create a unique temporary directory. Remove after completion.
-        self.current_dir = os.getcwd()
-        dir_path = os.path.join(self.current_dir, 'tmp')
-        if os.path.exists(dir_path) and os.path.isdir(dir_path):
-            shutil.rmtree(dir_path)
-        os.makedirs('tmp', exist_ok=True)
-        self.args.WorkingDir = os.path.join(os.sep, self.current_dir, 'tmp')
-
-        src_files = os.listdir(self.args.Model_directory)
-        for file_name in src_files:
-            full_file_name = os.path.join(self.args.Model_directory, file_name)
-
-            # Copy ALL files from Model_directory to Working_directory
-            if os.path.isfile(full_file_name):
-                shutil.copy(full_file_name, self.args.WorkingDir)
-
-        os.chdir(os.path.join(self.current_dir, self.args.WorkingDir))
 
         ################################################################################################################
         # Read  UQpy parameter file
-        from UQpyLibraries import ReadInputFile
 
+        os.chdir(os.path.join(os.getcwd(), self.args.Model_directory))
+
+        from UQpyLibraries import ReadInputFile
         if not os.path.isfile('UQpy_Params.txt'):
             print("Error: UQpy parameters file does not exist")
             sys.exit()
@@ -45,9 +29,9 @@ class RunCommandLine:
         ################################################################################################################
 
         # Run Selected method
-        if data['Method'] in ['SuS']:
+        if data['method'] in ['SuS']:
             self.run_reliability(data)
-        elif data['Method'] in ['mcs', 'lhs', 'mcmc', 'pss', 'sts']:
+        elif data['method'] in ['mcs', 'lhs', 'mcmc', 'pss', 'sts']:
             self.run_uq(data)
 
     def run_uq(self, data):
@@ -65,62 +49,36 @@ class RunCommandLine:
         self.args.Adaptive = False
         ################################################################################################################
         # Initialize the requested UQpy method: Check if all necessary parameters are defined in the UQpyParams.txt file
+
         init_sm(data)
 
         ################################################################################################################
-        # Run the requested UQpy method and save the samples into file 'UQpyOut.txt'
+        # Run the requested UQpy method
         rvs = run_sm(data)
 
         # Save the samples in a .txt file
-        save_txt(data['Names of random variables'], rvs.samples)
+        np.savetxt('UQpy_Samples.txt', rvs.samples, fmt='%0.5f')
 
         # Save the samples in a .csv file
-        save_csv(data['Names of random variables'], rvs.samples)
+        if 'names of parameters' not in data:
+            import itertools
+            data['names of parameters'] = list(itertools.repeat('#name', rvs.samples.shape[1]))
 
-        ################################################################################################################
-        # Split the samples into chunks in order to sent to each processor in case of parallel computing
-
-        if self.args.ParallelProcessing is True:
-            if rvs.samples.shape[0] <= self.args.CPUs:
-                self.args.CPUs = rvs.samples.shape[0]
-                self.args.CPUs_flag = True
-                print('The number of CPUs used is\n %', rvs.samples.shape[0])
-            chunk_samples_cores(data, rvs.samples, self.args)
+        save_csv(data['names of parameters'], rvs.samples)
 
         ################################################################################################################
         # If a model is provided then run it
 
         if self.args.Solver is not None:
-            RunModel(self.args)
-
-        ################################################################################################################
-        # Move the data to directory simUQpyOut/ , delete the temp/ directory
-        # and terminate the program
-
-        _files = list()
-        _files.append('UQpy_Samples.csv')
-        _files.append('UQpy_Samples.txt')
-
-        if self.args.Solver is not None:
-            src_files = [filename for filename in os.listdir(self.args.WorkingDir) if filename.startswith("UQpy_eval_")]
-            for file in src_files:
-                file_new = file.replace("UQpy_eval_", "Model_")
-                os.rename(file, file_new)
-                _files.append(file_new)
-
-        for file_name in _files:
-            full_file_name = os.path.join(self.args.WorkingDir, file_name)
-            shutil.copy(full_file_name, self.args.Output_directory)
-
-        shutil.rmtree(self.args.WorkingDir)
-        shutil.move(self.args.Output_directory, self.args.Model_directory)
+            RunModel(self.args.CPUs, self.args.Solver, self.args.Input_Shell_Script, self.args.Output_Shell_Script,
+                     self.args.Adaptive, rvs.dimension)
 
         ################################################################################################################
         print("\nSuccessful execution of UQpy\n\n")
 
     def run_reliability(self, data):
         init_rm(data)
-        if data['Method'] == 'SuS':
+        if data['method'] == 'SuS':
             from UQpyLibraries.Reliability import SubsetSimulation
             self.args.CPUs_flag = True
             self.args.ParallelProcessing = False
@@ -128,7 +86,7 @@ class RunCommandLine:
             sus = run_rm(self, data)
 
             # Save the samples in a .txt file
-            save_txt(data['Names of random variables'], sus.samples)
+            np.savetxt('UQpy_Samples.txt', sus.samples, fmt='%0.5f')
 
             # Save the samples in a .csv file
             save_csv(data['Names of random variables'], sus.samples)
@@ -163,22 +121,83 @@ class RunModel:
     """
     A class used to run the computational model.
 
-    :param args
-    """
-    def __init__(self, args):
+    :param cpu:
+    :param solver:
+    :param input_:
+    :param output_:
+    :param adaptive:
+    :param dimension:
 
-        self.CPUs = args.CPUs
-        self.model_script = args.Solver
-        self.input_script = args.Input_Shell_Script
-        self.output_script = args.Output_Shell_Script
-        self.current_dir = os.getcwd()
-        self.Adaptive = args.Adaptive
-        parallel_processing = args.ParallelProcessing
+    """
+    def __init__(self, cpu=None, solver=None, input_=None, output_=None, adaptive=None, dimension=None):
+
+        self.CPUs = cpu
+        self.model_script = solver
+        self.input_script = input_
+        self.output_script = output_
+        self.Adaptive = adaptive
+        self.dimension = dimension
+
+        import shutil
+        current_dir = os.getcwd()
+        ################################################################################################################
+        # Create a unique temporary directory. Remove after completion.
+        folder_name = 'simUQpyOut'
+        output_directory = os.path.join(os.sep, current_dir, folder_name)
+
+        model_files = list()
+        for fname in os.listdir(current_dir):
+            path = os.path.join(current_dir, fname)
+            if not os.path.isdir(path):
+                model_files.append(path)
+
+        dir_path = os.path.join(current_dir, 'tmp')
+        if os.path.exists(dir_path) and os.path.isdir(dir_path):
+            shutil.rmtree(dir_path)
+        os.makedirs('tmp', exist_ok=False)
+        work_dir = os.path.join(os.sep, current_dir, 'tmp')
+
+        # copy UQ_samples.txt to working-directory
+        for file_name in model_files:
+            full_file_name = os.path.join(current_dir, file_name)
+            shutil.copy(full_file_name, work_dir)
+
+        os.chdir(os.path.join(current_dir, work_dir))
+
+        if self.CPUs != 0 or self.CPUs is not None:
+            parallel_processing = True
+            import multiprocessing
+            n_cpu = multiprocessing.cpu_count()
+            if self.CPUs > n_cpu:
+                print("Error: You have available {0:1d} CPUs. Start parallel computing using {0:1d} CPUs".format(n_cpu))
+                self.CPUs = n_cpu
+        else:
+            parallel_processing = False
 
         if parallel_processing is True:
             self.values = self.multi_core()
         else:
             self.values = self.run_model()
+
+
+        ################################################################################################################
+        # Move the data to directory simUQpyOut
+
+        os.makedirs(output_directory, exist_ok=True)
+
+        path = os.path.join(current_dir, work_dir)
+
+        src_files = [filename for filename in os.listdir(path) if filename.startswith("Model_")]
+
+        for file_name in src_files:
+            full_file_name = os.path.join(path, file_name)
+            shutil.copy(full_file_name, output_directory)
+
+
+        ################################################################################################################
+        # Delete the tmp working directory directory
+        shutil.rmtree(work_dir)
+        os.chdir(current_dir)
 
     def run_model(self):
         import time
@@ -186,12 +205,15 @@ class RunModel:
 
         # Load the UQpyOut.txt
         values = np.loadtxt('UQpy_Samples.txt', dtype=np.float32)
-
         print("\nEvaluating the model...\n")
 
         if self.Adaptive is True:
             values = values.reshape(1, values.shape[0])
 
+        if self.dimension == 1:
+            values = values.reshape(values.shape[0], self.dimension)
+
+        model_eval = list()
         for i in range(values.shape[0]):
             # Write each value of UQpyOut.txt into a *.txt file
             with open('UQpy_run_{0}.txt'.format(i), 'wb') as f:
@@ -209,8 +231,11 @@ class RunModel:
             join_output_script = './{0} {1}'.format(self.output_script, i)
             os.system(join_output_script)
 
-            model_eval = np.loadtxt('UQpy_eval_{}.txt'.format(i))
-            os.remove('UQpy_eval_{}.txt'.format(i))
+            model_eval.append(np.loadtxt('UQpy_eval_{}.txt'.format(i)))
+
+            src_files = 'UQpy_eval_{0}.txt'.format(int(i))
+            file_new = src_files.replace("UQpy_eval_{0}.txt".format(int(i)), "Model_{0}.txt".format(int(i)))
+            os.rename(src_files, file_new)
 
         end_time = time.time()
         print('Total time:', end_time - start_time, "(sec)")
@@ -225,15 +250,27 @@ class RunModel:
 
         # Load the UQpyOut.txt
         values = np.loadtxt('UQpy_Batch_{0}.txt'.format(j+1), dtype=np.float32)
-        index = np.loadtxt('UQpy_Batch_index_{0}.txt'.format(j + 1))
+        index_temp = np.loadtxt('UQpy_Batch_index_{0}.txt'.format(j + 1))
 
-        if index.size == 1:
-            index = []
+        index = list()
+        for i in range(index_temp.size):
+            if index_temp.size == 1:
+                index.append(index_temp)
+            else:
+                index.append(index_temp[i])
+
+        if values.size == 1:
+            values = values.reshape(1, 1)
+
+        if len(values.shape) == 1 and self.dimension != 1:
             values = values.reshape(1, values.shape[0])
-            index.append(np.loadtxt('UQpy_Batch_index_{0}.txt'.format(j+1)))
-        else:
-            index = np.loadtxt('UQpy_Batch_index_{0}.txt'.format(j + 1))
+        elif len(values.shape) == 1 and self.dimension == 1:
+            values = values.reshape(values.shape[0], 1)
 
+        os.remove('UQpy_Batch_{0}.txt'.format(j+1))
+        os.remove('UQpy_Batch_index_{0}.txt'.format(j + 1))
+
+        model_eval = list()
         count = 0
         for i in index:
             lock = Lock()
@@ -254,8 +291,12 @@ class RunModel:
             join_output_script = './{0} {1}'.format(self.output_script, int(i))
             os.system(join_output_script)
 
-            model_eval = np.loadtxt('UQpy_eval_{0}.txt'.format(int(i)))
-            os.remove('UQpy_eval_{0}.txt'.format(i))
+            model_eval.append(np.loadtxt('UQpy_eval_{0}.txt'.format(int(i))))
+
+            src_files = 'UQpy_eval_{0}.txt'.format(int(i))
+            file_new = src_files.replace("UQpy_eval_{0}.txt".format(int(i)), "Model_{0}.txt".format(int(i)))
+            os.rename(src_files, file_new)
+
             count = count + 1
             lock.release()
 
@@ -272,6 +313,17 @@ class RunModel:
         start_time = time.time()
 
         print("\nEvaluating the model...\n")
+
+        samples = np.loadtxt('UQpy_Samples.txt', dtype=np.float32)
+
+        if samples.shape[0] <= self.CPUs:
+            self.CPUs = samples.shape[0]
+            print('The number of CPUs used is\n %', samples.shape[0])
+
+        if len(samples.shape) == 1:
+            samples = samples.reshape(samples.shape[0], 1)
+
+        chunk_samples_cores(samples, self)
 
         results = []
         queues = [Queue() for i in range(self.CPUs)]
@@ -291,14 +343,13 @@ class RunModel:
         return results
 
 
-def chunk_samples_cores(data, samples, args):
+def chunk_samples_cores(samples, args):
 
-    header = ', '.join(data['Names of random variables'])
     # In case of parallel computing divide the samples into chunks in order to sent to each processor
     chunks = args.CPUs
     if args.Adaptive is True:
         for i in range(args.CPUs):
-            np.savetxt('UQpy_Batch_{0}.txt'.format(i+1), samples[range(i-1, i), :], header=str(header), fmt='%0.5f')
+            np.savetxt('UQpy_Batch_{0}.txt'.format(i+1), samples[range(i-1, i), :],fmt='%0.5f')
             np.savetxt('UQpy_Batch_index_{0}.txt'.format(i+1), np.array(i).reshape(1,))
 
     else:
@@ -313,13 +364,11 @@ def chunk_samples_cores(data, samples, args):
                 lines = range(size[i])
             else:
                 lines = range(int(np.sum(size[:i])), int(np.sum(size[:i+1])))
-            np.savetxt('UQpy_Batch_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
+            np.savetxt('UQpy_Batch_{0}.txt'.format(i+1), samples[lines, :],  fmt='%0.5f')
             np.savetxt('UQpy_Batch_index_{0}.txt'.format(i+1), lines)
 
 
-def chunk_samples_nodes(data, samples, args):
-
-    header = ', '.join(data['Names of random variables'])
+def chunk_samples_nodes(samples, args):
 
     # In case of cluster divide the samples into chunks in order to sent to each processor
     chunks = args.nodes
@@ -335,7 +384,7 @@ def chunk_samples_nodes(data, samples, args):
         else:
             lines = range(int(np.sum(size[:i])), int(np.sum(size[:i+1])))
 
-        np.savetxt('UQpy_Batch_{0}.txt'.format(i+1), samples[lines, :], header=str(header), fmt='%0.5f')
+        np.savetxt('UQpy_Batch_{0}.txt'.format(i+1), samples[lines, :],  fmt='%0.5f')
         np.savetxt('UQpy_Batch_index_{0}.txt'.format(i+1), lines)
 
 
