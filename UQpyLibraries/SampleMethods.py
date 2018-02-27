@@ -31,9 +31,9 @@ def init_sm(data):
         if 'number of samples' not in data:
             data['number of samples'] = None
         if 'distribution type' not in data:
-            raise NotImplementedError("Probability distribution not provided")
+            raise NotImplementedError("Distributions not defined. Exit code")
         if 'distribution parameters' not in data:
-            raise NotImplementedError("Probability distribution parameters not provided")
+            raise NotImplementedError("Distribution parameters not provided. Exit code")
         if 'number of parameters' not in data:
             data['number of parameters'] = None
 
@@ -49,9 +49,9 @@ def init_sm(data):
         if 'number of samples' not in data:
             data['number of samples'] = None
         if 'distribution type' not in data:
-            raise NotImplementedError("Probability distribution not provided")
+            raise NotImplementedError("Exit code: Distributions not defined.")
         if 'distribution parameters' not in data:
-            raise NotImplementedError("Probability distribution parameters not provided")
+            raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
         # Optional
         if 'criterion' not in data:
@@ -71,17 +71,18 @@ def init_sm(data):
     if data['method'] == 'mcmc':
         # Mandatory
         if 'number of parameters' not in data:
-            raise NotImplementedError('Number of parameters not defined')
+            raise NotImplementedError('Exit code: Number of parameters not defined.')
         if 'target distribution' not in data:
-            raise NotImplementedError("Target distribution not defined")
+            raise NotImplementedError("Exit code: Target distribution not defined.")
         else:
             if data['target distribution'] not in ['multivariate_pdf', 'marginal_pdf', 'normal_pdf']:
-                raise ValueError('Invalid Target distribution type. Available distributions: multivariate_pdf, '
-                                 'marginal_pdf')
+                raise ValueError('Exit code: Unrecognized type for target distribution. Supported distributions: '
+                                 'multivariate_pdf, '
+                                 'marginal_pdf.')
         if 'target distribution parameters' not in data:
-            raise NotImplementedError("Target distribution parameters not defined")
+            raise NotImplementedError("Exit code: Target distribution parameters not defined.")
         if 'number of samples' not in data:
-            raise NotImplementedError('Number of samples not defined')
+            raise NotImplementedError('Exit code: Number of samples not defined.')
 
         # Optional
         if 'seed' not in data:
@@ -92,11 +93,12 @@ def init_sm(data):
             data['proposal distribution'] = None
         else:
             if data['proposal distribution'] not in ['Uniform', 'Normal']:
-                raise ValueError('Invalid Proposal distribution type. Available distributions: Uniform, Normal')
+                raise ValueError('Exit code: Unrecognized type of proposal distribution type. Supported distributions: '
+                                 'Uniform, '
+                                 'Normal.')
 
         if 'proposal distribution width' not in data:
             data['proposal distribution width'] = None
-
         if 'algorithm' not in data:
             data['algorithm'] = None
 
@@ -109,13 +111,13 @@ def init_sm(data):
 
         # Mandatory
         if 'distribution type' not in data:
-            raise NotImplementedError("Probability distribution not provided")
+            raise NotImplementedError("Exit code: Distributions not defined.")
         elif 'distribution parameters' not in data:
-            raise NotImplementedError("Probability distribution parameters not provided")
+            raise NotImplementedError("Exit code: distribution parameters not defined.")
         if 'design' not in data:
-            raise NotImplementedError("PSS design not provided")
+            raise NotImplementedError("Exit code: pss design not defined.")
         if 'strata' not in data:
-            raise NotImplementedError("PSS strata not provided")
+            raise NotImplementedError("Exit code: pss strata not defined.")
 
         # Optional
         if 'number of parameters' not in data:
@@ -129,11 +131,11 @@ def init_sm(data):
     if data['method'] == 'sts':
         # Mandatory
         if 'distribution type' not in data:
-            raise NotImplementedError("Probability distribution not provided")
+            raise NotImplementedError("Exit code: Distributions not defined.")
         elif 'distribution parameters' not in data:
-            raise NotImplementedError("Probability distribution parameters not provided")
+            raise NotImplementedError("Exit code: distribution parameters not defined.")
         if 'design' not in data:
-            raise NotImplementedError("STS design not provided")
+            raise NotImplementedError("Exit code: sts design not defined.")
 
         # Optional
         if 'number of parameters' not in data:
@@ -148,9 +150,9 @@ def init_sm(data):
 
         # Mandatory
         if 'moments' not in data:
-            raise NotImplementedError("Moments not provided")
+            raise NotImplementedError("Exit code: Moments not provided.")
         if 'error function weights' not in data:
-            raise NotImplementedError("Error function weights not provided")
+            raise NotImplementedError("Exit code: Error function weights not provided.")
 
         # Optional
         if 'properties to match' not in data:
@@ -254,7 +256,8 @@ class SROM:
         :type weights_function: list
 
         :param properties:
-        :type
+        :type properties:
+
         :param pdf_params: list
         :type pdf_params: list
         """
@@ -346,13 +349,18 @@ class SROM:
 
 class MCS:
     """
-    A class used to perform brute force Monte Carlo sampling (MCS).
+    A class used to perform brute force Monte Carlo design of experiment (MCS).
+    SamplesU01 belong in hypercube [0, 1]^n while samples belong to the parameter space
 
     :param dimension: Number of parameters
+    :type dimension: int
+
     :param nsamples: Number of samples to be generated
     :type nsamples: int
-    :param pdf_type: Type of Distributions
+
+    :param pdf_type: Type of distributions
     :type pdf_type: list
+
     :param pdf_params: Distribution parameters
     :type pdf_params: list
 
@@ -374,26 +382,27 @@ class MCS:
         return samples, samples_u_to_x
 
     ################################################################################################################
-    # Monte Carlo simulation checks.
+    # Initialize Monte Carlo simulation.
     # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters 3. Number of samples
     # Optional: dimension, names of random variables
 
     def init_mcs(self):
         if self.nsamples is None:
-            raise NotImplementedError("Number of samples not provided")
+            raise NotImplementedError("Exit code: Number of samples not defined.")
         if self.pdf_type is None:
-            raise NotImplementedError("Probability distribution not provided")
+            raise NotImplementedError("Exit code: Distributions not defined.")
         else:
             for i in self.pdf_type:
                 if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
-                    raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential', 'Gamma' ")
+                    raise NotImplementedError("Exit code: Unrecognized type of distribution."
+                                              "Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
+                                              "'Beta', 'Exponential', 'Gamma'. ")
         if self.pdf_params is None:
-            raise NotImplementedError("Probability distribution parameters not provided")
+            raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
         if self.dimension is None:
             if len(self.pdf_type) != len(self.pdf_params):
-                raise NotImplementedError("Incompatible dimensions")
+                raise NotImplementedError("Exit code: Incompatible dimensions.")
             else:
                 self.dimension = len(self.pdf_type)
         else:
@@ -412,7 +421,7 @@ class MCS:
                 self.pdf_type = list(chain.from_iterable(self.pdf_type))
                 self.pdf_params = list(chain.from_iterable(self.pdf_params))
             elif len(self.pdf_type) != len(self.pdf_params):
-                raise NotImplementedError("Incompatible dimensions")
+                raise NotImplementedError("Exit code: Incompatible dimensions")
 
 
 ########################################################################################################################
@@ -423,22 +432,20 @@ class MCS:
 class LHS:
     """
     A class that creates a Latin Hypercube Design for experiments.
+    SamplesU01 belong in hypercube [0, 1]^n while samples belong to the parameter space
 
-    These points are generated on the U-space(cdf) i.e. [0,1) and should be converted back to X-space(pdf)
-    i.e. (-Inf , Inf) for a normal distribution.
-
-    :param pdf_type: Probability distribution of the parameters
+    :param pdf_type: Distribution of the parameters
     :type pdf_type: list
 
-    :param pdf_params: Probability distribution parameters
+    :param pdf_params: Distribution parameters
     :type pdf_params: list
 
     :param lhs_criterion: The criterion for generating sample points
                            Options:
-                                    1. random - completely random \n
-                                    2. centered - points only at the centre \n
-                                    3. maximin - maximising the minimum distance between points \n
-                                    4. correlate - minimizing the correlation between the points \n
+                                1. random - completely random \n
+                                2. centered - points only at the centre \n
+                                3. maximin - maximising the minimum distance between points \n
+                                4. correlate - minimizing the correlation between the points \n
     :type lhs_criterion: str
 
     :param lhs_iter: The number of iteration to run. Only for maximin, correlate and criterion
@@ -483,7 +490,7 @@ class LHS:
             samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
             return samples, samples_u_to_x
         elif self.lhs_criterion == 'maximin':
-            samples = self._maximin(a, b)
+            samples = self._max_min(a, b)
             samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
             return samples, samples_u_to_x
         elif self.lhs_criterion == 'correlate':
@@ -509,11 +516,7 @@ class LHS:
         return samples
 
     def _centered(self, a, b):
-        """
 
-        :return: The samples points for the centered LHS design
-
-        """
         samples = np.zeros([self.nsamples, self.dimension])
         centers = (a + b) / 2
 
@@ -522,30 +525,23 @@ class LHS:
 
         return samples
 
-    def _maximin(self, a, b):
-        """
-        :return: The samples points for the Minimax LHS design
+    def _max_min(self, a, b):
 
-        """
-        maximin_dist = 0
+        max_min_dist = 0
         samples = self._random(a, b)
         for _ in range(self.lhs_iter):
             samples_try = self._random(a, b)
             d = pdist(samples_try, metric=self.lhs_metric)
-            if maximin_dist < np.min(d):
-                maximin_dist = np.min(d)
+            if max_min_dist < np.min(d):
+                max_min_dist = np.min(d)
                 samples = copy.deepcopy(samples_try)
 
-        print('Achieved miximin distance of ', maximin_dist)
+        print('Achieved max_min distance of ', max_min_dist)
 
         return samples
 
     def _correlate(self, a, b):
-        """
 
-        :return: The samples points for the minimum correlated LHS design
-
-        """
         min_corr = np.inf
         samples = self._random(a, b)
         for _ in range(self.lhs_iter):
@@ -567,21 +563,20 @@ class LHS:
     def init_lhs(self):
 
         if self.nsamples is None:
-            raise NotImplementedError("Number of samples not provided")
-
+            raise NotImplementedError("Exit code: Number of samples not defined.")
         if self.pdf_type is None:
-            raise NotImplementedError("Probability distribution not provided")
+            raise NotImplementedError("Exit code: Distributions not defined.")
         else:
             for i in self.pdf_type:
                 if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
-                    raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential', 'Gamma' ")
+                    raise NotImplementedError("Exit code: Unrecognized type of distribution."
+                                              "Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
+                                              "'Beta', 'Exponential', 'Gamma'.")
         if self.pdf_params is None:
-            raise NotImplementedError("Probability distribution parameters not provided")
-
+            raise NotImplementedError("Exit code: Distribution parameters not defined.")
         if self.dimension is None:
             if len(self.pdf_type) != len(self.pdf_params):
-                raise NotImplementedError("Incompatible dimensions")
+                raise NotImplementedError("Exit code: Incompatible dimensions.")
             else:
                 self.dimension = len(self.pdf_type)
         else:
@@ -600,13 +595,14 @@ class LHS:
                 self.pdf_type = list(chain.from_iterable(self.pdf_type))
                 self.pdf_params = list(chain.from_iterable(self.pdf_params))
             elif len(self.pdf_type) != len(self.pdf_params):
-                raise NotImplementedError("Incompatible dimensions")
+                raise NotImplementedError("Exit code: Incompatible dimensions.")
 
         if self.lhs_criterion is None:
             self.lhs_criterion = 'random'
         else:
             if self.lhs_criterion not in ['random', 'centered', 'maximin', 'correlate']:
-                raise NotImplementedError("Supported lhs criteria: 'random', 'centered', 'maximin', 'correlate'")
+                raise NotImplementedError("Exit code: Supported lhs criteria: 'random', 'centered', 'maximin', "
+                                          "'correlate'")
 
         if self.lhs_metric is None:
             self.lhs_metric = 'euclidean'
@@ -615,7 +611,8 @@ class LHS:
                                        'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis',
                                        'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean',
                                        'sokalmichener', 'sokalsneath', 'sqeuclidean']:
-                raise NotImplementedError("Supported lhs criteria: 'braycurtis', 'canberra', 'chebyshev', 'cityblock',"
+                raise NotImplementedError("Exit code: Supported lhs distances: 'braycurtis', 'canberra', 'chebyshev', "
+                                          "'cityblock',"
                                           " 'correlation', 'cosine','dice', 'euclidean', 'hamming', 'jaccard', "
                                           "'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto',"
                                           "'russellrao', 'seuclidean','sokalmichener', 'sokalsneath', 'sqeuclidean'")
@@ -624,7 +621,6 @@ class LHS:
             self.lhs_iter = 1000
         elif self.lhs_iter is not None:
             self.lhs_iter = int(self.lhs_iter)
-
 
 ########################################################################################################################
 ########################################################################################################################
@@ -694,20 +690,23 @@ class PSS:
     def init_pss(self):
 
         if self.pdf_type is None:
-            raise NotImplementedError("Probability distribution not provided")
+            raise NotImplementedError("Exit code: Distribution not defined.")
         else:
             for i in self.pdf_type:
                 if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
-                    raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential', 'Gamma' ")
+                    raise NotImplementedError("Exit code: Unrecognized type of distribution."
+                                              "Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
+                                              "'Beta', 'Exponential', 'Gamma'. ")
         if self.pdf_params is None:
-            raise NotImplementedError("Probability distribution parameters not provided")
+            raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
-        if self.pss_design is None or self.pss_strata is None:
-            raise NotImplementedError("PSS design or strata not provided")
+        if self.pss_design is None:
+            raise NotImplementedError("Exit code: pss design not defined.")
+        elif self.pss_strata is None:
+            raise NotImplementedError("Exit code: pss strata not defined.")
         else:
             if len(self.pss_design) != len(self.pss_strata):
-                raise ValueError('Input vectors "pss_design" and "pss_strata" must be the same length')
+                raise ValueError('Exit code: "pss design" and "pss strata" must be the same length.')
 
         sample_check = np.zeros((len(self.pss_strata), len(self.pss_design)))
         for i in range(len(self.pss_strata)):
@@ -715,13 +714,13 @@ class PSS:
                 sample_check[i, j] = self.pss_strata[i] ** self.pss_design[j]
 
         if np.max(sample_check) != np.min(sample_check):
-            raise ValueError('All dimensions must have the same number of samples/strata.')
+            raise ValueError('Exit code: All dimensions must have the same number of samples/strata.')
 
         if self.dimension is None:
             self.dimension = np.sum(self.pss_design)
         else:
             if self.dimension != np.sum(self.pss_design):
-                raise NotImplementedError("Incompatible dimensions")
+                raise NotImplementedError("Exit code: Incompatible dimensions.")
 
         import itertools
         from itertools import chain
@@ -738,7 +737,7 @@ class PSS:
             self.pdf_type = list(chain.from_iterable(self.pdf_type))
             self.pdf_params = list(chain.from_iterable(self.pdf_params))
         elif len(self.pdf_type) != len(self.pdf_params):
-            raise NotImplementedError("Incompatible dimensions")
+            raise NotImplementedError("Exit code: Incompatible dimensions.")
 
 
 ########################################################################################################################
@@ -781,23 +780,24 @@ class STS:
     def init_sts(self):
 
         if self.pdf_type is None:
-            raise NotImplementedError("Probability distribution not provided")
+            raise NotImplementedError("Exit code: Distribution not defined.")
         else:
             for i in self.pdf_type:
                 if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
-                    raise NotImplementedError("Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential', 'Gamma' ")
+                    raise NotImplementedError("Exit code: Unrecognized type of distribution."
+                                              "Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
+                                              "'Beta', 'Exponential', 'Gamma'. ")
         if self.pdf_params is None:
-            raise NotImplementedError("Probability distribution parameters not provided")
+            raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
         if self.sts_design is None:
-            raise NotImplementedError("PSS design or strata not provided")
+            raise NotImplementedError("Exit code: sts design not defined.")
 
         if self.dimension is None:
             self.dimension = len(self.sts_design)
         else:
             if self.dimension != len(self.sts_design):
-                raise NotImplementedError("Incompatible dimensions")
+                raise NotImplementedError("Exit code: Incompatible dimensions.")
 
         import itertools
         from itertools import chain
@@ -814,7 +814,7 @@ class STS:
             self.pdf_type = list(chain.from_iterable(self.pdf_type))
             self.pdf_params = list(chain.from_iterable(self.pdf_params))
         elif len(self.pdf_type) != len(self.pdf_params):
-            raise NotImplementedError("Incompatible dimensions")
+            raise NotImplementedError("Exit code: Incompatible dimensions.")
 
         # TODO: Create a list that contains all element info - parent structure
         # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
@@ -1156,7 +1156,7 @@ class MCMC:
     def init_mcmc(self):
 
         if self.nsamples is None:
-            raise NotImplementedError('Number of samples not defined.')
+            raise NotImplementedError('Exit code: Number of samples not defined.')
         if self.seed is None:
             self.seed = np.zeros(self.dimension)
         if self.skip is None:
@@ -1164,11 +1164,15 @@ class MCMC:
         if self.pdf_proposal_type is None:
             self.pdf_proposal_type = 'Uniform'
         if self.pdf_proposal_type not in ['Uniform', 'Normal']:
-            raise ValueError('Invalid Proposal distribution type. Available distributions: Uniform, Normal')
+            raise ValueError('Exit code: Unrecognized type for proposal distribution. Supported distributions: '
+                             'Uniform, '
+                             'Normal.')
         if self.pdf_target_type is None:
             self.pdf_target_type = 'marginal_pdf'
         if self.pdf_target_type not in ['multivariate_pdf', 'marginal_pdf']:
-            raise ValueError('InvalidTarget distribution type. Available distributions: multivariate_pdf, marginal_pdf')
+            raise ValueError('Exit code: Unrecognized type for target distribution. Supported distributions: '
+                             'multivariate_pdf, '
+                             'marginal_pdf.')
         if self.pdf_target_params is None:
             self.pdf_target_params = [0, 1]
 
@@ -1183,7 +1187,9 @@ class MCMC:
                     self.algorithm = 'MH'
         else:
             if self.algorithm not in ['MH', 'MMH']:
-                raise NotImplementedError('Invalid MCMC algorithm. Select from: MH, MMH')
+                raise NotImplementedError('Exit code: Unrecognized MCMC algorithm. Supported algorithms: '
+                                          'Metropolis-Hastings, '
+                                          'modified Metropolis-Hastings.')
 
 ########################################################################################################################
 ########################################################################################################################
