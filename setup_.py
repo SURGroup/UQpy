@@ -1,13 +1,27 @@
-import os
+#!/usr/bin/env python
 
-os.system("git --version")
-os.system("clear")
-os.system("python3 --version")
-os.system("pip3 --version")
-os.system("pip3 install virtualenv")
-#os.system("git clone https://github.com/SURGroup/UQ_algorithms.git")
-#os.chdir('UQ_algorithms/')
-#os.system("virtualenv SURG_UQenv")
-#os.system("SURG_UQenv/bin/activate")
-#os.system("pip3 install -r requirements.txt")
+from setuptools import setup, find_packages
+
+setup(
+    name='UQpy',
+    version="0.1.0",
+    url='https://github.com/SURGroup/UQpy',
+    author="Dimitris G. Giovanis, Michael D. Shields",
+    author_email="dgiovan1@jhu.edu, michael.shields@jhu.edu",
+    license='Apache',
+    platforms='OSX',
+    packages=find_packages("lib"),
+    package_dir={"": "lib"},
+    install_requires=[
+        "numpy", "scipy", "matplotlib"
+    ],
+    classifiers=[
+        'Development Status :: 1 - Production/Unstable',
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering :: Mathematics',
+        'License :: Apache',
+        'Natural Language :: English',
+    ],
+)
+
 
