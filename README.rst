@@ -67,14 +67,5 @@ In order to uninstall it
                         $pip uninstall UQpy
 
 
-Installed packages:
-------------------
-
-1. numpy
-2. scipy
-3. matplotlib
-4. pyDOE     
-5. scikit-learn
-
 .. |logo| image:: logo.jpg
     :target: https://gihub.com/SURGroup/UQpy
