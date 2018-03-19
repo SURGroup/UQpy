@@ -10,9 +10,9 @@ Uncertainty Quantification using python (UQpy)
 :Contact: michael.shields@jhu.edu, dgiovan1@jhu.edu
 :Web site: www.ce.jhu.edu/surg
 :Documentation: http://uqpy-docs-v0.readthedocs.io/en/latest/
-:Copyright: SURG, 2017
+:Copyright: SURG 
 :License:
-:Date: December 2017
+:Date: March 2018
 :Version: 0.1.0
 
 Note
