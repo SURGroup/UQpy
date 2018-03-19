@@ -52,21 +52,18 @@ This will check for all the necessary packages. It will create the required virt
 
             * ::
 
-                        $git clone https://github.com/SURGroup/UQpy.git
+                        $git clone https://github.com/dgiovanis/UQpy.git
                         $cd UQpy/
-                        $python3 setup_.py  
-                        $virtualenv SURG_UQenv
-                        $source SURG_UQenv/bin/activate
-                        $pip3 install -r requirements.txt
+                        $pip install -r requirements.txt
+                        $python setup.py install  
+
  
 
-In order to use matplotlib within SURG_UQenv
+In order to uninstall it
 
             * ::
-            
-                      $cd ~/.matplotlib
-                      $nano matplotlibrc
-                      type: "backend: TkAgg"
+
+                        $pip uninstall UQpy
 
 
 Installed packages:
