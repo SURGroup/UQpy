@@ -1,0 +1,14 @@
+#method
+sts
+
+#distribution
+Uniform
+
+#distribution parameters
+0 1
+
+#design
+10
+10
+
+#end

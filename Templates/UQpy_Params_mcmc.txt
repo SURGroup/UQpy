@@ -1,0 +1,26 @@
+#method
+mcmc
+
+#number of parameters
+3
+
+#distribution type
+Uniform
+
+#number of Samples
+20
+
+#proposal distribution width
+2
+
+#algorithm
+MMH
+
+#target distribution
+marginal_pdf
+
+#target distribution parameters
+0 1
+
+
+#end

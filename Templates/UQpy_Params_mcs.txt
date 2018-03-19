@@ -1,0 +1,17 @@
+#method
+mcs
+
+#number of parameters
+3
+
+#distribution type
+Uniform
+
+#distribution parameters
+0 1
+
+#number of samples
+20
+
+
+#end
