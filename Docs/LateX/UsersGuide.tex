@@ -38,7 +38,7 @@
 \section{Installing \texttt{UQpy}}
 
 \underline{Prerequisites:}
-You have at least one Python interpreter 3.6+ properly installed on your computer. In order to get the latest experimental version of  \texttt{UQpy} the code can be installed from Github directly as follows:
+You must have at least one Python interpreter 3.6+ properly installed on your computer. In order to get the latest version of  \texttt{UQpy}, the code can be installed from Github directly as follows:
 
 \begin{itemize}
 \item[ ]  \texttt{\$git clone https://github.com/SURGroup/UQpy.git}
@@ -54,26 +54,58 @@ The last command might need \textbf{sudo} prefix, depending on your python setup
 \section{Overview}
 \label{S:overview}
 \noindent
-\texttt{UQpy} (Uncertainty Quantification (UQ) using python) is a software toolbox containing a collection of modules  written in Python that provide standardized solutions for many UQ problems that occur in physical model. Connection between UQpy and the user-defined computational model is made with text-based and bash shell script(s) provided by the user. Execution of \texttt{UQpy} results in realizations of the parametric space of interest using advanced techniques, as well as evaluations the corresponding model responses. \texttt{UQpy} is entirely code-agnostic and gives users a fully functional tool for performing UQ with nearly any computational analysis code. \texttt{UQpy} performs submission, execution, monitoring and post-process analysis, specifically tailored to  the analysis tool and the available platform and thus, it is amenable to performing adaptive UQ methods. \texttt{UQpy} is written in the Python 3 programming language.
+\texttt{UQpy} (Uncertainty Quantification using python) is a software toolbox containing a collection of modules written in Python that provide standardized solutions for many UQ problems that arise in computational modeling, particularly physics-based computational modeling. The code is specially designed to serve as a ``UQ wrapper'' around a user-defined deterministic computational model. Connection between UQpy and the user-defined computational model is made with text-based and bash shell script(s) provided by the user but conforming to certain guidelines necessary for interaction with \texttt{UQpy}. Execution of \texttt{UQpy} results in realizations of the parametric space of interest using advanced techniques, as well as evaluations the corresponding model responses. \texttt{UQpy} is entirely code-agnostic and gives users a fully functional tool for performing UQ with nearly any computational analysis code. \texttt{UQpy} performs submission, execution, monitoring and post-process analysis, specifically tailored to the analysis tool and the available platform and thus, it is amenable to performing both ``static'' (where samples are defined a priori) and adaptive simulation-based UQ methods. \texttt{UQpy} is written in the Python 3 programming language.
 
-\subsection{Compiled version of \texttt{UQpy}}
+\section{\texttt{UQpy} architecture and workflows}
+
+
+
+\subsection{Architecture of the code}
+
+{\color{red}
+\noindent
+[MDS: Here we need to show how the code is structured. These should include the graphics we have developed and a description of them.]\\
+}
+
+\texttt{UQpy} is setup as a set of modules as illustrated in Figure XXX. Each module contains a set of classes that define it's capabilities. For each module, these classes are shown in Figure XXX. 
+
+\subsection{Files and file structure}
 
 \noindent
-{\color{red} We need to address the Windows version}
+\texttt{UQpy} requires a Python shell supporting Python 3.6+ as well as several common Python libraries listed in the file {\color{blue}requirements.txt} that can be found in the main directory of the UQpy installation. These libraries are automatically downloaded and installed when \texttt{UQpy} is installed. After downloading and installing \texttt{UQpy}, the following \texttt{UQpy}-specific files are required and must be co-located in the subdirectory lib/\textbf{UQpy}. These files are automatically downloaded with the \texttt{UQpy} installation.
 
-\subsection{Interpreted version of \texttt{UQpy}}
-
+{\color{red}
 \noindent
-The interpreted version of \texttt{UQpy} requires a Python shell supporting Python 3.6+ as well as several common Python libraries as well.  After downloading and installing \texttt{UQpy}, the following \texttt{UQpy}-specific files are required and must be co-located in the subdirectory lib/\textbf{UQpy}, which is in the same directory as {\color{blue}UQpy\_cmd.py}:
+[MDS: Need to come back to this once I have a better sense of what all the files do.]
+}
 
 \begin{itemize}
 \item[$\cdot$] {\color{blue}UQpyModules.py} - Contains various functions.
-\item[$\cdot$] {\color{blue}SampleMethods.py} - Contains the available sampling methods used for exploring the parameter space.
-\item[$\cdot$] {\color{blue}ReadInputFile.py} -  Reads the necessary UQ Parameter data file  in case of running \texttt{UQpy}  via command line, and converts it to  python variables. 
+\item[$\cdot$] {\color{blue}SampleMethods.py} - Contains the available methods used for sampling the parameter space.
+\item[$\cdot$] {\color{blue}ReadInputFile.py} -  Reads the necessary UQ parameter input file in case of running \texttt{UQpy} via command line, and converts all input to relevant python variables. 
 \item[$\cdot$] {\color{blue}PDFs.py} - Contains the percent point functions of all the supported distributions; any new distribution can be added here. 
+\item[$\cdot$] {\color{blue}UQpy\_cmd.py}
 \end{itemize}
 
-\section{Using UQpy- Required files}
+
+
+
+\subsection{Workflows for using \texttt{UQpy}}
+
+\texttt{UQpy} may be run using either a Python Integrated Development Environment (IDE) or via the command line. The current version of \texttt{UQpy} has been tested to run in the IDE PyCharm 2017.3.3.
+
+\subsubsection{Workflow for running UQpy in an IDE}
+All \texttt{UQpy} capabilities can be accessed in an IDE by simply importing the appropriate packages. 
+
+\subsubsection{Workflow for running UQpy via command line}
+
+{\color{red}
+\noindent
+[MDS: We need to define the two ways that someone can use the code -- either command line or directly in Python script]
+}
+
+
+\subsection{Required user-defined files}
 
 \noindent
 \texttt{UQpy} may be run using either an Integrated Development Environment (IDE) used in computer programming, specifically for the Python language or via the command line. The interpreted version of \texttt{UQpy}, has been tested to run in IDE PyCharm 2017.3.3.
@@ -94,10 +126,20 @@ The names of these files are user defined. Additional to these files, if the use
 The aforementioned files are directly specified by the user and may be in any directory.
 
 
-\section{UQpy Usage}
-
 \noindent
 \texttt{UQpy} is user friendly since it only requires the user to have basic knowledge in writing bash shell scripts.
+
+
+%\subsection{Compiled version of \texttt{UQpy}}
+
+%\noindent
+%{\color{red} We need to address the Windows version\\
+
+
+%\subsection{Interpreted version of \texttt{UQpy}}
+
+\section{Using UQpy}
+
 
 \subsection{Using the \texttt{UQpy}  Command Line Mode}
 
@@ -188,7 +230,7 @@ This will create the object \texttt{x} with is properties:
 
 
 
-\section{\texttt{UQpy} workflow}
+
 
 
 \section{Templates for the required  Files}
