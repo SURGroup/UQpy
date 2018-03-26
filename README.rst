@@ -31,10 +31,10 @@ Supported methods
 -----------------
 
 1. Monte Carlo simulation (MCS), 
-2. Latin hypercube sampling (LHS), 
+2. Latin Hypercube Sampling (LHS), 
 3. Markov Chain Monte Carlo simulation (MCMC) 
-4. Partially stratified sampling (PSS).
-5. Stochastic Reduced order Models (SROM).
+4. Partially Stratified Sampling (PSS).
+5. Stochastic Reduced Order Models (SROM).
 
 
 Requirements
