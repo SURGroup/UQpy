@@ -1,3 +1,23 @@
+<<<<<<< HEAD
+#Method
+lhs
+
+#Number of Samples
+1000
+
+#Probability distribution (pdf)
+Uniform
+Uniform
+
+#Probability distribution parameters
+0 1
+1 2
+
+#LHS criterion
+centered
+
+#distance metric
+=======
 #method
 mcs
 
@@ -17,6 +37,7 @@ Uniform
 centered
 
 #distance
+>>>>>>> master
 euclidean
 
 #iterations

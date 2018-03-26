@@ -1,3 +1,27 @@
+<<<<<<< HEAD
+#Method
+sts
+
+#Number of Samples
+1000
+
+#Probability distribution (pdf)
+Uniform
+Uniform
+
+#Probability distribution parameters
+0 1
+0 1
+
+#STS design
+10
+10
+
+#Names of random variables
+mu
+sigma
+
+=======
 #method
 sts
 
@@ -11,4 +35,5 @@ Uniform
 10
 10
 
+>>>>>>> master
 #end
