@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #Method
 pss
 
@@ -25,4 +26,24 @@ mu
 sigma
 
 
+=======
+#method
+pss
+
+#distribution type
+Uniform
+
+#distribution parameters
+0 1
+
+
+#design
+1
+1
+
+#strata
+100
+100
+
+>>>>>>> master
 #end

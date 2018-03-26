@@ -1,7 +1,11 @@
 #!/bin/bash
 
 # Don not modify
+<<<<<<< HEAD
 filename="UQpyInput_$1.txt"
+=======
+filename="UQpy_eval_$1.txt"
+>>>>>>> master
 touch "$filename"
 
 

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #Method
 sts
 
@@ -20,4 +21,19 @@ Uniform
 mu
 sigma
 
+=======
+#method
+sts
+
+#distribution
+Uniform
+
+#distribution parameters
+0 1
+
+#design
+10
+10
+
+>>>>>>> master
 #end

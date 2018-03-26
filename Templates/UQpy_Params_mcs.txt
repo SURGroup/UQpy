@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #Method
 mcs
 
@@ -15,5 +16,22 @@ Uniform
 #Names of random variables
 mu
 sigma
+=======
+#method
+mcs
+
+#number of parameters
+3
+
+#distribution type
+Uniform
+
+#distribution parameters
+0 1
+
+#number of samples
+20
+
+>>>>>>> master
 
 #end
