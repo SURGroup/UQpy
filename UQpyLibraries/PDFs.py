@@ -109,7 +109,7 @@ def inv_cdf(x, pdf, params):
 
 ########################################################################################################################
 #             Inverse pdf
-# ########################################################################################################################
+# ######################################################################################################################
 
 
 def ppfNormal(p, mu, sigma):
@@ -187,3 +187,52 @@ def normal_to_uniform(u, a, b):
         p = 0.5 + erf(((u[:, i] - 0) / 1) / np.sqrt(2)) / 2
         x[:, i] = a + (b - a) * p
     return x
+
+########################################################################################################################
+#             Log pdf (used in inference)
+# ######################################################################################################################
+
+def log_normal(data, fitted_params_norm):
+    loglike = np.sum(stats.norm.logpdf(data, loc=fitted_params_norm[0], scale=fitted_params_norm[1]))
+    k = 2
+    return k, loglike
+
+
+def log_cauchy(data, fitted_params_cauchy):
+    loglike = np.sum(stats.cauchy.logpdf(data, loc=fitted_params_cauchy[0], scale=fitted_params_cauchy[1]))
+    k = 2
+    return k, loglike
+
+
+def log_exp(data, fitted_params_expon):
+    loglike = np.sum(stats.expon.logpdf(data, loc=fitted_params_expon[0], scale=fitted_params_expon[1]))
+    k = 2
+    return k, loglike
+
+
+def log_log(data, fitted_params_logn):
+    loglike = np.sum(stats.lognorm.logpdf(data, s=fitted_params_logn[0], loc=fitted_params_logn[1],
+                                          scale=fitted_params_logn[2]))
+    k = 3
+    return k, loglike
+
+
+def log_gamma(data, fitted_params_gamma):
+    loglike = np.sum(stats.gamma.logpdf(data, a=fitted_params_gamma[0], loc=fitted_params_gamma[1],
+                                        scale=fitted_params_gamma[2]))
+    k = 3
+    return k, loglike
+
+
+def log_invgauss(data, fitted_params_invgauss):
+    loglike = np.sum(stats.invgauss.logpdf(data, mu=fitted_params_invgauss[0], loc=fitted_params_invgauss[1],
+                                           scale=fitted_params_invgauss[2]))
+    k = 3
+    return k, loglike
+
+
+def log_logistic(data, fitted_params_logistic):
+    loglike = np.sum(
+        stats.logistic.logpdf(data, loc=fitted_params_logistic[0], scale=fitted_params_logistic[1]))
+    k = 2
+    return k, loglike
