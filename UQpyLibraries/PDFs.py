@@ -36,8 +36,13 @@ def pdf(dist):
     if dist == 'Gamma':
         return partial(Gamma)
 
-    elif dist == 'marginal_pdf':
+    if dist == 'marginal_pdf':
         return partial(marginal_pdf)
+
+    if dist not in ['multivariate_pdf','Gamma', 'marginal_pdf']:
+
+        from UQpy_Example.custom_pdf import arbitrary
+        return partial(arbitrary)
 
 
 ########################################################################################################################

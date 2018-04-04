@@ -76,9 +76,25 @@ def init_sm(data):
             raise NotImplementedError("Exit code: Target distribution not defined.")
         else:
             if data['target distribution'] not in ['multivariate_pdf', 'marginal_pdf', 'normal_pdf']:
-                raise ValueError('Exit code: Unrecognized type for target distribution. Supported distributions: '
-                                 'multivariate_pdf, '
-                                 'marginal_pdf.')
+                import os
+                if os.path.isfile('custom_pdf.py'):
+                    import ast
+                    with open('custom_pdf.py') as f:
+                        tree = ast.parse(f.read())
+                        num = sum(isinstance(exp, ast.FunctionDef) for exp in tree.body)
+                        from inspect import getmembers, isfunction
+                        from UQpy_Example import custom_pdf
+                        functions_list = [o for o in getmembers(custom_pdf) if isfunction(o[1])]
+                        custom_list = list()
+                        for i1 in range(num):
+                            custom_list.append(functions_list[i1][0])
+                    if data['target distribution'] not in custom_list:
+                        raise NotImplementedError("Exit code: Unrecognized type of custom distribution.")
+                else:
+                    raise ValueError('Exit code: Unrecognized type for target distribution. Supported distributions: '
+                                     'multivariate_pdf, '
+                                     'marginal_pdf.')
+
         if 'target distribution parameters' not in data:
             raise NotImplementedError("Exit code: Target distribution parameters not defined.")
         if 'number of samples' not in data:
@@ -147,7 +163,6 @@ def init_sm(data):
     # Optional properties(2): 1.properties to match, 2. sample weights
 
     if 'SROM' in data and data['SROM'] is True:
-
         # Mandatory
         if 'moments' not in data:
             raise NotImplementedError("Exit code: Moments not provided.")
@@ -395,8 +410,8 @@ class MCS:
             for i in self.pdf_type:
                 if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
                     raise NotImplementedError("Exit code: Unrecognized type of distribution."
-                                              "Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential', 'Gamma'. ")
+                                                  "Supported distributions: 'Uniform', 'Normal', 'Lognormal', "
+                                                  "'Weibull', 'Beta', 'Exponential', 'Gamma'. ")
         if self.pdf_params is None:
             raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
@@ -1170,9 +1185,26 @@ class MCMC:
         if self.pdf_target_type is None:
             self.pdf_target_type = 'marginal_pdf'
         if self.pdf_target_type not in ['multivariate_pdf', 'marginal_pdf']:
-            raise ValueError('Exit code: Unrecognized type for target distribution. Supported distributions: '
+            print(self.pdf_target_type)
+            import os
+            if os.path.isfile('custom_pdf.py'):
+                import ast
+                with open('custom_pdf.py') as f:
+                    tree = ast.parse(f.read())
+                    num = sum(isinstance(exp, ast.FunctionDef) for exp in tree.body)
+                    from inspect import getmembers, isfunction
+                    from UQpy_Example import custom_pdf
+                    functions_list = [o for o in getmembers(custom_pdf) if isfunction(o[1])]
+                    custom_list = list()
+                    for i1 in range(num):
+                        custom_list.append(functions_list[i1][0])
+                if self.pdf_target_type not in custom_list:
+                    raise NotImplementedError("Exit code: Unrecognized type of custom distribution.")
+            else:
+                raise ValueError('Exit code: Unrecognized type for target distribution. Supported distributions: '
                              'multivariate_pdf, '
                              'marginal_pdf.')
+
         if self.pdf_target_params is None:
             self.pdf_target_params = [0, 1]
 
