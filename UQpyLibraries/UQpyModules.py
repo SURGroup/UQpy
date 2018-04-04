@@ -73,10 +73,10 @@ class RunCommandLine:
         # Run the requested UQpy method and save the samples into file 'UQpyOut.txt'
         rvs = run_sm(data)
 
-        if 'SROM' in data:
-            if data['SROM'] == 'Yes':
-                header = ', '.join('Weights')
-                np.savetxt('UQpyOut_weights.txt', rvs.probability, header=str(header), fmt='%0.5f')
+        # if 'SROM' in data:
+        #     if data['SROM'] == 'Yes':
+        #         header = ', '.join('Weights')
+        #         np.savetxt('UQpyOut_weights.txt', rvs.probability, header=str(header), fmt='%0.5f')
 
         # Save the samples in a .txt file
         save_txt(data['Names of random variables'], rvs.samples)
@@ -107,9 +107,9 @@ class RunCommandLine:
         _files = list()
         _files.append('UQpy_Samples.csv')
         _files.append('UQpy_Samples.txt')
-        if 'SROM' in data:
-            if data['SROM'] == 'Yes':
-                _files.append('UQpyOut_weights.txt')
+        # if 'SROM' in data:
+        #     if data['SROM'] == 'Yes':
+        #         _files.append('UQpyOut_weights.txt')
 
         if self.args.Solver is not None:
             src_files = [filename for filename in os.listdir(self.args.WorkingDir) if filename.startswith("UQpy_eval_")]

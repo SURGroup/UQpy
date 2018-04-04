@@ -127,18 +127,27 @@ def init_sm(data):
     # Necessary parameters:  1. marginal pdf, 2. moments 3. Error function weights
     # Optional: 1. Properties to match 2. Error function weights
 
-    if 'SROM' in data:
-        if data['SROM'] is True:
-            if 'Moments' not in data:
-                raise NotImplementedError("Moments not provided")
-            if 'Error function weights' not in data:
-                raise NotImplementedError("Error function weights not provided")
-            if 'Properties to match' not in data:
-                data['Properties to match'] = None
-                warnings.warn("Properties to match not defined. The default is [1, 1, 0]")
-            if 'Error function weights' not in data:
-                data['Error function weights'] = None
-                warnings.warn("Error function weights not defined. The default is equal weights to each sample")
+    if 'SROM' in data and data['SROM'] is True:
+
+        # Mandatory
+        if 'moments' not in data:
+            raise NotImplementedError("Exit code: Moments not provided.")
+        if 'error function weights' not in data:
+            raise NotImplementedError("Exit code: Error function weights not provided.")
+
+        # Optional
+        if 'properties to match' not in data:
+            data['properties to match'] = None
+        if 'sample weights' not in data:
+            data['sample weights'] = None
+        if 'Correlation' not in data:
+            data['Correlation'] = None
+        if 'Default weights for distribution' not in data:
+            data['Default weights for distribution'] = None
+        if 'Default weights for moments' not in data:
+            data['Default weights for moments'] = None
+        if 'Default weights for correlation' not in data:
+            data['Default weights for correlation'] = None
 
     ####################################################################################################################
     # Check any NEW METHOD HERE
@@ -205,11 +214,14 @@ def run_sm(data):
     # Run ANY NEW METHOD HERE
     if 'SROM' in data:
         if data['SROM'] == 'Yes':
-            print("\nApplying  %k \n", 'SROM')
-            rvs = SROM(samples=rvs.samples, nsamples=data['Number of Samples'], marginal=data['Probability distribution (pdf)'],
-                       moments=data['Moments'], weights_errors=data['Error function weights'],
-                       weights_function=data['Sample weights'], properties=data['Properties to match'],
-                       params=data['Probability distribution parameters'])
+            print("\nImplementing SROM to samples")
+            rvs = SROM(samples=rvs.samples, pdf_type=data['Probability distribution (pdf)'], moments=data['Moments'],
+                       weights_errors=data['Error function weights'], weights_function=data['Sample weights'],
+                       default_weights_distribution=data['Default weights for distribution'],
+                       default_weights_moments=data['Default weights for moments'],
+                       default_weights_correlation=data['Default weights for correlation'],
+                       properties=data['Properties to match'], pdf_params=data['Probability distribution parameters'],
+                       correlation=data['Correlation'])
 
     ################################################################################################################
     # Run ANY NEW METHOD HERE
@@ -598,6 +610,7 @@ class STS:
 
     def run_sts(self):
         samples = np.empty([self.origins.shape[0], self.origins.shape[1]], dtype=np.float32)
+        np.random.seed(0)
         for i in range(0, self.origins.shape[0]):
             for j in range(0, self.origins.shape[1]):
                 samples[i, j] = np.random.uniform(self.origins[i, j], self.origins[i, j] + self.widths[i, j])
@@ -1011,84 +1024,175 @@ class SROM:
 
     # TODO: Mohit - Write the documentation for the class
 
-    def __init__(self, samples=None, nsamples=None, marginal=None, moments=None, weights_errors=None,
-                 weights_function=None, properties=[1, 1, 0], params=None):
+    def __init__(self, samples=None, pdf_type=None, moments=None, weights_errors=None,
+                 weights_function=None, default_weights_distribution=None, default_weights_moments=None,
+                 default_weights_correlation=None, properties=None, pdf_params=None, correlation=None):
         """
+        :param samples: A list of samples corresponding to each random variables
+        :type samples: list
 
-        :param samples:
-        :param marginal:
-        :param moments:
-        :param weights_errors:
-        :param weights_function: An matrix (nsamples+3 x dimension) containing weights correponding to function
-        value for each dimension
-        :param properties:
+        :param pdf_type: Type of distribution functions
+        :type pdf_type: str
+
+        :param pdf_params: Parameters of distribution
+        :type pdf_params: list
+
+        :param moments: A list containing first and second order moment about origin of all random variables
+        :type moments: list
+
+        :param weights_errors: Weights associated with error in distribution, moments and correlation.
+        :type weights_errors: list
+
+        :param properties: A list containing the information about properties, which are required to match in reduce
+                           order model. This class focus on reducing errors in distribution, first order moment about
+                           origin, second order moment about origin and correlation.
+                           Example: properties = [1, 1, 0, 0] will minimize errors in distribution and errors in first
+                           order moment about origin in reduce order model.
+        :type properties: list
+
+        :param weights_function: An array of dimension (N+d+2)xN, where 'N' is number of samples and 'd' is number of
+                                 random variables. First 'N' rows contain weights associated with different samples.
+                                 Next two rows contain weights associated with moments. Last 'd' rows contain weights
+                                 associated with correlation of random variables.
+                                 :math: `weights function = [w_{F} w_{\\mu} w_{r}]^{T}`
+        :type weights_function: ndarray
+
+        :param default_weights_distribution: Default weights associated with samples for every random variable is 1.
+                                             This list modify the weights associated with all samples of each random
+                                             variable.
+                                             Example: default_weights_distribution = [2, 1, 3] will modify
+                                             :math: `w_{F} = [2w_{F}(1) w_{F}(2) 3w_{F}(3)]`
+        :type default_weights_distribution: list
+
+        :param default_weights_moments: This list modify the weights associated with moments of each random
+                                        variable.
+                                        Example: default_weights_moments = [2, 1, 3] will modify
+                                        :math: `w_{F} = [2w_{F}(1) w_{F}(2) 3w_{F}(3)]`
+        :type default_weights_moments: list
+
+        :param default_weights_correlation: This list modify the weights associated with correlation.
+        :type default_weights_moments: list
+
+        :param correlation: Correlation between random variables
+        :type correlation: list
         """
 
         # TODO: Mohit - Add error checks
-        dimension = np.size(marginal)
-        if weights_function is None or len(weights_function) == 0:
-            weights_function = np.ones([nsamples, dimension])
 
-        if np.size(moments) == 0:
-            sys.exit('Moments of marginal distribution are required')
-        else:
-            weights_function = weights_function.tolist()
-            for i in range(int(np.size(moments)/np.size(moments[0]))):
-                weights_function.append(moments[i])
+        self.samples = np.array(samples)
+        self.correlation = np.array(correlation)
+        if correlation is not None:
+            from scipy import linalg
+            l = linalg.cholesky(correlation, lower=True)
+            self.samples = np.transpose(np.dot(l, np.transpose(self.samples)))
 
-        self.samples = samples
-        self.marginal = marginal
-        self.moments = np.array(moments)
-        self.weights_errors = np.array(weights_errors).astype('float64')
-        self.weights_function = np.array(weights_function)
+        self.pdf_type = pdf_type
+        self.moments = moments
+        self.weights_errors = weights_errors
+        self.weight_function = np.array(weights_function)
+        self.default_sample_distribution = default_weights_distribution
+        self.default_sample_moments = default_weights_moments
+        self.default_sample_correlation = default_weights_correlation
         self.properties = properties
-        self.params = params
+        self.pdf_params = pdf_params
+        self.dimension = len(self.pdf_type)
+        self.nsamples = samples.shape[0]
+        self.init_srom()
+        weights = self.run_srom()
+        self.samples = np.concatenate([self.samples, weights.reshape(weights.shape[0], 1)], axis=1)
 
-        # TODO: Mohit - Define default calculation for moments
-        def f(p, samples, w, mar, n, d, m, alpha, para):
+    def run_srom(self):
+        from scipy import optimize
+
+        def f(p_, samples, w, mar, n, d, m, alpha, para, prop, correlation):
             e1 = 0.
             e2 = 0.
             e22 = 0.
             e3 = 0.
-            samples = np.matrix(samples)
-            p = np.transpose(np.matrix(p))
-            com = np.append(samples, p, 1)
+            com = np.append(samples, np.transpose(np.matrix(p_)), 1)
             for j in range(d):
                 srt = com[np.argsort(com[:, j].flatten())]
                 s = srt[0, :, j]
                 a = srt[0, :, d]
                 A = np.cumsum(a)
                 marginal = pdf(mar[j])
-                for i in range(n):
-                    e1 = + w[i, j] * (A[0, i] - marginal(s[0, i], para[j])) ** 2
+                if prop[0] == 1:
+                    for i in range(n):
+                        e1 += w[i, j] * (A[0, i] - marginal(s[0, i], para[j])) ** 2
 
-                e2 = + ((1/w[n, j])**2) * (np.sum(np.transpose(p) * samples[:, j]) - m[0, j]) ** 2
-                e22 = + ((1/w[n+1, j])**2) * (np.sum(np.array(p) * (np.array(samples[:, j])*np.array(samples[:,j]))) - m[1,j]) ** 2
-                # TODO: Mohit - Add error corresponding to correlation.
-            return alpha[0]*e1 + alpha[1]*(e2+e22) + alpha[2]*e3
+                if prop[1] == 1:
+                    e2 += w[n, j] * (np.sum(np.array(p_) * samples[:, j]) - m[0, j]) ** 2
 
-        def constraint(p):
-            return np.sum(p) - 1
+                if prop[2] == 1:
+                    e22 += w[n + 1, j] * (
+                        np.sum(np.array(p_) * (samples[:, j] * samples[:, j])) - m[1, j]) ** 2
 
-        def constraint2(p):
-            n = np.size(p)
-            return np.ones(n) - p
+                if prop[3] == 1 and correlation is not None:
+                    for k in range(d):
+                        if k > j:
+                            r = correlation[j, k] * np.sqrt((m[1, j]-m[0, j]**2)*(m[1, k]-m[0, k]**2)) + m[0, j]*m[0, k]
+                            e3 += w[n + 1 + k, j] * (
+                                    np.sum(np.array(p_) * (np.array(samples[:, j]) * np.array(samples[:, k]))) - r) ** 2
 
-        def constraint3(p):
-            n = np.size(p)
-            return p - np.zeros(n)
+            return alpha[0] * e1 + alpha[1] * (e2 + e22) + alpha[2] * e3
+
+        def constraint(x):
+            return np.sum(x) - 1
+
+        def constraint2(y):
+            n = np.size(y)
+            return np.ones(n) - y
+
+        def constraint3(z):
+            n = np.size(z)
+            return z - np.zeros(n)
 
         cons = ({'type': 'eq', 'fun': constraint}, {'type': 'ineq', 'fun': constraint2},
                 {'type': 'ineq', 'fun': constraint3})
-        P = optimize.minimize(f, np.zeros(nsamples),
-                              args=(self.samples, self.weights_function, self.marginal, nsamples, dimension, self.moments, self.weights_errors, self.params),
-                              constraints=cons, method='SLSQP')
 
-        self.probability = P.x
-        # mergelist = []
-        # for i in range(nsamples):
-        #     row = self.samples[i]+[self.probability[i]]
-        #     mergelist.append(row)
+        p_ = optimize.minimize(f, np.zeros(self.nsamples),
+                               args=(self.samples, self.weight_function, self.pdf_type, self.nsamples, self.dimension,
+                                     self.moments, self.weights_errors, self.pdf_params, self.properties, self.correlation),
+                               constraints=cons, method='SLSQP')
+
+        return p_.x
+
+    def init_srom(self):
+
+        self.moments = np.array(self.moments)
+        print(np.size(self.moments), np.size(self.default_sample_moments))
+
+        self.weights_errors = np.array(self.weights_errors).astype(np.float64)
+
+        if self.samples is None:
+            raise NotImplementedError('Samples not provided for SROM')
+
+        if self.properties is None:
+            self.properties = [1, 1, 1, 0]
+
+        # if self.default_sample_moments is not None:
+        #     if self.moments.shape != self.default_sample_moments.shape:
+        #         raise NotImplementedError('Size of Default weights for moments should be same as Moments')
         #
-        # self.samples = mergelist
+        # if self.default_sample_distribution is not None:
+        #     if self.default_sample_distribution.shape[0] != 1:
+        #         raise NotImplementedError('Rows in Default weights for distribution should be 1')
+        #     if self.default_sample_distribution.shape[1] != self.dimension:
+        #         raise NotImplementedError(
+        #             'Columns in Default weights for distribution should be same as number of variables')
 
+        if self.weight_function is None or len(self.weight_function) == 0:
+            if self.default_sample_distribution is None:
+                temp_weights_dist = np.ones(shape=(self.samples.shape[0], self.dimension))
+            else:
+                temp_weights_dist = self.default_sample_distribution * np.ones(shape=(self.samples.shape[0], self.dimension))
+            if self.default_sample_moments is None:
+                temp_weights_mom = np.reciprocal(np.square(self.moments))
+            else:
+                temp_weights_mom = self.default_sample_moments * np.ones(shape=(self.moments.shape[0], self.moments.shape[1]))
+            temp_weights_dist_mom = np.concatenate([temp_weights_dist, temp_weights_mom], axis=0)
+            if self.default_sample_correlation is None:
+                temp_weights_corr = np.ones(shape=(self.dimension, self.dimension))
+            else:
+                temp_weights_corr = self.default_sample_correlation * np.ones(shape=(self.dimension, self.dimension))
+            self.weight_function = np.concatenate([temp_weights_dist_mom, temp_weights_corr], axis=0)
