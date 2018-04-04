@@ -72,46 +72,46 @@ def init_sm(data):
         # Mandatory
         if 'number of parameters' not in data:
             raise NotImplementedError('Exit code: Number of parameters not defined.')
-        if 'target distribution' not in data:
-            raise NotImplementedError("Exit code: Target distribution not defined.")
-        else:
-            if data['target distribution'] not in ['multivariate_pdf', 'marginal_pdf', 'normal_pdf']:
-                import os
-                if os.path.isfile('custom_pdf.py'):
-                    import ast
-                    with open('custom_pdf.py') as f:
-                        tree = ast.parse(f.read())
-                        num = sum(isinstance(exp, ast.FunctionDef) for exp in tree.body)
-                        from inspect import getmembers, isfunction
-                        from UQpy_Example import custom_pdf
-                        functions_list = [o for o in getmembers(custom_pdf) if isfunction(o[1])]
-                        custom_list = list()
-                        for i1 in range(num):
-                            custom_list.append(functions_list[i1][0])
-                    if data['target distribution'] not in custom_list:
-                        raise NotImplementedError("Exit code: Unrecognized type of custom distribution.")
-                else:
-                    raise ValueError('Exit code: Unrecognized type for target distribution. Supported distributions: '
-                                     'multivariate_pdf, '
-                                     'marginal_pdf.')
-
+        if 'target distribution type' not in data:
+            raise NotImplementedError("Exit code: Target distribution type not defined.")
         if 'target distribution parameters' not in data:
             raise NotImplementedError("Exit code: Target distribution parameters not defined.")
         if 'number of samples' not in data:
             raise NotImplementedError('Exit code: Number of samples not defined.')
+
+        #else:
+        #    if data['target distribution type'] not in ['multivariate_pdf', 'marginal_pdf', 'normal_pdf']:
+        #        import os
+        #        if os.path.isfile('custom_pdf.py'):
+        #            import ast
+        #           with open('custom_pdf.py') as f:
+        #                tree = ast.parse(f.read())
+        #                num = sum(isinstance(exp, ast.FunctionDef) for exp in tree.body)
+        #                from inspect import getmembers, isfunction
+        #                from UQpy_Example import custom_pdf
+        #                functions_list = [o for o in getmembers(custom_pdf) if isfunction(o[1])]
+        #                custom_list = list()
+        #                for i1 in range(num):
+        #                    custom_list.append(functions_list[i1][0])
+        #            if data['target distribution type'] not in custom_list:
+        #                raise NotImplementedError("Exit code: Unrecognized type of custom distribution.")
+        #        else:
+        #            raise ValueError('Exit code: Unrecognized type for target distribution. Supported distributions: '
+        #                             'multivariate_pdf, '
+        #                             'marginal_pdf.')
 
         # Optional
         if 'seed' not in data:
             data['seed'] = None
         if 'skip' not in data:
             data['skip'] = None
-        if 'proposal distribution' not in data:
-            data['proposal distribution'] = None
-        else:
-            if data['proposal distribution'] not in ['Uniform', 'Normal']:
-                raise ValueError('Exit code: Unrecognized type of proposal distribution type. Supported distributions: '
-                                 'Uniform, '
-                                 'Normal.')
+        if 'proposal distribution type' not in data:
+            data['proposal distribution type'] = None
+        #else:
+        #    if data['proposal distribution type'] not in ['Uniform', 'Normal']:
+        #        raise ValueError('Exit code: Unrecognized type of proposal distribution type. Supported distributions: '
+        #                         'Uniform, '
+        #                         'Normal.')
 
         if 'proposal distribution width' not in data:
             data['proposal distribution width'] = None
@@ -225,8 +225,8 @@ def run_sm(data):
 
     elif data['method'] == 'mcmc':
         print("\nRunning  %k \n", data['method'])
-        rvs = MCMC(dimension=data['number of parameters'], pdf_target_type=data['target distribution'],
-                   algorithm=data['algorithm'], pdf_proposal_type=data['proposal distribution'],
+        rvs = MCMC(dimension=data['number of parameters'], pdf_target_type=data['target distribution type'],
+                   algorithm=data['algorithm'], pdf_proposal_type=data['proposal distribution type'],
                    pdf_proposal_width=data['proposal distribution width'],
                    pdf_target_params=data['target distribution parameters'], seed=data['seed'],
                    skip=data['skip'], nsamples=data['number of samples'])
@@ -1044,7 +1044,7 @@ class MCMC:
     :type pdf_proposal_type: str
 
     :param pdf_proposal_width: Width of the proposal distribution
-    :type pdf_proposal_width: float
+    :type pdf_proposal_width: list
 
     :param pdf_target_type: Type of target density function. Example:
                      'Normal' : Normal density function used to generate samples using the MH Algorithm
@@ -1142,18 +1142,18 @@ class MCMC:
             for i in range(self.nsamples * self.skip - 1):
                 for j in range(self.dimension):
 
-                    pdf_ = pdf(self.pdf_target_type)
+                    pdf_ = pdf(self.pdf_target_type[j])
 
-                    if self.pdf_proposal_type == 'Normal':
-                        candidate = np.random.normal(samples[i, j], self.pdf_proposal_width)
+                    if self.pdf_proposal_type[j] == 'Normal':
+                        candidate = np.random.normal(samples[i, j], self.pdf_proposal_width[j])
 
-                    elif self.pdf_proposal_type == 'Uniform':
+                    elif self.pdf_proposal_type[j] == 'Uniform':
 
-                        candidate = np.random.uniform(low=samples[i, j] - self.pdf_proposal_width / 2,
-                                                      high=samples[i, j] + self.pdf_proposal_width / 2, size=1)
+                        candidate = np.random.uniform(low=samples[i, j] - self.pdf_proposal_width[j] / 2,
+                                                      high=samples[i, j] + self.pdf_proposal_width[j] / 2, size=1)
 
-                    p_proposal = pdf_(candidate, self.pdf_target_params)
-                    p_current = pdf_(samples[i, j], self.pdf_target_params)
+                    p_proposal = pdf_(candidate, self.pdf_target_params[j])
+                    p_current = pdf_(samples[i, j], self.pdf_target_params[j])
                     p_accept = p_proposal / p_current
 
                     accept = np.random.random() < p_accept
@@ -1178,32 +1178,34 @@ class MCMC:
             self.skip = 1
         if self.pdf_proposal_type is None:
             self.pdf_proposal_type = 'Uniform'
-        if self.pdf_proposal_type not in ['Uniform', 'Normal']:
-            raise ValueError('Exit code: Unrecognized type for proposal distribution. Supported distributions: '
-                             'Uniform, '
-                             'Normal.')
+        for i in self.pdf_proposal_type:
+            if i not in ['Uniform', 'Normal']:
+                raise ValueError('Exit code: Unrecognized type for proposal distribution. Supported distributions: '
+                                 'Uniform, '
+                                 'Normal.')
+
         if self.pdf_target_type is None:
             self.pdf_target_type = 'marginal_pdf'
-        if self.pdf_target_type not in ['multivariate_pdf', 'marginal_pdf']:
-            print(self.pdf_target_type)
-            import os
-            if os.path.isfile('custom_pdf.py'):
-                import ast
-                with open('custom_pdf.py') as f:
-                    tree = ast.parse(f.read())
-                    num = sum(isinstance(exp, ast.FunctionDef) for exp in tree.body)
-                    from inspect import getmembers, isfunction
-                    from UQpy_Example import custom_pdf
-                    functions_list = [o for o in getmembers(custom_pdf) if isfunction(o[1])]
-                    custom_list = list()
-                    for i1 in range(num):
-                        custom_list.append(functions_list[i1][0])
-                if self.pdf_target_type not in custom_list:
-                    raise NotImplementedError("Exit code: Unrecognized type of custom distribution.")
-            else:
-                raise ValueError('Exit code: Unrecognized type for target distribution. Supported distributions: '
-                             'multivariate_pdf, '
-                             'marginal_pdf.')
+        for i in self.pdf_target_type:
+            if i not in ['multivariate_pdf', 'marginal_pdf']:
+                import os
+                if os.path.isfile('custom_pdf.py'):
+                    import ast
+                    with open('custom_pdf.py') as f:
+                        tree = ast.parse(f.read())
+                        num = sum(isinstance(exp, ast.FunctionDef) for exp in tree.body)
+                        from inspect import getmembers, isfunction
+                        from UQpy_Example import custom_pdf
+                        functions_list = [o for o in getmembers(custom_pdf) if isfunction(o[1])]
+                        custom_list = list()
+                        for i1 in range(num):
+                            custom_list.append(functions_list[i1][0])
+                    if i not in custom_list:
+                        raise NotImplementedError("Exit code: Unrecognized type of custom distribution.")
+                else:
+                    raise ValueError('Exit code: Unrecognized type for target distribution. Supported distributions: '
+                                 'multivariate_pdf, '
+                                 'marginal_pdf.')
 
         if self.pdf_target_params is None:
             self.pdf_target_params = [0, 1]
@@ -1222,6 +1224,42 @@ class MCMC:
                 raise NotImplementedError('Exit code: Unrecognized MCMC algorithm. Supported algorithms: '
                                           'Metropolis-Hastings, '
                                           'modified Metropolis-Hastings.')
+
+        import itertools
+        from itertools import chain
+
+        if len(self.pdf_target_type) == 1 and len(self.pdf_target_params) == self.dimension:
+            self.pdf_target_type = list(itertools.repeat(self.pdf_target_type, self.dimension))
+            self.pdf_target_type = list(chain.from_iterable(self.pdf_target_type))
+
+        elif len(self.pdf_target_params) == 1 and len(self.pdf_target_type) == self.dimension:
+            self.pdf_target_params = list(itertools.repeat(self.pdf_target_params, self.dimension))
+            self.pdf_target_params = list(chain.from_iterable(self.pdf_target_params))
+
+        elif len(self.pdf_target_params) == 1 and len(self.pdf_target_type) == 1:
+            self.pdf_target_params = list(itertools.repeat(self.pdf_target_params, self.dimension))
+            self.pdf_target_type = list(itertools.repeat(self.pdf_target_type, self.dimension))
+            self.pdf_target_type = list(chain.from_iterable(self.pdf_target_type))
+            self.pdf_target_params = list(chain.from_iterable(self.pdf_target_params))
+
+        elif len(self.pdf_target_type) != len(self.pdf_target_params):
+            raise NotImplementedError("Exit code: Incompatible dimensions.")
+
+        if len(self.pdf_proposal_type) == 1 and len(self.pdf_proposal_width) == self.dimension:
+            self.pdf_proposal_type = list(itertools.repeat(self.pdf_proposal_type, self.dimension))
+            self.pdf_proposal_type = list(chain.from_iterable(self.pdf_proposal_type))
+
+        elif len(self.pdf_proposal_width) == 1 and len(self.pdf_proposal_type) == self.dimension:
+            self.pdf_proposal_width = list(itertools.repeat(self.pdf_proposal_width, self.dimension))
+            self.pdf_proposal_width = list(chain.from_iterable(self.pdf_proposal_width))
+
+        elif len(self.pdf_proposal_width) == 1 and len(self.pdf_proposal_type) == 1:
+            self.pdf_proposal_width = list(itertools.repeat(self.pdf_proposal_width, self.dimension))
+            self.pdf_proposal_type = list(itertools.repeat(self.pdf_proposal_type, self.dimension))
+            self.pdf_proposal_type = list(chain.from_iterable(self.pdf_proposal_type))
+            self.pdf_proposal_width = list(chain.from_iterable(self.pdf_proposal_width))
+        elif len(self.pdf_proposal_type) != len(self.pdf_proposal_width):
+            raise NotImplementedError("Exit code: Incompatible dimensions.")
 
 ########################################################################################################################
 ########################################################################################################################

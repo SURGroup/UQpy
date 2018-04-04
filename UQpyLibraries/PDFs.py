@@ -2,6 +2,8 @@ import scipy.stats as stats
 from scipy.special import erf
 from functools import partial
 import numpy as np
+import sys
+import os
 
 
 ########################################################################################################################
@@ -40,9 +42,13 @@ def pdf(dist):
         return partial(marginal_pdf)
 
     if dist not in ['multivariate_pdf','Gamma', 'marginal_pdf']:
+        dir_ = os.getcwd()
+        sys.path.insert(0, dir_)
 
-        from UQpy_Example.custom_pdf import arbitrary
-        return partial(arbitrary)
+        import custom_pdf
+        method_to_call = getattr(custom_pdf, dist)
+
+        return partial(method_to_call)
 
 
 ########################################################################################################################

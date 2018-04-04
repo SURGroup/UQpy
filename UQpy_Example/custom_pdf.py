@@ -1,4 +1,13 @@
-def arbitrary(x, mp):
-    return x**3
+def arbitrary0(x, mp):
+    return 1- x**3 + mp[0]
+
+
+def arbitrary1(x, mp):
+    return 1- x**3 + mp[0]
+
+
+def arbitrary2(x, mp):
+    return 1- x**3 + mp[0]
+
 
 

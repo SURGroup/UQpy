@@ -4,20 +4,26 @@ mcmc
 #number of parameters
 3
 
-#distribution type
-Uniform
-
 #number of samples
 20
-
-#proposal distribution width
-2
 
 #algorithm
 MMH
 
-#target distribution
-arbitrary
+#proposal distribution type
+Uniform
+Uniform
+Uniform
+
+
+#proposal distribution width
+2
+
+#target distribution type
+arbitrary0
+arbitrary1
+arbitrary2
+
 
 #target distribution parameters
 0 1
