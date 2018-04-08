@@ -1,21 +1,22 @@
-#Method
-lhs
+#method
+mcs
 
-#Number of Samples
-1000
+#number of parameters
+3
 
-#Probability distribution (pdf)
+#distribution type
 Uniform
-Uniform
 
-#Probability distribution parameters
+#distribution parameters
 0 1
-1 2
 
-#LHS criterion
+#number of samples
+20
+
+#criterion
 centered
 
-#distance metric
+#distance
 euclidean
 
 #iterations
