@@ -1,4 +1,4 @@
-from UQpyLibraries import UQpyModules, PDFs
+from UQpy import UQpyModules, PDFs
 import numpy as np
 import warnings
 import time
