@@ -4,7 +4,7 @@ import copy
 import numpy as np
 from scipy.spatial.distance import pdist
 import UQpy 
-from UQpy.PDFs import *
+from lib.UQpy.PDFs import *
 import warnings
 
 
@@ -1175,7 +1175,9 @@ class MCMC:
                         tree = ast.parse(f.read())
                         num = sum(isinstance(exp, ast.FunctionDef) for exp in tree.body)
                         from inspect import getmembers, isfunction
-                        from UQpy_Example import custom_pdf
+                        dir_ = os.getcwd()
+                        sys.path.insert(0, dir_)
+                        import custom_pdf
                         functions_list = [o for o in getmembers(custom_pdf) if isfunction(o[1])]
                         custom_list = list()
                         for i1 in range(num):

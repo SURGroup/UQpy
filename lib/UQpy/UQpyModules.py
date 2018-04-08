@@ -2,6 +2,7 @@ import os
 import shutil
 import UQpy as uq
 import numpy as np
+import sys
 
 
 class RunCommandLine:
@@ -15,13 +16,13 @@ class RunCommandLine:
 
         os.chdir(os.path.join(os.getcwd(), self.args.Model_directory))
 
-        from UQpyLibraries import ReadInputFile
+        from UQpy  import ReadInputFile
         if not os.path.isfile('UQpy_Params.txt'):
             print("Error: UQpy parameters file does not exist")
             sys.exit()
         else:
             from lib.UQpy.ReadInputFile import readfile
-            data = ReadInputFile.readfile('UQpy_Params.txt')
+            data = readfile('UQpy_Params.txt')
 
         ################################################################################################################
         # Run UQpy
@@ -79,9 +80,10 @@ class RunCommandLine:
         print("\nSuccessful execution of UQpy\n\n")
 
     def run_reliability(self, data):
+        from lib.UQpy.Reliability import init_rm, run_rm
         init_rm(data)
         if data['method'] == 'SuS':
-            from UQpyLibraries.Reliability import SubsetSimulation
+            from UQpy.Reliability import SubsetSimulation
             self.args.CPUs_flag = True
             self.args.ParallelProcessing = False
             self.args.Adaptive = True

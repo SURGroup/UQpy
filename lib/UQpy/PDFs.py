@@ -44,7 +44,6 @@ def pdf(dist):
     if dist not in ['multivariate_pdf','Gamma', 'marginal_pdf']:
         dir_ = os.getcwd()
         sys.path.insert(0, dir_)
-
         import custom_pdf
         method_to_call = getattr(custom_pdf, dist)
 
