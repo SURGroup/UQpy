@@ -1,5 +1,7 @@
+import os
+import sys
 from argparse import ArgumentParser
-from UQpyLibraries.UQpyModules import *
+import numpy as np
 
 UQpy_commandLine = \
 UQpy_commandLine_Usage = """python UQpy.py --{options}"""
