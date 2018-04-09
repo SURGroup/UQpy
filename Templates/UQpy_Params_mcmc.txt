@@ -1,28 +1,25 @@
-#Method
+#method
 mcmc
 
-#Names of random variables
-mu
-sigma
-l
+#number of parameters
+3
 
-
-#Proposal distribution
+#distribution type
 Uniform
 
-#Number of Samples
+#number of Samples
 20
 
-#Proposal distribution width
+#proposal distribution width
 2
 
-#MCMC algorithm
+#algorithm
 MMH
 
-#Target distribution
+#target distribution
 marginal_pdf
 
-#Target distribution parameters
+#target distribution parameters
 0 1
 
 

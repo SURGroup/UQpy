@@ -18,10 +18,10 @@ def readfile(filename):
         title = lines[lines_[i]][1:-1]
         ################################################################################################################
         # General parameters
-        if title == 'Method':
+        if title == 'method':
             mydict[title] = lines[lines_[i]+1][:-1]
             print()
-        elif title == 'Probability distribution (pdf)':
+        elif title == 'distribution type':
             dist = []
             j = 0
             while j >= 0:
@@ -33,7 +33,7 @@ def readfile(filename):
                     dist.append(lines[lines_[i] + j + 1][:-1])
                     j = j + 1
             mydict[title] = dist
-        elif title == 'Names of random variables':
+        elif title == 'names of parameters':
             names = []
             j = 0
             while j >= 0:
@@ -45,7 +45,7 @@ def readfile(filename):
                     names.append(lines[lines_[i] + j + 1][:-1])
                     j = j + 1
             mydict[title] = names
-        elif title == 'Probability distribution parameters':
+        elif title == 'distribution parameters':
             params = []
             j = 0
             while j >= 0:
@@ -57,21 +57,21 @@ def readfile(filename):
                     params.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = params
-        elif title == 'Number of Samples':
+        elif title == 'number of samples':
             mydict[title] = int(lines[lines_[i] + 1][:-1])
-        elif title == 'Number of random variables':
+        elif title == 'number of parameters':
             mydict[title] = int(lines[lines_[i] + 1][:-1])
         ################################################################################################################
         # Latin Hypercube parameters
-        elif title == 'LHS criterion':
+        elif title == 'criterion':
             mydict[title] = lines[lines_[i] + 1][:-1]
-        elif title == 'distance metric':
+        elif title == 'distance':
             mydict[title] = lines[lines_[i] + 1][:-1]
         elif title == 'iterations':
             mydict[title] = lines[lines_[i] + 1][:-1]
         ################################################################################################################
         #  partially stratified sampling
-        elif title == 'PSS design':
+        elif title == 'design':
             pss_design = []
             j = 0
             while j >= 0:
@@ -83,7 +83,7 @@ def readfile(filename):
                     pss_design.append(int(lines[lines_[i] + j + 1][:-1]))
                     j = j + 1
             mydict[title] = pss_design
-        elif title == 'PSS strata':
+        elif title == 'strata':
             pss_strata = []
             j = 0
             while j >= 0:
@@ -97,7 +97,7 @@ def readfile(filename):
             mydict[title] = pss_strata
         ################################################################################################################
         #  stratified sampling
-        elif title == 'STS design':
+        elif title == 'design':
             sts_design = []
             j = 0
             while j >= 0:
@@ -112,19 +112,54 @@ def readfile(filename):
             print(sts_design)
         ################################################################################################################
         # Markov Chain Monte Carlo simulation
-        elif title == 'MCMC algorithm':
+        elif title == 'algorithm':
             mydict[title] = lines[lines_[i] + 1][:-1]
-        elif title == 'Proposal distribution':
-            mydict[title] = lines[lines_[i] + 1][:-1]
-        elif title == 'Proposal distribution width':
-            mydict[title] = int(lines[lines_[i] + 1][:-1])
-        elif title == 'Target distribution':
-            mydict[title] = lines[lines_[i] + 1][:-1]
+        elif title == 'proposal distribution type':
+            dist = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    dist.append(lines[lines_[i] + j + 1][:-1])
+                    j = j + 1
+            mydict[title] = dist
+        elif title == 'proposal distribution width':
+            dist = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    dist.append(int(lines[lines_[i] + j + 1][:-1]))
+                    j = j + 1
+            mydict[title] = dist
+        elif title == 'target distribution type':
+            dist = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    dist.append(lines[lines_[i] + j + 1][:-1])
+                    j = j + 1
+            mydict[title] = dist
         elif title == 'skip':
             mydict[title] = int(lines[lines_[i] + 1][:-1])
-        elif title == 'Target distribution parameters':
-            x = lines[lines_[i] + 1]
-            target_params = np.float32(x.split(" "))
+        elif title == 'target distribution parameters':
+            target_params = list()
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    x = lines[lines_[i] + j + 1]
+                    target_params.append(np.float32(x.split(" ")))
+                    j = j + 1
             mydict[title] = target_params
         elif title == 'seed':
             seed = []
@@ -170,7 +205,11 @@ def readfile(filename):
         # Stochastic Reduced Order Model
         elif title == 'SROM':
             mydict[title] = lines[lines_[i] + 1][:-1]
+<<<<<<< HEAD:UQpyLibraries/ReadInputFile.py
         elif title == 'Moments':
+=======
+        elif title == 'moments':
+>>>>>>> 09ada5938efd9b05bfc2a8a9f37ca23ee39aaefe:lib/UQpy/ReadInputFile.py
             seed = []
             j = 0
             while j >= 0:
@@ -182,7 +221,11 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
+<<<<<<< HEAD:UQpyLibraries/ReadInputFile.py
         elif title == 'Correlation':
+=======
+        elif title == 'error function weights':
+>>>>>>> 09ada5938efd9b05bfc2a8a9f37ca23ee39aaefe:lib/UQpy/ReadInputFile.py
             seed = []
             j = 0
             while j >= 0:
@@ -194,7 +237,11 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
+<<<<<<< HEAD:UQpyLibraries/ReadInputFile.py
         elif title == 'Error function weights':
+=======
+        elif title == 'sample weights':
+>>>>>>> 09ada5938efd9b05bfc2a8a9f37ca23ee39aaefe:lib/UQpy/ReadInputFile.py
             seed = []
             j = 0
             while j >= 0:
@@ -206,7 +253,11 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
+<<<<<<< HEAD:UQpyLibraries/ReadInputFile.py
         elif title == 'Sample weights':
+=======
+        elif title == 'properties to match':
+>>>>>>> 09ada5938efd9b05bfc2a8a9f37ca23ee39aaefe:lib/UQpy/ReadInputFile.py
             seed = []
             j = 0
             while j >= 0:
@@ -218,6 +269,7 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
+<<<<<<< HEAD:UQpyLibraries/ReadInputFile.py
         elif title == 'Default weights for distribution':
             seed = []
             j = 0
@@ -267,6 +319,9 @@ def readfile(filename):
                     j = j + 1
             mydict[title] = seed
 
+=======
+        ################################################################################################################
+>>>>>>> 09ada5938efd9b05bfc2a8a9f37ca23ee39aaefe:lib/UQpy/ReadInputFile.py
         # ADD ANY NEW METHOD HERE
 
         ################################################################################################################
