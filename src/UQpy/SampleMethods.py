@@ -4,7 +4,7 @@ import copy
 import numpy as np
 from scipy.spatial.distance import pdist
 import UQpy 
-from lib.UQpy.PDFs import *
+from src.UQpy.PDFs import *
 import warnings
 
 
