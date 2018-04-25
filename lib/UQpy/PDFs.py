@@ -2,10 +2,12 @@ import scipy.stats as stats
 from scipy.special import erf
 from functools import partial
 import numpy as np
+import sys
+import os
 
 
 ########################################################################################################################
-#        Define the probability distribution of the random parameters used in MCMC
+#        Define the probability distribution of the random parameters
 ########################################################################################################################
 
 def multivariate_pdf(x, dim):
@@ -33,13 +35,32 @@ def pdf(dist):
     if dist == 'multivariate_pdf':
         return partial(multivariate_pdf)
 
-    elif dist == 'marginal_pdf':
+    if dist == 'Gamma':
+        return partial(Gamma)
+
+    if dist == 'marginal_pdf':
         return partial(marginal_pdf)
+
+    if dist not in ['multivariate_pdf','Gamma', 'marginal_pdf']:
+        dir_ = os.getcwd()
+        sys.path.insert(0, dir_)
+        import custom_pdf
+        method_to_call = getattr(custom_pdf, dist)
+
+        return partial(method_to_call)
+
+
+########################################################################################################################
+#        Define the cumulative distribution of the random parameters
+########################################################################################################################
+
+def Gamma(x, params):
+    return stats.gamma.cdf(x, params[0], loc=params[1], scale=params[2])
+
 
 ########################################################################################################################
 #        Transform the random parameters from U(0, 1) to the original space
 ########################################################################################################################
-
 
 def inv_cdf(x, pdf, params):
     x_trans = np.zeros(shape=(x.shape[0], x.shape[1]))
@@ -85,7 +106,7 @@ def inv_cdf(x, pdf, params):
         elif pdf[i] == 'Exponential':
             for j in range(x.shape[0]):
                 x_trans[j, i] = ppfExponential(x[j, i], params[i][0])
-    
+
     ####################################################################################
     # U(0, 1)  ---->  Gamma(λ-shape, shift, scale )
 
@@ -95,9 +116,10 @@ def inv_cdf(x, pdf, params):
 
     return x_trans
 
+
 ########################################################################################################################
 #             Inverse pdf
-# ########################################################################################################################
+# ######################################################################################################################
 
 
 def ppfNormal(p, mu, sigma):
@@ -176,3 +198,51 @@ def normal_to_uniform(u, a, b):
         x[:, i] = a + (b - a) * p
     return x
 
+########################################################################################################################
+#             Log pdf (used in inference)
+# ######################################################################################################################
+
+def log_normal(data, fitted_params_norm):
+    loglike = np.sum(stats.norm.logpdf(data, loc=fitted_params_norm[0], scale=fitted_params_norm[1]))
+    k = 2
+    return k, loglike
+
+
+def log_cauchy(data, fitted_params_cauchy):
+    loglike = np.sum(stats.cauchy.logpdf(data, loc=fitted_params_cauchy[0], scale=fitted_params_cauchy[1]))
+    k = 2
+    return k, loglike
+
+
+def log_exp(data, fitted_params_expon):
+    loglike = np.sum(stats.expon.logpdf(data, loc=fitted_params_expon[0], scale=fitted_params_expon[1]))
+    k = 2
+    return k, loglike
+
+
+def log_log(data, fitted_params_logn):
+    loglike = np.sum(stats.lognorm.logpdf(data, s=fitted_params_logn[0], loc=fitted_params_logn[1],
+                                          scale=fitted_params_logn[2]))
+    k = 3
+    return k, loglike
+
+
+def log_gamma(data, fitted_params_gamma):
+    loglike = np.sum(stats.gamma.logpdf(data, a=fitted_params_gamma[0], loc=fitted_params_gamma[1],
+                                        scale=fitted_params_gamma[2]))
+    k = 3
+    return k, loglike
+
+
+def log_invgauss(data, fitted_params_invgauss):
+    loglike = np.sum(stats.invgauss.logpdf(data, mu=fitted_params_invgauss[0], loc=fitted_params_invgauss[1],
+                                           scale=fitted_params_invgauss[2]))
+    k = 3
+    return k, loglike
+
+
+def log_logistic(data, fitted_params_logistic):
+    loglike = np.sum(
+        stats.logistic.logpdf(data, loc=fitted_params_logistic[0], scale=fitted_params_logistic[1]))
+    k = 2
+    return k, loglike
