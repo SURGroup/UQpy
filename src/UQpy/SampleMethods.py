@@ -6,7 +6,7 @@ from scipy.spatial.distance import pdist
 import scipy.stats as sp
 import UQpy
 import random
-from lib.UQpy.PDFs import *
+from UQpy.PDFs import *
 import warnings
 
 

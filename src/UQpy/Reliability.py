@@ -1,4 +1,4 @@
-from lib.UQpy import UQpyModules, PDFs
+from UQpy import UQpyModules, PDFs
 import numpy as np
 import warnings
 import time
@@ -186,7 +186,7 @@ class SubsetSimulation:
         return np.prod(p), theta_fail, np.sum(cov)
 
     def subset_step(self, args, theta_new, y, M):
-        from UQpyLibraries.SampleMethods import MCMC
+        from SampleMethods import MCMC
         sub_germ_u = theta_new
         sub_germ_g = M
         nr = int(1 / self.p0)

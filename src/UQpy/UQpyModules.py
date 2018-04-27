@@ -21,7 +21,7 @@ class RunCommandLine:
             print("Error: UQpy parameters file does not exist")
             sys.exit()
         else:
-            from lib.UQpy.ReadInputFile import readfile
+            from UQpy.ReadInputFile import readfile
             data = readfile('UQpy_Params.txt')
 
         ################################################################################################################
@@ -51,7 +51,7 @@ class RunCommandLine:
         self.args.Adaptive = False
         ################################################################################################################
         # Initialize the requested UQpy method: Check if all necessary parameters are defined in the UQpyParams.txt file
-        from lib.UQpy.SampleMethods import init_sm, run_sm
+        from UQpy.SampleMethods import init_sm, run_sm
         init_sm(data)
 
         ################################################################################################################
@@ -80,7 +80,7 @@ class RunCommandLine:
         print("\nSuccessful execution of UQpy\n\n")
 
     def run_reliability(self, data):
-        from lib.UQpy.Reliability import init_rm, run_rm
+        from UQpy.Reliability import init_rm, run_rm
         init_rm(data)
         if data['method'] == 'SuS':
             from UQpy.Reliability import SubsetSimulation
