@@ -1013,10 +1013,18 @@ class Strata:
 
 class MCMC:
 
-    """This class generates samples from arbitrary distribution using Metropolis-Hastings(MH),
+    """Generate samples from an arbitrary probability density function using Markov Chain Monte Carlo.
+
+    This class generates samples from arbitrary distribution using Metropolis-Hastings(MH),
     Modified Metropolis-Hastings, of Affine Invariant Ensembler Sampler with stretch moves.
 
+    References:
+    S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by subset simulation,”
+        Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+    J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci., vol. 5,
+        no. 1, pp. 65–80, 2010.
 
+    Input:
     :param dimension:  A scalar value defining the dimension of target density function.
                     Default: 1
     :type dimension: int
@@ -1082,13 +1090,15 @@ class MCMC:
                         For 'Stretch': No default, this must be specified.
     :type seed: float list
 
-    References:
-    S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by subset simulation,”
-        Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
-    J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci., vol. 5,
-        no. 1, pp. 65–80, 2010.
 
+    Output:
+    :return: MCMC.samples:
+
+    :rtype: MCMC.samples: numpy array
     """
+
+    # Authors: Mohit Chauhan, Dimitris Giovanis, Michael D. Shields
+    # Last Updated: 4/26/18 by Michael D. Shields
 
     def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None, pdf_target_type=None,
                  pdf_target=None, algorithm=None,   jump=None, nsamples=None, seed=None):
