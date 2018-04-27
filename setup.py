@@ -10,8 +10,8 @@ setup(
     author_emails="dgiovan1@jhu.edu, michael.shields@jhu.edu",
     license='Apache',
     platforms='OSX',
-    packages=find_packages("lib"),
-    package_dir={"": "lib"},
+    packages=find_packages("src"),
+    package_dir={"": "src"},
     package_data={"":["*.pdf"]},
     install_requires=[
         "numpy", "scipy", "chaospy","pyDOE","scikit-learn"
