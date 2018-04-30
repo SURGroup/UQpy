@@ -205,11 +205,10 @@ def readfile(filename):
         # Stochastic Reduced Order Model
         elif title == 'SROM':
             mydict[title] = lines[lines_[i] + 1][:-1]
-<<<<<<< HEAD:UQpyLibraries/ReadInputFile.py
         elif title == 'Moments':
-=======
+
         elif title == 'moments':
->>>>>>> 09ada5938efd9b05bfc2a8a9f37ca23ee39aaefe:lib/UQpy/ReadInputFile.py
+
             seed = []
             j = 0
             while j >= 0:
@@ -221,11 +220,8 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
-<<<<<<< HEAD:UQpyLibraries/ReadInputFile.py
         elif title == 'Correlation':
-=======
         elif title == 'error function weights':
->>>>>>> 09ada5938efd9b05bfc2a8a9f37ca23ee39aaefe:lib/UQpy/ReadInputFile.py
             seed = []
             j = 0
             while j >= 0:
@@ -237,11 +233,7 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
-<<<<<<< HEAD:UQpyLibraries/ReadInputFile.py
-        elif title == 'Error function weights':
-=======
         elif title == 'sample weights':
->>>>>>> 09ada5938efd9b05bfc2a8a9f37ca23ee39aaefe:lib/UQpy/ReadInputFile.py
             seed = []
             j = 0
             while j >= 0:
@@ -253,11 +245,7 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
-<<<<<<< HEAD:UQpyLibraries/ReadInputFile.py
-        elif title == 'Sample weights':
-=======
         elif title == 'properties to match':
->>>>>>> 09ada5938efd9b05bfc2a8a9f37ca23ee39aaefe:lib/UQpy/ReadInputFile.py
             seed = []
             j = 0
             while j >= 0:
@@ -269,7 +257,6 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
-<<<<<<< HEAD:UQpyLibraries/ReadInputFile.py
         elif title == 'Default weights for distribution':
             seed = []
             j = 0
@@ -318,10 +305,7 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
-
-=======
         ################################################################################################################
->>>>>>> 09ada5938efd9b05bfc2a8a9f37ca23ee39aaefe:lib/UQpy/ReadInputFile.py
         # ADD ANY NEW METHOD HERE
 
         ################################################################################################################
