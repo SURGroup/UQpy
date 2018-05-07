@@ -1041,10 +1041,14 @@ class MCMC:
     :type pdf_proposal_type: str or str list
 
     :param pdf_proposal_scale: Scale of the proposal distribution
-                    For pdf_proposal_type = 'Uniform'
-                        Proposal is Uniform in [x-pdf_proposal_scale/2, x+pdf_proposal_scale/2]
-                    For pdf_proposal_type = 'Normal'
-                        Proposal is Normal with standard deviation equal to pdf_proposal_scale
+                    If algorithm == 'MH' or 'MMH'
+                        For pdf_proposal_type = 'Uniform'
+                            Proposal is Uniform in [x-pdf_proposal_scale/2, x+pdf_proposal_scale/2]
+                        For pdf_proposal_type = 'Normal'
+                            Proposal is Normal with standard deviation equal to pdf_proposal_scale
+                    If algorithm == 'Stretch'
+                        pdf_proposal_scale sets the scale of the stretch density
+                            g(z) = 1/sqrt(z) for z in [1/pdf_proposal_scale, pdf_proposal_scale]
                     Default value: dimension x 1 list of ones
     :type pdf_proposal_scale: float or float list
                     If dimension > 1, this may be defined as float or float list
@@ -1060,11 +1064,18 @@ class MCMC:
     :type pdf_target_type: str
 
     :param pdf_target: Target density function from which to draw random samples
-                    The target joint probability density must be a function, or list of functions, with a single input
-                        corresponding to the value at which the pdf is to be evaluated.
+                    The target joint probability density must be a function, or list of functions, or a string.
+                    If type == 'str'
+                        The assigned string must refer to a custom pdf defined in the file custom_pdf.py in the working
+                            directory
+                    If type == function
+                        The function must be defined in the python script calling MCMC
                     If dimension > 1, the input to pdf_target is a list of size [dimensions x 1]
                     Default: Multivariate normal distribution having zero mean and unit standard deviation
-    :type pdf_target: function or function list
+    :type pdf_target: function, function list, or str
+
+    :param pdf_target_params: Parameters of the target pdf
+    :type pdf_target_params: list
 
     :param algorithm:  Algorithm used to generate random samples.
                     Options:
@@ -1098,15 +1109,16 @@ class MCMC:
     """
 
     # Authors: Mohit Chauhan, Dimitris Giovanis, Michael D. Shields
-    # Last Updated: 4/26/18 by Michael D. Shields
+    # Updated: 4/26/18 by Michael D. Shields
 
     def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None, pdf_target_type=None,
-                 pdf_target=None, algorithm=None,   jump=None, nsamples=None, seed=None):
+                 pdf_target=None, pdf_target_params=None, algorithm=None, jump=None, nsamples=None, seed=None):
 
         self.pdf_proposal_type = pdf_proposal_type
         self.pdf_proposal_scale = pdf_proposal_scale
         self.pdf_target_type = pdf_target_type
         self.pdf_target = pdf_target
+        self.pdf_target_params = pdf_target_params
         self.algorithm = algorithm
         self.jump = jump
         self.nsamples = nsamples
@@ -1116,6 +1128,8 @@ class MCMC:
         if self.algorithm is 'Stretch':
             self.ensemble_size = len(self.seed)
         self.samples = self.run_mcmc()
+
+        #TODO Add burn-in
 
     def run_mcmc(self):
         rejects = 0
@@ -1136,8 +1150,9 @@ class MCMC:
                     if self.dimension == 1:
                         candidate = np.random.normal(samples[i, :], np.array(self.pdf_proposal_scale))
                     else:
-                        pdf_proposal_scale = np.diag(np.array(self.pdf_proposal_scale))
-                        candidate = np.random.multivariate_normal(samples[i, :], np.array(pdf_proposal_scale))
+                        if i == 0:
+                            self.pdf_proposal_scale = np.diag(np.array(self.pdf_proposal_scale))
+                        candidate = np.random.multivariate_normal(samples[i, :], np.array(self.pdf_proposal_scale))
 
                 elif self.pdf_proposal_type == 'Uniform':
 
@@ -1145,8 +1160,8 @@ class MCMC:
                                                   high=samples[i, :] + np.array(self.pdf_proposal_scale) / 2,
                                                   size=self.dimension)
 
-                p_proposal = pdf_(candidate)
-                p_current = pdf_(samples[i, :])
+                p_proposal = pdf_(candidate, self.pdf_target_params)
+                p_current = pdf_(samples[i, :], self.pdf_target_params)
                 p_accept = p_proposal / p_current
 
                 accept = np.random.random() < p_accept
@@ -1176,8 +1191,8 @@ class MCMC:
                             candidate = np.random.uniform(low=samples[i, j] - self.pdf_proposal_scale[j] / 2,
                                                           high=samples[i, j] + self.pdf_proposal_scale[j] / 2, size=1)
 
-                        p_proposal = pdf_(candidate)
-                        p_current = pdf_(samples[i, j])
+                        p_proposal = pdf_(candidate, self.pdf_target_params)
+                        p_current = pdf_(samples[i, j], self.pdf_target_params)
                         p_accept = p_proposal / p_current
 
                         accept = np.random.random() < p_accept
@@ -1206,8 +1221,8 @@ class MCMC:
                                                              high=samples[i, j] + self.pdf_proposal_scale[j] / 2,
                                                              size=1)
 
-                        p_proposal = pdf_(candidate)
-                        p_current = pdf_(current)
+                        p_proposal = pdf_(candidate, self.pdf_target_params)
+                        p_current = pdf_(current, self.pdf_target_params)
                         p_accept = p_proposal / p_current
 
                         accept = np.random.random() < p_accept
@@ -1218,7 +1233,6 @@ class MCMC:
                             candidate[j] = current[j]
 
                     samples[i + 1, :] = current
-
 
         ################################################################################################################
         # Affine Invariant Ensemble Sampler with stretch moves
@@ -1237,8 +1251,8 @@ class MCMC:
                 s = (1+(self.pdf_proposal_scale[0]-1)*random.random())**2/self.pdf_proposal_scale[0]
                 candidate = S+s*(samples[i-self.ensemble_size+1,:]-S)
 
-                p_proposal = pdf_(candidate)
-                p_current = pdf_(samples[i-self.ensemble_size+1, :])
+                p_proposal = pdf_(candidate, self.pdf_target_params)
+                p_current = pdf_(samples[i-self.ensemble_size+1, :], self.pdf_target_params)
                 p_accept = s**(self.dimension-1)*p_proposal/p_current
 
                 accept = np.random.random() < p_accept
@@ -1339,6 +1353,8 @@ class MCMC:
                                           'Affine Invariant Ensemble with Stretch Moves (Stretch).')
 
         # Check pdf_target
+        if type(self.pdf_target).__name__ == 'str':
+            self.pdf_target = pdf(self.pdf_target)
         if self.pdf_target is None and self.algorithm is 'MMH':
             if self.dimension == 1 or self.pdf_target_type is 'marginal_pdf':
                 def target(x):
@@ -1360,10 +1376,14 @@ class MCMC:
                 def target(x):
                     return sp.multivariate_normal.pdf(x,mean=np.zeros(self.dimension),cov=np.eye(self.dimension))
                 self.pdf_target = [target]
-        elif type(self.pdf_target).__name__!='list':
+        elif type(self.pdf_target).__name__ != 'list':
             self.pdf_target = [self.pdf_target]
 
-
+        # Check pdf_target_params
+        if self.pdf_target_params is None:
+            self.pdf_target_params = []
+        if type(self.pdf_target_params).__name__!='list':
+            self.pdf_target_params = [self.pdf_target_params]
 
 
 
