@@ -16,12 +16,11 @@ class RunCommandLine:
 
         os.chdir(os.path.join(os.getcwd(), self.args.Model_directory))
 
-        from UQpy  import ReadInputFile
         if not os.path.isfile('UQpy_Params.txt'):
             print("Error: UQpy parameters file does not exist")
             sys.exit()
         else:
-            from lib.UQpy.ReadInputFile import readfile
+            from src.UQpy.ReadInputFile import readfile
             data = readfile('UQpy_Params.txt')
 
         ################################################################################################################
@@ -51,7 +50,7 @@ class RunCommandLine:
         self.args.Adaptive = False
         ################################################################################################################
         # Initialize the requested UQpy method: Check if all necessary parameters are defined in the UQpyParams.txt file
-        from lib.UQpy.SampleMethods import init_sm, run_sm
+        from src.UQpy.SampleMethods import init_sm, run_sm
         init_sm(data)
 
         ################################################################################################################

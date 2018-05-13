@@ -205,8 +205,6 @@ def readfile(filename):
         # Stochastic Reduced Order Model
         elif title == 'SROM':
             mydict[title] = lines[lines_[i] + 1][:-1]
-        elif title == 'Moments':
-
         elif title == 'moments':
 
             seed = []
@@ -220,20 +218,7 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
-        elif title == 'Correlation':
         elif title == 'error function weights':
-            seed = []
-            j = 0
-            while j >= 0:
-                testline = lines[lines_[i] + j + 1].strip()
-                if not testline:
-                    break
-                else:
-                    x = lines[lines_[i] + j + 1][:-1]
-                    seed.append(np.float32(x.split(" ")))
-                    j = j + 1
-            mydict[title] = seed
-        elif title == 'sample weights':
             seed = []
             j = 0
             while j >= 0:
@@ -257,7 +242,7 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
-        elif title == 'Default weights for distribution':
+        elif title == 'correlation':
             seed = []
             j = 0
             while j >= 0:
@@ -269,7 +254,7 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
-        elif title == 'Default weights for moments':
+        elif title == 'weights for distribution':
             seed = []
             j = 0
             while j >= 0:
@@ -281,7 +266,7 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
-        elif title == 'Default weights for correlation':
+        elif title == 'default weights for distribution':
             seed = []
             j = 0
             while j >= 0:
@@ -293,7 +278,55 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
-        elif title == 'Properties to match':
+        elif title == 'weights for moments':
+            seed = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    x = lines[lines_[i] + j + 1][:-1]
+                    seed.append(np.float32(x.split(" ")))
+                    j = j + 1
+            mydict[title] = seed
+        elif title == 'default weights for moments':
+            seed = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    x = lines[lines_[i] + j + 1][:-1]
+                    seed.append(np.float32(x.split(" ")))
+                    j = j + 1
+            mydict[title] = seed
+        elif title == 'weights for correlation':
+            seed = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    x = lines[lines_[i] + j + 1][:-1]
+                    seed.append(np.float32(x.split(" ")))
+                    j = j + 1
+            mydict[title] = seed
+        elif title == 'default weights for correlation':
+            seed = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    x = lines[lines_[i] + j + 1][:-1]
+                    seed.append(np.float32(x.split(" ")))
+                    j = j + 1
+            mydict[title] = seed
+        elif title == 'properties to match':
             seed = []
             j = 0
             while j >= 0:
@@ -310,6 +343,5 @@ def readfile(filename):
 
         ################################################################################################################
         # ADD ANY NEW METHOD HERE
-
 
     return mydict

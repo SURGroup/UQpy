@@ -4,10 +4,10 @@ from various.modelist import *
 import sys
 import copy
 from scipy.spatial.distance import pdist
-from UQpyLibraries.PDFs import *
+from src.UQpy.PDFs import *
 from functools import partial
 from scipy import optimize
-from UQpyLibraries.PDFs import pdf
+from src.UQpy.PDFs import pdf
 import warnings
 
 
@@ -19,8 +19,8 @@ def init_sm(data):
     ################################################################################################################
     # Check if requested method is available
 
-    if 'Method' in data:
-        if data['Method'] not in valid_methods:
+    if 'method' in data:
+        if data['method'] not in valid_methods:
             raise NotImplementedError("Method - %s not available" % data['Method'])
     else:
         raise NotImplementedError("No sampling method was provided")
@@ -30,12 +30,12 @@ def init_sm(data):
     # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
     # Optional: number of samples (default 100)
 
-    if data['Method'] == 'mcs':
-        if 'Number of Samples' not in data:
-            data['Number of Samples'] = None
-        if 'Probability distribution (pdf)' not in data:
+    if data['method'] == 'mcs':
+        if 'number of Samples' not in data:
+            data['number of Samples'] = None
+        if 'distribution type' not in data:
             raise NotImplementedError("Probability distribution not provided")
-        if 'Probability distribution parameters' not in data:
+        if 'distribution parameters' not in data:
             raise NotImplementedError("Probability distribution parameters not provided")
 
     ################################################################################################################
@@ -43,7 +43,7 @@ def init_sm(data):
     # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
     # Optional: 1. Criterion, 2. Metric, 3. Iterations
 
-    if data['Method'] == 'lhs':
+    if data['method'] == 'lhs':
         if 'Number of Samples' not in data:
             data['Number of Samples'] = None
         if 'Probability distribution (pdf)' not in data:
@@ -63,7 +63,7 @@ def init_sm(data):
     #                        5. algorithm
     # Optional: 1. Seed, 2. Burn-in
 
-    if data['Method'] == 'mcmc':
+    if data['method'] == 'mcmc':
         if 'Names of random variables' not in data:
             raise NotImplementedError('Number of random variables cannot be defined. Specify names of random variables')
         if 'seed' not in data:
@@ -99,7 +99,7 @@ def init_sm(data):
     # Optional:
 
 
-    if data['Method'] == 'pss':
+    if data['method'] == 'pss':
         if 'Probability distribution (pdf)' not in data:
             raise NotImplementedError("Probability distribution not provided")
         elif 'Probability distribution parameters' not in data:
@@ -114,12 +114,12 @@ def init_sm(data):
     # Necessary parameters:  1. pdf, 2. pdf parameters 3. sts design
     # Optional:
 
-    if data['Method'] == 'sts':
-        if 'Probability distribution (pdf)' not in data:
+    if data['method'] == 'sts':
+        if 'distribution type' not in data:
             raise NotImplementedError("Probability distribution not provided")
-        elif 'Probability distribution parameters' not in data:
+        elif 'distribution parameters' not in data:
             raise NotImplementedError("Probability distribution parameters not provided")
-        if 'STS design' not in data:
+        if 'design' not in data:
             raise NotImplementedError("STS design not provided")
 
     ################################################################################################################
@@ -138,16 +138,20 @@ def init_sm(data):
         # Optional
         if 'properties to match' not in data:
             data['properties to match'] = None
-        if 'sample weights' not in data:
-            data['sample weights'] = None
-        if 'Correlation' not in data:
-            data['Correlation'] = None
-        if 'Default weights for distribution' not in data:
-            data['Default weights for distribution'] = None
-        if 'Default weights for moments' not in data:
-            data['Default weights for moments'] = None
-        if 'Default weights for correlation' not in data:
-            data['Default weights for correlation'] = None
+        if 'correlation' not in data:
+            data['correlation'] = None
+        if 'weights for distribution' not in data:
+            data['weights for distribution'] = None
+        if 'default weights for distribution' not in data:
+            data['default weights for distribution'] = None
+        if 'weights for moments' not in data:
+            data['weights for moments'] = None
+        if 'default weights for moments' not in data:
+            data['default weights for moments'] = None
+        if 'weights for correlation' not in data:
+            data['weights for correlation'] = None
+        if 'default weights for correlation' not in data:
+            data['default weights for correlation'] = None
 
     ####################################################################################################################
     # Check any NEW METHOD HERE
@@ -168,7 +172,7 @@ def init_sm(data):
 def run_sm(data):
     ################################################################################################################
     # Run Monte Carlo simulation
-    if data['Method'] == 'mcs':
+    if data['method'] == 'mcs':
         print("\nRunning  %k \n", data['Method'])
         rvs = MCS(pdf_type=data['Probability distribution (pdf)'],
                   pdf_params=data['Probability distribution parameters'],
@@ -176,7 +180,7 @@ def run_sm(data):
 
     ################################################################################################################
     # Run Latin Hypercube sampling
-    elif data['Method'] == 'lhs':
+    elif data['method'] == 'lhs':
         print("\nRunning  %k \n", data['Method'])
         rvs = LHS(pdf_type=data['Probability distribution (pdf)'],
                   pdf_params=data['Probability distribution parameters'],
@@ -185,7 +189,7 @@ def run_sm(data):
 
     ################################################################################################################
     # Run partially stratified sampling
-    elif data['Method'] == 'pss':
+    elif data['method'] == 'pss':
         print("\nRunning  %k \n", data['Method'])
         rvs = PSS(pdf_type=data['Probability distribution (pdf)'],
                   pdf_params=data['Probability distribution parameters'],
@@ -194,15 +198,15 @@ def run_sm(data):
     ################################################################################################################
     # Run STS sampling
 
-    elif data['Method'] == 'sts':
-        print("\nRunning  %k \n", data['Method'])
-        rvs = STS(pdf_type=data['Probability distribution (pdf)'],
-                  pdf_params=data['Probability distribution parameters'], sts_design=data['STS design'])
+    elif data['method'] == 'sts':
+        print("\nRunning  %k \n", data['method'])
+        rvs = STS(pdf_type=data['distribution type'],
+                  pdf_params=data['distribution parameters'], sts_design=data['design'])
 
     ################################################################################################################
     # Run Markov Chain Monte Carlo sampling
 
-    elif data['Method'] == 'mcmc':
+    elif data['method'] == 'mcmc':
         print("\nRunning  %k \n", data['Method'])
         rvs = MCMC(dimension=len(data['Names of random variables']), pdf_target_type=data['Target distribution'],
                    algorithm=data['MCMC algorithm'], pdf_proposal_type=data['Proposal distribution'],
@@ -215,13 +219,16 @@ def run_sm(data):
     if 'SROM' in data:
         if data['SROM'] == 'Yes':
             print("\nImplementing SROM to samples")
-            rvs = SROM(samples=rvs.samples, pdf_type=data['Probability distribution (pdf)'], moments=data['Moments'],
-                       weights_errors=data['Error function weights'], weights_function=data['Sample weights'],
-                       default_weights_distribution=data['Default weights for distribution'],
-                       default_weights_moments=data['Default weights for moments'],
-                       default_weights_correlation=data['Default weights for correlation'],
-                       properties=data['Properties to match'], pdf_params=data['Probability distribution parameters'],
-                       correlation=data['Correlation'])
+            rvs = SROM(samples=rvs.samples, pdf_type=data['distribution type'], moments=data['moments'],
+                       weights_errors=data['error function weights'],
+                       weights_distribution=data['weights for distribution'],
+                       default_weights_distribution=data['default weights for distribution'],
+                       weights_moments=data['weights for moments'],
+                       default_weights_moments=data['default weights for moments'],
+                       weights_correlation=data['weights for correlation'],
+                       default_weights_correlation=data['default weights for correlation'],
+                       properties=data['properties to match'], pdf_params=data['distribution parameters'],
+                       correlation=data['correlation'])
 
     ################################################################################################################
     # Run ANY NEW METHOD HERE
@@ -1022,17 +1029,23 @@ class MCMC:
 
 class SROM:
 
-    # TODO: Mohit - Write the documentation for the class
-
     def __init__(self, samples=None, pdf_type=None, moments=None, weights_errors=None,
-                 weights_function=None, default_weights_distribution=None, default_weights_moments=None,
-                 default_weights_correlation=None, properties=None, pdf_params=None, correlation=None):
+                 weights_distribution=None, default_weights_distribution=None, weights_moments=None,
+                 default_weights_moments=None, weights_correlation=None, default_weights_correlation=None,
+                 properties=None, pdf_params=None, correlation=None):
         """
+        Generates weights corresponding to samples using Stochastic Reduce Order Model.
+
+        References:
+        M. Grigoriu, "Reduced order models for random functions. Application to stochastic problems",
+            Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.
+
+        Input:
         :param samples: A list of samples corresponding to each random variables
         :type samples: list
 
         :param pdf_type: Type of distribution functions
-        :type pdf_type: str
+        :type pdf_type: list str or list function
 
         :param pdf_params: Parameters of distribution
         :type pdf_params: list
@@ -1041,21 +1054,21 @@ class SROM:
         :type moments: list
 
         :param weights_errors: Weights associated with error in distribution, moments and correlation.
-        :type weights_errors: list
+                               Default: weights_errors = [1, 0.2, 0]
+        :type weights_errors: list or array
 
         :param properties: A list containing the information about properties, which are required to match in reduce
                            order model. This class focus on reducing errors in distribution, first order moment about
                            origin, second order moment about origin and correlation.
+                           Default: properties = [1, 1, 1, 0]
                            Example: properties = [1, 1, 0, 0] will minimize errors in distribution and errors in first
                            order moment about origin in reduce order model.
         :type properties: list
 
-        :param weights_function: An array of dimension (N+d+2)xN, where 'N' is number of samples and 'd' is number of
-                                 random variables. First 'N' rows contain weights associated with different samples.
-                                 Next two rows contain weights associated with moments. Last 'd' rows contain weights
-                                 associated with correlation of random variables.
-                                 :math: `weights function = [w_{F} w_{\\mu} w_{r}]^{T}`
-        :type weights_function: ndarray
+        :param weights_distribution: An array of dimension Nxd, where 'N' is number of samples and 'd' is number of
+                                     random variables. It contain weights associated with different samples.
+                                     Default: weights_distribution = Nxd dimensional array with all elements equal to 1.
+        :type weights_distribution: ndarray or list
 
         :param default_weights_distribution: Default weights associated with samples for every random variable is 1.
                                              This list modify the weights associated with all samples of each random
@@ -1064,20 +1077,36 @@ class SROM:
                                              :math: `w_{F} = [2w_{F}(1) w_{F}(2) 3w_{F}(3)]`
         :type default_weights_distribution: list
 
+        :param weights_moments: An array of dimension 2xd, where 'd' is number of random variables. It contain weights
+                                associated with moments.
+                                Default: weights_moments = Square of reciprocal of elements of moments.
+        :type weights_moments: ndarray or list
+
         :param default_weights_moments: This list modify the weights associated with moments of each random
                                         variable.
                                         Example: default_weights_moments = [2, 1, 3] will modify
                                         :math: `w_{F} = [2w_{F}(1) w_{F}(2) 3w_{F}(3)]`
         :type default_weights_moments: list
 
+        :param weights_correlation: An array of dimension dxd, where 'd' is number of random variables. It contain
+                                    weights associated with correlation of random variables.
+                                    Default: weights_correlation = dxd dimensional array with all elements equal to 1.
+        :type weights_correlation: ndarray or list
+
         :param default_weights_correlation: This list modify the weights associated with correlation.
         :type default_weights_moments: list
 
         :param correlation: Correlation between random variables
         :type correlation: list
-        """
 
-        # TODO: Mohit - Add error checks
+
+        Output:
+        :return: SROM.p_.x:
+
+        :rtype: SROM.p_.x: ndarray
+        """
+        # Authors: Mohit Chauhan
+        # Updated: 5/12/18 by Mohit Chauhan
 
         self.samples = np.array(samples)
         self.correlation = np.array(correlation)
@@ -1089,10 +1118,12 @@ class SROM:
         self.pdf_type = pdf_type
         self.moments = moments
         self.weights_errors = weights_errors
-        self.weight_function = np.array(weights_function)
-        self.default_sample_distribution = default_weights_distribution
-        self.default_sample_moments = default_weights_moments
-        self.default_sample_correlation = default_weights_correlation
+        self.weights_distribution = np.array(weights_distribution)
+        self.weights_moments = np.array(weights_moments)
+        self.weights_correlation = np.array(weights_correlation)
+        self.default_weights_distribution = default_weights_distribution
+        self.default_weights_moments = default_weights_moments
+        self.default_weights_correlation = default_weights_correlation
         self.properties = properties
         self.pdf_params = pdf_params
         self.dimension = len(self.pdf_type)
@@ -1101,37 +1132,39 @@ class SROM:
         weights = self.run_srom()
         self.samples = np.concatenate([self.samples, weights.reshape(weights.shape[0], 1)], axis=1)
 
+
     def run_srom(self):
         from scipy import optimize
 
-        def f(p_, samples, w, mar, n, d, m, alpha, para, prop, correlation):
-            e1 = 0.
-            e2 = 0.
-            e22 = 0.
-            e3 = 0.
+        def f(p_, samples, wd, wm, wc, mar, n, d, m, alpha, para, prop, correlation):
+            e1 = 0.; e2 = 0.; e22 = 0.; e3 = 0.
             com = np.append(samples, np.transpose(np.matrix(p_)), 1)
             for j in range(d):
                 srt = com[np.argsort(com[:, j].flatten())]
                 s = srt[0, :, j]
                 a = srt[0, :, d]
                 A = np.cumsum(a)
-                marginal = pdf(mar[j])
+                if type(mar[j]) == 'function':
+                    marginal = mar[j]
+                elif type(mar[j]) == 'str':
+                    marginal = pdf(mar[j])
+
                 if prop[0] == 1:
                     for i in range(n):
-                        e1 += w[i, j] * (A[0, i] - marginal(s[0, i], para[j])) ** 2
+                        e1 += wd[i, j] * (A[0, i] - marginal(s[0, i], para[j])) ** 2
 
                 if prop[1] == 1:
-                    e2 += w[n, j] * (np.sum(np.array(p_) * samples[:, j]) - m[0, j]) ** 2
+                    e2 += wm[0, j] * (np.sum(np.array(p_) * samples[:, j]) - m[0, j]) ** 2
 
                 if prop[2] == 1:
-                    e22 += w[n + 1, j] * (
+                    e22 += wm[1, j] * (
                         np.sum(np.array(p_) * (samples[:, j] * samples[:, j])) - m[1, j]) ** 2
 
                 if prop[3] == 1 and correlation is not None:
                     for k in range(d):
                         if k > j:
                             r = correlation[j, k] * np.sqrt((m[1, j]-m[0, j]**2)*(m[1, k]-m[0, k]**2)) + m[0, j]*m[0, k]
-                            e3 += w[n + 1 + k, j] * (
+                            e3 += wc[k, j] * (
                                     np.sum(np.array(p_) * (np.array(samples[:, j]) * np.array(samples[:, k]))) - r) ** 2
 
             return alpha[0] * e1 + alpha[1] * (e2 + e22) + alpha[2] * e3
@@ -1151,48 +1184,74 @@ class SROM:
                 {'type': 'ineq', 'fun': constraint3})
 
         p_ = optimize.minimize(f, np.zeros(self.nsamples),
-                               args=(self.samples, self.weight_function, self.pdf_type, self.nsamples, self.dimension,
-                                     self.moments, self.weights_errors, self.pdf_params, self.properties, self.correlation),
+                               args=(self.samples, self.weights_distribution, self.weights_moments,
+                                     self.weights_correlation, self.pdf_type, self.nsamples, self.dimension,
+                                     self.moments, self.weights_errors, self.pdf_params, self.properties,
+                                     self.correlation),
                                constraints=cons, method='SLSQP')
 
         return p_.x
 
     def init_srom(self):
 
+        # Check moments
         self.moments = np.array(self.moments)
-        print(np.size(self.moments), np.size(self.default_sample_moments))
+
+        # Check weights corresponding to errors
+        if self.weights_errors is None:
+            self.weights_errors = [1, 0.2, 0]
 
         self.weights_errors = np.array(self.weights_errors).astype(np.float64)
 
+        # Check samples
         if self.samples is None:
             raise NotImplementedError('Samples not provided for SROM')
 
+        # Check properties to match
         if self.properties is None:
             self.properties = [1, 1, 1, 0]
 
-        # if self.default_sample_moments is not None:
-        #     if self.moments.shape != self.default_sample_moments.shape:
-        #         raise NotImplementedError('Size of Default weights for moments should be same as Moments')
-        #
-        # if self.default_sample_distribution is not None:
-        #     if self.default_sample_distribution.shape[0] != 1:
-        #         raise NotImplementedError('Rows in Default weights for distribution should be 1')
-        #     if self.default_sample_distribution.shape[1] != self.dimension:
-        #         raise NotImplementedError(
-        #             'Columns in Default weights for distribution should be same as number of variables')
+        # Check weights corresponding to distribution and it's default list
+        if self.weights_distribution is None or len(self.weights_distribution) == 0:
+            if self.default_weights_distribution is None or len(self.default_weights_distribution) == 0:
+                self.weights_distribution = np.ones(shape=(self.samples.shape[0], self.dimension))
+            else:
+                self.weights_distribution = self.default_weights_distribution * np.ones(
+                    shape=(self.samples.shape[0], self.dimension))
+        else:
+            if len(self.default_weights_distribution) != self.dimension:
+                raise NotImplementedError("Size of 'default weights for distribution' is not correct")
 
-        if self.weight_function is None or len(self.weight_function) == 0:
-            if self.default_sample_distribution is None:
-                temp_weights_dist = np.ones(shape=(self.samples.shape[0], self.dimension))
+            if self.default_weights_distribution.shape[0] != self.nsamples or self.default_weights_distribution.shape[
+                1] != self.dimension:
+                raise NotImplementedError("Size of 'weights for distribution' is not correct")
+
+        # Check weights corresponding to moments and it's default list
+        if self.weights_moments is None or len(self.weights_moments) == 0:
+            if self.default_weights_moments is None or len(self.default_weights_moments) == 0:
+                self.weights_moments = np.reciprocal(np.square(self.moments))
             else:
-                temp_weights_dist = self.default_sample_distribution * np.ones(shape=(self.samples.shape[0], self.dimension))
-            if self.default_sample_moments is None:
-                temp_weights_mom = np.reciprocal(np.square(self.moments))
+                self.weights_moments = self.default_weights_moments * np.ones(shape=(self.moments.shape[0], self.moments.shape[1]))
+            # temp_weights_dist_mom = np.concatenate([temp_weights_dist, temp_weights_mom], axis=0)
+        else:
+            if len(self.default_weights_moments) != self.dimension:
+                raise NotImplementedError("Size of 'default weights for moments' is not correct")
+
+            if self.default_weights_moments.shape[0] != self.nsamples or self.default_weights_moments.shape[
+                1] != self.dimension:
+                raise NotImplementedError("Size of 'weights for moments' is not correct")
+
+        # Check weights corresponding to correlation and it's default list
+        if self.weights_correlation is None or len(self.weights_correlation) == 0:
+            if self.default_weights_correlation is None or len(self.default_weights_correlation) == 0:
+                self.weights_correlation = np.ones(shape=(self.dimension, self.dimension))
             else:
-                temp_weights_mom = self.default_sample_moments * np.ones(shape=(self.moments.shape[0], self.moments.shape[1]))
-            temp_weights_dist_mom = np.concatenate([temp_weights_dist, temp_weights_mom], axis=0)
-            if self.default_sample_correlation is None:
-                temp_weights_corr = np.ones(shape=(self.dimension, self.dimension))
-            else:
-                temp_weights_corr = self.default_sample_correlation * np.ones(shape=(self.dimension, self.dimension))
-            self.weight_function = np.concatenate([temp_weights_dist_mom, temp_weights_corr], axis=0)
+                self.weights_correlation = self.default_weights_correlation * np.ones(shape=(self.dimension, self.dimension))
+            # self.weights_function = np.concatenate([temp_weights_dist_mom, temp_weights_corr], axis=0)
+        else:
+            if len(self.default_weights_correlation) != self.dimension:
+                raise NotImplementedError("Size of 'default weights for correlation' is not correct")
+
+            if self.default_weights_correlation.shape[0] != self.nsamples or self.default_weights_correlation.shape[
+                1] != self.dimension:
+                raise NotImplementedError("Size of 'weights for correlation' is not correct")
