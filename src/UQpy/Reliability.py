@@ -139,13 +139,12 @@ class SubsetSimulation:
         # TODO: DG - Add coefficient of variation estimator for subset simulation
 
     def run_sus(self):
-        from UQpy import SampleMethods
         step = 0
         y_mcs = np.zeros(self.nsamples_ss)
         p = list()
         cov = list()
         threshold = []
-        mcs = SampleMethods.MCS(pdf_type=self.pdf_type, pdf_params=self.pdf_params, nsamples=self.nsamples_ss)
+        mcs = UQpyModules.MCS(pdf_type=self.pdf_type, pdf_params=self.pdf_params, nsamples=self.nsamples_ss)
         theta = mcs.samples
         import itertools
         pdf = list(itertools.repeat('Normal', self.dimension))
@@ -187,7 +186,7 @@ class SubsetSimulation:
         return np.prod(p), theta_fail, np.sum(cov)
 
     def subset_step(self, args, theta_new, y, M):
-        from UQpy import SampleMethods
+        from SampleMethods import MCMC
         sub_germ_u = theta_new
         sub_germ_g = M
         nr = int(1 / self.p0)
@@ -200,7 +199,7 @@ class SubsetSimulation:
         for i in range(nchains):
             seed_i = sub_germ_u[i, :]
             val_i = sub_germ_g[i]
-            rvs = SampleMethods.MCMC(dimension=self.dimension, pdf_target_type=self.pdf_target_type,
+            rvs = MCMC(dimension=self.dimension, pdf_target_type=self.pdf_target_type,
                        algorithm=self.algorithm, pdf_proposal_type=self.pdf_proposal_type,
                        pdf_proposal_width=self.pdf_proposal_width,
                        pdf_target_params=self.pdf_target_params, seed=seed_i,

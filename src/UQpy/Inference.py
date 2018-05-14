@@ -261,7 +261,7 @@ class Bayes_Inference:
         #plt.show()
 
         sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=[data])
-        sampler.run_mcmc(p0, 500)
+        sampler.run_mcmc
         trace = sampler.chain[:, 50:, :].reshape((-1, ndim))
 
         #fig = corner.corner(trace, labels=["$m$", "$s$"], truths=[0, 1, np.log(1)])

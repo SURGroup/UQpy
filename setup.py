@@ -14,7 +14,7 @@ setup(
     package_dir={"": "src"},
     package_data={"":["*.pdf"]},
     install_requires=[
-        "numpy", "scipy", "chaospy","pyDOE","scikit-learn"
+        "numpy", "scipy", "chaospy", "pyDOE", "scikit-learn"
     ],
     classifiers=[
         'Development Status :: 1 - Production/Unstable',
