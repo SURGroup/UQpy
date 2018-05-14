@@ -1,4 +1,4 @@
-from UQpyLibraries import SampleMethods, PDFs
+from UQpy import SampleMethods, PDFs
 import scipy.stats as stats
 import numpy as np
 import emcee

@@ -41,7 +41,7 @@ def pdf(dist):
     if dist == 'marginal_pdf':
         return partial(marginal_pdf)
 
-    if dist not in ['multivariate_pdf','Gamma', 'marginal_pdf']:
+    if dist not in ['multivariate_pdf', 'Gamma', 'marginal_pdf']:
         dir_ = os.getcwd()
         sys.path.insert(0, dir_)
         import custom_pdf
