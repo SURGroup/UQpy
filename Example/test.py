@@ -19,7 +19,6 @@ def Normal(x):
 x = MCMC(dimension=2, pdf_proposal_type='Normal', pdf_proposal_scale=[1.5,2.3], pdf_target_type='joint_pdf',
          pdf_target='Rosenbrock', pdf_target_params = [100], algorithm='MMH', jump=100, nsamples=100, seed=None)
 
-
 np.savetxt('UQpy_Samples.txt', x.samples, fmt='%0.5f')
 
 RunModel(cpu=4, solver='UQpy_Model.sh', input_='UQpy_Input.sh', output_='UQpy_Output.sh',
