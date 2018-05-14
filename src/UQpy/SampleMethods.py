@@ -1141,6 +1141,8 @@ class MCMC:
         # Classical Metropolis-Hastings Algorithm with symmetric proposal density
         if self.algorithm == 'MH':
 
+            # TODO: from np.random import multivariate_normal
+
             samples[0, :] = self.seed
 
             pdf_ = self.pdf_target[0]
