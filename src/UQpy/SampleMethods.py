@@ -1034,7 +1034,11 @@ class SROM:
                  default_weights_moments=None, weights_correlation=None, default_weights_correlation=None,
                  properties=None, pdf_params=None, correlation=None):
         """
-        Generates weights corresponding to samples using Stochastic Reduce Order Model.
+        Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random quantity.
+
+        SROM generates a discrete approximation of continuous random variables. The probabilities/weights are considered
+        to be the parameters for the SROM and they can be obtained by minimizing the error between the marginal
+        distributions, first and second order moments about origin and correlation between random variables.
 
         References:
         M. Grigoriu, "Reduced order models for random functions. Application to stochastic problems",
@@ -1101,8 +1105,7 @@ class SROM:
 
 
         Output:
-        :return: SROM.p_.x:
-
+        :return: SROM.p_.x: Probabilities/Weights defining discrete approximation of continuous random variables.
         :rtype: SROM.p_.x: ndarray
         """
         # Authors: Mohit Chauhan
@@ -1144,9 +1147,9 @@ class SROM:
                 s = srt[0, :, j]
                 a = srt[0, :, d]
                 A = np.cumsum(a)
-                if type(mar[j]) == 'function':
+                if type(mar[j]).__name__ == 'function':
                     marginal = mar[j]
-                elif type(mar[j]) == 'str':
+                elif type(mar[j]).__name__ == 'str':
                     marginal = pdf(mar[j])
 
                 if prop[0] == 1:
