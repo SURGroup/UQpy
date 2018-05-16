@@ -1089,7 +1089,7 @@ class SROM:
         :param default_weights_moments: This list modify the weights associated with moments of each random
                                         variable.
                                         Example: default_weights_moments = [2, 1, 3] will modify
-                                        :math: `w_{F} = [2w_{F}(1) w_{F}(2) 3w_{F}(3)]`
+                                        :math: `w_{\mu} = [2w_{\mu}(1) w_{\mu}(2) 3w_{\mu}(3)]`
         :type default_weights_moments: list
 
         :param weights_correlation: An array of dimension dxd, where 'd' is number of random variables. It contain
@@ -1097,10 +1097,10 @@ class SROM:
                                     Default: weights_correlation = dxd dimensional array with all elements equal to 1.
         :type weights_correlation: ndarray or list
 
-        :param default_weights_correlation: This list modify the weights associated with correlation.
+        :param default_weights_correlation: This list modify the weights associated each element of correlation matrix.
         :type default_weights_moments: list
 
-        :param correlation: Correlation between random variables
+        :param correlation: Correlation matrix between random variables.
         :type correlation: list
 
 
