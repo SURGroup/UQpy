@@ -33,9 +33,9 @@ if __name__ == '__main__':
     parser.add_argument("--CPUs", dest="CPUs", action="store",
                         default=0, type=int, help="Number of local cores to be used for the analysis")
 
-    parser.add_argument("--ClusterNodes", dest="nodes", action="store", type=int,
-                        default=1, help="Number of nodes to distribute the model evaluations in "
-                        "case of a cluster (Not Available).")
+    #parser.add_argument("--ClusterNodes", dest="nodes", action="store", type=int,
+                        #default=1, help="Number of nodes to distribute the model evaluations in "
+                        #"case of a cluster. (Not available)")
 
     args, unknown = parser.parse_known_args()
 
@@ -58,8 +58,6 @@ if __name__ == '__main__':
                 print("Error: Shell scripts for communication between UQpy and the model are required. Type --help"
                       "for more information")
                 sys.exit()
-        
-        from lib.UQpy.UQpyModules import RunCommandLine
-        RunCommandLine(args)
 
-  
+        from UQpy.UQpyModules import RunCommandLine
+        RunCommandLine(args)

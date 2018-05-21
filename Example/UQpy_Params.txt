@@ -1,17 +1,32 @@
 #method
-mcs
+mcmc
 
 #number of parameters
 3
 
-#distribution type
-Uniform
-
-#distribution parameters
-0 1
-
 #number of samples
 20
+
+#algorithm
+MMH
+
+#proposal distribution type
+Uniform
+Uniform
+Uniform
+
+
+#proposal distribution width
+2
+
+#target distribution type
+Mohit
+arbitrary1
+arbitrary2
+
+
+#target distribution parameters
+0 1
 
 
 #end

@@ -110,17 +110,52 @@ def readfile(filename):
         # Markov Chain Monte Carlo simulation
         elif title == 'algorithm':
             mydict[title] = lines[lines_[i] + 1][:-1]
-        elif title == 'proposal distribution':
-            mydict[title] = lines[lines_[i] + 1][:-1]
+        elif title == 'proposal distribution type':
+            dist = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    dist.append(lines[lines_[i] + j + 1][:-1])
+                    j = j + 1
+            mydict[title] = dist
         elif title == 'proposal distribution width':
-            mydict[title] = int(lines[lines_[i] + 1][:-1])
-        elif title == 'target distribution':
-            mydict[title] = lines[lines_[i] + 1][:-1]
+            dist = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    dist.append(int(lines[lines_[i] + j + 1][:-1]))
+                    j = j + 1
+            mydict[title] = dist
+        elif title == 'target distribution type':
+            dist = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    dist.append(lines[lines_[i] + j + 1][:-1])
+                    j = j + 1
+            mydict[title] = dist
         elif title == 'skip':
             mydict[title] = int(lines[lines_[i] + 1][:-1])
         elif title == 'target distribution parameters':
-            x = lines[lines_[i] + 1]
-            target_params = np.float32(x.split(" "))
+            target_params = list()
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    x = lines[lines_[i] + j + 1]
+                    target_params.append(np.float32(x.split(" ")))
+                    j = j + 1
             mydict[title] = target_params
         elif title == 'seed':
             seed = []
@@ -134,6 +169,34 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
+        ################################################################################################################
+        # Subset Simulation
+        elif title == 'Number of Samples per subset':
+            mydict[title] = int(lines[lines_[i] + 1][:-1])
+        elif title == 'Conditional probability':
+            mydict[title] = np.float32(lines[lines_[i] + 1][:-1])
+        elif title == 'Limit-state':
+            ls = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    ls.append(np.float32(lines[lines_[i] + j + 1][:-1]))
+                    j = j + 1
+                mydict[title] = ls
+        elif title == 'Failure probability':
+            pf = []
+            j = 0
+            while j >= 0:
+                testline = lines[lines_[i] + j + 1].strip()
+                if not testline:
+                    break
+                else:
+                    pf.append(np.float32(lines[lines_[i] + j + 1][:-1]))
+                    j = j + 1
+                mydict[title] = pf
         ################################################################################################################
         # Stochastic Reduced Order Model
         elif title == 'SROM':

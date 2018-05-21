@@ -1,4 +1,4 @@
-import UQpy as uq
+from UQpy import UQpyModules, PDFs
 import numpy as np
 import warnings
 import time
@@ -155,7 +155,9 @@ class SubsetSimulation:
         for i in range(self.nsamples_ss):
             # Perform MCS
             np.savetxt('UQpy_Samples.txt', theta[i, :], newline=' ', fmt='%0.5f')
-            model = UQpyModules.RunModel(self.args)
+            model = UQpyModules.RunModel(self.args.CPUs, self.args.Solver, self.args.Input_Shell_Script,
+                                         self.args.Output_Shell_Script,
+                                         self.args.Adaptive)
             y_mcs[i] = model.values
 
         y, theta_new, m = self.threshold0value(theta_u, y_mcs)
@@ -184,7 +186,7 @@ class SubsetSimulation:
         return np.prod(p), theta_fail, np.sum(cov)
 
     def subset_step(self, args, theta_new, y, M):
-        from UQpyLibraries.SampleMethods import MCMC
+        from SampleMethods import MCMC
         sub_germ_u = theta_new
         sub_germ_g = M
         nr = int(1 / self.p0)
@@ -212,7 +214,9 @@ class SubsetSimulation:
                 xu = theta_u[j, :]   # In the original space
                 candidate = samples[j, :]   # candidate in N(0, 1)
                 np.savetxt('UQpy_Samples.txt', xu, newline=' ', fmt='%0.5f')
-                model = UQpyModules.RunModel(args)
+                model = UQpyModules.RunModel(self.args.CPUs, self.args.Solver, self.args.Input_Shell_Script,
+                                         self.args.Output_Shell_Script,
+                                         self.args.Adaptive, self.args.ParallelProcessing)
                 temp_g = model.values
                 if temp_g < y:
                     val_i = val_i
