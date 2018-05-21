@@ -14,6 +14,7 @@
 \subsubsectionfont{\normalfont}
 \subsectionfont{\normalfont}
 \usepackage{multirow}
+\usepackage{subfiles}
 
 
 \journal{Journal Name}
@@ -147,6 +148,7 @@ which results in:
 
 
 \subsection{Using the \texttt{UQpy}  IDE Mode}
+\label{sec:IDE_Mode}
 
 \noindent
 After installation, \texttt{UQpy} is build in the local Python’s standard library and thus, it runs from any Integrated Development Environment (PyCharm, Atom, Eclipse, e.t.c) which provides code analysis and debugging. In order to use \texttt{UQpy} libraries in a project the user needs to import the specific module to its workspace. This can be done by writing in a python script
@@ -319,39 +321,6 @@ The properties that need to be specified by the user inside the parameter file i
 
 
 
-\begin{center}
-	\begin{tabular}{ |l|c|c| } 
-				\hline
-		\multicolumn{3}{|c|}{\textbf{Markov chain Monte Carlo simulation}} \\
-		\hline
-		\textbf{Property} & \textbf{Mandatory} & \textbf{Optional} \\
-		\hline
-		\texttt{\#method} & $\star$ &   \\ 
-		\hline
-		\texttt{\#algorithm}& & $\star$   \\ 
-		\hline
-		\texttt{\#number of samples}& $\star$ &   \\ 
-		\hline
-		\texttt{\#number of parameters}& &  $\star$  \\ 
-		\hline
-		\texttt{\#proposal distribution type}  &  & $\star$  \\ 
-		\hline
-		\texttt{\#proposal distribution width}   & &  $\star$  \\ 
-		\hline
-		\texttt{\#target distribution}  & $\star$ &   \\ 
-		\hline
-		\texttt{\#target distribution parameters}  & $\star$ &   \\ 
-		\hline
-		\texttt{\#names of parameters} & & $\star$   \\ 
-		\hline
-		\texttt{\#jump} & & $\star$   \\ 
-		\hline
-		\texttt{\#initial seed} & & $\star$   \\ 
-		\hline
-		\texttt{\#SROM}&  & \textbf{True} or \textbf{False}    \\ 
-		\hline
-	\end{tabular}
-\end{center}
 
 \begin{center}
 	\begin{tabular}{ |l|c|c| } 
@@ -434,66 +403,8 @@ The functionality of the {\color{red} name3*.sh} bash shell script file is to co
 	\label{template_output}
 \end{figure}
 
+\subfile{Modules}
 
-
-\section{Probabilistic sampling}
-
-\begin{center}
-	\begin{tabular}{ |l|l| } 
-		\hline
-		\textbf{Property} &  \textbf{Options} \\
-		\hline
-		\texttt{\#method}&  'mcs', 'lhs', 'sts', 'pss', 'mcmc'  \\ 
-		\hline
-		\multirow{2}{*}{\texttt{\#distribution type}} & 'Uniform', 'Normal',  'Lognormal', \\ 
-		&    'Weibull', 'Beta', 'Exponential', 'Gamma'   \\ 
-		\hline
-	\end{tabular}
-\end{center}
-
-
-\subsection{Latin hypercube sampling}
-
-\begin{center}
-	\begin{tabular}{ |l|c|l| } 
-		\hline
-		\textbf{Property} & \textbf{Type} & \textbf{Options} \\
-		\hline
-		\texttt{\#criterion}& \textit{string} &  'random', 'centered', 'maximin', 'correlate'  \\ 
-		\hline
-		\multirow{5}{*}{\texttt{\#distance}} & \multirow{5}{*}{\textit{string}} & 'braycurtis', 'canberra', 'chebyshev', 'cosine', \\ 
-		&  &  'dice', 'euclidean', 'hamming', 'jaccard',  'cityblock',   \\ 
-		&  &  'matching', 'minkowski', 'rogerstanimoto',  'correlation', \\ 
-		&  & 'sokalmichener', 'sokalsneath', 'sqeuclidean',  \\ 
-		&  & ' 'kulsinski', 'mahalanobis', 'russellrao', 'seuclidean',  \\ 
-		\hline
-	\end{tabular}
-\end{center}
-
-
-\subsection{Markov Chain Monte Carlo sampling}
-
-\begin{center}
-	\begin{tabular}{ |l|l| } 
-		\hline
-		\textbf{Property} &  \textbf{Options} \\
-		\hline
-		\texttt{\#target distribution}&   'multivariate\_pdf', 'marginal\_pdf', 'normal\_pdf'  \\ 
-		\hline
-		\texttt{\#proposal distribution}&   'Uniform', 'Normal'  \\ 
-		\hline
-		\texttt{\#algorithm}&   'MH', 'MMH'  \\ 
-		\hline
-	\end{tabular}
-\end{center}
-
-
-\subsection{Partially Stratified sampling}
-\subsection{Latinized stratified sampling}
-\subsection{Stochastic reduced order method}
-
-
-\subsection{Adding a sampling method in UQpy}
 
 \section*{References}
 

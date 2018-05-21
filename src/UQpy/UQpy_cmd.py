@@ -59,5 +59,5 @@ if __name__ == '__main__':
                       "for more information")
                 sys.exit()
 
-        from src.UQpy.UQpyModules import RunCommandLine
+        from UQpy.UQpyModules import RunCommandLine
         RunCommandLine(args)
