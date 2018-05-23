@@ -232,9 +232,9 @@ def run_sm(data):
     #         rvs = SROM(samples=rvs.samples, pdf_type=data['distribution type'], moments=data['moments'],
     #                    weights_errors=data['error function weights'],
     #                    weights_distribution=data['weights for distribution'],
-    #                    weights_moments=data['weights for moments'], weights_correlation=data['weights for correlation'],
-    #                    properties=data['properties to match'], pdf_params=data['distribution parameters'],
-    #                    correlation=data['correlation'])
+    #                    weights_moments=data['weights for moments'],
+    #                    weights_correlation=data['weights for correlation'], properties=data['properties to match'],
+    #                    pdf_params=data['distribution parameters'], correlation=data['correlation'])
 
     ################################################################################################################
     # Run ANY NEW METHOD HERE
