@@ -266,18 +266,6 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
-        elif title == 'default weights for distribution':
-            seed = []
-            j = 0
-            while j >= 0:
-                testline = lines[lines_[i] + j + 1].strip()
-                if not testline:
-                    break
-                else:
-                    x = lines[lines_[i] + j + 1][:-1]
-                    seed.append(np.float32(x.split(" ")))
-                    j = j + 1
-            mydict[title] = seed
         elif title == 'weights for moments':
             seed = []
             j = 0
@@ -290,31 +278,7 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
-        elif title == 'default weights for moments':
-            seed = []
-            j = 0
-            while j >= 0:
-                testline = lines[lines_[i] + j + 1].strip()
-                if not testline:
-                    break
-                else:
-                    x = lines[lines_[i] + j + 1][:-1]
-                    seed.append(np.float32(x.split(" ")))
-                    j = j + 1
-            mydict[title] = seed
         elif title == 'weights for correlation':
-            seed = []
-            j = 0
-            while j >= 0:
-                testline = lines[lines_[i] + j + 1].strip()
-                if not testline:
-                    break
-                else:
-                    x = lines[lines_[i] + j + 1][:-1]
-                    seed.append(np.float32(x.split(" ")))
-                    j = j + 1
-            mydict[title] = seed
-        elif title == 'default weights for correlation':
             seed = []
             j = 0
             while j >= 0:
