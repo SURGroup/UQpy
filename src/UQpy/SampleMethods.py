@@ -254,6 +254,251 @@ def run_sm(data):
 
 ########################################################################################################################
 ########################################################################################################################
+#                                         Stochastic Reduced Order Model  (SROM)                                       #
+########################################################################################################################
+########################################################################################################################
+
+class SROM:
+
+    def __init__(self, samples=None, pdf_type=None, moments=None, weights_errors=None,
+                 weights_distribution=None, default_weights_distribution=None, weights_moments=None,
+                 default_weights_moments=None, weights_correlation=None, default_weights_correlation=None,
+                 properties=None, pdf_params=None, correlation=None):
+        """
+        Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random quantity.
+
+        SROM generates a discrete approximation of continuous random variables. The probabilities/weights are considered
+        to be the parameters for the SROM and they can be obtained by minimizing the error between the marginal
+        distributions, first and second order moments about origin and correlation between random variables.
+
+        References:
+        M. Grigoriu, "Reduced order models for random functions. Application to stochastic problems",
+            Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.
+
+        Input:
+        :param samples: A list of samples corresponding to each random variables
+        :type samples: list
+
+        :param pdf_type: Type of distribution functions
+        :type pdf_type: list str or list function
+
+        :param pdf_params: Parameters of distribution
+        :type pdf_params: list
+
+        :param moments: A list containing first and second order moment about origin of all random variables
+        :type moments: list
+
+        :param weights_errors: Weights associated with error in distribution, moments and correlation.
+                               Default: weights_errors = [1, 0.2, 0]
+        :type weights_errors: list or array
+
+        :param properties: A list containing the information about properties, which are required to match in reduce
+                           order model. This class focus on reducing errors in distribution, first order moment about
+                           origin, second order moment about origin and correlation.
+                           Default: properties = [1, 1, 1, 0]
+                           Example: properties = [1, 1, 0, 0] will minimize errors in distribution and errors in first
+                           order moment about origin in reduce order model.
+        :type properties: list
+
+        :param weights_distribution: An array of dimension Nxd, where 'N' is number of samples and 'd' is number of
+                                     random variables. It contain weights associated with different samples.
+                                     Default: weights_distribution = Nxd dimensional array with all elements equal to 1.
+        :type weights_distribution: ndarray or list
+
+        :param default_weights_distribution: Default weights associated with samples for every random variable is 1.
+                                             This list modify the weights associated with all samples of each random
+                                             variable.
+                                             Example: default_weights_distribution = [2, 1, 3] will modify
+                                             :math: `w_{F} = [2w_{F}(1) w_{F}(2) 3w_{F}(3)]`
+        :type default_weights_distribution: list
+
+        :param weights_moments: An array of dimension 2xd, where 'd' is number of random variables. It contain weights
+                                associated with moments.
+                                Default: weights_moments = Square of reciprocal of elements of moments.
+        :type weights_moments: ndarray or list (float)
+
+        :param default_weights_moments: This list modify the weights associated with moments of each random
+                                        variable.
+                                        Example: default_weights_moments = [2, 1, 3] will modify
+                                        :math: `w_{\mu} = [2w_{\mu}(1) w_{\mu}(2) 3w_{\mu}(3)]`
+        :type default_weights_moments: list
+
+        :param weights_correlation: An array of dimension dxd, where 'd' is number of random variables. It contain
+                                    weights associated with correlation of random variables.
+                                    Default: weights_correlation = dxd dimensional array with all elements equal to 1.
+        :type weights_correlation: ndarray or list
+
+        :param default_weights_correlation: This list modify the weights associated each element of correlation matrix.
+        :type default_weights_moments: list
+
+        :param correlation: Correlation matrix between random variables.
+        :type correlation: list
+
+
+        Output:
+        :return: SROM.samples: Last column contains the probabilities/weights defining discrete approximation of
+                               continuous random variables.
+        :rtype: SROM.samples: ndarray
+        """
+        # Authors: Mohit Chauhan
+        # Updated: 5/12/18 by Mohit Chauhan
+
+        self.samples = np.array(samples)
+        self.correlation = np.array(correlation)
+        self.pdf_type = pdf_type
+        self.moments = np.array(moments)
+        self.weights_errors = weights_errors
+        self.weights_distribution = np.array(weights_distribution)
+        self.weights_moments = np.array(weights_moments)
+        self.weights_correlation = np.array(weights_correlation)
+        self.default_weights_distribution = default_weights_distribution
+        self.default_weights_moments = default_weights_moments
+        self.default_weights_correlation = default_weights_correlation
+        self.properties = properties
+        self.pdf_params = pdf_params
+        self.dimension = len(self.pdf_type)
+        self.nsamples = samples.shape[0]
+        self.init_srom()
+        weights = self.run_srom()
+        self.samples = np.concatenate([self.samples, weights.reshape(weights.shape[0], 1)], axis=1)
+
+    def run_srom(self):
+        from scipy import optimize
+
+        def f(p_, samples, wd, wm, wc, mar, n, d, m, alpha, para, prop, correlation):
+            e1 = 0.; e2 = 0.; e22 = 0.; e3 = 0.
+            com = np.append(samples, np.transpose(np.matrix(p_)), 1)
+            for j in range(d):
+                srt = com[np.argsort(com[:, j].flatten())]
+                s = srt[0, :, j]
+                a = srt[0, :, d]
+                A = np.cumsum(a)
+                if type(mar[j]).__name__ == 'function':
+                    marginal = mar[j]
+                elif type(mar[j]).__name__ == 'str':
+                    marginal = pdf(mar[j])
+
+                if prop[0] == 1:
+                    for i in range(n):
+                        e1 += wd[i, j] * (A[0, i] - marginal(s[0, i], para[j])) ** 2
+
+                if prop[1] == 1:
+                    e2 += wm[0, j] * (np.sum(np.array(p_) * samples[:, j]) - m[0, j]) ** 2
+
+                if prop[2] == 1:
+                    e22 += wm[1, j] * (
+                        np.sum(np.array(p_) * (samples[:, j] * samples[:, j])) - m[1, j]) ** 2
+
+                if prop[3] == 1 and correlation is not None:
+                    for k in range(d):
+                        if k > j:
+                            r = correlation[j, k] * np.sqrt((m[1, j]-m[0, j]**2)*(m[1, k]-m[0, k]**2)) + m[0, j]*m[0, k]
+                            e3 += wc[k, j] * (
+                                    np.sum(np.array(p_) * (np.array(samples[:, j]) * np.array(samples[:, k]))) - r) ** 2
+
+            return alpha[0] * e1 + alpha[1] * (e2 + e22) + alpha[2] * e3
+
+        def constraint(x):
+            return np.sum(x) - 1
+
+        def constraint2(y):
+            n = np.size(y)
+            return np.ones(n) - y
+
+        def constraint3(z):
+            n = np.size(z)
+            return z - np.zeros(n)
+
+        cons = ({'type': 'eq', 'fun': constraint}, {'type': 'ineq', 'fun': constraint2},
+                {'type': 'ineq', 'fun': constraint3})
+
+        p_ = optimize.minimize(f, np.zeros(self.nsamples),
+                               args=(self.samples, self.weights_distribution, self.weights_moments,
+                                     self.weights_correlation, self.pdf_type, self.nsamples, self.dimension,
+                                     self.moments, self.weights_errors, self.pdf_params, self.properties,
+                                     self.correlation),
+                               constraints=cons, method='SLSQP')
+
+        return p_.x
+
+    def init_srom(self):
+        # Check samples
+        if self.samples is None:
+            raise NotImplementedError('Samples not provided for SROM')
+
+        # Check moments
+        if self.moments.shape != (2, self.dimension):
+            raise NotImplementedError("Size of 'moments' is not correct")
+
+        # Check weights corresponding to errors
+        if self.weights_errors is None:
+            self.weights_errors = [1, 0.2, 0]
+
+        self.weights_errors = np.array(self.weights_errors).astype(np.float64)
+
+        # Check properties to match
+        if self.properties is None:
+            self.properties = [1, 1, 1, 0]
+
+        # Check correlation
+        if self.correlation is None:
+            self.correlation = np.identity(self.dimension)
+
+        # Creating Correlated Samples
+        from scipy import linalg
+        self.correlation = np.array(self.correlation)
+        l = linalg.cholesky(self.correlation, lower=True)
+        self.samples = np.transpose(np.dot(l, np.transpose(self.samples)))
+
+        # Check weights corresponding to distribution and it's default values
+        if self.weights_distribution is None or not self.weights_distribution:
+            self.weights_distribution = np.ones(shape=(self.samples.shape[0], self.dimension))
+        else:
+            if self.weights_distribution.shape != self.samples.shape:
+                raise NotImplementedError("Size of 'weights for distribution' is not correct")
+
+        if self.default_weights_distribution is None or not self.default_weights_distribution:
+            self.default_weights_distribution = np.ones(shape=(1, self.dimension))
+        else:
+            if len(self.default_weights_distribution) != self.dimension:
+                raise NotImplementedError("Size of 'default weights for distribution' is not correct")
+
+        self.weights_distribution = self.default_weights_distribution * self.weights_distribution
+
+        # Check weights corresponding to moments and it's default list
+        if self.weights_moments is None or not self.weights_moments:
+            self.weights_moments = np.reciprocal(np.square(self.moments))
+        else:
+            if self.weights_moments.shape != self.moments.shape:
+                raise NotImplementedError("Size of 'weights for moments' is not correct")
+
+        if self.default_weights_moments is None or not self.default_weights_moments:
+            self.default_weights_moments = np.ones(shape=self.moments.shape)
+        else:
+            if self.default_weights_moments.shape != self.moments.shape:
+                raise NotImplementedError("Size of 'default weights for moments' is not correct")
+
+        self.weights_moments = self.default_weights_moments * self.weights_moments
+
+        # Check weights corresponding to correlation and it's default list
+        if self.weights_correlation is None or not self.weights_correlation:
+            self.weights_correlation = np.ones(shape=(self.dimension, self.dimension))
+        else:
+            if self.weights_correlation.shape != (self.dimension, self.dimension):
+                raise NotImplementedError("Size of 'weights for correlation' is not correct")
+
+        if self.default_weights_correlation is None or not self.default_weights_correlation:
+            self.default_weights_correlation = np.ones(shape=(self.dimension, self.dimension))
+        else:
+            if self.default_weights_correlation.shape != (self.dimension, self.dimension):
+                raise NotImplementedError("Size of 'default weights for correlation' is not correct")
+
+        self.weights_correlation = self.default_weights_correlation * self.weights_correlation
+
+
+
+########################################################################################################################
+########################################################################################################################
 #                                         Monte Carlo simulation
 ########################################################################################################################
 
@@ -1306,242 +1551,3 @@ class MCMC:
 ########################################################################################################################
 #                                         ADD ANY NEW METHOD HERE
 ########################################################################################################################
-
-
-########################################################################################################################
-########################################################################################################################
-#                                         Stochastic Reduced Order Model  (SROM)                                       #
-########################################################################################################################
-########################################################################################################################
-
-class SROM:
-
-    def __init__(self, samples=None, pdf_type=None, moments=None, weights_errors=None,
-                 weights_distribution=None, default_weights_distribution=None, weights_moments=None,
-                 default_weights_moments=None, weights_correlation=None, default_weights_correlation=None,
-                 properties=None, pdf_params=None, correlation=None):
-        """
-        Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random quantity.
-
-        SROM generates a discrete approximation of continuous random variables. The probabilities/weights are considered
-        to be the parameters for the SROM and they can be obtained by minimizing the error between the marginal
-        distributions, first and second order moments about origin and correlation between random variables.
-
-        References:
-        M. Grigoriu, "Reduced order models for random functions. Application to stochastic problems",
-            Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.
-
-        Input:
-        :param samples: A list of samples corresponding to each random variables
-        :type samples: list
-
-        :param pdf_type: Type of distribution functions
-        :type pdf_type: list str or list function
-
-        :param pdf_params: Parameters of distribution
-        :type pdf_params: list
-
-        :param moments: A list containing first and second order moment about origin of all random variables
-        :type moments: list
-
-        :param weights_errors: Weights associated with error in distribution, moments and correlation.
-                               Default: weights_errors = [1, 0.2, 0]
-        :type weights_errors: list or array
-
-        :param properties: A list containing the information about properties, which are required to match in reduce
-                           order model. This class focus on reducing errors in distribution, first order moment about
-                           origin, second order moment about origin and correlation.
-                           Default: properties = [1, 1, 1, 0]
-                           Example: properties = [1, 1, 0, 0] will minimize errors in distribution and errors in first
-                           order moment about origin in reduce order model.
-        :type properties: list
-
-        :param weights_distribution: An array of dimension Nxd, where 'N' is number of samples and 'd' is number of
-                                     random variables. It contain weights associated with different samples.
-                                     Default: weights_distribution = Nxd dimensional array with all elements equal to 1.
-        :type weights_distribution: ndarray or list
-
-        :param default_weights_distribution: Default weights associated with samples for every random variable is 1.
-                                             This list modify the weights associated with all samples of each random
-                                             variable.
-                                             Example: default_weights_distribution = [2, 1, 3] will modify
-                                             :math: `w_{F} = [2w_{F}(1) w_{F}(2) 3w_{F}(3)]`
-        :type default_weights_distribution: list
-
-        :param weights_moments: An array of dimension 2xd, where 'd' is number of random variables. It contain weights
-                                associated with moments.
-                                Default: weights_moments = Square of reciprocal of elements of moments.
-        :type weights_moments: ndarray or list
-
-        :param default_weights_moments: This list modify the weights associated with moments of each random
-                                        variable.
-                                        Example: default_weights_moments = [2, 1, 3] will modify
-                                        :math: `w_{\mu} = [2w_{\mu}(1) w_{\mu}(2) 3w_{\mu}(3)]`
-        :type default_weights_moments: list
-
-        :param weights_correlation: An array of dimension dxd, where 'd' is number of random variables. It contain
-                                    weights associated with correlation of random variables.
-                                    Default: weights_correlation = dxd dimensional array with all elements equal to 1.
-        :type weights_correlation: ndarray or list
-
-        :param default_weights_correlation: This list modify the weights associated each element of correlation matrix.
-        :type default_weights_moments: list
-
-        :param correlation: Correlation matrix between random variables.
-        :type correlation: list
-
-
-        Output:
-        :return: SROM.p_.x: Probabilities/Weights defining discrete approximation of continuous random variables.
-        :rtype: SROM.p_.x: ndarray
-        """
-        # Authors: Mohit Chauhan
-        # Updated: 5/12/18 by Mohit Chauhan
-
-        self.samples = np.array(samples)
-        self.correlation = np.array(correlation)
-        if correlation is not None:
-            from scipy import linalg
-            l = linalg.cholesky(correlation, lower=True)
-            self.samples = np.transpose(np.dot(l, np.transpose(self.samples)))
-
-        self.pdf_type = pdf_type
-        self.moments = moments
-        self.weights_errors = weights_errors
-        self.weights_distribution = np.array(weights_distribution)
-        self.weights_moments = np.array(weights_moments)
-        self.weights_correlation = np.array(weights_correlation)
-        self.default_weights_distribution = default_weights_distribution
-        self.default_weights_moments = default_weights_moments
-        self.default_weights_correlation = default_weights_correlation
-        self.properties = properties
-        self.pdf_params = pdf_params
-        self.dimension = len(self.pdf_type)
-        self.nsamples = samples.shape[0]
-        self.init_srom()
-        weights = self.run_srom()
-        self.samples = np.concatenate([self.samples, weights.reshape(weights.shape[0], 1)], axis=1)
-
-
-    def run_srom(self):
-        from scipy import optimize
-
-        def f(p_, samples, wd, wm, wc, mar, n, d, m, alpha, para, prop, correlation):
-            e1 = 0.; e2 = 0.; e22 = 0.; e3 = 0.
-            com = np.append(samples, np.transpose(np.matrix(p_)), 1)
-            for j in range(d):
-                srt = com[np.argsort(com[:, j].flatten())]
-                s = srt[0, :, j]
-                a = srt[0, :, d]
-                A = np.cumsum(a)
-                if type(mar[j]).__name__ == 'function':
-                    marginal = mar[j]
-                elif type(mar[j]).__name__ == 'str':
-                    marginal = pdf(mar[j])
-
-                if prop[0] == 1:
-                    for i in range(n):
-                        e1 += wd[i, j] * (A[0, i] - marginal(s[0, i], para[j])) ** 2
-
-                if prop[1] == 1:
-                    e2 += wm[0, j] * (np.sum(np.array(p_) * samples[:, j]) - m[0, j]) ** 2
-
-                if prop[2] == 1:
-                    e22 += wm[1, j] * (
-                        np.sum(np.array(p_) * (samples[:, j] * samples[:, j])) - m[1, j]) ** 2
-
-                if prop[3] == 1 and correlation is not None:
-                    for k in range(d):
-                        if k > j:
-                            r = correlation[j, k] * np.sqrt((m[1, j]-m[0, j]**2)*(m[1, k]-m[0, k]**2)) + m[0, j]*m[0, k]
-                            e3 += wc[k, j] * (
-                                    np.sum(np.array(p_) * (np.array(samples[:, j]) * np.array(samples[:, k]))) - r) ** 2
-
-            return alpha[0] * e1 + alpha[1] * (e2 + e22) + alpha[2] * e3
-
-        def constraint(x):
-            return np.sum(x) - 1
-
-        def constraint2(y):
-            n = np.size(y)
-            return np.ones(n) - y
-
-        def constraint3(z):
-            n = np.size(z)
-            return z - np.zeros(n)
-
-        cons = ({'type': 'eq', 'fun': constraint}, {'type': 'ineq', 'fun': constraint2},
-                {'type': 'ineq', 'fun': constraint3})
-
-        p_ = optimize.minimize(f, np.zeros(self.nsamples),
-                               args=(self.samples, self.weights_distribution, self.weights_moments,
-                                     self.weights_correlation, self.pdf_type, self.nsamples, self.dimension,
-                                     self.moments, self.weights_errors, self.pdf_params, self.properties,
-                                     self.correlation),
-                               constraints=cons, method='SLSQP')
-
-        return p_.x
-
-    def init_srom(self):
-
-        # Check moments
-        self.moments = np.array(self.moments)
-
-        # Check weights corresponding to errors
-        if self.weights_errors is None:
-            self.weights_errors = [1, 0.2, 0]
-
-        self.weights_errors = np.array(self.weights_errors).astype(np.float64)
-
-        # Check samples
-        if self.samples is None:
-            raise NotImplementedError('Samples not provided for SROM')
-
-        # Check properties to match
-        if self.properties is None:
-            self.properties = [1, 1, 1, 0]
-
-        # Check weights corresponding to distribution and it's default list
-        if self.weights_distribution is None or len(self.weights_distribution) == 0:
-            if self.default_weights_distribution is None or len(self.default_weights_distribution) == 0:
-                self.weights_distribution = np.ones(shape=(self.samples.shape[0], self.dimension))
-            else:
-                self.weights_distribution = self.default_weights_distribution * np.ones(
-                    shape=(self.samples.shape[0], self.dimension))
-        else:
-            if len(self.default_weights_distribution) != self.dimension:
-                raise NotImplementedError("Size of 'default weights for distribution' is not correct")
-
-            if self.default_weights_distribution.shape[0] != self.nsamples or self.default_weights_distribution.shape[
-                1] != self.dimension:
-                raise NotImplementedError("Size of 'weights for distribution' is not correct")
-
-        # Check weights corresponding to moments and it's default list
-        if self.weights_moments is None or len(self.weights_moments) == 0:
-            if self.default_weights_moments is None or len(self.default_weights_moments) == 0:
-                self.weights_moments = np.reciprocal(np.square(self.moments))
-            else:
-                self.weights_moments = self.default_weights_moments * np.ones(shape=(self.moments.shape[0], self.moments.shape[1]))
-            # temp_weights_dist_mom = np.concatenate([temp_weights_dist, temp_weights_mom], axis=0)
-        else:
-            if len(self.default_weights_moments) != self.dimension:
-                raise NotImplementedError("Size of 'default weights for moments' is not correct")
-
-            if self.default_weights_moments.shape[0] != self.nsamples or self.default_weights_moments.shape[
-                1] != self.dimension:
-                raise NotImplementedError("Size of 'weights for moments' is not correct")
-
-        # Check weights corresponding to correlation and it's default list
-        if self.weights_correlation is None or len(self.weights_correlation) == 0:
-            if self.default_weights_correlation is None or len(self.default_weights_correlation) == 0:
-                self.weights_correlation = np.ones(shape=(self.dimension, self.dimension))
-            else:
-                self.weights_correlation = self.default_weights_correlation * np.ones(shape=(self.dimension, self.dimension))
-            # self.weights_function = np.concatenate([temp_weights_dist_mom, temp_weights_corr], axis=0)
-        else:
-            if len(self.default_weights_correlation) != self.dimension:
-                raise NotImplementedError("Size of 'default weights for correlation' is not correct")
-
-            if self.default_weights_correlation.shape[0] != self.nsamples or self.default_weights_correlation.shape[
-                1] != self.dimension:
-                raise NotImplementedError("Size of 'weights for correlation' is not correct")
