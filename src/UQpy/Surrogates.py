@@ -32,7 +32,7 @@ class SROM:
         :param samples: A list of samples corresponding to each random variables
         :type samples: list
 
-        :param pdf_type: Type of distribution functions
+        :param pdf_type: A list of Cumulative distribution functions of random variables
         :type pdf_type: list str or list function
 
         :param pdf_params: Parameters of distribution
@@ -101,7 +101,7 @@ class SROM:
         self.weights_correlation = np.array(weights_correlation)
         self.properties = properties
         self.pdf_params = pdf_params
-        self.dimension = len(self.pdf_type)
+        self.dimension = samples.shape[1]
         self.nsamples = samples.shape[0]
         self.init_srom()
         self.sample_weights = self.run_srom()
@@ -215,6 +215,12 @@ class SROM:
             raise NotImplementedError("Size of 'weights for correlation' is not correct")
 
         # Check pdf_type
+        if len(self.pdf_type) == 1:
+            self.pdf_type = self.pdf_type * self.dimension
+            self.pdf_params = self.pdf_params * self.dimension
+        elif len(self.pdf_type) != self.dimension:
+            raise NotImplementedError("Size of pdf_type should be 1 or equal to dimension")
+
         for i in range(len(self.pdf_type)):
             if type(self.pdf_type[i]).__name__ == 'function':
                 self.pdf_type[i] = self.pdf_type[i]

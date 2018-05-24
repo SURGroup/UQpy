@@ -15,6 +15,6 @@ def gamma(z, p):
 # l = linalg.cholesky(self.correlation, lower=True)
 # self.samples = np.transpose(np.dot(l, np.transpose(self.samples)))
 
-y = Surrogates.SurrogateModels.SROM(samples=x.samples, pdf_type=[gamma, 'Gamma'], moments=[[6., 6.], [54., 54.]],
-                                    properties=[True, True, True, True], pdf_params=[[2, 1, 3], [2, 1, 3]],
-                                    correlation=[[1, 0], [0, 1]])
+y = Surrogates.SROM(samples=x.samples, pdf_type=[gamma], moments=[[6., 6.], [54., 54.]],
+                    properties=[True, True, True, True], pdf_params=[[2, 1, 3]],
+                    correlation=[[1, 0], [0, 1]])
