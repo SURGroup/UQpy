@@ -180,11 +180,19 @@ class SROM:
         if self.properties[1] is True or self.properties[2] is True or self.properties[3] is True:
             if self.moments is None:
                 raise NotImplementedError("'moments' are required")
+
+        if self.properties[3] is True:
             if self.moments.shape != (2, self.dimension):
                 raise NotImplementedError("Size of 'moments' is not correct")
-        if self.properties[3] is True:
             if self.correlation is None:
                 self.correlation = np.identity(self.dimension)
+
+        if self.moments.shape != (1, self.dimension) and self.moments.shape != (2, self.dimension):
+            raise NotImplementedError("Size of 'moments' is not correct")
+        if self.properties[1] is False and self.properties[2] is True:
+            if self.moments.shape == (1, self.dimension):
+                temp = np.ones(shape=(1, self.dimension))
+                self.moments = np.concatenate((temp, self.moments))
 
         # Check weights corresponding to errors
         if self.weights_errors is None:
@@ -228,7 +236,6 @@ class SROM:
                 self.pdf_type[i] = pdf(self.pdf_type[i])
             else:
                 raise NotImplementedError("Distribution type should be either 'function' or 'list'")
-
 
 class SurrogateModels:
     """
