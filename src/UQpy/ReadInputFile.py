@@ -290,18 +290,6 @@ def readfile(filename):
                     seed.append(np.float32(x.split(" ")))
                     j = j + 1
             mydict[title] = seed
-        elif title == 'properties to match':
-            seed = []
-            j = 0
-            while j >= 0:
-                testline = lines[lines_[i] + j + 1].strip()
-                if not testline:
-                    break
-                else:
-                    x = lines[lines_[i] + j + 1][:-1]
-                    seed.append(np.float32(x.split(" ")))
-                    j = j + 1
-            mydict[title] = seed
         ################################################################################################################
         # ADD ANY NEW METHOD HERE
 
