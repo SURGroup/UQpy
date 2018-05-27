@@ -59,6 +59,8 @@ Temporary Items
 # User-specific stuff:
 .idea/**/workspace.xml
 .idea/**/tasks.xml
+.idea/**/misc.xml
+.idea/**/UQpy.iml
 .idea/dictionaries
 
 # Sensitive or high-churn files:
