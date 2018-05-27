@@ -4,9 +4,8 @@ import copy
 import numpy as np
 from scipy.spatial.distance import pdist
 import scipy.stats as sp
-import UQpy
 import random
-from UQpy.PDFs import *
+from UQpy.Distributions import *
 import warnings
 
 
@@ -1015,8 +1014,8 @@ class MCMC:
 
     """Generate samples from an arbitrary probability density function using Markov Chain Monte Carlo.
 
-    This class generates samples from arbitrary distribution using Metropolis-Hastings(MH),
-    Modified Metropolis-Hastings, of Affine Invariant Ensembler Sampler with stretch moves.
+    This class generates samples from an arbitrary user-specified distribution using Metropolis-Hastings(MH),
+    Modified Metropolis-Hastings, of Affine Invariant Ensemble Sampler with stretch moves.
 
     References:
     S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by subset simulation,”
@@ -1029,14 +1028,14 @@ class MCMC:
                     Default: 1
     :type dimension: int
 
-    :param pdf_proposal_type: Type of proposed density function.
+    :param pdf_proposal_type: Type of proposal density function for MCMC. Only used with algorithm = 'MH' or 'MMH'
                     Options:
                         'Normal' : Normal proposal density
                         'Uniform' : Uniform proposal density
                     Default: 'Uniform'
                     If dimension > 1 and algorithm = 'MMH', this may be input as a list to assign different proposal
                         densities to each dimension. Example pdf_proposal_type = ['Normal','Uniform'].
-                    If dimesion > 1, algorithm = 'MMH' and this is input as a string, the proposal densities for all
+                    If dimension > 1, algorithm = 'MMH' and this is input as a string, the proposal densities for all
                         dimensions are set equal to the assigned proposal type.
     :type pdf_proposal_type: str or str list
 
@@ -1070,7 +1069,8 @@ class MCMC:
                             directory
                     If type == function
                         The function must be defined in the python script calling MCMC
-                    If dimension > 1, the input to pdf_target is a list of size [dimensions x 1]
+                    If dimension > 1 and pdf_target_type='marginal_pdf', the input to pdf_target is a list of size
+                        [dimensions x 1] where each item of the list defines a marginal pdf.
                     Default: Multivariate normal distribution having zero mean and unit standard deviation
     :type pdf_target: function, function list, or str
 
@@ -1099,12 +1099,16 @@ class MCMC:
                     Default:
                         For 'MH' and 'MMH': zeros(1 x dimension)
                         For 'Stretch': No default, this must be specified.
-    :type seed: float list
+    :type seed: float or numpy array
+
+    :param nburn: Length of burn-in. Number of samples at the beginning of the chain to discard.
+                    This option is only used for the 'MMH' and 'MH' algorithms.
+                    Default: nburn = 0
+    :type nburn: int
 
 
     Output:
     :return: MCMC.samples:
-
     :rtype: MCMC.samples: numpy array
     """
 
@@ -1112,7 +1116,8 @@ class MCMC:
     # Updated: 4/26/18 by Michael D. Shields
 
     def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None, pdf_target_type=None,
-                 pdf_target=None, pdf_target_params=None, algorithm=None, jump=None, nsamples=None, seed=None):
+                 pdf_target=None, pdf_target_params=None, algorithm=None, jump=None, nsamples=None, seed=None,
+                 nburn=None):
 
         self.pdf_proposal_type = pdf_proposal_type
         self.pdf_proposal_scale = pdf_proposal_scale
@@ -1124,12 +1129,11 @@ class MCMC:
         self.nsamples = nsamples
         self.dimension = dimension
         self.seed = seed
+        self.nburn = nburn
         self.init_mcmc()
         if self.algorithm is 'Stretch':
             self.ensemble_size = len(self.seed)
         self.samples = self.run_mcmc()
-
-        #TODO Add burn-in
 
     def run_mcmc(self):
         rejects = 0
@@ -1141,24 +1145,24 @@ class MCMC:
         # Classical Metropolis-Hastings Algorithm with symmetric proposal density
         if self.algorithm == 'MH':
 
-            # TODO: from np.random import multivariate_normal
+            from numpy.random import normal, multivariate_normal, uniform
 
             samples[0, :] = self.seed
 
             pdf_ = self.pdf_target[0]
 
-            for i in range(self.nsamples * self.jump - 1):
+            for i in range(self.nsamples * self.jump - 1 + self.nburn):
                 if self.pdf_proposal_type[0] == 'Normal':
                     if self.dimension == 1:
-                        candidate = np.random.normal(samples[i, :], np.array(self.pdf_proposal_scale))
+                        candidate = normal(samples[i, :], np.array(self.pdf_proposal_scale))
                     else:
                         if i == 0:
                             self.pdf_proposal_scale = np.diag(np.array(self.pdf_proposal_scale))
-                        candidate = np.random.multivariate_normal(samples[i, :], np.array(self.pdf_proposal_scale))
+                        candidate = multivariate_normal(samples[i, :], np.array(self.pdf_proposal_scale))
 
                 elif self.pdf_proposal_type == 'Uniform':
 
-                    candidate = np.random.uniform(low=samples[i, :] - np.array(self.pdf_proposal_scale) / 2,
+                    candidate = uniform(low=samples[i, :] - np.array(self.pdf_proposal_scale) / 2,
                                                   high=samples[i, :] + np.array(self.pdf_proposal_scale) / 2,
                                                   size=self.dimension)
 
@@ -1178,10 +1182,10 @@ class MCMC:
         # Modified Metropolis-Hastings Algorithm with symmetric proposal density
         elif self.algorithm == 'MMH':
 
-            samples[0, :] = self.seed[0]
+            samples[0, :] = self.seed[0:]
 
             if self.pdf_target_type == 'marginal_pdf':
-                for i in range(self.nsamples * self.jump - 1):
+                for i in range(self.nsamples * self.jump - 1 + self.nburn):
                     for j in range(self.dimension):
 
                         pdf_ = self.pdf_target[j]
@@ -1206,13 +1210,10 @@ class MCMC:
 
             elif self.pdf_target_type == 'joint_pdf':
                 pdf_ = self.pdf_target[0]
-                # current = np.zeros(self.dimension)
-                for i in range(self.nsamples * self.jump - 1):
+
+                for i in range(self.nsamples * self.jump - 1 + self.nburn):
                     candidate = list(samples[i, :])
-                    # if i==0:
-                    #     current = self.seed
-                    # else:
-                    #     current = samples[i-1,:]
+
                     current = list(samples[i, :])
                     for j in range(self.dimension):
                         if self.pdf_proposal_type[j] == 'Normal':
@@ -1268,7 +1269,7 @@ class MCMC:
         # Return the samples
 
         if self.algorithm is 'MMH' or self.algorithm is 'MH':
-            return samples[0:self.nsamples * self.jump:self.jump]
+            return samples[self.nburn:self.nsamples * self.jump +self.nburn:self.jump]
         else:
             output = np.zeros((self.nsamples,self.dimension))
             j = 0
@@ -1327,7 +1328,10 @@ class MCMC:
 
         # Check pdf_proposal_scale
         if self.pdf_proposal_scale is None:
-            self.pdf_proposal_scale = 1
+            if self.algorithm == 'Stretch':
+                self.pdf_proposal_scale = 2
+            else:
+                self.pdf_proposal_scale = 1
         if type(self.pdf_proposal_scale).__name__ != 'list':
             self.pdf_proposal_scale = [self.pdf_proposal_scale]
         if len(self.pdf_proposal_scale) != self.dimension:
@@ -1339,6 +1343,8 @@ class MCMC:
         # Check pdf_target_type
         if self.algorithm is 'MMH' and self.pdf_target_type is None:
             self.pdf_target_type = 'marginal_pdf'
+        if self.algorithm is 'Stretch':
+            self.pdf_target_type = 'joint_pdf'
         if self.pdf_target_type not in ['joint_pdf', 'marginal_pdf']:
             raise ValueError('Exit code: Unrecognized type for target distribution. Supported distributions: '
                                      'joint_pdf, '
@@ -1359,23 +1365,23 @@ class MCMC:
             self.pdf_target = pdf(self.pdf_target)
         if self.pdf_target is None and self.algorithm is 'MMH':
             if self.dimension == 1 or self.pdf_target_type is 'marginal_pdf':
-                def target(x):
+                def target(x, dummy):
                     return sp.norm.pdf(x)
                 if self.dimension == 1:
                     self.pdf_target = [target]
                 else:
                     self.pdf_target = [target] * self.dimension
             else:
-                def target(x):
+                def target(x, dummy):
                     return sp.multivariate_normal.pdf(x,mean=np.zeros(self.dimension),cov=np.eye(self.dimension))
                 self.pdf_target = [target]
         elif self.pdf_target is None:
             if self.dimension == 1:
-                def target(x):
+                def target(x, dummy):
                     return sp.norm.pdf(x)
                 self.pdf_target = [target]
             else:
-                def target(x):
+                def target(x, dummy):
                     return sp.multivariate_normal.pdf(x,mean=np.zeros(self.dimension),cov=np.eye(self.dimension))
                 self.pdf_target = [target]
         elif type(self.pdf_target).__name__ != 'list':
@@ -1386,6 +1392,9 @@ class MCMC:
             self.pdf_target_params = []
         if type(self.pdf_target_params).__name__!='list':
             self.pdf_target_params = [self.pdf_target_params]
+
+        if self.nburn is None:
+            self.nburn = 0
 
 
 

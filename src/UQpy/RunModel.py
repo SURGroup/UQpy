@@ -27,7 +27,6 @@ class RunModel:
                                 in list form where there is one item in the list per sample. Each item in the qoi list
                                 may take type the user prefers.
             Default: None
-
     :type model_type: str
 
     :param model_script: Defines the script (must be either a shell script (.sh) or a python script (.py)) used to call
@@ -94,7 +93,6 @@ class RunModel:
         # 'self.samples'. Otherwise, read the samples as input.
         if samples is None and os.path.isfile('UQpy_Samples.txt'):
             self.samples = np.loadtxt('UQpy_Samples.txt', dtype=np.float32)
-            print(self.samples.ndim)
             if self.samples.ndim == 1:
                 if self.dimension == 1:
                     self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
@@ -209,7 +207,7 @@ class RunModel:
         """
         A subclass of RunModel to run a third-party software model serially (without parallel processing).
 
-        Most attributes of this subclass are inhereted from RunModel. The only variable that is not inherited is QOI.
+        Most attributes of this subclass are inherited from RunModel. The only variable that is not inherited is QOI.
 
         Input:
         :param samples: Inherited from RunModel. See its documentation.
