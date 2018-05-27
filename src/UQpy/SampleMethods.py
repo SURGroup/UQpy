@@ -68,7 +68,7 @@ def init_sm(data):
     # Markov Chain Monte Carlo simulation block.
     # Mandatory properties(4):  1. target distribution, 2. target distribution parameters, 3. Number of samples,
     #                           4. Number of parameters
-    #  Optional properties(5): 1. Proposal distribution, 2. proposal width, 3. Seed, 4. jump samples (avoid burn-in),
+    #  Optional properties(5): 1. Proposal distribution, 2. proposal width, 3. Seed, 4. skip samples (avoid burn-in),
     #                          5. algorithm
 
     if data['method'] == 'mcmc':
@@ -84,8 +84,8 @@ def init_sm(data):
         # Optional
         if 'seed' not in data:
             data['seed'] = None
-        if 'jump' not in data:
-            data['jump'] = None
+        if 'skip' not in data:
+            data['skip'] = None
         if 'proposal distribution type' not in data:
             data['proposal distribution type'] = None
         #else:
@@ -143,18 +143,29 @@ def init_sm(data):
     # Mandatory properties(2):  1. moments, 2. error function weights
     # Optional properties(2): 1.properties to match, 2. sample weights
 
-    if 'SROM' in data and data['SROM'] is True:
-        # Mandatory
-        if 'moments' not in data:
-            raise NotImplementedError("Exit code: Moments not provided.")
-        if 'error function weights' not in data:
-            raise NotImplementedError("Exit code: Error function weights not provided.")
+    # if 'SROM' in data and data['SROM'] is True:
+    #     # Mandatory
+    #     if 'moments' not in data:
+    #         raise NotImplementedError("Exit code: Moments not provided.")
+    #     if 'error function weights' not in data:
+    #         raise NotImplementedError("Exit code: Error function weights not provided.")
+    #
+    #     # Optional
+    #     if 'properties to match' not in data:
+    #         data['properties to match'] = None
+    #     if 'correlation' not in data:
+    #         data['correlation'] = None
+    #     if 'weights for distribution' not in data:
+    #         data['weights for distribution'] = None
+    #     if 'weights for moments' not in data:
+    #         data['weights for moments'] = None
+    #     if 'weights for correlation' not in data:
+    #         data['weights for correlation'] = None
 
-        # Optional
-        if 'properties to match' not in data:
-            data['properties to match'] = None
-        if 'sample weights' not in data:
-            data['sample weights'] = None
+    ####################################################################################################################
+    # Check any NEW METHOD HERE
+    #
+    #
 
     ####################################################################################################################
     # Check any NEW METHOD HERE
@@ -208,134 +219,26 @@ def run_sm(data):
         print("\nRunning  %k \n", data['method'])
         rvs = MCMC(dimension=data['number of parameters'], pdf_target_type=data['target distribution type'],
                    algorithm=data['algorithm'], pdf_proposal_type=data['proposal distribution type'],
-                   pdf_proposal_scale=data['proposal distribution width'],
+                   pdf_proposal_width=data['proposal distribution width'],
                    pdf_target_params=data['target distribution parameters'], seed=data['seed'],
-                   jump=data['jump'], nsamples=data['number of samples'])
+                   skip=data['skip'], nsamples=data['number of samples'])
 
     ################################################################################################################
-    # Run SROM to the samples
-
-    if 'SROM' in data and data['SROM'] == 'Yes':
-        print("\nImplementing SROM to samples")
-        rvs = SROM(samples=rvs.samples, pdf_type=data['distribution type'], moments=data['moments'],
-                   weights_errors=data['error function weights'], weights_function=data['sample weights'],
-                   properties=data['properties to match'], pdf_params=data['distribution parameters'])
+    # Run Stochastic Reduce Order Model
+    # if 'SROM' in data:
+    #     if data['SROM'] == 'Yes':
+    #         print("\nImplementing SROM to samples")
+    #         rvs = SROM(samples=rvs.samples, pdf_type=data['distribution type'], moments=data['moments'],
+    #                    weights_errors=data['error function weights'],
+    #                    weights_distribution=data['weights for distribution'],
+    #                    weights_moments=data['weights for moments'],
+    #                    weights_correlation=data['weights for correlation'], properties=data['properties to match'],
+    #                    pdf_params=data['distribution parameters'], correlation=data['correlation'])
 
     ################################################################################################################
     # Run ANY NEW METHOD HERE
 
     return rvs
-
-########################################################################################################################
-########################################################################################################################
-#                                         Stochastic reduced order model
-########################################################################################################################
-
-class SROM:
-
-    # TODO: Mohit - Write the documentation for the class
-
-    def __init__(self, samples=None,  pdf_type=None, moments=None, weights_errors=None,
-                 weights_function=None, properties=None, pdf_params=None):
-        """
-        :param samples:
-        :type
-        :param pdf_type:
-        :type
-        :param moments:
-        :type
-
-        :param weights_errors:
-        :type
-
-        :param weights_function:
-        :type weights_function: list
-
-        :param properties:
-        :type properties:
-
-        :param pdf_params: list
-        :type pdf_params: list
-        """
-
-        # TODO: Mohit - Add error checks
-
-        self.samples = samples
-        self.pdf_type = pdf_type
-        self.moments = moments
-        self.weights_errors = weights_errors
-        self.weight_function = weights_function
-        self.properties = properties
-        self.pdf_params = pdf_params
-        self.dimension = len(self.pdf_type)
-        self.nsamples = samples.shape[0]
-        self.init_srom()
-        weights = self.run_srom()
-        print(weights.shape)
-        self.samples = np.concatenate([self.samples, weights.reshape(weights.shape[0], 1)], axis=1)
-
-    def run_srom(self):
-        from scipy import optimize
-
-        def f(p_, samples, w, mar, n, d, m, alpha, para):
-            e1 = 0.
-            e2 = 0.
-            e22 = 0.
-            e3 = 0.
-            samples = np.matrix(samples)
-            p_ = np.transpose(np.matrix(p_))
-            com = np.append(samples, p_, 1)
-            for j in range(d):
-                srt = com[np.argsort(com[:, j].flatten())]
-                s = srt[0, :, j]
-                a = srt[0, :, d]
-                A = np.cumsum(a)
-                marginal = pdf(mar[j])
-                for i in range(n):
-                    e1 = + w[i, j] * (A[0, i] - marginal(s[0, i], para[j])) ** 2
-
-                e2 = + ((1 / w[i + 1, j]) ** 2) * (np.sum(np.transpose(p_) * samples[:, j]) - m[0, j]) ** 2
-                e22 = + ((1 / w[i + 2, j]) ** 2) * (
-                        np.sum(np.array(p_) * (np.array(samples[:, j]) * np.array(samples[:, j]))) - m[1, j]) ** 2
-
-            return alpha[0] * e1 + alpha[1] * (e2 + e22) + alpha[2] * e3
-
-        def constraint(x):
-            return np.sum(x) - 1
-
-        def constraint2(y):
-            n = np.size(y)
-            return np.ones(n) - y
-
-        def constraint3(z):
-            n = np.size(z)
-            return z - np.zeros(n)
-
-        cons = ({'type': 'eq', 'fun': constraint}, {'type': 'ineq', 'fun': constraint2},
-                {'type': 'ineq', 'fun': constraint3})
-
-        p_ = optimize.minimize(f, np.zeros(self.nsamples),
-                              args=(self.samples, self.weight_function, self.pdf_type, self.nsamples, self.dimension,
-                              self.moments, self.weights_errors, self.pdf_params),
-                              constraints=cons, method='SLSQP')
-
-        return p_.x
-
-    def init_srom(self):
-
-        self.moments = np.array(self.moments)
-        self.weights_errors = np.array(self.weights_errors).astype(np.float64)
-
-        if self.samples is None:
-            raise NotImplementedError('Samples not provided for SROM')
-
-        if self.properties is None:
-            self.properties = [1, 1, 0]
-
-        if self.weight_function is None or len(self.weight_function) == 0:
-            temp_weights_function = np.ones(shape=(self.samples.shape[0], self.dimension))
-            print(temp_weights_function)
-            self.weight_function = np.concatenate([temp_weights_function, self.moments], axis=0)
 
 
 ########################################################################################################################
@@ -1292,7 +1195,7 @@ class MCMC:
         # Check nsamples
         if self.nsamples is None:
             raise NotImplementedError('Exit code: Number of samples not defined.')
-        
+
         # Check seed
         if self.seed is None:
             self.seed = np.zeros(self.dimension)

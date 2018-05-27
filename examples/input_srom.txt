@@ -1,0 +1,46 @@
+#Names of random variables
+Mohit
+Dimitris
+sHIELDS
+
+#Method
+srom
+
+#Probability distribution (pdf)
+srom1
+srom2
+srom3
+
+#Moments
+6 6 6
+54 54 54
+
+#Properties to match
+1
+1
+0
+
+#Error function weights
+1
+0.2
+0
+
+#Sample weights
+
+
+#Sampling method
+sts
+
+#STS design
+3
+3
+3
+
+#Number of Samples
+27
+
+#Probability distribution parameters
+2 1 3
+2 1 3
+2 1 3
+
