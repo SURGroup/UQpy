@@ -426,39 +426,58 @@ class MCS:
 #                                         Latin hypercube sampling  (LHS)
 ########################################################################################################################
 
-class LHS:
-    """
-    A class that creates a Latin Hypercube Design for experiments.
-    SamplesU01 belong in hypercube [0, 1]^n while samples belong to the parameter space
 
-    :param pdf_type: Distribution of the parameters
+class LHS:
+    """Generate samples based on the Latin Hypercube Design.
+
+    A class that creates a Latin Hypercube Design for experiments. Firstly, samples on hypercube [0, 1]^n are generated
+    and then translated to the parameter space.
+
+    Input:
+
+    :param dimension:  A scalar value defining the dimension of target density function.
+                    Default: 1
+    :type dimension: int
+
+    :param pdf_type: Type of the distribution
+                    No Default Value: nsamples must be prescribed
     :type pdf_type: list
 
-    :param pdf_params: Distribution parameters
+    :param pdf_params: Parameters of the distribution
     :type pdf_params: list
 
     :param lhs_criterion: The criterion for generating sample points
-                           Options:
-                                1. random - completely random \n
-                                2. centered - points only at the centre \n
-                                3. maximin - maximising the minimum distance between points \n
-                                4. correlate - minimizing the correlation between the points \n
+                            Options:
+                                1. 'random' - completely random \n
+                                2. 'centered' - points only at the centre \n
+                                3. 'maximin' - maximising the minimum distance between points \n
+                                4. 'correlate' - minimizing the correlation between the points \n
+                            Default: 'random'
     :type lhs_criterion: str
-
-    :param lhs_iter: The number of iteration to run. Only for maximin, correlate and criterion
-    :type lhs_iter: int
 
     :param lhs_metric: The distance metric to use. Supported metrics are
                         'braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', \n
                         'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', \n
                         'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', \n
                         'yule'.
+                        Default: 'euclidean'
     :type lhs_metric: str
 
+    :param lhs_iter: The number of iteration to run. Required only for maximin, correlate and criterion
+                        Default: 100
+    :type lhs_iter: int
+
+    :param nsamples: Number of samples to generate
+                        No Default Value: nsamples must be prescribed
+    :type nsamples: int
+
+    Output:
+
+    :rtype: LHS.samples: numpy array
     """
 
-    def __init__(self, dimension=None, pdf_type=None, pdf_params=None, lhs_criterion=None, lhs_metric=None,
-                 lhs_iter=None, nsamples=None):
+    def __init__(self, dimension=1, pdf_type=None, pdf_params=None, lhs_criterion='random', lhs_metric='euclidean',
+                 lhs_iter=100, nsamples=None):
 
         self.dimension = dimension
         self.nsamples = nsamples
@@ -471,8 +490,6 @@ class LHS:
         self.samplesU01, self.samples = self.run_lhs()
 
     def run_lhs(self):
-
-        print('Running LHS for ' + str(self.lhs_iter) + ' iterations')
 
         cut = np.linspace(0, 1, self.nsamples + 1)
         a = cut[:self.nsamples]
@@ -495,11 +512,9 @@ class LHS:
             samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
             return samples, samples_u_to_x
 
-    def _random(self, a, b):
-        """
-        :return: The samples points for the random LHS design
+        print('Successfully ran the LHS design')
 
-        """
+    def _random(self, a, b):
         u = np.random.rand(self.nsamples, self.dimension)
         samples = np.zeros_like(u)
 
@@ -549,7 +564,9 @@ class LHS:
             if np.max(np.abs(R1)) < min_corr:
                 min_corr = np.max(np.abs(R1))
                 samples = copy.deepcopy(samples_try)
+
         print('Achieved minimum correlation of ', min_corr)
+
         return samples
 
     ################################################################################################################
