@@ -158,7 +158,9 @@ class SubsetSimulation:
         self.g = list()
         self.samples = list()
         self.g_level = list()
+        self.delta2 = list()
         self.pf = np.empty(1)
+        self.cov = np.empty(1)
 
         # Hard-wire the maximum number of conditional levels.
         self.max_level = 20
@@ -194,6 +196,8 @@ class SubsetSimulation:
         self.g.append(np.asarray(g_init.model_eval.QOI))
         g_ind = np.argsort(self.g[step])
         self.g_level.append(self.g[step][g_ind[n_keep]])
+        # Estimate coefficient of variation of conditional probability of first level
+        self.delta2.append(self.cov_sus(step)**2)
 
         while self.g_level[step] > 0 and step < self.max_level:
 
@@ -226,10 +230,14 @@ class SubsetSimulation:
 
             g_ind = np.argsort(self.g[step])
             self.g_level.append(self.g[step][g_ind[n_keep]])
+            # Estimate coefficient of variation of conditional probability of first level
+            self.delta2.append(self.cov_sus(step)**2)
 
         n_fail = len([value for value in self.g[step] if value < 0])
         self.pf = self.p_cond**step*n_fail/self.nsamples_ss
+        self.cov = np.sum(self.delta2)
         print(self.pf)
+        print(self.cov)
 
     def run_subsim_stretch(self):
         step = 0
@@ -316,3 +324,35 @@ class SubsetSimulation:
         if self.model_script is None:
             raise NotImplementedError('Subset Simulation requires the specification of a computational model. Please '
                                       'specify the model using the model_script input.')
+   
+    def cov_sus(self, step):
+        N = self.g[step].size
+        if step == 0:
+            di = np.sqrt((1 - self.p_cond) / (self.p_cond * N))
+        else:
+            nc = int(self.p_cond * N)
+            r_zero = self.p_cond * (1 - self.p_cond)
+            I = np.where(self.g[step] < self.g_level[step])
+            index = np.zeros(N)
+            index[I] = 1
+            indices = np.zeros(shape=(int(N / nc), nc)).astype(int)
+            for i in range(int(N / nc)):
+                for j in range(nc):
+                    if i == 0:
+                        indices[i, j] = j
+                    else:
+                        indices[i, j] = indices[i - 1, j] + nc
+            gamma = 0
+            rho = np.zeros(int(N / nc) - 1)
+            for k in range(int(N / nc) - 1):
+                z = 0
+                for j in range(int(nc)):
+                    for l in range(int(N / nc) - k):
+                        z = z + index[indices[l, j]] * index[indices[l + k, j]]
+
+                rho[k] = (1 / (N - k * nc) * z - self.p_cond ** 2) / r_zero
+                gamma = gamma + 2 * (1 - k * nc / N) * rho[k]
+
+            di = np.sqrt((1 - self.p_cond) / (self.p_cond * N) * (1 + gamma))
+
+        return di
