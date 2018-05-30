@@ -1,250 +1,15 @@
 """This module contains functionality for all the sampling methods supported in UQpy."""
-import sys
 import copy
-import numpy as np
 from scipy.spatial.distance import pdist
 import scipy.stats as sp
 import random
 from UQpy.Distributions import *
-import warnings
-
-
-def init_sm(data):
-    ################################################################################################################
-    # Add available sampling methods Here
-    valid_methods = ['mcs', 'lhs', 'mcmc', 'pss', 'sts', 'SuS']
-
-    ################################################################################################################
-    # Check if requested method is available
-
-    if 'method' in data:
-        if data['method'] not in valid_methods:
-            raise NotImplementedError("method - %s not available" % data['method'])
-    else:
-        raise NotImplementedError("No sampling method was provided")
-
-    ################################################################################################################
-    # Monte Carlo simulation block.
-    # Mandatory properties(4): 1. Number of parameters, 2. distribution, 3. distribution parameters 4. Number of samples
-    # Optional properties(0):
-
-    if data['method'] == 'mcs':
-
-        # Mandatory
-        if 'number of samples' not in data:
-            data['number of samples'] = None
-        if 'distribution type' not in data:
-            raise NotImplementedError("Distributions not defined. Exit code")
-        if 'distribution parameters' not in data:
-            raise NotImplementedError("Distribution parameters not provided. Exit code")
-        if 'number of parameters' not in data:
-            data['number of parameters'] = None
-
-    ################################################################################################################
-    # Latin Hypercube simulation block.
-    # Mandatory properties(4): 1. Number of parameters, 2. distribution, 3. distribution parameters 4. Number of samples
-    # Optional properties(3):  1. Criterion, 2. Metric, 3. Iterations
-
-    if data['method'] == 'lhs':
-        # Mandatory
-        if 'number of parameters' not in data:
-            data['number of parameters'] = None
-        if 'number of samples' not in data:
-            data['number of samples'] = None
-        if 'distribution type' not in data:
-            raise NotImplementedError("Exit code: Distributions not defined.")
-        if 'distribution parameters' not in data:
-            raise NotImplementedError("Exit code: Distribution parameters not defined.")
-
-        # Optional
-        if 'criterion' not in data:
-            data['criterion'] = None
-        if 'distance' not in data:
-            data['distance'] = None
-        if 'iterations' not in data:
-            data['iterations'] = None
-
-    ####################################################################################################################
-    # Markov Chain Monte Carlo simulation block.
-    # Mandatory properties(4):  1. target distribution, 2. target distribution parameters, 3. Number of samples,
-    #                           4. Number of parameters
-    #  Optional properties(5): 1. Proposal distribution, 2. proposal width, 3. Seed, 4. skip samples (avoid burn-in),
-    #                          5. algorithm
-
-    if data['method'] == 'mcmc':
-        # Mandatory
-        if 'number of parameters' not in data:
-            raise NotImplementedError('Exit code: Number of parameters not defined.')
-        if 'target distribution type' not in data:
-            raise NotImplementedError("Exit code: Target distribution type not defined.")
-        if 'target distribution parameters' not in data:
-            raise NotImplementedError("Exit code: Target distribution parameters not defined.")
-        if 'number of samples' not in data:
-            raise NotImplementedError('Exit code: Number of samples not defined.')
-        # Optional
-        if 'seed' not in data:
-            data['seed'] = None
-        if 'skip' not in data:
-            data['skip'] = None
-        if 'proposal distribution type' not in data:
-            data['proposal distribution type'] = None
-        #else:
-        #    if data['proposal distribution type'] not in ['Uniform', 'Normal']:
-        #        raise ValueError('Exit code: Unrecognized type of proposal distribution type. Supported distributions: '
-        #                         'Uniform, '
-        #                         'Normal.')
-
-        if 'proposal distribution width' not in data:
-            data['proposal distribution width'] = None
-        if 'algorithm' not in data:
-            data['algorithm'] = None
-
-    ################################################################################################################
-    # Partially stratified sampling  block.
-    # Mandatory properties (4):  1. distribution, 2. distribution parameters, 3. design, 4. strata
-    # Optional properties(1): 1. Number of parameters
-
-    if data['method'] == 'pss':
-
-        # Mandatory
-        if 'distribution type' not in data:
-            raise NotImplementedError("Exit code: Distributions not defined.")
-        elif 'distribution parameters' not in data:
-            raise NotImplementedError("Exit code: distribution parameters not defined.")
-        if 'design' not in data:
-            raise NotImplementedError("Exit code: pss design not defined.")
-        if 'strata' not in data:
-            raise NotImplementedError("Exit code: pss strata not defined.")
-
-        # Optional
-        if 'number of parameters' not in data:
-            data['number of parameters'] = None
-
-    ################################################################################################################
-    # Stratified sampling block.
-    # Mandatory properties(3):  1. distribution, 2. distribution parameters, 3. design
-    # Optional properties(1): 1. Number of parameters
-
-    if data['method'] == 'sts':
-        # Mandatory
-        if 'distribution type' not in data:
-            raise NotImplementedError("Exit code: Distributions not defined.")
-        elif 'distribution parameters' not in data:
-            raise NotImplementedError("Exit code: distribution parameters not defined.")
-        if 'design' not in data:
-            raise NotImplementedError("Exit code: sts design not defined.")
-
-        # Optional
-        if 'number of parameters' not in data:
-            data['number of parameters'] = None
-
-    ####################################################################################################################
-    # Stochastic reduced order model block
-    # Mandatory properties(2):  1. moments, 2. error function weights
-    # Optional properties(2): 1.properties to match, 2. sample weights
-
-    # if 'SROM' in data and data['SROM'] is True:
-    #     # Mandatory
-    #     if 'moments' not in data:
-    #         raise NotImplementedError("Exit code: Moments not provided.")
-    #     if 'error function weights' not in data:
-    #         raise NotImplementedError("Exit code: Error function weights not provided.")
-    #
-    #     # Optional
-    #     if 'properties to match' not in data:
-    #         data['properties to match'] = None
-    #     if 'correlation' not in data:
-    #         data['correlation'] = None
-    #     if 'weights for distribution' not in data:
-    #         data['weights for distribution'] = None
-    #     if 'weights for moments' not in data:
-    #         data['weights for moments'] = None
-    #     if 'weights for correlation' not in data:
-    #         data['weights for correlation'] = None
-
-    ####################################################################################################################
-    # Check any NEW METHOD HERE
-    #
-    #
-
-    ####################################################################################################################
-    # Check any NEW METHOD HERE
-    #
-    #
-
-
-########################################################################################################################
-########################################################################################################################
-########################################################################################################################
-
-
-def run_sm(data):
-    ################################################################################################################
-    # Run Monte Carlo simulation
-    if data['method'] == 'mcs':
-        print("\nRunning  %k \n", data['method'])
-        rvs = MCS(dimension=data['number of parameters'], pdf_type=data['distribution type'],
-                  pdf_params=data['distribution parameters'],
-                  nsamples=data['number of samples'])
-
-    ################################################################################################################
-    # Run Latin Hypercube sampling
-    elif data['method'] == 'lhs':
-        print("\nRunning  %k \n", data['method'])
-        rvs = LHS(dimension=data['number of parameters'], pdf_type=data['distribution type'],
-                  pdf_params=data['distribution parameters'],
-                  nsamples=data['number of samples'], lhs_metric=data['distance'],
-                  lhs_iter=data['iterations'], lhs_criterion=data['criterion'])
-
-    ################################################################################################################
-    # Run partially stratified sampling
-    elif data['method'] == 'pss':
-        print("\nRunning  %k \n", data['method'])
-        rvs = PSS(dimension=data['number of parameters'], pdf_type=data['distribution type'],
-                  pdf_params=data['distribution parameters'],
-                  pss_design=data['design'], pss_strata=data['strata'])
-
-    ################################################################################################################
-    # Run STS sampling
-
-    elif data['method'] == 'sts':
-        print("\nRunning  %k \n", data['method'])
-        rvs = STS(dimension=data['number of parameters'], pdf_type=data['distribution type'],
-                  pdf_params=data['distribution parameters'], sts_design=data['design'])
-
-    ################################################################################################################
-    # Run Markov Chain Monte Carlo sampling
-
-    elif data['method'] == 'mcmc':
-        print("\nRunning  %k \n", data['method'])
-        rvs = MCMC(dimension=data['number of parameters'], pdf_target_type=data['target distribution type'],
-                   algorithm=data['algorithm'], pdf_proposal_type=data['proposal distribution type'],
-                   pdf_proposal_width=data['proposal distribution width'],
-                   pdf_target_params=data['target distribution parameters'], seed=data['seed'],
-                   skip=data['skip'], nsamples=data['number of samples'])
-
-    ################################################################################################################
-    # Run Stochastic Reduce Order Model
-    # if 'SROM' in data:
-    #     if data['SROM'] == 'Yes':
-    #         print("\nImplementing SROM to samples")
-    #         rvs = SROM(samples=rvs.samples, pdf_type=data['distribution type'], moments=data['moments'],
-    #                    weights_errors=data['error function weights'],
-    #                    weights_distribution=data['weights for distribution'],
-    #                    weights_moments=data['weights for moments'],
-    #                    weights_correlation=data['weights for correlation'], properties=data['properties to match'],
-    #                    pdf_params=data['distribution parameters'], correlation=data['correlation'])
-
-    ################################################################################################################
-    # Run ANY NEW METHOD HERE
-
-    return rvs
-
 
 ########################################################################################################################
 ########################################################################################################################
 #                                         Monte Carlo simulation
 ########################################################################################################################
+
 
 class MCS:
     """
@@ -277,7 +42,7 @@ class MCS:
     def run_mcs(self):
 
         samples = np.random.rand(self.nsamples, self.dimension)
-        samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
+        samples_u_to_x =  samples#inv_cdf(samples, self.pdf_type, self.pdf_params)
         return samples, samples_u_to_x
 
     ################################################################################################################
@@ -294,8 +59,8 @@ class MCS:
             for i in self.pdf_type:
                 if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
                     raise NotImplementedError("Exit code: Unrecognized type of distribution."
-                                                  "Supported distributions: 'Uniform', 'Normal', 'Lognormal', "
-                                                  "'Weibull', 'Beta', 'Exponential', 'Gamma'. ")
+                                              "Supported distributions: 'Uniform', 'Normal', 'Lognormal', "
+                                              "'Weibull', 'Beta', 'Exponential', 'Gamma'. ")
         if self.pdf_params is None:
             raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
@@ -310,7 +75,7 @@ class MCS:
 
             if len(self.pdf_type) == 1 and len(self.pdf_params) == self.dimension:
                 self.pdf_type = list(itertools.repeat(self.pdf_type, self.dimension))
-                self.pdf_type  =  list(chain.from_iterable(self.pdf_type))
+                self.pdf_type = list(chain.from_iterable(self.pdf_type))
             elif len(self.pdf_params) == 1 and len(self.pdf_type) == self.dimension:
                 self.pdf_params = list(itertools.repeat(self.pdf_params, self.dimension))
                 self.pdf_params = list(chain.from_iterable(self.pdf_params))
@@ -1152,7 +917,7 @@ class MCMC:
             pdf_ = self.pdf_target[0]
 
             for i in range(self.ensemble_size-1,self.nsamples * self.jump - 1):
-                complementary_ensemble = samples[i-self.ensemble_size+2:i+1,:]
+                complementary_ensemble = samples[i-self.ensemble_size+2:i+1, :]
                 S = random.choice(complementary_ensemble)
                 s = (1+(self.pdf_proposal_scale[0]-1)*random.random())**2/self.pdf_proposal_scale[0]
                 candidate = S+s*(samples[i-self.ensemble_size+1,:]-S)
@@ -1172,7 +937,7 @@ class MCMC:
         # Return the samples
 
         if self.algorithm is 'MMH' or self.algorithm is 'MH':
-            return samples[self.nburn:self.nsamples * self.jump +self.nburn:self.jump]
+            return samples[self.nburn:self.nsamples * self.jump + self.nburn:self.jump]
         else:
             output = np.zeros((self.nsamples,self.dimension))
             j = 0

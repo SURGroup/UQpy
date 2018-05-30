@@ -115,7 +115,7 @@ class RunModel:
             model_script = self.model_script[:-3]
             python_model = __import__(model_script)
             print("\nEvaluating the model...\n")
-            self.model_eval = python_model.RunPythonModel(self.samples,self.dimension)
+            self.model_eval = python_model.RunPythonModel(self.samples, self.dimension)
 
         ################################################################################################################
         # Run a third-party software model with file-passing
@@ -416,7 +416,6 @@ class RunModel:
                 file_new = src_files.replace("UQpy_eval_{0}.txt".format(int(i)), "Model_{0}.txt".format(int(i)))
                 os.rename(src_files, file_new)
 
-
             model_eval = que.put([job_inds, model_eval])
 
             return model_eval
@@ -438,7 +437,6 @@ class RunModel:
                     batch_ind[i] = range(int(np.sum(size_[:i])), int(np.sum(size_[:i+1])))
                 batches[i] = self.samples[batch_ind[i], :]
             return batches, batch_ind
-
 
         # This code may be used in the future to extend for distributed computing for HPC use.
         # def chunk_samples_nodes(samples, args):
