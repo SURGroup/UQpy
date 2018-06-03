@@ -1,8 +1,10 @@
 from UQpy import SampleMethods, PDFs
+from UQpy.SampleMethods import MCMC
 import scipy.stats as stats
 import numpy as np
 import emcee
 from scipy import integrate
+import matplotlib.pyplot as plt
 
 
 def init_inf(data):
@@ -260,15 +262,19 @@ class Bayes_Inference:
         #plt.plot(MCMC.samples[:,0], MCMC.samples[:,1], 'ro')
         #plt.show()
 
-        sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=[data])
-        sampler.run_mcmc
-        trace = sampler.chain[:, 50:, :].reshape((-1, ndim))
+        z = MCMC(dimension=2, pdf_proposal_type=None, pdf_proposal_scale=2, pdf_target_type='joint_pdf',
+                 pdf_target=lnprob, pdf_target_params=[20], algorithm='Stretch', jump=1000, nsamples=1000,
+                 seed=None)
+
+        #sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=[data])
+        #sampler.run_mcmc
+        #trace = sampler.chain[:, 50:, :].reshape((-1, ndim))
 
         #fig = corner.corner(trace, labels=["$m$", "$s$"], truths=[0, 1, np.log(1)])
         #fig.show()
         #fig.savefig("pos_samples.png")
-        # plt.plot(trace[:, 0], trace[:, 1], 'ko')
-        # plt.show()
+        plt.plot(z[:, 0], z[:, 1], 'ko')
+        plt.show()
 
         #Bayesian parameter estimation - Conventional MLE
         # print(trace)
