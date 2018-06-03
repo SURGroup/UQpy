@@ -5,14 +5,14 @@ Uncertainty Quantification using python (UQpy)
 
 |logo|
 
-:Authors: Michael D. Shields, Dimitris G. Giovanis
+:Authors: Dimitris G. Giovanis, Michael D. Shields
 :Contributors: Jiaxin Zhang, Aakash Bangalore Satish, Lohit Vandanapu, Mohit Singh Chauhan
-:Contact: michael.shields@jhu.edu, dgiovan1@jhu.edu
+:Contact: dgiovan1@jhu.edu, michael.shields@jhu.edu
 :Web site: www.ce.jhu.edu/surg
 :Documentation: http://uqpy-docs-v0.readthedocs.io/en/latest/
 :Copyright: SURG 
 :License:
-:Date: March 2018
+:Date: May 2018
 :Version: 0.1.0
 
 Note
@@ -30,11 +30,17 @@ using python.
 Supported methods
 -----------------
 
-1. Monte Carlo simulation (MCS), 
-2. Latin Hypercube Sampling (LHS), 
-3. Markov Chain Monte Carlo simulation (MCMC) 
-4. Partially Stratified Sampling (PSS).
-5. Stochastic Reduced Order Models (SROM).
+Sampling methods:
+           1. Monte Carlo simulation (MCS), 
+           2. Latin Hypercube Sampling (LHS), 
+           3. Markov Chain Monte Carlo simulation (MCMC) 
+           4. Partially Stratified Sampling (PSS).
+
+Reliability methods:
+           1. Subset Simulation
+           
+Surrogate methods:
+           1. Stochastic Reduced Order Models (SROM).
 
 
 Requirements
