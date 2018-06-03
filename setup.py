@@ -6,14 +6,15 @@ setup(
     name='UQpy',
     version="0.1.0",
     url='https://github.com/SURGroup/UQpy',
-    author="Dimitris G. Giovanis, Michael D. Shields",
-    author_email="dgiovan1@jhu.edu, michael.shields@jhu.edu",
+    authors="Dimitris G. Giovanis, Michael D. Shields",
+    author_emails="dgiovan1@jhu.edu, michael.shields@jhu.edu",
     license='Apache',
     platforms='OSX',
-    packages=find_packages("lib"),
-    package_dir={"": "lib"},
+    packages=find_packages("src"),
+    package_dir={"": "src"},
+    package_data={"":["*.pdf"]},
     install_requires=[
-        "numpy", "scipy", "matplotlib"
+        "numpy", "scipy", "chaospy", "pyDOE", "scikit-learn"
     ],
     classifiers=[
         'Development Status :: 1 - Production/Unstable',
@@ -23,5 +24,3 @@ setup(
         'Natural Language :: English',
     ],
 )
-
-
