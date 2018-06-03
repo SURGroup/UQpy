@@ -11,7 +11,7 @@ Uncertainty Quantification using python (UQpy)
 :Web site: www.ce.jhu.edu/surg
 :Documentation: http://uqpy-docs-v0.readthedocs.io/en/latest/
 :Copyright: SURG 
-:License:
+:License: Apache 2.0
 :Date: May 2018
 :Version: 0.1.0
 
@@ -43,27 +43,26 @@ Surrogate methods:
            1. Stochastic Reduced Order Models (SROM).
 
 
-Requirements
+Dependencies
 ------------
 
             * ::
             
-                Python >= 3.6.2
+                Python >= 3.6
                 Git >= 2.13.1
 
 
 Installation
 ------------
 
-From Source: 
+Clone your fork of the UQpy repo from your GitHub account to your local disk (to get the latest version): 
 
             * ::
 
                         $git clone https://github.com/SURGroup/UQpy.git
                         $cd UQpy/
-                        
-                        $python setup.py install  (as user)
-                        $python setup.py develop (as developer)
+                        $python setup.py install  (user installation)
+                        $python setup.py develop (developer installation)
 
 From PyPI
 
