@@ -6,100 +6,6 @@ import warnings
 import time
 
 
-def init_rm(data):
-    ################################################################################################################
-    # Add available sampling methods Here
-    valid_methods = ['SuS']
-
-    ################################################################################################################
-    # Check if requested method is available
-
-    if 'Method' in data:
-        if data['Method'] not in valid_methods:
-            raise NotImplementedError("Method - %s not available" % data['Method'])
-    else:
-        raise NotImplementedError("No reliability method was provided")
-
-    ####################################################################################################################
-    # Subset Simulation simulation block.
-    # Necessary MCMC parameters:  1. Proposal pdf, 2. Proposal width, 3. Target pdf, 4. Target pdf parameters
-    #                             5. algorithm
-    # Optional: 1. Seed, 2. skip
-
-    if data['Method'] == 'SuS':
-        if 'Probability distribution (pdf)' not in data:
-            raise NotImplementedError("Probability distribution not provided")
-        if 'Probability distribution parameters' not in data:
-            raise NotImplementedError("Probability distribution parameters not provided")
-        if 'Names of random variables' not in data:
-            raise NotImplementedError('Number of random variables cannot be defined. Specify names of random variables')
-        if 'seed' not in data:
-            data['seed'] = np.zeros(len(data['Names of random variables']))
-        if 'skip' not in data:
-            data['skip'] = None
-        if 'Proposal distribution' not in data:
-            data['Proposal distribution'] = None
-        else:
-            print(data['Proposal distribution'])
-            if data['Proposal distribution'] not in ['Uniform', 'Normal']:
-                raise ValueError('Invalid Proposal distribution type. Available distributions: Uniform, Normal')
-
-        if 'Target distribution' not in data:
-            data['Target distribution'] = None
-        else:
-            if data['Target distribution'] not in ['multivariate_pdf', 'marginal_pdf', 'normal_pdf']:
-                raise ValueError('InvalidTarget distribution type. Available distributions: multivariate_pdf, '
-                                 'marginal_pdf')
-
-        if 'Target distribution parameters' not in data:
-            data['Target distribution parameters'] = None
-
-        if 'Proposal distribution width' not in data:
-            data['Proposal distribution width'] = None
-
-        if 'MCMC algorithm' not in data:
-            data['MCMC algorithm'] = None
-
-        if 'Number of Samples per subset' not in data:
-            data['Number of Samples per subset'] = None
-
-        if 'skip' not in data:
-            data['skip'] = None
-
-        if 'Conditional probability' not in data:
-            data['Conditional probability'] = None
-
-        if 'Limit-state' not in data:
-            data['Limit-state'] = None
-
-    ####################################################################################################################
-    # Check any NEW RELIABILITY METHOD HERE
-    #
-    #
-
-    ####################################################################################################################
-    # Check any NEW RELIABILITY METHOD HERE
-    #
-    #
-
-
-def run_rm(self, data):
-    ################################################################################################################
-    # Run Subset Simulation
-    if data['Method'] == 'SuS':
-        print("\nRunning  %k \n", data['Method'])
-        sus = SubsetSimulation(self.args, pdf_type=data['Probability distribution (pdf)'],
-                               dimension=len(data['Probability distribution (pdf)']),
-                               pdf_params=data['Probability distribution parameters'],
-                               pdf_target_type=data['Target distribution'],
-                               algorithm=data['MCMC algorithm'], pdf_proposal_type=data['Proposal distribution'],
-                               pdf_proposal_width=data['Proposal distribution width'],
-                               pdf_target_params=data['Target distribution parameters'], seed=data['seed'],
-                               skip=data['skip'], nsamples_ss=data['Number of Samples per subset'],
-                               p0=data['Conditional probability'], fail=data['Limit-state'])
-        return sus
-
-
 ########################################################################################################################
 ########################################################################################################################
 #                                        Subset Simulation
@@ -252,7 +158,9 @@ class SubsetSimulation:
         self.g = list()
         self.samples = list()
         self.g_level = list()
+        self.delta2 = list()
         self.pf = np.empty(1)
+        self.cov = np.empty(1)
 
         # Hard-wire the maximum number of conditional levels.
         self.max_level = 20
@@ -288,6 +196,8 @@ class SubsetSimulation:
         self.g.append(np.asarray(g_init.model_eval.QOI))
         g_ind = np.argsort(self.g[step])
         self.g_level.append(self.g[step][g_ind[n_keep]])
+        # Estimate coefficient of variation of conditional probability of first level
+        self.delta2.append(self.cov_sus(step)**2)
 
         while self.g_level[step] > 0 and step < self.max_level:
 
@@ -320,10 +230,14 @@ class SubsetSimulation:
 
             g_ind = np.argsort(self.g[step])
             self.g_level.append(self.g[step][g_ind[n_keep]])
+            # Estimate coefficient of variation of conditional probability of first level
+            self.delta2.append(self.cov_sus(step)**2)
 
         n_fail = len([value for value in self.g[step] if value < 0])
         self.pf = self.p_cond**step*n_fail/self.nsamples_ss
+        self.cov = np.sum(self.delta2)
         print(self.pf)
+        print(self.cov)
 
     def run_subsim_stretch(self):
         step = 0
@@ -410,3 +324,35 @@ class SubsetSimulation:
         if self.model_script is None:
             raise NotImplementedError('Subset Simulation requires the specification of a computational model. Please '
                                       'specify the model using the model_script input.')
+   
+    def cov_sus(self, step):
+        N = self.g[step].size
+        if step == 0:
+            di = np.sqrt((1 - self.p_cond) / (self.p_cond * N))
+        else:
+            nc = int(self.p_cond * N)
+            r_zero = self.p_cond * (1 - self.p_cond)
+            I = np.where(self.g[step] < self.g_level[step])
+            index = np.zeros(N)
+            index[I] = 1
+            indices = np.zeros(shape=(int(N / nc), nc)).astype(int)
+            for i in range(int(N / nc)):
+                for j in range(nc):
+                    if i == 0:
+                        indices[i, j] = j
+                    else:
+                        indices[i, j] = indices[i - 1, j] + nc
+            gamma = 0
+            rho = np.zeros(int(N / nc) - 1)
+            for k in range(int(N / nc) - 1):
+                z = 0
+                for j in range(int(nc)):
+                    for l in range(int(N / nc) - k):
+                        z = z + index[indices[l, j]] * index[indices[l + k, j]]
+
+                rho[k] = (1 / (N - k * nc) * z - self.p_cond ** 2) / r_zero
+                gamma = gamma + 2 * (1 - k * nc / N) * rho[k]
+
+            di = np.sqrt((1 - self.p_cond) / (self.p_cond * N) * (1 + gamma))
+
+        return di
