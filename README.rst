@@ -55,23 +55,21 @@ Requirements
 Installation
 ------------
 
-As user through github: 
+From Source: 
 
             * ::
 
                         $git clone https://github.com/SURGroup/UQpy.git
                         $cd UQpy/
-                        $python setup.py install  
+                        
+                        $python setup.py install  (as user)
+                        $python setup.py develop (as developer)
 
-As developer: 
+From PyPI
 
             * ::
 
-                        $git clone https://github.com/SURGroup/UQpy.git
-                        $cd UQpy/
-                        $python setup.py develop 
-
- 
+                        $pip install UQpy 
 
 In order to uninstall it
 
