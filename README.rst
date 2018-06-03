@@ -16,8 +16,6 @@ UQpy (Uncertainty Quantification with python) is a general purpose Python toolbo
 :Authors: Dimitris G. Giovanis, Michael D. Shields
 :Contributors: Jiaxin Zhang, Aakash Bangalore Satish, Lohit Vandanapu, Mohit Singh Chauhan
 :Contact: dgiovan1@jhu.edu, michael.shields@jhu.edu 
-:License: Apache 2.0
-:Date: May 2018
 :Version: 0.1.0
 
 
@@ -77,15 +75,14 @@ In order to uninstall it
                         $pip uninstall UQpy
 
 
-Documentation
+Help and Support
 ===========
 
-http://uqpy-docs-v0.readthedocs.io/en/latest/
+Documentation:
+           http://uqpy-docs-v0.readthedocs.io/en/latest/
 
-Web Site of Group
-===========
-
-www.ce.jhu.edu/surg
+Website:
+           www.ce.jhu.edu/surg
 
 
 
