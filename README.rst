@@ -28,16 +28,16 @@ using python.
 Supported methods
 ===========
 
-Sampling methods:
+For sampling:
            1. Monte Carlo simulation (MCS), 
            2. Latin Hypercube Sampling (LHS), 
            3. Markov Chain Monte Carlo simulation (MCMC) 
            4. Partially Stratified Sampling (PSS).
 
-Reliability methods:
+For reliability analysis:
            1. Subset Simulation
            
-Surrogate methods:
+For surrogate modeling:
            1. Stochastic Reduced Order Models (SROM).
 
 
