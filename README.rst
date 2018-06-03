@@ -11,6 +11,8 @@ Note
 UQpy (Uncertainty Quantification with python) is a general purpose Python toolbox for modeling uncertainty in physical and mathematical systems.
 
 
+====
+
 :Authors: Dimitris G. Giovanis, Michael D. Shields
 :Contributors: Jiaxin Zhang, Aakash Bangalore Satish, Lohit Vandanapu, Mohit Singh Chauhan
 :Contact: dgiovan1@jhu.edu, michael.shields@jhu.edu 
