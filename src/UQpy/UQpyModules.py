@@ -74,7 +74,6 @@ class RunCommandLine:
             RunModel(self.args.CPUs, self.args.Solver, self.args.Input_Shell_Script, self.args.Output_Shell_Script,
                      self.args.Adaptive, rvs.dimension)
 
-
         ################################################################################################################
         print("\nSuccessful execution of UQpy\n\n")
 
@@ -120,7 +119,6 @@ class RunCommandLine:
 
 
 class RunModel:
-
     """
     A class used to run the computational model.
 
@@ -132,6 +130,7 @@ class RunModel:
     :param dimension:
 
     """
+
     def __init__(self, cpu=None, solver=None, input_=None, output_=None, adaptive=None, dimension=None):
 
         self.CPUs = cpu
@@ -187,7 +186,6 @@ class RunModel:
         end_time = time.time()
         print('Total time:', end_time - start_time, "(sec)")
 
-
         ################################################################################################################
         # Move the data to directory simUQpyOut
 
@@ -200,7 +198,6 @@ class RunModel:
         for file_name in src_files:
             full_file_name = os.path.join(path, file_name)
             shutil.copy(full_file_name, output_directory)
-
 
         ################################################################################################################
         # Delete the tmp working directory directory
@@ -263,7 +260,7 @@ class RunModel:
         # Define the executable shell scripts for the model
 
         # Load the UQpyOut.txt
-        values = np.loadtxt('UQpy_Batch_{0}.txt'.format(j+1), dtype=np.float32)
+        values = np.loadtxt('UQpy_Batch_{0}.txt'.format(j + 1), dtype=np.float32)
         index_temp = np.loadtxt('UQpy_Batch_index_{0}.txt'.format(j + 1))
 
         index = list()
@@ -281,7 +278,7 @@ class RunModel:
         elif len(values.shape) == 1 and self.dimension == 1:
             values = values.reshape(values.shape[0], 1)
 
-        os.remove('UQpy_Batch_{0}.txt'.format(j+1))
+        os.remove('UQpy_Batch_{0}.txt'.format(j + 1))
         os.remove('UQpy_Batch_index_{0}.txt'.format(j + 1))
 
         model_eval = list()
@@ -363,16 +360,15 @@ class RunModel:
 
 
 def chunk_samples_cores(samples, args):
-
     # In case of parallel computing divide the samples into chunks in order to sent to each processor
     chunks = args.CPUs
     if args.Adaptive is True:
         for i in range(args.CPUs):
-            np.savetxt('UQpy_Batch_{0}.txt'.format(i+1), samples[range(i-1, i), :],fmt='%0.5f')
-            np.savetxt('UQpy_Batch_index_{0}.txt'.format(i+1), np.array(i).reshape(1,))
+            np.savetxt('UQpy_Batch_{0}.txt'.format(i + 1), samples[range(i - 1, i), :], fmt='%0.5f')
+            np.savetxt('UQpy_Batch_index_{0}.txt'.format(i + 1), np.array(i).reshape(1, ))
 
     else:
-        size = np.array([np.ceil(samples.shape[0]/chunks) for i in range(args.CPUs)]).astype(int)
+        size = np.array([np.ceil(samples.shape[0] / chunks) for i in range(args.CPUs)]).astype(int)
         dif = np.sum(size) - samples.shape[0]
         count = 0
         for k in range(dif):
@@ -382,16 +378,15 @@ def chunk_samples_cores(samples, args):
             if i == 0:
                 lines = range(size[i])
             else:
-                lines = range(int(np.sum(size[:i])), int(np.sum(size[:i+1])))
-            np.savetxt('UQpy_Batch_{0}.txt'.format(i+1), samples[lines, :],  fmt='%0.5f')
-            np.savetxt('UQpy_Batch_index_{0}.txt'.format(i+1), lines)
+                lines = range(int(np.sum(size[:i])), int(np.sum(size[:i + 1])))
+            np.savetxt('UQpy_Batch_{0}.txt'.format(i + 1), samples[lines, :], fmt='%0.5f')
+            np.savetxt('UQpy_Batch_index_{0}.txt'.format(i + 1), lines)
 
 
 def chunk_samples_nodes(samples, args):
-
     # In case of cluster divide the samples into chunks in order to sent to each processor
     chunks = args.nodes
-    size = np.array([np.ceil(samples.shape[0]/chunks) in range(args.nodes)]).astype(int)
+    size = np.array([np.ceil(samples.shape[0] / chunks) in range(args.nodes)]).astype(int)
     dif = np.sum(size) - samples.shape[0]
     count = 0
     for k in range(dif):
@@ -401,14 +396,13 @@ def chunk_samples_nodes(samples, args):
         if i == 0:
             lines = range(0, size[i])
         else:
-            lines = range(int(np.sum(size[:i])), int(np.sum(size[:i+1])))
+            lines = range(int(np.sum(size[:i])), int(np.sum(size[:i + 1])))
 
-        np.savetxt('UQpy_Batch_{0}.txt'.format(i+1), samples[lines, :],  fmt='%0.5f')
-        np.savetxt('UQpy_Batch_index_{0}.txt'.format(i+1), lines)
+        np.savetxt('UQpy_Batch_{0}.txt'.format(i + 1), samples[lines, :], fmt='%0.5f')
+        np.savetxt('UQpy_Batch_index_{0}.txt'.format(i + 1), lines)
 
 
 def save_csv(headers, param_values):
-
     index = np.array(range(1, param_values.shape[0] + 1)).astype(int)
     param_values = np.hstack((index.reshape(index.shape[0], 1), param_values))
     expand_header = list()
@@ -433,4 +427,3 @@ def save_txt(headers, param_values):
 
     header = ', '.join(expand_header)
     np.savetxt('UQpy_Samples.txt', param_values, header=str(header), fmt='%0.5f')
-

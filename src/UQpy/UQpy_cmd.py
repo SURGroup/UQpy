@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 import numpy as np
 
 UQpy_commandLine = \
-UQpy_commandLine_Usage = """python UQpy.py --{options}"""
+    UQpy_commandLine_Usage = """python UQpy.py --{options}"""
 
 if __name__ == '__main__':
 
@@ -33,9 +33,9 @@ if __name__ == '__main__':
     parser.add_argument("--CPUs", dest="CPUs", action="store",
                         default=0, type=int, help="Number of local cores to be used for the analysis")
 
-    #parser.add_argument("--ClusterNodes", dest="nodes", action="store", type=int,
-                        #default=1, help="Number of nodes to distribute the model evaluations in "
-                        #"case of a cluster. (Not available)")
+    # parser.add_argument("--ClusterNodes", dest="nodes", action="store", type=int,
+    # default=1, help="Number of nodes to distribute the model evaluations in "
+    # "case of a cluster. (Not available)")
 
     args, unknown = parser.parse_known_args()
 
@@ -60,4 +60,5 @@ if __name__ == '__main__':
                 sys.exit()
 
         from UQpy.UQpyModules import RunCommandLine
+
         RunCommandLine(args)

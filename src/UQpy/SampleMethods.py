@@ -144,6 +144,8 @@ class LHS:
 
     :rtype: LHS.samples: numpy array
     """
+    # Created by: Lohit Vandanapu
+    # Last modified: 24/05/2018 by Lohit Vandanapu
 
     def __init__(self, dimension=1, pdf_type=None, pdf_params=None, lhs_criterion='random', lhs_metric='euclidean',
                  lhs_iter=100, nsamples=None):

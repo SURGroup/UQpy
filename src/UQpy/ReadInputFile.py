@@ -19,7 +19,7 @@ def readfile(filename):
         ################################################################################################################
         # General parameters
         if title == 'method':
-            mydict[title] = lines[lines_[i]+1][:-1]
+            mydict[title] = lines[lines_[i] + 1][:-1]
             print()
         elif title == 'distribution type':
             dist = []

@@ -30,12 +30,10 @@ def init_inf(data):
     # Necessary Multimodel Information-theoretic selection parameters:
     # Optional:
 
-
     ####################################################################################################################
     # TODO: Jiaxin: Bayes_Inference block.
     # Necessary  Bayesian inference - parameter estimation parameters:
     # Optional:
-
 
     ####################################################################################################################
     # TODO: Jiaxin: MultiMBayesI block.
@@ -139,7 +137,6 @@ class InforMS:
 
 
 class MultiMI:
-
     """
     Created by: Jiaxin Zhang
     Last modified by Dimitris Giovanis: 4/2/2018
@@ -184,6 +181,7 @@ class MultiMI:
     def init_MultiMI(self):
         print()
         # TODO: Jiaxin: Multimodel Information-theoretic selection
+
 
 ########################################################################################################################
 #                                         Bayesian inference - parameter estimation
@@ -237,7 +235,7 @@ class Bayes_Inference:
             if not np.isfinite(lp):
                 return -np.inf
 
-            #return np.exp(lp + lnlike(theta, data))
+            # return np.exp(lp + lnlike(theta, data))
             return (lp + lnlike(theta, data))
 
         # TODO: computing the evidence using numerical integration; monte carlo; RJMCMC?
@@ -250,33 +248,33 @@ class Bayes_Inference:
         ndim = 2
         p0 = [np.random.rand(ndim) for i in range(nwalkers)]
 
-        #target_like = np.exp(lnprob)
+        # target_like = np.exp(lnprob)
 
         # # using MCMC from SampleMethods
-        #MCMC = SampleMethods.MCMC(nsamples = 5000, dimension = 2, seed = [2,1], algorithm = 'MH',
+        # MCMC = SampleMethods.MCMC(nsamples = 5000, dimension = 2, seed = [2,1], algorithm = 'MH',
         #                          pdf_proposal_type = 'Normal',
         #                          pdf_proposal_width = 1, pdf_target_type = lnprob, skip = 1,
         #                          pdf_target_params = [[0, 1], [0, 1]])
 
-        #print(MCMC.samples)
-        #plt.plot(MCMC.samples[:,0], MCMC.samples[:,1], 'ro')
-        #plt.show()
+        # print(MCMC.samples)
+        # plt.plot(MCMC.samples[:,0], MCMC.samples[:,1], 'ro')
+        # plt.show()
 
         z = MCMC(dimension=2, pdf_proposal_type=None, pdf_proposal_scale=2, pdf_target_type='joint_pdf',
                  pdf_target=lnprob, pdf_target_params=[20], algorithm='Stretch', jump=1000, nsamples=1000,
                  seed=None)
 
-        #sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=[data])
-        #sampler.run_mcmc
-        #trace = sampler.chain[:, 50:, :].reshape((-1, ndim))
+        # sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=[data])
+        # sampler.run_mcmc
+        # trace = sampler.chain[:, 50:, :].reshape((-1, ndim))
 
-        #fig = corner.corner(trace, labels=["$m$", "$s$"], truths=[0, 1, np.log(1)])
-        #fig.show()
-        #fig.savefig("pos_samples.png")
+        # fig = corner.corner(trace, labels=["$m$", "$s$"], truths=[0, 1, np.log(1)])
+        # fig.show()
+        # fig.savefig("pos_samples.png")
         plt.plot(z[:, 0], z[:, 1], 'ko')
         plt.show()
 
-        #Bayesian parameter estimation - Conventional MLE
+        # Bayesian parameter estimation - Conventional MLE
         # print(trace)
         # print(trace[0])
         loglike = np.zeros((len(trace)))
@@ -292,7 +290,7 @@ class Bayes_Inference:
         xlim, ylim = zip(trace.min(0), trace.max(0))
 
         Z1, err_Z1 = integrate_posterior_2D(lnprob, xlim, ylim)
-        #print("Z1 =", Z1, "+/-", err_Z1)
+        # print("Z1 =", Z1, "+/-", err_Z1)
 
         self.samples = trace
         self.Bayes_factor = Z1
@@ -301,6 +299,7 @@ class Bayes_Inference:
     def init_Bayes_Inference(self):
         print()
         # TODO: Jiaxin: ADD CHECKS for Bayesian inference - parameter estimation
+
 
 ########################################################################################################################
 #                                  Multimodel Bayesian inference
@@ -330,7 +329,7 @@ class MultiMBayesI:
             s = sort_index[i]
             model_sort[i] = model[s]
 
-        bms = -np.sort(nevi_value)/sum_evi_value
+        bms = -np.sort(nevi_value) / sum_evi_value
 
         self.model_sort = model_sort
         self.weights = bms
