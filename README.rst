@@ -8,8 +8,6 @@ Uncertainty Quantification using python (UQpy)
 :Authors: Dimitris G. Giovanis, Michael D. Shields
 :Contributors: Jiaxin Zhang, Aakash Bangalore Satish, Lohit Vandanapu, Mohit Singh Chauhan
 :Contact: dgiovan1@jhu.edu, michael.shields@jhu.edu
-:Web site: www.ce.jhu.edu/surg
-:Documentation: http://uqpy-docs-v0.readthedocs.io/en/latest/
 :Copyright: SURG 
 :License: Apache 2.0
 :Date: May 2018
@@ -76,6 +74,17 @@ In order to uninstall it
 
                         $pip uninstall UQpy
 
+
+
+Documentation
+------------
+
+http://uqpy-docs-v0.readthedocs.io/en/latest/
+
+Web Site of Group
+------------
+
+www.ce.jhu.edu/surg
 
 .. |logo| image:: logo.jpg
     :target: https://gihub.com/SURGroup/UQpy
