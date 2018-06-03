@@ -55,13 +55,21 @@ Requirements
 Installation
 ------------
 
-This will check for all the necessary packages. It will create the required virtual environment and install all its dependencies. 
+As user through github: 
 
             * ::
 
                         $git clone https://github.com/SURGroup/UQpy.git
                         $cd UQpy/
                         $python setup.py install  
+
+As developer: 
+
+            * ::
+
+                        $git clone https://github.com/SURGroup/UQpy.git
+                        $cd UQpy/
+                        $python setup.py develop 
 
  
 
