@@ -108,12 +108,12 @@ class LHS:
                     Default: 1
     :type dimension: int
 
-    :param pdf_type: Type of the distribution
+    :param dist_type: Type of the distribution
                     No Default Value: nsamples must be prescribed
-    :type pdf_type: list
+    :type dist_type: list
 
-    :param pdf_params: Parameters of the distribution
-    :type pdf_params: list
+    :param dist_params: Parameters of the distribution
+    :type dist_params: list
 
     :param lhs_criterion: The criterion for generating sample points
                             Options:
@@ -147,13 +147,13 @@ class LHS:
     # Created by: Lohit Vandanapu
     # Last modified: 24/05/2018 by Lohit Vandanapu
 
-    def __init__(self, dimension=1, pdf_type=None, pdf_params=None, lhs_criterion='random', lhs_metric='euclidean',
+    def __init__(self, dimension=1, dist_type=None, dist_params=None, lhs_criterion='random', lhs_metric='euclidean',
                  lhs_iter=100, nsamples=None):
 
         self.dimension = dimension
         self.nsamples = nsamples
-        self.pdf_type = pdf_type
-        self.pdf_params = pdf_params
+        self.dist_type = dist_type
+        self.dist_params = dist_params
         self.lhs_criterion = lhs_criterion
         self.lhs_metric = lhs_metric
         self.lhs_iter = lhs_iter
@@ -178,8 +178,8 @@ class LHS:
         samples_u_to_x = np.zeros_like(samples)
         for i in range(samples.shape[0]):
             for j in range(samples.shape[1]):
-                f = self.pdf_type[j]
-                samples_u_to_x[i, j] = f(samples[i, j], self.pdf_params[j])
+                f = self.dist_type[j]
+                samples_u_to_x[i, j] = f(samples[i, j], self.dist_params[j])
 
         print('Successfully ran the LHS design')
         return samples, samples_u_to_x
@@ -248,32 +248,32 @@ class LHS:
 
         if self.nsamples is None:
             raise NotImplementedError("Exit code: Number of samples not defined.")
-        if self.pdf_type is None:
+        if self.dist_type is None:
             raise NotImplementedError("Exit code: Distributions not defined.")
-        self.pdf_type = inv_cdf(self.pdf_type)
-        if self.pdf_params is None:
+        self.dist_type = inv_cdf(self.dist_type)
+        if self.dist_params is None:
             raise NotImplementedError("Exit code: Distribution parameters not defined.")
         if self.dimension is None:
-            if len(self.pdf_type) != len(self.pdf_params):
+            if len(self.dist_type) != len(self.dist_params):
                 raise NotImplementedError("Exit code: Incompatible dimensions.")
             else:
-                self.dimension = len(self.pdf_type)
+                self.dimension = len(self.dist_type)
         else:
             import itertools
             from itertools import chain
 
-            if len(self.pdf_type) == 1 and len(self.pdf_params) == self.dimension:
-                self.pdf_type = list(itertools.repeat(self.pdf_type, self.dimension))
-                self.pdf_type = list(chain.from_iterable(self.pdf_type))
-            elif len(self.pdf_params) == 1 and len(self.pdf_type) == self.dimension:
-                self.pdf_params = list(itertools.repeat(self.pdf_params, self.dimension))
-                self.pdf_params = list(chain.from_iterable(self.pdf_params))
-            elif len(self.pdf_params) == 1 and len(self.pdf_type) == 1:
-                self.pdf_params = list(itertools.repeat(self.pdf_params, self.dimension))
-                self.pdf_type = list(itertools.repeat(self.pdf_type, self.dimension))
-                self.pdf_type = list(chain.from_iterable(self.pdf_type))
-                self.pdf_params = list(chain.from_iterable(self.pdf_params))
-            elif len(self.pdf_type) != len(self.pdf_params):
+            if len(self.dist_type) == 1 and len(self.dist_params) == self.dimension:
+                self.dist_type = list(itertools.repeat(self.dist_type, self.dimension))
+                self.dist_type = list(chain.from_iterable(self.dist_type))
+            elif len(self.dist_params) == 1 and len(self.dist_type) == self.dimension:
+                self.dist_params = list(itertools.repeat(self.dist_params, self.dimension))
+                self.dist_params = list(chain.from_iterable(self.dist_params))
+            elif len(self.dist_params) == 1 and len(self.dist_type) == 1:
+                self.dist_params = list(itertools.repeat(self.dist_params, self.dimension))
+                self.dist_type = list(itertools.repeat(self.dist_type, self.dimension))
+                self.dist_type = list(chain.from_iterable(self.dist_type))
+                self.dist_params = list(chain.from_iterable(self.dist_params))
+            elif len(self.dist_type) != len(self.dist_params):
                 raise NotImplementedError("Exit code: Incompatible dimensions.")
 
         if self.lhs_criterion is None:
