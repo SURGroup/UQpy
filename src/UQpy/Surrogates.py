@@ -2,7 +2,7 @@ import chaospy as cp
 import numpy as np
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 from sklearn.gaussian_process import GaussianProcessRegressor
-from UQpy.PDFs import *
+from UQpy.Distributions import *
 
 
 ########################################################################################################################
@@ -13,9 +13,9 @@ from UQpy.PDFs import *
 
 class SROM:
 
-    def __init__(self, samples=None, pdf_type=None, moments=None, weights_errors=None,
+    def __init__(self, samples=None, cdf_type=None, moments=None, weights_errors=None,
                  weights_distribution=None,  weights_moments=None, weights_correlation=None,
-                 properties=None, pdf_params=None, correlation=None):
+                 properties=None, cdf_params=None, correlation=None):
         """
         Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random
         quantity.
@@ -32,11 +32,11 @@ class SROM:
         :param samples: A list of samples corresponding to each random variables
         :type samples: list
 
-        :param pdf_type: A list of Cumulative distribution functions of random variables
-        :type pdf_type: list str or list function
+        :param cdf_type: A list of Cumulative distribution functions of random variables
+        :type cdf_type: list str or list function
 
-        :param pdf_params: Parameters of distribution
-        :type pdf_params: list
+        :param cdf_params: Parameters of distribution
+        :type cdf_params: list
 
         :param moments: A list containing first and second order moment about origin of all random variables
         :type moments: list
@@ -93,14 +93,14 @@ class SROM:
 
         self.samples = np.array(samples)
         self.correlation = np.array(correlation)
-        self.pdf_type = pdf_type
+        self.cdf_type = cdf_type
         self.moments = np.array(moments)
         self.weights_errors = weights_errors
         self.weights_distribution = np.array(weights_distribution)
         self.weights_moments = np.array(weights_moments)
         self.weights_correlation = np.array(weights_correlation)
         self.properties = properties
-        self.pdf_params = pdf_params
+        self.cdf_params = cdf_params
         self.dimension = samples.shape[1]
         self.nsamples = samples.shape[0]
         self.init_srom()
@@ -160,8 +160,8 @@ class SROM:
 
         p_ = optimize.minimize(f, np.zeros(self.nsamples),
                                args=(self.samples, self.weights_distribution, self.weights_moments,
-                                     self.weights_correlation, self.pdf_type, self.nsamples, self.dimension,
-                                     self.moments, self.weights_errors, self.pdf_params, self.properties,
+                                     self.weights_correlation, self.cdf_type, self.nsamples, self.dimension,
+                                     self.moments, self.weights_errors, self.cdf_params, self.properties,
                                      self.correlation),
                                constraints=cons, method='SLSQP')
 
@@ -228,18 +228,18 @@ class SROM:
         elif self.weights_correlation.shape != (self.dimension, self.dimension):
             raise NotImplementedError("Size of 'weights for correlation' is not correct")
 
-        # Check pdf_type
-        if len(self.pdf_type) == 1:
-            self.pdf_type = self.pdf_type * self.dimension
-            self.pdf_params = self.pdf_params * self.dimension
-        elif len(self.pdf_type) != self.dimension:
-            raise NotImplementedError("Size of pdf_type should be 1 or equal to dimension")
+        # Check cdf_type
+        if len(self.cdf_type) == 1:
+            self.cdf_type = self.cdf_type * self.dimension
+            self.cdf_params = [self.cdf_params] * self.dimension
+        elif len(self.cdf_type) != self.dimension:
+            raise NotImplementedError("Size of cdf_type should be 1 or equal to dimension")
 
-        for i in range(len(self.pdf_type)):
-            if type(self.pdf_type[i]).__name__ == 'function':
-                self.pdf_type[i] = self.pdf_type[i]
-            elif type(self.pdf_type[i]).__name__ == 'str':
-                self.pdf_type[i] = pdf(self.pdf_type[i])
+        for i in range(len(self.cdf_type)):
+            if type(self.cdf_type[i]).__name__ == 'function':
+                self.cdf_type[i] = self.cdf_type[i]
+            elif type(self.cdf_type[i]).__name__ == 'str':
+                self.cdf_type[i] = cdf(self.cdf_type[i])
             else:
                 raise NotImplementedError("Distribution type should be either 'function' or 'list'")
 
