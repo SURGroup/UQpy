@@ -488,13 +488,14 @@ class STS:
 
     def run_sts(self):
         samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
+        samples_u_to_x = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
         for i in range(0, self.strata.origins.shape[0]):
             for j in range(0, self.strata.origins.shape[1]):
                 icdf = inv_cdf(self.dist_type[j])
                 samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
                                                   + self.strata.widths[i, j])
 
-                samples_u_to_x = icdf(samples, self.dist_params)
+                samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
         return samples, samples_u_to_x
 
     def init_sts(self):
