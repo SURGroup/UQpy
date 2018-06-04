@@ -437,22 +437,22 @@ class STS:
 
     def run_sts(self):
         samples = np.empty([self.origins.shape[0], self.origins.shape[1]], dtype=np.float32)
+        samples_u_to_x = np.empty([self.origins.shape[0], self.origins.shape[1]], dtype=np.float32)
         for i in range(0, self.origins.shape[0]):
             for j in range(0, self.origins.shape[1]):
+                f = self.pdf_type[j]
                 samples[i, j] = np.random.uniform(self.origins[i, j], self.origins[i, j] + self.widths[i, j])
-        samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
+                samples_u_to_x[i,j] = f(samples[i, j], self.pdf_params[j])
+
         return samples, samples_u_to_x
 
     def init_sts(self):
 
         if self.pdf_type is None:
             raise NotImplementedError("Exit code: Distribution not defined.")
-        else:
-            for i in self.pdf_type:
-                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
-                    raise NotImplementedError("Exit code: Unrecognized type of distribution."
-                                              "Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential', 'Gamma'. ")
+
+        self.pdf_type = inv_cdf(self.pdf_type)
+
         if self.pdf_params is None:
             raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
@@ -481,6 +481,7 @@ class STS:
             self.pdf_params = list(chain.from_iterable(self.pdf_params))
         elif len(self.pdf_type) != len(self.pdf_params):
             raise NotImplementedError("Exit code: Incompatible dimensions.")
+
 
         # TODO: Create a list that contains all element info - parent structure
         # e.g. SS_samples = [STS[j] for j in range(0,nsamples)]
@@ -833,8 +834,8 @@ class MCMC:
                 elif self.pdf_proposal_type == 'Uniform':
 
                     candidate = uniform(low=samples[i, :] - np.array(self.pdf_proposal_scale) / 2,
-                                                  high=samples[i, :] + np.array(self.pdf_proposal_scale) / 2,
-                                                  size=self.dimension)
+                                        high=samples[i, :] + np.array(self.pdf_proposal_scale) / 2,
+                                        size=self.dimension)
 
                 p_proposal = pdf_(candidate, self.pdf_target_params)
                 p_current = pdf_(samples[i, :], self.pdf_target_params)
@@ -1060,7 +1061,7 @@ class MCMC:
         # Check pdf_target_params
         if self.pdf_target_params is None:
             self.pdf_target_params = []
-        if type(self.pdf_target_params).__name__!='list':
+        if type(self.pdf_target_params).__name__ != 'list':
             self.pdf_target_params = [self.pdf_target_params]
 
         if self.nburn is None:

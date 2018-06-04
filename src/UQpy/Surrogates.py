@@ -13,9 +13,9 @@ from UQpy.Distributions import *
 
 class SROM:
 
-    def __init__(self, samples=None, cdf_type=None, moments=None, weights_errors=None,
-                 weights_distribution=None,  weights_moments=None, weights_correlation=None,
-                 properties=None, cdf_params=None, correlation=None):
+    def __init__(self, samples=None, pdf_type=None, moments=None, weights_errors=None,
+                 weights_distribution=None, weights_moments=None, weights_correlation=None,
+                 properties=None, pdf_params=None, correlation=None):
         """
         Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random
         quantity.
@@ -32,11 +32,11 @@ class SROM:
         :param samples: A list of samples corresponding to each random variables
         :type samples: list
 
-        :param cdf_type: A list of Cumulative distribution functions of random variables
-        :type cdf_type: list str or list function
+        :param pdf_type: A list of Cumulative distribution functions of random variables
+        :type pdf_type: list str or list function
 
-        :param cdf_params: Parameters of distribution
-        :type cdf_params: list
+        :param pdf_params: Parameters of distribution
+        :type pdf_params: list
 
         :param moments: A list containing first and second order moment about origin of all random variables
         :type moments: list
@@ -93,14 +93,14 @@ class SROM:
 
         self.samples = np.array(samples)
         self.correlation = np.array(correlation)
-        self.cdf_type = cdf_type
+        self.pdf_type = pdf_type
         self.moments = np.array(moments)
         self.weights_errors = weights_errors
-        self.weights_distribution = np.array(weights_distribution)
-        self.weights_moments = np.array(weights_moments)
-        self.weights_correlation = np.array(weights_correlation)
+        self.weights_distribution = weights_distribution
+        self.weights_moments = weights_moments
+        self.weights_correlation = weights_correlation
         self.properties = properties
-        self.cdf_params = cdf_params
+        self.pdf_params = pdf_params
         self.dimension = samples.shape[1]
         self.nsamples = samples.shape[0]
         self.init_srom()
@@ -160,14 +160,20 @@ class SROM:
 
         p_ = optimize.minimize(f, np.zeros(self.nsamples),
                                args=(self.samples, self.weights_distribution, self.weights_moments,
-                                     self.weights_correlation, self.cdf_type, self.nsamples, self.dimension,
-                                     self.moments, self.weights_errors, self.cdf_params, self.properties,
+                                     self.weights_correlation, self.pdf_type, self.nsamples, self.dimension,
+                                     self.moments, self.weights_errors, self.pdf_params, self.properties,
                                      self.correlation),
                                constraints=cons, method='SLSQP')
 
         return p_.x
 
     def init_srom(self):
+
+        if self.pdf_type is None:
+            raise NotImplementedError("Exit code: Distribution not defined.")
+
+        self.pdf_type = cdf(self.pdf_type)
+
         # Check samples
         if self.samples is None:
             raise NotImplementedError('Samples not provided for SROM')
@@ -183,16 +189,16 @@ class SROM:
         # Both moments are required, if correlation property is required to be match
         if self.properties[3] is True:
             if self.moments.shape != (2, self.dimension):
-                raise NotImplementedError("Size of 'moments' is not correct")
+                raise NotImplementedError("1. Size of 'moments' is not correct")
             if self.correlation is None:
                 self.correlation = np.identity(self.dimension)
         # moments.shape[0] should be 1 or 2
         if self.moments.shape != (1, self.dimension) and self.moments.shape != (2, self.dimension):
-            raise NotImplementedError("Size of 'moments' is not correct")
+            raise NotImplementedError("2. Size of 'moments' is not correct")
         # If both the moments are to be included in objective function, then moments.shape[0] should be 2
         if self.properties[1] is True and self.properties[2] is True:
             if self.moments.shape != (2, self.dimension):
-                raise NotImplementedError("Size of 'moments' is not correct")
+                raise NotImplementedError("3. Size of 'moments' is not correct")
         # If only second order moment is to be included in objective function and moments.shape[0] is 1. Then
         # self.moments is converted shape = (2, self.dimension) where is second row contain second order moments.
         if self.properties[1] is False and self.properties[2] is True:
@@ -208,7 +214,9 @@ class SROM:
         # Check weights corresponding to distribution
         if self.weights_distribution is None or not self.weights_distribution:
             self.weights_distribution = np.ones(shape=(self.samples.shape[0], self.dimension))
-        elif self.weights_distribution.shape == (1, self.dimension):
+
+        self.weights_distribution = np.array(self.weights_distribution)
+        if self.weights_distribution.shape == (1, self.dimension):
             self.weights_distribution = self.weights_distribution * np.ones(shape=(self.samples.shape[0],
                                                                                    self.dimension))
         elif self.weights_distribution.shape != (self.samples.shape[0], self.dimension):
@@ -217,31 +225,27 @@ class SROM:
         # Check weights corresponding to moments and it's default list
         if self.weights_moments is None or not self.weights_moments:
             self.weights_moments = np.reciprocal(np.square(self.moments))
-        elif self.weights_moments.shape == (1, self.dimension):
+
+        self.weights_moments = np.array(self.weights_moments)
+        if self.weights_moments.shape == (1, self.dimension):
             self.weights_moments = self.weights_moments * np.ones(shape=(2, self.dimension))
-        elif self.weights_moments != (2, self.dimension):
+        elif self.weights_moments.shape != (2, self.dimension):
             raise NotImplementedError("Size of 'weights for moments' is not correct")
 
         # Check weights corresponding to correlation and it's default list
         if self.weights_correlation is None or not self.weights_correlation:
             self.weights_correlation = np.ones(shape=(self.dimension, self.dimension))
-        elif self.weights_correlation.shape != (self.dimension, self.dimension):
+
+        self.weights_correlation = np.array(self.weights_correlation)
+        if self.weights_correlation.shape != (self.dimension, self.dimension):
             raise NotImplementedError("Size of 'weights for correlation' is not correct")
 
         # Check cdf_type
-        if len(self.cdf_type) == 1:
-            self.cdf_type = self.cdf_type * self.dimension
-            self.cdf_params = [self.cdf_params] * self.dimension
-        elif len(self.cdf_type) != self.dimension:
+        if len(self.pdf_type) == 1:
+            self.pdf_type = self.pdf_type * self.dimension
+            self.pdf_params = [self.pdf_params] * self.dimension
+        elif len(self.pdf_type) != self.dimension:
             raise NotImplementedError("Size of cdf_type should be 1 or equal to dimension")
-
-        for i in range(len(self.cdf_type)):
-            if type(self.cdf_type[i]).__name__ == 'function':
-                self.cdf_type[i] = self.cdf_type[i]
-            elif type(self.cdf_type[i]).__name__ == 'str':
-                self.cdf_type[i] = cdf(self.cdf_type[i])
-            else:
-                raise NotImplementedError("Distribution type should be either 'function' or 'list'")
 
 
 class SurrogateModels:
