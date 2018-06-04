@@ -13,9 +13,9 @@ UQpy (Uncertainty Quantification with python) is a general purpose Python toolbo
 
 ====
 
-:Authors: Dimitris G. Giovanis, Michael D. Shields
-:Contributors: Jiaxin Zhang, Aakash Bangalore Satish, Lohit Vandanapu, Mohit Singh Chauhan
-:Contact: dgiovan1@jhu.edu, michael.shields@jhu.edu 
+:Authors: Michael D. Shields, Dimitris G. Giovanis
+:Contributors: Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu, Jiaxin Zhang
+:Contact: michael.shields@jhu.edu, dgiovan1@jhu.edu
 :Version: 0.1.0
 
 
@@ -53,15 +53,6 @@ Dependencies
 Installation
 ===========
 
-Clone your fork of the UQpy repo from your GitHub account to your local disk (to get the latest version): 
-
-            * ::
-
-                        $git clone https://github.com/SURGroup/UQpy.git
-                        $cd UQpy/
-                        $python setup.py install  (user installation)
-                        $python setup.py develop (developer installation)
-
 From PyPI
 
             * ::
@@ -73,6 +64,15 @@ In order to uninstall it
             * ::
 
                         $pip uninstall UQpy
+
+Clone your fork of the UQpy repo from your GitHub account to your local disk (to get the latest version): 
+
+            * ::
+
+                        $git clone https://github.com/SURGroup/UQpy.git
+                        $cd UQpy/
+                        $python setup.py install  (user installation)
+                        $python setup.py develop (developer installation)
 
 
 Help and Support
