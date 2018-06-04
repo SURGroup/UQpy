@@ -1,14 +1,9 @@
 
 *******************************************
-Uncertainty Quantification using python (UQpy)
+Uncertainty Quantification with python (UQpy)
 *******************************************
 
 |logo|
-
-Note
-====
-
-UQpy (Uncertainty Quantification with python) is a general purpose Python toolbox for modeling uncertainty in physical and mathematical systems.
 
 
 ====
@@ -22,8 +17,7 @@ UQpy (Uncertainty Quantification with python) is a general purpose Python toolbo
 Description
 ===========
 
-UQpy is a numerical tool for performing uncertainty quantification
-using python.
+UQpy (Uncertainty Quantification with python) is a general purpose Python toolbox for modeling uncertainty in physical and mathematical systems..
 
 Supported methods
 ===========
