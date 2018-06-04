@@ -55,7 +55,6 @@ This will check for all the necessary packages. It will create the required virt
 
                         $git clone https://github.com/SURGroup/UQpy.git
                         $cd UQpy/
-                        $pip install -r requirements.txt
                         $python setup.py install  
 
  
