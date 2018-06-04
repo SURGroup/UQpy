@@ -1,4 +1,4 @@
-from UQpy import UQpyModules, Distributions
+import UQpy.Distributions
 from UQpy.RunModel import RunModel
 from UQpy.SampleMethods import MCMC
 import numpy as np
