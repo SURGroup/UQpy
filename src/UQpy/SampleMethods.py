@@ -433,7 +433,8 @@ class STS:
         self.origins = strata.origins
         self.widths = strata.widths
         self.weights = strata.weights
-        self.samplesU01, self.samples = self.run_sts()
+        self.samplesU01 
+        self.samples = self.run_sts()
 
     def run_sts(self):
         samples = np.empty([self.origins.shape[0], self.origins.shape[1]], dtype=np.float32)
