@@ -168,22 +168,21 @@ class LHS:
 
         if self.lhs_criterion == 'random':
             samples = self._random(a, b)
-            samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
-            return samples, samples_u_to_x
         elif self.lhs_criterion == 'centered':
             samples = self._centered(a, b)
-            samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
-            return samples, samples_u_to_x
         elif self.lhs_criterion == 'maximin':
             samples = self._max_min(a, b)
-            samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
-            return samples, samples_u_to_x
         elif self.lhs_criterion == 'correlate':
             samples = self._correlate(a, b)
-            samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
-            return samples, samples_u_to_x
+
+        samples_u_to_x = np.zeros_like(samples)
+        for i in range(samples.shape[0]):
+            for j in range(samples.shape[1]):
+                f = self.pdf_type[j]
+                samples_u_to_x[i, j] = f(samples[i, j], self.pdf_params[j])
 
         print('Successfully ran the LHS design')
+        return samples, samples_u_to_x
 
     def _random(self, a, b):
         u = np.random.rand(self.nsamples, self.dimension)
@@ -251,12 +250,7 @@ class LHS:
             raise NotImplementedError("Exit code: Number of samples not defined.")
         if self.pdf_type is None:
             raise NotImplementedError("Exit code: Distributions not defined.")
-        else:
-            for i in self.pdf_type:
-                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
-                    raise NotImplementedError("Exit code: Unrecognized type of distribution."
-                                              "Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential', 'Gamma'.")
+        self.pdf_type = inv_cdf(self.pdf_type)
         if self.pdf_params is None:
             raise NotImplementedError("Exit code: Distribution parameters not defined.")
         if self.dimension is None:
