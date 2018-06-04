@@ -337,7 +337,7 @@ class PSS:
         col = 0
         for i in range(len(self.pss_design)):
             n_stratum = self.pss_strata[i] * np.ones(self.pss_design[i], dtype=np.int)
-            sts = STS(pdf_type=self.pdf_type, pdf_params=self.pdf_params, sts_design=n_stratum, pss_=True)
+            sts = STS(dist_type=self.pdf_type, dist_params=self.pdf_params, sts_design=n_stratum, pss_=True)
             index = list(range(col, col + self.pss_design[i]))
             samples[:, index] = sts.samplesU01
             samples_u_to_x[:, index] = sts.samples
@@ -421,11 +421,11 @@ class STS:
     :param pss_:
     """
 
-    def __init__(self, dimension=None, pdf_type=None, pdf_params=None, sts_design=None, pss_=None):
+    def __init__(self, dimension=None, dist_type=None, dist_params=None, sts_design=None, pss_=None):
 
         self.dimension = dimension
-        self.pdf_type = pdf_type
-        self.pdf_params = pdf_params
+        self.dist_type = dist_type
+        self.dist_params = dist_params
         self.sts_design = sts_design
         if pss_ is None:
             self.init_sts()
@@ -440,20 +440,20 @@ class STS:
         samples_u_to_x = np.empty([self.origins.shape[0], self.origins.shape[1]], dtype=np.float32)
         for i in range(0, self.origins.shape[0]):
             for j in range(0, self.origins.shape[1]):
-                f = self.pdf_type[j]
+                f = self.dist_type[j]
                 samples[i, j] = np.random.uniform(self.origins[i, j], self.origins[i, j] + self.widths[i, j])
-                samples_u_to_x[i,j] = f(samples[i, j], self.pdf_params[j])
+                samples_u_to_x[i,j] = f(samples[i, j], self.dist_params[j])
 
         return samples, samples_u_to_x
 
     def init_sts(self):
 
-        if self.pdf_type is None:
+        if self.dist_type is None:
             raise NotImplementedError("Exit code: Distribution not defined.")
 
-        self.pdf_type = inv_cdf(self.pdf_type)
+        self.dist_type = inv_cdf(self.dist_type)
 
-        if self.pdf_params is None:
+        if self.dist_params is None:
             raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
         if self.sts_design is None:
@@ -468,18 +468,18 @@ class STS:
         import itertools
         from itertools import chain
 
-        if len(self.pdf_type) == 1 and len(self.pdf_params) == self.dimension:
-            self.pdf_type = list(itertools.repeat(self.pdf_type, self.dimension))
-            self.pdf_type = list(chain.from_iterable(self.pdf_type))
-        elif len(self.pdf_params) == 1 and len(self.pdf_type) == self.dimension:
-            self.pdf_params = list(itertools.repeat(self.pdf_params, self.dimension))
-            self.pdf_params = list(chain.from_iterable(self.pdf_params))
-        elif len(self.pdf_params) == 1 and len(self.pdf_type) == 1:
-            self.pdf_params = list(itertools.repeat(self.pdf_params, self.dimension))
-            self.pdf_type = list(itertools.repeat(self.pdf_type, self.dimension))
-            self.pdf_type = list(chain.from_iterable(self.pdf_type))
-            self.pdf_params = list(chain.from_iterable(self.pdf_params))
-        elif len(self.pdf_type) != len(self.pdf_params):
+        if len(self.dist_type) == 1 and len(self.dist_params) == self.dimension:
+            self.dist_type = list(itertools.repeat(self.dist_type, self.dimension))
+            self.dist_type = list(chain.from_iterable(self.dist_type))
+        elif len(self.dist_params) == 1 and len(self.dist_type) == self.dimension:
+            self.dist_params = list(itertools.repeat(self.dist_params, self.dimension))
+            self.dist_params = list(chain.from_iterable(self.dist_params))
+        elif len(self.dist_params) == 1 and len(self.dist_type) == 1:
+            self.dist_params = list(itertools.repeat(self.dist_params, self.dimension))
+            self.dist_type = list(itertools.repeat(self.dist_type, self.dimension))
+            self.dist_type = list(chain.from_iterable(self.dist_type))
+            self.dist_params = list(chain.from_iterable(self.dist_params))
+        elif len(self.dist_type) != len(self.dist_params):
             raise NotImplementedError("Exit code: Incompatible dimensions.")
 
 
