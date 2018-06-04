@@ -101,8 +101,8 @@ class SROM:
         self.weights_correlation = weights_correlation
         self.properties = properties
         self.pdf_params = pdf_params
-        self.dimension = samples.shape[1]
-        self.nsamples = samples.shape[0]
+        self.dimension = self.samples.shape[1]
+        self.nsamples = self.samples.shape[0]
         self.init_srom()
         self.sample_weights = self.run_srom()
 
