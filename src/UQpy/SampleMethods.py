@@ -28,21 +28,36 @@ class MCS:
     :param pdf_params: Distribution parameters
     :type pdf_params: list
 
+    :return: samplesU01: Generated samples Array (nSamples x nRVs) in U[0, 1]^nRVs
+    :type samplesU01: array
+
+    :return: samples: Generated samples Array (nSamples x nRVs)
+    :type samples: array
+
+    Created by: Dimitris Giovanis
+    Last modified: 06/04/2018 by D.G. Giovanis
+
+
     """
 
-    def __init__(self, dimension=None, pdf_type=None, pdf_params=None, nsamples=None):
+    def __init__(self, dimension=None, dist_type=None, dist_params=None, nsamples=None):
 
         self.dimension = dimension
         self.nsamples = nsamples
-        self.pdf_type = pdf_type
-        self.pdf_params = pdf_params
+        self.dist_type = dist_type
+        self.dist_params = dist_params
         self.init_mcs()
         self.samplesU01, self.samples = self.run_mcs()
 
     def run_mcs(self):
 
         samples = np.random.rand(self.nsamples, self.dimension)
-        samples_u_to_x =  samples#inv_cdf(samples, self.pdf_type, self.pdf_params)
+        samples_u_to_x = np.zeros_like(samples)
+        for i in range(samples.shape[0]):
+            for j in range(samples.shape[1]):
+                icdf = inv_cdf(self.dist_type[j])
+                samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
+
         return samples, samples_u_to_x
 
     ################################################################################################################
@@ -53,19 +68,19 @@ class MCS:
     def init_mcs(self):
         if self.nsamples is None:
             raise NotImplementedError("Exit code: Number of samples not defined.")
-        if self.pdf_type is None:
+        if self.dist_type is None:
             raise NotImplementedError("Exit code: Distributions not defined.")
         else:
-            for i in self.pdf_type:
+            for i in self.dist_type:
                 if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
                     raise NotImplementedError("Exit code: Unrecognized type of distribution."
                                               "Supported distributions: 'Uniform', 'Normal', 'Lognormal', "
                                               "'Weibull', 'Beta', 'Exponential', 'Gamma'. ")
-        if self.pdf_params is None:
+        if self.dist_params is None:
             raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
         if self.dimension is None:
-            if len(self.pdf_type) != len(self.pdf_params):
+            if len(self.dist_type) != len(self.dist_params):
                 raise NotImplementedError("Exit code: Incompatible dimensions.")
             else:
                 self.dimension = len(self.pdf_type)
@@ -93,44 +108,65 @@ class MCS:
 #                                         Latin hypercube sampling  (LHS)
 ########################################################################################################################
 
+
 class LHS:
-    """
-    A class that creates a Latin Hypercube Design for experiments.
-    SamplesU01 belong in hypercube [0, 1]^n while samples belong to the parameter space
+    """Generate samples based on the Latin Hypercube Design.
 
-    :param pdf_type: Distribution of the parameters
-    :type pdf_type: list
+    A class that creates a Latin Hypercube Design for experiments. Firstly, samples on hypercube [0, 1]^n are generated
+    and then translated to the parameter space.
 
-    :param pdf_params: Distribution parameters
-    :type pdf_params: list
+    Input:
+
+    :param dimension:  A scalar value defining the dimension of target density function.
+                    Default: 1
+    :type dimension: int
+
+    :param dist_type: Type of the distribution
+                    No Default Value: nsamples must be prescribed
+    :type dist_type: list
+
+    :param dist_params: Parameters of the distribution
+    :type dist_params: list
 
     :param lhs_criterion: The criterion for generating sample points
-                           Options:
-                                1. random - completely random \n
-                                2. centered - points only at the centre \n
-                                3. maximin - maximising the minimum distance between points \n
-                                4. correlate - minimizing the correlation between the points \n
+                            Options:
+                                1. 'random' - completely random \n
+                                2. 'centered' - points only at the centre \n
+                                3. 'maximin' - maximising the minimum distance between points \n
+                                4. 'correlate' - minimizing the correlation between the points \n
+                            Default: 'random'
     :type lhs_criterion: str
-
-    :param lhs_iter: The number of iteration to run. Only for maximin, correlate and criterion
-    :type lhs_iter: int
 
     :param lhs_metric: The distance metric to use. Supported metrics are
                         'braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', \n
                         'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski', \n
                         'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', \n
                         'yule'.
+                        Default: 'euclidean'
     :type lhs_metric: str
 
-    """
+    :param lhs_iter: The number of iteration to run. Required only for maximin, correlate and criterion
+                        Default: 100
+    :type lhs_iter: int
 
-    def __init__(self, dimension=None, pdf_type=None, pdf_params=None, lhs_criterion=None, lhs_metric=None,
-                 lhs_iter=None, nsamples=None):
+    :param nsamples: Number of samples to generate
+                        No Default Value: nsamples must be prescribed
+    :type nsamples: int
+
+    Output:
+
+    :rtype: LHS.samples: numpy array
+    """
+    # Created by: Lohit Vandanapu
+    # Last modified: 24/05/2018 by Lohit Vandanapu
+
+    def __init__(self, dimension=1, dist_type=None, dist_params=None, lhs_criterion='random', lhs_metric='euclidean',
+                 lhs_iter=100, nsamples=None):
 
         self.dimension = dimension
         self.nsamples = nsamples
-        self.pdf_type = pdf_type
-        self.pdf_params = pdf_params
+        self.dist_type = dist_type
+        self.dist_params = dist_params
         self.lhs_criterion = lhs_criterion
         self.lhs_metric = lhs_metric
         self.lhs_iter = lhs_iter
@@ -139,34 +175,29 @@ class LHS:
 
     def run_lhs(self):
 
-        print('Running LHS for ' + str(self.lhs_iter) + ' iterations')
-
         cut = np.linspace(0, 1, self.nsamples + 1)
         a = cut[:self.nsamples]
         b = cut[1:self.nsamples + 1]
 
         if self.lhs_criterion == 'random':
             samples = self._random(a, b)
-            samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
-            return samples, samples_u_to_x
         elif self.lhs_criterion == 'centered':
             samples = self._centered(a, b)
-            samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
-            return samples, samples_u_to_x
         elif self.lhs_criterion == 'maximin':
             samples = self._max_min(a, b)
-            samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
-            return samples, samples_u_to_x
         elif self.lhs_criterion == 'correlate':
             samples = self._correlate(a, b)
-            samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
-            return samples, samples_u_to_x
+
+        samples_u_to_x = np.zeros_like(samples)
+        for i in range(samples.shape[0]):
+            for j in range(samples.shape[1]):
+                icdf = inv_cdf(self.dist_type[j])
+                samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
+
+        print('Successfully ran the LHS design')
+        return samples, samples_u_to_x
 
     def _random(self, a, b):
-        """
-        :return: The samples points for the random LHS design
-
-        """
         u = np.random.rand(self.nsamples, self.dimension)
         samples = np.zeros_like(u)
 
@@ -216,7 +247,9 @@ class LHS:
             if np.max(np.abs(R1)) < min_corr:
                 min_corr = np.max(np.abs(R1))
                 samples = copy.deepcopy(samples_try)
+
         print('Achieved minimum correlation of ', min_corr)
+
         return samples
 
     ################################################################################################################
@@ -228,37 +261,32 @@ class LHS:
 
         if self.nsamples is None:
             raise NotImplementedError("Exit code: Number of samples not defined.")
-        if self.pdf_type is None:
+        if self.dist_type is None:
             raise NotImplementedError("Exit code: Distributions not defined.")
-        else:
-            for i in self.pdf_type:
-                if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
-                    raise NotImplementedError("Exit code: Unrecognized type of distribution."
-                                              "Supported distributions: 'Uniform', 'Normal', 'Lognormal', 'Weibull', "
-                                              "'Beta', 'Exponential', 'Gamma'.")
-        if self.pdf_params is None:
+        # self.dist_type = inv_cdf(self.dist_type)
+        if self.dist_params is None:
             raise NotImplementedError("Exit code: Distribution parameters not defined.")
         if self.dimension is None:
-            if len(self.pdf_type) != len(self.pdf_params):
+            if len(self.dist_type) != len(self.dist_params):
                 raise NotImplementedError("Exit code: Incompatible dimensions.")
             else:
-                self.dimension = len(self.pdf_type)
+                self.dimension = len(self.dist_type)
         else:
             import itertools
             from itertools import chain
 
-            if len(self.pdf_type) == 1 and len(self.pdf_params) == self.dimension:
-                self.pdf_type = list(itertools.repeat(self.pdf_type, self.dimension))
-                self.pdf_type = list(chain.from_iterable(self.pdf_type))
-            elif len(self.pdf_params) == 1 and len(self.pdf_type) == self.dimension:
-                self.pdf_params = list(itertools.repeat(self.pdf_params, self.dimension))
-                self.pdf_params = list(chain.from_iterable(self.pdf_params))
-            elif len(self.pdf_params) == 1 and len(self.pdf_type) == 1:
-                self.pdf_params = list(itertools.repeat(self.pdf_params, self.dimension))
-                self.pdf_type = list(itertools.repeat(self.pdf_type, self.dimension))
-                self.pdf_type = list(chain.from_iterable(self.pdf_type))
-                self.pdf_params = list(chain.from_iterable(self.pdf_params))
-            elif len(self.pdf_type) != len(self.pdf_params):
+            if len(self.dist_type) == 1 and len(self.dist_params) == self.dimension:
+                self.dist_type = list(itertools.repeat(self.dist_type, self.dimension))
+                self.dist_type = list(chain.from_iterable(self.dist_type))
+            elif len(self.dist_params) == 1 and len(self.dist_type) == self.dimension:
+                self.dist_params = list(itertools.repeat(self.dist_params, self.dimension))
+                self.dist_params = list(chain.from_iterable(self.dist_params))
+            elif len(self.dist_params) == 1 and len(self.dist_type) == 1:
+                self.dist_params = list(itertools.repeat(self.dist_params, self.dimension))
+                self.dist_type = list(itertools.repeat(self.dist_type, self.dimension))
+                self.dist_type = list(chain.from_iterable(self.dist_type))
+                self.dist_params = list(chain.from_iterable(self.dist_params))
+            elif len(self.dist_type) != len(self.dist_params):
                 raise NotImplementedError("Exit code: Incompatible dimensions.")
 
         if self.lhs_criterion is None:
@@ -285,11 +313,11 @@ class LHS:
             self.lhs_iter = 1000
         elif self.lhs_iter is not None:
             self.lhs_iter = int(self.lhs_iter)
-
 ########################################################################################################################
 ########################################################################################################################
 #                                         Partially Stratified Sampling (PSS)
 ########################################################################################################################
+
 
 class PSS:
     """
