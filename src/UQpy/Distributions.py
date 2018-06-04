@@ -10,169 +10,324 @@ import os
 #        Define the probability distribution of the random parameters
 ########################################################################################################################
 
-def pdf(dist):
 
+def pdf(dist):
     dir_ = os.getcwd()
     sys.path.insert(0, dir_)
-    import custom_pdf
-    method_to_call = getattr(custom_pdf, dist)
+    for i in range(len(dist)):
+        if type(dist[i]).__name__ == 'str':
+            if dist[i] == 'Uniform':
+                def f(x, params):
+                    return stats.uniform.pdf(x, params[0], params[1])
 
-    return partial(method_to_call)
+                dist[i] = f
 
-#TODO: Add a library of pdfs here.
+            elif dist[i] == 'Normal':
+                def f(x, params):
+                    return stats.norm.pdf(x, params[0], params[1])
+
+                dist[i] = f
+
+            elif dist[i] == 'Lognormal':
+                def f(x, params):
+                    return stats.lognorm.pdf(x, params[0], params[1])
+
+                dist[i] = f
+
+            elif dist[i] == 'Weibull':
+                def f(x, params):
+                    return stats.weibull_min.pdf(x, params[0], params[1])
+
+                dist[i] = f
+
+            elif dist[i] == 'Beta':
+                def f(x, params):
+                    return stats.weibull_min.pdf(x, params[0], params[1], params[2], params[3])
+
+                dist[i] = f
+
+            elif dist[i] == 'Exponential':
+                def f(x, params):
+                    return stats.expon.pdf(x, params[0], params[1])
+
+                dist[i] = f
+
+            elif dist[i] == 'Gamma':
+                def f(x, params):
+                    return stats.gamma.pdf(x, params[0], params[1], params[2])
+
+                dist[i] = f
+
+            elif os.path.isfile('custom_dist.py') is True:
+                import custom_dist
+                method_to_call = getattr(custom_dist, dist[i])
+
+                dist[i] = partial(method_to_call)
+
+            else:
+                raise NotImplementedError('Unidentified pdf_type')
+
+    return dist
+
+# TODO: Add a library of pdfs here.
 
 
-# ########################################################################################################################
-# #        Define the cumulative distribution of the random parameters
-# ########################################################################################################################
-#
-# def Gamma(x, params):
-#     return stats.gamma.cdf(x, params[0], loc=params[1], scale=params[2])
-#
-#
+def cdf(dist):
+    dir_ = os.getcwd()
+    sys.path.insert(0, dir_)
+    for i in range(len(dist)):
+        if type(dist[i]).__name__ == 'str':
+            if dist[i] == 'Uniform':
+                def f(x, params):
+                    return stats.uniform.cdf(x, params[0], params[1])
+
+                dist[i] = f
+
+            elif dist[i] == 'Normal':
+                def f(x, params):
+                    return stats.norm.cdf(x, params[0], params[1])
+
+                dist[i] = f
+
+            elif dist[i] == 'Lognormal':
+                def f(x, params):
+                    return stats.lognorm.cdf(x, params[0], params[1])
+
+                dist[i] = f
+
+            elif dist[i] == 'Weibull':
+                def f(x, params):
+                    return stats.weibull_min.cdf(x, params[0], params[1])
+
+                dist[i] = f
+
+            elif dist[i] == 'Beta':
+                def f(x, params):
+                    return stats.weibull_min.cdf(x, params[0], params[1], params[2], params[3])
+
+                dist[i] = f
+
+            elif dist[i] == 'Exponential':
+                def f(x, params):
+                    return stats.expon.cdf(x, params[0], params[1])
+
+                dist[i] = f
+
+            elif dist[i] == 'Gamma':
+                def f(x, params):
+                    return stats.gamma.cdf(x, params[0], params[1], params[2])
+
+                dist[i] = f
+
+            elif os.path.isfile('custom_dist.py') is True:
+                import custom_dist
+                method_to_call = getattr(custom_dist, dist[i])
+
+                dist[i] = partial(method_to_call)
+
+            else:
+                raise NotImplementedError('Unidentified pdf_type')
+
+    return dist
+
+
+def inv_cdf(dist):
+    dir_ = os.getcwd()
+    sys.path.insert(0, dir_)
+    for i in range(len(dist)):
+        if type(dist[i]).__name__ == 'str':
+            if dist[i] == 'Uniform':
+                def f(x, params):
+                    return stats.uniform.ppf(x, params[0], params[1])
+
+                dist[i] = f
+
+            elif dist[i] == 'Normal':
+                def f(x, params):
+                    return stats.norm.ppf(x, params[0], params[1])
+
+                dist[i] = f
+
+            elif dist[i] == 'Lognormal':
+                def f(x, params):
+                    return stats.lognorm.ppf(x, params[0], params[1])
+
+                dist[i] = f
+
+            elif dist[i] == 'Weibull':
+                def f(x, params):
+                    return stats.weibull_min.ppf(x, params[0], params[1])
+
+                dist[i] = f
+
+            elif dist[i] == 'Beta':
+                def f(x, params):
+                    return stats.weibull_min.ppf(x, params[0], params[1], params[2], params[3])
+
+                dist[i] = f
+
+            elif dist[i] == 'Exponential':
+                def f(x, params):
+                    return stats.expon.ppf(x, params[0], params[1])
+
+                dist[i] = f
+
+            elif dist[i] == 'Gamma':
+                def f(x, params):
+                    return stats.gamma.ppf(x, params[0], params[1], params[2])
+
+                dist[i] = f
+
+            elif os.path.isfile('custom_dist.py') is True:
+                import custom_dist
+                method_to_call = getattr(custom_dist, dist[i])
+
+                dist[i] = partial(method_to_call)
+
+            else:
+                raise NotImplementedError('Unidentified pdf_type')
+
+    return dist
+
 # ########################################################################################################################
 # #        Transform the random parameters from U(0, 1) to the original space
 # ########################################################################################################################
 #
-# def inv_cdf(x, pdf, params):
+# def inv_cdf(x, pdf_type, params):
 #     x_trans = np.zeros(shape=(x.shape[0], x.shape[1]))
 #     ###################################################################################
 #     # U(0, 1)  ---->  U(a, b)
 #
 #     for i in range(x.shape[1]):
-#         if pdf[i] == 'Uniform':
+#         if pdf_type[i] == 'Uniform':
 #             for j in range(x.shape[0]):
-#                 x_trans[j, i] = ppfUniform(x[j, i], params[i][0], params[i][1])
+#                 x_trans[j, i] = stats.uniform.ppf(x[j, i], params[i][0], params[i][1])
 #
-#     ###################################################################################
-#     # U(0, 1)  ---->  N(μ, σ)
+#         ###################################################################################
+#         # U(0, 1)  ---->  N(μ, σ)
 #
-#         elif pdf[i] == 'Normal':
+#         elif pdf_type[i] == 'Normal':
 #             for j in range(x.shape[0]):
-#                 x_trans[j, i] = ppfNormal(x[j, i], params[i][0], params[i][1])
+#                 x_trans[j, i] = stats.norm.ppf(x[j, i], params[i][0], params[i][1])
 #
-#     ####################################################################################
-#     # U(0, 1)  ---->  LN(μ, σ)
+#         ####################################################################################
+#         # U(0, 1)  ---->  LN(μ, σ)
 #
-#         elif pdf[i] == 'Lognormal':
+#         elif pdf_type[i] == 'Lognormal':
 #             for j in range(x.shape[0]):
-#                 x_trans[j, i] = ppfLognormal(x[j, i], params[i][0], params[i][1])
+#                 x_trans[j, i] = stats.lognorm.ppf(x[j, i], params[i][0], params[i][1])
 #
-#     ####################################################################################
-#     # U(0, 1)  ---->  Weibull(λ, κ)
+#         ####################################################################################
+#         # U(0, 1)  ---->  Weibull(λ, κ)
 #
-#         elif pdf[i] == 'Weibull':
+#         elif pdf_type[i] == 'Weibull':
 #             for j in range(x.shape[0]):
-#                 x_trans[j, i] = ppfWeibull(x[j, i], params[i][0], params[i][1])
+#                 x_trans[j, i] = stats.weibull_min.ppf(x[j, i], params[i][0], params[i][1])
 #
-#     ####################################################################################
-#     # U(0, 1)  ---->  Beta(q, r, a, b)
+#         ####################################################################################
+#         # U(0, 1)  ---->  Beta(q, r, a, b)
 #
-#         elif pdf[i] == 'Beta':
+#         elif pdf_type[i] == 'Beta':
 #             for j in range(x.shape[0]):
-#                 x_trans[j, i] = ppfBeta(x[j, i], params[i][0], params[i][1], params[i][2], params[i][3])
+#                 x_trans[j, i] = stats.beta.ppf(x[j, i], params[i][0], params[i][1], params[i][2], params[i][3])
 #
-#     ####################################################################################
-#     # U(0, 1)  ---->  Exp(λ)
+#         ####################################################################################
+#         # U(0, 1)  ---->  Exp(λ)
 #
-#         elif pdf[i] == 'Exponential':
+#         elif pdf_type[i] == 'Exponential':
 #             for j in range(x.shape[0]):
-#                 x_trans[j, i] = ppfExponential(x[j, i], params[i][0])
+#                 x_trans[j, i] = stats.expon.ppf(x[j, i], params[i][0])
 #
-#     ####################################################################################
-#     # U(0, 1)  ---->  Gamma(λ-shape, shift, scale )
+#         ####################################################################################
+#         # U(0, 1)  ---->  Gamma(λ-shape, shift, scale )
 #
-#         elif pdf[i] == 'Gamma':
+#         elif pdf_type[i] == 'Gamma':
 #             for j in range(x.shape[0]):
-#                 x_trans[j, i] = ppfGamma(x[j, i], params[i][0], params[i][1], params[i][2])
+#                 x_trans[j, i] = stats.gamma.ppf(x[j, i], params[i][0], params[i][1], params[i][2])
 #
 #     return x_trans
 #
 #
 # ########################################################################################################################
-# #             Inverse pdf
-# # ######################################################################################################################
+# #        Get probability of a pdf
+# ########################################################################################################################
 #
+# def prob_pdf(x, pdf_type, params):
+#     prob = np.zeros(shape=(x.shape[0], x.shape[1]))
 #
-# def ppfNormal(p, mu, sigma):
-#     """Returns the evaluation of the percent point function (inverse cumulative
-#     distribution) evaluated at the probability p with mean (mu) and
-#     scale (sigma)."""
-#     return stats.norm.ppf(p, loc=mu, scale=sigma)
+#     for i in range(x.shape[1]):
+#         if pdf_type[i] == 'Uniform':
+#             for j in range(x.shape[0]):
+#                 prob[j, i] = stats.uniform.pdf(x[j, i], params[i][0], params[i][1])
 #
+#         elif pdf_type[i] == 'Normal':
+#             for j in range(x.shape[0]):
+#                 prob[j, i] = stats.norm.pdf(x[j, i], params[i][0], params[i][1])
 #
-# def ppfLognormal(p, mu, sigma):
-#     """Returns the evaluation of the percent point function (inverse cumulative
-#     distribution) evaluated at the probability p with mean (mu) and
-#     scale (sigma)."""
-#     epsilon = np.sqrt(np.log((sigma**2 + mu**2)/(mu**2)))
-#     elamb = mu**2/(np.sqrt(mu**2+sigma**2))
-#     return stats.lognorm.ppf(p, epsilon, scale=elamb)
+#         elif pdf_type[i] == 'Lognormal':
+#             for j in range(x.shape[0]):
+#                 prob[j, i] = stats.lognorm.pdf(x[j, i], params[i][0], params[i][1])
 #
+#         elif pdf_type[i] == 'Weibull':
+#             for j in range(x.shape[0]):
+#                 prob[j, i] = stats.weibull_min.pdf(x[j, i], params[i][0], params[i][1])
 #
-# def ppfWeibull(p, lamb, k):
-#     """Returns the evaluation of the percent point function (inverse cumulative
-#     distribution) evaluated at the probability p with scale (lamb) and
-#     shape (k) specified for a Weibull distribution."""
+#         elif pdf_type[i] == 'Beta':
+#             for j in range(x.shape[0]):
+#                 prob[j, i] = stats.beta.pdf(x[j, i], params[i][0], params[i][1], params[i][2], params[i][3])
 #
-#     # PDF form of Weibull Distirubtion:
-#     # f(x) = k/lamb * (x/lamb)**(k-1) * exp(-(x/lamb)**k)
+#         elif pdf_type[i] == 'Exponential':
+#             for j in range(x.shape[0]):
+#                 prob[j, i] = stats.expon.pdf(x[j, i], params[i][0])
 #
-#     # frechet_r is analogous to weibull-min, or standard weibull.
-#     return stats.frechet_r.ppf(p, k, scale=lamb)
+#         elif pdf_type[i] == 'Gamma':
+#             for j in range(x.shape[0]):
+#                 prob[j, i] = stats.gamma.pdf(x[j, i], params[i][0], params[i][1], params[i][2])
 #
+#     return prob
 #
-# def ppfUniform(p, a, b):
-#     """Returns the evaluation of the percent point function (inverse cumulative
-#     distribution) evaluated at the probability p for a Uniform distribution
-#     with range (a,b). Usage:\n ppfUniform(a,b)"""
-#     return a+p*(b-a)
-#
-#
-# def ppfTriangular(p, a, c, b):
-#     """Returns the evaluation of the percent point function (inverse cumulative
-#     distribution) evaluated at the probability p for a triangular distribution.
-#     Usage:\n ppfTriangular(p, a, c, b)"""
-#     width = b-a
-#     scaledMiddle = (c-a)/width
-#     return stats.triang.ppf(p, scaledMiddle, loc=a, scale=width)
-#
-#
-# def ppfBeta(p, q, r, a, b):
-#     """Returns the evaluation of the percent point function (inverse cumulative
-#     distribution) evaluated at the probability p for a Beta distribution.
-#     Usage:\n ppfBeta(p, q, r, a, b)"""
-#     width = b-a
-#     return stats.beta.ppf(p, q, r, loc=a, scale=width)
-#
-#
-# def ppfExponential(p, lamb):
-#     """Returns the evaluation of the percent point function (inverse cumulative
-#     distribution) evaluated at the probability p for an Exponential
-#     distribution.  Usage:\n
-#     ppfExponential(p, lamb)"""
-#     scalE = 1.0/lamb
-#     return stats.expon.ppf(p, scale=scalE)
-#
-#
-# def ppfGamma(p, shape, shift, scale):
-#     """Returns the evaluation of the percent point function (inverse cumulative
-#     distribution) evaluated at the probability p for an Gamma
-#     distribution.  Usage:\n
-#     ppfGamma(p, shape, shift, scale)"""
-#     return stats.gamma.ppf(p, shape, loc=shift, scale=scale)
-#
-#
-# def normal_to_uniform(u, a, b):
-#     x = np.zeros(shape=(u.shape[0], u.shape[1]))
-#     for i in range(u.shape[1]):
-#         p = 0.5 + erf(((u[:, i] - 0) / 1) / np.sqrt(2)) / 2
-#         x[:, i] = a + (b - a) * p
-#     return x
 #
 # ########################################################################################################################
-# #             Log pdf (used in inference)
-# # ######################################################################################################################
+# #        Get cumulative probability of a pdf
+# ########################################################################################################################
+#
+# def prob_cdf(x, pdf_type, params):
+#     prob_c = np.zeros(shape=(x.shape[0], x.shape[1]))
+#
+#     for i in range(x.shape[1]):
+#         if pdf_type[i] == 'Uniform':
+#             for j in range(x.shape[0]):
+#                 prob_c[j, i] = stats.uniform.cdf(x[j, i], params[i][0], params[i][1])
+#
+#         elif pdf_type[i] == 'Normal':
+#             for j in range(x.shape[0]):
+#                 prob_c[j, i] = stats.norm.cdf(x[j, i], params[i][0], params[i][1])
+#
+#         elif pdf_type[i] == 'Lognormal':
+#             for j in range(x.shape[0]):
+#                 prob_c[j, i] = stats.lognorm.cdf(x[j, i], params[i][0], params[i][1])
+#
+#         elif pdf_type[i] == 'Weibull':
+#             for j in range(x.shape[0]):
+#                 prob_c[j, i] = stats.weibull_min.cdf(x[j, i], params[i][0], params[i][1])
+#
+#         elif pdf_type[i] == 'Beta':
+#             for j in range(x.shape[0]):
+#                 prob_c[j, i] = stats.beta.cdf(x[j, i], params[i][0], params[i][1], params[i][2], params[i][3])
+#
+#         elif pdf_type[i] == 'Exponential':
+#             for j in range(x.shape[0]):
+#                 prob_c[j, i] = stats.expon.cdf(x[j, i], params[i][0])
+#
+#         elif pdf_type[i] == 'Gamma':
+#             for j in range(x.shape[0]):
+#                 prob_c[j, i] = stats.gamma.cdf(x[j, i], params[i][0], params[i][1], params[i][2])
+#
+#     return prob_c
+
+# ########################################################################################################################
+#             Log pdf (used in inference)
+# ######################################################################################################################
 #
 # def log_normal(data, fitted_params_norm):
 #     loglike = np.sum(stats.norm.logpdf(data, loc=fitted_params_norm[0], scale=fitted_params_norm[1]))

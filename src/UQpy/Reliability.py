@@ -184,7 +184,7 @@ class SubsetSimulation:
         if self.samples_init is None:
             x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                           pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
-                          pdf_target = self.pdf_target, pdf_target_params = self.pdf_target_params,
+                          pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
                           algorithm=self.algorithm, nsamples=self.nsamples_ss, seed=np.zeros((self.dimension)))
             self.samples.append(x_init.samples)
         else:
@@ -197,7 +197,7 @@ class SubsetSimulation:
         g_ind = np.argsort(self.g[step])
         self.g_level.append(self.g[step][g_ind[n_keep]])
         # Estimate coefficient of variation of conditional probability of first level
-        self.delta2.append(self.cov_sus(step)**2)
+        self.delta2.append(self.cov_sus(step) ** 2)
 
         while self.g_level[step] > 0 and step < self.max_level:
 
@@ -205,16 +205,16 @@ class SubsetSimulation:
             self.samples.append(self.samples[step - 1][g_ind[0:n_keep]])
             self.g.append(self.g[step - 1][g_ind[:n_keep]])
 
-            for i in range(self.nsamples_ss-n_keep):
+            for i in range(self.nsamples_ss - n_keep):
                 seed = self.samples[step][i]
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                               pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
-                              pdf_target = self.pdf_target, pdf_target_params = self.pdf_target_params,
+                              pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
                               algorithm=self.algorithm, nsamples=2, seed=seed)
 
                 x_temp = x_mcmc.samples[1].reshape((1, self.dimension))
-                g_model = RunModel(samples = x_temp, cpu=1, model_type=self.model_type, model_script=self.model_script,
+                g_model = RunModel(samples=x_temp, cpu=1, model_type=self.model_type, model_script=self.model_script,
                                    input_script=self.input_script, output_script=self.output_script,
                                    dimension=self.dimension)
 
@@ -223,7 +223,7 @@ class SubsetSimulation:
                 # Accept or reject the sample
                 if g_temp < self.g_level[step - 1]:
                     self.samples[step] = np.vstack((self.samples[step], x_temp))
-                    self.g[step] = np.hstack((self.g[step],g_temp[0]))
+                    self.g[step] = np.hstack((self.g[step], g_temp[0]))
                 else:
                     self.samples[step] = np.vstack((self.samples[step], self.samples[step][i]))
                     self.g[step] = np.hstack((self.g[step], self.g[step][i]))
@@ -231,10 +231,10 @@ class SubsetSimulation:
             g_ind = np.argsort(self.g[step])
             self.g_level.append(self.g[step][g_ind[n_keep]])
             # Estimate coefficient of variation of conditional probability of first level
-            self.delta2.append(self.cov_sus(step)**2)
+            self.delta2.append(self.cov_sus(step) ** 2)
 
         n_fail = len([value for value in self.g[step] if value < 0])
-        self.pf = self.p_cond**step*n_fail/self.nsamples_ss
+        self.pf = self.p_cond ** step * n_fail / self.nsamples_ss
         self.cov = np.sum(self.delta2)
         print(self.pf)
         print(self.cov)
@@ -268,12 +268,12 @@ class SubsetSimulation:
             self.g.append(self.g[step - 1][g_ind[:n_keep]])
 
             for i in range(self.nsamples_ss - n_keep):
-                seed = self.samples[step][i:i+n_keep]
+                seed = self.samples[step][i:i + n_keep]
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                               pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
                               pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
-                              algorithm=self.algorithm, nsamples=n_keep+1, seed=seed)
+                              algorithm=self.algorithm, nsamples=n_keep + 1, seed=seed)
 
                 x_temp = x_mcmc.samples[n_keep].reshape((1, self.dimension))
                 g_model = RunModel(samples=x_temp, cpu=1, model_type=self.model_type,
@@ -324,7 +324,7 @@ class SubsetSimulation:
         if self.model_script is None:
             raise NotImplementedError('Subset Simulation requires the specification of a computational model. Please '
                                       'specify the model using the model_script input.')
-   
+
     def cov_sus(self, step):
         N = self.g[step].size
         if step == 0:
