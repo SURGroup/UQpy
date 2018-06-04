@@ -412,35 +412,46 @@ class PSS:
 ########################################################################################################################
 
 class STS:
-    # TODO: MDS - Add documentation to this subclass
-    """
-    :param dimension:
+
+    """Generate samples from an assigned probability density function using Stratified Sampling.
+
+    This class generates samples from an arbitrary user-specified distribution using Metropolis-Hastings(MH),
+    Modified Metropolis-Hastings, of Affine Invariant Ensemble Sampler with stretch moves.
+
+    References:
+    S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by subset simulation,”
+        Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+    J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci., vol. 5,
+        no. 1, pp. 65–80, 2010.
+
+
+    Input:
+    :param dimension:  A scalar value defining the dimension of target density function.
+                    Default: 1
+    :type dimension: int
     :param pdf_type:
     :param pdf_params:
     :param sts_design:
-    :param pss_:
     """
 
-    def __init__(self, dimension=None, pdf_type=None, pdf_params=None, sts_design=None, pss_=None):
+    def __init__(self, dimension=None, pdf_type=None, pdf_params=None, sts_design=None):
 
         self.dimension = dimension
         self.pdf_type = pdf_type
         self.pdf_params = pdf_params
         self.sts_design = sts_design
-        if pss_ is None:
-            self.init_sts()
-        strata = Strata(nstrata=self.sts_design)
-        self.origins = strata.origins
-        self.widths = strata.widths
-        self.weights = strata.weights
-        self.samplesU01 
+        self.strata = Strata(nstrata=self.sts_design)
+        self.strata.weights = self.strata.weights
+        self.samplesU01
+        self.init_sts()
         self.samples = self.run_sts()
 
     def run_sts(self):
-        samples = np.empty([self.origins.shape[0], self.origins.shape[1]], dtype=np.float32)
-        for i in range(0, self.origins.shape[0]):
-            for j in range(0, self.origins.shape[1]):
-                samples[i, j] = np.random.uniform(self.origins[i, j], self.origins[i, j] + self.widths[i, j])
+        samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
+        for i in range(0, self.strata.origins.shape[0]):
+            for j in range(0, self.strata.origins.shape[1]):
+                samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
+                                                  + self.strata.widths[i, j])
         samples_u_to_x = inv_cdf(samples, self.pdf_type, self.pdf_params)
         return samples, samples_u_to_x
 
@@ -574,12 +585,12 @@ class Strata:
 
         self.input_file = input_file
         self.nstrata = nstrata
-        self.origins = origins
-        self.widths = widths
+        self.strata.origins = origins
+        self.strata.widths = widths
 
         if self.nstrata is None:
             if self.input_file is None:
-                if self.widths is None or self.origins is None:
+                if self.strata.widths is None or self.strata.origins is None:
                     sys.exit('Error: The strata are not fully defined. Must provide [nstrata], '
                              'input file, or [origins] and [widths]')
 
@@ -587,7 +598,7 @@ class Strata:
                 # Read the strata from the specified input file
                 # See documentation for input file formatting
                 array_tmp = np.loadtxt(input_file)
-                self.origins = array_tmp[:, 0:array_tmp.shape[1] // 2]
+                self.strata.origins = array_tmp[:, 0:array_tmp.shape[1] // 2]
                 self.width = array_tmp[:, array_tmp.shape[1] // 2:]
 
                 # Check to see that the strata are space-filling
@@ -605,9 +616,9 @@ class Strata:
 
         else:
             # Use nstrata to assign the origin and widths of a specified rectilinear stratification.
-            self.origins = np.divide(self.fullfact(self.nstrata), self.nstrata)
-            self.widths = np.divide(np.ones(self.origins.shape), self.nstrata)
-            self.weights = np.prod(self.widths, axis=1)
+            self.strata.origins = np.divide(self.fullfact(self.nstrata), self.nstrata)
+            self.strata.widths = np.divide(np.ones(self.strata.origins.shape), self.nstrata)
+            self.strata.weights = np.prod(self.strata.widths, axis=1)
 
     def fullfact(self, levels):
 
