@@ -13,9 +13,9 @@ from UQpy.Distributions import *
 
 class SROM:
 
-    def __init__(self, samples=None, dist_type=None, moments=None, weights_errors=None,
+    def __init__(self, samples=None, cdf_target=None, moments=None, weights_errors=None,
                  weights_distribution=None, weights_moments=None, weights_correlation=None,
-                 properties=None, dist_params=None, correlation=None):
+                 properties=None, cdf_target_params=None, correlation=None):
         """
         Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random
         quantity.
@@ -32,11 +32,11 @@ class SROM:
         :param samples: A list of samples corresponding to each random variables
         :type samples: list
 
-        :param dist_type: A list of Cumulative distribution functions of random variables
-        :type dist_type: list str or list function
+        :param cdf_target: A list of Cumulative distribution functions of random variables
+        :type cdf_target: list str or list function
 
-        :param dist_params: Parameters of distribution
-        :type dist_params: list
+        :param cdf_target_params: Parameters of distribution
+        :type cdf_target_params: list
 
         :param moments: A list containing first and second order moment about origin of all random variables
         :type moments: list
@@ -93,14 +93,14 @@ class SROM:
 
         self.samples = np.array(samples)
         self.correlation = np.array(correlation)
-        self.dist_type = dist_type
+        self.cdf_target = cdf_target
         self.moments = np.array(moments)
         self.weights_errors = weights_errors
         self.weights_distribution = weights_distribution
         self.weights_moments = weights_moments
         self.weights_correlation = weights_correlation
         self.properties = properties
-        self.dist_params = dist_params
+        self.cdf_target_params = cdf_target_params
         self.dimension = self.samples.shape[1]
         self.nsamples = self.samples.shape[0]
         self.init_srom()
@@ -160,8 +160,8 @@ class SROM:
 
         p_ = optimize.minimize(f, np.zeros(self.nsamples),
                                args=(self.samples, self.weights_distribution, self.weights_moments,
-                                     self.weights_correlation, self.dist_type, self.nsamples, self.dimension,
-                                     self.moments, self.weights_errors, self.dist_params, self.properties,
+                                     self.weights_correlation, self.cdf_target, self.nsamples, self.dimension,
+                                     self.moments, self.weights_errors, self.cdf_target_params, self.properties,
                                      self.correlation),
                                constraints=cons, method='SLSQP')
 
@@ -169,10 +169,10 @@ class SROM:
 
     def init_srom(self):
 
-        if self.dist_type is None:
+        if self.cdf_target is None:
             raise NotImplementedError("Exit code: Distribution not defined.")
 
-        self.dist_type = cdf(self.dist_type)
+        self.cdf_target = cdf(self.cdf_target)
 
         # Check samples
         if self.samples is None:
@@ -241,10 +241,10 @@ class SROM:
             raise NotImplementedError("Size of 'weights for correlation' is not correct")
 
         # Check cdf_type
-        if len(self.dist_type) == 1:
-            self.dist_type = self.dist_type * self.dimension
-            self.dist_params = [self.dist_params] * self.dimension
-        elif len(self.dist_type) != self.dimension:
+        if len(self.cdf_target) == 1:
+            self.cdf_target = self.cdf_target * self.dimension
+            self.cdf_target_params = [self.cdf_target_params] * self.dimension
+        elif len(self.cdf_target) != self.dimension:
             raise NotImplementedError("Size of cdf_type should be 1 or equal to dimension")
 
 
