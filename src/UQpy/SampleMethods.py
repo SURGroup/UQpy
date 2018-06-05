@@ -50,7 +50,7 @@ class MCS:
         self.dist_type = dist_type
         self.dist_params = dist_params
         self.init_mcs()
-        self.samples, self.samplesU01 = self.run_mcs()
+        self.samplesU01, self.samples = self.run_mcs()
 
     def run_mcs(self):
 
@@ -536,9 +536,6 @@ class STS:
                 self.dist_type = self.dist_type * self.dimension
             else:
                 raise NotImplementedError("Exit code: Incompatible dimensions in 'dist_type'.")
-
-        # Set dist_type as the inverse cdf.
-        # self.dist_type = inv_cdf(self.dist_type)
 
         # Set default dist_params
         if self.dist_params is None:
