@@ -406,7 +406,7 @@ class PSS:
 
         if len(self.dist_type) == 1 and len(self.dist_params) == self.dimension:
             self.dist_type = list(itertools.repeat(self.dist_type, self.dimension))
-            self.dist_type  =  list(chain.from_iterable(self.dist_type))
+            self.dist_type = list(chain.from_iterable(self.dist_type))
         elif len(self.dist_params) == 1 and len(self.dist_type) == self.dimension:
             self.dist_params = list(itertools.repeat(self.dist_params, self.dimension))
             self.dist_params = list(chain.from_iterable(self.dist_params))
@@ -462,6 +462,10 @@ class STS:
 
     :param sts_design: Specifies the number of strata in each dimension
     :type sts_design: int list
+
+    :param input_file: File path to input file specifying stratum origins and stratum widths
+                    Default: None
+    :type input_file: string
     
     Output:
     :return: STS.samples: Set of stratified samples
@@ -475,35 +479,37 @@ class STS:
     
     """
 
-    def __init__(self, dimension=None, dist_type=None, dist_params=None, sts_design=None):
+    # Authors: Michael D. Shields
+    # Updated: 6/4/18 by Michael D. Shields
+
+    def __init__(self, dimension=None, dist_type=None, dist_params=None, sts_design=None, input_file=None):
 
         self.dimension = dimension
         self.dist_type = dist_type
         self.dist_params = dist_params
         self.sts_design = sts_design
-        self.strata = Strata(nstrata=self.sts_design)
-        self.strata.weights = self.strata.weights
+        self.input_file = input_file
         self.init_sts()
+        self.icdf = inv_cdf(self.dist_type)
         self.samplesU01, self.samples = self.run_sts()
 
     def run_sts(self):
         samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
         samples_u_to_x = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
-        for i in range(0, self.strata.origins.shape[0]):
-            for j in range(0, self.strata.origins.shape[1]):
-                icdf = inv_cdf(self.dist_type[j])
+        for j in range(0, self.strata.origins.shape[1]):
+            invcdf = self.icdf[j]
+            for i in range(0, self.strata.origins.shape[0]):
                 samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
                                                   + self.strata.widths[i, j])
-
-                samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
+                samples_u_to_x[i, j] = invcdf(samples[i, j], self.dist_params[j])
         return samples, samples_u_to_x
 
     def init_sts(self):
 
         # Check for dimensional consistency
-        if self.dimension is None:
+        if self.dimension is None and self.sts_design is not None:
             self.dimension = len(self.sts_design)
-        else:
+        elif self.sts_design is not None:
             if self.dimension != len(self.sts_design):
                 raise NotImplementedError("Exit code: Incompatible dimensions.")
 
@@ -541,9 +547,14 @@ class STS:
                 raise NotImplementedError("Exit code: Incompatible dimensions in 'dist_params'.")
 
         if self.sts_design is None:
-            raise NotImplementedError("Exit code: 'sts_design' not defined.")
-        if len(self.sts_design) != self.dimension:
-            raise NotImplementedError("Exit code: Incompatible dimensions in 'sts_design'.")
+            if self.input_file is None:
+                raise NotImplementedError("Exit code: Stratum design is not defined.")
+            else:
+                self.strata = Strata(input_file=self.input_file)
+        else:
+            if len(self.sts_design) != self.dimension:
+                raise NotImplementedError("Exit code: Incompatible dimensions in 'sts_design'.")
+            self.strata = Strata(nstrata=self.sts_design)
 
 ########################################################################################################################
 ########################################################################################################################
@@ -555,8 +566,8 @@ class Strata:
     """
     Define a rectilinear stratification of the n-dimensional unit hypercube with N strata.
 
-    :param nstrata: array-like
-                    An array of dimension 1 x n defining the number of strata in each of the n dimensions
+    Input:
+    :param nstrata: An array of dimension 1 x n defining the number of strata in each of the n dimensions
                     Creates an equal stratification with strata widths equal to 1/nstrata
                     The total number of strata, N, is the product of the terms of nstrata
                     Example -
@@ -564,76 +575,45 @@ class Strata:
                     2 strata in dimension 0 with stratum widths 1/2
                     3 strata in dimension 1 with stratum widths 1/3
                     2 strata in dimension 2 with stratum widths 1/2
+    :type nstrata int list
 
-    :param input_file: string
-                       File path to input file specifying stratum origins and stratum widths
+    :param input_file: File path to input file specifying stratum origins and stratum widths
+                    Default: None
+    :type input_file: string
 
-    :param origins: array-like
-                    An array of dimension N x n specifying the origins of all strata
+    Output:
+    :return origins: An array of dimension N x n specifying the origins of all strata
                     The origins of the strata are the coordinates of the stratum orthotope nearest the global origin
                     Example - A 2D stratification with 2 strata in each dimension
                     origins = [[0, 0]
                               [0, 0.5]
                               [0.5, 0]
                               [0.5, 0.5]]
+    :rtype origins: ndarray
 
-    :param widths: array-like
-                   An array of dimension N x n specifying the widths of all strata in each dimension
+    :return widths: An array of dimension N x n specifying the widths of all strata in each dimension
                    Example - A 2D stratification with 2 strata in each dimension
                    widths = [[0.5, 0.5]
                              [0.5, 0.5]
                              [0.5, 0.5]
                              [0.5, 0.5]]
+    :rtype widths: ndarray
+
+    :return weights: An array of dimension 1 x N containing sample weights.
+                    Sample weights are equal to the product of the strata widths (i.e. they are equal to the size of the
+                        strata in the [0, 1]^n space.
+    :rtype weights: ndarray
 
     """
 
     def __init__(self, nstrata=None, input_file=None, origins=None, widths=None):
-
-        """
-        Class defines a rectilinear stratification of the n-dimensional unit hypercube with N strata
-
-        :param nstrata: array-like
-            An array of dimension 1 x n defining the number of strata in each of the n dimensions
-            Creates an equal stratification with strata widths equal to 1/nstrata
-            The total number of strata, N, is the product of the terms of nstrata
-            Example -
-            nstrata = [2, 3, 2] creates a 3d stratification with:
-                2 strata in dimension 0 with stratum widths 1/2
-                3 strata in dimension 1 with stratum widths 1/3
-                2 strata in dimension 2 with stratum widths 1/2
-
-        :param input_file: string
-            File path to input file specifying stratum origins and stratum widths
-            See documentation ######## for input file format
-
-        :param origins: array-like
-            An array of dimension N x n specifying the origins of all strata
-            The origins of the strata are the coordinates of the stratum orthotope nearest the global origin
-            Example - A 2D stratification with 2 strata in each dimension
-            origins = [[0, 0]
-                       [0, 0.5]
-                       [0.5, 0]
-                       [0.5, 0.5]]
-
-        :param widths: array-like
-            An array of dimension N x n specifying the widths of all strata in each dimension
-            Example - A 2D stratification with 2 strata in each dimension
-            widths = [[0.5, 0.5]
-                      [0.5, 0.5]
-                      [0.5, 0.5]
-                      [0.5, 0.5]]
-
-        Created by: Michael D. Shields
-        Last modified: 11/4/2017
-        Last modified by: Michael D. Shields
-
-        """
 
         self.input_file = input_file
         self.nstrata = nstrata
         self.origins = origins
         self.widths = widths
 
+        # Read a stratified design from an input file.
         if self.nstrata is None:
             if self.input_file is None:
                 if self.widths is None or self.origins is None:
@@ -645,91 +625,69 @@ class Strata:
                 # See documentation for input file formatting
                 array_tmp = np.loadtxt(input_file)
                 self.origins = array_tmp[:, 0:array_tmp.shape[1] // 2]
-                self.width = array_tmp[:, array_tmp.shape[1] // 2:]
+                self.widths = array_tmp[:, array_tmp.shape[1] // 2:]
 
                 # Check to see that the strata are space-filling
-                space_fill = np.sum(np.prod(self.width, 1))
+                space_fill = np.sum(np.prod(self.widths, 1))
                 if 1 - space_fill > 1e-5:
                     sys.exit('Error: The stratum design is not space-filling.')
                 if 1 - space_fill < -1e-5:
                     sys.exit('Error: The stratum design is over-filling.')
 
-                    # TODO: MDS - Add a check for disjointness of strata
-                    # Check to see that the strata are disjoint
-                    # ncorners = 2**self.strata.shape[1]
-                    # for i in range(0,len(self.strata)):
-                    #     for j in range(0,ncorners):
-
+        # Define a rectilinear stratification by specifying the number of strata in each dimension via nstrata
         else:
-            # Use nstrata to assign the origin and widths of a specified rectilinear stratification.
             self.origins = np.divide(self.fullfact(self.nstrata), self.nstrata)
             self.widths = np.divide(np.ones(self.origins.shape), self.nstrata)
-            self.weights = np.prod(self.widths, axis=1)
 
-    def fullfact(self, levels):
+        self.weights = np.prod(self.widths, axis=1)
 
-        # TODO: MDS - Acknowledge the source here.
-        """
-        Create a general full-factorial design
-
-        Parameters
-        ----------
-        levels : array-like
-            An array of integers that indicate the number of levels of each input
-            design factor.
-
-        Returns
-        -------
-        mat : 2d-array
-            The design matrix with coded levels 0 to k-1 for a k-level factor
-
-        Example
-        -------
-        ::
-
-            >>> fullfact([2, 4, 3])
-            array([[ 0.,  0.,  0.],
-                   [ 1.,  0.,  0.],
-                   [ 0.,  1.,  0.],
-                   [ 1.,  1.,  0.],
-                   [ 0.,  2.,  0.],
-                   [ 1.,  2.,  0.],
-                   [ 0.,  3.,  0.],
-                   [ 1.,  3.,  0.],
-                   [ 0.,  0.,  1.],
-                   [ 1.,  0.,  1.],
-                   [ 0.,  1.,  1.],
-                   [ 1.,  1.,  1.],
-                   [ 0.,  2.,  1.],
-                   [ 1.,  2.,  1.],
-                   [ 0.,  3.,  1.],
-                   [ 1.,  3.,  1.],
-                   [ 0.,  0.,  2.],
-                   [ 1.,  0.,  2.],
-                   [ 0.,  1.,  2.],
-                   [ 1.,  1.,  2.],
-                   [ 0.,  2.,  2.],
-                   [ 1.,  2.,  2.],
-                   [ 0.,  3.,  2.],
-                   [ 1.,  3.,  2.]])
+    @staticmethod
+    def fullfact(levels):
 
         """
-        n = len(levels)  # number of factors
-        nb_lines = np.prod(levels)  # number of trial conditions
-        H = np.zeros((nb_lines, n))
+        Create a full-factorial design
+
+        Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
+        Copyright (C) 2012 - 2013 - Michael Baudin
+        Copyright (C) 2012 - Maria Christopoulou
+        Copyright (C) 2010 - 2011 - INRIA - Michael Baudin
+        Copyright (C) 2009 - Yann Collette
+        Copyright (C) 2009 - CEA - Jean-Marc Martinez
+        Original source code can be found at:
+        https://pythonhosted.org/pyDOE/#
+        or
+        https://pypi.org/project/pyDOE/
+        or
+        https://github.com/tisimst/pyDOE/
+
+        Input:
+        :param levels: An array of integers that indicate the number of levels of each input design factor.
+        :type levels: ndarray
+
+        Output:
+        :return ff: Full-factorial design matrix
+        :rtype ff: ndarray
+
+        """
+
+        # Number of factors
+        n_factors = len(levels)
+        # Number of combinations
+        n_comb = np.prod(levels)
+        ff = np.zeros((n_comb, n_factors))
 
         level_repeat = 1
         range_repeat = np.prod(levels)
-        for i in range(n):
+        for i in range(n_factors):
             range_repeat //= levels[i]
             lvl = []
             for j in range(levels[i]):
                 lvl += [j] * level_repeat
             rng = lvl * range_repeat
             level_repeat *= levels[i]
-            H[:, i] = rng
+            ff[:, i] = rng
 
-        return H
+        return ff
 
 
 ########################################################################################################################
