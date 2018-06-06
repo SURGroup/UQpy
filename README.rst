@@ -3,8 +3,8 @@
 Uncertainty Quantification with python (UQpy)
 *******************************************
 
-.. class:: center
-|logo|
+.. image:: logo2.jpg
+   :align: center
 
 ====
 
