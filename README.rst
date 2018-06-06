@@ -81,4 +81,5 @@ Website:
 
 
 .. |logo| image:: logo2.jpg
+    :target: https://gihub.com/SURGroup/UQpy
     :align: center
