@@ -87,8 +87,6 @@ def pdf(dist):
 
     return dist
 
-# TODO: Add a library of pdfs here.
-
 
 def cdf(dist):
     dir_ = os.getcwd()

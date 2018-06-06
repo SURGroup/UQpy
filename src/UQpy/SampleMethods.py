@@ -396,23 +396,19 @@ class STS:
                     Default: Length of sts_design                
     :type dimension: int
     
-    :param dist_type: Target probability distribution from which to draw random samples
-                        The assigned string must refer to a distribution type supported in Distribution.py or a custom
-                            distribution defined in the file custom_dist.py in the working directory
+    :param icdf: Inverse cumulative distribution for each random variable.
+                The inverse cdf may be defined as a function, a string, a list of functions, a list of strings, or a
+                    list of functions and strings
+                Each item in the list specifies the distribution of the corresponding random variable.
+                If icdf[i] is a string, the cdf is defined in Distributions.py or custom_dist.py
+                If icdf[i] is a function, the user must define this function in the script and pass it
+    :type icdf: function/string list
 
-                    If dimension > 1 and dist_type is a string or list of length = 1, the value of dist_type is assigned
-                        to all dimensions.
-
-                    Default: 'Uniform'
-    :type dist_type: str list
-
-    :param dist_params: Parameters of the probability distribution
-                    Default: If dist_type is 'Uniform', dist_params = np.array([0, 1])
-                             If dist_type is not 'Uniform', there is no default.
-
-                    If dimension > 1 and dist_params is not a list or is a list of length = 1, the value of dist_params
-                        is assigned to all dimensions.
-    :type dist_params: list of numpy arrays
+    :param icdf_params: Parameters of the inverse cdf (icdf)
+                Parameters for each random variable are defined as ndarrays
+                Each item in the list, icdf_params[i], specifies the parameters for the corresponding inverse cdf,
+                    icdf[i]
+    :type icdf_params: ndarray list
 
     :param sts_design: Specifies the number of strata in each dimension
     :type sts_design: int list
@@ -436,15 +432,14 @@ class STS:
     # Authors: Michael D. Shields
     # Updated: 6/4/18 by Michael D. Shields
 
-    def __init__(self, dimension=None, dist_type=None, dist_params=None, sts_design=None, input_file=None):
+    def __init__(self, dimension=None, icdf=None, icdf_params=None, sts_design=None, input_file=None):
 
         self.dimension = dimension
-        self.dist_type = dist_type
-        self.dist_params = dist_params
+        self.icdf = icdf
+        self.icdf_params = icdf_params
         self.sts_design = sts_design
         self.input_file = input_file
         self.init_sts()
-        self.icdf = inv_cdf(self.dist_type)
         self.samplesU01, self.samples = self.run_sts()
 
     def run_sts(self):
@@ -455,7 +450,7 @@ class STS:
             for i in range(0, self.strata.origins.shape[0]):
                 samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
                                                   + self.strata.widths[i, j])
-                samples_u_to_x[i, j] = invcdf(samples[i, j], self.dist_params[j])
+                samples_u_to_x[i, j] = invcdf(samples[i, j], self.icdf_params[j])
         return samples, samples_u_to_x
 
     def init_sts(self):
@@ -469,35 +464,42 @@ class STS:
         elif self.sts_design is None and self.dimension is None:
             raise NotImplementedError("Exit code: Dimension must be specified.")
 
-        # Set default dist_type
-        if self.dist_type is None:
-            self.dist_type = ['Uniform']
+        # Check icdf
+        if type(self.icdf).__name__ != 'list':
+            self.icdf = [self.icdf]
+        if len(self.icdf) == 1 and self.dimension != 1:
+            self.icdf = self.icdf * self.dimension
+        elif len(self.icdf) != self.dimension:
+            raise NotImplementedError("Length of icdf should be 1 or equal to dimension")
 
-        # Make dist_type a list if it is not already.
-        if type(self.dist_type).__name__ == 'str':
-            self.dist_type = [self.dist_type]
-        if len(self.dist_type) != self.dimension:
-            if len(self.dist_type) == 1:
-                self.dist_type = self.dist_type * self.dimension
+        # Assign icdf function for each dimension
+        for i in range(len(self.icdf)):
+            if type(self.icdf[i]).__name__ == 'function':
+                self.icdf[i] = self.icdf[i]
+            elif type(self.icdf[i]).__name__ == 'str':
+                self.icdf[i] = inv_cdf(self.icdf[i])
             else:
-                raise NotImplementedError("Exit code: Incompatible dimensions in 'dist_type'.")
+                raise NotImplementedError("Distribution type should be either 'function' or 'list'")
 
-        # Set default dist_params
-        if self.dist_params is None:
-            for i in range(len(self.dist_type)):
-                if self.dist_type[i] is 'Uniform':
-                    self.dist_params = np.array([0, 1])
-                else:
-                    raise NotImplementedError("Exit code: Distribution parameters not defined.")
+        # Check the dimension
+        if self.dimension is None:
+            self.dimension = len(self.icdf)
 
-        # make dist_params a list if it is not already
-        if type(self.dist_params).__name__ != 'list':
-            self.dist_params = [self.dist_params]
-        if len(self.dist_params) != self.dimension:
-            if len(self.dist_params) == 1:
-                self.dist_params = self.dist_params * self.dimension
-            else:
-                raise NotImplementedError("Exit code: Incompatible dimensions in 'dist_params'.")
+        # Ensure that distribution parameters are assigned
+        if self.icdf_params is None:
+            raise NotImplementedError("Exit code: Distribution parameters not defined.")
+
+        # Check icdf_params
+        if type(self.icdf_params).__name__ != 'list':
+            self.icdf_params = [self.icdf_params]
+        if len(self.icdf_params) == 1 and self.dimension != 1:
+            self.icdf_params = self.icdf_params * self.dimension
+        elif len(self.icdf_params) != self.dimension:
+            raise NotImplementedError("Length of icdf_params should be 1 or equal to dimension")
+
+        # Check for dimensional consistency
+        if len(self.icdf) != len(self.icdf_params):
+            raise NotImplementedError("Exit code: Incompatible dimensions.")
 
         if self.sts_design is None:
             if self.input_file is None:
@@ -917,9 +919,6 @@ class MCMC:
                 output[j:j+self.ensemble_size,:] = samples[i:i+self.ensemble_size,:]
                 j = j+self.ensemble_size
             return output
-
-        # TODO: Add Gibbs Sampler
-        # TODO: Add Affine Invariant with walk moves
 
     ####################################################################################################################
     # Check to ensure consistency of the user input and assign defaults
