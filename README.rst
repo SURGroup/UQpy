@@ -3,7 +3,7 @@
 Uncertainty Quantification with python (UQpy)
 *******************************************
 
-|logo2|
+|logo|
 
 
 ====
@@ -80,5 +80,5 @@ Website:
 
 
 
-.. |logo| image:: logo.jpg
+.. |logo| image:: logo2.jpg
     :target: https://gihub.com/SURGroup/UQpy
