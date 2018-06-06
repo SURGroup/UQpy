@@ -3,7 +3,7 @@
 Uncertainty Quantification with python (UQpy)
 *******************************************
 
-|logo|
+|logo2|
 
 
 ====
