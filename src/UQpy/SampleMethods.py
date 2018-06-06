@@ -1,3 +1,20 @@
+# UQpy is distributed under the MIT license.
+#
+# Copyright (C) 2018  -- Michael D. Shields
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+# persons to whom the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+# Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 """This module contains functionality for all the sampling methods supported in UQpy."""
 import sys
 import copy
@@ -438,19 +455,14 @@ class STS:
     :type dimension: int
     
     :param dist_type: Target probability distribution from which to draw random samples
-                    The target distribution must be a function or string, or list of functions or strings.
-                    If type == 'str'
                         The assigned string must refer to a distribution type supported in Distribution.py or a custom
                             distribution defined in the file custom_dist.py in the working directory
-                    If type == function
-                        The function must be defined in the python script calling STS
-
 
                     If dimension > 1 and dist_type is a string or list of length = 1, the value of dist_type is assigned
                         to all dimensions.
 
                     Default: 'Uniform'
-    :type dist_type: function list, or str list
+    :type dist_type: str list
 
     :param dist_params: Parameters of the probability distribution
                     Default: If dist_type is 'Uniform', dist_params = np.array([0, 1])
@@ -512,6 +524,8 @@ class STS:
         elif self.sts_design is not None:
             if self.dimension != len(self.sts_design):
                 raise NotImplementedError("Exit code: Incompatible dimensions.")
+        elif self.sts_design is None and self.dimension is None:
+            raise NotImplementedError("Exit code: Dimension must be specified.")
 
         # Set default dist_type
         if self.dist_type is None:
