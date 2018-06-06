@@ -30,6 +30,7 @@ import warnings
 #                                         Monte Carlo simulation
 ########################################################################################################################
 
+
 class MCS:
     """
     A class used to perform brute force Monte Carlo design of experiment (MCS).
@@ -47,7 +48,17 @@ class MCS:
     :param dist_params: Distribution parameters
     :type dist_params: list
 
+    Output:
+    :return: MCS.samples: Set of MCS samples
+    :rtype: MCS.samples: numpy array
+
+    :return: MCS.samplesU01: Set of uniform MCS samples on [0, 1]^dimension
+    :rtype: MCS.samplesU01: numpy array
+
     """
+
+    # Created by: Dimitris Giovanis
+    # Last modified: 06/04/2018 by Dimitris Giovanis
 
     def __init__(self, dimension=None, dist_type=None, dist_params=None, nsamples=None):
 
@@ -61,7 +72,11 @@ class MCS:
     def run_mcs(self):
 
         samples = np.random.rand(self.nsamples, self.dimension)
-        samples_u_to_x = inv_cdf(samples, self.dist_type, self.dist_params)
+        samples_u_to_x = np.zeros_like(samples)
+        for i in range(samples.shape[0]):
+            for j in range(samples.shape[1]):
+                icdf = inv_cdf(self.dist_type[j])
+                samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
         return samples, samples_u_to_x
 
     ################################################################################################################
@@ -78,8 +93,8 @@ class MCS:
             for i in self.dist_type:
                 if i not in ['Uniform', 'Normal', 'Lognormal', 'Weibull', 'Beta', 'Exponential', 'Gamma']:
                     raise NotImplementedError("Exit code: Unrecognized type of distribution."
-                                                  "Supported distributions: 'Uniform', 'Normal', 'Lognormal', "
-                                                  "'Weibull', 'Beta', 'Exponential', 'Gamma'. ")
+                                              "Supported distributions: 'Uniform', 'Normal', 'Lognormal', "
+                                              "'Weibull', 'Beta', 'Exponential', 'Gamma'. ")
         if self.dist_params is None:
             raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
@@ -157,12 +172,16 @@ class LHS:
                         No Default Value: nsamples must be prescribed
     :type nsamples: int
 
-    Output:
-
+    Output
+    :return: LHS.samples: Set of LHS samples
     :rtype: LHS.samples: numpy array
+
+    :return: LHS.samplesU01: Set of uniform LHS samples on [0, 1]^dimension
+    :rtype: LHS.samplesU01: numpy array
+
     """
     # Created by: Lohit Vandanapu
-    # Last modified: 24/05/2018 by Lohit Vandanapu
+    # Last modified: 06/04/2018 by Dimitris Giovanis & Michael Shields
 
     def __init__(self, dimension=1, dist_type=None, dist_params=None, lhs_criterion='random', lhs_metric='euclidean',
                  lhs_iter=100, nsamples=None):
@@ -323,6 +342,7 @@ class LHS:
 #                                         Partially Stratified Sampling (PSS)
 ########################################################################################################################
 
+
 class PSS:
     """
     This class generates a partially stratified sample set on U(0,1) as described in:
@@ -339,9 +359,6 @@ class PSS:
     :return: pss_samples: Generated samples Array (nSamples x nRVs)
     :type pss_design: list
     :type pss_strata: list
-
-    Created by: Jiaxin Zhang
-    Last modified: 24/01/2018 by D.G. Giovanis
 
     """
 
@@ -539,9 +556,6 @@ class STS:
                 self.dist_type = self.dist_type * self.dimension
             else:
                 raise NotImplementedError("Exit code: Incompatible dimensions in 'dist_type'.")
-
-        # Set dist_type as the inverse cdf.
-        # self.dist_type = inv_cdf(self.dist_type)
 
         # Set default dist_params
         if self.dist_params is None:

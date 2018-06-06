@@ -6,8 +6,8 @@ setup(
     name='UQpy',
     version="0.1.0",
     url='https://github.com/SURGroup/UQpy',
-    authors="Dimitris G. Giovanis, Michael D. Shields",
-    author_emails="dgiovan1@jhu.edu, michael.shields@jhu.edu",
+    authors="Michael D. Shields, Dimitris G. Giovanis",
+    author_emails="michael.shields@jhu.edu, dgiovan1@jhu.edu",
     license='Apache',
     platforms='OSX',
     packages=find_packages("src"),
@@ -17,6 +17,7 @@ setup(
         "numpy", "scipy", "chaospy", "pyDOE", "scikit-learn"
     ],
     classifiers=[
+        'Programming Language :: Python :: 3'
         'Development Status :: 1 - Production/Unstable',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Mathematics',

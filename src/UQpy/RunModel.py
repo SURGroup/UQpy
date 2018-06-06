@@ -20,8 +20,8 @@ import os
 import numpy as np
 import sys
 
-
 class RunModel:
+
     """
     A class used to run a computational model a specified sample points.
 
@@ -97,7 +97,7 @@ class RunModel:
     # Updated: 5/1/18 by Michael D. Shields & Dimitris Giovanis
 
     def __init__(self, samples=None, dimension=None, model_type=None, model_script=None, input_script=None,
-                 output_script=None, cpu=None):
+                 output_script=None,  cpu=None):
 
         self.CPUs = cpu
         self.model_type = model_type
@@ -132,7 +132,7 @@ class RunModel:
             model_script = self.model_script[:-3]
             python_model = __import__(model_script)
             print("\nEvaluating the model...\n")
-            self.model_eval = python_model.RunPythonModel(self.samples, self.dimension)
+            self.model_eval = python_model.RunPythonModel(self.samples,self.dimension)
 
         ################################################################################################################
         # Run a third-party software model with file-passing
@@ -355,8 +355,8 @@ class RunModel:
             from multiprocessing import Process
             from multiprocessing import Queue
 
-            jobs_per_cpu = int(np.floor(self.samples.shape[0] / self.CPUs))
-            jobs_remaining = np.mod(self.samples.shape[0], self.CPUs)
+            jobs_per_cpu = int(np.floor(self.samples.shape[0]/self.CPUs))
+            jobs_remaining = np.mod(self.samples.shape[0],self.CPUs)
             if jobs_per_cpu == 0:
                 self.CPUs = jobs_remaining
                 print('The number of CPUs used is {}\n '.format(self.CPUs))
@@ -376,13 +376,13 @@ class RunModel:
                 j.join()
 
             # Collect the results from the processes and sort them into the original sample order.
-            self.QOI = [None] * self.samples.shape[0]
+            self.QOI = [None]*self.samples.shape[0]
             results = [que.get(j) for j in jobs]
             for i in range(self.CPUs):
                 k = 0
                 for j in results[i][0]:
                     self.QOI[j] = results[i][1][k]
-                    k = k + 1
+                    k = k+1
 
         ################################################################################################################
         # Function to call the model
@@ -433,6 +433,7 @@ class RunModel:
                 file_new = src_files.replace("UQpy_eval_{0}.txt".format(int(i)), "Model_{0}.txt".format(int(i)))
                 os.rename(src_files, file_new)
 
+
             model_eval = que.put([job_inds, model_eval])
 
             return model_eval
@@ -441,19 +442,20 @@ class RunModel:
         # Chunk the samples into batches
         def chunk_samples_cpus(self):
 
-            size_ = np.array([np.ceil(self.samples.shape[0] / self.CPUs) for i in range(self.CPUs)]).astype(int)
+            size_ = np.array([np.ceil(self.samples.shape[0]/self.CPUs) for i in range(self.CPUs)]).astype(int)
             dif = np.sum(size_) - self.samples.shape[0]
             for k in range(dif):
                 size_[k] = size_[k] - 1
-            batches = [None] * self.CPUs
-            batch_ind = [None] * self.CPUs
+            batches = [None]*self.CPUs
+            batch_ind = [None]*self.CPUs
             for i in range(self.CPUs):
                 if i == 0:
                     batch_ind[i] = range(size_[i])
                 else:
-                    batch_ind[i] = range(int(np.sum(size_[:i])), int(np.sum(size_[:i + 1])))
+                    batch_ind[i] = range(int(np.sum(size_[:i])), int(np.sum(size_[:i+1])))
                 batches[i] = self.samples[batch_ind[i], :]
             return batches, batch_ind
+
 
         # This code may be used in the future to extend for distributed computing for HPC use.
         # def chunk_samples_nodes(samples, args):
