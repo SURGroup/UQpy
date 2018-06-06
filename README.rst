@@ -3,6 +3,7 @@
 Uncertainty Quantification with python (UQpy)
 *******************************************
 
+.. class:: center
 |logo|
 
 ====
