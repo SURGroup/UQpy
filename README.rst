@@ -4,7 +4,6 @@ Uncertainty Quantification with python (UQpy)
 *******************************************
 
 |logo|
-:align: center
 
 ====
 
