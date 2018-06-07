@@ -130,6 +130,7 @@ class SROM:
         self.sample_weights = self.run_srom()
 
     def run_srom(self):
+        print('UQpy: Performing SROM...')
         from scipy import optimize
 
         def f(p0, samples, wd, wm, wc, mar, n, d, m, alpha, para, prop, correlation):
@@ -188,6 +189,7 @@ class SROM:
                                      self.correlation),
                                constraints=cons, method='SLSQP')
 
+        print('Done!')
         return p_.x
 
     def init_srom(self):

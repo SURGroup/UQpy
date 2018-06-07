@@ -79,14 +79,14 @@ class MCS:
         self.samplesU01, self.samples = self.run_mcs()
 
     def run_mcs(self):
-        print('Executing the MCS design')
+        print('UQpy: Performing MCS design...')
         samples = np.random.rand(self.nsamples, self.dimension)
         samples_u_to_x = np.zeros_like(samples)
         for j in range(samples.shape[1]):
             icdf = self.icdf[j]
             for i in range(samples.shape[0]):
                 samples_u_to_x[i, j] = icdf(samples[i, j], self.icdf_params[j])
-        print('Successful execution of the MCS design')
+        print('Done!')
         return samples, samples_u_to_x
 
     ################################################################################################################
@@ -225,7 +225,7 @@ class LHS:
 
     def run_lhs(self):
 
-        print('Executing the LHS design')
+        print('UQpy: Performing LHS design...')
         cut = np.linspace(0, 1, self.nsamples + 1)
         a = cut[:self.nsamples]
         b = cut[1:self.nsamples + 1]
@@ -238,7 +238,7 @@ class LHS:
             for i in range(samples.shape[0]):
                 samples_u_to_x[i, j] = i_cdf(samples[i, j], self.icdf_params[j])
 
-        print('Successful execution of the LHS design')
+        print('Done')
         return samples, samples_u_to_x
 
     def _samples(self, a, b):
@@ -447,6 +447,7 @@ class STS:
         self.samplesU01, self.samples = self.run_sts()
 
     def run_sts(self):
+        print('UQpy: Performing STS design...')
         samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
         samples_u_to_x = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
         for j in range(0, self.strata.origins.shape[1]):
@@ -455,6 +456,7 @@ class STS:
                 samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
                                                   + self.strata.widths[i, j])
                 samples_u_to_x[i, j] = icdf(samples[i, j], self.icdf_params[j])
+        print('Done!')
         return samples, samples_u_to_x
 
     def init_sts(self):
@@ -948,6 +950,7 @@ class MCMC:
         # Return the samples
 
         if self.algorithm is 'MMH' or self.algorithm is 'MH':
+            print('Successful execution of the MCMC design')
             return samples[self.nburn:self.nsamples * self.jump + self.nburn:self.jump]
         else:
             output = np.zeros((self.nsamples, self.dimension))

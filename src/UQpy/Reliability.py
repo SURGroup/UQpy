@@ -183,9 +183,11 @@ class SubsetSimulation:
 
         # Select the appropriate Subset Simulation Algorithm
         if self.algorithm == 'MMH':
+            print('UQpy: Running Subset Simulation....')
             [self.pf, self.cov] = self.run_subsim_mmh()
         elif self.algorithm == 'Stretch':
             self.pf = self.run_subsim_stretch()
+        print('Done!')
 
     def run_subsim_mmh(self):
         step = 0
