@@ -99,10 +99,15 @@ class SROM:
                  weights_distribution=None, weights_moments=None, weights_correlation=None,
                  properties=None, cdf_target_params=None, correlation=None):
 
-        self.weights_distribution = weights_distribution
-        self.weights_moments = weights_moments
-        self.cdf_target = cdf_target
-        self.weights_errors = weights_errors
+        if type(weights_distribution) is list:
+            self.weights_distribution = np.array(weights_distribution)
+        else:
+            self.weights_distribution = weights_distribution
+
+        if type(weights_moments) is list:
+            self.weights_moments = np.array(weights_moments)
+        else:
+            self.weights_moments = weights_moments
 
         if type(correlation) is list:
             self.correlation = np.array(correlation)
@@ -114,16 +119,21 @@ class SROM:
         else:
             self.moments = moments
         if type(samples) is list:
-            self.dimension = len(samples)
             self.samples = np.array(samples)
-            self.nsamples = samples.shape[0]
-            self.dimension = samples.shape[1]
+            self.nsamples = self.samples.shape[0]
+            self.dimension = self.samples.shape[1]
         else:
             self.dimension = samples.shape[1]
             self.samples = samples
             self.nsamples = samples.shape[0]
 
-        self.weights_correlation = weights_correlation
+        if type(weights_correlation) is list:
+            self.weights_correlation = np.array(weights_correlation)
+        else:
+            self.weights_correlation = weights_correlation
+
+        self.weights_errors = weights_errors
+        self.cdf_target = cdf_target
         self.properties = properties
         self.cdf_target_params = cdf_target_params
         self.init_srom()
@@ -235,7 +245,7 @@ class SROM:
         self.weights_errors = np.array(self.weights_errors).astype(np.float64)
 
         # Check weights corresponding to distribution
-        if self.weights_distribution is None or not self.weights_distribution:
+        if self.weights_distribution is None:
             self.weights_distribution = np.ones(shape=(self.samples.shape[0], self.dimension))
 
         self.weights_distribution = np.array(self.weights_distribution)
@@ -246,7 +256,7 @@ class SROM:
             raise NotImplementedError("Size of 'weights for distribution' is not correct")
 
         # Check weights corresponding to moments and it's default list
-        if self.weights_moments is None or not self.weights_moments:
+        if self.weights_moments is None:
             self.weights_moments = np.reciprocal(np.square(self.moments))
 
         self.weights_moments = np.array(self.weights_moments)
@@ -256,7 +266,7 @@ class SROM:
             raise NotImplementedError("Size of 'weights for moments' is not correct")
 
         # Check weights corresponding to correlation and it's default list
-        if self.weights_correlation is None or not self.weights_correlation:
+        if self.weights_correlation is None:
             self.weights_correlation = np.ones(shape=(self.dimension, self.dimension))
 
         self.weights_correlation = np.array(self.weights_correlation)
