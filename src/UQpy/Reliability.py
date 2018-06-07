@@ -11,17 +11,15 @@
 # Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+"""This module contains functionality for all the reliability methods supported in UQpy."""
 
-import UQpy.Distributions
 from UQpy.RunModel import RunModel
 from UQpy.SampleMethods import MCMC
 import numpy as np
-import warnings
-import time
 
 
 ########################################################################################################################
@@ -145,15 +143,14 @@ class SubsetSimulation:
 
     Output:
 
-    :param pf: Probability of failure estimate
-    :type pf: float
+    :return self.pf: Probability of failure estimate
+    :rtype self.pf: float
+    :return self.cov: Coefficient of variation
+    :rtype self.cov: float
     """
 
-    # Created by: Dimitris G.Giovanis, Michael D. Shields
-    # Modified: 12 / 08 / 2017
-    # Modified by: Dimitris G. Giovanis
-    # Modified: 5 / 15 / 2018
-    # Modified by: Michael D. Shields
+    # Authors: Dimitris G.Giovanis, Michael D. Shields
+    # Last Modified: 6/7/18 by Dimitris G. Giovanis
 
     def __init__(self, dimension=None, samples_init=None, nsamples_ss=None, p_cond=None, pdf_target_type=None,
                  pdf_target=None, pdf_target_params=None, pdf_proposal_type=None, pdf_proposal_scale=None,
@@ -177,8 +174,6 @@ class SubsetSimulation:
         self.samples = list()
         self.g_level = list()
         self.delta2 = list()
-        self.pf = np.empty(1)
-        self.cov = np.empty(1)
 
         # Hard-wire the maximum number of conditional levels.
         self.max_level = 20
@@ -188,11 +183,9 @@ class SubsetSimulation:
 
         # Select the appropriate Subset Simulation Algorithm
         if self.algorithm == 'MMH':
-            self.run_subsim_mmh()
+            [self.pf, self.cov] = self.run_subsim_mmh()
         elif self.algorithm == 'Stretch':
-            self.run_subsim_stretch()
-
-        # TODO: DG - Add coefficient of variation estimator for subset simulation
+            self.pf = self.run_subsim_stretch()
 
     def run_subsim_mmh(self):
         step = 0
@@ -202,8 +195,8 @@ class SubsetSimulation:
         if self.samples_init is None:
             x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                           pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
-                          pdf_target = self.pdf_target, pdf_target_params = self.pdf_target_params,
-                          algorithm=self.algorithm, nsamples=self.nsamples_ss, seed=np.zeros((self.dimension)))
+                          pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
+                          algorithm=self.algorithm, nsamples=self.nsamples_ss, seed=np.zeros(self.dimension))
             self.samples.append(x_init.samples)
         else:
             self.samples.append(self.samples_init)
@@ -214,6 +207,7 @@ class SubsetSimulation:
         self.g.append(np.asarray(g_init.model_eval.QOI))
         g_ind = np.argsort(self.g[step])
         self.g_level.append(self.g[step][g_ind[n_keep]])
+
         # Estimate coefficient of variation of conditional probability of first level
         self.delta2.append(self.cov_sus(step)**2)
 
@@ -228,11 +222,11 @@ class SubsetSimulation:
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                               pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
-                              pdf_target = self.pdf_target, pdf_target_params = self.pdf_target_params,
+                              pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
                               algorithm=self.algorithm, nsamples=2, seed=seed)
 
                 x_temp = x_mcmc.samples[1].reshape((1, self.dimension))
-                g_model = RunModel(samples = x_temp, cpu=1, model_type=self.model_type, model_script=self.model_script,
+                g_model = RunModel(samples=x_temp, cpu=1, model_type=self.model_type, model_script=self.model_script,
                                    input_script=self.input_script, output_script=self.output_script,
                                    dimension=self.dimension)
 
@@ -241,7 +235,7 @@ class SubsetSimulation:
                 # Accept or reject the sample
                 if g_temp < self.g_level[step - 1]:
                     self.samples[step] = np.vstack((self.samples[step], x_temp))
-                    self.g[step] = np.hstack((self.g[step],g_temp[0]))
+                    self.g[step] = np.hstack((self.g[step], g_temp[0]))
                 else:
                     self.samples[step] = np.vstack((self.samples[step], self.samples[step][i]))
                     self.g[step] = np.hstack((self.g[step], self.g[step][i]))
@@ -252,10 +246,10 @@ class SubsetSimulation:
             self.delta2.append(self.cov_sus(step)**2)
 
         n_fail = len([value for value in self.g[step] if value < 0])
-        self.pf = self.p_cond**step*n_fail/self.nsamples_ss
-        self.cov = np.sum(self.delta2)
-        print(self.pf)
-        print(self.cov)
+        pf = self.p_cond**step*n_fail/self.nsamples_ss
+        cov = np.sum(self.delta2)
+
+        return pf, cov
 
     def run_subsim_stretch(self):
         step = 0
@@ -266,7 +260,7 @@ class SubsetSimulation:
             x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                           pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
                           pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
-                          algorithm='MMH', nsamples=self.nsamples_ss, seed=np.zeros((self.dimension)))
+                          algorithm='MMH', nsamples=self.nsamples_ss, seed=np.zeros(self.dimension))
             self.samples.append(x_init.samples)
         else:
             self.samples.append(self.samples_init)
@@ -313,8 +307,8 @@ class SubsetSimulation:
             self.g_level.append(self.g[step][g_ind[n_keep]])
 
         n_fail = len([value for value in self.g[step] if value < 0])
-        self.pf = self.p_cond ** step * n_fail / self.nsamples_ss
-        print(self.pf)
+        pf = self.p_cond ** step * n_fail / self.nsamples_ss
+        return pf
 
     def init_sus(self):
 
@@ -344,33 +338,32 @@ class SubsetSimulation:
                                       'specify the model using the model_script input.')
    
     def cov_sus(self, step):
-        N = self.g[step].size
+        n = self.g[step].size
         if step == 0:
-            di = np.sqrt((1 - self.p_cond) / (self.p_cond * N))
+            di = np.sqrt((1 - self.p_cond) / (self.p_cond * n))
         else:
-            nc = int(self.p_cond * N)
+            nc = int(self.p_cond * n)
             r_zero = self.p_cond * (1 - self.p_cond)
-            I = np.where(self.g[step] < self.g_level[step])
-            index = np.zeros(N)
-            index[I] = 1
-            indices = np.zeros(shape=(int(N / nc), nc)).astype(int)
-            for i in range(int(N / nc)):
+            index = np.zeros(n)
+            index[np.where(self.g[step] < self.g_level[step])] = 1
+            indices = np.zeros(shape=(int(n / nc), nc)).astype(int)
+            for i in range(int(n / nc)):
                 for j in range(nc):
                     if i == 0:
                         indices[i, j] = j
                     else:
                         indices[i, j] = indices[i - 1, j] + nc
             gamma = 0
-            rho = np.zeros(int(N / nc) - 1)
-            for k in range(int(N / nc) - 1):
+            rho = np.zeros(int(n / nc) - 1)
+            for k in range(int(n / nc) - 1):
                 z = 0
                 for j in range(int(nc)):
-                    for l in range(int(N / nc) - k):
+                    for l in range(int(n / nc) - k):
                         z = z + index[indices[l, j]] * index[indices[l + k, j]]
 
-                rho[k] = (1 / (N - k * nc) * z - self.p_cond ** 2) / r_zero
-                gamma = gamma + 2 * (1 - k * nc / N) * rho[k]
+                rho[k] = (1 / (n - k * nc) * z - self.p_cond ** 2) / r_zero
+                gamma = gamma + 2 * (1 - k * nc / n) * rho[k]
 
-            di = np.sqrt((1 - self.p_cond) / (self.p_cond * N) * (1 + gamma))
+            di = np.sqrt((1 - self.p_cond) / (self.p_cond * n) * (1 + gamma))
 
         return di

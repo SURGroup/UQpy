@@ -11,10 +11,11 @@
 # Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+"""This module contains functionality for all the surrogate methods supported in UQpy."""
 
 import numpy as np
 from UQpy.Distributions import *
@@ -38,17 +39,20 @@ class SROM:
     M. Grigoriu, "Reduced order models for random functions. Application to stochastic problems",
         Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.
     Input:
-    :param samples: A list of samples corresponding to each random variables
-    :type samples: list
+    :param samples: An array/list of samples corresponding to each random variables
+
     :param cdf_target: A list of Cumulative distribution functions of random variables
     :type cdf_target: list str or list function
+
     :param cdf_target_params: Parameters of distribution
     :type cdf_target_params: list
+
     :param moments: A list containing first and second order moment about origin of all random variables
-    :type moments: list
+
     :param weights_errors: Weights associated with error in distribution, moments and correlation.
                            Default: weights_errors = [1, 0.2, 0]
-    :type weights_errors: list or array
+    :type weights_errors: list
+
     :param properties: A list of booleans representing properties, which are required to match in reduce
                        order model. This class focus on reducing errors in distribution, first order moment
                        about origin, second order moment about origin and correlation of samples.
@@ -56,6 +60,7 @@ class SROM:
                        Example: properties = [True, True, False, False] will minimize errors in distribution and
                        errors in first order moment about origin in reduce order model.
     :type properties: list
+
     :param weights_distribution: An list or array containing weights associated with different samples.
                                  Options:
                                     If weights_distribution is None, then default value is assigned.
@@ -64,7 +69,7 @@ class SROM:
                                     Otherwise size of weights_distribution should be equal to Nxd.
                                  Default: weights_distribution = Nxd dimensional array with all elements equal
                                  to 1.
-    :type weights_distribution: ndarray or list
+
     :param weights_moments: An array of dimension 2xd, where 'd' is number of random variables. It contain
                             weights associated with moments.
                             Options:
@@ -74,65 +79,82 @@ class SROM:
                                 Otherwise size of weights_distribution should be equal to 2xd.
                             Default: weights_moments = Square of reciprocal of elements of moments.
     :type weights_moments: ndarray or list (float)
+
     :param weights_correlation: An array of dimension dxd, where 'd' is number of random variables. It contain
                                 weights associated with correlation of random variables.
                                 Default: weights_correlation = dxd dimensional array with all elements equal to
                                 1.
-    :type weights_correlation: ndarray or list
+
     :param correlation: Correlation matrix between random variables.
-    :type correlation: list
+
     Output:
     :return: SROM.samples: Last column contains the probabilities/weights defining discrete approximation of
                            continuous random variables.
     :rtype: SROM.samples: ndarray
     """
     # Authors: Mohit Chauhan
-    # Updated: 6/4/18 by Mohit Chauhan
+    # Updated: 6/7/18 by Dimitris G. Giovanis
 
     def __init__(self, samples=None, cdf_target=None, moments=None, weights_errors=None,
                  weights_distribution=None, weights_moments=None, weights_correlation=None,
                  properties=None, cdf_target_params=None, correlation=None):
-        self.samples = np.array(samples)
-        self.correlation = np.array(correlation)
-        self.cdf_target = cdf_target
-        self.moments = np.array(moments)
-        self.weights_errors = weights_errors
+
         self.weights_distribution = weights_distribution
         self.weights_moments = weights_moments
+        self.cdf_target = cdf_target
+        self.weights_errors = weights_errors
+
+        if type(correlation) is list:
+            self.correlation = np.array(correlation)
+        else:
+            self.correlation = correlation
+
+        if type(moments) is list:
+            self.moments = np.array(moments)
+        else:
+            self.moments = moments
+        if type(samples) is list:
+            self.dimension = len(samples)
+            self.samples = np.array(samples)
+            self.nsamples = samples.shape[0]
+            self.dimension = samples.shape[1]
+        else:
+            self.dimension = samples.shape[1]
+            self.samples = samples
+            self.nsamples = samples.shape[0]
+
         self.weights_correlation = weights_correlation
         self.properties = properties
         self.cdf_target_params = cdf_target_params
-        self.dimension = self.samples.shape[1]
-        self.nsamples = self.samples.shape[0]
         self.init_srom()
         self.sample_weights = self.run_srom()
 
     def run_srom(self):
         from scipy import optimize
 
-        def f(p_, samples, wd, wm, wc, mar, n, d, m, alpha, para, prop, correlation):
+        def f(p0, samples, wd, wm, wc, mar, n, d, m, alpha, para, prop, correlation):
             e1 = 0.
             e2 = 0.
             e22 = 0.
             e3 = 0.
-            com = np.append(samples, np.transpose(np.matrix(p_)), 1)
+            com = np.append(samples, np.transpose(np.matrix(p0)), 1)
             for j in range(d):
                 srt = com[np.argsort(com[:, j].flatten())]
                 s = srt[0, :, j]
                 a = srt[0, :, d]
-                A = np.cumsum(a)
+                a0 = np.cumsum(a)
                 marginal = mar[j]
 
                 if prop[0] is True:
                     for i in range(n):
-                        e1 += wd[i, j] * (A[0, i] - marginal(s[0, i], para[j])) ** 2
+                        e1 += wd[i, j] * (a0[0, i] - marginal(s[0, i], para[j])) ** 2
 
                 if prop[1] is True:
-                    e2 += wm[0, j] * (np.sum(np.array(p_) * samples[:, j]) - m[0, j]) ** 2
+                    e2 += wm[0, j] * (np.sum(np.array(p0) * samples[:, j]) - m[0, j]) ** 2
 
                 if prop[2] is True:
                     e22 += wm[1, j] * (
-                            np.sum(np.array(p_) * (samples[:, j] * samples[:, j])) - m[1, j]) ** 2
+                            np.sum(np.array(p0) * (samples[:, j] * samples[:, j])) - m[1, j]) ** 2
 
                 if prop[3] is True:
                     for k in range(d):
