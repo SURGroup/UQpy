@@ -17,7 +17,7 @@ setup(
         "numpy", "scipy", "chaospy", "pyDOE", "scikit-learn"
     ],
     classifiers=[
-        'Programming Language :: Python :: 3'
+        'Programming Language :: Python :: 3',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Mathematics',
         'License :: MIT',
