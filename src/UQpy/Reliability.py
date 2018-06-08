@@ -28,7 +28,7 @@ import numpy as np
 ########################################################################################################################
 class SubsetSimulation:
     """
-    A class used to perform Subset Simulation.
+    Perform Subset Simulation.
 
     This class estimates probability of failure for a user-defined model using Subset Simulation
 
@@ -36,17 +36,19 @@ class SubsetSimulation:
     S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by subset simulation,”
         Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
 
+
     Input:
+
     :param dimension:  A scalar value defining the dimension of target density function.
-                    Default: 1
+                       Default: 1
     :type dimension: int
 
-    :param nsamples_ss: Number of samples to generate in each conditional subset
+    :param nsamples_ss: Number of samples to generate in each conditional subset.
                         No Default Value: nsamples_ss must be prescribed
     :type nsamples_ss: int
 
-    :param p_cond: Conditional probability at each level
-                        Default: p_cond = 0.1
+    :param p_cond: Conditional probability at each level.
+                   Default: p_cond = 0.1
     :type p_cond: float
 
     :param algorithm:  Algorithm used to generate MCMC samples.

@@ -32,7 +32,7 @@ from UQpy.Distributions import *
 
 class MCS:
     """
-    A class used to perform Monte Carlo sampling (MCS) of independent random variables from a user-specified probability
+    Perform Monte Carlo sampling (MCS) of independent random variables from a user-specified probability
     distribution using inverse transform method.
 
     :param dimension: A scalar value defining the dimension of the random variables
