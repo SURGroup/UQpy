@@ -16,12 +16,11 @@ setup(
     install_requires=[
         "numpy", "scipy", "chaospy", "pyDOE", "scikit-learn"
     ],
-    # classifiers=[
-    #     'Programming Language :: Python :: 3'
-    #     'Development Status :: 1 - Production/Unstable',
-    #     'Intended Audience :: Science/Research',
-    #     'Topic :: Scientific/Engineering :: Mathematics',
-    #     'License :: MIT',
-    #     'Natural Language :: English',
-    # ],
+    classifiers=[
+        'Programming Language :: Python :: 3',
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering :: Mathematics',
+        'License :: OSI Approved :: MIT License',
+        'Natural Language :: English',
+    ],
 )
