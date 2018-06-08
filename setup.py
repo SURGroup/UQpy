@@ -20,7 +20,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Mathematics',
-        'License :: MIT',
+        'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
     ],
 )
