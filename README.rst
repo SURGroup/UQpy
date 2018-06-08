@@ -25,7 +25,6 @@ For sampling:
            1. Monte Carlo simulation (MCS), 
            2. Latin Hypercube Sampling (LHS), 
            3. Markov Chain Monte Carlo simulation (MCMC) 
-           4. Partially Stratified Sampling (PSS).
 
 For reliability analysis:
            1. Subset Simulation
