@@ -8,7 +8,7 @@ setup(
     url='https://github.com/SURGroup/UQpy',
     authors="Michael D. Shields, Dimitris G. Giovanis",
     author_emails="michael.shields@jhu.edu, dgiovan1@jhu.edu",
-    license='Apache',
+    license='MIT',
     platforms='OSX',
     packages=find_packages("src"),
     package_dir={"": "src"},
@@ -16,12 +16,12 @@ setup(
     install_requires=[
         "numpy", "scipy", "chaospy", "pyDOE", "scikit-learn"
     ],
-    classifiers=[
-        'Programming Language :: Python :: 3'
-        'Development Status :: 1 - Production/Unstable',
-        'Intended Audience :: Science/Research',
-        'Topic :: Scientific/Engineering :: Mathematics',
-        'License :: Apache',
-        'Natural Language :: English',
-    ],
+    # classifiers=[
+    #     'Programming Language :: Python :: 3'
+    #     'Development Status :: 1 - Production/Unstable',
+    #     'Intended Audience :: Science/Research',
+    #     'Topic :: Scientific/Engineering :: Mathematics',
+    #     'License :: MIT',
+    #     'Natural Language :: English',
+    # ],
 )
