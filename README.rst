@@ -83,7 +83,7 @@ Help and Support
 ===========
 
 Documentation:
-           http://uqpy-docs-v0.readthedocs.io/en/latest/
+           https://uqpy.readthedocs.io/en/latest/
 
 Website:
            www.ce.jhu.edu/surg
