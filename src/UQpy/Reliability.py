@@ -277,7 +277,7 @@ class SubsetSimulation:
         g_ind = np.argsort(self.g[step])
         self.g_level.append(self.g[step][g_ind[n_keep]])
 
-        while self.g_level[step] > 0:
+        while self.g_level[step] > 0 and step < self.max_level:
 
             step = step + 1
             self.samples.append(self.samples[step - 1][g_ind[0:n_keep]])

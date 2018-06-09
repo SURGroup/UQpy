@@ -893,9 +893,10 @@ class MCMC:
                 pdf_ = self.pdf_target[0]
 
                 for i in range(self.nsamples * self.jump - 1 + self.nburn):
-                    candidate = list(samples[i, :])
+                    current = samples[i, :].copy()
 
-                    current = list(samples[i, :])
+                    candidate = samples[i, :]
+
                     for j in range(self.dimension):
                         if self.pdf_proposal_type[j] == 'Normal':
                             candidate[j] = np.random.normal(samples[i, j], self.pdf_proposal_scale[j])
