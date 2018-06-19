@@ -208,3 +208,42 @@ def inv_cdf(dist):
                 raise NotImplementedError('Unidentified pdf_type')
 
     return dist
+
+
+class Distribution:
+    def __init__(self, name):
+
+        self.name = name
+
+        if self.name == 'Normal':
+            def pdf(x, params):
+                return stats.norm.pdf(x, params[0], params[1])
+            self.pdf = partial(pdf)
+
+            def cdf(x, params):
+                return stats.norm.cdf(x, params[0], params[1])
+            self.cdf = partial(cdf)
+
+            def icdf(x, params):
+                return stats.norm.ppf(x, params[0], params[1])
+            self.icdf = partial(icdf)
+
+        elif self.name == 'Lognormal':
+            def pdf(x, params):
+                return stats.lognorm.pdf(x, params[0], params[1])
+            self.pdf = partial(pdf)
+
+            def cdf(x, params):
+                return stats.lognorm.cdf(x, params[0], params[1])
+            self.cdf = partial(cdf)
+
+            def icdf(x, params):
+                return stats.lognorm.ppf(x, params[0], params[1])
+            self.icdf = partial(icdf)
+
+        elif os.path.isfile('custom_dist.py') is True:
+            import custom_dist
+            self.pdf = getattr(custom_dist, 'pdf')
+            self.cdf = getattr(custom_dist, 'cdf')
+            self.icdf = getattr(custom_dist, 'icdf')
+

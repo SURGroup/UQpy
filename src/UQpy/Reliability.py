@@ -143,6 +143,9 @@ class SubsetSimulation:
                           If model_type = 'python', this is not used.
     :type output_script: str
 
+    :param samples_init: Intial samples drawn from the target probability density
+    :type samples_init: ndarray
+
     Output:
 
     :return self.pf: Probability of failure estimate
