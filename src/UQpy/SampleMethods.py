@@ -32,26 +32,30 @@ from UQpy.Distributions import *
 
 class MCS:
     """
-    A class used to perform Monte Carlo sampling (MCS) of independent random variables from a user-specified probability
+    Perform Monte Carlo sampling (MCS) of independent random variables from a user-specified probability
     distribution using inverse transform method.
 
     :param dimension: A scalar value defining the dimension of the random variables
-                        Default: len(icdf)
+                        Default: len(dist_names)
     :type dimension: int
 
-    :param icdf: Inverse cumulative distribution for each random variable.
-                The inverse cdf may be defined as a function, a string, a list of functions, a list of strings, or a
-                    list of functions and strings
-                Each item in the list specifies the distribution of the corresponding random variable.
-                If icdf[i] is a string, the cdf is defined in Distributions.py or custom_dist.py
-                If icdf[i] is a function, the user must define this function in the script and pass it
-    :type icdf: function/string list
+    :param dist_name: A list containing the names of the distributions of the random variables.
+                        Distribution names must match those in the Distributions module.
+                        If the distribution does not match one from the Distributions module, the user must provide
+                            custom_dist.py.
+                        The length of the string must be 1 (if all distributions are the same) or equal to dimension.
+    :type dist_name: string list
 
-    :param icdf_params: Parameters of the inverse cdf (icdf)
+    :param dist_params: Parameters of the distribution
                 Parameters for each random variable are defined as ndarrays
-                Each item in the list, icdf_params[i], specifies the parameters for the corresponding inverse cdf,
-                    icdf[i]
-    :type icdf_params: list
+                Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
+                    dist[i]
+    :type dist_params: list
+
+    param: dist:    An object list containing the distributions of the random variables.
+                    Each item in the list is an object of the Distribution class (see Distributions.py)
+                    The list has length equal to dimension
+    :type dist: list
 
     :param nsamples: Number of samples to generate
                       No Default Value: nsamples must be prescribed
@@ -67,14 +71,17 @@ class MCS:
     """
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 6/7/18 by Dimitris G. Giovanis & Michael Shields
+    # Last Modified: 6/20/18 by Dimitris G.Giovanis
 
-    def __init__(self, dimension=None, icdf=None, icdf_params=None, nsamples=None):
+    def __init__(self, dimension=None, dist_name=None, dist_params=None, nsamples=None):
 
         self.dimension = dimension
         self.nsamples = nsamples
-        self.icdf = icdf
-        self.icdf_params = icdf_params
+        self.dist_name = dist_name
+        self.dist = list()
+        for i in range(self.dimension):
+            self.dist.append(Distribution(self.dist_name[i]))
+        self.dist_params = dist_params
         self.init_mcs()
         self.samplesU01, self.samples = self.run_mcs()
 
@@ -83,9 +90,9 @@ class MCS:
         samples = np.random.rand(self.nsamples, self.dimension)
         samples_u_to_x = np.zeros_like(samples)
         for j in range(samples.shape[1]):
-            icdf = self.icdf[j]
+            icdf = self.dist[j].icdf
             for i in range(samples.shape[0]):
-                samples_u_to_x[i, j] = icdf(samples[i, j], self.icdf_params[j])
+                samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
         print('Done!')
         return samples, samples_u_to_x
 
@@ -100,45 +107,24 @@ class MCS:
         if self.nsamples is None:
             raise NotImplementedError("Exit code: Number of samples not defined.")
 
-        # Ensure that a distribution is assigned.
-        if self.icdf is None:
-            raise NotImplementedError("Exit code: Distributions not defined.")
-
-        # Check inverse cdf (i_cdf)
-        if type(self.icdf).__name__ != 'list':
-            self.icdf = [self.icdf]
-        if len(self.icdf) == 1 and self.dimension != 1:
-            self.icdf = self.icdf * self.dimension
-        elif len(self.icdf) != self.dimension:
-            raise NotImplementedError("Length of i_cdf should be 1 or equal to dimension")
-
-        # Assign inverse cdf (i_cdf) function for each dimension
-        for i in range(len(self.icdf)):
-            if type(self.icdf[i]).__name__ == 'function':
-                self.icdf[i] = self.icdf[i]
-            elif type(self.icdf[i]).__name__ == 'str':
-                self.icdf[i] = inv_cdf(self.icdf[i])
-            else:
-                raise NotImplementedError("Distribution type should be either 'function' or 'list'")
-
         # Check the dimension
         if self.dimension is None:
-            self.dimension = len(self.icdf)
+            self.dimension = len(self.dist_name)
 
         # Ensure that distribution parameters are assigned
-        if self.icdf_params is None:
+        if self.dist_params is None:
             raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
-        # Check i_cdf_params
-        if type(self.icdf_params).__name__ != 'list':
-            self.icdf_params = [self.icdf_params]
-        if len(self.icdf_params) == 1 and self.dimension != 1:
-            self.icdf_params = self.icdf_params * self.dimension
-        elif len(self.icdf_params) != self.dimension:
-            raise NotImplementedError("Length of i_cdf_params should be 1 or equal to dimension")
+        # Check dist_params
+        if type(self.dist_params).__name__ != 'list':
+            self.dist_params = [self.dist_params]
+        if len(self.dist_params) == 1 and self.dimension != 1:
+            self.dist_params = self.dist_params * self.dimension
+        elif len(self.dist_params) != self.dimension:
+            raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension")
 
         # Check for dimensional consistency
-        if len(self.icdf) != len(self.icdf_params):
+        if len(self.dist_name) != len(self.dist_params):
             raise NotImplementedError("Exit code: Incompatible dimensions.")
 
 
@@ -146,7 +132,6 @@ class MCS:
 ########################################################################################################################
 #                                         Latin hypercube sampling  (LHS)
 ########################################################################################################################
-
 
 class LHS:
     """Generate samples based on the Latin Hypercube Design.
@@ -160,19 +145,23 @@ class LHS:
                         Default: len(i_cdf)
     :type dimension: int
 
-    :param icdf: Inverse cumulative distribution for each random variable.
-                The inverse cdf may be defined as a function, a string, a list of functions, a list of strings, or a
-                    list of functions and strings
-                Each item in the list specifies the distribution of the corresponding random variable.
-                If icdf[i] is a string, the cdf is defined in Distributions.py or custom_dist.py
-                If icdf[i] is a function, the user must define this function in the script and pass it
-    :type icdf: function/string list
+    :param dist_name: A list containing the names of the distributions of the random variables.
+                        Distribution names must match those in the Distributions module.
+                        If the distribution does not match one from the Distributions module, the user must provide
+                            custom_dist.py.
+                        The length of the string must be 1 (if all distributions are the same) or equal to dimension.
+    :type dist_name: string list
 
-    :param icdf_params: Parameters of the inverse cdf (icdf)
-                Parameters for each random variable are defined as arrays
-                Each item in the list, icdf_params[i], specifies the parameters for the corresponding inverse cdf,
-                    icdf[i]
-    :type icdf_params: list
+    :param dist_params: Parameters of the distribution
+                Parameters for each random variable are defined as ndarrays
+                Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
+                    dist[i]
+    :type dist_params: list
+
+    param: dist:    An object list containing the distributions of the random variables.
+                    Each item in the list is an object of the Distribution class (see Distributions.py)
+                    The list has length equal to dimension
+    :type dist: list
 
     :param lhs_criterion: The criterion for generating sample points
                             Options:
@@ -208,15 +197,18 @@ class LHS:
 
     """
     # Created by: Lohit Vandanapu
-    # Last modified: 6/7/2018 by Dimitris Giovanis & Michael Shields
+    # Last modified: 6/20/2018 by Dimitris G. Giovanis
 
-    def __init__(self, dimension=1, icdf=None, icdf_params=None, lhs_criterion='random', lhs_metric='euclidean',
+    def __init__(self, dimension=None, dist_name=None, dist_params=None, lhs_criterion='random', lhs_metric='euclidean',
                  lhs_iter=100, nsamples=None):
 
         self.dimension = dimension
         self.nsamples = nsamples
-        self.icdf = icdf
-        self.icdf_params = icdf_params
+        self.dist_name = dist_name
+        self.dist = list()
+        for i in range(self.dimension):
+            self.dist.append(Distribution(self.dist_name[i]))
+        self.dist_params = dist_params
         self.lhs_criterion = lhs_criterion
         self.lhs_metric = lhs_metric
         self.lhs_iter = lhs_iter
@@ -234,9 +226,9 @@ class LHS:
 
         samples_u_to_x = np.zeros_like(samples)
         for j in range(samples.shape[1]):
-            i_cdf = self.icdf[j]
+            icdf = self.dist[j].icdf
             for i in range(samples.shape[0]):
-                samples_u_to_x[i, j] = i_cdf(samples[i, j], self.icdf_params[j])
+                samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
 
         print('Done')
         return samples, samples_u_to_x
@@ -318,41 +310,24 @@ class LHS:
         if self.nsamples is None:
             raise NotImplementedError("Exit code: Number of samples not defined.")
 
-        # Check inverse cdf (i_cdf)
-        if type(self.icdf).__name__ != 'list':
-            self.icdf = [self.icdf]
-        if len(self.icdf) == 1 and self.dimension != 1:
-            self.icdf = self.icdf * self.dimension
-        elif len(self.icdf) != self.dimension:
-            raise NotImplementedError("Length of i_cdf should be 1 or equal to dimension")
-
-        # Assign i_cdf function for each dimension
-        for i in range(len(self.icdf)):
-            if type(self.icdf[i]).__name__ == 'function':
-                self.icdf[i] = self.icdf[i]
-            elif type(self.icdf[i]).__name__ == 'str':
-                self.icdf[i] = inv_cdf(self.icdf[i])
-            else:
-                raise NotImplementedError("Distribution type should be either 'function' or 'list'")
-
         # Check the dimension
         if self.dimension is None:
-            self.dimension = len(self.icdf)
+            self.dimension = len(self.dist_name)
 
         # Ensure that distribution parameters are assigned
-        if self.icdf_params is None:
+        if self.dist_params is None:
             raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
-        # Check i_cdf_params
-        if type(self.icdf_params).__name__ != 'list':
-            self.icdf_params = [self.icdf_params]
-        if len(self.icdf_params) == 1 and self.dimension != 1:
-            self.icdf_params = self.icdf_params * self.dimension
-        elif len(self.icdf_params) != self.dimension:
-            raise NotImplementedError("Length of i_cdf_params should be 1 or equal to dimension")
+        # Check dist_params
+        if type(self.dist_params).__name__ != 'list':
+            self.dist_params = [self.dist_params]
+        if len(self.dist_params) == 1 and self.dimension != 1:
+            self.dist_params = self.dist_params * self.dimension
+        elif len(self.dist_params) != self.dimension:
+            raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension")
 
         # Check for dimensional consistency
-        if len(self.icdf) != len(self.icdf_params):
+        if len(self.dist_name) != len(self.dist_params):
             raise NotImplementedError("Exit code: Incompatible dimensions.")
 
         if self.lhs_criterion is None:
@@ -399,19 +374,23 @@ class STS:
                     Default: Length of sts_design                
     :type dimension: int
     
-    :param icdf: Inverse cumulative distribution for each random variable.
-                The inverse cdf may be defined as a function, a string, a list of functions, a list of strings, or a
-                    list of functions and strings
-                Each item in the list specifies the distribution of the corresponding random variable.
-                If icdf[i] is a string, the cdf is defined in Distributions.py or custom_dist.py
-                If icdf[i] is a function, the user must define this function in the script and pass it
-    :type icdf: function/string list
+    :param dist_name: A list containing the names of the distributions of the random variables.
+                        Distribution names must match those in the Distributions module.
+                        If the distribution does not match one from the Distributions module, the user must provide
+                            custom_dist.py.
+                        The length of the string must be 1 (if all distributions are the same) or equal to dimension.
+    :type dist_name: string list
 
-    :param icdf_params: Parameters of the inverse cdf (icdf)
-                Parameters for each random variable are defined as arrays
-                Each item in the list, icdf_params[i], specifies the parameters for the corresponding inverse cdf,
-                    i_cdf[i]
-    :type icdf_params: list
+    :param dist_params: Parameters of the distribution
+                Parameters for each random variable are defined as ndarrays
+                Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
+                    dist[i]
+    :type dist_params: list
+
+    param: dist:    An object list containing the distributions of the random variables.
+                    Each item in the list is an object of the Distribution class (see Distributions.py)
+                    The list has length equal to dimension
+    :type dist: list
 
     :param sts_design: Specifies the number of strata in each dimension
     :type sts_design: int list
@@ -435,11 +414,14 @@ class STS:
     # Authors: Michael Shields
     # Last modified: 6/7/2018 by Dimitris Giovanis & Michael Shields
 
-    def __init__(self, dimension=None, icdf=None, icdf_params=None, sts_design=None, input_file=None):
+    def __init__(self, dimension=None, dist_name=None, dist_params=None, sts_design=None, input_file=None):
 
         self.dimension = dimension
-        self.icdf = icdf
-        self.icdf_params = icdf_params
+        self.dist_name = dist_name
+        self.dist = list()
+        for i in range(self.dimension):
+            self.dist.append(Distribution(self.dist_name[i]))
+        self.dist_params = dist_params
         self.sts_design = sts_design
         self.input_file = input_file
         self.strata = None
@@ -451,11 +433,11 @@ class STS:
         samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
         samples_u_to_x = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
         for j in range(0, self.strata.origins.shape[1]):
-            icdf = self.icdf[j]
+            icdf = self.dist[j].icdf
             for i in range(0, self.strata.origins.shape[0]):
                 samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
                                                   + self.strata.widths[i, j])
-                samples_u_to_x[i, j] = icdf(samples[i, j], self.icdf_params[j])
+                samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
         print('Done!')
         return samples, samples_u_to_x
 
@@ -470,42 +452,21 @@ class STS:
         elif self.sts_design is None and self.dimension is None:
             raise NotImplementedError("Exit code: Dimension must be specified.")
 
-        # Check i_cdf
-        if type(self.icdf).__name__ != 'list':
-            self.icdf = [self.icdf]
-        if len(self.icdf) == 1 and self.dimension != 1:
-            self.icdf = self.icdf * self.dimension
-        elif len(self.icdf) != self.dimension:
-            raise NotImplementedError("Length of i_cdf should be 1 or equal to dimension")
-
-        # Assign i_cdf function for each dimension
-        for i in range(len(self.icdf)):
-            if type(self.icdf[i]).__name__ == 'function':
-                self.icdf[i] = self.icdf[i]
-            elif type(self.icdf[i]).__name__ == 'str':
-                self.icdf[i] = inv_cdf(self.icdf[i])
-            else:
-                raise NotImplementedError("Distribution type should be either 'function' or 'list'")
-
-        # Check the dimension
-        if self.dimension is None:
-            self.dimension = len(self.icdf)
-
-        # Ensure that distribution parameters are assigned
-        if self.icdf_params is None:
-            raise NotImplementedError("Exit code: Distribution parameters not defined.")
-
-        # Check i_cdf_params
-        if type(self.icdf_params).__name__ != 'list':
-            self.icdf_params = [self.icdf_params]
-        if len(self.icdf_params) == 1 and self.dimension != 1:
-            self.icdf_params = self.icdf_params * self.dimension
-        elif len(self.icdf_params) != self.dimension:
-            raise NotImplementedError("Length of i_cdf_params should be 1 or equal to dimension")
+        # Check dist_params
+        if type(self.dist_params).__name__ != 'list':
+            self.dist_params = [self.dist_params]
+        if len(self.dist_params) == 1 and self.dimension != 1:
+            self.dist_params = self.dist_params * self.dimension
+        elif len(self.dist_params) != self.dimension:
+            raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension")
 
         # Check for dimensional consistency
-        if len(self.icdf) != len(self.icdf_params):
+        if len(self.dist_name) != len(self.dist_params):
             raise NotImplementedError("Exit code: Incompatible dimensions.")
+
+        # Ensure that distribution parameters are assigned
+        if self.dist_params is None:
+            raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
         if self.sts_design is None:
             if self.input_file is None:
