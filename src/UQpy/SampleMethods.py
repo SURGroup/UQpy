@@ -418,14 +418,14 @@ class STS:
 
         self.dimension = dimension
         self.dist_name = dist_name
-        self.dist = list()
-        for i in range(self.dimension):
-            self.dist.append(Distribution(self.dist_name[i]))
         self.dist_params = dist_params
         self.sts_design = sts_design
         self.input_file = input_file
         self.strata = None
         self.init_sts()
+        self.dist = list()
+        for i in range(self.dimension):
+            self.dist.append(Distribution(self.dist_name[i]))
         self.samplesU01, self.samples = self.run_sts()
 
     def run_sts(self):
@@ -452,6 +452,14 @@ class STS:
         elif self.sts_design is None and self.dimension is None:
             raise NotImplementedError("Exit code: Dimension must be specified.")
 
+        # Check dist_name
+        if type(self.dist_name).__name__ != 'list':
+            self.dist_name = [self.dist_name]
+        if len(self.dist_name) == 1 and self.dimension != 1:
+            self.dist_name = self.dist_name * self.dimension
+        elif len(self.dist_name) != self.dimension:
+            raise NotImplementedError("Length of i_cdf should be 1 or equal to dimension")
+
         # Check dist_params
         if type(self.dist_params).__name__ != 'list':
             self.dist_params = [self.dist_params]
@@ -459,10 +467,6 @@ class STS:
             self.dist_params = self.dist_params * self.dimension
         elif len(self.dist_params) != self.dimension:
             raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension")
-
-        # Check for dimensional consistency
-        if len(self.dist_name) != len(self.dist_params):
-            raise NotImplementedError("Exit code: Incompatible dimensions.")
 
         # Ensure that distribution parameters are assigned
         if self.dist_params is None:
