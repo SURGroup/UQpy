@@ -241,6 +241,19 @@ class Distribution:
                 return stats.lognorm.ppf(x, params[0], params[1])
             self.icdf = partial(icdf)
 
+        elif self.name == 'Exponential':
+            def pdf(x, params):
+                return stats.expon.pdf(x, params[0], params[1])
+            self.pdf = partial(pdf)
+
+            def cdf(x, params):
+                return stats.expon.cdf(x, params[0], params[1])
+            self.cdf = partial(cdf)
+
+            def icdf(x, params):
+                return stats.expon.ppf(x, params[0], params[1])
+            self.icdf = partial(icdf)
+
         elif os.path.isfile('custom_dist.py') is True:
             import custom_dist
             self.pdf = getattr(custom_dist, 'pdf')
