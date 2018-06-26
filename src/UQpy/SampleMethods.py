@@ -78,10 +78,10 @@ class MCS:
         self.dimension = dimension
         self.nsamples = nsamples
         self.dist_name = dist_name
+        self.dist_params = dist_params
         self.dist = list()
         for i in range(self.dimension):
             self.dist.append(Distribution(self.dist_name[i]))
-        self.dist_params = dist_params
         self.init_mcs()
         self.samplesU01, self.samples = self.run_mcs()
 
@@ -89,8 +89,11 @@ class MCS:
         print('UQpy: Performing MCS design...')
         samples = np.random.rand(self.nsamples, self.dimension)
         samples_u_to_x = np.zeros_like(samples)
+        mom = list()
         for j in range(samples.shape[1]):
             icdf = self.dist[j].icdf
+            moments = self.dist[j].moments
+            mom.append(moments(self.dist_params[j]))
             for i in range(samples.shape[0]):
                 samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
         print('Done!')
@@ -1042,5 +1045,255 @@ class MCMC:
 
 ########################################################################################################################
 ########################################################################################################################
-#                                         ADD ANY NEW METHOD HERE
+#                                         Correlation and Nataf transformation
 ########################################################################################################################
+
+class Correlate:
+    """
+        A class to correlate samples ~ N(0, 1).
+        :param samples: An object of type MCS, LHS
+        :type samples: object
+
+        :param corr_norm: The correlation matrix of the random variables in the standard normal space
+        :type corr_norm: ndarray
+
+    """
+
+    # Authors: Dimitris G.Giovanis
+    # Last Modified: 6/24/18 by Dimitris G. Giovanis
+
+    def __init__(self, samples=None, corr_norm=None):
+
+        # Check if samples is a SampleMethods Object or an array
+        if isinstance(samples, MCS) is True or isinstance(samples, LHS) is True:
+            _dict = {**samples.__dict__}
+            for k, v in _dict.items():
+                setattr(self, k, v)
+
+            for i in range(len(self.dist)):
+                if self.dist[i].name != 'Normal' or self.dist_params[i] != [0, 1]:
+                    raise RuntimeError("In order to use class 'Correlate' the random variables should be standard "
+                                       "Gaussian")
+
+                self.corr_norm = corr_norm
+                if self.corr_norm is None:
+                    raise RuntimeError("A correlation matrix is required.")
+                else:
+                    self.samples_corr = run_corr(self.samples, self.corr_norm)
+
+        # Check if samples is an array
+        elif isinstance(samples, np.ndarray):
+            print('Caution: The samples provided must be realizations of standard normal random variables.')
+            self.samples = samples
+            self.corr_norm = corr_norm
+            if self.corr_norm is None:
+                raise RuntimeError("A correlation matrix is required.")
+            else:
+                self.samples_corr = run_corr(self.samples, self.corr_norm)
+
+
+class Uncorrelate:
+    """
+        A class to uncorrelate samples ~ N(0, 1).
+        :param samples: An object of type MCS, LHS
+        :type samples: object
+
+        :param corr_norm: The correlation matrix of the random variables in the standard normal space
+        :type corr_norm: ndarray
+
+    """
+
+    # Authors: Dimitris G.Giovanis
+    # Last Modified: 6/24/18 by Dimitris G. Giovanis
+
+    def __init__(self, samples=None, corr_norm=None):
+
+        # Check if samples is a SampleMethods Object or an array
+        if isinstance(samples, Correlate) is True:
+            _dict = {**samples.__dict__}
+            for k, v in _dict.items():
+                setattr(self, k, v)
+
+            for i in range(len(self.dist)):
+                if self.dist[i].name != 'Normal' or self.dist_params[i] != [0, 1]:
+                    raise RuntimeError("In order to use class 'Correlate' the random variables should be standard "
+                                       "Gaussian")
+
+                self.corr_norm = corr_norm
+                if self.corr_norm is None:
+                    raise RuntimeError("A correlation matrix is required.")
+                else:
+                    self.samples_uncorr = run_uncorr(self.samples_corr, self.corr_norm)
+
+        # Check if samples is an array
+        elif isinstance(samples, np.ndarray):
+            print('Caution: The samples provided must be realizations of standard normal random variables.')
+            self.samples_corr = samples
+            self.corr_norm = corr_norm
+            if self.corr_norm is None:
+                raise RuntimeError("A correlation matrix is required.")
+            else:
+                self.samples_uncorr = run_uncorr(self.samples_corr, self.corr_norm)
+
+
+class Nataf:
+    """
+        A class to perform the Nataf transformation of samples ~ N(0, 1).
+        :param samples: An object of type MCS, LHS
+        :type samples: object
+
+        :param marginal_name: A list containing the names of the distributions of the random variables.
+                        Distribution names must match those in the Distributions module.
+                        If the distribution does not match one from the Distributions module, the user must provide
+                            custom_dist.py.
+                        The length of the string must be 1 (if all distributions are the same) or equal to dimension.
+        :type marginal_name: string list
+
+        :param marginal_params: Parameters of the distribution
+                Parameters for each random variable are defined as ndarrays
+                Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
+                    dist[i]
+        :type marginal_params: list
+
+        :param corr_norm: The correlation matrix of the random variables in the standard normal space
+        :type corr_norm: ndarray
+    """
+
+    # Authors: Dimitris G.Giovanis
+    # Last Modified: 6/24/18 by Dimitris G. Giovanis
+
+    def __init__(self, samples=None, corr_norm=None, marginal_name=None, marginal_params=None):
+
+        self.marginal_name = marginal_name
+        self.marginal_params = marginal_params
+        self.marginal_dist = list()
+        for j in range(len(self.marginal_name)):
+            self.marginal_dist.append(Distribution(self.marginal_name[j]))
+
+        # Check if samples is a SampleMethods Object or an array
+        if isinstance(samples, Correlate) is True or isinstance(samples, MCS) is True \
+                or isinstance(samples, LHS) is True:
+            _dict = {**samples.__dict__}
+            for k, v in _dict.items():
+                setattr(self, k, v)
+
+            for i in range(len(self.dist)):
+                if self.dist[i].name != 'Normal' or self.dist_params[i] != [0, 1]:
+                    raise RuntimeError("In order to use class 'Correlate' the random variables should be standard "
+                                       "Gaussian")
+
+            if not hasattr(self, 'corr_norm') and corr_norm is None:
+                print('Using the Nataf transformation to uncorrelated samples.')
+            elif not hasattr(self, 'corr_norm') and corr_norm is not None:
+                print('Using the Nataf transformation to correlated samples.')
+                self.corr_norm = corr_norm
+                self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
+            elif hasattr(self, 'corr_norm'):
+                print('Using the Nataf transformation to correlated samples.')
+                self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
+
+        # Check if samples is an array
+        elif isinstance(samples, np.ndarray):
+            print('The samples provided must be realizations of standard normal random variables.')
+            self.samples = samples
+            self.corr_norm = corr_norm
+            if self.corr_norm is not None:
+                self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
+            elif self.corr_norm is None:
+                print('Using the Nataf transformation to uncorrelated samples.')
+
+        self.samples_transf = np.zeros_like(self.samples)
+        for j in range(len(self.marginal_dist)):
+            icdf = self.marginal_dist[j].icdf
+            for i in range(self.samples.shape[0]):
+                self.samples_transf[i, j] = icdf(stats.norm.cdf(self.samples[i, j]), self.marginal_params[j])
+
+
+def run_corr(samples, corr):
+    """
+        A function which performs the Cholesky decomposition of the correlation matrix and correlate
+        the samples
+    """
+
+    from scipy.linalg import cholesky
+    c = cholesky(corr, lower=True)
+    y = np.dot(c, samples.T)
+    return y.T
+
+
+def run_uncorr(samples, corr):
+    """
+        A function which uncorrelates
+        the samples
+    """
+
+    from scipy.linalg import cholesky
+    c = cholesky(np.linalg.inv(corr), lower=True)
+    y = np.dot(c, samples.T)
+    return y.T
+
+
+def solve_double_integral(marginal, params, rho_norm):
+    """
+        A function to solve the double integral equation in order to evaluate the modified correlation
+        matrix in the standard normal space given the correlation matrix in the original space. This is achieved
+        by a quadratic two-dimensional Gauss-Legendre integration.
+    """
+
+    n = 1024
+    zmax = 8
+    zmin = -zmax
+    points, weights = np.polynomial.legendre.leggauss(n)
+    points = - (0.5 * (points + 1) * (zmax - zmin) + zmin)
+    weights = weights * (0.5 * (zmax - zmin))
+
+    xi = np.tile(points, [n, 1])
+    xi = xi.flatten(order='F')
+    eta = np.tile(points, n)
+
+    first = np.tile(weights, n)
+    first = np.reshape(first, [n, n])
+    second = np.transpose(first)
+
+    weights2d = first * second
+    w2d = weights2d.flatten()
+    rho = np.ones_like(rho_norm)
+
+    for i in range(len(marginal)):
+        icdf_i = marginal[i].icdf
+        moments_i = marginal[i].moments
+        mi = moments_i(params[i])
+        if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
+            raise RuntimeError("The marginal distributions need to have "
+                               "finite mean and variance")
+
+        for j in range(i + 1, len(marginal)):
+            icdf_j = marginal[j].icdf
+            moments_j = marginal[j].moments
+            mj = moments_j(params[j])
+            if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
+                raise RuntimeError("The marginal distributions need to have "
+                                   "finite mean and variance")
+
+            if marginal[j].name == 'Normal' and marginal[i].name == 'Normal':
+                rho[i, j] = rho_norm[i, j]
+                rho[j, i] = rho[i, j]
+            else:
+                #  performing Nataf
+                tmp_f_xi = ((icdf_j(stats.norm.cdf(xi), params[j]) - mj[0]) / mj[1])
+                tmp_f_eta = ((icdf_i(stats.norm.cdf(eta), params[i]) - mi[0]) / mi[1])
+                coef = tmp_f_xi * tmp_f_eta * w2d
+
+                rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
+                rho[j, i] = rho[i, j]
+
+    return rho
+
+
+def bi_variate_normal_pdf(x1, x2, rho):
+    """
+        A function which evaluates the values of the bi-variate normal probability distribution function
+    """
+    return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
+            np.exp(-1/(2*(1-rho**2)) *
+                   (x1**2 - 2 * rho * x1 * x2 + x2**2)))

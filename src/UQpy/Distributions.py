@@ -181,7 +181,7 @@ def inv_cdf(dist):
 
             elif dist == 'Beta':
                 def f(x, params):
-                    return stats.weibull_min.ppf(x, params[0], params[1], params[2], params[3])
+                    return stats.weibull_min.ppf(x, params[0], params[1])
 
                 dist = f
 
@@ -228,8 +228,76 @@ class Distribution:
                 return stats.norm.ppf(x, params[0], params[1])
             self.icdf = partial(icdf)
 
-        elif self.name == 'Lognormal':
+            def moments(params):
+
+                import numpy as np
+                y = [np.nan, np.nan, np.nan, np.nan]
+                y[0] = params[0]
+                y[1] = params[1]
+                return y
+
+            self.moments = partial(moments)
+
+        elif self.name == 'Uniform':
             def pdf(x, params):
+                return stats.uniform.pdf(x, params[0], params[1])
+            self.pdf = partial(pdf)
+
+            def cdf(x, params):
+                return stats.uniform.cdf(x, params[0], params[1])
+            self.cdf = partial(cdf)
+
+            def icdf(x, params):
+                return stats.uniform.ppf(x, params[0], params[1])
+            self.icdf = partial(icdf)
+
+            def moments(params):
+
+                import numpy as np
+                y = [np.nan, np.nan, np.nan, np.nan]
+                y[0] = (params[0]+params[1])/2
+                y[1] = np.sqrt(1/12*(params[1]-params[0])**2)
+                return y
+
+            self.moments = partial(moments)
+
+        elif self.name == 'Beta':
+
+            def pdf(x, params):
+                if not params[0] > 0 and params[1] > 0 and params[2] < params[3]:
+                    raise RuntimeError("The Beta distribution is not defined "
+                                       "for your parameters")
+                return stats.beta.pdf(x, params[0], params[1], params[2], params[3])
+            self.pdf = partial(pdf)
+
+            def cdf(x, params):
+                return stats.beta.cdf(x, params[0], params[1], params[2], params[3])
+            self.cdf = partial(cdf)
+
+            def icdf(x, params):
+                return stats.beta.ppf(x, params[0], params[1], params[2], params[3])
+            self.icdf = partial(icdf)
+
+            def moments(params):
+
+                import numpy as np
+                y = [np.nan, np.nan, np.nan, np.nan]
+                alpha = params[0]
+                beta = params[1]
+                a = params[2]
+                b = params[3]
+                y[0] = (alpha*b + beta*a)/(alpha + beta)
+                y[1] = np.sqrt((alpha*beta*(b-a))/(alpha + beta)**2*(alpha + beta + 1))
+                return y
+
+            self.moments = partial(moments)
+
+        elif self.name == 'Lognormal':
+
+            def pdf(x, params):
+                if not params[0] > 0 and params[1] > 0:
+                    raise RuntimeError("The Beta distribution is not defined "
+                                       "for your parameters")
                 return stats.lognorm.pdf(x, params[0], params[1])
             self.pdf = partial(pdf)
 
@@ -240,6 +308,42 @@ class Distribution:
             def icdf(x, params):
                 return stats.lognorm.ppf(x, params[0], params[1])
             self.icdf = partial(icdf)
+
+            def moments(params):
+
+                import numpy as np
+                y = [np.nan, np.nan, np.nan, np.nan]
+                y[0] = np.exp(params[0])
+                y[1] = params[1]
+                return y
+
+            self.moments = partial(moments)
+
+        elif self.name == 'gamma':
+            def pdf(x, params):
+                if not params[0] > 0 and params[1] > 0:
+                    raise RuntimeError("The Gamma distribution is not defined "
+                                       "for your parameters")
+                return stats.gamma.pdf(x, params[0], params[1])
+            self.pdf = partial(pdf)
+
+            def cdf(x, params):
+                return stats.gamma.cdf(x, params[0], params[1])
+            self.cdf = partial(cdf)
+
+            def icdf(x, params):
+                return stats.gamma.ppf(x, params[0], params[1])
+            self.icdf = partial(icdf)
+
+            def moments(params):
+
+                import numpy as np
+                y = [np.nan, np.nan, np.nan, np.nan]
+                y[0] = params[0]/params[1]
+                y[1] = np.sqrt(params[0]/params[1]**2)
+                return y
+
+            self.moments = partial(moments)
 
         elif self.name == 'Exponential':
             def pdf(x, params):
