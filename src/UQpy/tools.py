@@ -20,26 +20,6 @@ import numpy as np
 import scipy.stats as stats
 
 
-def transform_z_to_x(samples_z, marginal_dist, marginal_params, corr_norm, Jacobian=False):
-    samples_x = np.zeros_like(samples_z)
-    for j in range(len(marginal_dist)):
-        icdf = marginal_dist[j].icdf
-        for i in range(samples_z.shape[0]):
-            samples_x[i, j] = icdf(stats.norm.cdf(samples_z[i, j]), marginal_params[j])
-
-    if not Jacobian or corr_norm is None:
-        return samples_x, None
-    else:
-        from scipy.linalg import cholesky
-        c = cholesky(corr_norm, lower=True)
-        diag = np.zeros([len(marginal_dist), len(marginal_dist)])
-        for j in range(len(marginal_dist)):
-            pdf = marginal_dist[j].pdf
-            diag[j, j] = pdf(samples_x[j, j], marginal_params[j]) / stats.norm.pdf(samples_z[j, j])
-        Jac = np.linalg.solve(c, diag)
-        return samples_x, Jac
-
-
 def transform_x_to_z(samples_x, marginal_dist, marginal_params, corr_norm, Jacobian=False):
     samples_z = np.zeros_like(samples_x)
     for j in range(len(marginal_dist)):
@@ -57,6 +37,28 @@ def transform_x_to_z(samples_x, marginal_dist, marginal_params, corr_norm, Jacob
             diag[j, j] = stats.norm.pdf(samples_z[j, j]) / pdf(samples_x[j, j], marginal_params[j])
         Jac = np.linalg.solve(c, diag)
         return samples_x, Jac
+
+
+def transform_z_to_x(corr_norm, marginal_dist, marginal_params, samples_z, Jacobian=True):
+
+    from scipy.linalg import cholesky
+    A = cholesky(corr_norm, lower=True)
+    samples_x = np.zeros_like(samples_z)
+    Z = np.dot(A, samples_z)
+    m, n = np.shape(samples_z)
+    for j in range(m):
+        icdf = marginal_dist[j].icdf
+        samples_x[j, :] = icdf(stats.norm.cdf(Z[j, :]), marginal_params[j])
+
+    if not Jacobian:
+        return samples_x, None
+    else:
+        diag = np.zeros([m, m])
+        for j in range(m):
+            pdf = marginal_dist[j].pdf
+            diag[j, j] = pdf(samples_x[j], marginal_params[j]) / stats.norm.pdf(Z[j])
+        Jac = np.linalg.solve(A, diag)
+        return samples_x.T, Jac
 
 
 def run_corr(samples, corr):
@@ -147,13 +149,13 @@ def itam(marginal, params, corr):
     # Iteration Condition
     i_converge = 0
     error0 = 100
-    max_iter = 150
+    max_iter = 20
 
     for ii in range(max_iter):
         corr0 = solve_double_integral(marginal, params, corr_norm0)
         # compute the relative difference between the computed NGACF & the target R(Normalized)
-        err1 = 0
-        err2 = 0
+        err1 = 1.0e-10
+        err2 = 1.0e-10
         for i in range(corr0.shape[0]):
             for j in range(corr0.shape[1]):
                 err1 = err1 + (corr[i, j] - corr0[i, j]) ** 2

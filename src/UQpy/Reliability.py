@@ -369,3 +369,92 @@ class SubsetSimulation:
             di = np.sqrt((1 - self.p_cond) / (self.p_cond * n) * (1 + gamma))
 
         return di
+
+########################################################################################################################
+########################################################################################################################
+#                                        Subset Simulation
+########################################################################################################################
+
+
+class FORM:
+
+    # Authors: Dimitris G.Giovanis
+    # Last Modified: 6/27/18 by Dimitris G. Giovanis
+
+    def __init__(self, dimension=None, dist_name=None, dist_params=None, nsamples=None, corr=None, method=None,
+                 algorithm=None, model_type=None, model_script=None, input_script=None, output_script=None):
+
+        self.dimension = dimension
+        self.dist_name = dist_name
+        self.dist_params = dist_params
+        self.nsamples = nsamples
+        self.corr = corr
+        self.method = method
+        self.algorithm = algorithm
+        self.model_type = model_type
+        self.model_script = model_script
+        self.input_script = input_script
+        self.output_script = output_script
+
+        # Correlation matrix of the random variables in the original space
+        from UQpy.SampleMethods import InvNataf
+        self.obj = InvNataf(corr=self.corr, marginal_name=self.dist_name, marginal_params=dist_params)
+
+        if self.method == 'HLRF':
+            d = self.dimension
+            print('running FORM...')
+            [self.u_star, self.x_star, self.beta, self.Pf] = self.form_hlrf()
+
+    def form_hlrf(self):
+        import scipy as sp
+        n = self.dimension  # number of random variables (dimension)
+
+        # initialization
+        max_iter = int(1e2)
+        tol = 1e-5
+        u = np.ones([max_iter, n])
+        beta = np.zeros(max_iter)
+
+        # HLRF method
+        for k in range(max_iter):
+            from UQpy.tools import transform_z_to_x
+            # 0. Get x and Jacobi from u (important for transformation)
+            [xk, jacob] = transform_z_to_x(self.obj.corr_norm, self.obj.marginal_dist,
+                                           self.obj.marginal_params, u[k, :].reshape(-1, 1))
+
+            # 1. evaluate LSF at point u_k
+            H_uk = RunModel(samples=xk, model_type=self.model_type, model_script=self.model_script,
+                            input_script=self.input_script, output_script=self.output_script,
+                            dimension=self.dimension)
+
+            # 2. evaluate LSF gradient at point u_k and direction cosines
+            DH_uk = np.linalg.solve(jacob, H_uk.model_eval.QOI[1])
+            norm_DH_uk = sp.linalg.norm(DH_uk)
+            alpha = DH_uk / norm_DH_uk
+            alpha = alpha.squeeze()
+
+            # 3. calculate beta
+            beta[k] = -np.inner(u[k, :].T, alpha) + H_uk.model_eval.QOI[0] / norm_DH_uk
+
+            # 4. calculate u_{k+1}
+            u[k + 1, :] = -beta[k] * alpha
+
+            # next iteration
+            if np.linalg.norm(u[k + 1, :] - u[k, :]) <= tol:
+                break
+
+        # delete unnecessary data
+        u = u[:k + 1, :]
+
+        # compute design point, reliability index and Pf
+        u_star = u[-1, :]
+        x_star = transform_z_to_x(self.obj.corr_norm, self.obj.marginal_dist,
+                                  self.obj.marginal_params, u_star.reshape(-1, 1))
+        beta = beta[k]
+        Pf = sp.stats.norm.cdf(-beta)
+
+        # print results
+        print('*FORM Method\n')
+        print(' ', k, ' iterations... Reliability index = ', beta, ' --- Failure probability = ', Pf, '\n\n')
+
+        return u_star, x_star, beta, Pf

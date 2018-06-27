@@ -240,15 +240,21 @@ class Distribution:
 
         elif self.name == 'Uniform':
             def pdf(x, params):
-                return stats.uniform.pdf(x, params[0], params[1])
+                loc = params[0]
+                scale = params[1] - params[0]
+                return stats.uniform.pdf(x, loc=loc, scale=scale)
             self.pdf = partial(pdf)
 
             def cdf(x, params):
-                return stats.uniform.cdf(x, params[0], params[1])
+                loc = params[0]
+                scale = params[1] - params[0]
+                return stats.uniform.cdf(x, loc=loc, scale=scale)
             self.cdf = partial(cdf)
 
             def icdf(x, params):
-                return stats.uniform.ppf(x, params[0], params[1])
+                loc = params[0]
+                scale = params[1] - params[0]
+                return stats.uniform.ppf(x, loc=loc, scale=scale)
             self.icdf = partial(icdf)
 
             def moments(params):

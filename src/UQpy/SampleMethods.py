@@ -1131,7 +1131,6 @@ class Uncorrelate:
 
         # Check if samples is an array
         elif isinstance(samples, np.ndarray):
-            print('Caution: The samples provided must be realizations of standard normal random variables.')
             self.samples_corr = samples
             self.corr_norm = corr_norm
             self.dist = None
@@ -1139,10 +1138,8 @@ class Uncorrelate:
                 raise RuntimeError("A correlation matrix is required.")
 
         if np.linalg.norm(self.corr_norm - np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
-            print('Samples are already uncorrelated...')
             self.samples_uncorr = self.samples_corr
         else:
-            print('Uncorrelating standard normal samples...')
             self.samples_uncorr = run_uncorr(self.samples_corr, self.corr_norm)
 
 
@@ -1178,9 +1175,8 @@ class Nataf:
     # Authors: Dimitris G.Giovanis
     # Last Modified: 6/24/18 by Dimitris G. Giovanis
 
-    def __init__(self, samples=None, corr_norm=None, marginal_name=None, marginal_params=None, transform=True):
+    def __init__(self, samples=None, corr_norm=None, marginal_name=None, marginal_params=None):
 
-        self.transform = transform
         self.marginal_name = marginal_name
         self.marginal_params = marginal_params
         if self.marginal_name is None or self.marginal_params is None:
@@ -1191,8 +1187,29 @@ class Nataf:
             self.marginal_dist.append(Distribution(self.marginal_name[j]))
 
         # Check if samples is a SampleMethods Object or an array
-        if isinstance(samples, Correlate) is True or isinstance(samples, MCS) is True \
-                or isinstance(samples, LHS) is True:
+        if isinstance(samples, MCS) is True or isinstance(samples, LHS) is True:
+            _dict = {**samples.__dict__}
+            for k, v in _dict.items():
+                setattr(self, k, v)
+
+            for i in range(len(self.dist)):
+                if self.dist[i].name != 'Normal' or self.dist_params[i] != [0, 1]:
+                    raise RuntimeError("In order to use class 'Nataf' the random variables should be standard "
+                                       "Gaussian")
+            if not hasattr(self, 'corr_norm') and corr_norm is None:
+                self.corr_norm = np.identity(n=self.dimension)
+            elif not hasattr(self, 'corr_norm') and corr_norm is not None:
+                self.corr_norm = corr_norm
+                y = Correlate(self.samples, corr_norm=self.corr_norm)
+
+            self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
+            self.samples_corr = y.samples_corr
+            self.Jacobian = list()
+            self.samples_x = np.zeros_like(self.samples)
+            for i in range(self.samples.shape[0]):
+                self.samples_x[i, :], J = transform_z_to_x(self.corr_norm, self.marginal_dist,
+                                                           self.marginal_params, self.samples[i, :].reshape(-1, 1))
+        if isinstance(samples, Correlate) is True:
             _dict = {**samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
@@ -1203,33 +1220,59 @@ class Nataf:
                                        "Gaussian")
 
             if not hasattr(self, 'corr_norm') and corr_norm is None:
-                print('Using the Nataf transformation to uncorrelated samples.')
-                self.corr_norm = None
+                raise RuntimeError("In order to use class 'Nataf' a correlation matrix should"
+                                   "be provided.")
             elif not hasattr(self, 'corr_norm') and corr_norm is not None:
                 self.corr_norm = corr_norm
 
-        # Check if samples is an array
+            self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
+            self.Jacobian = list()
+            self.samples_x = np.zeros_like(self.samples)
+            for i in range(self.samples.shape[0]):
+                self.samples_x[i, :], J = transform_z_to_x(self.corr_norm, self.marginal_dist,
+                                                           self.marginal_params, self.samples[i, :].reshape(-1, 1))
+
         elif isinstance(samples, np.ndarray):
             print('The samples provided must be realizations of standard normal random variables.')
             self.samples = samples
             self.corr_norm = corr_norm
             self.dist = None
 
-        if self.corr_norm is not None:
+            if self.corr_norm is not None:
+                self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
+            elif self.corr_norm is None or np.linalg.norm(self.corr_norm -
+                                                          np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
+                self.corr = self.corr_norm
+
             self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
-        elif self.corr_norm is None or np.linalg.norm(self.corr_norm -
-                                                      np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
-            self.corr = self.corr_norm
+            self.Jacobian = list()
+            self.samples_x = np.zeros_like(self.samples)
+            for i in range(self.samples.shape[0]):
+                self.samples_x[i, :], J = transform_z_to_x(self.corr_norm, self.marginal_dist,
+                                                           self.marginal_params, self.samples[i, :].reshape(-1, 1))
 
-        if self.transform is True:
-            self.samples_x, self.Jacobian = transform_z_to_x(self.samples, self.marginal_dist, self.marginal_params,
-                                                             self.corr_norm, Jacobian=True)
+        elif samples is None:
+            print('The samples provided must be realizations of standard normal random variables...')
+            self.samples = samples
+            if corr_norm is not None:
+                if np.linalg.norm(corr_norm - np.identity(n=corr_norm.shape[0])) < 10 ** (-8):
+                    self.corr = self.corr_norm
+                else:
+                    self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
+            elif self.corr is None:
+                raise RuntimeError("In order to use class 'invNataf' a correlation matrix should"
+                                   "be provided.")
 
+            self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
+            from scipy.linalg import cholesky
+            self.A = cholesky(self.corr_norm, lower=True)
 
 ########################################################################################################################
 ########################################################################################################################
 #                                         Inverse Nataf transformation
 ########################################################################################################################
+
+
 class InvNataf:
     """
         A class to perform the inverse Nataf transformation of samples in standard normal space.
@@ -1256,10 +1299,11 @@ class InvNataf:
     # Authors: Dimitris G.Giovanis
     # Last Modified: 6/24/18 by Dimitris G. Giovanis
 
-    def __init__(self, samples=None, corr=None, marginal_name=None, marginal_params=None, transform=True):
+    def __init__(self, samples=None, corr=None, marginal_name=None, marginal_params=None):
 
-        self.transform = transform
+        from scipy.linalg import cholesky
         self.marginal_name = marginal_name
+        self.corr = corr
         self.marginal_params = marginal_params
         if self.marginal_name is None or self.marginal_params is None:
             raise RuntimeError("In order to use class 'invNataf' marginal distributions and their parameters should"
@@ -1269,32 +1313,61 @@ class InvNataf:
             self.marginal_dist.append(Distribution(self.marginal_name[j]))
 
         # Check if samples is a SampleMethods Object or an array
-        if isinstance(samples, Correlate) is True or isinstance(samples, MCS) is True \
-                or isinstance(samples, LHS) is True:
+        
+        if isinstance(samples, MCS) is True or isinstance(samples, LHS) is True:
             _dict = {**samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
 
             if not hasattr(self, 'corr') and corr is None:
-                print('Using the inverse Nataf transformation to uncorrelated samples...')
+                raise RuntimeError("In order to use class 'invNataf' a correlation matrix should"
+                                   "be provided.")
             elif not hasattr(self, 'corr_norm') and corr is not None:
-                print('Using the inverse Nataf transformation to correlated samples...')
-                self.corr = corr
-                self.corr_norm = itam(self.marginal_dist, self.marginal_params, self.corr)
-            elif hasattr(self, 'corr_norm'):
-                print('Using the inverse Nataf transformation to correlated samples...')
-                self.corr = itam(self.marginal_dist, self.marginal_params, self.corr_norm)
+                if np.linalg.norm(corr - np.identity(n=corr.shape[0])) < 10 ** (-8):
+                    self.corr_norm = self.corr
+                else:
+                    self.corr_norm = itam(self.marginal_dist, self.marginal_params, self.corr)
+            elif hasattr(self, 'corr'):
+                if np.linalg.norm(self.corr - np.identity(n=self.corr.shape[0])) < 10 ** (-8):
+                    self.corr_norm = self.corr
+                else:
+                    self.corr_norm = itam(self.marginal_dist, self.marginal_params, self.corr)
+
+            self.Jacobian = list()
+            self.samples_x = np.zeros_like(self.samples)
+            for i in range(self.samples.shape[0]):
+                self.samples_x[i, :], J = transform_z_to_x(self.corr_norm, self.marginal_dist,
+                                                           self.marginal_params, self.samples[i, :].reshape(-1, 1))
+                self.Jacobian.append(J)
 
         # Check if samples is an array
         elif isinstance(samples, np.ndarray):
+            self.samples = samples
+            if self.corr is not None:
+                if np.linalg.norm(self.corr - np.identity(n=self.corr.shape[0])) < 10 ** (-8):
+                    self.corr_norm = self.corr
+                else:
+                    self.corr_norm = itam(self.marginal_dist, self.marginal_params, self.corr)
+            elif self.corr is None:
+                raise RuntimeError("In order to use class 'invNataf' a correlation matrix is required.")
+
+            self.Jacobian = list()
+            self.samples_x = np.zeros_like(self.samples)
+            for i in range(self.samples.shape[0]):
+                self.samples_x[i, :], J = transform_z_to_x(self.corr_norm, self.marginal_dist,
+                                                           self.marginal_params, self.samples[i, :].reshape(-1, 1))
+                self.Jacobian.append(J)
+
+        elif samples is None:
             print('The samples provided must be realizations of standard normal random variables...')
             self.samples = samples
-            self.corr = corr
-            if self.corr_norm is not None:
-                self.corr = itam(self.marginal_dist, self.marginal_params, self.corr_norm)
+            if corr is not None:
+                if np.linalg.norm(corr - np.identity(n=corr.shape[0])) < 10 ** (-8):
+                    self.corr_norm = self.corr
+                    self.A = cholesky(corr, lower=True)
+                else:
+                    self.corr_norm = itam(self.marginal_dist, self.marginal_params, self.corr)
             elif self.corr is None:
-                print('Using the inverse Nataf transformation to uncorrelated samples...')
-
-        if self.transform is True:
-            self.samples_z, self.Jacobian = transform_x_to_z(self.samples, self.marginal_dist, self.marginal_params,
-                                                             self.corr_norm, Jacobian=True)
+                raise RuntimeError("In order to use class 'invNataf' a correlation matrix should"
+                                   "be provided.")
+            self.A = cholesky(corr, lower=True)
