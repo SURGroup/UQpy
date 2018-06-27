@@ -1046,7 +1046,7 @@ class MCMC:
 
 ########################################################################################################################
 ########################################################################################################################
-#                                         Correlation and Nataf transformation
+#                                         Correlation
 ########################################################################################################################
 
 class Correlate:
@@ -1071,27 +1071,34 @@ class Correlate:
             for k, v in _dict.items():
                 setattr(self, k, v)
 
+            self.corr_norm = corr_norm
+
             for i in range(len(self.dist)):
                 if self.dist[i].name != 'Normal' or self.dist_params[i] != [0, 1]:
                     raise RuntimeError("In order to use class 'Correlate' the random variables should be standard "
                                        "Gaussian")
-
-                self.corr_norm = corr_norm
-                if self.corr_norm is None:
-                    raise RuntimeError("A correlation matrix is required.")
-                else:
-                    self.samples_corr = run_corr(self.samples, self.corr_norm)
 
         # Check if samples is an array
         elif isinstance(samples, np.ndarray):
             print('Caution: The samples provided must be realizations of standard normal random variables.')
             self.samples = samples
             self.corr_norm = corr_norm
+            self.dist = None
+
             if self.corr_norm is None:
                 raise RuntimeError("A correlation matrix is required.")
-            else:
-                self.samples_corr = run_corr(self.samples, self.corr_norm)
 
+        if np.linalg.norm(self.corr_norm - np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
+            self.samples_corr = self.samples
+        else:
+            print('Correlating standard normal samples...')
+            self.samples_corr = run_corr(self.samples, self.corr_norm)
+
+
+########################################################################################################################
+########################################################################################################################
+#                                         Uncorrelation
+########################################################################################################################
 
 class Uncorrelate:
     """
@@ -1115,26 +1122,34 @@ class Uncorrelate:
             for k, v in _dict.items():
                 setattr(self, k, v)
 
+            self.corr_norm = corr_norm
+
             for i in range(len(self.dist)):
                 if self.dist[i].name != 'Normal' or self.dist_params[i] != [0, 1]:
                     raise RuntimeError("In order to use class 'Uncorrelate' the random variables should be standard "
                                        "Gaussian")
-
-                self.corr_norm = corr_norm
-                if self.corr_norm is None:
-                    raise RuntimeError("A correlation matrix is required.")
-                else:
-                    self.samples_uncorr = run_uncorr(self.samples_corr, self.corr_norm)
 
         # Check if samples is an array
         elif isinstance(samples, np.ndarray):
             print('Caution: The samples provided must be realizations of standard normal random variables.')
             self.samples_corr = samples
             self.corr_norm = corr_norm
+            self.dist = None
             if self.corr_norm is None:
                 raise RuntimeError("A correlation matrix is required.")
-            else:
-                self.samples_uncorr = run_uncorr(self.samples_corr, self.corr_norm)
+
+        if np.linalg.norm(self.corr_norm - np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
+            print('Samples are already uncorrelated...')
+            self.samples_uncorr = self.samples_corr
+        else:
+            print('Uncorrelating standard normal samples...')
+            self.samples_uncorr = run_uncorr(self.samples_corr, self.corr_norm)
+
+
+########################################################################################################################
+########################################################################################################################
+#                                         Nataf transformation
+########################################################################################################################
 
 
 class Nataf:
@@ -1189,27 +1204,32 @@ class Nataf:
 
             if not hasattr(self, 'corr_norm') and corr_norm is None:
                 print('Using the Nataf transformation to uncorrelated samples.')
+                self.corr_norm = None
             elif not hasattr(self, 'corr_norm') and corr_norm is not None:
-                print('Using the Nataf transformation to correlated samples.')
                 self.corr_norm = corr_norm
-                self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
-            elif hasattr(self, 'corr_norm'):
-                print('Using the Nataf transformation to correlated samples.')
-                self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
 
         # Check if samples is an array
         elif isinstance(samples, np.ndarray):
             print('The samples provided must be realizations of standard normal random variables.')
             self.samples = samples
             self.corr_norm = corr_norm
-            if self.corr_norm is not None:
-                self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
-            elif self.corr_norm is None:
-                print('Using the Nataf transformation to uncorrelated samples.')
+            self.dist = None
+
+        if self.corr_norm is not None:
+            self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
+        elif self.corr_norm is None or np.linalg.norm(self.corr_norm -
+                                                      np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
+            self.corr = self.corr_norm
 
         if self.transform is True:
-            self.samples_x = transform_z_to_x(self.samples, self.marginal_dist, self.marginal_params)
+            self.samples_x, self.Jacobian = transform_z_to_x(self.samples, self.marginal_dist, self.marginal_params,
+                                                             self.corr_norm, Jacobian=True)
 
+
+########################################################################################################################
+########################################################################################################################
+#                                         Inverse Nataf transformation
+########################################################################################################################
 class InvNataf:
     """
         A class to perform the inverse Nataf transformation of samples in standard normal space.
@@ -1256,24 +1276,25 @@ class InvNataf:
                 setattr(self, k, v)
 
             if not hasattr(self, 'corr') and corr is None:
-                print('Using the Nataf transformation to uncorrelated samples.')
+                print('Using the inverse Nataf transformation to uncorrelated samples...')
             elif not hasattr(self, 'corr_norm') and corr is not None:
-                print('Using the Nataf transformation to correlated samples.')
+                print('Using the inverse Nataf transformation to correlated samples...')
                 self.corr = corr
                 self.corr_norm = itam(self.marginal_dist, self.marginal_params, self.corr)
             elif hasattr(self, 'corr_norm'):
-                print('Using the Nataf transformation to correlated samples.')
+                print('Using the inverse Nataf transformation to correlated samples...')
                 self.corr = itam(self.marginal_dist, self.marginal_params, self.corr_norm)
 
         # Check if samples is an array
         elif isinstance(samples, np.ndarray):
-            print('The samples provided must be realizations of standard normal random variables.')
+            print('The samples provided must be realizations of standard normal random variables...')
             self.samples = samples
             self.corr = corr
             if self.corr_norm is not None:
                 self.corr = itam(self.marginal_dist, self.marginal_params, self.corr_norm)
             elif self.corr is None:
-                print('Using the Nataf transformation to uncorrelated samples.')
+                print('Using the inverse Nataf transformation to uncorrelated samples...')
 
         if self.transform is True:
-            self.samples_z = transform_x_to_z(self.samples, self.marginal_dist, self.marginal_params)
+            self.samples_z, self.Jacobian = transform_x_to_z(self.samples, self.marginal_dist, self.marginal_params,
+                                                             self.corr_norm, Jacobian=True)

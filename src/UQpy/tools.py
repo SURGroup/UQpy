@@ -20,22 +20,43 @@ import numpy as np
 import scipy.stats as stats
 
 
-def transform_z_to_x(samples, marginal_dist, marginal_params):
-    samples_x = np.zeros_like(samples)
+def transform_z_to_x(samples_z, marginal_dist, marginal_params, corr_norm, Jacobian=False):
+    samples_x = np.zeros_like(samples_z)
     for j in range(len(marginal_dist)):
         icdf = marginal_dist[j].icdf
-        for i in range(samples.shape[0]):
-            samples_x[i, j] = icdf(stats.norm.cdf(samples[i, j]), marginal_params[j])
-    return samples_x
+        for i in range(samples_z.shape[0]):
+            samples_x[i, j] = icdf(stats.norm.cdf(samples_z[i, j]), marginal_params[j])
+
+    if not Jacobian or corr_norm is None:
+        return samples_x, None
+    else:
+        from scipy.linalg import cholesky
+        c = cholesky(corr_norm, lower=True)
+        diag = np.zeros([len(marginal_dist), len(marginal_dist)])
+        for j in range(len(marginal_dist)):
+            pdf = marginal_dist[j].pdf
+            diag[j, j] = pdf(samples_x[j, j], marginal_params[j]) / stats.norm.pdf(samples_z[j, j])
+        Jac = np.linalg.solve(c, diag)
+        return samples_x, Jac
 
 
-def transform_x_to_z(samples, marginal_dist, marginal_params):
-    samples_z = np.zeros_like(samples)
+def transform_x_to_z(samples_x, marginal_dist, marginal_params, corr_norm, Jacobian=False):
+    samples_z = np.zeros_like(samples_x)
     for j in range(len(marginal_dist)):
         cdf = marginal_dist[j].cdf
-        for i in range(samples.shape[0]):
-            samples_z[i, j] = stats.norm.ppf(cdf(samples[i, j], marginal_params[j]))
-    return samples_z
+        for i in range(samples_x.shape[0]):
+            samples_z[i, j] = stats.norm.ppf(cdf(samples_x[i, j], marginal_params[j]))
+    if not Jacobian or corr_norm is None:
+        return samples_z, None
+    else:
+        from scipy.linalg import cholesky
+        c = cholesky(corr_norm, lower=True)
+        diag = np.zeros([len(marginal_dist), len(marginal_dist)])
+        for j in range(len(marginal_dist)):
+            pdf = marginal_dist[j].pdf
+            diag[j, j] = stats.norm.pdf(samples_z[j, j]) / pdf(samples_x[j, j], marginal_params[j])
+        Jac = np.linalg.solve(c, diag)
+        return samples_x, Jac
 
 
 def run_corr(samples, corr):
@@ -71,7 +92,7 @@ def solve_double_integral(marginal, params, rho_norm):
     """
 
     n = 1024
-    zmax = 8
+    zmax = 3
     zmin = -zmax
     points, weights = np.polynomial.legendre.leggauss(n)
     points = - (0.5 * (points + 1) * (zmax - zmin) + zmin)
@@ -126,7 +147,7 @@ def itam(marginal, params, corr):
     # Iteration Condition
     i_converge = 0
     error0 = 100
-    max_iter = 5
+    max_iter = 150
 
     for ii in range(max_iter):
         corr0 = solve_double_integral(marginal, params, corr_norm0)
