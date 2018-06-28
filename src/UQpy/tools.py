@@ -20,23 +20,26 @@ import numpy as np
 import scipy.stats as stats
 
 
-def transform_x_to_z(samples_x, marginal_dist, marginal_params, corr_norm, Jacobian=False):
+def transform_x_to_z(corr_norm, marginal_dist, marginal_params, samples_x, Jacobian=True):
+
+    from scipy.linalg import cholesky
+    A = cholesky(corr_norm, lower=True)
     samples_z = np.zeros_like(samples_x)
-    for j in range(len(marginal_dist)):
+    m, n = np.shape(samples_x)
+    for j in range(m):
         cdf = marginal_dist[j].cdf
-        for i in range(samples_x.shape[0]):
-            samples_z[i, j] = stats.norm.ppf(cdf(samples_x[i, j], marginal_params[j]))
-    if not Jacobian or corr_norm is None:
+        samples_z[j, :] = stats.norm.ppf(cdf(samples_x[j], marginal_params[j]))
+    Z = np.dot(A, samples_z)
+
+    if not Jacobian:
         return samples_z, None
     else:
-        from scipy.linalg import cholesky
-        c = cholesky(corr_norm, lower=True)
-        diag = np.zeros([len(marginal_dist), len(marginal_dist)])
+        diag = np.zeros([m, m])
         for j in range(len(marginal_dist)):
             pdf = marginal_dist[j].pdf
-            diag[j, j] = stats.norm.pdf(samples_z[j, j]) / pdf(samples_x[j, j], marginal_params[j])
-        Jac = np.linalg.solve(c, diag)
-        return samples_x, Jac
+            diag[j, j] = stats.norm.pdf(Z[j]) / pdf(samples_x[j], marginal_params[j])
+        Jac = np.linalg.solve(A, diag)
+        return samples_z.T, Jac
 
 
 def transform_z_to_x(corr_norm, marginal_dist, marginal_params, samples_z, Jacobian=True):

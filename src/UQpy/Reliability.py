@@ -382,13 +382,15 @@ class FORM:
     # Last Modified: 6/27/18 by Dimitris G. Giovanis
 
     def __init__(self, dimension=None, dist_name=None, dist_params=None, nsamples=None, corr=None, method=None,
-                 algorithm=None, model_type=None, model_script=None, input_script=None, output_script=None):
+                 init_design_point=None, algorithm=None, model_type=None, model_script=None, input_script=None,
+                 output_script=None):
 
         self.dimension = dimension
         self.dist_name = dist_name
         self.dist_params = dist_params
         self.nsamples = nsamples
         self.corr = corr
+        self.init_design_point = init_design_point
         self.method = method
         self.algorithm = algorithm
         self.model_type = model_type
@@ -397,8 +399,12 @@ class FORM:
         self.output_script = output_script
 
         # Correlation matrix of the random variables in the original space
-        from UQpy.SampleMethods import InvNataf
-        self.obj = InvNataf(corr=self.corr, marginal_name=self.dist_name, marginal_params=dist_params)
+        from UQpy.SampleMethods import InvNataf, Nataf
+        if self.corr is not None:
+            self.obj = InvNataf(corr=self.corr, marginal_name=self.dist_name, marginal_params=dist_params)
+        else:
+            self.obj = Nataf(samples=self.init_design_point, marginal_name=self.dist_name,
+                             marginal_params=dist_params)
 
         if self.method == 'HLRF':
             d = self.dimension
@@ -406,6 +412,8 @@ class FORM:
             [self.u_star, self.x_star, self.beta, self.Pf] = self.form_hlrf()
 
     def form_hlrf(self):
+
+        # Hasofer-Lind-Rackwitz-Fiessler (HLRF) algorithm
         import scipy as sp
         n = self.dimension  # number of random variables (dimension)
 
