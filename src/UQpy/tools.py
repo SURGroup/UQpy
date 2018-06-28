@@ -32,7 +32,7 @@ def transform_x_to_z(corr_norm, marginal_dist, marginal_params, samples_x, Jacob
     Z = np.dot(A, samples_z)
 
     if not Jacobian:
-        return samples_z, None
+        return samples_z.T, None
     else:
         diag = np.zeros([m, m])
         for j in range(len(marginal_dist)):
@@ -54,7 +54,7 @@ def transform_z_to_x(corr_norm, marginal_dist, marginal_params, samples_z, Jacob
         samples_x[j, :] = icdf(stats.norm.cdf(Z[j, :]), marginal_params[j])
 
     if not Jacobian:
-        return samples_x, None
+        return samples_x.T, None
     else:
         diag = np.zeros([m, m])
         for j in range(m):
@@ -131,17 +131,13 @@ def solve_double_integral(marginal, params, rho_norm):
                 raise RuntimeError("The marginal distributions need to have "
                                    "finite mean and variance")
 
-            if marginal[j].name == 'Normal' and marginal[i].name == 'Normal':
-                rho[i, j] = rho_norm[i, j]
-                rho[j, i] = rho[i, j]
-            else:
-                #  performing Nataf
-                tmp_f_xi = ((icdf_j(stats.norm.cdf(xi), params[j]) - mj[0]) / mj[1])
-                tmp_f_eta = ((icdf_i(stats.norm.cdf(eta), params[i]) - mi[0]) / mi[1])
-                coef = tmp_f_xi * tmp_f_eta * w2d
 
-                rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
-                rho[j, i] = rho[i, j]
+            tmp_f_xi = ((icdf_j(stats.norm.cdf(xi), params[j]) - mj[0]) / mj[1])
+            tmp_f_eta = ((icdf_i(stats.norm.cdf(eta), params[i]) - mi[0]) / mi[1])
+            coef = tmp_f_xi * tmp_f_eta * w2d
+
+            rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
+            rho[j, i] = rho[i, j]
 
     return rho
 

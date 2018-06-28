@@ -1221,9 +1221,18 @@ class Nataf:
             self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
             self.Jacobian = list()
             self.samples_x = np.zeros_like(self.samples)
+            if self.samples.ndim == 1:
+                if self.dimension == 1:
+                    self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
+                else:
+                    self.samples = self.samples.reshape(1, self.samples.shape[0])
             for i in range(self.samples.shape[0]):
-                self.samples_x[i, :], J = transform_z_to_x(self.corr_norm, self.marginal_dist,
-                                                           self.marginal_params, self.samples[i, :].reshape(-1, 1))
+                if self.samples.shape[0] != 1:
+                    self.samples_x[i, :], J = transform_z_to_x(self.corr_norm, self.marginal_dist,
+                                                             self.marginal_params, self.samples[i, :].reshape(-1, 1))
+                else:
+                    self.samples_x, J = transform_x_to_z(self.corr_norm, self.marginal_dist,
+                                                               self.marginal_params, self.samples[i, :].reshape(-1, 1))
                 self.Jacobian.append(J)
 
         elif isinstance(samples, np.ndarray):
@@ -1231,16 +1240,25 @@ class Nataf:
             self.samples = samples
             self.corr_norm = corr_norm
             self.dist = None
-
+            self.dimension = len(self.marginal_dist)
             if self.corr_norm is None:
-                self.corr_norm = np.identity(n=self.dimension)
+                self.corr_norm = np.identity(n=len(self.marginal_name))
 
             self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
             self.Jacobian = list()
             self.samples_x = np.zeros_like(self.samples)
+            if self.samples.ndim == 1:
+                if self.dimension == 1:
+                    self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
+                else:
+                    self.samples = self.samples.reshape(1, self.samples.shape[0])
             for i in range(self.samples.shape[0]):
-                self.samples_x[i, :], J = transform_z_to_x(self.corr_norm, self.marginal_dist,
-                                                           self.marginal_params, self.samples[i, :].reshape(-1, 1))
+                if self.samples.shape[0] != 1:
+                    self.samples_x[i, :], J = transform_z_to_x(self.corr_norm, self.marginal_dist,
+                                                             self.marginal_params, self.samples[i, :].reshape(-1, 1))
+                else:
+                    self.samples_x, J = transform_x_to_z(self.corr_norm, self.marginal_dist,
+                                                               self.marginal_params, self.samples[i, :].reshape(-1, 1))
                 self.Jacobian.append(J)
 
         elif samples is None:
@@ -1314,9 +1332,18 @@ class InvNataf:
             self.corr_norm = itam(self.dist, self.dist_params, self.corr)
             self.Jacobian = list()
             self.samples_z = np.zeros_like(self.samples)
+            if self.samples.ndim == 1:
+                if self.dimension == 1:
+                    self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
+                else:
+                    self.samples = self.samples.reshape(1, self.samples.shape[0])
             for i in range(self.samples.shape[0]):
-                self.samples_z[i, :], J = transform_x_to_z(self.corr_norm, self.dist,
-                                                           self.dist_params, self.samples[i, :].reshape(-1, 1))
+                if self.samples.shape[0] != 1:
+                    self.samples_z[i, :], J = transform_x_to_z(self.corr_norm, self.marginal_dist,
+                                                             self.marginal_params, self.samples[i, :].reshape(-1, 1))
+                else:
+                    self.samples_z, J = transform_x_to_z(self.corr_norm, self.marginal_dist,
+                                                               self.marginal_params, self.samples[i, :].reshape(-1, 1))
                 self.Jacobian.append(J)
 
         # Check if samples is an array
@@ -1331,16 +1358,25 @@ class InvNataf:
 
             self.samples = samples
             self.dist = None
-
+            self.dimension = len(self.marginal_dist)
             if self.corr is None:
-                self.corr_norm = np.identity(n=self.dimension)
+                self.corr = np.identity(n=len(self.marginal_name))
 
             self.corr_norm = itam(self.marginal_dist, self.marginal_params, self.corr)
             self.Jacobian = list()
             self.samples_z = np.zeros_like(self.samples)
+            if self.samples.ndim == 1:
+                if self.dimension == 1:
+                    self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
+                else:
+                    self.samples = self.samples.reshape(1, self.samples.shape[0])
             for i in range(self.samples.shape[0]):
-                self.samples_z[i, :], J = transform_x_to_z(self.corr_norm, self.marginal_dist,
-                                                           self.marginal_params, self.samples[i, :].reshape(-1, 1))
+                if self.samples.shape[0] != 1:
+                    self.samples_z[i, :], J = transform_x_to_z(self.corr_norm, self.marginal_dist,
+                                                             self.marginal_params, self.samples[i, :].reshape(-1, 1))
+                else:
+                    self.samples_z, J = transform_x_to_z(self.corr_norm, self.marginal_dist,
+                                                               self.marginal_params, self.samples[i, :].reshape(-1, 1))
                 self.Jacobian.append(J)
 
         elif samples is None:

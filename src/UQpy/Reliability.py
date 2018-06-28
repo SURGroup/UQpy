@@ -398,14 +398,6 @@ class FORM:
         self.input_script = input_script
         self.output_script = output_script
 
-        # Correlation matrix of the random variables in the original space
-        from UQpy.SampleMethods import InvNataf, Nataf
-        if self.corr is not None:
-            self.obj = InvNataf(corr=self.corr, marginal_name=self.dist_name, marginal_params=dist_params)
-        else:
-            self.obj = Nataf(samples=self.init_design_point, marginal_name=self.dist_name,
-                             marginal_params=dist_params)
-
         if self.method == 'HLRF':
             d = self.dimension
             print('running FORM...')
@@ -420,23 +412,30 @@ class FORM:
         # initialization
         max_iter = int(1e2)
         tol = 1e-5
-        u = np.ones([max_iter, n])
+        # Correlation matrix of the random variables in the original space
+        u = np.zeros([max_iter, n])
         beta = np.zeros(max_iter)
 
         # HLRF method
         for k in range(max_iter):
-            from UQpy.tools import transform_z_to_x
-            # 0. Get x and Jacobi from u (important for transformation)
-            [xk, jacob] = transform_z_to_x(self.obj.corr_norm, self.obj.marginal_dist,
-                                           self.obj.marginal_params, u[k, :].reshape(-1, 1))
+
+            if k == 0:
+                u[k, :] = np.array(self.init_design_point)
+            
+            from UQpy.SampleMethods import InvNataf, Nataf
+            dist = Nataf(samples=u[k, :], marginal_name=self.dist_name,
+                            marginal_params=self.dist_params)
+
+            jacob = dist.Jacobian[0]
 
             # 1. evaluate LSF at point u_k
-            H_uk = RunModel(samples=xk, model_type=self.model_type, model_script=self.model_script,
+            H_uk = RunModel(samples=dist.samples_z, model_type=self.model_type, model_script=self.model_script,
                             input_script=self.input_script, output_script=self.output_script,
                             dimension=self.dimension)
 
             # 2. evaluate LSF gradient at point u_k and direction cosines
-            DH_uk = np.linalg.solve(jacob, H_uk.model_eval.QOI[1])
+
+            DH_uk = np.linalg.solve(dist.Jacobian[0], H_uk.model_eval.QOI[1].reshape(-1, 1))
             norm_DH_uk = sp.linalg.norm(DH_uk)
             alpha = DH_uk / norm_DH_uk
             alpha = alpha.squeeze()
@@ -456,13 +455,16 @@ class FORM:
 
         # compute design point, reliability index and Pf
         u_star = u[-1, :]
-        x_star = transform_z_to_x(self.obj.corr_norm, self.obj.marginal_dist,
-                                  self.obj.marginal_params, u_star.reshape(-1, 1))
+        dist_star = Nataf(samples=u_star, marginal_name=self.dist_name,
+                            marginal_params=self.dist_params)
+        
+        x_star = dist_star.samples_x
         beta = beta[k]
         Pf = sp.stats.norm.cdf(-beta)
 
         # print results
         print('*FORM Method\n')
-        print(' ', k, ' iterations... Reliability index = ', beta, ' --- Failure probability = ', Pf, '\n\n')
-
+        print(' ', k, ' iterations... Reliability index = ', beta, ' --- Failure probability = ', Pf,
+              ' ----design point = ', x_star)
+                                                                            
         return u_star, x_star, beta, Pf
