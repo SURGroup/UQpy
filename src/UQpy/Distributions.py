@@ -54,8 +54,12 @@ class Distribution:
 
                 import numpy as np
                 y = [np.nan, np.nan, np.nan, np.nan]
-                y[0] = params[0]
-                y[1] = params[1]
+                mean, var, skew, kurt = stats.norm.stats(scale=params[1],
+                                                         loc=params[0],  moments='mvsk')
+                y[0] = mean
+                y[1] = var
+                y[2] = skew
+                y[3] = kurt
                 return y
 
             self.moments = partial(moments)
@@ -83,8 +87,13 @@ class Distribution:
 
                 import numpy as np
                 y = [np.nan, np.nan, np.nan, np.nan]
-                y[0] = (params[0]+params[1])/2
-                y[1] = np.sqrt(1/12*(params[1]-params[0])**2)
+
+                mean, var, skew, kurt = stats.uniform.stats(scale=params[1]-params[0],
+                                                            loc=params[0],  moments='mvsk')
+                y[0] = mean
+                y[1] = var
+                y[2] = skew
+                y[3] = kurt
                 return y
 
             self.moments = partial(moments)
@@ -92,23 +101,28 @@ class Distribution:
         elif self.name == 'Binomial':
 
             def pdf(x, params):
-                return stats.binom.pdf(x, params[0], params[1])
+                return stats.binom.pdf(x, n=params[0], p=params[1])
             self.pdf = partial(pdf)
 
             def cdf(x, params):
-                return stats.binom.cdf(x, params[0], params[1])
+                return stats.binom.cdf(x, n=params[0], p=params[1])
             self.cdf = partial(cdf)
 
             def icdf(x, params):
-                return stats.binom.ppf(x, params[0], params[1])
+                return stats.binom.ppf(x, n=params[0], p=params[1])
             self.icdf = partial(icdf)
 
             def moments(params):
 
                 import numpy as np
                 y = [np.nan, np.nan, np.nan, np.nan]
-                y[0] = params[0]*params[1]
-                y[1] = np.sqrt(params[0]*params[1]*(1-params[1]))
+
+                mean, var, skew, kurt = stats.binom.stats(n=params[0],
+                                                          p=params[0],  moments='mvsk')
+                y[0] = mean
+                y[1] = var
+                y[2] = skew
+                y[3] = kurt
                 return y
 
             self.moments = partial(moments)
@@ -131,12 +145,40 @@ class Distribution:
 
                 import numpy as np
                 y = [np.nan, np.nan, np.nan, np.nan]
-                alpha = params[0]
-                beta = params[1]
-                a = params[2]
-                b = params[3]
-                y[0] = (alpha*b + beta*a)/(alpha + beta)
-                y[1] = np.sqrt((alpha*beta*(b-a))/(alpha + beta)**2*(alpha + beta + 1))
+
+                mean, var, skew, kurt = stats.beta.stats(a=params[0],
+                                                         b=params[0],  moments='mvsk')
+                y[0] = mean
+                y[1] = var
+                y[2] = skew
+                y[3] = kurt
+                return y
+
+            self.moments = partial(moments)
+
+        elif self.name == 'Gumbel':
+
+            def pdf(x, params):
+                return stats.genextreme.pdf(x, c=0, loc=params[0], scale=params[1])
+            self.pdf = partial(pdf)
+
+            def cdf(x, params):
+                return stats.genextreme.cdf(x, c=0, loc=params[0], scale=params[1])
+            self.cdf = partial(cdf)
+
+            def icdf(x, params):
+                return stats.genextreme.ppf(x, c=0, loc=params[0], scale=params[1])
+            self.icdf = partial(icdf)
+
+            def moments(params):
+                import numpy as np
+                y = [np.nan, np.nan, np.nan, np.nan]
+                mean, var, skew, kurt = stats.genextreme.stats(c=0, scale=params[1],
+                                                               loc=params[0],  moments='mvsk')
+                y[0] = mean
+                y[1] = var
+                y[2] = skew
+                y[3] = kurt
                 return y
 
             self.moments = partial(moments)
@@ -156,15 +198,14 @@ class Distribution:
             self.icdf = partial(icdf)
 
             def moments(params):
-
                 import numpy as np
                 y = [np.nan, np.nan, np.nan, np.nan]
-                alpha = params[0]
-                beta = params[1]
-                a = params[2]
-                b = params[3]
-                y[0] = (alpha*b + beta*a)/(alpha + beta)
-                y[1] = np.sqrt((alpha*beta*(b-a))/(alpha + beta)**2*(alpha + beta + 1))
+                mean, var, skew, kurt = stats.chi2.stats(a=params[0]/2.0,
+                                                         scale=2,  moments='mvsk')
+                y[0] = mean
+                y[1] = var
+                y[2] = skew
+                y[3] = kurt
                 return y
 
             self.moments = partial(moments)
@@ -190,8 +231,13 @@ class Distribution:
 
                 import numpy as np
                 y = [np.nan, np.nan, np.nan, np.nan]
-                y[0] = np.exp(params[0])
-                y[1] = params[1]
+                mean, var, skew, kurt = stats.lognorm.stats(s=params[1],
+                                                            scale=np.exp(params[0]),  moments='mvsk')
+                y[0] = mean
+                y[1] = var
+                y[2] = skew
+                y[3] = kurt
+
                 return y
 
             self.moments = partial(moments)
@@ -214,8 +260,12 @@ class Distribution:
 
                 import numpy as np
                 y = [np.nan, np.nan, np.nan, np.nan]
-                y[0] = params[0]/params[1]
-                y[1] = np.sqrt(params[0]/params[1]**2)
+                mean, var, skew, kurt = stats.gamma.stats(a=params[0],
+                                                          scale=1/params[1],  moments='mvsk')
+                y[0] = mean
+                y[1] = var
+                y[2] = skew
+                y[3] = kurt
                 return y
 
             self.moments = partial(moments)
@@ -232,6 +282,19 @@ class Distribution:
             def icdf(x, params):
                 return stats.expon.ppf(x, params[0], scale=1/params[0])
             self.icdf = partial(icdf)
+
+            def moments(params):
+
+                import numpy as np
+                y = [np.nan, np.nan, np.nan, np.nan]
+                mean, var, skew, kurt = stats.expon.stats(scale=1 / params[0], moments='mvsk')
+                y[0] = mean
+                y[1] = var
+                y[2] = skew
+                y[3] = kurt
+                return y
+
+            self.moments = partial(moments)
 
         elif os.path.isfile('custom_dist.py') is True:
             import custom_dist

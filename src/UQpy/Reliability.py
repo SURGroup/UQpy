@@ -383,7 +383,7 @@ class FORM:
 
     def __init__(self, dimension=None, dist_name=None, dist_params=None, nsamples=None, corr=None, method=None,
                  init_design_point=None, algorithm=None, model_type=None, model_script=None, input_script=None,
-                 output_script=None):
+                 output_script=None, deriv_script=None):
 
         self.dimension = dimension
         self.dist_name = dist_name
@@ -397,11 +397,12 @@ class FORM:
         self.model_script = model_script
         self.input_script = input_script
         self.output_script = output_script
+        self.deriv_script = deriv_script
 
         if self.method == 'HLRF':
             d = self.dimension
-            print('running FORM...')
-            [self.u_star, self.x_star, self.beta, self.Pf] = self.form_hlrf()
+            print('Running FORM...')
+            [self.u_star, self.x_star, self.beta, self.Pf, self.iterations] = self.form_hlrf()
 
     def form_hlrf(self):
 
@@ -413,7 +414,7 @@ class FORM:
         max_iter = int(1e2)
         tol = 1e-5
         # Correlation matrix of the random variables in the original space
-        u = np.zeros([max_iter, n])
+        u = np.zeros([max_iter+1, n])
         beta = np.zeros(max_iter)
 
         # HLRF method
@@ -422,26 +423,30 @@ class FORM:
             if k == 0:
                 u[k, :] = np.array(self.init_design_point)
             
+
             from UQpy.SampleMethods import InvNataf, Nataf
-            dist = Nataf(samples=u[k, :], marginal_name=self.dist_name,
-                            marginal_params=self.dist_params)
+            dist = InvNataf(samples=u[k, :], dimension=self.dimension, marginal_name=self.dist_name,
+                            corr=self.corr, marginal_params=self.dist_params)
 
-            jacob = dist.Jacobian[0]
 
-            # 1. evaluate LSF at point u_k
-            H_uk = RunModel(samples=dist.samples_z, model_type=self.model_type, model_script=self.model_script,
+            # 1. evaluate Limit State Function at point
+            g = RunModel(samples=dist.samples_z, model_type=self.model_type, model_script=self.model_script,
                             input_script=self.input_script, output_script=self.output_script,
                             dimension=self.dimension)
 
-            # 2. evaluate LSF gradient at point u_k and direction cosines
+            # 2. evaluate Limit State Function gradient at point u_k and direction cosines
+            dg = RunModel(samples=dist.samples_z, model_type=self.model_type, model_script=self.deriv_script,
+                            input_script=self.input_script, output_script=self.output_script,
+                            dimension=self.dimension)
 
-            DH_uk = np.linalg.solve(dist.Jacobian[0], H_uk.model_eval.QOI[1].reshape(-1, 1))
-            norm_DH_uk = sp.linalg.norm(DH_uk)
-            alpha = DH_uk / norm_DH_uk
+
+            A = np.linalg.solve(dist.Jacobian[0], dg.model_eval.QOI)
+            norm_g = sp.linalg.norm(A)
+            alpha = A / norm_g
             alpha = alpha.squeeze()
 
             # 3. calculate beta
-            beta[k] = -np.inner(u[k, :].T, alpha) + H_uk.model_eval.QOI[0] / norm_DH_uk
+            beta[k] = -np.inner(u[k, :].T, alpha) + g.model_eval.QOI[0] / norm_g
 
             # 4. calculate u_{k+1}
             u[k + 1, :] = -beta[k] * alpha
@@ -456,15 +461,11 @@ class FORM:
         # compute design point, reliability index and Pf
         u_star = u[-1, :]
         dist_star = Nataf(samples=u_star, marginal_name=self.dist_name,
-                            marginal_params=self.dist_params)
-        
+                            marginal_params=self.dist_params, corr_norm=dist.corr_norm)
+
+
         x_star = dist_star.samples_x
         beta = beta[k]
         Pf = sp.stats.norm.cdf(-beta)
 
-        # print results
-        print('*FORM Method\n')
-        print(' ', k, ' iterations... Reliability index = ', beta, ' --- Failure probability = ', Pf,
-              ' ----design point = ', x_star)
-                                                                            
-        return u_star, x_star, beta, Pf
+        return u_star, x_star[0], beta, Pf, k

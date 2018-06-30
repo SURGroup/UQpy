@@ -97,7 +97,7 @@ def solve_double_integral(marginal, params, rho_norm):
     """
 
     n = 1024
-    zmax = 3
+    zmax = 8
     zmin = -zmax
     points, weights = np.polynomial.legendre.leggauss(n)
     points = - (0.5 * (points + 1) * (zmax - zmin) + zmin)
@@ -132,8 +132,12 @@ def solve_double_integral(marginal, params, rho_norm):
                                    "finite mean and variance")
 
 
-            tmp_f_xi = ((icdf_j(stats.norm.cdf(xi), params[j]) - mj[0]) / mj[1])
-            tmp_f_eta = ((icdf_i(stats.norm.cdf(eta), params[i]) - mi[0]) / mi[1])
+            s1 = np.sqrt(mj[1])
+            m1 = mj[0]
+            s2 = np.sqrt(mi[1])
+            m2 = mi[0]
+            tmp_f_xi = ((icdf_j(stats.norm.cdf(xi), params[j]) - mj[0]) / np.sqrt(mj[1]))
+            tmp_f_eta = ((icdf_i(stats.norm.cdf(eta), params[i]) - mi[0]) / np.sqrt(mi[1]))
             coef = tmp_f_xi * tmp_f_eta * w2d
 
             rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
