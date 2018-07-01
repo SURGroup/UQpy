@@ -372,11 +372,11 @@ class SubsetSimulation:
 
 ########################################################################################################################
 ########################################################################################################################
-#                                        First order reliability method
+#                                        First/Second order reliability method
 ########################################################################################################################
 
 
-class FORM:
+class TaylorSeries:
 
     # Authors: Dimitris G.Giovanis
     # Last Modified: 6/27/18 by Dimitris G. Giovanis
@@ -399,9 +399,12 @@ class FORM:
         self.output_script = output_script
         self.deriv_script = deriv_script
 
-        if self.method == 'HL':
-            d = self.dimension
+        if self.method == 'FORM':
             print('Running FORM...')
+        elif self.method == 'SORM':
+            print('Running SORM...')
+
+        if self.algorithm == 'HL':
             [self.u_star, self.x_star, self.beta, self.Pf, self.iterations] = self.form_hl()
 
     def form_hl(self):
@@ -470,9 +473,3 @@ class FORM:
         pf = sp.stats.norm.cdf(-beta)
 
         return u_star, x_star[0], beta, pf, k
-
-
-########################################################################################################################
-########################################################################################################################
-#                                        Second order reliability method
-########################################################################################################################
