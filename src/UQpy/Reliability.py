@@ -414,7 +414,7 @@ class TaylorSeries:
         n = self.dimension  # number of random variables (dimension)
 
         # initialization
-        max_iter = int(1e2)
+        max_iter = int(1e3)
         tol = 1e-5
         # Correlation matrix of the random variables in the original space
         u = np.zeros([max_iter+1, n])
@@ -449,15 +449,34 @@ class TaylorSeries:
             alpha = A / norm_g
             alpha = alpha.squeeze()
 
-            # 3. calculate beta
-            beta[k] = -np.inner(u[k, :].T, alpha) + g.model_eval.QOI[0] / norm_g
+            if self.method == 'FORM':
+                # 3. calculate first order beta
+                beta[k] = -np.inner(u[k, :].T, alpha) + g.model_eval.QOI[0] / norm_g
+                # 4. calculate u_{k+1}
+                u[k + 1, :] = -beta[k] * alpha
+                # next iteration
+                if np.linalg.norm(u[k + 1, :] - u[k, :]) <= tol:
+                    break
 
-            # 4. calculate u_{k+1}
-            u[k + 1, :] = -beta[k] * alpha
+            if self.method == 'SORM':
 
-            # next iteration
-            if np.linalg.norm(u[k + 1, :] - u[k, :]) <= tol:
-                break
+                # 3. calculate first order beta
+                beta_ = -np.inner(u[k, :].T, alpha) + g.model_eval.QOI[0] / norm_g
+                Q = np.identity(n=self.dimension)
+                Q[:, -1] = u[k, :].T
+                [Q, R] = np.linalg.qr(Q)
+                Q = np.fliplr(Q)
+                B = np.dot(np.dot(Q.T, dg.model_eval.Hessian), Q)
+                J = np.identity(n=self.dimension-1) + beta_*B[:self.dimension-1, :self.dimension-1]/norm_g
+                correction = 1/np.sqrt(np.linalg.det(J))
+                pf = sp.stats.norm.cdf(-beta_)*correction
+                beta[k] = -sp.stats.norm.ppf(pf)  # corrected index for second-order
+
+                # 4. calculate u_{k+1}
+                u[k + 1, :] = -beta[k] * alpha
+                # next iteration
+                if np.linalg.norm(u[k + 1, :] - u[k, :]) <= tol:
+                    break
 
         # delete unnecessary data
         u = u[:k + 1, :]
