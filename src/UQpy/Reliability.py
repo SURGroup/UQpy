@@ -372,7 +372,7 @@ class SubsetSimulation:
 
 ########################################################################################################################
 ########################################################################################################################
-#                                        Subset Simulation
+#                                        First order reliability method
 ########################################################################################################################
 
 
@@ -399,14 +399,14 @@ class FORM:
         self.output_script = output_script
         self.deriv_script = deriv_script
 
-        if self.method == 'HLRF':
+        if self.method == 'HL':
             d = self.dimension
             print('Running FORM...')
-            [self.u_star, self.x_star, self.beta, self.Pf, self.iterations] = self.form_hlrf()
+            [self.u_star, self.x_star, self.beta, self.Pf, self.iterations] = self.form_hl()
 
-    def form_hlrf(self):
+    def form_hl(self):
 
-        # Hasofer-Lind-Rackwitz-Fiessler (HLRF) algorithm
+        # Hasofer-Lind (HL) algorithm
         import scipy as sp
         n = self.dimension  # number of random variables (dimension)
 
@@ -417,30 +417,31 @@ class FORM:
         u = np.zeros([max_iter+1, n])
         beta = np.zeros(max_iter)
 
-        # HLRF method
+        # HL method
         for k in range(max_iter):
 
             if k == 0:
                 u[k, :] = np.array(self.init_design_point)
-            
 
-            from UQpy.SampleMethods import InvNataf, Nataf
+            from UQpy.SampleMethods import InvNataf
             dist = InvNataf(samples=u[k, :], dimension=self.dimension, marginal_name=self.dist_name,
                             corr=self.corr, marginal_params=self.dist_params)
 
-
             # 1. evaluate Limit State Function at point
             g = RunModel(samples=dist.samples_z, model_type=self.model_type, model_script=self.model_script,
-                            input_script=self.input_script, output_script=self.output_script,
-                            dimension=self.dimension)
+                         input_script=self.input_script, output_script=self.output_script,
+                         dimension=self.dimension)
 
             # 2. evaluate Limit State Function gradient at point u_k and direction cosines
-            dg = RunModel(samples=dist.samples_z, model_type=self.model_type, model_script=self.deriv_script,
-                            input_script=self.input_script, output_script=self.output_script,
-                            dimension=self.dimension)
+            if self.deriv_script is None:
+                raise RuntimeError('A python script that provides the derivatives of the limit state function'
+                                   'is required for the Hasofer-Lind method.')
+            else:
+                dg = RunModel(samples=dist.samples_z.reshape(self.dimension), model_type=self.model_type,
+                              model_script=self.deriv_script, input_script=self.input_script,
+                              output_script=self.output_script, dimension=self.dimension)
 
-
-            A = np.linalg.solve(dist.Jacobian[0], dg.model_eval.QOI)
+            A = np.linalg.solve(dist.Jacobian[0], dg.model_eval.Grad)
             norm_g = sp.linalg.norm(A)
             alpha = A / norm_g
             alpha = alpha.squeeze()
@@ -460,12 +461,18 @@ class FORM:
 
         # compute design point, reliability index and Pf
         u_star = u[-1, :]
+        from UQpy.SampleMethods import Nataf
         dist_star = Nataf(samples=u_star, marginal_name=self.dist_name,
-                            marginal_params=self.dist_params, corr_norm=dist.corr_norm)
-
+                          marginal_params=self.dist_params, corr_norm=dist.corr_norm)
 
         x_star = dist_star.samples_x
         beta = beta[k]
-        Pf = sp.stats.norm.cdf(-beta)
+        pf = sp.stats.norm.cdf(-beta)
 
-        return u_star, x_star[0], beta, Pf, k
+        return u_star, x_star[0], beta, pf, k
+
+
+########################################################################################################################
+########################################################################################################################
+#                                        Second order reliability method
+########################################################################################################################
