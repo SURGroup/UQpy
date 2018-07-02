@@ -88,9 +88,8 @@ class SROM:
     :param correlation: Correlation matrix between random variables.
 
     Output:
-    :return: SROM.samples: Last column contains the probabilities/weights defining discrete approximation of
-                           continuous random variables.
-    :rtype: SROM.samples: ndarray
+    :return: SROM.sample_weights: The probabilities weights for each sample as identified through optimization.
+    :rtype: SROM.sample_weights: ndarray
     """
     # Authors: Mohit Chauhan
     # Updated: 6/7/18 by Dimitris G. Giovanis
