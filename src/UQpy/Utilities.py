@@ -20,54 +20,53 @@ import numpy as np
 import scipy.stats as stats
 
 
-def transform_x_to_z(corr_norm, marginal_dist, marginal_params, samples_x, Jacobian=True):
+def transform_x_to_z(corr_norm, marginal_dist, marginal_params, samples_ng, Jacobian=True):
 
     from scipy.linalg import cholesky
     A = cholesky(corr_norm, lower=True)
-    samples_z = np.zeros_like(samples_x)
-    m, n = np.shape(samples_x)
+    samples_g = np.zeros_like(samples_ng)
+    m, n = np.shape(samples_ng)
     for j in range(m):
         cdf = marginal_dist[j].cdf
-        samples_z[j, :] = stats.norm.ppf(cdf(samples_x[j], marginal_params[j]))
-    Z = np.dot(A, samples_z)
+        samples_g[j, :] = stats.norm.ppf(cdf(samples_ng[j], marginal_params[j]))
+    Z = np.dot(A, samples_g)
 
     if not Jacobian:
-        return samples_z.T, None
+        return samples_g.T, None
     else:
         diag = np.zeros([m, m])
         for j in range(len(marginal_dist)):
             pdf = marginal_dist[j].pdf
-            diag[j, j] = stats.norm.pdf(Z[j]) / pdf(samples_x[j], marginal_params[j])
+            diag[j, j] = stats.norm.pdf(Z[j]) / pdf(samples_ng[j], marginal_params[j])
         Jac = np.linalg.solve(A, diag)
-        return samples_z.T, Jac
+        return samples_g.T, Jac
 
 
-def transform_z_to_x(corr_norm, marginal_dist, marginal_params, samples_z, Jacobian=True):
+def transform_g_to_ng(corr_norm, marginal_dist, marginal_params, samples, Jacobian=True):
 
     from scipy.linalg import cholesky
-    A = cholesky(corr_norm, lower=True)
-    samples_x = np.zeros_like(samples_z)
-    Z = np.dot(A, samples_z)
-    m, n = np.shape(samples_z)
+    samples_ng = np.zeros_like(samples)
+    m, n = np.shape(samples)
     for j in range(m):
         icdf = marginal_dist[j].icdf
-        samples_x[j, :] = icdf(stats.norm.cdf(Z[j, :]), marginal_params[j])
+        samples_ng[j, :] = icdf(stats.norm.cdf(samples[j, :]), marginal_params[j])
 
     if not Jacobian:
-        return samples_x.T, None
+        return samples_ng.T, None
     else:
+        A = cholesky(corr_norm, lower=True)
         diag = np.zeros([m, m])
         for j in range(m):
             pdf = marginal_dist[j].pdf
-            diag[j, j] = pdf(samples_x[j], marginal_params[j]) / stats.norm.pdf(Z[j])
-        Jac = np.linalg.solve(A, diag)
-        return samples_x.T, Jac
+            diag[j, j] = pdf(samples_ng[j], marginal_params[j]) / stats.norm.pdf(samples[j])
+        jac = np.linalg.solve(A, diag)
+        return samples_ng.T, jac
 
 
 def run_corr(samples, corr):
     """
-        A function which performs the Cholesky decomposition of the correlation matrix and correlate
-        the samples
+        A function which performs the Cholesky decomposition of the correlation matrix and correlates standard normal
+        samples
     """
 
     from scipy.linalg import cholesky
@@ -76,10 +75,9 @@ def run_corr(samples, corr):
     return y.T
 
 
-def run_uncorr(samples, corr):
+def run_decorr(samples, corr):
     """
-        A function which un-correlates
-        the samples
+        A function which decorrelates standard normal samples
     """
 
     from scipy.linalg import cholesky
@@ -89,7 +87,7 @@ def run_uncorr(samples, corr):
     return y.T
 
 
-def solve_double_integral(marginal, params, rho_norm):
+def correlation_distortion(marginal, params, rho_norm):
     """
         A function to solve the double integral equation in order to evaluate the modified correlation
         matrix in the standard normal space given the correlation matrix in the original space. This is achieved
@@ -131,11 +129,6 @@ def solve_double_integral(marginal, params, rho_norm):
                 raise RuntimeError("The marginal distributions need to have "
                                    "finite mean and variance")
 
-
-            s1 = np.sqrt(mj[1])
-            m1 = mj[0]
-            s2 = np.sqrt(mi[1])
-            m2 = mi[0]
             tmp_f_xi = ((icdf_j(stats.norm.cdf(xi), params[j]) - mj[0]) / np.sqrt(mj[1]))
             tmp_f_eta = ((icdf_i(stats.norm.cdf(eta), params[i]) - mi[0]) / np.sqrt(mi[1]))
             coef = tmp_f_xi * tmp_f_eta * w2d
@@ -155,7 +148,7 @@ def itam(marginal, params, corr):
     max_iter = 20
 
     for ii in range(max_iter):
-        corr0 = solve_double_integral(marginal, params, corr_norm0)
+        corr0 = correlation_distortion(marginal, params, corr_norm0)
         # compute the relative difference between the computed NGACF & the target R(Normalized)
         err1 = 1.0e-10
         err2 = 1.0e-10

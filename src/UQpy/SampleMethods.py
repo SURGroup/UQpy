@@ -22,7 +22,7 @@ from scipy.spatial.distance import pdist
 import scipy.stats as sp
 import random
 from UQpy.Distributions import *
-from UQpy.tools import *
+from UQpy.Utilities import *
 
 ########################################################################################################################
 ########################################################################################################################
@@ -1051,8 +1051,8 @@ class MCMC:
 class Correlate:
     """
         A class to correlate samples ~ N(0, 1).
-        :param samples: An object of type MCS, LHS
-        :type samples: object
+        :param samples: An object of type MCS, LHS, STS or an array of N(0,1) samples
+        :type samples: object or ndarray
 
         :param corr_norm: The correlation matrix of the random variables in the standard normal space
         :type corr_norm: ndarray
@@ -1065,7 +1065,7 @@ class Correlate:
     def __init__(self, samples=None, corr_norm=None):
 
         # Check if samples is a SampleMethods Object or an array
-        if isinstance(samples, MCS) is True or isinstance(samples, LHS) is True:
+        if isinstance(samples, MCS) is True or isinstance(samples, LHS) is True or isinstance(samples, STS) is True:
             _dict = {**samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
@@ -1075,7 +1075,7 @@ class Correlate:
             for i in range(len(self.dist)):
                 if self.dist[i].name != 'Normal' or self.dist_params[i] != [0, 1]:
                     raise RuntimeError("In order to use class 'Correlate' the random variables should be standard "
-                                       "Gaussian")
+                                       "normal")
 
         # Check if samples is an array
         elif isinstance(samples, np.ndarray):
@@ -1096,14 +1096,14 @@ class Correlate:
 
 ########################################################################################################################
 ########################################################################################################################
-#                                         Uncorrelation
+#                                         Decorrelation
 ########################################################################################################################
 
-class Uncorrelate:
+class Decorrelate:
     """
-        A class to uncorrelate samples ~ N(0, 1).
-        :param samples: An object of type MCS, LHS
-        :type samples: object
+        A class to decorrelate samples ~ N(0, 1).
+        :param samples: An object of type Correlate or an array of correlated N(0,1) samples
+        :type samples: object or ndarray
 
         :param corr_norm: The correlation matrix of the random variables in the standard normal space
         :type corr_norm: ndarray
@@ -1115,7 +1115,7 @@ class Uncorrelate:
 
     def __init__(self, samples=None, corr_norm=None):
 
-        # Check if samples is a SampleMethods Object or an array
+        # Check if samples is a Correlate object or an array
         if isinstance(samples, Correlate) is True:
             _dict = {**samples.__dict__}
             for k, v in _dict.items():
@@ -1139,7 +1139,7 @@ class Uncorrelate:
         if np.linalg.norm(self.corr_norm - np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
             self.samples_uncorr = self.samples_corr
         else:
-            self.samples_uncorr = run_uncorr(self.samples_corr, self.corr_norm)
+            self.samples_uncorr = run_decorr(self.samples_corr, self.corr_norm)
 
 
 ########################################################################################################################
@@ -1150,8 +1150,8 @@ class Uncorrelate:
 
 class Nataf:
     """
-        A class to perform the Nataf transformation of samples ~ N(0, 1).
-        :param samples: An object of type MCS, LHS
+        A class to perform the Nataf transformation of samples from N(0, 1) to a user-defined distribution.
+        :param samples: An object of type MCS, LHS, or STS
         :type samples: object
 
         :param marginal_name: A list containing the names of the distributions of the random variables.
@@ -1179,44 +1179,30 @@ class Nataf:
         self.marginal_name = marginal_name
         self.marginal_params = marginal_params
         if self.marginal_name is None or self.marginal_params is None:
-            raise RuntimeError("In order to use class 'Nataf' marginal distributions and their parameters should"
+            raise RuntimeError("In order to use class 'Nataf', marginal distributions and their parameters must"
                                "be provided.")
         self.marginal_dist = list()
         for j in range(len(self.marginal_name)):
             self.marginal_dist.append(Distribution(self.marginal_name[j]))
 
         # Check if samples is a SampleMethods Object or an array
-        if isinstance(samples, MCS) is True or isinstance(samples, LHS) is True:
+        if isinstance(samples, MCS) is True or isinstance(samples, LHS) is True or isinstance(samples, STS) is True:
             _dict = {**samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
 
             for i in range(len(self.dist)):
                 if self.dist[i].name != 'Normal' or self.dist_params[i] != [0, 1]:
-                    raise RuntimeError("In order to use class 'Nataf' the random variables should be standard "
-                                       "Gaussian")
+                    raise RuntimeError("In order to use class 'Nataf' the random variables should be standard normal")
 
             if corr_norm is None:
                 self.corr_norm = np.identity(n=self.dimension)
             elif corr_norm is not None:
                 self.corr_norm = corr_norm
 
-            self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
+            self.corr = correlation_distortion(self.marginal_dist, self.marginal_params, self.corr_norm)
             self.Jacobian = list()
-            self.samples_x = np.zeros_like(self.samples)
-            for i in range(self.samples.shape[0]):
-                self.samples_x[i, :], jac = transform_z_to_x(self.corr_norm, self.marginal_dist,
-                                                             self.marginal_params, self.samples[i, :].reshape(-1, 1))
-                self.Jacobian.append(jac)
-
-        if isinstance(samples, Correlate) is True:
-            _dict = {**samples.__dict__}
-            for k, v in _dict.items():
-                setattr(self, k, v)
-
-            self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
-            self.Jacobian = list()
-            self.samples_x = np.zeros_like(self.samples)
+            self.samples_ng = np.zeros_like(self.samples)
             if self.samples.ndim == 1:
                 if self.dimension == 1:
                     self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
@@ -1224,12 +1210,35 @@ class Nataf:
                     self.samples = self.samples.reshape(1, self.samples.shape[0])
             for i in range(self.samples.shape[0]):
                 if self.samples.shape[0] != 1:
-                    self.samples_x[i, :], jac = transform_z_to_x(self.corr_norm, self.marginal_dist,
+                    self.samples_ng[i, :], jac = transform_g_to_ng(self.corr_norm, self.marginal_dist,
                                                                  self.marginal_params,
                                                                  self.samples[i, :].reshape(-1, 1))
                 else:
-                    self.samples_x, jac = transform_x_to_z(self.corr_norm, self.marginal_dist,
+                    self.samples_ng, jac = transform_g_to_ng(self.corr_norm, self.marginal_dist,
                                                            self.marginal_params, self.samples[i, :].reshape(-1, 1))
+                self.Jacobian.append(jac)
+
+        if isinstance(samples, Correlate) is True:
+            _dict = {**samples.__dict__}
+            for k, v in _dict.items():
+                setattr(self, k, v)
+
+            self.corr = correlation_distortion(self.marginal_dist, self.marginal_params, self.corr_norm)
+            self.Jacobian = list()
+            self.samples_ng = np.zeros_like(self.samples)
+            if self.samples.ndim == 1:
+                if self.dimension == 1:
+                    self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
+                else:
+                    self.samples = self.samples.reshape(1, self.samples.shape[0])
+            for i in range(self.samples.shape[0]):
+                if self.samples.shape[0] != 1:
+                    self.samples_ng[i, :], jac = transform_g_to_ng(self.corr_norm, self.marginal_dist,
+                                                                 self.marginal_params,
+                                                                 self.samples_corr[i, :].reshape(-1, 1))
+                else:
+                    self.samples_ng, jac = transform_g_to_ng(self.corr_norm, self.marginal_dist,
+                                                           self.marginal_params, self.samples_corr[i, :].reshape(-1, 1))
                 self.Jacobian.append(jac)
 
         elif isinstance(samples, np.ndarray):
@@ -1240,9 +1249,9 @@ class Nataf:
             if self.corr_norm is None:
                 self.corr_norm = np.identity(n=len(self.marginal_name))
 
-            self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
+            self.corr = correlation_distortion(self.marginal_dist, self.marginal_params, self.corr_norm)
             self.Jacobian = list()
-            self.samples_x = np.zeros_like(self.samples)
+            self.samples_ng = np.zeros_like(self.samples)
             if self.samples.ndim == 1:
                 if self.dimension == 1:
                     self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
@@ -1250,17 +1259,17 @@ class Nataf:
                     self.samples = self.samples.reshape(1, self.samples.shape[0])
             for i in range(self.samples.shape[0]):
                 if self.samples.shape[0] != 1:
-                    self.samples_x[i, :], jac = transform_z_to_x(self.corr_norm, self.marginal_dist,
+                    self.samples_ng[i, :], jac = transform_g_to_ng(self.corr_norm, self.marginal_dist,
                                                                  self.marginal_params,
                                                                  self.samples[i, :].reshape(-1, 1))
                 else:
-                    self.samples_x, jac = transform_x_to_z(self.corr_norm, self.marginal_dist,
+                    self.samples_ng, jac = transform_x_to_z(self.corr_norm, self.marginal_dist,
                                                            self.marginal_params, self.samples[i, :].reshape(-1, 1))
                 self.Jacobian.append(jac)
 
         elif samples is None:
             if corr_norm is not None:
-                self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
+                self.corr = correlation_distortion(self.marginal_dist, self.marginal_params, self.corr_norm)
 
 
 ########################################################################################################################
@@ -1322,7 +1331,7 @@ class InvNataf:
 
             if count == len(self.dist):  # Case where the variables are all standard Gaussian
                 self.Jacobian = list()
-                self.samples_z = self.samples
+                self.samples_g = self.samples
                 for i in range(len(self.dist)):
                     self.Jacobian.append(np.identity(n=self.dimension))
                 self.corr = corr
@@ -1337,7 +1346,7 @@ class InvNataf:
 
 
                 self.Jacobian = list()
-                self.samples_z = np.zeros_like(self.samples)
+                self.samples_g = np.zeros_like(self.samples)
                 if self.samples.ndim == 1:
                     if self.dimension == 1:
                         self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
@@ -1345,11 +1354,11 @@ class InvNataf:
                         self.samples = self.samples.reshape(1, self.samples.shape[0])
                 for i in range(self.samples.shape[0]):
                     if self.samples.shape[0] != 1:
-                        self.samples_z[i, :], jac = transform_x_to_z(self.corr_norm, self.dist,
+                        self.samples_g[i, :], jac = transform_x_to_z(self.corr_norm, self.dist,
                                                                      self.dist_params,
                                                                      self.samples[i, :].reshape(-1, 1))
                     else:
-                        self.samples_z, jac = transform_x_to_z(self.corr_norm, self.dist,
+                        self.samples_g, jac = transform_x_to_z(self.corr_norm, self.dist,
                                                                self.dist_params, self.samples[i, :].reshape(-1, 1))
                     self.Jacobian.append(jac)
 
@@ -1376,7 +1385,7 @@ class InvNataf:
                     count = count + 1
 
             if count == len(self.marginal_dist) and self.corr is None:
-                self.samples_z = self.samples
+                self.samples_g = self.samples
                 self.Jacobian = list()
                 for i in range(len(self.marginal_dist)):
                     self.Jacobian.append(np.identity(n=self.dimension))
@@ -1391,15 +1400,15 @@ class InvNataf:
                     self.corr_norm = itam(self.marginal_dist, self.marginal_params, self.corr)
 
                 self.Jacobian = list()
-                self.samples_z = np.zeros_like(self.samples)
+                self.samples_g = np.zeros_like(self.samples)
 
                 for i in range(self.samples.shape[0]):
                     if self.samples.shape[0] != 1:
-                        self.samples_z[i, :], jac = transform_x_to_z(self.corr_norm, self.marginal_dist,
+                        self.samples_g[i, :], jac = transform_x_to_z(self.corr_norm, self.marginal_dist,
                                                                      self.marginal_params,
                                                                      self.samples[i, :].reshape(-1, 1))
                     else:
-                        self.samples_z, jac = transform_x_to_z(self.corr_norm, self.marginal_dist,
+                        self.samples_g, jac = transform_x_to_z(self.corr_norm, self.marginal_dist,
                                                                self.marginal_params, self.samples[i, :].reshape(-1, 1))
                     self.Jacobian.append(jac)
 
@@ -1418,7 +1427,7 @@ class InvNataf:
                     count = count + 1
 
             if count == len(self.marginal_dist) and self.corr is None:
-                self.samples_z = self.samples
+                self.samples_g = self.samples
                 for i in range(len(self.dist)):
                     self.Jacobian.append(np.identity(n=self.dimension))
                 self.corr = corr
