@@ -20,11 +20,13 @@
 
 from UQpy.SampleMethods import *
 from scipy import integrate
-
+import warnings
+warnings.filterwarnings("ignore")
 
 ########################################################################################################################
 #                            Bayesian Importance sampling
 ########################################################################################################################
+
 
 class BayesIS:
 
@@ -32,6 +34,27 @@ class BayesIS:
                  algorithm=None, jump=None, nsamples_mcmc=None, seed=None, nburn=None, parameters=None, walkers=None,
                  max_delta=None, model_type=None, model_script=None, input_script=None, output_script=None,
                  nsamples_mixt=None):
+
+        """
+        :param data:
+        :param candidate_model:
+        :param method:
+        :param pdf_proposal_type:
+        :param pdf_proposal_scale:
+        :param algorithm:
+        :param jump:
+        :param nsamples_mcmc:
+        :param seed:
+        :param nburn:
+        :param parameters:
+        :param walkers:
+        :param max_delta:
+        :param model_type:
+        :param model_script:
+        :param input_script:
+        :param output_script:
+        :param nsamples_mixt:
+        """
 
         self.data = data
         self.method = method
@@ -52,26 +75,27 @@ class BayesIS:
         self.input_script = input_script
         self.output_script = output_script
 
+        print('Running Bayesian Inference...')
         ################################################################################################################
         # Step 1: multi-model inference
 
-        ms = ModelSelection(method='InfoMS', data=self.data, candidate_model=self.candidate_model)
+        self.ims = ModelSelection(method='InfoMS', data=self.data, candidate_model=self.candidate_model)
 
         # Keep the models with delta <= maxDelta
 
-        index = np.where(ms.delta <= self.maxDelta)
-        self.selected_models = ms.model[:np.max(index[0])+1]
+        index = np.where(self.ims.delta <= self.maxDelta)
+        self.selected_models = self.ims.model[:np.max(index[0])+1]
 
         ################################################################################################################
         # Step 2: Bayesian inference
 
-        bi = ModelSelection(method='BayesMS', data=self.data,
-                            candidate_model=self.selected_models,
-                            pdf_proposal_type=self.pdf_proposal_type, pdf_proposal_scale=self.pdf_proposal_scale,
-                            nsamples=self.nsamples_mcmc,
-                            algorithm=self.algorithm,
-                            jump=self.jump,
-                            walkers=self.walkers)
+        self.bms = ModelSelection(method='BayesMS', data=self.data,
+                                  candidate_model=self.selected_models,
+                                  pdf_proposal_type=self.pdf_proposal_type, pdf_proposal_scale=self.pdf_proposal_scale,
+                                  nsamples=self.nsamples_mcmc,
+                                  algorithm=self.algorithm,
+                                  jump=self.jump,
+                                  walkers=self.walkers)
 
         ################################################################################################################
         # Step 3: Establish a finite element model
@@ -79,7 +103,7 @@ class BayesIS:
         # Randomly select the model set of total target densities, here use 1000
         n_dist = 1000
         # Calculate the number of each candidate model family
-        candidate_n_dis = (n_dist * ms.weights[:np.max(index[0])+1])
+        candidate_n_dis = (n_dist * self.ims.weights[:np.max(index[0])+1])
         # Transfer the number from float to int, which is necessary and Identify the posterior parameter samples given
         #  probability model. Then Randomly select parameter values from the posterior samples for each candidate model
         # and obtain the posterior parameter values for each candidate model
@@ -89,7 +113,7 @@ class BayesIS:
         param_value = [0] * len(self.selected_models)
         for i in range(len(self.selected_models)):
             dist_num[i] = int(np.round(candidate_n_dis[i]))
-            p_[i] = bi.samples[i]
+            p_[i] = self.bms.samples[i]
             param_list[i] = random.sample(range(len(p_[i])), dist_num[i])
             param_value[i] = p_[i][param_list[i]]
 
@@ -109,7 +133,7 @@ class BayesIS:
             rs_seed = int(rs_seed - s[dist2use])
 
             params2use = np.array(param_value[dist2use][rs_seed, :])
-            pdf_mixture_i = bi.dist_models[dist2use].rvs
+            pdf_mixture_i = self.bms.dist_models[dist2use].rvs
             self.samples_mixture[i] = pdf_mixture_i(params2use)
 
         ################################################################################################################
@@ -117,7 +141,7 @@ class BayesIS:
 
         all_pdf = np.zeros(shape=(self.nsamples_mixt, n_dist))
         for i in range(len(self.selected_models)):
-            model_pdf_i = bi.dist_models[i].pdf
+            model_pdf_i = self.bms.dist_models[i].pdf
             for j in range(int(candidate_n_dis[i])):
                 all_pdf[:, j] = model_pdf_i(self.samples_mixture, param_value[i][j, :])
 
@@ -128,12 +152,17 @@ class BayesIS:
         self.is_weights = np.zeros(shape=(self.nsamples_mixt, n_dist))
 
         for i in range(len(self.selected_models)):
-            model_pdf_i = bi.dist_models[i].pdf
+            model_pdf_i = self.bms.dist_models[i].pdf
             for j in range(int(candidate_n_dis[i])):
                 all_pdf[:, j] = model_pdf_i(self.samples_mixture, param_value[i][j, :])
                 self.is_weights[:, j] = all_pdf[:, j] / self.optimal_pdf
 
+        if self.input_script is not None:
+            from UQpy.RunModel import RunModel
+            self.gfun = RunModel(cpu=1, model_type=self.model_type, model_script=self.model_script, dimension=1,
+                                 samples=self.samples_mixture)
 
+        print('Successful execution of the code!')
 ########################################################################################################################
 ########################################################################################################################
 #                            Information theoretic model selection - AIC, BIC
@@ -143,6 +172,21 @@ class ModelSelection:
 
     def __init__(self,  data=None, candidate_model=None, method=None, pdf_proposal_type=None, pdf_proposal_scale=None,
                  algorithm=None, jump=None, nsamples=None, seed=None, nburn=None, parameters=None, walkers=None):
+
+        """
+        :param data:
+        :param candidate_model:
+        :param method:
+        :param pdf_proposal_type:
+        :param pdf_proposal_scale:
+        :param algorithm:
+        :param jump:
+        :param nsamples:
+        :param seed:
+        :param nburn:
+        :param parameters:
+        :param walkers:
+        """
 
         self.data = data
         self.method = method
@@ -261,6 +305,20 @@ class BayesianInference:
 
     def __init__(self, data=None, dimension=None, candidate_model=None, pdf_proposal_type=None, pdf_proposal_scale=None,
                  algorithm=None, jump=None, nsamples=None, seed=None, nburn=None, parameters=None):
+
+        """
+        :param data:
+        :param dimension:
+        :param candidate_model:
+        :param pdf_proposal_type:
+        :param pdf_proposal_scale:
+        :param algorithm:
+        :param jump:
+        :param nsamples:
+        :param seed:
+        :param nburn:
+        :param parameters:
+        """
 
         self.data = data
         self.parameters = parameters[0]
