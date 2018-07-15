@@ -80,9 +80,9 @@ class MCS:
         self.dist_name = dist_name
         self.dist_params = dist_params
         self.dist = list()
+        self.init_mcs()
         for i in range(self.dimension):
             self.dist.append(Distribution(self.dist_name[i]))
-        self.init_mcs()
         self.samplesU01, self.samples = self.run_mcs()
 
     def run_mcs(self):
@@ -1008,7 +1008,7 @@ class MCMC:
 
         # Check pdf_target
         if type(self.pdf_target).__name__ == 'str':
-            self.pdf_target = pdf(self.pdf_target)
+            self.pdf_target = Distribution(self.pdf_target)
         if self.pdf_target is None and self.algorithm is 'MMH':
             if self.dimension == 1 or self.pdf_target_type is 'marginal_pdf':
                 def target(x, dummy):
