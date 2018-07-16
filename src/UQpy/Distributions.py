@@ -32,11 +32,13 @@ import os
 
 
 class Distribution:
-    def __init__(self, name):
+    def __init__(self, name, parameters):
 
         self.name = name
+        self.params = parameters
 
         if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
+
             def pdf(x, params):
                 return stats.norm.pdf(x, loc=params[0], scale=params[1])
             self.pdf = partial(pdf)
@@ -203,7 +205,7 @@ class Distribution:
 
             self.moments = partial(moments)
 
-        elif self.name.lower() == 'gumbel':
+        elif self.name.lower() == 'genextreme':
 
             def pdf(x, params):
                 return stats.genextreme.pdf(x, c=0, loc=params[0], scale=params[1])
@@ -245,23 +247,23 @@ class Distribution:
         elif self.name.lower() == 'chisquare':
 
             def pdf(x, params):
-                return stats.chi2.pdf(x, params[0])
+                return stats.chi2.pdf(x, df=params[0], loc=params[1], scale=params[2])
             self.pdf = partial(pdf)
 
             def rvs(params):
-                return stats.chi2.rvs(params[0])
+                return stats.chi2.rvs(df=params[0], loc=params[1], scale=params[2])
             self.rvs = partial(rvs)
 
             def cdf(x, params):
-                return stats.chi2.cdf(x, params[0])
+                return stats.chi2.cdf(x, df=params[0], loc=params[1], scale=params[2])
             self.cdf = partial(cdf)
 
             def icdf(x, params):
-                return stats.chi2.ppf(x, params[0])
+                return stats.chi2.ppf(x, df=params[0], loc=params[1], scale=params[2])
             self.icdf = partial(icdf)
 
             def log_pdf(x, params):
-                return stats.chi2.logpdf(x, params[0])
+                return stats.chi2.logpdf(x, df=params[0], loc=params[1], scale=params[2])
             self.log_pdf = partial(log_pdf)
 
             def fit(x):
@@ -271,8 +273,7 @@ class Distribution:
             def moments(params):
                 import numpy as np
                 y = [np.nan, np.nan, np.nan, np.nan]
-                mean, var, skew, kurt = stats.chi2.stats(a=params[0]/2.0,
-                                                         scale=2,  moments='mvsk')
+                mean, var, skew, kurt = stats.chi2.stats(df=params[0], loc=params[1], scale=params[2], moments='mvsk')
                 y[0] = mean
                 y[1] = var
                 y[2] = skew
@@ -330,24 +331,24 @@ class Distribution:
         elif self.name.lower() == 'gamma':
 
             def pdf(x, params):
-                return stats.gamma.pdf(x, a=params[0], loc=params[0],  scale=params[2])
+                return stats.gamma.pdf(x, a=params[0], loc=params[1],  scale=params[2])
             self.pdf = partial(pdf)
 
             def rvs(params):
-                return stats.gamma.rvs(a=params[0], loc=params[0],  scale=params[2])
+                return stats.gamma.rvs(a=params[0], loc=params[1],  scale=params[2])
             self.rvs = partial(rvs)
 
             def cdf(x, params):
-                return stats.gamma.cdf(x,  a=params[0], loc=params[0],  scale=params[2])
+                return stats.gamma.cdf(x,  a=params[0], loc=params[1],  scale=params[2])
             self.cdf = partial(cdf)
 
             def icdf(x, params):
-                return stats.gamma.ppf(x,  a=params[0], loc=params[0],  scale=params[2])
+                return stats.gamma.ppf(x,  a=params[0], loc=params[1],  scale=params[2])
             self.icdf = partial(icdf)
 
             def log_pdf(x, params):
                 import numpy as np
-                return stats.gamma.logpdf(x, a=params[0], loc=params[0],  scale=params[2])
+                return stats.gamma.logpdf(x, a=params[0], loc=params[1],  scale=params[2])
             self.log_pdf = partial(log_pdf)
 
             def fit(x):
@@ -358,7 +359,7 @@ class Distribution:
 
                 import numpy as np
                 y = [np.nan, np.nan, np.nan, np.nan]
-                mean, var, skew, kurt = stats.gamma.stats(a=params[0], loc=params[0],  scale=params[2], moments='mvsk')
+                mean, var, skew, kurt = stats.gamma.stats(a=params[0], loc=params[1],  scale=params[2], moments='mvsk')
                 y[0] = mean
                 y[1] = var
                 y[2] = skew

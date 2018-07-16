@@ -23,6 +23,7 @@ import scipy.stats as sp
 import random
 from UQpy.Distributions import *
 from UQpy.tools import *
+from os import sys
 
 ########################################################################################################################
 ########################################################################################################################
@@ -77,25 +78,24 @@ class MCS:
 
         self.dimension = dimension
         self.nsamples = nsamples
-        self.dist_name = dist_name
         self.dist_params = dist_params
-        self.dist = list()
+        self.dist_name = dist_name
+
         self.init_mcs()
+        self.distribution = list()
         for i in range(self.dimension):
-            self.dist.append(Distribution(self.dist_name[i]))
+            self.distribution.append(Distribution(self.dist_name[i], self.dist_params[i]))
         self.samplesU01, self.samples = self.run_mcs()
+        del self.dist_name, self.dist_params
 
     def run_mcs(self):
         print('UQpy: Performing MCS design...')
         samples = np.random.rand(self.nsamples, self.dimension)
         samples_u_to_x = np.zeros_like(samples)
-        mom = list()
         for j in range(samples.shape[1]):
-            icdf = self.dist[j].icdf
-            moments = self.dist[j].moments
-            mom.append(moments(self.dist_params[j]))
+            i_cdf = self.distribution[j].icdf
             for i in range(samples.shape[0]):
-                samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
+                samples_u_to_x[i, j] = i_cdf(samples[i, j], self.distribution[j].params)
         print('Done!')
         return samples, samples_u_to_x
 
@@ -208,15 +208,18 @@ class LHS:
         self.dimension = dimension
         self.nsamples = nsamples
         self.dist_name = dist_name
-        self.dist = list()
-        for i in range(self.dimension):
-            self.dist.append(Distribution(self.dist_name[i]))
         self.dist_params = dist_params
         self.lhs_criterion = lhs_criterion
         self.lhs_metric = lhs_metric
         self.lhs_iter = lhs_iter
         self.init_lhs()
+
+        self.distribution = list()
+        for i in range(self.dimension):
+            self.distribution.append(Distribution(self.dist_name[i], self.dist_params[i]))
+
         self.samplesU01, self.samples = self.run_lhs()
+        del self.dist_name, self.dist_params
 
     def run_lhs(self):
 
@@ -229,9 +232,9 @@ class LHS:
 
         samples_u_to_x = np.zeros_like(samples)
         for j in range(samples.shape[1]):
-            icdf = self.dist[j].icdf
+            i_cdf = self.distribution[j].icdf
             for i in range(samples.shape[0]):
-                samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
+                samples_u_to_x[i, j] = i_cdf(samples[i, j], self.distribution[j].params)
 
         print('Done')
         return samples, samples_u_to_x
@@ -420,27 +423,28 @@ class STS:
     def __init__(self, dimension=None, dist_name=None, dist_params=None, sts_design=None, input_file=None):
 
         self.dimension = dimension
-        self.dist_name = dist_name
-        self.dist_params = dist_params
         self.sts_design = sts_design
         self.input_file = input_file
+        self.dist_name = dist_name
+        self.dist_params = dist_params
         self.strata = None
         self.init_sts()
-        self.dist = list()
+        self.distribution = list()
         for i in range(self.dimension):
-            self.dist.append(Distribution(self.dist_name[i]))
+            self.distribution.append(Distribution(self.dist_name[i], self.dist_params[i]))
         self.samplesU01, self.samples = self.run_sts()
+        del self.dist_name, self.dist_params
 
     def run_sts(self):
         print('UQpy: Performing STS design...')
         samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
         samples_u_to_x = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
         for j in range(0, self.strata.origins.shape[1]):
-            icdf = self.dist[j].icdf
+            i_cdf = self.distribution[j].icdf
             for i in range(0, self.strata.origins.shape[0]):
                 samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
                                                   + self.strata.widths[i, j])
-                samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
+                samples_u_to_x[i, j] = i_cdf(samples[i, j], self.dist_params[j])
         print('Done!')
         return samples, samples_u_to_x
 
