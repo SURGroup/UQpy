@@ -32,10 +32,11 @@ import os
 
 
 class Distribution:
-    def __init__(self, name, parameters):
+    def __init__(self, name, parameters=None):
 
         self.name = name
-        self.params = parameters
+        if parameters is not None:
+            self.params = parameters
 
         if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
 

@@ -1187,7 +1187,7 @@ class Nataf:
                                "be provided.")
         self.marginal_dist = list()
         for j in range(len(self.marginal_name)):
-            self.marginal_dist.append(Distribution(self.marginal_name[j]))
+            self.marginal_dist.append(Distribution(self.marginal_name[j], self.marginal_params[j]))
 
         # Check if samples is a SampleMethods Object or an array
         if isinstance(samples, MCS) is True or isinstance(samples, LHS) is True:
