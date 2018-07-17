@@ -89,11 +89,8 @@ class MCS:
         print('UQpy: Performing MCS design...')
         samples = np.random.rand(self.nsamples, self.dimension)
         samples_u_to_x = np.zeros_like(samples)
-        mom = list()
         for j in range(samples.shape[1]):
             icdf = self.dist[j].icdf
-            moments = self.dist[j].moments
-            mom.append(moments(self.dist_params[j]))
             for i in range(samples.shape[0]):
                 samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
         print('Done!')
@@ -1051,7 +1048,7 @@ class MCMC:
 class Correlate:
     """
         A class to correlate samples ~ N(0, 1).
-        :param samples: An object of type MCS, LHS, STS or an array of N(0,1) samples
+        :param samples: An object of a SampleMethods class or an array of N(0,1) samples
         :type samples: object or ndarray
 
         :param corr_norm: The correlation matrix of the random variables in the standard normal space
@@ -1060,39 +1057,45 @@ class Correlate:
     """
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 6/24/18 by Dimitris G. Giovanis
+    # Last Modified: 7/4/18 by Michael D. Shields
 
-    def __init__(self, samples=None, corr_norm=None):
+    def __init__(self, samples=None, corr_norm=None, dimension=None):
 
-        # Check if samples is a SampleMethods Object or an array
-        if isinstance(samples, MCS) is True or isinstance(samples, LHS) is True or isinstance(samples, STS) is True:
+        # If samples is not an array (It should be an instance of a SampleMethods class)
+        if isinstance(samples, np.ndarray) is False:
             _dict = {**samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
 
             self.corr_norm = corr_norm
+            self.samples_ucorr = self.samples.copy()
 
             for i in range(len(self.dist)):
                 if self.dist[i].name != 'Normal' or self.dist_params[i] != [0, 1]:
-                    raise RuntimeError("In order to use class 'Correlate' the random variables should be standard "
+                    raise RuntimeError("In order to use class 'Correlate' the random variables should be standard"
                                        "normal")
 
-        # Check if samples is an array
-        elif isinstance(samples, np.ndarray):
-            print('Caution: The samples provided must be realizations of standard normal random variables.')
-            self.samples = samples
+        # If samples is an array
+        else:
+            print('Caution: The samples provided must be uncorrelated standard normal random variables.')
+            self.samples_ucorr = samples
+            if dimension is None:
+                raise RuntimeError("Dimension must be specified when entering samples as an array.")
+            self.dimension = dimension
+            self.dist_name = ['Normal'] * self.dimension
+            self.dist_params = [[0, 1]] * self.dimension
             self.corr_norm = corr_norm
-            self.dist = None
+            self.dist = [None] * self.dimension
+            for i in range(self.dimension):
+                self.dist[i] = Distribution(self.dist_name[i])
 
             if self.corr_norm is None:
                 raise RuntimeError("A correlation matrix is required.")
 
         if np.linalg.norm(self.corr_norm - np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
-            self.samples_corr = self.samples
+            self.samples = self.samples_ucorr.copy()
         else:
-            print('Correlating standard normal samples...')
-            self.samples_corr = run_corr(self.samples, self.corr_norm)
-
+            self.samples = run_corr(self.samples_ucorr, self.corr_norm)
 
 ########################################################################################################################
 ########################################################################################################################
@@ -1113,33 +1116,43 @@ class Decorrelate:
     # Authors: Dimitris G.Giovanis
     # Last Modified: 6/24/18 by Dimitris G. Giovanis
 
-    def __init__(self, samples=None, corr_norm=None):
+    def __init__(self, samples=None, corr_norm=None, dimension=None):
 
-        # Check if samples is a Correlate object or an array
-        if isinstance(samples, Correlate) is True:
+        # If samples is not an array (It should be an instance of the Correlate class)
+        if isinstance(samples, np.ndarray) is False:
             _dict = {**samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
 
             self.corr_norm = corr_norm
+            self.samples_corr = self.samples.copy()
 
             for i in range(len(self.dist)):
                 if self.dist[i].name != 'Normal' or self.dist_params[i] != [0, 1]:
-                    raise RuntimeError("In order to use class 'Uncorrelate' the random variables should be standard "
-                                       "Gaussian")
+                    raise RuntimeError("In order to use class 'Decorrelate' the random variables should be standard "
+                                       "normal")
 
-        # Check if samples is an array
-        elif isinstance(samples, np.ndarray):
+        # If samples is an array
+        else:
+            print('Caution: The samples provided must be correlated standard normal random variables.')
             self.samples_corr = samples
+            if dimension is None:
+                raise RuntimeError("Dimension must be specified when entering samples as an array.")
+            self.dimension = dimension
+            self.dist_name = ['Normal'] * self.dimension
+            self.dist_params = [[0, 1]] * self.dimension
             self.corr_norm = corr_norm
-            self.dist = None
+            self.dist = [None] * self.dimension
+            for i in range(self.dimension):
+                self.dist[i] = Distribution(self.dist_name[i])
+
             if self.corr_norm is None:
                 raise RuntimeError("A correlation matrix is required.")
 
         if np.linalg.norm(self.corr_norm - np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
-            self.samples_uncorr = self.samples_corr
+            self.samples = self.samples_corr
         else:
-            self.samples_uncorr = run_decorr(self.samples_corr, self.corr_norm)
+            self.samples = run_decorr(self.samples_corr, self.corr_norm)
 
 
 ########################################################################################################################
@@ -1151,42 +1164,34 @@ class Decorrelate:
 class Nataf:
     """
         A class to perform the Nataf transformation of samples from N(0, 1) to a user-defined distribution.
-        :param samples: An object of type MCS, LHS, or STS
-        :type samples: object
 
-        :param marginal_name: A list containing the names of the distributions of the random variables.
+        :param samples: An object of a SampleMethods class containing N(0,1) samples or an array of N(0,1) samples
+        :type samples: object or ndarray
+
+        :param dist_name: A list containing the names of the distributions of the random variables.
                         Distribution names must match those in the Distributions module.
                         If the distribution does not match one from the Distributions module, the user must provide
                             custom_dist.py.
                         The length of the string must be 1 (if all distributions are the same) or equal to dimension.
-        :type marginal_name: string list
+        :type dist_name: string list
 
-        :param marginal_params: Parameters of the distribution
+        :param dist_params: Parameters of the distribution
                 Parameters for each random variable are defined as ndarrays
                 Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
                     dist[i]
-        :type marginal_params: list
+        :type dist_params: list
 
         :param corr_norm: The correlation matrix of the random variables in the standard normal space
         :type corr_norm: ndarray
     """
 
-    # Authors: Dimitris G.Giovanis
-    # Last Modified: 6/30/18 by Dimitris G. Giovanis
+    # Authors: Dimitris G. Giovanis
+    # Last Modified: 7/15/18 by Michael D. Shields
 
-    def __init__(self, samples=None, corr_norm=None, marginal_name=None, marginal_params=None):
-
-        self.marginal_name = marginal_name
-        self.marginal_params = marginal_params
-        if self.marginal_name is None or self.marginal_params is None:
-            raise RuntimeError("In order to use class 'Nataf', marginal distributions and their parameters must"
-                               "be provided.")
-        self.marginal_dist = list()
-        for j in range(len(self.marginal_name)):
-            self.marginal_dist.append(Distribution(self.marginal_name[j]))
+    def __init__(self, samples=None, corr_norm=None, dist_name=None, dist_params=None, dimension=None):
 
         # Check if samples is a SampleMethods Object or an array
-        if isinstance(samples, MCS) is True or isinstance(samples, LHS) is True or isinstance(samples, STS) is True:
+        if isinstance(samples, np.ndarray) is False and samples is not None:
             _dict = {**samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
@@ -1195,81 +1200,122 @@ class Nataf:
                 if self.dist[i].name != 'Normal' or self.dist_params[i] != [0, 1]:
                     raise RuntimeError("In order to use class 'Nataf' the random variables should be standard normal")
 
-            if corr_norm is None:
-                self.corr_norm = np.identity(n=self.dimension)
-            elif corr_norm is not None:
-                self.corr_norm = corr_norm
+            self.dist_name = dist_name
+            self.dist_params = dist_params
+            if self.dist_name is None or self.dist_params is None:
+                raise RuntimeError("In order to use class 'Nataf', marginal distributions and their parameters must"
+                                   "be provided.")
 
-            self.corr = correlation_distortion(self.marginal_dist, self.marginal_params, self.corr_norm)
-            self.Jacobian = list()
-            self.samples_ng = np.zeros_like(self.samples)
-            if self.samples.ndim == 1:
-                if self.dimension == 1:
-                    self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
-                else:
-                    self.samples = self.samples.reshape(1, self.samples.shape[0])
-            for i in range(self.samples.shape[0]):
-                if self.samples.shape[0] != 1:
-                    self.samples_ng[i, :], jac = transform_g_to_ng(self.corr_norm, self.marginal_dist,
-                                                                 self.marginal_params,
-                                                                 self.samples[i, :].reshape(-1, 1))
-                else:
-                    self.samples_ng, jac = transform_g_to_ng(self.corr_norm, self.marginal_dist,
-                                                           self.marginal_params, self.samples[i, :].reshape(-1, 1))
-                self.Jacobian.append(jac)
+            # Ensure the dimensions of dist_name are consistent
+            if type(self.dist_name).__name__ != 'list':
+                self.dist_name = [self.dist_name]
+            if len(self.dist_name) == 1 and self.dimension != 1:
+                self.dist_name = self.dist_name * self.dimension
 
-        if isinstance(samples, Correlate) is True:
-            _dict = {**samples.__dict__}
-            for k, v in _dict.items():
-                setattr(self, k, v)
+            # Ensure that dist_params is a list of length dimension
+            if type(self.dist_params).__name__ != 'list':
+                self.dist_params = [self.dist_params]
+            if len(self.dist_params) == 1 and self.dimension != 1:
+                self.dist_params = self.dist_params * self.dimension
 
-            self.corr = correlation_distortion(self.marginal_dist, self.marginal_params, self.corr_norm)
-            self.Jacobian = list()
-            self.samples_ng = np.zeros_like(self.samples)
-            if self.samples.ndim == 1:
-                if self.dimension == 1:
-                    self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
-                else:
-                    self.samples = self.samples.reshape(1, self.samples.shape[0])
-            for i in range(self.samples.shape[0]):
-                if self.samples.shape[0] != 1:
-                    self.samples_ng[i, :], jac = transform_g_to_ng(self.corr_norm, self.marginal_dist,
-                                                                 self.marginal_params,
-                                                                 self.samples_corr[i, :].reshape(-1, 1))
-                else:
-                    self.samples_ng, jac = transform_g_to_ng(self.corr_norm, self.marginal_dist,
-                                                           self.marginal_params, self.samples_corr[i, :].reshape(-1, 1))
-                self.Jacobian.append(jac)
+            self.dist = [None] * self.dimension
+            for j in range(len(self.dist_name)):
+                self.dist[j] = Distribution(self.dist_name[j])
+
+            if hasattr(self, 'corr_norm') == False:
+                if corr_norm is None:
+                    self.corr_norm = np.identity(n=self.dimension)
+                    self.corr = self.corr_norm
+                elif corr_norm is not None:
+                    self.corr_norm = corr_norm
+                    self.corr = correlation_distortion(self.dist, self.dist_params, self.corr_norm)
+            else:
+                self.corr = correlation_distortion(self.dist, self.dist_params, self.corr_norm)
+
+            self.samplesN01 = self.samples.copy()
+            self.samples = np.zeros_like(self.samples)
+
+            self.samples, self.Jacobian = transform_g_to_ng(self.corr_norm, self.dist, self.dist_params,
+                                                            self.samplesN01)
 
         elif isinstance(samples, np.ndarray):
-            self.samples = samples
+            self.samplesN01 = samples
+            if corr_norm is None:
+                raise RuntimeError("UQpy: corr_norm must be specified in 'Nataf' when entering samples as an array.")
             self.corr_norm = corr_norm
-            self.dist = None
-            self.dimension = len(self.marginal_dist)
-            if self.corr_norm is None:
-                self.corr_norm = np.identity(n=len(self.marginal_name))
+            if dimension is None:
+                raise RuntimeError("UQpy: Dimension must be specified in 'Nataf' when entering samples as an array.")
+            self.dimension = dimension
 
-            self.corr = correlation_distortion(self.marginal_dist, self.marginal_params, self.corr_norm)
-            self.Jacobian = list()
-            self.samples_ng = np.zeros_like(self.samples)
-            if self.samples.ndim == 1:
-                if self.dimension == 1:
-                    self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
-                else:
-                    self.samples = self.samples.reshape(1, self.samples.shape[0])
-            for i in range(self.samples.shape[0]):
-                if self.samples.shape[0] != 1:
-                    self.samples_ng[i, :], jac = transform_g_to_ng(self.corr_norm, self.marginal_dist,
-                                                                 self.marginal_params,
-                                                                 self.samples[i, :].reshape(-1, 1))
-                else:
-                    self.samples_ng, jac = transform_x_to_z(self.corr_norm, self.marginal_dist,
-                                                           self.marginal_params, self.samples[i, :].reshape(-1, 1))
-                self.Jacobian.append(jac)
+            self.dist_name = dist_name
+            self.dist_params = dist_params
+            if self.dist_name is None or self.dist_params is None:
+                raise RuntimeError("UQpy: Marginal distributions and their parameters must be specified in 'Nataf' "
+                                   "when entering samples as an array.")
+
+            # Ensure the dimensions of dist_name are consistent
+            if type(self.dist_name).__name__ != 'list':
+                self.dist_name = [self.dist_name]
+            if len(self.dist_name) == 1 and self.dimension != 1:
+                self.dist_name = self.dist_name * self.dimension
+
+            # Ensure that dist_params is a list of length dimension
+            if type(self.dist_params).__name__ != 'list':
+                self.dist_params = [self.dist_params]
+            if len(self.dist_params) == 1 and self.dimension != 1:
+                self.dist_params = self.dist_params * self.dimension
+
+            self.dist = [None] * self.dimension
+            for j in range(len(self.dist_name)):
+                self.dist[j] = Distribution(self.dist_name[j])
+
+            if corr_norm is None:
+                self.corr_norm = np.identity(n=self.dimension)
+                self.corr = self.corr_norm
+            elif corr_norm is not None:
+                self.corr_norm = corr_norm
+                self.corr = correlation_distortion(self.dist, self.dist_params, self.corr_norm)
+
+            self.samples = np.zeros_like(self.samplesN01)
+
+            self.samples, self.Jacobian = transform_g_to_ng(self.corr_norm, self.dist, self.dist_params,
+                                                            self.samplesN01)
 
         elif samples is None:
             if corr_norm is not None:
-                self.corr = correlation_distortion(self.marginal_dist, self.marginal_params, self.corr_norm)
+                self.dist_name = dist_name
+                self.dist_params = dist_params
+                self.corr_norm = corr_norm
+                if self.dist_name is None or self.dist_params is None:
+                    raise RuntimeError("UQpy: In order to use class 'Nataf', marginal distributions and their "
+                                       "parameters must be provided.")
+
+                if dimension is not None:
+                    self.dimension = dimension
+                else:
+                    self.dimension = len(self.dist_name)
+
+                # Ensure the dimensions of dist_name are consistent
+                if type(self.dist_name).__name__ != 'list':
+                    self.dist_name = [self.dist_name]
+                if len(self.dist_name) == 1 and self.dimension != 1:
+                    self.dist_name = self.dist_name * self.dimension
+
+                # Ensure that dist_params is a list of length dimension
+                if type(self.dist_params).__name__ != 'list':
+                    self.dist_params = [self.dist_params]
+                if len(self.dist_params) == 1 and self.dimension != 1:
+                    self.dist_params = self.dist_params * self.dimension
+
+                self.dist = [None] * self.dimension
+                for j in range(len(self.dist_name)):
+                    self.dist[j] = Distribution(self.dist_name[j])
+
+                self.corr = correlation_distortion(self.dist, self.dist_params, self.corr_norm)
+
+            else:
+                raise RuntimeError("UQpy: To perform the Nataf transformation without samples, a correlation function"
+                                   "'corr_norm' must be provided.")
 
 
 ########################################################################################################################
@@ -1284,18 +1330,18 @@ class InvNataf:
         :param samples: An object of type MCS, LHS
         :type samples: object
 
-        :param marginal_name: A list containing the names of the distributions of the random variables.
+        :param dist_name: A list containing the names of the distributions of the random variables.
                         Distribution names must match those in the Distributions module.
                         If the distribution does not match one from the Distributions module, the user must provide
                             custom_dist.py.
                         The length of the string must be 1 (if all distributions are the same) or equal to dimension.
-        :type marginal_name: string list
+        :type dist_name: string list
 
-        :param marginal_params: Parameters of the distribution
+        :param dist_params: Parameters of the distribution
                 Parameters for each random variable are defined as ndarrays
                 Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
                     dist[i]
-        :type marginal_params: list
+        :type dist_params: list
 
         :param corr_norm: The correlation matrix of the random variables in the standard normal space
         :type corr_norm: ndarray
@@ -1304,26 +1350,36 @@ class InvNataf:
     # Authors: Dimitris G.Giovanis
     # Last Modified: 6/30/18 by Dimitris G. Giovanis
 
-    def __init__(self, samples=None, dimension=None, corr=None, marginal_name=None, marginal_params=None):
+    def __init__(self, samples=None, dimension=None, corr=None, dist_name=None, dist_params=None, beta=None,
+                 itam_error1=None, itam_error2=None):
 
-        self.marginal_name = marginal_name
-        self.corr = corr
-        self.marginal_params = marginal_params
-
-        # Check if samples is a SampleMethods Object or an array
-        
-        if isinstance(samples, MCS) is True or isinstance(samples, LHS) is True:
+        # If samples is an instance of a SampleMethods class
+        if isinstance(samples, np.ndarray) is False and samples is not None:
             _dict = {**samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
 
-            if self.dist_name is None or self.dist_params is None:
-                raise RuntimeError("In order to use class 'invNataf' the distributions and their parameters should"
-                                   "be provided.")
-            self.dist = list()
-            for j in range(len(self.dist_name)):
-                self.dist.append(Distribution(self.dist_name[j]))
+            # Allow to inherit distribution from samples or the user to specify the distribution
+            if dist_name is None or dist_params is None:
+                if hasattr(self, 'dist_name') == False or hasattr(self, 'dist_params') == False or \
+                        hasattr(self, 'dist') == False:
+                    raise RuntimeError("In order to use class 'InvNataf' the distributions and their parameters must"
+                                       "be provided.")
+            else:
+                self.dist_name = dist_name
+                self.dist_params = dist_params
+                self.dist = [None] * self.dimension
+                for j in range(len(self.dist_name)):
+                    self.dist[j] = Distribution(self.dist_name[j])
 
+            # Allow to inherit correlation from samples or the user to specify the correlation
+            if corr is None:
+                if hasattr(self, 'corr') == False:
+                    self.corr = np.identity(n=self.dimension)
+            else:
+                self.corr = corr
+
+            # Check for variables that are non-Gaussian
             count = 0
             for i in range(len(self.dist)):
                 if self.dist[i].name == 'Normal' and self.dist_params[i] == [0, 1]:
@@ -1331,107 +1387,129 @@ class InvNataf:
 
             if count == len(self.dist):  # Case where the variables are all standard Gaussian
                 self.Jacobian = list()
-                self.samples_g = self.samples
-                for i in range(len(self.dist)):
+                self.samplesN01 = self.samples.copy()
+                m, n = np.shape(self.samples)
+                for i in range(m):
                     self.Jacobian.append(np.identity(n=self.dimension))
-                self.corr = corr
                 self.corr_norm = self.corr
             else:
-                if corr is None:
-                    self.corr = np.identity(n=self.dimension)
-                    self.corr_norm = self.corr
-                elif corr is not None:
-                    self.corr = corr
-                    self.corr_norm = itam(self.dist, self.dist_params, self.corr)
-
-
-                self.Jacobian = list()
-                self.samples_g = np.zeros_like(self.samples)
-                if self.samples.ndim == 1:
-                    if self.dimension == 1:
-                        self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
-                    else:
-                        self.samples = self.samples.reshape(1, self.samples.shape[0])
-                for i in range(self.samples.shape[0]):
-                    if self.samples.shape[0] != 1:
-                        self.samples_g[i, :], jac = transform_x_to_z(self.corr_norm, self.dist,
-                                                                     self.dist_params,
-                                                                     self.samples[i, :].reshape(-1, 1))
-                    else:
-                        self.samples_g, jac = transform_x_to_z(self.corr_norm, self.dist,
-                                                               self.dist_params, self.samples[i, :].reshape(-1, 1))
-                    self.Jacobian.append(jac)
-
-        # Check if samples is an array
-        elif isinstance(samples, np.ndarray):
-            self.dimension = dimension
-            self.samples = samples
-            if self.samples.ndim == 1:
-                if self.dimension == 1:
-                    self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
+                if np.linalg.norm(self.corr - np.identity(n=self.corr.shape[0])) < 10 ** (-8):
+                    self.corr_norm = self.corr.copy()
                 else:
-                    self.samples = self.samples.reshape(1, self.samples.shape[0])
-
-            if self.marginal_name is None or self.marginal_params is None:
-                raise RuntimeError("In order to use class 'invNataf' marginal distributions and their parameters should"
-                                   "be provided.")
-            self.marginal_dist = list()
-            for j in range(len(self.marginal_name)):
-                self.marginal_dist.append(Distribution(self.marginal_name[j]))
-
-            count = 0
-            for i in range(len(self.marginal_dist)):
-                if self.marginal_dist[i].name == 'Normal' and self.marginal_params[i] == [0, 1]:
-                    count = count + 1
-
-            if count == len(self.marginal_dist) and self.corr is None:
-                self.samples_g = self.samples
-                self.Jacobian = list()
-                for i in range(len(self.marginal_dist)):
-                    self.Jacobian.append(np.identity(n=self.dimension))
-                self.corr = corr
-                self.corr_norm = self.corr
-            else:
-                if corr is None:
-                    self.corr = np.identity(n=self.dimension)
-                    self.corr_norm = self.corr
-                elif corr is not None:
-                    self.corr = corr
-                    self.corr_norm = itam(self.marginal_dist, self.marginal_params, self.corr)
+                    self.corr_norm = itam(self.dist, self.dist_params, self.corr, beta, itam_error1, itam_error2)
 
                 self.Jacobian = list()
-                self.samples_g = np.zeros_like(self.samples)
+                self.samplesNG = self.samples.copy()
+                self.samples = np.zeros_like(self.samplesNG)
 
-                for i in range(self.samples.shape[0]):
-                    if self.samples.shape[0] != 1:
-                        self.samples_g[i, :], jac = transform_x_to_z(self.corr_norm, self.marginal_dist,
-                                                                     self.marginal_params,
-                                                                     self.samples[i, :].reshape(-1, 1))
-                    else:
-                        self.samples_g, jac = transform_x_to_z(self.corr_norm, self.marginal_dist,
-                                                               self.marginal_params, self.samples[i, :].reshape(-1, 1))
-                    self.Jacobian.append(jac)
+                self.samples, self.Jacobian = transform_ng_to_g(self.corr_norm, self.dist, self.dist_params,
+                                                                self.samplesNG)
 
-        elif samples is None:
+        # If samples is an array
+        elif isinstance(samples, np.ndarray):
+            if dimension is None:
+                raise RuntimeError("UQpy: Dimension must be specified in 'InvNataf' when entering samples as an array.")
+            self.dimension = dimension
+            self.samplesNG = samples
+            if corr is None:
+                raise RuntimeError("UQpy: corr must be specified in 'InvNataf' when entering samples as an array.")
+            self.corr = corr
 
-            if self.marginal_name is None or self.marginal_params is None:
-                raise RuntimeError("In order to use class 'invNataf' marginal distributions and their parameters should"
-                                   "be provided.")
-            self.marginal_dist = list()
-            for j in range(len(self.marginal_name)):
-                self.marginal_dist.append(Distribution(self.marginal_name[j]))
+            self.dist_name = dist_name
+            self.dist_params = dist_params
+            if self.dist_name is None or self.dist_params is None:
+                raise RuntimeError("UQpy: Marginal distributions and their parameters must be specified in 'InvNataf' "
+                                   "when entering samples as an array.")
 
+            # Ensure the dimensions of dist_name are consistent
+            if type(self.dist_name).__name__ != 'list':
+                self.dist_name = [self.dist_name]
+            if len(self.dist_name) == 1 and self.dimension != 1:
+                self.dist_name = self.dist_name * self.dimension
+
+            # Ensure that dist_params is a list of length dimension
+            if type(self.dist_params).__name__ != 'list':
+                self.dist_params = [self.dist_params]
+            if len(self.dist_params) == 1 and self.dimension != 1:
+                self.dist_params = self.dist_params * self.dimension
+
+            self.dist = [None] * self.dimension
+            for j in range(len(self.dist_name)):
+                self.dist[j] = Distribution(self.dist_name[j])
+
+            # Check for variables that are non-Gaussian
             count = 0
             for i in range(len(self.dist)):
-                if self.marginal_dist[i].name == 'Normal' and self.marginal_params[i] == [0, 1]:
+                if self.dist[i].name == 'Normal' and self.dist_params[i] == [0, 1]:
                     count = count + 1
 
-            if count == len(self.marginal_dist) and self.corr is None:
-                self.samples_g = self.samples
+            if count == len(self.dist):
+                self.samples = self.samplesNG.copy()
+                self.Jacobian = list()
                 for i in range(len(self.dist)):
                     self.Jacobian.append(np.identity(n=self.dimension))
-                self.corr = corr
                 self.corr_norm = self.corr
             else:
-                if corr is not None:
-                    self.corr_norm = itam(self.marginal_dist, self.marginal_params, self.corr)
+                if np.linalg.norm(self.corr - np.identity(n=self.corr.shape[0])) < 10 ** (-8):
+                    self.corr_norm = self.corr
+                else:
+                    self.corr = corr
+                    self.corr_norm = itam(self.dist, self.dist_params, self.corr, beta, itam_error1, itam_error2)
+
+                self.Jacobian = list()
+                self.samples = np.zeros_like(self.samplesNG)
+
+                self.samples, self.Jacobian = transform_ng_to_g(self.corr_norm, self.dist, self.dist_params,
+                                                                self.samplesNG)
+
+        # Perform ITAM to identify underlying Gaussian correlation without samples.
+        elif samples is None:
+            if corr is not None:
+                self.dist_name = dist_name
+                self.dist_params = dist_params
+                self.corr = corr
+                if self.dist_name is None or self.dist_params is None:
+                    raise RuntimeError("UQpy: In order to use class 'InvNataf', marginal distributions and their "
+                                       "parameters must be provided.")
+
+                if dimension is not None:
+                    self.dimension = dimension
+                else:
+                    self.dimension = len(self.dist_name)
+
+                # Ensure the dimensions of dist_name are consistent
+                if type(self.dist_name).__name__ != 'list':
+                    self.dist_name = [self.dist_name]
+                if len(self.dist_name) == 1 and self.dimension != 1:
+                    self.dist_name = self.dist_name * self.dimension
+
+                # Ensure that dist_params is a list of length dimension
+                if type(self.dist_params).__name__ != 'list':
+                    self.dist_params = [self.dist_params]
+                if len(self.dist_params) == 1 and self.dimension != 1:
+                    self.dist_params = self.dist_params * self.dimension
+
+                self.dist = [None] * self.dimension
+                for j in range(len(self.dist_name)):
+                    self.dist[j] = Distribution(self.dist_name[j])
+
+                count = 0
+                for i in range(len(self.dist)):
+                    if self.dist[i].name == 'Normal' and self.dist_params[i] == [0, 1]:
+                        count = count + 1
+
+                if count == len(self.dist):
+                    self.Jacobian = list()
+                    for i in range(len(self.dist)):
+                        self.Jacobian.append(np.identity(n=self.dimension))
+                    self.corr_norm = self.corr
+                else:
+                    if np.linalg.norm(self.corr - np.identity(n=self.corr.shape[0])) < 10 ** (-8):
+                        self.corr_norm = self.corr
+                    else:
+                        self.corr = corr
+                        self.corr_norm = itam(self.dist, self.dist_params, self.corr, beta, itam_error1, itam_error2)
+
+            else:
+                raise RuntimeError("UQpy: To perform the inverse Nataf transformation without samples, a correlation "
+                                   "function 'corr' must be provided.")

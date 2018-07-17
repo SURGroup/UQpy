@@ -20,47 +20,58 @@ import numpy as np
 import scipy.stats as stats
 
 
-def transform_x_to_z(corr_norm, marginal_dist, marginal_params, samples_ng, Jacobian=True):
+def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, Jacobian=True):
 
     from scipy.linalg import cholesky
+
+    print('UQpy: Performing inverse Nataf transformation of the samples...')
     A = cholesky(corr_norm, lower=True)
     samples_g = np.zeros_like(samples_ng)
     m, n = np.shape(samples_ng)
-    for j in range(m):
-        cdf = marginal_dist[j].cdf
-        samples_g[j, :] = stats.norm.ppf(cdf(samples_ng[j], marginal_params[j]))
-    Z = np.dot(A, samples_g)
+    for j in range(n):
+        cdf = dist[j].cdf
+        samples_g[:, j] = stats.norm.ppf(cdf(samples_ng[:, j], dist_params[j]))
 
     if not Jacobian:
-        return samples_g.T, None
+        print("UQpy: Done.")
+        return samples_g, None
     else:
-        diag = np.zeros([m, m])
-        for j in range(len(marginal_dist)):
-            pdf = marginal_dist[j].pdf
-            diag[j, j] = stats.norm.pdf(Z[j]) / pdf(samples_ng[j], marginal_params[j])
-        Jac = np.linalg.solve(A, diag)
-        return samples_g.T, Jac
+        diag = np.zeros([n, n])
+        jac = [None] * m
+        for i in range(m):
+            for j in range(n):
+                pdf = dist[j].pdf
+                diag[j, j] = stats.norm.pdf(samples_g[i, j]) / pdf(samples_ng[i, j], dist_params[j])
+            jac[i] = np.linalg.solve(diag, A)
+        print("UQpy: Done.")
+        return samples_g, jac
 
 
-def transform_g_to_ng(corr_norm, marginal_dist, marginal_params, samples, Jacobian=True):
+def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, Jacobian=True):
 
     from scipy.linalg import cholesky
-    samples_ng = np.zeros_like(samples)
-    m, n = np.shape(samples)
-    for j in range(m):
-        icdf = marginal_dist[j].icdf
-        samples_ng[j, :] = icdf(stats.norm.cdf(samples[j, :]), marginal_params[j])
+
+    print('UQpy: Performing Nataf transformation of the samples...')
+    samples_ng = np.zeros_like(samples_g)
+    m, n = np.shape(samples_g)
+    for j in range(n):
+        icdf = dist[j].icdf
+        samples_ng[:, j] = icdf(stats.norm.cdf(samples_g[:, j]), dist_params[j])
 
     if not Jacobian:
-        return samples_ng.T, None
+        print("UQpy: Done.")
+        return samples_ng, None
     else:
         A = cholesky(corr_norm, lower=True)
-        diag = np.zeros([m, m])
-        for j in range(m):
-            pdf = marginal_dist[j].pdf
-            diag[j, j] = pdf(samples_ng[j], marginal_params[j]) / stats.norm.pdf(samples[j])
-        jac = np.linalg.solve(A, diag)
-        return samples_ng.T, jac
+        diag = np.zeros([n, n])
+        jac = [None] * m
+        for i in range(m):
+            for j in range(n):
+                pdf = dist[j].pdf
+                diag[j, j] = pdf(samples_ng[i, j], dist_params[j]) / stats.norm.pdf(samples_g[i, j])
+            jac[i] = np.linalg.solve(A, diag)
+        print("UQpy: Done.")
+        return samples_ng, jac
 
 
 def run_corr(samples, corr):
@@ -70,8 +81,10 @@ def run_corr(samples, corr):
     """
 
     from scipy.linalg import cholesky
+    print('UQpy: Correlating standard normal samples...')
     c = cholesky(corr, lower=True)
     y = np.dot(c, samples.T)
+    print("UQpy: Done.")
     return y.T
 
 
@@ -81,9 +94,11 @@ def run_decorr(samples, corr):
     """
 
     from scipy.linalg import cholesky
+    print('UQpy: Decorrelating standard normal samples...')
     c = cholesky(corr, lower=True)
     inv_corr = np.linalg.inv(c)
     y = np.dot(inv_corr, samples.T)
+    print("UQpy: Done.")
     return y.T
 
 
@@ -113,21 +128,20 @@ def correlation_distortion(marginal, params, rho_norm):
     w2d = weights2d.flatten()
     rho = np.ones_like(rho_norm)
 
+    print('UQpy: Computing Nataf correlation distortion...')
     for i in range(len(marginal)):
         icdf_i = marginal[i].icdf
         moments_i = marginal[i].moments
         mi = moments_i(params[i])
         if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
-            raise RuntimeError("The marginal distributions need to have "
-                               "finite mean and variance")
+            raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
 
         for j in range(i + 1, len(marginal)):
             icdf_j = marginal[j].icdf
             moments_j = marginal[j].moments
             mj = moments_j(params[j])
             if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
-                raise RuntimeError("The marginal distributions need to have "
-                                   "finite mean and variance")
+                raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
 
             tmp_f_xi = ((icdf_j(stats.norm.cdf(xi), params[j]) - mj[0]) / np.sqrt(mj[1]))
             tmp_f_eta = ((icdf_i(stats.norm.cdf(eta), params[i]) - mi[0]) / np.sqrt(mi[1]))
@@ -136,50 +150,52 @@ def correlation_distortion(marginal, params, rho_norm):
             rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
             rho[j, i] = rho[i, j]
 
+    print('UQpy: Done.')
     return rho
 
 
-def itam(marginal, params, corr):
+def itam(marginal, params, corr, beta, thresh1, thresh2):
+    if beta is None:
+        beta = 1
+    if thresh1 is None:
+        thresh1 = 0.0001
+    if thresh2 is None:
+        thresh2 = 0.01
+
     # Initial Guess
     corr_norm0 = corr
+    corr_norm1 = np.zeros_like(corr_norm0)
     # Iteration Condition
-    i_converge = 0
-    error0 = 100
-    max_iter = 20
+    error0 = 0.1
+    error1 = 100.
+    max_iter = 50
+    iter = 0
 
-    for ii in range(max_iter):
+    print("UQpy: Initializing Iterative Translation Approximation Method (ITAM)")
+    while iter < max_iter and error1 > thresh1 and abs(error1-error0)/error0 > thresh2:
+        error0 = error1
         corr0 = correlation_distortion(marginal, params, corr_norm0)
-        # compute the relative difference between the computed NGACF & the target R(Normalized)
-        err1 = 1.0e-10
-        err2 = 1.0e-10
-        for i in range(corr0.shape[0]):
-            for j in range(corr0.shape[1]):
-                err1 = err1 + (corr[i, j] - corr0[i, j]) ** 2
-                err2 = err2 + corr0[i, j] ** 2
-        error1 = 100 * np.sqrt(err1 / err2)
+        error1 = np.linalg.norm(corr - corr0)
 
-        if abs(error0 - error1) / error1 < 0.001 or ii == max_iter or 100 * np.sqrt(err1 / err2) < 0.0005:
-            i_converge = 1
+        max_ratio = np.amax(np.ones((len(corr),len(corr))) / abs(corr_norm0))
 
-        corr_norm1 = np.zeros_like(corr_norm0)
-        for i in range(corr_norm0.shape[0]):
-            for j in range(corr_norm0.shape[1]):
-                if corr0[i, j] != 0:
-                    corr_norm1[i, j] = (corr[i, j] / corr0[i, j]) * corr_norm0[i, j]
-                else:
-                    corr_norm1[i, j] = 0
+        corr_norm1 = np.nan_to_num((corr / corr0)**beta * corr_norm0)
 
-        # Eliminate Numerical error of Upgrading Scheme
-        corr_norm1[corr_norm1 < -1.0] = -0.99999
-        corr_norm1[corr_norm1 > 1.0] = 0.99999
+        # Do not allow off-diagonal correlations to equal or exceed one
+        corr_norm1[corr_norm1 < -1.0] = (max_ratio +1) / 2 * corr_norm0[corr_norm1 < -1.0]
+        corr_norm1[corr_norm1 > 1.0] = (max_ratio + 1) / 2 * corr_norm0[corr_norm1 > 1.0]
 
         # Iteratively finding the nearest PSD(Qi & Sun, 2006)
-        corr_norm1 = np.array(near_pd(corr_norm1))
+        corr_norm1 = np.array(nearest_psd(corr_norm1))
 
-        if i_converge == 0 and ii != max_iter:
-            corr_norm0 = corr_norm1
-            error0 = error1
+        corr_norm0 = corr_norm1.copy()
 
+        iter = iter + 1
+
+        print(["UQpy: ITAM iteration number ", iter])
+        print(["UQpy: Current error, ", error1])
+
+    print("UQpy: ITAM Done.")
     return corr_norm1
 
 
@@ -213,7 +229,7 @@ def _get_pu(a, w=None):
     return np.matrix(a_ret)
 
 
-def near_pd(a, nit=10):
+def nearest_psd(a, nit=10):
 
     n = a.shape[0]
     w = np.identity(n)
