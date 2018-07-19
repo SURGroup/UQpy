@@ -1078,8 +1078,8 @@ class Correlate:
     A class to correlate standard normal samples ~ N(0, 1) given a correlation matrix.
 
     Input:
-    :param data: An object of a SampleMethods class or an array of standard normal samples ~ N(0, 1).
-    :type data: object or ndarray
+    :param input_samples: An object of a SampleMethods class or an array of standard normal samples ~ N(0, 1).
+    :type input_samples: object or ndarray
 
     :param corr_norm: The correlation matrix of the random variables in the standard normal space.
     :type corr_norm: ndarray
@@ -1098,11 +1098,11 @@ class Correlate:
     # Authors: Dimitris G.Giovanis
     # Last Modified: 7/4/18 by Michael D. Shields
 
-    def __init__(self, data=None, corr_norm=None, dimension=None):
+    def __init__(self, input_samples=None, corr_norm=None, dimension=None):
 
         # If samples is not an array (It should be an instance of a SampleMethods class)
-        if isinstance(data, np.ndarray) is False:
-            _dict = {**data.__dict__}
+        if isinstance(input_samples, np.ndarray) is False:
+            _dict = {**input_samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
 
@@ -1117,7 +1117,7 @@ class Correlate:
         # If samples is an array
         else:
             print('Caution: The samples provided must be uncorrelated standard normal random variables.')
-            self.samples_uncorr = data
+            self.samples_uncorr = input_samples
             if dimension is None:
                 raise RuntimeError("Dimension must be specified when entering samples as an array.")
 
@@ -1151,8 +1151,8 @@ class Decorrelate:
             A class to decorrelate already correlated normal samples given their correlation matrix.
 
         Input:
-            :param data: An object of type Correlate or an array of correlated N(0,1) samples
-            :type data: object or ndarray
+            :param input_samples: An object of type Correlate or an array of correlated N(0,1) samples
+            :type input_samples: object or ndarray
 
             param: distribution: An object list containing the distributions of the random variables.
                                  Each item in the list is an object of the Distribution class (see Distributions.py).
@@ -1170,11 +1170,11 @@ class Decorrelate:
     # Authors: Dimitris G.Giovanis
     # Last Modified: 6/24/18 by Dimitris G. Giovanis
 
-    def __init__(self, data=None, corr_norm=None, dimension=None):
+    def __init__(self, input_samples=None, corr_norm=None, dimension=None):
 
         # If samples is not an array (It should be an instance of the Correlate class)
-        if isinstance(data, np.ndarray) is False:
-            _dict = {**data.__dict__}
+        if isinstance(input_samples, np.ndarray) is False:
+            _dict = {**input_samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
 
@@ -1189,7 +1189,7 @@ class Decorrelate:
         # If samples is an array
         else:
             print('Caution: The samples provided must be correlated standard normal random variables.')
-            self.samples_corr = data
+            self.samples_corr = input_samples
             if dimension is None:
                 raise RuntimeError("Dimension must be specified when entering samples as an array.")
             self.dimension = dimension
@@ -1223,8 +1223,9 @@ class Nataf:
             A class to perform the Nataf transformation of samples from N(0, 1) to a user-defined distribution.
 
         Input:
-            :param data: An object of a SampleMethods class containing N(0,1) samples or an array of N(0,1) samples.
-            :type data: object or ndarray
+            :param input_samples: An object of a SampleMethods class containing N(0,1) samples or an array of N(0,1)
+                                  samples.
+            :type input_samples: object or ndarray
 
             :param dist_name: A list containing the names of the distributions of the random variables.
                               Distribution names must match those in the Distributions module.
@@ -1266,11 +1267,11 @@ class Nataf:
     # Authors: Dimitris G. Giovanis
     # Last Modified: 7/15/18 by Michael D. Shields
 
-    def __init__(self, data=None, corr_norm=None, dist_name=None, dist_params=None, dimension=None):
+    def __init__(self, input_samples=None, corr_norm=None, dist_name=None, dist_params=None, dimension=None):
 
         # Check if samples is a SampleMethods Object or an array
-        if isinstance(data, np.ndarray) is False and data is not None:
-            _dict = {**data.__dict__}
+        if isinstance(input_samples, np.ndarray) is False and input_samples is not None:
+            _dict = {**input_samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
 
@@ -1316,8 +1317,8 @@ class Nataf:
             self.samples, self.jacobian = transform_g_to_ng(self.corr_norm, self.distribution, self.dist_params,
                                                             self.samplesN01)
 
-        elif isinstance(data, np.ndarray):
-            self.samplesN01 = data
+        elif isinstance(input_samples, np.ndarray):
+            self.samplesN01 = input_samples
             if dimension is None:
                 raise RuntimeError("UQpy: Dimension must be specified in 'Nataf' when entering samples as an array.")
             self.dimension = dimension
@@ -1356,7 +1357,7 @@ class Nataf:
             self.samples, self.jacobian = transform_g_to_ng(self.corr_norm, self.distribution, self.dist_params,
                                                             self.samplesN01)
 
-        elif data is None:
+        elif input_samples is None:
             if corr_norm is not None:
                 self.dist_name = dist_name
                 self.dist_params = dist_params
@@ -1406,8 +1407,8 @@ class InvNataf:
             A class to perform the inverse Nataf transformation of samples in standard normal space.
 
         Input:
-            :param data: An object of type MCS, LHS
-            :type data: object
+            :param input_samples: An object of type MCS, LHS
+            :type input_samples: object
 
             :param dist_name: A list containing the names of the distributions of the random variables.
                             Distribution names must match those in the Distributions module.
@@ -1457,12 +1458,12 @@ class InvNataf:
     # Authors: Dimitris G.Giovanis
     # Last Modified: 7/19/18 by Dimitris G. Giovanis
 
-    def __init__(self, data=None, dimension=None, corr=None, dist_name=None, dist_params=None, beta=None,
+    def __init__(self, input_samples=None, dimension=None, corr=None, dist_name=None, dist_params=None, beta=None,
                  itam_error1=None, itam_error2=None):
 
         # If samples is an instance of a SampleMethods class
-        if isinstance(data, np.ndarray) is False and data is not None:
-            _dict = {**data.__dict__}
+        if isinstance(input_samples, np.ndarray) is False and input_samples is not None:
+            _dict = {**input_samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
 
@@ -1488,7 +1489,7 @@ class InvNataf:
             if count == len(self.distribution):  # Case where the variables are all standard Gaussian
                 self.samplesN01 = self.samples.copy()
                 m, n = np.shape(self.samples)
-                self.samples = data
+                self.samples = input_samples
                 self.Jacobian = list()
                 for i in range(m):
                     self.Jacobian.append(np.identity(n=self.dimension))
@@ -1508,11 +1509,11 @@ class InvNataf:
                                                                 self.samplesNG)
 
         # If samples is an array
-        elif isinstance(data, np.ndarray):
+        elif isinstance(input_samples, np.ndarray):
             if dimension is None:
                 raise RuntimeError("UQpy: Dimension must be specified in 'InvNataf' when entering samples as an array.")
             self.dimension = dimension
-            self.samplesNG = data
+            self.samplesNG = input_samples
             if corr is None:
                 raise RuntimeError("UQpy: corr must be specified in 'InvNataf' when entering samples as an array.")
             self.corr = corr
@@ -1566,7 +1567,7 @@ class InvNataf:
                                                                 self.samplesNG)
 
         # Perform ITAM to identify underlying Gaussian correlation without samples.
-        elif data is None:
+        elif input_samples is None:
             if corr is not None:
                 self.dist_name = dist_name
                 self.dist_params = dist_params
