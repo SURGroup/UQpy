@@ -27,119 +27,130 @@ import numpy as np
 #                                        Subset Simulation
 ########################################################################################################################
 class SubsetSimulation:
+
     """
-    A class used to perform Subset Simulation.
+        Description:
 
-    This class estimates probability of failure for a user-defined model using Subset Simulation
+            A class used to perform Subset Simulation.
 
-    References:
-    S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by subset simulation,”
-        Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+            This class estimates probability of failure for a user-defined model using Subset Simulation
 
-    Input:
-    :param dimension:  A scalar value defining the dimension of target density function.
-                    Default: 1
-    :type dimension: int
+            References:
+            S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by
+            subset simulation,” Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
 
-    :param nsamples_ss: Number of samples to generate in each conditional subset
-                        No Default Value: nsamples_ss must be prescribed
-    :type nsamples_ss: int
+        Input:
+            :param dimension:  A scalar value defining the dimension of target density function.
+                            Default: 1
+            :type dimension: int
 
-    :param p_cond: Conditional probability at each level
-                        Default: p_cond = 0.1
-    :type p_cond: float
+            :param nsamples_ss: Number of samples to generate in each conditional subset
+                                No Default Value: nsamples_ss must be prescribed
+            :type nsamples_ss: int
 
-    :param algorithm:  Algorithm used to generate MCMC samples.
-                    Options:
-                        'MH': Metropolis Hastings Algorithm
-                        'MMH': Component-wise Modified Metropolis Hastings Algorithm
-                        'Stretch': Affine Invariant Ensemble MCMC with stretch moves
-                    Default: 'MMH'
-    :type algorithm: str
+            :param p_cond: Conditional probability at each level
+                                Default: p_cond = 0.1
+            :type p_cond: float
 
-    :param pdf_target_type: Type of target density function for acceptance/rejection in MMH. Not used for MH or Stretch.
-                    Options:
-                        'marginal_pdf': Check acceptance/rejection for a candidate in MMH using the marginal pdf
-                                        For independent variables only
-                        'joint_pdf': Check acceptance/rejection for a candidate in MMH using the joint pdf
-                    Default: 'marginal_pdf'
-    :type pdf_target_type: str
+            :param algorithm:  Algorithm used to generate MCMC samples.
+                            Options:
+                                'MH': Metropolis Hastings Algorithm
+                                'MMH': Component-wise Modified Metropolis Hastings Algorithm
+                                'Stretch': Affine Invariant Ensemble MCMC with stretch moves
+                            Default: 'MMH'
+            :type algorithm: str
 
-    :param pdf_target: Target density function from which to draw random samples
-                    The target joint probability density must be a function, or list of functions, or a string.
-                    If type == 'str'
-                        The assigned string must refer to a custom pdf defined in the file custom_pdf.py in the working
-                            directory
-                    If type == function
-                        The function must be defined in the python script calling MCMC
-                    If dimension > 1 and pdf_target_type='marginal_pdf', the input to pdf_target is a list of size
-                        [dimensions x 1] where each item of the list defines a marginal pdf.
-                    Default: Multivariate normal distribution having zero mean and unit standard deviation
-    :type pdf_target: function, function list, or str
+            :param pdf_target_type: Type of target density function for acceptance/rejection in MMH. Not used for MH
+                                    or Stretch.
+                            Options:
+                                'marginal_pdf': Check acceptance/rejection for a candidate in MMH using the marginal pdf
+                                                For independent variables only
+                                'joint_pdf': Check acceptance/rejection for a candidate in MMH using the joint pdf
+                            Default: 'marginal_pdf'
+            :type pdf_target_type: str
 
-    :param pdf_target_params: Parameters of the target pdf
-    :type pdf_target_params: list
+            :param pdf_target: Target density function from which to draw random samples
+                            The target joint probability density must be a function, or list of functions, or a string.
+                            If type == 'str'
+                                The assigned string must refer to a custom pdf defined in the file custom_pdf.py in
+                                the working directory.
+                            If type == function
+                                The function must be defined in the python script calling MCMC
+                            If dimension > 1 and pdf_target_type='marginal_pdf', the input to pdf_target is a list of
+                            size [dimensions x 1] where each item of the list defines a marginal pdf.
+                            Default: Multivariate normal distribution having zero mean and unit standard deviation
+            :type pdf_target: function, function list, or str
 
-    :param pdf_proposal_type: Type of proposal density function for MCMC. Only used with algorithm = 'MH' or 'MMH'
-                    Options:
-                        'Normal' : Normal proposal density
-                        'Uniform' : Uniform proposal density
-                    Default: 'Uniform'
-                    If dimension > 1 and algorithm = 'MMH', this may be input as a list to assign different proposal
-                        densities to each dimension. Example pdf_proposal_type = ['Normal','Uniform'].
-                    If dimension > 1, algorithm = 'MMH' and this is input as a string, the proposal densities for all
-                        dimensions are set equal to the assigned proposal type.
-    :type pdf_proposal_type: str or str list
+            :param pdf_target_params: Parameters of the target pdf
+            :type pdf_target_params: list
 
-    :param pdf_proposal_scale: Scale of the proposal distribution
-                    If algorithm == 'MH' or 'MMH'
-                        For pdf_proposal_type = 'Uniform'
-                            Proposal is Uniform in [x-pdf_proposal_scale/2, x+pdf_proposal_scale/2]
-                        For pdf_proposal_type = 'Normal'
-                            Proposal is Normal with standard deviation equal to pdf_proposal_scale
-                    If algorithm == 'Stretch'
-                        pdf_proposal_scale sets the scale of the stretch density
-                            g(z) = 1/sqrt(z) for z in [1/pdf_proposal_scale, pdf_proposal_scale]
-                    Default value: dimension x 1 list of ones
-    :type pdf_proposal_scale: float or float list
-                    If dimension > 1, this may be defined as float or float list
-                        If input as float, pdf_proposal_scale is assigned to all dimensions
-                        If input as float list, each element is assigned to the corresponding dimension
+            :param pdf_proposal_type: Type of proposal density function for MCMC. Only used with algorithm = 'MH' or
+                                      'MMH'
+                            Options:
+                                'Normal' : Normal proposal density
+                                'Uniform' : Uniform proposal density
+                            Default: 'Uniform'
+                            If dimension > 1 and algorithm = 'MMH', this may be input as a list to assign different
+                            proposal densities to each dimension. Example pdf_proposal_type = ['Normal','Uniform'].
+                            If dimension > 1, algorithm = 'MMH' and this is input as a string, the proposal densities
+                            for all dimensions are set equal to the assigned proposal type.
+            :type pdf_proposal_type: str or str list
 
-    :param model_type: Define the model as a python file or as a third party software model (e.g. Matlab, Abaqus, etc.)
-            Options: None - Run a third party software model
-                     'python' - Run a python model. When selected, the python file must contain a class RunPythonModel
-                                that takes, as input, samples and dimension and returns quantity of interest (qoi) in
-                                in list form where there is one item in the list per sample. Each item in the qoi list
-                                may take type the user prefers.
-            Default: None
-    :type model_type: str
+            :param pdf_proposal_scale: Scale of the proposal distribution
+                            If algorithm == 'MH' or 'MMH'
+                                For pdf_proposal_type = 'Uniform'
+                                    Proposal is Uniform in [x-pdf_proposal_scale/2, x+pdf_proposal_scale/2]
+                                For pdf_proposal_type = 'Normal'
+                                    Proposal is Normal with standard deviation equal to pdf_proposal_scale
+                            If algorithm == 'Stretch'
+                                pdf_proposal_scale sets the scale of the stretch density
+                                    g(z) = 1/sqrt(z) for z in [1/pdf_proposal_scale, pdf_proposal_scale]
+                            Default value: dimension x 1 list of ones
+            :type pdf_proposal_scale: float or float list
+                            If dimension > 1, this may be defined as float or float list
+                                If input as float, pdf_proposal_scale is assigned to all dimensions
+                                If input as float list, each element is assigned to the corresponding dimension
 
-    :param model_script: Defines the script (must be either a shell script (.sh) or a python script (.py)) used to call
-                            the model.
-                         This is a user-defined script that must be provided.
-                         If model_type = 'python', this must be a python script (.py) having a specified class
-                            structure. Details on this structure can be found in the UQpy documentation.
-    :type: model_script: str
+            :param model_type: Define the model as a python file or as a third party software model (e.g. Matlab,
+                               Abaqus, etc.)
+                    Options: None - Run a third party software model
+                             'python' - Run a python model. When selected, the python file must contain a class
+                                        RunPythonModel
+                                        that takes, as input, samples and dimension and returns quantity of interest
+                                        (qoi) in
+                                        in list form where there is one item in the list per sample. Each item in the
+                                        qoi list may take type the user prefers.
+                    Default: None
+            :type model_type: str
 
-    :param input_script: Defines the script (must be either a shell script (.sh) or a python script (.py)) that takes
-                            samples generated by UQpy from the sample file generated by UQpy (UQpy_run_{0}.txt) and
-                            imports them into a usable input file for the third party solver. Details on
-                            UQpy_run_{0}.txt can be found in the UQpy documentation.
-                         If model_type = None, this is a user-defined script that the user must provide.
-                         If model_type = 'python', this is not used.
-    :type: input_script: str
+            :param model_script: Defines the script (must be either a shell script (.sh) or a python script (.py)) used
+                                 to call
+                                    the model.
+                                 This is a user-defined script that must be provided.
+                                 If model_type = 'python', this must be a python script (.py) having a specified class
+                                    structure. Details on this structure can be found in the UQpy documentation.
+            :type: model_script: str
 
-    :param output_script: (Optional) Defines the script (must be either a shell script (.sh) or python script (.py))
-                            that extracts quantities of interest from third-party output files and saves them to a file
-                            (UQpy_eval_{}.txt) that can be read for postprocessing and adaptive sampling methods by
-                            UQpy.
-                          If model_type = None, this is an optional user-defined script. If not provided, all run files
-                            and output files will be saved in the folder 'UQpyOut' placed in the current working
-                            directory. If provided, the text files UQpy_eval_{}.txt are placed in this directory and all
-                            other files are deleted.
-                          If model_type = 'python', this is not used.
-    :type output_script: str
+            :param input_script: Defines the script (must be either a shell script (.sh) or a python script (.py))
+                                that takes
+                                samples generated by UQpy from the sample file generated by UQpy (UQpy_run_{0}.txt) and
+                                imports them into a usable input file for the third party solver. Details on
+                                UQpy_run_{0}.txt can be found in the UQpy documentation.
+                                 If model_type = None, this is a user-defined script that the user must provide.
+                                 If model_type = 'python', this is not used.
+            :type: input_script: str
+
+            :param output_script: (Optional) Defines the script (must be either a shell script (.sh) or python
+                                  script (.py))
+                                  that extracts quantities of interest from third-party output files and saves them
+                                  to a file (UQpy_eval_{}.txt) that can be read for postprocessing and adaptive
+                                  sampling methods by UQpy.
+                                  If model_type = None, this is an optional user-defined script. If not provided, all
+                                  run files and output files will be saved in the folder 'UQpyOut' placed in the current
+                                  working directory. If provided, the text files UQpy_eval_{}.txt are placed in this
+                                  directory and all other files are deleted.
+                                  If model_type = 'python', this is not used.
+            :type output_script: str
 
     Output:
 
@@ -427,11 +438,11 @@ class TaylorSeries:
                 u[k, :] = np.array(self.init_design_point)
 
             from UQpy.SampleMethods import InvNataf
-            dist = InvNataf(samples=u[k, :], dimension=self.dimension, marginal_name=self.dist_name,
-                            corr=self.corr, marginal_params=self.dist_params)
+            dist = InvNataf(samples=u[k, :], dimension=self.dimension, dist_name=self.dist_name,
+                            corr=self.corr, dist_params=self.dist_params)
 
             # 1. evaluate Limit State Function at point
-            g = RunModel(samples=dist.samples_z, model_type=self.model_type, model_script=self.model_script,
+            g = RunModel(samples=dist.samples, model_type=self.model_type, model_script=self.model_script,
                          input_script=self.input_script, output_script=self.output_script,
                          dimension=self.dimension)
 
@@ -484,8 +495,8 @@ class TaylorSeries:
         # compute design point, reliability index and Pf
         u_star = u[-1, :]
         from UQpy.SampleMethods import Nataf
-        dist_star = Nataf(samples=u_star, marginal_name=self.dist_name,
-                          marginal_params=self.dist_params, corr_norm=dist.corr_norm)
+        dist_star = Nataf(samples=u_star, dist_name=self.dist_name,
+                          dist_params=self.dist_params, corr_norm=dist.corr_norm)
 
         x_star = dist_star.samples_x
         beta = beta[k]

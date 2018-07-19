@@ -23,7 +23,7 @@ import os
 
 
 # Authors: Dimitris G.Giovanis, Michael D. Shields
-# Last Modified: 7/9/18 by Dimitris G. Giovanis
+# Last Modified: 7/18/18 by Dimitris G. Giovanis
 
 
 ########################################################################################################################
@@ -32,7 +32,36 @@ import os
 
 
 class Distribution:
+
     def __init__(self, name, parameters=None):
+
+        """
+            Description:
+
+            A module containing functions of a wide variaty of distributions that can be found in the package
+            scipy.stats. The supported distributions are:
+            [normal, uniform, binomial, beta, genextreme, chisquare, lognormal, gamma, exponential, cauchy, levy,
+            logistic, laplace, maxwell, inverse gauss, pareto, rayleigh].
+            For the assigned distribution, for a point you can estimate:
+
+                1. pdf: probability density function
+                2. cdf: cumulative distribution function
+                3. icdf (inverse cdf)
+                4. rvs: generate random numbers (it doesn't need a point)
+                5. log_pdf: logarithm of the pdf
+                6. fit: Estimates the parameters of the distribution over arbitrary data
+                7. moments: Calculate the first four moments of the distribution (mean, variance, skewness, kyrtosis)
+
+            Input:
+                :param name: Name of distribution.
+                :type: name: string
+
+                :param parameters: Parameters of the distribution
+                :type: parameters: ndarray
+
+            Output:
+                A handler pointing to the 7 aforementioned distribution functions.
+        """
 
         self.name = name
         if parameters is not None:

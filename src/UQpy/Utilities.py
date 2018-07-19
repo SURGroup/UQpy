@@ -15,93 +15,217 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+"""This module contains functionality for all the supporting methods in UQpy."""
 
 import numpy as np
 import scipy.stats as stats
 
 
-def transform_x_to_z(corr_norm, marginal_dist, marginal_params, samples_x, Jacobian=True):
+def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
+
+    """
+        Description:
+
+            A function that performs transformation of a non-Gaussian random variable to a Gaussian one.
+
+        Input:
+            :param corr_norm: Correlation matrix in the standard normal space
+            :type corr_norm: ndarray
+
+            :param dist: marginal distributions
+            :type dist: list
+
+            :param dist_params: marginal distribution parameters
+            :type dist_params: list
+
+            :param samples_ng: non-Gaussian samples
+            :type samples_ng: ndarray
+
+            :param jacobian: The Jacobian of the transformation
+            :type jacobian: ndarray
+
+        Output:
+            :return: samples_g: Gaussian samples
+            :rtype: samples_g: ndarray
+
+            :return: jacobian: The jacobian
+            :rtype: jacobian: ndarray
+
+    """
 
     from scipy.linalg import cholesky
-    A = cholesky(corr_norm, lower=True)
-    samples_z = np.zeros_like(samples_x)
-    m, n = np.shape(samples_x)
-    for j in range(m):
-        cdf = marginal_dist[j].cdf
-        samples_z[j, :] = stats.norm.ppf(cdf(samples_x[j], marginal_params[j]))
-    Z = np.dot(A, samples_z)
+    print("UQpy: Performing Nataf transformation of the samples...")
+    a_ = cholesky(corr_norm, lower=True)
+    samples_g = np.zeros_like(samples_ng)
+    m, n = np.shape(samples_ng)
+    for j in range(n):
+        cdf = dist[j].cdf
+        samples_g[:, j] = stats.norm.ppf(cdf(samples_ng[:, j], dist_params[j]))
 
-    if not Jacobian:
-        return samples_z.T, None
+    if not jacobian:
+        print("UQpy: Done.")
+        return samples_g, None
     else:
-        diag = np.zeros([m, m])
-        for j in range(len(marginal_dist)):
-            pdf = marginal_dist[j].pdf
-            diag[j, j] = stats.norm.pdf(Z[j]) / pdf(samples_x[j], marginal_params[j])
-        Jac = np.linalg.solve(A, diag)
-        return samples_z.T, Jac
+        temp_ = np.zeros([n, n])
+        jacobian = [None] * m
+        for i in range(m):
+            for j in range(n):
+                pdf = dist[j].pdf
+                temp_[j, j] = stats.norm.pdf(samples_g[i, j]) / pdf(samples_ng[i, j], dist_params[j])
+            jacobian[i] = np.linalg.solve(temp_, a_)
+        print("UQpy: Done.")
+        return samples_g, jacobian
 
 
-def transform_z_to_x(corr_norm, marginal_dist, marginal_params, samples_z, Jacobian=True):
+def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
+
+    """
+        Description:
+
+            A function that performs transformation of a Gaussian random variable to a non-Gaussian one.
+
+        Input:
+            :param corr_norm: Correlation matrix in the standard normal space
+            :type corr_norm: ndarray
+
+            :param dist: marginal distributions
+            :type dist: list
+
+            :param dist_params: marginal distribution parameters
+            :type dist_params: list
+
+            :param samples_g: Gaussian samples
+            :type samples_g: ndarray
+
+            :param jacobian: The Jacobian of the transformation
+            :type jacobian: ndarray
+
+        Output:
+            :return: samples_ng: Gaussian samples
+            :rtype: samples_ng: ndarray
+
+            :return: jacobian: The jacobian
+            :rtype: jacobian: ndarray
+
+    """
 
     from scipy.linalg import cholesky
-    A = cholesky(corr_norm, lower=True)
-    samples_x = np.zeros_like(samples_z)
-    Z = np.dot(A, samples_z)
-    m, n = np.shape(samples_z)
-    for j in range(m):
-        icdf = marginal_dist[j].icdf
-        samples_x[j, :] = icdf(stats.norm.cdf(Z[j, :]), marginal_params[j])
+    print("UQpy: Performing Nataf transformation of the samples...")
+    samples_ng = np.zeros_like(samples_g)
+    m, n = np.shape(samples_g)
+    for j in range(n):
+        i_cdf = dist[j].icdf
+        samples_ng[:, j] = i_cdf(stats.norm.cdf(samples_g[:, j]), dist_params[j])
 
-    if not Jacobian:
-        return samples_x.T, None
+    if not jacobian:
+        print("UQpy: Done.")
+        return samples_ng, None
     else:
-        diag = np.zeros([m, m])
-        for j in range(m):
-            pdf = marginal_dist[j].pdf
-            diag[j, j] = pdf(samples_x[j], marginal_params[j]) / stats.norm.pdf(Z[j])
-        Jac = np.linalg.solve(A, diag)
-        return samples_x.T, Jac
+        a_ = cholesky(corr_norm, lower=True)
+        temp_ = np.zeros([n, n])
+        jacobian = [None] * m
+        for i in range(m):
+            for j in range(n):
+                pdf = dist[j].pdf
+                temp_[j, j] = pdf(samples_ng[i, j], dist_params[j]) / stats.norm.pdf(samples_g[i, j])
+            jacobian[i] = np.linalg.solve(a_, temp_)
+        print("UQpy: Done.")
+        return samples_ng, jacobian
 
 
 def run_corr(samples, corr):
+
     """
-        A function which performs the Cholesky decomposition of the correlation matrix and correlate
-        the samples
+        Description:
+
+            A function which performs the Cholesky decomposition of the correlation matrix and correlates standard
+            normal samples.
+
+        Input:
+            :param corr: Correlation matrix
+            :type corr: ndarray
+
+            :param samples: Standard normal samples.
+            :type samples: ndarray
+
+
+        Output:
+            :return: samples_corr: Correlated standard normal samples
+            :rtype: samples_corr: ndarray
+
     """
 
     from scipy.linalg import cholesky
+    print("UQpy: Performing correlation of the samples...")
     c = cholesky(corr, lower=True)
-    y = np.dot(c, samples.T)
-    return y.T
+    samples_corr = np.dot(c, samples.T)
+    print("UQpy: Done.")
+    return samples_corr.T
 
 
-def run_uncorr(samples, corr):
+def run_decorr(samples, corr):
+
     """
-        A function which un-correlates
-        the samples
+        Description:
+
+            A function which performs the Cholesky decomposition of the correlation matrix and de-correlates standard
+            normal samples.
+
+        Input:
+            :param corr: Correlation matrix
+            :type corr: ndarray
+
+            :param samples: standard normal samples.
+            :type samples: ndarray
+
+
+        Output:
+            :return: samples_uncorr: Uncorrelated standard normal samples
+            :rtype: samples_uncorr: ndarray
+
     """
 
     from scipy.linalg import cholesky
+    print("UQpy: Performing decorrelation of the samples...")
     c = cholesky(corr, lower=True)
     inv_corr = np.linalg.inv(c)
-    y = np.dot(inv_corr, samples.T)
-    return y.T
+    samples_uncorr = np.dot(inv_corr, samples.T)
+    print("UQpy: Done.")
+    return samples_uncorr.T
 
 
-def solve_double_integral(marginal, params, rho_norm):
+def correlation_distortion(marginal, params, rho_norm):
+
     """
-        A function to solve the double integral equation in order to evaluate the modified correlation
-        matrix in the standard normal space given the correlation matrix in the original space. This is achieved
-        by a quadratic two-dimensional Gauss-Legendre integration.
-    """
+        Description:
 
-    n = 3
-    zmax = 1
-    zmin = -zmax
+            A function to solve the double integral equation in order to evaluate the modified correlation
+            matrix in the standard normal space given the correlation matrix in the original space. This is achieved
+            by a quadratic two-dimensional Gauss-Legendre integration.
+            This function is a part of the ERADIST code that can be found in:
+            https://www.era.bgu.tum.de/en/software/
+
+        Input:
+            :param marginal: marginal distributions
+            :type marginal: list
+
+            :param params: marginal distribution parameters.
+            :type params: list
+
+            :param rho_norm: Correlation at standard normal space.
+            :type rho_norm: ndarray
+
+        Output:
+            :return rho: Distorted correlation
+            :rtype rho: ndarray
+
+    """
+    n = 1024
+    z_max = 8
+    z_min = -z_max
     points, weights = np.polynomial.legendre.leggauss(n)
-    points = - (0.5 * (points + 1) * (zmax - zmin) + zmin)
-    weights = weights * (0.5 * (zmax - zmin))
+    points = - (0.5 * (points + 1) * (z_max - z_min) + z_min)
+    weights = weights * (0.5 * (z_max - z_min))
 
     xi = np.tile(points, [n, 1])
     xi = xi.flatten(order='F')
@@ -115,79 +239,132 @@ def solve_double_integral(marginal, params, rho_norm):
     w2d = weights2d.flatten()
     rho = np.ones_like(rho_norm)
 
+    print('UQpy: Computing Nataf correlation distortion...')
     for i in range(len(marginal)):
-        icdf_i = marginal[i].icdf
+        i_cdf_i = marginal[i].icdf
         moments_i = marginal[i].moments
         mi = moments_i(params[i])
         if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
-            raise RuntimeError("The marginal distributions need to have "
-                               "finite mean and variance")
+            raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
 
         for j in range(i + 1, len(marginal)):
-            icdf_j = marginal[j].icdf
+            i_cdf_j = marginal[j].icdf
             moments_j = marginal[j].moments
             mj = moments_j(params[j])
             if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
-                raise RuntimeError("The marginal distributions need to have "
-                                   "finite mean and variance")
+                raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
 
-            tmp_f_xi = ((icdf_j(stats.norm.cdf(xi), params[j]) - mj[0]) / np.sqrt(mj[1]))
-            tmp_f_eta = ((icdf_i(stats.norm.cdf(eta), params[i]) - mi[0]) / np.sqrt(mi[1]))
+            tmp_f_xi = ((i_cdf_j(stats.norm.cdf(xi), params[j]) - mj[0]) / np.sqrt(mj[1]))
+            tmp_f_eta = ((i_cdf_i(stats.norm.cdf(eta), params[i]) - mi[0]) / np.sqrt(mi[1]))
             coef = tmp_f_xi * tmp_f_eta * w2d
 
             rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
             rho[j, i] = rho[i, j]
 
+    print('UQpy: Done.')
     return rho
 
 
-def itam(marginal, params, corr):
+def itam(marginal, params, corr, beta, thresh1, thresh2):
+
+    """
+        Description:
+
+            A function to perform the  Iterative Translation Approximation Method;  an iterative scheme for
+            upgrading the Gaussian power spectral density function.
+            [1] Shields M, Deodatis G, Bocchini P. A simple and efficient methodology to approximate a general
+            non-Gaussian  stochastic process by a translation process. Probab Eng Mech 2011;26:511–9.
+
+
+        Input:
+            :param marginal: marginal distributions
+            :type marginal: list
+
+            :param params: marginal distribution parameters.
+            :type params: list
+
+            :param corr: Non-Gaussian Correlation matrix.
+            :type corr: ndarray
+
+            :param beta:  A variable selected to optimize convergence speed and desired accuracy.
+            :type beta: int
+
+            :param thresh1: Threshold
+            :type thresh1: float
+
+            :param thresh2: Threshold
+            :type thresh2: float
+
+        Output:
+            :return corr_norm: Gaussian correlation matrix
+            :rtype corr_norm: ndarray
+
+    """
+
+    if beta is None:
+        beta = 1
+    if thresh1 is None:
+        thresh1 = 0.0001
+    if thresh2 is None:
+        thresh2 = 0.01
+
     # Initial Guess
     corr_norm0 = corr
+    corr_norm = np.zeros_like(corr_norm0)
     # Iteration Condition
-    i_converge = 0
-    error0 = 100
-    max_iter = 20
+    error0 = 0.1
+    error1 = 100.
+    max_iter = 50
+    iter_ = 0
 
-    for ii in range(max_iter):
-        corr0 = solve_double_integral(marginal, params, corr_norm0)
-        # compute the relative difference between the computed NGACF & the target R(Normalized)
-        err1 = 1.0e-10
-        err2 = 1.0e-10
-        for i in range(corr0.shape[0]):
-            for j in range(corr0.shape[1]):
-                err1 = err1 + (corr[i, j] - corr0[i, j]) ** 2
-                err2 = err2 + corr0[i, j] ** 2
-        error1 = 100 * np.sqrt(err1 / err2)
+    print("UQpy: Initializing Iterative Translation Approximation Method (ITAM)")
+    while iter_ < max_iter and error1 > thresh1 and abs(error1-error0)/error0 > thresh2:
+        error0 = error1
+        corr0 = correlation_distortion(marginal, params, corr_norm0)
+        error1 = np.linalg.norm(corr - corr0)
 
-        if abs(error0 - error1) / error1 < 0.001 or ii == max_iter or 100 * np.sqrt(err1 / err2) < 0.0005:
-            i_converge = 1
+        max_ratio = np.amax(np.ones((len(corr), len(corr))) / abs(corr_norm0))
 
-        corr_norm1 = np.zeros_like(corr_norm0)
-        for i in range(corr_norm0.shape[0]):
-            for j in range(corr_norm0.shape[1]):
-                if corr0[i, j] != 0:
-                    corr_norm1[i, j] = (corr[i, j] / corr0[i, j]) * corr_norm0[i, j]
-                else:
-                    corr_norm1[i, j] = 0
+        corr_norm = np.nan_to_num((corr / corr0)**beta * corr_norm0)
 
-        # Eliminate Numerical error of Upgrading Scheme
-        corr_norm1[corr_norm1 < -1.0] = -0.99999
-        corr_norm1[corr_norm1 > 1.0] = 0.99999
+        # Do not allow off-diagonal correlations to equal or exceed one
+        corr_norm[corr_norm < -1.0] = (max_ratio + 1) / 2 * corr_norm0[corr_norm < -1.0]
+        corr_norm[corr_norm > 1.0] = (max_ratio + 1) / 2 * corr_norm0[corr_norm > 1.0]
 
         # Iteratively finding the nearest PSD(Qi & Sun, 2006)
-        corr_norm1 = np.array(near_pd(corr_norm1))
+        corr_norm = np.array(nearest_psd(corr_norm))
 
-        if i_converge == 0 and ii != max_iter:
-            corr_norm0 = corr_norm1
-            error0 = error1
+        corr_norm0 = corr_norm.copy()
 
-    return corr_norm1
+        iter_ = iter_ + 1
+
+        print(["UQpy: ITAM iteration number ", iter_])
+        print(["UQpy: Current error, ", error1])
+
+    print("UQpy: ITAM Done.")
+    return corr_norm
 
 
 def bi_variate_normal_pdf(x1, x2, rho):
+
     """
-        A function which evaluates the values of the bi-variate normal probability distribution function
+
+        Description:
+
+            A function which evaluates the values of the bi-variate normal probability distribution function.
+
+        Input:
+            :param x1: value 1
+            :type x1: ndarray
+
+            :param x2: value 2
+            :type x2: ndarray
+
+            :param rho: correlation between x1, x2
+            :type rho: float
+
+        Output:
+
     """
     return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
             np.exp(-1/(2*(1-rho**2)) *
@@ -196,26 +373,74 @@ def bi_variate_normal_pdf(x1, x2, rho):
 
 def _get_a_plus(a):
 
+    """
+        Description:
+
+        Input:
+            :param a:
+
+        Output:
+            :return:
+            :rtype:
+    """
+
     eig_val, eig_vec = np.linalg.eig(a)
     q = np.matrix(eig_vec)
-    xdiag = np.matrix(np.diag(np.maximum(eig_val, 0)))
+    x_diagonal = np.matrix(np.diag(np.maximum(eig_val, 0)))
 
-    return q * xdiag * q.T
+    return q * x_diagonal * q.T
 
 
 def _get_ps(a, w=None):
+
+    """
+        Description:
+
+        Input:
+            :param a:
+            :param w:
+
+        Output:
+            :return:
+            :rtype:
+    """
+
     w05 = np.matrix(w ** .5)
+
     return w05.I * _get_a_plus(w05 * a * w05) * w05.I
 
 
 def _get_pu(a, w=None):
+
+    """
+        Description:
+
+         Input:
+            :param a:
+            :param w:
+
+         Output:
+            :return:
+            :rtype:
+    """
 
     a_ret = np.array(a.copy())
     a_ret[w > 0] = np.array(w)[w > 0]
     return np.matrix(a_ret)
 
 
-def near_pd(a, nit=10):
+def nearest_psd(a, nit=10):
+
+    """
+        Description:
+
+         Input:
+            :param a:
+            :param nit:
+
+        Output:
+            :return:
+    """
 
     n = a.shape[0]
     w = np.identity(n)
@@ -224,23 +449,34 @@ def near_pd(a, nit=10):
     delta_s = 0
     y_k = a.copy()
     for k in range(nit):
+
         r_k = y_k - delta_s
         x_k = _get_ps(r_k, w=w)
         delta_s = x_k - r_k
         y_k = _get_pu(x_k, w=w)
+
     return y_k
 
 
 def nearest_pd(a):
-    """Find the nearest positive-definite matrix to input
 
-    A Python/Numpy port of John D'Errico's `nearestSPD` MATLAB code [1], which
-    credits [2].
+    """
+        Description:
 
-    [1] https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd
+            Find the nearest positive-definite matrix to input
+            A Python/Numpy port of John D'Errico's `nearestSPD` MATLAB code [1], which
+            credits [2].
+            [1] https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd
+            [2] N.J. Higham, "Computing a nearest symmetric positive semidefinite
+            matrix" (1988): https://doi.org/10.1016/0024-3795(88)90223-6
 
-    [2] N.J. Higham, "Computing a nearest symmetric positive semidefinite
-    matrix" (1988): https://doi.org/10.1016/0024-3795(88)90223-6
+        Input:
+            :param a:
+            :type a:
+
+
+        Output:
+
     """
 
     b = (a + a.T) / 2
@@ -262,8 +498,8 @@ def nearest_pd(a):
     # for `np.spacing`), we use the above definition. CAVEAT: our `spacing`
     # will be much larger than [1]'s `eps(mineig)`, since `mineig` is usually on
     # the order of 1e-16, and `eps(1e-16)` is on the order of 1e-34, whereas
-    # `spacing` will, for Gaussian random matrixes of small dimension, be on
-    # othe order of 1e-16. In practice, both ways converge, as the unit test
+    # `spacing` will, for Gaussian random matrices of small dimension, be on
+    # other order of 1e-16. In practice, both ways converge, as the unit test
     # below suggests.
     k = 1
     while not is_pd(a3):
@@ -275,7 +511,20 @@ def nearest_pd(a):
 
 
 def is_pd(b):
-    """Returns true when input is positive-definite, via Cholesky"""
+
+    """
+        Description:
+
+            Returns true when input is positive-definite, via Cholesky decomposition.
+
+        Input:
+            :param b:
+            :type b:
+
+        Output:
+
+
+    """
     try:
         _ = np.linalg.cholesky(b)
         return True
@@ -284,6 +533,21 @@ def is_pd(b):
 
 
 def estimate_psd(samples, nt, t):
+
+    """
+        Description:
+
+        Input:
+            :param samples:
+            :param nt:
+            :param t:
+
+        Output:
+            :return:
+            :rtype:
+
+    """
+
     sample_size = nt
     sample_max_time = t
     dt = t / (nt - 1)
@@ -291,10 +555,25 @@ def estimate_psd(samples, nt, t):
     x_w = x_w[:, 0: int(sample_size / 2)]
     m_ps = np.mean(np.absolute(x_w) ** 2 * sample_max_time / sample_size ** 2, axis=0)
     num = int(t / (2 * dt))
+
     return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
 
 
 def s_to_r(s, w, t):
+
+    """
+        Description:
+
+        Input:
+            :param s:
+            :param w:
+            :param t:
+
+        Output:
+            :return:
+            :rtype:
+    """
+
     dw = w[1] - w[0]
     fac = np.ones(len(w))
     fac[1: len(w) - 1: 2] = 4
@@ -311,6 +590,20 @@ def s_to_r(s, w, t):
 
 
 def r_to_s(r, w, t):
+
+    """
+        Description:
+
+
+        Input:
+            :param r:
+            :param w:
+            :param t:
+
+        Output:
+            :return:
+
+    """
     dt = t[1] - t[0]
     fac = np.ones(len(t))
     fac[1: len(t) - 1: 2] = 4

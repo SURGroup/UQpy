@@ -30,67 +30,71 @@ from UQpy.Distributions import *
 class SROM:
 
     """
-    Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random
-    quantity.
-    SROM generates a discrete approximation of continuous random variables. The probabilities/weights are
-    considered to be the parameters for the SROM and they can be obtained by minimizing the error between the
-    marginal distributions, first and second order moments about origin and correlation between random variables.
-    References:
-    M. Grigoriu, "Reduced order models for random functions. Application to stochastic problems",
-        Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.
-    Input:
-    :param samples: An array/list of samples corresponding to each random variables
 
-    :param cdf_target: A list of Cumulative distribution functions of random variables
-    :type cdf_target: list str or list function
+        Description:
 
-    :param cdf_target_params: Parameters of distribution
-    :type cdf_target_params: list
+            Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random
+            quantity.
+            SROM generates a discrete approximation of continuous random variables. The probabilities/weights are
+            considered to be the parameters for the SROM and they can be obtained by minimizing the error between the
+            marginal distributions, first and second order moments about origin and correlation between random variables
+            References:
+            M. Grigoriu, "Reduced order models for random functions. Application to stochastic problems",
+                Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.
+        Input:
+            :param samples: An array/list of samples corresponding to each random variables
 
-    :param moments: A list containing first and second order moment about origin of all random variables
+            :param cdf_target: A list of Cumulative distribution functions of random variables
+            :type cdf_target: list str or list function
 
-    :param weights_errors: Weights associated with error in distribution, moments and correlation.
-                           Default: weights_errors = [1, 0.2, 0]
-    :type weights_errors: list
+            :param cdf_target_params: Parameters of distribution
+            :type cdf_target_params: list
 
-    :param properties: A list of booleans representing properties, which are required to match in reduce
-                       order model. This class focus on reducing errors in distribution, first order moment
-                       about origin, second order moment about origin and correlation of samples.
-                       Default: properties = [True, True, True, False]
-                       Example: properties = [True, True, False, False] will minimize errors in distribution and
-                       errors in first order moment about origin in reduce order model.
-    :type properties: list
+            :param moments: A list containing first and second order moment about origin of all random variables
 
-    :param weights_distribution: An list or array containing weights associated with different samples.
-                                 Options:
-                                    If weights_distribution is None, then default value is assigned.
-                                    If size of weights_distribution is 1xd, then it is assigned as dot product
-                                        of weights_distribution and default value.
-                                    Otherwise size of weights_distribution should be equal to Nxd.
-                                 Default: weights_distribution = Nxd dimensional array with all elements equal
-                                 to 1.
+            :param weights_errors: Weights associated with error in distribution, moments and correlation.
+                                   Default: weights_errors = [1, 0.2, 0]
+            :type weights_errors: list
 
-    :param weights_moments: An array of dimension 2xd, where 'd' is number of random variables. It contain
-                            weights associated with moments.
-                            Options:
-                                If weights_moments is None, then default value is assigned.
-                                If size of weights_moments is 1xd, then it is assigned as dot product
-                                    of weights_moments and default value.
-                                Otherwise size of weights_distribution should be equal to 2xd.
-                            Default: weights_moments = Square of reciprocal of elements of moments.
-    :type weights_moments: ndarray or list (float)
+            :param properties: A list of booleans representing properties, which are required to match in reduce
+                               order model. This class focus on reducing errors in distribution, first order moment
+                               about origin, second order moment about origin and correlation of samples.
+                               Default: properties = [True, True, True, False]
+                               Example: properties = [True, True, False, False] will minimize errors in distribution and
+                               errors in first order moment about origin in reduce order model.
+            :type properties: list
 
-    :param weights_correlation: An array of dimension dxd, where 'd' is number of random variables. It contain
-                                weights associated with correlation of random variables.
-                                Default: weights_correlation = dxd dimensional array with all elements equal to
-                                1.
+            :param weights_distribution: An list or array containing weights associated with different samples.
+                                         Options:
+                                            If weights_distribution is None, then default value is assigned.
+                                            If size of weights_distribution is 1xd, then it is assigned as dot product
+                                                of weights_distribution and default value.
+                                            Otherwise size of weights_distribution should be equal to Nxd.
+                                         Default: weights_distribution = Nxd dimensional array with all elements equal
+                                         to 1.
 
-    :param correlation: Correlation matrix between random variables.
+            :param weights_moments: An array of dimension 2xd, where 'd' is number of random variables. It contain
+                                    weights associated with moments.
+                                    Options:
+                                        If weights_moments is None, then default value is assigned.
+                                        If size of weights_moments is 1xd, then it is assigned as dot product
+                                            of weights_moments and default value.
+                                        Otherwise size of weights_distribution should be equal to 2xd.
+                                    Default: weights_moments = Square of reciprocal of elements of moments.
+            :type weights_moments: ndarray or list (float)
 
-    Output:
-    :return: SROM.samples: Last column contains the probabilities/weights defining discrete approximation of
-                           continuous random variables.
-    :rtype: SROM.samples: ndarray
+            :param weights_correlation: An array of dimension dxd, where 'd' is number of random variables. It contain
+                                        weights associated with correlation of random variables.
+                                        Default: weights_correlation = dxd dimensional array with all elements equal to
+                                        1.
+
+            :param correlation: Correlation matrix between random variables.
+
+        Output:
+            :return: SROM.samples: Last column contains the probabilities/weights defining discrete approximation of
+                                   continuous random variables.
+            :rtype: SROM.samples: ndarray
+
     """
     # Authors: Mohit Chauhan
     # Updated: 6/7/18 by Dimitris G. Giovanis
@@ -285,6 +289,6 @@ class SROM:
             if type(self.cdf_target[i]).__name__ == 'function':
                 self.cdf_target[i] = self.cdf_target[i]
             elif type(self.cdf_target[i]).__name__ == 'str':
-                self.cdf_target[i] = cdf(self.cdf_target[i])
+                self.cdf_target[i] = Distribution(self.cdf_target[i], self.cdf_target_params[i]).cdf
             else:
                 raise NotImplementedError("Distribution type should be either 'function' or 'list'")
