@@ -22,7 +22,8 @@ from scipy.spatial.distance import pdist
 import scipy.stats as sp
 import random
 from UQpy.Distributions import *
-from UQpy.tools import *
+from UQpy.Utilities import *
+from os import sys
 
 ########################################################################################################################
 ########################################################################################################################
@@ -31,42 +32,46 @@ from UQpy.tools import *
 
 
 class MCS:
+
     """
-    Perform Monte Carlo sampling (MCS) of independent random variables from a user-specified probability
-    distribution using inverse transform method.
+        Description:
 
-    :param dimension: A scalar value defining the dimension of the random variables
-                        Default: len(dist_names)
-    :type dimension: int
+            Perform Monte Carlo sampling (MCS) of independent random variables from a user-specified probability
+            distribution using inverse transform method.
 
-    :param dist_name: A list containing the names of the distributions of the random variables.
-                        Distribution names must match those in the Distributions module.
-                        If the distribution does not match one from the Distributions module, the user must provide
-                            custom_dist.py.
-                        The length of the string must be 1 (if all distributions are the same) or equal to dimension.
-    :type dist_name: string list
+        Input:
+            :param dimension: A scalar value defining the dimension of the random variables.
+                              Default: len(dist_names).
+            :type dimension: int
 
-    :param dist_params: Parameters of the distribution
-                Parameters for each random variable are defined as ndarrays
-                Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
-                    dist[i]
-    :type dist_params: list
+            :param dist_name: A list containing the names of the distributions of the random variables.
+                              Distribution names must match those in the Distributions module.
+                              If the distribution does not match one from the Distributions module, the user must
+                              provide custom_dist.py. The length of the string must be 1 (if all distributions are the
+                              same) or equal to dimension.
+            :type dist_name: string list
 
-    param: dist:    An object list containing the distributions of the random variables.
-                    Each item in the list is an object of the Distribution class (see Distributions.py)
-                    The list has length equal to dimension
-    :type dist: list
+            :param dist_params: Parameters of the distribution.
+                                Parameters for each random variable are defined as ndarrays.
+                                Each item in the list, dist_params[i], specifies the parameters for the corresponding
+                                distribution, dist[i].
+            :type dist_params: list
 
-    :param nsamples: Number of samples to generate
-                      No Default Value: nsamples must be prescribed
-    :type nsamples: int
+            param: distribution: An object list containing the distributions of the random variables.
+                                 Each item in the list is an object of the Distribution class (see Distributions.py).
+                                 The list has length equal to dimension.
+            :type distribution: list
 
-    Output:
-    :return: MCS.samples: Set of generated samples
-    :rtype: MCS.samples: ndarray
+            :param nsamples: Number of samples to generate.
+                             No Default Value: nsamples must be prescribed.
+            :type nsamples: int
 
-    :return: MCS.samplesU01: Set of uniform samples on [0, 1]^dimension
-    :rtype: MCS.samplesU01: ndarray
+        Output:
+            :return: MCS.samples: Set of generated samples
+            :rtype: MCS.samples: ndarray
+
+            :return: MCS.samplesU01: Set of uniform samples on [0, 1]^dimension
+            :rtype: MCS.samplesU01: ndarray
 
     """
 
@@ -77,26 +82,23 @@ class MCS:
 
         self.dimension = dimension
         self.nsamples = nsamples
-        self.dist_name = dist_name
         self.dist_params = dist_params
-        self.dist = list()
-        for i in range(self.dimension):
-            self.dist.append(Distribution(self.dist_name[i]))
+        self.dist_name = dist_name
+
         self.init_mcs()
+        self.distribution = [None] * self.dimension
+        for i in range(self.dimension):
+            self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
         self.samplesU01, self.samples = self.run_mcs()
+        del self.dist_name, self.dist_params
 
     def run_mcs(self):
-        print('UQpy: Performing MCS design...')
         samples = np.random.rand(self.nsamples, self.dimension)
         samples_u_to_x = np.zeros_like(samples)
-        mom = list()
         for j in range(samples.shape[1]):
-            icdf = self.dist[j].icdf
-            moments = self.dist[j].moments
-            mom.append(moments(self.dist_params[j]))
-            for i in range(samples.shape[0]):
-                samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
-        print('Done!')
+            i_cdf = self.distribution[j].icdf
+            samples_u_to_x[:, j] = i_cdf(samples[:, j], self.distribution[j].params)
+        print('Successful execution of MCS design..')
         return samples, samples_u_to_x
 
     ################################################################################################################
@@ -124,7 +126,7 @@ class MCS:
         if len(self.dist_params) == 1 and self.dimension != 1:
             self.dist_params = self.dist_params * self.dimension
         elif len(self.dist_params) != self.dimension:
-            raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension")
+            raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension.")
 
         # Check for dimensional consistency
         if len(self.dist_name) != len(self.dist_params):
@@ -137,66 +139,68 @@ class MCS:
 ########################################################################################################################
 
 class LHS:
-    """Generate samples based on the Latin Hypercube Design.
 
-    A class that creates a Latin Hypercube Design for experiments. Firstly, samples on hypercube [0, 1]^n are generated
-    and then translated to the parameter space.
+    """
+        Description:
 
-    Input:
+            A class that creates a Latin Hypercube Design for experiments. Samples on hypercube [0, 1]^n  and on the
+            parameter space are generated.
 
-    :param dimension: A scalar value defining the dimension of the random variables
-                        Default: len(i_cdf)
-    :type dimension: int
+        Input:
+            :param dimension: A scalar value defining the dimension of the random variables.
+                              If dimension is not provided then dimension is equal to the length of the dist_name.
+            :type dimension: int
 
-    :param dist_name: A list containing the names of the distributions of the random variables.
-                        Distribution names must match those in the Distributions module.
-                        If the distribution does not match one from the Distributions module, the user must provide
-                            custom_dist.py.
-                        The length of the string must be 1 (if all distributions are the same) or equal to dimension.
-    :type dist_name: string list
+            :param dist_name: A list containing the names of the distributions of the random variables.
+                              Distribution names must match those in the Distributions module.
+                              If the distribution does not match one from the Distributions module, the user must
+                              provide custom_dist.py.
+                              The length of the string must be 1 (if all distributions are the same) or equal to
+                              dimension.
+            :type dist_name: string list
 
-    :param dist_params: Parameters of the distribution
-                Parameters for each random variable are defined as ndarrays
-                Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
-                    dist[i]
-    :type dist_params: list
+            :param dist_params: Parameters of the distribution.
+                                Parameters for each random variable are defined as ndarrays.
+                                Each item in the list, dist_params[i], specifies the parameters for the corresponding
+                                distribution, dist[i].
+            :type dist_params: list
 
-    param: dist:    An object list containing the distributions of the random variables.
-                    Each item in the list is an object of the Distribution class (see Distributions.py)
-                    The list has length equal to dimension
-    :type dist: list
+            param: distribution: An object list containing the distributions of the random variables.
+                                 Each item in the list is an object of the Distribution class (see Distributions.py).
+                                 The list has length equal to dimension.
+            :type distribution: list
 
-    :param lhs_criterion: The criterion for generating sample points
-                            Options:
-                                1. 'random' - completely random \n
-                                2. 'centered' - points only at the centre \n
-                                3. 'maximin' - maximising the minimum distance between points \n
-                                4. 'correlate' - minimizing the correlation between the points \n
-                            Default: 'random'
-    :type lhs_criterion: str
+            :param lhs_criterion: The criterion for generating sample points
+                                  Options:
+                                        1. 'random' - completely random \n
+                                        2. 'centered' - points only at the centre \n
+                                        3. 'maximin' - maximising the minimum distance between points \n
+                                        4. 'correlate' - minimizing the correlation between the points \n
+                                  Default: 'random'
+            :type lhs_criterion: str
 
-    :param lhs_metric: The distance metric to use. Supported metrics are
-                        'braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice',
-                        'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski',
-                        'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean',
-                        'yule'.
-                        Default: 'euclidean'
-    :type lhs_metric: str
+            :param lhs_metric: The distance metric to use. Supported metrics are:
+                               'braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice',
+                               'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski',
+                               'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath',
+                               'sqeuclidean', 'yule'.
+                                Default: 'euclidean'.
+            :type lhs_metric: str
 
-    :param lhs_iter: The number of iteration to run. Required only for maximin, correlate and criterion
-                        Default: 100
-    :type lhs_iter: int
+            :param lhs_iter: The number of iteration to run. Required only for maximin, correlate and criterion.
+                             Default: 100
+            :type lhs_iter: int
 
-    :param nsamples: Number of samples to generate
-                        No Default Value: nsamples must be prescribed
-    :type nsamples: int
+            :param nsamples: Number of samples to generate.
+                             No Default Value: nsamples must be prescribed.
+            :type nsamples: int
 
-    Output
-    :return: LHS.samples: Set of LHS samples
-    :rtype: LHS.samples: ndarray
+        Output:
+            :return: LHS.samples: Set of LHS samples
+            :rtype: LHS.samples: ndarray
 
-    :return: LHS.samplesU01: Set of uniform LHS samples on [0, 1]^dimension
-    :rtype: LHS.samplesU01: ndarray
+            :return: LHS.samplesU01: Set of uniform LHS samples on [0, 1]^dimension.
+            :rtype: LHS.samplesU01: ndarray.
 
     """
     # Created by: Lohit Vandanapu
@@ -208,19 +212,21 @@ class LHS:
         self.dimension = dimension
         self.nsamples = nsamples
         self.dist_name = dist_name
-        self.dist = list()
-        for i in range(self.dimension):
-            self.dist.append(Distribution(self.dist_name[i]))
         self.dist_params = dist_params
         self.lhs_criterion = lhs_criterion
         self.lhs_metric = lhs_metric
         self.lhs_iter = lhs_iter
         self.init_lhs()
+
+        self.distribution = [None] * self.dimension
+        for i in range(self.dimension):
+            self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
+
         self.samplesU01, self.samples = self.run_lhs()
+        del self.dist_name, self.dist_params
 
     def run_lhs(self):
 
-        print('UQpy: Performing LHS design...')
         cut = np.linspace(0, 1, self.nsamples + 1)
         a = cut[:self.nsamples]
         b = cut[1:self.nsamples + 1]
@@ -229,11 +235,10 @@ class LHS:
 
         samples_u_to_x = np.zeros_like(samples)
         for j in range(samples.shape[1]):
-            icdf = self.dist[j].icdf
-            for i in range(samples.shape[0]):
-                samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
+            i_cdf = self.distribution[j].icdf
+            samples_u_to_x[:, j] = i_cdf(samples[:, j], self.distribution[j].params)
 
-        print('Done')
+        print('Successful execution of LHS design..')
         return samples, samples_u_to_x
 
     def _samples(self, a, b):
@@ -327,7 +332,7 @@ class LHS:
         if len(self.dist_params) == 1 and self.dimension != 1:
             self.dist_params = self.dist_params * self.dimension
         elif len(self.dist_params) != self.dimension:
-            raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension")
+            raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension.")
 
         # Check for dimensional consistency
         if len(self.dist_name) != len(self.dist_params):
@@ -338,7 +343,7 @@ class LHS:
         else:
             if self.lhs_criterion not in ['random', 'centered', 'maximin', 'correlate']:
                 raise NotImplementedError("Exit code: Supported lhs criteria: 'random', 'centered', 'maximin', "
-                                          "'correlate'")
+                                          "'correlate'.")
 
         if self.lhs_metric is None:
             self.lhs_metric = 'euclidean'
@@ -351,7 +356,7 @@ class LHS:
                                           "'cityblock',"
                                           " 'correlation', 'cosine','dice', 'euclidean', 'hamming', 'jaccard', "
                                           "'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto',"
-                                          "'russellrao', 'seuclidean','sokalmichener', 'sokalsneath', 'sqeuclidean'")
+                                          "'russellrao', 'seuclidean','sokalmichener', 'sokalsneath', 'sqeuclidean'.")
 
         if self.lhs_iter is None or self.lhs_iter == 0:
             self.lhs_iter = 1000
@@ -366,51 +371,55 @@ class LHS:
 
 class STS:
 
-    """Generate samples from an assigned probability density function using Stratified Sampling.
+    """
+        Description:
 
-    References:
-    M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte Carlo based
-        uncertainty quantification," Reliability Engineering and System Safety, vol. 142, pp. 310-325, 2015.
+            Generate samples from an assigned probability density function using Stratified Sampling.
 
-    Input:
-    :param dimension:  A scalar value defining the dimension of target density function.
-                    Default: Length of sts_design                
-    :type dimension: int
-    
-    :param dist_name: A list containing the names of the distributions of the random variables.
-                        Distribution names must match those in the Distributions module.
-                        If the distribution does not match one from the Distributions module, the user must provide
-                            custom_dist.py.
-                        The length of the string must be 1 (if all distributions are the same) or equal to dimension.
-    :type dist_name: string list
+            References:
+            M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte
+            Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
 
-    :param dist_params: Parameters of the distribution
-                Parameters for each random variable are defined as ndarrays
-                Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
-                    dist[i]
-    :type dist_params: list
+        Input:
+            :param dimension: A scalar value defining the dimension of target density function.
+                              Default: Length of sts_design.
+            :type dimension: int
 
-    param: dist:    An object list containing the distributions of the random variables.
-                    Each item in the list is an object of the Distribution class (see Distributions.py)
-                    The list has length equal to dimension
-    :type dist: list
+            :param dist_name: A list containing the names of the distributions of the random variables.
+                              Distribution names must match those in the Distributions module.
+                              If the distribution does not match one from the Distributions module, the user must
+                              provide custom_dist.py.
+                              The length of the string must be 1 (if all distributions are the same) or equal to
+                              dimension.
+            :type dist_name: string list
 
-    :param sts_design: Specifies the number of strata in each dimension
-    :type sts_design: int list
+            :param dist_params: Parameters of the distribution
+                                Parameters for each random variable are defined as ndarrays.
+                                Each item in the list, dist_params[i], specifies the parameters for the corresponding
+                                distribution, dist[i].
+            :type dist_params: list
 
-    :param input_file: File path to input file specifying stratum origins and stratum widths
-                    Default: None
-    :type input_file: string
-    
-    Output:
-    :return: STS.samples: Set of stratified samples
-    :rtype: STS.samples: ndarray
+            param: distribution: An object list containing the distributions of the random variables.
+                                 Each item in the list is an object of the Distribution class (see Distributions.py).
+                                 The list has length equal to dimension.
+            :type distribution: list
 
-    :return: STS.samplesU01: Set of uniform stratified samples on [0, 1]^dimension
-    :rtype: STS.samplesU01: ndarray
+            :param sts_design: Specifies the number of strata in each dimension
+            :type sts_design: int list
 
-    :return: STS.strata: Instance of the class SampleMethods.Strata
-    :rtype: STS.strata: ndarray
+            :param input_file: File path to input file specifying stratum origins and stratum widths.
+                               Default: None.
+            :type input_file: string
+
+        Output:
+            :return: STS.samples: Set of stratified samples.
+            :rtype: STS.samples: ndarray
+
+            :return: STS.samplesU01: Set of uniform stratified samples on [0, 1]^dimension
+            :rtype: STS.samplesU01: ndarray
+
+            :return: STS.strata: Instance of the class SampleMethods.Strata
+            :rtype: STS.strata: ndarray
     
     """
 
@@ -420,28 +429,30 @@ class STS:
     def __init__(self, dimension=None, dist_name=None, dist_params=None, sts_design=None, input_file=None):
 
         self.dimension = dimension
-        self.dist_name = dist_name
-        self.dist_params = dist_params
         self.sts_design = sts_design
         self.input_file = input_file
+        self.dist_name = dist_name
+        self.dist_params = dist_params
         self.strata = None
         self.init_sts()
-        self.dist = list()
+
+        self.distribution = [None] * self.dimension
         for i in range(self.dimension):
-            self.dist.append(Distribution(self.dist_name[i]))
+            self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
         self.samplesU01, self.samples = self.run_sts()
+        del self.dist_name, self.dist_params
 
     def run_sts(self):
-        print('UQpy: Performing STS design...')
         samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
         samples_u_to_x = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
         for j in range(0, self.strata.origins.shape[1]):
-            icdf = self.dist[j].icdf
+            i_cdf = self.distribution[j].icdf
             for i in range(0, self.strata.origins.shape[0]):
                 samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
                                                   + self.strata.widths[i, j])
-                samples_u_to_x[i, j] = icdf(samples[i, j], self.dist_params[j])
-        print('Done!')
+            samples_u_to_x[:, j] = i_cdf(samples[:, j], self.dist_params[j])
+
+        print('Successful execution of STS design..')
         return samples, samples_u_to_x
 
     def init_sts(self):
@@ -461,7 +472,7 @@ class STS:
         if len(self.dist_name) == 1 and self.dimension != 1:
             self.dist_name = self.dist_name * self.dimension
         elif len(self.dist_name) != self.dimension:
-            raise NotImplementedError("Length of i_cdf should be 1 or equal to dimension")
+            raise NotImplementedError("Length of i_cdf should be 1 or equal to dimension.")
 
         # Check dist_params
         if type(self.dist_params).__name__ != 'list':
@@ -469,7 +480,7 @@ class STS:
         if len(self.dist_params) == 1 and self.dimension != 1:
             self.dist_params = self.dist_params * self.dimension
         elif len(self.dist_params) != self.dimension:
-            raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension")
+            raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension.")
 
         # Ensure that distribution parameters are assigned
         if self.dist_params is None:
@@ -493,46 +504,50 @@ class STS:
 
 
 class Strata:
+
     """
-    Define a rectilinear stratification of the n-dimensional unit hypercube with N strata.
+        Description:
 
-    Input:
-    :param n_strata: A list of dimension n defining the number of strata in each of the n dimensions
-                    Creates an equal stratification with strata widths equal to 1/n_strata
-                    The total number of strata, N, is the product of the terms of n_strata
-                    Example -
-                    n_strata = [2, 3, 2] creates a 3d stratification with:
-                    2 strata in dimension 0 with stratum widths 1/2
-                    3 strata in dimension 1 with stratum widths 1/3
-                    2 strata in dimension 2 with stratum widths 1/2
-    :type n_strata int list
+            Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^dimension with N strata.
 
-    :param input_file: File path to input file specifying stratum origins and stratum widths
-                    Default: None
-    :type input_file: string
+        Input:
+            :param n_strata: A list of dimension n defining the number of strata in each of the n dimensions
+                            Creates an equal stratification with strata widths equal to 1/n_strata
+                            The total number of strata, N, is the product of the terms of n_strata
+                            Example -
+                            n_strata = [2, 3, 2] creates a 3d stratification with:
+                            2 strata in dimension 0 with stratum widths 1/2
+                            3 strata in dimension 1 with stratum widths 1/3
+                            2 strata in dimension 2 with stratum widths 1/2
+            :type n_strata int list
 
-    Output:
-    :return origins: An array of dimension N x n specifying the origins of all strata
-                    The origins of the strata are the coordinates of the stratum orthotope nearest the global origin
-                    Example - A 2D stratification with 2 strata in each dimension
-                    origins = [[0, 0]
-                              [0, 0.5]
-                              [0.5, 0]
-                              [0.5, 0.5]]
-    :rtype origins: array
+            :param input_file: File path to input file specifying stratum origins and stratum widths.
+                               Default: None
+            :type input_file: string
 
-    :return widths: An array of dimension N x n specifying the widths of all strata in each dimension
-                   Example - A 2D stratification with 2 strata in each dimension
-                   widths = [[0.5, 0.5]
-                             [0.5, 0.5]
-                             [0.5, 0.5]
-                             [0.5, 0.5]]
-    :rtype widths: ndarray
+        Output:
+            :return origins: An array of dimension N x n specifying the origins of all strata
+                            The origins of the strata are the coordinates of the stratum orthotope nearest the global
+                            origin.
+                            Example - A 2D stratification with 2 strata in each dimension
+                            origins = [[0, 0]
+                                      [0, 0.5]
+                                      [0.5, 0]
+                                      [0.5, 0.5]]
+            :rtype origins: array
 
-    :return weights: An array of dimension 1 x N containing sample weights.
-                    Sample weights are equal to the product of the strata widths (i.e. they are equal to the size of the
-                        strata in the [0, 1]^n space.
-    :rtype weights: ndarray
+            :return widths: An array of dimension N x n specifying the widths of all strata in each dimension
+                           Example - A 2D stratification with 2 strata in each dimension
+                           widths = [[0.5, 0.5]
+                                     [0.5, 0.5]
+                                     [0.5, 0.5]
+                                     [0.5, 0.5]]
+            :rtype widths: ndarray
+
+            :return weights: An array of dimension 1 x N containing sample weights.
+                            Sample weights are equal to the product of the strata widths (i.e. they are equal to the
+                            size of the strata in the [0, 1]^n space.
+            :rtype weights: ndarray
 
     """
 
@@ -548,7 +563,7 @@ class Strata:
             if self.input_file is None:
                 if self.widths is None or self.origins is None:
                     sys.exit('Error: The strata are not fully defined. Must provide [n_strata], '
-                             'input file, or [origins] and [widths]')
+                             'input file, or [origins] and [widths].')
 
             else:
                 # Read the strata from the specified input file
@@ -575,28 +590,30 @@ class Strata:
     def fullfact(levels):
 
         """
-        Create a full-factorial design
+            Description:
 
-        Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
-        Copyright (C) 2012 - 2013 - Michael Baudin
-        Copyright (C) 2012 - Maria Christopoulou
-        Copyright (C) 2010 - 2011 - INRIA - Michael Baudin
-        Copyright (C) 2009 - Yann Collette
-        Copyright (C) 2009 - CEA - Jean-Marc Martinez
-        Original source code can be found at:
-        https://pythonhosted.org/pyDOE/#
-        or
-        https://pypi.org/project/pyDOE/
-        or
-        https://github.com/tisimst/pyDOE/
+                Create a full-factorial design
 
-        Input:
-        :param levels: A list of integers that indicate the number of levels of each input design factor.
-        :type levels: list
+                Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
+                Copyright (C) 2012 - 2013 - Michael Baudin
+                Copyright (C) 2012 - Maria Christopoulou
+                Copyright (C) 2010 - 2011 - INRIA - Michael Baudin
+                Copyright (C) 2009 - Yann Collette
+                Copyright (C) 2009 - CEA - Jean-Marc Martinez
+                Original source code can be found at:
+                https://pythonhosted.org/pyDOE/#
+                or
+                https://pypi.org/project/pyDOE/
+                or
+                https://github.com/tisimst/pyDOE/
 
-        Output:
-        :return ff: Full-factorial design matrix
-        :rtype ff: ndarray
+            Input:
+                :param levels: A list of integers that indicate the number of levels of each input design factor.
+                :type levels: list
+
+            Output:
+                :return ff: Full-factorial design matrix.
+                :rtype ff: ndarray
 
         """
 
@@ -628,104 +645,108 @@ class Strata:
 
 class MCMC:
 
-    """Generate samples from an arbitrary probability density function using Markov Chain Monte Carlo.
+    """
+        Description:
+            Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
+            This class generates samples using Metropolis-Hastings(MH), Modified Metropolis-Hastings,
+            or Affine Invariant Ensemble Sampler with stretch moves.
 
-    This class generates samples from an arbitrary user-specified distribution using Metropolis-Hastings(MH),
-    Modified Metropolis-Hastings, of Affine Invariant Ensemble Sampler with stretch moves.
+            References:
+            S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
+                Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+            J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
+                no. 1, pp. 65–80, 2010.
 
-    References:
-    S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by subset simulation,”
-        Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
-    J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci., vol. 5,
-        no. 1, pp. 65–80, 2010.
+        Input:
+            :param dimension: A scalar value defining the dimension of target density function.
+                              Default: 1
+            :type dimension: int
 
-    Input:
-    :param dimension:  A scalar value defining the dimension of target density function.
-                    Default: 1
-    :type dimension: int
+            :param pdf_proposal_type: Type of proposal density function for MCMC. Only used with algorithm ='MH' or'MMH'
+                            Options:
+                                    'Normal' : Normal proposal density.
+                                    'Uniform' : Uniform proposal density.
+                            Default: 'Uniform'
+                            If dimension > 1 and algorithm = 'MMH', this may be input as a list to assign different
+                            proposal densities to each dimension. Example pdf_proposal_type = ['Normal','Uniform'].
+                            If dimension > 1, algorithm = 'MMH' and this is input as a string, the proposal densities
+                            for all dimensions are set equal to the assigned proposal type.
+            :type pdf_proposal_type: str or str list
 
-    :param pdf_proposal_type: Type of proposal density function for MCMC. Only used with algorithm = 'MH' or 'MMH'
-                    Options:
-                        'Normal' : Normal proposal density
-                        'Uniform' : Uniform proposal density
-                    Default: 'Uniform'
-                    If dimension > 1 and algorithm = 'MMH', this may be input as a list to assign different proposal
-                        densities to each dimension. Example pdf_proposal_type = ['Normal','Uniform'].
-                    If dimension > 1, algorithm = 'MMH' and this is input as a string, the proposal densities for all
-                        dimensions are set equal to the assigned proposal type.
-    :type pdf_proposal_type: str or str list
+            :param pdf_proposal_scale: Scale of the proposal distribution
+                            If algorithm == 'MH' or 'MMH'
+                                For pdf_proposal_type = 'Uniform'
+                                    Proposal is Uniform in [x-pdf_proposal_scale/2, x+pdf_proposal_scale/2].
+                                For pdf_proposal_type = 'Normal'
+                                    Proposal is Normal with standard deviation equal to pdf_proposal_scale.
+                            If algorithm == 'Stretch'
+                                pdf_proposal_scale sets the scale of the stretch density.
+                                    g(z) = 1/sqrt(z) for z in [1/pdf_proposal_scale, pdf_proposal_scale].
+                            Default value: dimension x 1 list of ones.
+            :type pdf_proposal_scale: float or float list
+                            If dimension > 1, this may be defined as float or float list.
+                                If input as float, pdf_proposal_scale is assigned to all dimensions.
+                                If input as float list, each element is assigned to the corresponding dimension.
 
-    :param pdf_proposal_scale: Scale of the proposal distribution
-                    If algorithm == 'MH' or 'MMH'
-                        For pdf_proposal_type = 'Uniform'
-                            Proposal is Uniform in [x-pdf_proposal_scale/2, x+pdf_proposal_scale/2]
-                        For pdf_proposal_type = 'Normal'
-                            Proposal is Normal with standard deviation equal to pdf_proposal_scale
-                    If algorithm == 'Stretch'
-                        pdf_proposal_scale sets the scale of the stretch density
-                            g(z) = 1/sqrt(z) for z in [1/pdf_proposal_scale, pdf_proposal_scale]
-                    Default value: dimension x 1 list of ones
-    :type pdf_proposal_scale: float or float list
-                    If dimension > 1, this may be defined as float or float list
-                        If input as float, pdf_proposal_scale is assigned to all dimensions
-                        If input as float list, each element is assigned to the corresponding dimension
+            :param pdf_target_type: Type of target density function for acceptance/rejection in MMH. Not used for MH or
+                                    Stretch.
+                            Options:
+                                'marginal_pdf': Check acceptance/rejection for a candidate in MMH using the marginal pdf
+                                                For independent variables only
+                                'joint_pdf': Check acceptance/rejection for a candidate in MMH using the joint pdf
+                            Default: 'marginal_pdf'
+            :type pdf_target_type: str
 
-    :param pdf_target_type: Type of target density function for acceptance/rejection in MMH. Not used for MH or Stretch.
-                    Options:
-                        'marginal_pdf': Check acceptance/rejection for a candidate in MMH using the marginal pdf
-                                        For independent variables only
-                        'joint_pdf': Check acceptance/rejection for a candidate in MMH using the joint pdf
-                    Default: 'marginal_pdf'
-    :type pdf_target_type: str
+            :param pdf_target: Target density function from which to draw random samples
+                            The target joint probability density must be a function, or list of functions, or a string.
+                            If type == 'str'
+                                The assigned string must refer to a custom pdf defined in the file custom_pdf.py in the
+                                 working directory.
+                            If type == function
+                                The function must be defined in the python script calling MCMC.
+                            If dimension > 1 and pdf_target_type='marginal_pdf', the input to pdf_target is a list of
+                            size [dimensions x 1] where each item of the list defines a marginal pdf.
+                            Default: Multivariate normal distribution having zero mean and unit standard deviation.
+            :type pdf_target: function, function list, or str
 
-    :param pdf_target: Target density function from which to draw random samples
-                    The target joint probability density must be a function, or list of functions, or a string.
-                    If type == 'str'
-                        The assigned string must refer to a custom pdf defined in the file custom_pdf.py in the working
-                            directory
-                    If type == function
-                        The function must be defined in the python script calling MCMC
-                    If dimension > 1 and pdf_target_type='marginal_pdf', the input to pdf_target is a list of size
-                        [dimensions x 1] where each item of the list defines a marginal pdf.
-                    Default: Multivariate normal distribution having zero mean and unit standard deviation
-    :type pdf_target: function, function list, or str
+            :param pdf_target_params: Parameters of the target pdf.
+            :type pdf_target_params: list
 
-    :param pdf_target_params: Parameters of the target pdf
-    :type pdf_target_params: list
+            :param algorithm:  Algorithm used to generate random samples.
+                            Options:
+                                'MH': Metropolis Hastings Algorithm
+                                'MMH': Component-wise Modified Metropolis Hastings Algorithm
+                                'Stretch': Affine Invariant Ensemble MCMC with stretch moves
+                            Default: 'MMH'
+            :type algorithm: str
 
-    :param algorithm:  Algorithm used to generate random samples.
-                    Options:
-                        'MH': Metropolis Hastings Algorithm
-                        'MMH': Component-wise Modified Metropolis Hastings Algorithm
-                        'Stretch': Affine Invariant Ensemble MCMC with stretch moves
-                    Default: 'MMH'
-    :type algorithm: str
+            :param jump: Number of samples between accepted states of the Markov chain.
+                                Default value: 1 (Accepts every state)
+            :type: jump: int
 
-    :param jump: Number of samples between accepted states of the Markov chain.
-                        Default value: 1 (Accepts every state)
-    :type: jump: int
+            :param nsamples: Number of samples to generate
+                                No Default Value: nsamples must be prescribed
+            :type nsamples: int
 
-    :param nsamples: Number of samples to generate
-                        No Default Value: nsamples must be prescribed
-    :type nsamples: int
+            :param seed: Seed of the Markov chain(s)
+                            For 'MH' and 'MMH', this is a single point, defined as a numpy array of dimension
+                             (1 x dimension).
+                            For 'Stretch', this is a numpy array of dimension N x dimension, where N is the ensemble
+                            size.
+                            Default:
+                                For 'MH' and 'MMH': zeros(1 x dimension)
+                                For 'Stretch': No default, this must be specified.
+            :type seed: float or numpy array
 
-    :param seed: Seed of the Markov chain(s)
-                    For 'MH' and 'MMH', this is a single point, defined as a numpy array of dimension (1 x dimension)
-                    For 'Stretch', this is a numpy array of dimension N x dimension, where N is the ensemble size
-                    Default:
-                        For 'MH' and 'MMH': zeros(1 x dimension)
-                        For 'Stretch': No default, this must be specified.
-    :type seed: float or numpy array
-
-    :param nburn: Length of burn-in. Number of samples at the beginning of the chain to discard.
-                    This option is only used for the 'MMH' and 'MH' algorithms.
-                    Default: nburn = 0
-    :type nburn: int
+            :param nburn: Length of burn-in. Number of samples at the beginning of the chain to discard.
+                            This option is only used for the 'MMH' and 'MH' algorithms.
+                            Default: nburn = 0
+            :type nburn: int
 
 
-    Output:
-    :return: MCMC.samples: Set of MCMC samples following the target distribution
-    :rtype: MCMC.samples: ndarray
+        Output:
+            :return: MCMC.samples: Set of MCMC samples following the target distribution
+            :rtype: MCMC.samples: ndarray
     """
 
     # Authors: Michael D. Shields, Mohit Chauhan, Dimitris G. Giovanis
@@ -888,8 +909,6 @@ class MCMC:
 
         ################################################################################################################
         # Affine Invariant Ensemble Sampler with stretch moves
-        # Reference: Goodman, J. and Weare, J., (2010) "Ensemble samplers with affine invariance." Communications in
-        #               applied mathematics and computational science. 5: 65-80.
 
         elif self.algorithm == 'Stretch':
 
@@ -1008,10 +1027,11 @@ class MCMC:
 
         # Check pdf_target
         if type(self.pdf_target).__name__ == 'str':
-            self.pdf_target = pdf(self.pdf_target)
+            self.pdf_target = Distribution(self.pdf_target)
         if self.pdf_target is None and self.algorithm is 'MMH':
             if self.dimension == 1 or self.pdf_target_type is 'marginal_pdf':
                 def target(x, dummy):
+                    _ = dummy
                     return sp.norm.pdf(x)
                 if self.dimension == 1:
                     self.pdf_target = [target]
@@ -1019,15 +1039,18 @@ class MCMC:
                     self.pdf_target = [target] * self.dimension
             else:
                 def target(x, dummy):
+                    _ = dummy
                     return sp.multivariate_normal.pdf(x, mean=np.zeros(self.dimension), cov=np.eye(self.dimension))
                 self.pdf_target = [target]
         elif self.pdf_target is None:
             if self.dimension == 1:
                 def target(x, dummy):
+                    _ = dummy
                     return sp.norm.pdf(x)
                 self.pdf_target = [target]
             else:
                 def target(x, dummy):
+                    _ = dummy
                     return sp.multivariate_normal.pdf(x, mean=np.zeros(self.dimension), cov=np.eye(self.dimension))
                 self.pdf_target = [target]
         elif type(self.pdf_target).__name__ != 'list':
@@ -1045,101 +1068,145 @@ class MCMC:
 
 ########################################################################################################################
 ########################################################################################################################
-#                                         Correlation
+#                                         Correlate standard normal samples
 ########################################################################################################################
 
 class Correlate:
-    """
-        A class to correlate samples ~ N(0, 1).
-        :param samples: An object of type MCS, LHS
-        :type samples: object
 
-        :param corr_norm: The correlation matrix of the random variables in the standard normal space
-        :type corr_norm: ndarray
+    """
+    Description:
+    A class to correlate standard normal samples ~ N(0, 1) given a correlation matrix.
+
+    Input:
+    :param input_samples: An object of a SampleMethods class or an array of standard normal samples ~ N(0, 1).
+    :type input_samples: object or ndarray
+
+    :param corr_norm: The correlation matrix of the random variables in the standard normal space.
+    :type corr_norm: ndarray
+
+    param: distribution: An object list containing the distributions of the random variables.
+                         Each item in the list is an object of the Distribution class (see Distributions.py).
+                         The list has length equal to dimension.
+    :type distribution: list
+
+    Output:
+    :return: Correlate.samples: Set of correlated normal samples.
+    :rtype: Correlate.samples: ndarray
 
     """
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 6/24/18 by Dimitris G. Giovanis
+    # Last Modified: 7/4/18 by Michael D. Shields
 
-    def __init__(self, samples=None, corr_norm=None):
+    def __init__(self, input_samples=None, corr_norm=None, dimension=None):
 
-        # Check if samples is a SampleMethods Object or an array
-        if isinstance(samples, MCS) is True or isinstance(samples, LHS) is True:
-            _dict = {**samples.__dict__}
+        # If samples is not an array (It should be an instance of a SampleMethods class)
+        if isinstance(input_samples, np.ndarray) is False:
+            _dict = {**input_samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
 
             self.corr_norm = corr_norm
+            self.samples_uncorr = self.samples.copy()
 
-            for i in range(len(self.dist)):
-                if self.dist[i].name != 'Normal' or self.dist_params[i] != [0, 1]:
-                    raise RuntimeError("In order to use class 'Correlate' the random variables should be standard "
-                                       "Gaussian")
+            for i in range(len(self.distribution)):
+                if self.distribution[i].name != 'Normal' or self.distribution[i].params != [0, 1]:
+                    raise RuntimeError("In order to use class 'Correlate' the random variables should be standard"
+                                       "normal")
 
-        # Check if samples is an array
-        elif isinstance(samples, np.ndarray):
-            print('Caution: The samples provided must be realizations of standard normal random variables.')
-            self.samples = samples
+        # If samples is an array
+        else:
+            print('Caution: The samples provided must be uncorrelated standard normal random variables.')
+            self.samples_uncorr = input_samples
+            if dimension is None:
+                raise RuntimeError("Dimension must be specified when entering samples as an array.")
+
+            self.dimension = dimension
+            self.dist_name = ['Normal'] * self.dimension
+            self.dist_params = [[0, 1]] * self.dimension
             self.corr_norm = corr_norm
-            self.dist = None
+            self.distribution = [None] * self.dimension
+            for i in range(self.dimension):
+                self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
 
             if self.corr_norm is None:
                 raise RuntimeError("A correlation matrix is required.")
 
         if np.linalg.norm(self.corr_norm - np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
-            self.samples_corr = self.samples
+            self.samples = self.samples_uncorr.copy()
         else:
-            print('Correlating standard normal samples...')
-            self.samples_corr = run_corr(self.samples, self.corr_norm)
+            self.samples = run_corr(self.samples_uncorr, self.corr_norm)
 
 
 ########################################################################################################################
 ########################################################################################################################
-#                                         Uncorrelation
+#                                         Decorrelate standard normal samples
 ########################################################################################################################
 
-class Uncorrelate:
+class Decorrelate:
+
     """
-        A class to uncorrelate samples ~ N(0, 1).
-        :param samples: An object of type MCS, LHS
-        :type samples: object
+        Description:
 
-        :param corr_norm: The correlation matrix of the random variables in the standard normal space
-        :type corr_norm: ndarray
+            A class to decorrelate already correlated normal samples given their correlation matrix.
 
+        Input:
+            :param input_samples: An object of type Correlate or an array of correlated N(0,1) samples
+            :type input_samples: object or ndarray
+
+            param: distribution: An object list containing the distributions of the random variables.
+                                 Each item in the list is an object of the Distribution class (see Distributions.py).
+                                 The list has length equal to dimension.
+            :type distribution: list
+
+            :param corr_norm: The correlation matrix of the random variables in the standard normal space
+            :type corr_norm: ndarray
+
+        Output:
+            :return: Decorrelate.samples: Set of uncorrelated normal samples.
+            :rtype: Decorrelate.samples: ndarray
     """
 
     # Authors: Dimitris G.Giovanis
     # Last Modified: 6/24/18 by Dimitris G. Giovanis
 
-    def __init__(self, samples=None, corr_norm=None):
+    def __init__(self, input_samples=None, corr_norm=None, dimension=None):
 
-        # Check if samples is a SampleMethods Object or an array
-        if isinstance(samples, Correlate) is True:
-            _dict = {**samples.__dict__}
+        # If samples is not an array (It should be an instance of the Correlate class)
+        if isinstance(input_samples, np.ndarray) is False:
+            _dict = {**input_samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
 
             self.corr_norm = corr_norm
+            self.samples_corr = self.samples.copy()
 
-            for i in range(len(self.dist)):
-                if self.dist[i].name != 'Normal' or self.dist_params[i] != [0, 1]:
-                    raise RuntimeError("In order to use class 'Uncorrelate' the random variables should be standard "
-                                       "Gaussian")
+            for i in range(len(self.distribution)):
+                if self.distribution[i].name != 'Normal' or self.distribution[i].params != [0, 1]:
+                    raise RuntimeError("In order to use class 'Decorrelate' the random variables should be standard "
+                                       "normal.")
 
-        # Check if samples is an array
-        elif isinstance(samples, np.ndarray):
-            self.samples_corr = samples
+        # If samples is an array
+        else:
+            print('Caution: The samples provided must be correlated standard normal random variables.')
+            self.samples_corr = input_samples
+            if dimension is None:
+                raise RuntimeError("Dimension must be specified when entering samples as an array.")
+            self.dimension = dimension
+            self.dist_name = ['Normal'] * self.dimension
+            self.dist_params = [[0, 1]] * self.dimension
             self.corr_norm = corr_norm
-            self.dist = None
+            self.distribution = [None] * self.dimension
+            for i in range(self.dimension):
+                self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
+
             if self.corr_norm is None:
                 raise RuntimeError("A correlation matrix is required.")
 
         if np.linalg.norm(self.corr_norm - np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
-            self.samples_uncorr = self.samples_corr
+            self.samples = self.samples_corr
         else:
-            self.samples_uncorr = run_uncorr(self.samples_corr, self.corr_norm)
+            self.samples = run_decorr(self.samples_corr, self.corr_norm)
 
 
 ########################################################################################################################
@@ -1149,118 +1216,182 @@ class Uncorrelate:
 
 
 class Nataf:
+
     """
-        A class to perform the Nataf transformation of samples ~ N(0, 1).
-        :param samples: An object of type MCS, LHS
-        :type samples: object
+        Description:
 
-        :param marginal_name: A list containing the names of the distributions of the random variables.
-                        Distribution names must match those in the Distributions module.
-                        If the distribution does not match one from the Distributions module, the user must provide
-                            custom_dist.py.
-                        The length of the string must be 1 (if all distributions are the same) or equal to dimension.
-        :type marginal_name: string list
+            A class to perform the Nataf transformation of samples from N(0, 1) to a user-defined distribution.
 
-        :param marginal_params: Parameters of the distribution
-                Parameters for each random variable are defined as ndarrays
-                Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
-                    dist[i]
-        :type marginal_params: list
+        Input:
+            :param input_samples: An object of a SampleMethods class containing N(0,1) samples or an array of N(0,1)
+                                  samples.
+            :type input_samples: object or ndarray
 
-        :param corr_norm: The correlation matrix of the random variables in the standard normal space
-        :type corr_norm: ndarray
+            :param dist_name: A list containing the names of the distributions of the random variables.
+                              Distribution names must match those in the Distributions module.
+                              If the distribution does not match one from the Distributions module,the user must provide
+                              custom_dist.py.
+                              The length of the string must be 1 (if all distributions are the same) or equal to
+                              dimension.
+            :type dist_name: string list
+
+            :param dist_params: Parameters of the distribution.
+                                Parameters for each random variable are defined as ndarrays
+                                Each item in the list, dist_params[i], specifies the parameters for the corresponding
+                                distribution, dist[i].
+            :type dist_params: list
+
+            :param corr_norm: The correlation matrix of the random variables in the standard normal space
+            :type corr_norm: ndarray
+
+            param: distribution: An object list containing the distributions of the random variables.
+                                 Each item in the list is an object of the Distribution class (see Distributions.py).
+                                 The list has length equal to dimension.
+            :type distribution: list
+
+        Output:
+            :return: Nataf.corr: The distorted correlation matrix of the random variables in the standard space;
+            :rtype: Nataf.corr: ndarray
+
+            :return: Nataf.samplesN01: An array of N(0,1) samples;
+            :rtype: Nataf.corr: ndarray
+
+            :return: Nataf.samples: An array of samples following the prescribed distributions;
+            :rtype: Nataf.corr: ndarray
+
+            :return: Nataf.jacobian: An array containing the Jacobian of the transformation.
+            :rtype: Nataf.jacobian: ndarray
+
     """
 
-    # Authors: Dimitris G.Giovanis
-    # Last Modified: 6/30/18 by Dimitris G. Giovanis
+    # Authors: Dimitris G. Giovanis
+    # Last Modified: 7/15/18 by Michael D. Shields
 
-    def __init__(self, samples=None, corr_norm=None, marginal_name=None, marginal_params=None):
-
-        self.marginal_name = marginal_name
-        self.marginal_params = marginal_params
-        if self.marginal_name is None or self.marginal_params is None:
-            raise RuntimeError("In order to use class 'Nataf' marginal distributions and their parameters should"
-                               "be provided.")
-        self.marginal_dist = list()
-        for j in range(len(self.marginal_name)):
-            self.marginal_dist.append(Distribution(self.marginal_name[j]))
+    def __init__(self, input_samples=None, corr_norm=None, dist_name=None, dist_params=None, dimension=None):
 
         # Check if samples is a SampleMethods Object or an array
-        if isinstance(samples, MCS) is True or isinstance(samples, LHS) is True:
-            _dict = {**samples.__dict__}
+        if isinstance(input_samples, np.ndarray) is False and input_samples is not None:
+            _dict = {**input_samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
 
-            for i in range(len(self.dist)):
-                if self.dist[i].name != 'Normal' or self.dist_params[i] != [0, 1]:
-                    raise RuntimeError("In order to use class 'Nataf' the random variables should be standard "
-                                       "Gaussian")
+            for i in range(len(self.distribution)):
+                if self.distribution[i].name.title() != 'Normal' or self.distribution[i].params != [0, 1]:
+                    raise RuntimeError("In order to use class 'Nataf' the random variables should be standard normal")
+
+            self.dist_name = dist_name
+            self.dist_params = dist_params
+            if self.dist_name is None or self.dist_params is None:
+                raise RuntimeError("In order to use class 'Nataf', marginal distributions and their parameters must"
+                                   "be provided.")
+
+            # Ensure the dimensions of dist_name are consistent
+            if type(self.dist_name).__name__ != 'list':
+                self.dist_name = [self.dist_name]
+            if len(self.dist_name) == 1 and self.dimension != 1:
+                self.dist_name = self.dist_name * self.dimension
+
+            # Ensure that dist_params is a list of length dimension
+            if type(self.dist_params).__name__ != 'list':
+                self.dist_params = [self.dist_params]
+            if len(self.dist_params) == 1 and self.dimension != 1:
+                self.dist_params = self.dist_params * self.dimension
+
+            self.distribution = [None] * self.dimension
+            for j in range(len(self.dist_name)):
+                self.distribution[j] = Distribution(self.dist_name[j], self.dist_params[j])
+
+            if not hasattr(self, 'corr_norm'):
+                if corr_norm is None:
+                    self.corr_norm = np.identity(n=self.dimension)
+                    self.corr = self.corr_norm
+                elif corr_norm is not None:
+                    self.corr_norm = corr_norm
+                    self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
+            else:
+                self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
+
+            self.samplesN01 = self.samples.copy()
+            self.samples = np.zeros_like(self.samples)
+
+            self.samples, self.jacobian = transform_g_to_ng(self.corr_norm, self.distribution, self.dist_params,
+                                                            self.samplesN01)
+
+        elif isinstance(input_samples, np.ndarray):
+            self.samplesN01 = input_samples
+            if dimension is None:
+                raise RuntimeError("UQpy: Dimension must be specified in 'Nataf' when entering samples as an array.")
+            self.dimension = dimension
+
+            self.dist_name = dist_name
+            self.dist_params = dist_params
+            if self.dist_name is None or self.dist_params is None:
+                raise RuntimeError("UQpy: Marginal distributions and their parameters must be specified in 'Nataf' "
+                                   "when entering samples as an array.")
+
+            # Ensure the dimensions of dist_name are consistent
+            if type(self.dist_name).__name__ != 'list':
+                self.dist_name = [self.dist_name]
+            if len(self.dist_name) == 1 and self.dimension != 1:
+                self.dist_name = self.dist_name * self.dimension
+
+            # Ensure that dist_params is a list of length dimension
+            if type(self.dist_params).__name__ != 'list':
+                self.dist_params = [self.dist_params]
+            if len(self.dist_params) == 1 and self.dimension != 1:
+                self.dist_params = self.dist_params * self.dimension
+
+            self.distribution = [None] * self.dimension
+            for j in range(len(self.dist_name)):
+                self.distribution[j] = Distribution(self.dist_name[j], self.dist_params[j])
 
             if corr_norm is None:
                 self.corr_norm = np.identity(n=self.dimension)
+                self.corr = self.corr_norm
             elif corr_norm is not None:
                 self.corr_norm = corr_norm
+                self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
 
-            self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
-            self.Jacobian = list()
-            self.samples_x = np.zeros_like(self.samples)
-            for i in range(self.samples.shape[0]):
-                self.samples_x[i, :], jac = transform_z_to_x(self.corr_norm, self.marginal_dist,
-                                                             self.marginal_params, self.samples[i, :].reshape(-1, 1))
-                self.Jacobian.append(jac)
+            self.samples = np.zeros_like(self.samplesN01)
 
-        if isinstance(samples, Correlate) is True:
-            _dict = {**samples.__dict__}
-            for k, v in _dict.items():
-                setattr(self, k, v)
+            self.samples, self.jacobian = transform_g_to_ng(self.corr_norm, self.distribution, self.dist_params,
+                                                            self.samplesN01)
 
-            self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
-            self.Jacobian = list()
-            self.samples_x = np.zeros_like(self.samples)
-            if self.samples.ndim == 1:
-                if self.dimension == 1:
-                    self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
-                else:
-                    self.samples = self.samples.reshape(1, self.samples.shape[0])
-            for i in range(self.samples.shape[0]):
-                if self.samples.shape[0] != 1:
-                    self.samples_x[i, :], jac = transform_z_to_x(self.corr_norm, self.marginal_dist,
-                                                                 self.marginal_params,
-                                                                 self.samples[i, :].reshape(-1, 1))
-                else:
-                    self.samples_x, jac = transform_x_to_z(self.corr_norm, self.marginal_dist,
-                                                           self.marginal_params, self.samples[i, :].reshape(-1, 1))
-                self.Jacobian.append(jac)
-
-        elif isinstance(samples, np.ndarray):
-            self.samples = samples
-            self.corr_norm = corr_norm
-            self.dist = None
-            self.dimension = len(self.marginal_dist)
-            if self.corr_norm is None:
-                self.corr_norm = np.identity(n=len(self.marginal_name))
-
-            self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
-            self.Jacobian = list()
-            self.samples_x = np.zeros_like(self.samples)
-            if self.samples.ndim == 1:
-                if self.dimension == 1:
-                    self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
-                else:
-                    self.samples = self.samples.reshape(1, self.samples.shape[0])
-            for i in range(self.samples.shape[0]):
-                if self.samples.shape[0] != 1:
-                    self.samples_x[i, :], jac = transform_z_to_x(self.corr_norm, self.marginal_dist,
-                                                                 self.marginal_params,
-                                                                 self.samples[i, :].reshape(-1, 1))
-                else:
-                    self.samples_x, jac = transform_x_to_z(self.corr_norm, self.marginal_dist,
-                                                           self.marginal_params, self.samples[i, :].reshape(-1, 1))
-                self.Jacobian.append(jac)
-
-        elif samples is None:
+        elif input_samples is None:
             if corr_norm is not None:
-                self.corr = solve_double_integral(self.marginal_dist, self.marginal_params, self.corr_norm)
+                self.dist_name = dist_name
+                self.dist_params = dist_params
+                self.corr_norm = corr_norm
+                if self.dist_name is None or self.dist_params is None:
+                    raise RuntimeError("UQpy: In order to use class 'Nataf', marginal distributions and their "
+                                       "parameters must be provided.")
+
+                if dimension is not None:
+                    self.dimension = dimension
+                else:
+                    self.dimension = len(self.dist_name)
+
+                # Ensure the dimensions of dist_name are consistent
+                if type(self.dist_name).__name__ != 'list':
+                    self.dist_name = [self.dist_name]
+                if len(self.dist_name) == 1 and self.dimension != 1:
+                    self.dist_name = self.dist_name * self.dimension
+
+                # Ensure that dist_params is a list of length dimension
+                if type(self.dist_params).__name__ != 'list':
+                    self.dist_params = [self.dist_params]
+                if len(self.dist_params) == 1 and self.dimension != 1:
+                    self.dist_params = self.dist_params * self.dimension
+
+                self.distribution = [None] * self.dimension
+                for j in range(len(self.dist_name)):
+                    self.distribution[j] = Distribution(self.dist_name[j], self.dist_params[j])
+
+                self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
+
+            else:
+                raise RuntimeError("UQpy: To perform the Nataf transformation without samples, a correlation function"
+                                   "'corr_norm' must be provided.")
 
 
 ########################################################################################################################
@@ -1270,159 +1401,220 @@ class Nataf:
 
 
 class InvNataf:
+
     """
-        A class to perform the inverse Nataf transformation of samples in standard normal space.
-        :param samples: An object of type MCS, LHS
-        :type samples: object
+        Description:
+            A class to perform the inverse Nataf transformation of samples in standard normal space.
 
-        :param marginal_name: A list containing the names of the distributions of the random variables.
-                        Distribution names must match those in the Distributions module.
-                        If the distribution does not match one from the Distributions module, the user must provide
+        Input:
+            :param input_samples: An object of type MCS, LHS
+            :type input_samples: object
+
+            :param dist_name: A list containing the names of the distributions of the random variables.
+                            Distribution names must match those in the Distributions module.
+                            If the distribution does not match one from the Distributions module, the user must provide
                             custom_dist.py.
-                        The length of the string must be 1 (if all distributions are the same) or equal to dimension.
-        :type marginal_name: string list
+                            The length of the string must be 1 (if all distributions are the same) or equal to dimension
+            :type dist_name: string list
 
-        :param marginal_params: Parameters of the distribution
-                Parameters for each random variable are defined as ndarrays
-                Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
-                    dist[i]
-        :type marginal_params: list
+            :param dist_params: Parameters of the distribution
+                    Parameters for each random variable are defined as ndarrays
+                    Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
+                        dist[i]
+            :type dist_params: list
 
-        :param corr_norm: The correlation matrix of the random variables in the standard normal space
-        :type corr_norm: ndarray
+            param: distribution: An object list containing the distributions of the random variables.
+                   Each item in the list is an object of the Distribution class (see Distributions.py).
+                   The list has length equal to dimension.
+            :type distribution: list
+
+            :param corr The correlation matrix of the random variables in the parameter space.
+            :type corr: ndarray
+
+            :param itam_error1:
+            :type itam_error1: float
+
+            :param itam_error2:
+            :type itam_error1: float
+
+            :param beta:
+            :type itam_error1: float
+
+
+        Output:
+            :return: invNataf.corr: The distorted correlation matrix of the random variables in the standard space;
+            :rtype: invNataf.corr: ndarray
+
+            :return: invNataf.samplesN01: An array of N(0,1) samples;
+            :rtype: Nataf.corr: ndarray
+
+            :return: invNataf.samples: An array of samples following the normal distribution.
+            :rtype: invNataf.corr: ndarray
+
+            :return: invNataf.jacobian: An array containing the Jacobian of the transformation.
+            :rtype: invNataf.jacobian: ndarray
     """
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 6/30/18 by Dimitris G. Giovanis
+    # Last Modified: 7/19/18 by Dimitris G. Giovanis
 
-    def __init__(self, samples=None, dimension=None, corr=None, marginal_name=None, marginal_params=None):
+    def __init__(self, input_samples=None, dimension=None, corr=None, dist_name=None, dist_params=None, beta=None,
+                 itam_error1=None, itam_error2=None):
 
-        self.marginal_name = marginal_name
-        self.corr = corr
-        self.marginal_params = marginal_params
-
-        # Check if samples is a SampleMethods Object or an array
-        
-        if isinstance(samples, MCS) is True or isinstance(samples, LHS) is True:
-            _dict = {**samples.__dict__}
+        # If samples is an instance of a SampleMethods class
+        if isinstance(input_samples, np.ndarray) is False and input_samples is not None:
+            _dict = {**input_samples.__dict__}
             for k, v in _dict.items():
                 setattr(self, k, v)
 
-            if self.dist_name is None or self.dist_params is None:
-                raise RuntimeError("In order to use class 'invNataf' the distributions and their parameters should"
-                                   "be provided.")
-            self.dist = list()
-            for j in range(len(self.dist_name)):
-                self.dist.append(Distribution(self.dist_name[j]))
+            # Allow to inherit distribution from samples or the user to specify the distribution
+            if dist_name is None or dist_params is None:
+                if not hasattr(self, 'distribution'):
+                    raise RuntimeError("In order to use class 'InvNataf' the distributions and their parameters must"
+                                       "be provided.")
 
+            # Allow to inherit correlation from samples or the user to specify the correlation
+            if corr is None:
+                if not hasattr(self, 'corr'):
+                    self.corr = np.identity(n=self.dimension)
+            else:
+                self.corr = corr
+
+            # Check for variables that are non-Gaussian
             count = 0
-            for i in range(len(self.dist)):
-                if self.dist[i].name == 'Normal' and self.dist_params[i] == [0, 1]:
+            for i in range(len(self.distribution)):
+                if self.distribution[i].name.title() == 'Normal' and self.distribution[i].params == [0, 1]:
                     count = count + 1
 
-            if count == len(self.dist):  # Case where the variables are all standard Gaussian
+            if count == len(self.distribution):  # Case where the variables are all standard Gaussian
+                self.samplesN01 = self.samples.copy()
+                m, n = np.shape(self.samples)
+                self.samples = input_samples
                 self.Jacobian = list()
-                self.samples_z = self.samples
-                for i in range(len(self.dist)):
+                for i in range(m):
                     self.Jacobian.append(np.identity(n=self.dimension))
-                self.corr = corr
                 self.corr_norm = self.corr
             else:
-                if corr is None:
-                    self.corr = np.identity(n=self.dimension)
-                    self.corr_norm = self.corr
-                elif corr is not None:
-                    self.corr = corr
-                    self.corr_norm = itam(self.dist, self.dist_params, self.corr)
-
-
-                self.Jacobian = list()
-                self.samples_z = np.zeros_like(self.samples)
-                if self.samples.ndim == 1:
-                    if self.dimension == 1:
-                        self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
-                    else:
-                        self.samples = self.samples.reshape(1, self.samples.shape[0])
-                for i in range(self.samples.shape[0]):
-                    if self.samples.shape[0] != 1:
-                        self.samples_z[i, :], jac = transform_x_to_z(self.corr_norm, self.dist,
-                                                                     self.dist_params,
-                                                                     self.samples[i, :].reshape(-1, 1))
-                    else:
-                        self.samples_z, jac = transform_x_to_z(self.corr_norm, self.dist,
-                                                               self.dist_params, self.samples[i, :].reshape(-1, 1))
-                    self.Jacobian.append(jac)
-
-        # Check if samples is an array
-        elif isinstance(samples, np.ndarray):
-            self.dimension = dimension
-            self.samples = samples
-            if self.samples.ndim == 1:
-                if self.dimension == 1:
-                    self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
+                if np.linalg.norm(self.corr - np.identity(n=self.corr.shape[0])) < 10 ** (-8):
+                    self.corr_norm = self.corr.copy()
                 else:
-                    self.samples = self.samples.reshape(1, self.samples.shape[0])
+                    self.corr_norm = itam(self.distribution, self.dist_params, self.corr, beta, itam_error1,
+                                          itam_error2)
 
-            if self.marginal_name is None or self.marginal_params is None:
-                raise RuntimeError("In order to use class 'invNataf' marginal distributions and their parameters should"
-                                   "be provided.")
-            self.marginal_dist = list()
-            for j in range(len(self.marginal_name)):
-                self.marginal_dist.append(Distribution(self.marginal_name[j]))
+                self.Jacobian = list()
+                self.samplesNG = self.samples.copy()
+                self.samples = np.zeros_like(self.samplesNG)
 
+                self.samples, self.jacobian = transform_ng_to_g(self.corr_norm, self.distribution, self.dist_params,
+                                                                self.samplesNG)
+
+        # If samples is an array
+        elif isinstance(input_samples, np.ndarray):
+            if dimension is None:
+                raise RuntimeError("UQpy: Dimension must be specified in 'InvNataf' when entering samples as an array.")
+            self.dimension = dimension
+            self.samplesNG = input_samples
+            if corr is None:
+                raise RuntimeError("UQpy: corr must be specified in 'InvNataf' when entering samples as an array.")
+            self.corr = corr
+
+            self.dist_name = dist_name
+            self.dist_params = dist_params
+            if self.dist_name is None or self.dist_params is None:
+                raise RuntimeError("UQpy: Marginal distributions and their parameters must be specified in 'InvNataf' "
+                                   "when entering samples as an array.")
+
+            # Ensure the dimensions of dist_name are consistent
+            if type(self.dist_name).__name__ != 'list':
+                self.dist_name = [self.dist_name]
+            if len(self.dist_name) == 1 and self.dimension != 1:
+                self.dist_name = self.dist_name * self.dimension
+
+            # Ensure that dist_params is a list of length dimension
+            if type(self.dist_params).__name__ != 'list':
+                self.dist_params = [self.dist_params]
+            if len(self.dist_params) == 1 and self.dimension != 1:
+                self.dist_params = self.dist_params * self.dimension
+
+            self.distribution = [None] * self.dimension
+            for j in range(len(self.dist_name)):
+                self.distribution[j] = Distribution(self.dist_name[j], self.dist_params[j])
+
+            # Check for variables that are non-Gaussian
             count = 0
-            for i in range(len(self.marginal_dist)):
-                if self.marginal_dist[i].name == 'Normal' and self.marginal_params[i] == [0, 1]:
+            for i in range(len(self.distribution)):
+                if self.distribution[i].name.title() == 'Normal' and self.distribution[i].params == [0, 1]:
                     count = count + 1
 
-            if count == len(self.marginal_dist) and self.corr is None:
-                self.samples_z = self.samples
-                self.Jacobian = list()
-                for i in range(len(self.marginal_dist)):
-                    self.Jacobian.append(np.identity(n=self.dimension))
-                self.corr = corr
+            if count == len(self.distribution):
+                self.samples = self.samplesNG.copy()
+                self.jacobian = list()
+                for i in range(len(self.distribution)):
+                    self.jacobian.append(np.identity(n=self.dimension))
                 self.corr_norm = self.corr
             else:
-                if corr is None:
-                    self.corr = np.identity(n=self.dimension)
+                if np.linalg.norm(self.corr - np.identity(n=self.corr.shape[0])) < 10 ** (-8):
                     self.corr_norm = self.corr
-                elif corr is not None:
+                else:
                     self.corr = corr
-                    self.corr_norm = itam(self.marginal_dist, self.marginal_params, self.corr)
+                    self.corr_norm = itam(self.distribution, self.dist_params, self.corr, beta, itam_error1,
+                                          itam_error2)
 
                 self.Jacobian = list()
-                self.samples_z = np.zeros_like(self.samples)
+                self.samples = np.zeros_like(self.samplesNG)
 
-                for i in range(self.samples.shape[0]):
-                    if self.samples.shape[0] != 1:
-                        self.samples_z[i, :], jac = transform_x_to_z(self.corr_norm, self.marginal_dist,
-                                                                     self.marginal_params,
-                                                                     self.samples[i, :].reshape(-1, 1))
-                    else:
-                        self.samples_z, jac = transform_x_to_z(self.corr_norm, self.marginal_dist,
-                                                               self.marginal_params, self.samples[i, :].reshape(-1, 1))
-                    self.Jacobian.append(jac)
+                self.samples, self.jacobian = transform_ng_to_g(self.corr_norm, self.distribution, self.dist_params,
+                                                                self.samplesNG)
 
-        elif samples is None:
-
-            if self.marginal_name is None or self.marginal_params is None:
-                raise RuntimeError("In order to use class 'invNataf' marginal distributions and their parameters should"
-                                   "be provided.")
-            self.marginal_dist = list()
-            for j in range(len(self.marginal_name)):
-                self.marginal_dist.append(Distribution(self.marginal_name[j]))
-
-            count = 0
-            for i in range(len(self.dist)):
-                if self.marginal_dist[i].name == 'Normal' and self.marginal_params[i] == [0, 1]:
-                    count = count + 1
-
-            if count == len(self.marginal_dist) and self.corr is None:
-                self.samples_z = self.samples
-                for i in range(len(self.dist)):
-                    self.Jacobian.append(np.identity(n=self.dimension))
+        # Perform ITAM to identify underlying Gaussian correlation without samples.
+        elif input_samples is None:
+            if corr is not None:
+                self.dist_name = dist_name
+                self.dist_params = dist_params
                 self.corr = corr
-                self.corr_norm = self.corr
+                if self.dist_name is None or self.dist_params is None:
+                    raise RuntimeError("UQpy: In order to use class 'InvNataf', marginal distributions and their "
+                                       "parameters must be provided.")
+
+                if dimension is not None:
+                    self.dimension = dimension
+                else:
+                    self.dimension = len(self.dist_name)
+
+                # Ensure the dimensions of dist_name are consistent
+                if type(self.dist_name).__name__ != 'list':
+                    self.dist_name = [self.dist_name]
+                if len(self.dist_name) == 1 and self.dimension != 1:
+                    self.dist_name = self.dist_name * self.dimension
+
+                # Ensure that dist_params is a list of length dimension
+                if type(self.dist_params).__name__ != 'list':
+                    self.dist_params = [self.dist_params]
+                if len(self.dist_params) == 1 and self.dimension != 1:
+                    self.dist_params = self.dist_params * self.dimension
+
+                self.distribution = [None] * self.dimension
+                for j in range(len(self.dist_name)):
+                    self.distribution[j] = Distribution(self.dist_name[j], self.dist_params[j])
+
+                count = 0
+                for i in range(len(self.distribution)):
+                    if self.distribution[i].name.title() == 'Normal' and self.distribution[i].params == [0, 1]:
+                        count = count + 1
+
+                if count == len(self.distribution):
+                    self.jacobian = list()
+                    for i in range(len(self.distribution)):
+                        self.jacobian.append(np.identity(n=self.dimension))
+                    self.corr_norm = self.corr
+                else:
+                    if np.linalg.norm(self.corr - np.identity(n=self.corr.shape[0])) < 10 ** (-8):
+                        self.corr_norm = self.corr
+                    else:
+                        self.corr = corr
+                        self.corr_norm = itam(self.distribution, self.dist_params, self.corr, beta, itam_error1,
+                                              itam_error2)
+
             else:
-                if corr is not None:
-                    self.corr_norm = itam(self.marginal_dist, self.marginal_params, self.corr)
+                raise RuntimeError("UQpy: To perform the inverse Nataf transformation without samples, a correlation "
+                                   "function 'corr' must be provided.")
