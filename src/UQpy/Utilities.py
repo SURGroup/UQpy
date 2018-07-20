@@ -15,7 +15,6 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""This module contains functionality for all the supporting methods in UQpy."""
 
 import numpy as np
 import scipy.stats as stats
@@ -54,7 +53,7 @@ def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
     """
 
     from scipy.linalg import cholesky
-    print("UQpy: Performing Nataf transformation of the samples...")
+
     a_ = cholesky(corr_norm, lower=True)
     samples_g = np.zeros_like(samples_ng)
     m, n = np.shape(samples_ng)
@@ -73,7 +72,7 @@ def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
                 pdf = dist[j].pdf
                 temp_[j, j] = stats.norm.pdf(samples_g[i, j]) / pdf(samples_ng[i, j], dist_params[j])
             jacobian[i] = np.linalg.solve(temp_, a_)
-        print("UQpy: Done.")
+
         return samples_g, jacobian
 
 
@@ -110,7 +109,7 @@ def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
     """
 
     from scipy.linalg import cholesky
-    print("UQpy: Performing Nataf transformation of the samples...")
+
     samples_ng = np.zeros_like(samples_g)
     m, n = np.shape(samples_g)
     for j in range(n):
@@ -129,7 +128,7 @@ def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
                 pdf = dist[j].pdf
                 temp_[j, j] = pdf(samples_ng[i, j], dist_params[j]) / stats.norm.pdf(samples_g[i, j])
             jacobian[i] = np.linalg.solve(a_, temp_)
-        print("UQpy: Done.")
+
         return samples_ng, jacobian
 
 
@@ -156,10 +155,9 @@ def run_corr(samples, corr):
     """
 
     from scipy.linalg import cholesky
-    print("UQpy: Performing correlation of the samples...")
     c = cholesky(corr, lower=True)
     samples_corr = np.dot(c, samples.T)
-    print("UQpy: Done.")
+
     return samples_corr.T
 
 
@@ -186,11 +184,11 @@ def run_decorr(samples, corr):
     """
 
     from scipy.linalg import cholesky
-    print("UQpy: Performing decorrelation of the samples...")
+
     c = cholesky(corr, lower=True)
     inv_corr = np.linalg.inv(c)
     samples_uncorr = np.dot(inv_corr, samples.T)
-    print("UQpy: Done.")
+
     return samples_uncorr.T
 
 
@@ -220,6 +218,7 @@ def correlation_distortion(marginal, params, rho_norm):
             :rtype rho: ndarray
 
     """
+
     n = 1024
     z_max = 8
     z_min = -z_max
@@ -376,12 +375,14 @@ def _get_a_plus(a):
     """
         Description:
 
+            A supporting function for the nearest_pd function
+
         Input:
-            :param a:
+            :param a:A general nd array
 
         Output:
-            :return:
-            :rtype:
+            :return a_plus: A modified nd array
+            :rtype:np.ndarray
     """
 
     eig_val, eig_vec = np.linalg.eig(a)
@@ -396,13 +397,8 @@ def _get_ps(a, w=None):
     """
         Description:
 
-        Input:
-            :param a:
-            :param w:
+            A supporting function for the nearest_pd function
 
-        Output:
-            :return:
-            :rtype:
     """
 
     w05 = np.matrix(w ** .5)
@@ -415,13 +411,8 @@ def _get_pu(a, w=None):
     """
         Description:
 
-         Input:
-            :param a:
-            :param w:
+            A supporting function for the nearest_pd function
 
-         Output:
-            :return:
-            :rtype:
     """
 
     a_ret = np.array(a.copy())
@@ -433,10 +424,14 @@ def nearest_psd(a, nit=10):
 
     """
         Description:
+            A function to compute the nearest positive semi definite matrix of a given matrix
 
          Input:
-            :param a:
-            :param nit:
+            :param a: Input matrix
+            :type a: ndarray
+
+            :param nit: Number of iterations to perform (Default=10)
+            :type nit: int
 
         Output:
             :return:
@@ -471,7 +466,7 @@ def nearest_pd(a):
             matrix" (1988): https://doi.org/10.1016/0024-3795(88)90223-6
 
         Input:
-            :param a:
+            :param a: Input matrix
             :type a:
 
 
@@ -518,11 +513,9 @@ def is_pd(b):
             Returns true when input is positive-definite, via Cholesky decomposition.
 
         Input:
-            :param b:
-            :type b:
+            :param b: A general matrix
 
         Output:
-
 
     """
     try:
@@ -535,16 +528,16 @@ def is_pd(b):
 def estimate_psd(samples, nt, t):
 
     """
-        Description:
+        Description: A function to estimate the Power Spectrum of a stochastic process given an ensemble of samples
 
         Input:
-            :param samples:
-            :param nt:
-            :param t:
+            :param samples: Samples of the stochastic process
+            :param nt: Number of time discretisations in the time domain
+            :param t: Total simulation time
 
         Output:
-            :return:
-            :rtype:
+            :return: Power Spectrum
+            :rtype: ndarray
 
     """
 
@@ -564,14 +557,16 @@ def s_to_r(s, w, t):
     """
         Description:
 
+            A function to transform the power spectrum to an autocorrelation function
+
         Input:
-            :param s:
-            :param w:
-            :param t:
+            :param s: Power Spectrum of the signal
+            :param w: Array of frequency discretisations
+            :param t: Array of time discretisations
 
         Output:
-            :return:
-            :rtype:
+            :return r: Autocorrelation function
+            :rtype: ndarray
     """
 
     dw = w[1] - w[0]
@@ -592,16 +587,17 @@ def s_to_r(s, w, t):
 def r_to_s(r, w, t):
 
     """
-        Description:
+        Description: A function to transform the autocorrelation function to a power spectrum
 
 
         Input:
-            :param r:
-            :param w:
-            :param t:
+            :param r: Autocorrelation function of the signal
+            :param w: Array of frequency discretizations
+            :param t: Array of time discretizations
 
         Output:
-            :return:
+            :return s: Power Spectrum
+            :rtype: ndarray
 
     """
     dt = t[1] - t[0]
