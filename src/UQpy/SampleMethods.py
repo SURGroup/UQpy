@@ -867,8 +867,7 @@ class MCMC:
 
                         elif self.pdf_proposal_type[j] == 'Uniform':
                             candidate[j] = np.random.uniform(low=samples[i, j] - self.pdf_proposal_scale[j] / 2,
-                                                             high=samples[i, j] + self.pdf_proposal_scale[j] / 2,
-                                                             size=1)
+                                                             high=samples[i, j] + self.pdf_proposal_scale[j] / 2)
 
                         p_proposal = pdf_(candidate, self.pdf_target_params)
                         p_current = pdf_(current, self.pdf_target_params)
