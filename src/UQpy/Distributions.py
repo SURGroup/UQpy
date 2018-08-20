@@ -745,10 +745,12 @@ class Distribution:
 
         elif os.path.isfile('custom_dist.py') is True:
             import custom_dist
-            self.pdf = getattr(custom_dist, 'pdf')
-            self.cdf = getattr(custom_dist, 'cdf')
-            self.icdf = getattr(custom_dist, 'icdf')
-            self.log_pdf = getattr(custom_dist, 'log_pdf')
-            self.fit = getattr(custom_dist, 'fit')
-            self.moments = getattr(custom_dist, 'stats')
+            self.name = 'custom'
+            self.pdf = getattr(custom_dist, 'pdf', 'Attribute not defined.')
+            self.cdf = getattr(custom_dist, 'cdf', 'Attribute not defined.')
+            self.icdf = getattr(custom_dist, 'icdf', 'Attribute not defined.')
+            self.log_pdf = getattr(custom_dist, 'log_pdf', 'Attribute not defined.')
+            self.rvs = getattr(custom_dist, 'rvs', 'Attribute not defined.')
+            self.fit = getattr(custom_dist, 'fit', 'Attribute not defined.')
+            self.moments = getattr(custom_dist, 'moments', 'Attribute not defined.')
 
