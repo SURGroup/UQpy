@@ -1,35 +1,67 @@
 """This module contains functionality for all the stochastic process generation supported by UQpy."""
 
 from UQpy.tools import *
+from UQpy.Distributions import *
 from scipy.linalg import sqrtm
+from scipy.stats import norm
+import itertools
 
 
 class SRM:
-    def __init__(self, n_sim, S, dw, nt, nw, case='uni', g=None):
-        # TODO: Error check for all the variables
-        # TODO: Division by 2 to deal with zero frequency for all cases
+    """
+    A class to simulate Stochastic Processes from a given power spectrum density based on the Spectral Representation
+    Method. This class can simulate both uni-variate and multi-variate multi-dimensional Stochastic Processes.
+
+    :param nsamples: Number of Stochastic Processes to be generated
+    :type nsamples: int
+
+    :param S: Power spectrum to be used for generating the samples
+    :type S: numpy.ndarray
+
+    :param dw: Array of frequency discretizations across dimensions
+    :type dw: array
+
+    :param nt: Array of number of time discretizations across dimensions
+    :type nt: array
+
+    :param nw: Array of number of frequency discretizations across dimensions
+    :type nw: array
+
+    :param case: Uni-variate or Multivariate options.
+                    1. 'uni' - Uni-variate
+                    2. 'multi' - Multi-variate
+
+    :param g: The cross - Power Spectral Density. Used only for the Multi-variate case.
+                    Default: None
+
+    Output:
+    :rtype: samples: numpy.ndarray
+    """
+    # Created by Lohit Vandanapu
+    # Last Modified:08/04/2018 Lohit Vandanapu
+
+    def __init__(self, nsamples, S, dw, nt, nw, case='uni', g=None):
         self.S = S
         self.dw = dw
         self.nt = nt
         self.nw = nw
-        self.n_sim = n_sim
+        self.nsamples = nsamples
         self.case = case
         if self.case == 'uni':
             self.n = len(S.shape)
-            self.phi = np.random.uniform(size=np.append(self.n_sim, np.ones(self.n, dtype=np.int32) * self.nw)) * 2 * np.pi
+            self.phi = np.random.uniform(size=np.append(self.nsamples, np.ones(self.n, dtype=np.int32) * self.nw)) * 2 * np.pi
             self.samples = self._simulate_uni(self.phi)
         elif self.case == 'multi':
             self.m = self.S.shape[0]
             self.n = len(S.shape[1:])
             self.g = g
-            self.phi = np.random.uniform(size=np.append(self.n_sim, np.append(self.m, np.ones(self.n, dtype=np.int32) * self.nw))) * 2 * np.pi
+            self.phi = np.random.uniform(size=np.append(self.nsamples, np.append(self.m, np.ones(self.n, dtype=np.int32) * self.nw))) * 2 * np.pi
             self.samples = self._simulate_multi(self.phi)
 
     def _simulate_uni(self, phi):
-        B = (2 ** self.n) * np.exp(phi * 1.0j) * np.sqrt(self.S * np.prod(self.dw))
+        B = np.exp(phi * 1.0j) * np.sqrt(2 ** (self.n + 1) * self.S * np.prod(self.dw))
         sample = np.fft.fftn(B, np.ones(self.n, dtype=np.int32) * self.nt)
         samples = np.real(sample)
-        # samples = translate_process(samples, self.Dist, self.mu, self.sig, self.parameter1, self.parameter2)
         return samples
 
     def _simulate_multi(self, phi):
@@ -63,7 +95,7 @@ class SRM:
         for i in range(self.m):
             samples = 0
             for j in range(i+1):
-                B = 2 * H_jk[i, j] * np.sqrt(np.prod(self.dw)) * np.exp(phi[:, j] * 1.0j)
+                B = H_jk[i, j] * np.sqrt(2 ** (self.n + 1) * np.prod(self.dw)) * np.exp(phi[:, j] * 1.0j)
                 sample = np.fft.fftn(B, np.ones(self.n, dtype=np.int32) * self.nt)
                 samples += np.real(sample)
             samples_list.append(samples)
@@ -73,6 +105,37 @@ class SRM:
 
 
 class BSRM:
+    """
+    A class to simulate Stochastic Processes from a given power spectrum and bispectrum density based on the
+    BiSpectral Representation Method.
+
+    :param nsamples: Number of Stochastic Processes to be generated
+    :type nsamples: int
+
+    :param S: Power Spectral Density to be used for generating the samples
+    :type S: numpy.ndarray
+
+    :param B: BiSpectral Density to be used for generating the samples
+    :type B: numpy.ndarray
+
+    :param dt: Array of time discretizations across dimensions
+    :type dt: array
+
+    :param dw: Array of frequency discretizations across dimensions
+    :type dw: array
+
+    :param nt: Array of number of time discretizations across dimensions
+    :type nt: array
+
+    :param nw: Array of number of frequency discretizations across dimensions
+    :type nw: array
+
+    Output:
+    :rtype: samples: numpy.ndarray
+    """
+    # Created by Lohit Vandanapu
+    # Last Modified:08/04/2018 Lohit Vandanapu
+
     def __init__(self, n_sim, S, B, dt, dw, nt, nw, case='uni', g=None):
         self.n_sim = n_sim
         self.nw = nw
@@ -89,59 +152,102 @@ class BSRM:
         self.Biphase[np.isnan(self.Biphase)] = 0
         self.phi = np.random.uniform(size=np.append(self.n_sim, np.ones(self.n, dtype=np.int32) * self.nw)) * 2 * np.pi
         self._compute_bicoherence()
+        self.samples = self._simulate_bsrm_uni()
 
     def _compute_bicoherence(self):
         self.Bc2 = np.zeros_like(self.B_Real)
         self.PP = np.zeros_like(self.S)
-        self.sum_Bc2 = np.zeros(self.nw)
-        self.PP[0] = self.S[0]
-        self.PP[1] = self.S[1]
+        self.sum_Bc2 = np.zeros_like(self.S)
 
-        for i in range(self.nw):
-            for j in range(int(np.ceil((i + 1) / 2))):
-                w1 = i - j
-                w2 = j
-                if self.B_Ampl[w2, w1] > 0 and self.PP[w2] * self.PP[w1] != 0:
-                    self.Bc2[w2, w1] = self.B_Ampl[w2, w1] ** 2 / (self.PP[w2] * self.PP[w1] * self.S[i]) * self.dw
-                    self.sum_Bc2[i] = self.sum_Bc2[i] + self.Bc2[w2, w1]
+        if self.n == 1:
+            self.PP[0] = self.S[0]
+            self.PP[1] = self.S[1]
+
+        if self.n == 2:
+            self.PP[0, :] = self.S[0, :]
+            self.PP[1, :] = self.S[1, :]
+            self.PP[:, 0] = self.S[:, 0]
+            self.PP[:, 1] = self.S[:, 1]
+
+        if self.n == 3:
+            self.PP[0, :, :] = self.S[0, :, :]
+            self.PP[1, :, :] = self.S[1, :, :]
+            self.PP[:, 0, :] = self.S[:, 0, :]
+            self.PP[:, 1, :] = self.S[:, 1, :]
+            self.PP[:, :, 0] = self.S[:, :, 0]
+            self.PP[:, 0, 1] = self.S[:, :, 1]
+
+        self.ranges = [range(self.nw) for _ in range(self.n)]
+
+        for i in itertools.product(*self.ranges):
+            wk = np.array(i)
+            for j in itertools.product(*[range(k) for k in np.int32(np.ceil((wk + 1) / 2))]):
+                wj = np.array(j)
+                wi = wk - wj
+                if self.B_Ampl[(*wi, *wj)] > 0 and self.PP[(*wi, *[])] * self.PP[(*wj, *[])] != 0:
+                    self.Bc2[(*wi, *wj)] = self.B_Ampl[(*wi, *wj)] ** 2 / (
+                                self.PP[(*wi, *[])] * self.PP[(*wj, *[])] * self.S[(*wk, *[])]) * self.dw ** self.n
+                    self.sum_Bc2[(*wk, *[])] = self.sum_Bc2[(*wk, *[])] + self.Bc2[(*wi, *wj)]
                 else:
-                    self.Bc2[w2, w1] = 0
-            if self.sum_Bc2[i] > 1:
-                for j in range(int(np.ceil((i + 1) / 2))):
-                    w1 = i - j
-                    w2 = j
-                    self.Bc2[w2, w1] = self.Bc2[w2, w1] / self.sum_Bc2[i]
-                self.sum_Bc2[i] = 1
-            self.PP[i] = self.S[i] * (1 - self.sum_Bc2[i])
+                    self.Bc2[(*wi, *wj)] = 0
+            if self.sum_Bc2[(*wk, *[])] > 1:
+                print('Results may not be as expected as sum of partial bicoherences is greater than 1')
+                for j in itertools.product(*[range(k) for k in np.int32(np.ceil((wk + 1) / 2))]):
+                    wj = np.array(j)
+                    wi = wk - wj
+                    self.Bc2[(*wi, *wj)] = self.Bc2[(*wi, *wj)] / self.sum_Bc2[(*wk, *[])]
+                self.sum_Bc2[(*wk, *[])] = 1
+            self.PP[(*wk, *[])] = self.S[(*wk, *[])] * (1 - self.sum_Bc2[(*wk, *[])])
 
     def _simulate_bsrm_uni(self):
-        Coeff = (2 ** self.n) * np.sqrt(self.S * np.prod(self.dw))
+        Coeff = np.sqrt((2 ** (self.n + 1)) * self.S * self.dw ** self.n)
         Phi_e = np.exp(self.phi * 1.0j)
         Biphase_e = np.exp(self.Biphase * 1.0j)
         B = np.sqrt(1 - self.sum_Bc2) * Phi_e
         Bc = np.sqrt(self.Bc2)
 
-        for i in range(self.nw):
-            for j in range(1, int(np.ceil((i + 1) / 2))):
-                w1 = j
-                w2 = i - j
-                B[:, i] = B[:, i] + Bc[w1, w2] * Biphase_e[w1, w2] * Phi_e[:, w1] * Phi_e[:, w2]
+        Phi_e = np.einsum('i...->...i', Phi_e)
+        B = np.einsum('i...->...i', B)
 
+        for i in itertools.product(*self.ranges):
+            wk = np.array(i)
+            for j in itertools.product(*[range(k) for k in np.int32(np.ceil((wk + 1) / 2))]):
+                wj = np.array(j)
+                wi = wk - wj
+                B[(*wk, *[])] = B[(*wk, *[])] + Bc[(*wi, *wj)] * Biphase_e[(*wi, *wj)] * Phi_e[(*wi, *[])] * \
+                                Phi_e[(*wj, *[])]
+
+        B = np.einsum('...i->i...', B)
+        Phi_e = np.einsum('...i->i...', Phi_e)
         B = B * Coeff
         B[np.isnan(B)] = 0
-        samples = np.real(np.fft.fftn(B, [self.nt]))
-        return samples
-
+        samples = np.fft.fftn(B, [self.nt for _ in range(self.n)])
+        return np.real(samples)
 
 class KLE:
-    def __init__(self, n_sim, R):
-        self.R = R
-        self.samples = self._simulate(n_sim)
+    """
+    A class to simulate Stochastic Processes from a given auto-correlation function based on the Karhunen-Louve Expansion
 
-    def _simulate(self, n_sim):
+    :param nsamples: Number of Stochastic Processes to be generated
+    :type nsamples: int
+
+    :param R: Auto-correlation Function to be used for generating the samples
+    :type R: numpy.ndarray
+
+    Output:
+    :rtype: samples: numpy.ndarray
+    """
+    # Created by Lohit Vandanapu
+    # Last Modified:08/04/2018 Lohit Vandanapu
+
+    def __init__(self, nsamples, R):
+        self.R = R
+        self.samples = self._simulate(nsamples)
+
+    def _simulate(self, nsamples):
         lam, phi = np.linalg.eig(self.R)
         nRV = self.R.shape[0]
-        xi = np.random.normal(size=(nRV, n_sim))
+        xi = np.random.normal(size=(nRV, nsamples))
         lam = np.diag(lam)
         lam = lam.astype(np.float64)
         samples = np.dot(phi, np.dot(sqrtm(lam), xi))
@@ -150,242 +256,197 @@ class KLE:
         return samples
 
 
-def itam_srm(S, beta, w, t, CDF, mu, sig, parameter1, parameter2, maxii=10):
-    S_NGT = S
-    S_G0 = S
-    S_NG0 = S
-
-    R_NGT = R_to_r(S_to_R(S_NGT, w, t))
-
-    iconverge = 0
-    Error0 = 100
-    Error1_time = np.zeros([maxii])
-
-    for ii in range(maxii):
-        R_G0 = S_to_R(S_G0, w, t)
-
-        # Translation the correlation coefficients from Gaussian to Non-Gaussian case
-        R_NG0 = np.zeros_like(R_G0)
-        if CDF == 'Lognormal':
-            R_NG0 = translate(R_G0, 'Lognormal_Distribution', 'pseudo', mu, sig, parameter1, parameter2)
-        elif CDF == 'Beta':
-            R_NG0 = translate(R_G0, 'Beta_Distribution', 'pseudo', mu, sig, parameter1, parameter2)
-        elif CDF == 'User':
-            R_NG0 = translate(R_G0, 'User_Distribution', 'pseudo', mu, sig, parameter1, parameter2)
-
-        R_NG0_Unnormal_Mean = np.zeros_like(R_NG0)
-        for i in range(R_NG0.shape[0]):
-            if R_NG0[i, 1] != 0:
-                R_NG0_Unnormal_Mean[i, :] = (R_NG0[i, :] - mu[i] ** 2)
-            else:
-                R_NG0_Unnormal_Mean[i, :] = 0
-
-        # Normalize computed non - Gaussian R(Stationary(1D R) & Nonstatioanry(Pseudo R))
-        rho = np.zeros_like(R_NG0)
-        for i in range(R_NG0.shape[0]):
-            if R_G0[i, 1] != 0:
-                rho[i, :] = (R_NG0[i, :] - mu[i] ** 2) / sig[i] ** 2
-            else:
-                rho[i, :] = 0
-        R_NG0 = rho
-
-        S_NG0 = R_to_S(R_NG0_Unnormal_Mean, w, t)
-
-        if S_NG0.shape[0] == 1:
-            # compute the relative difference between the computed S_NG0 & the target S_NGT
-            Err1 = 0
-            Err2 = 0
-            for j in range(S_NG0.shape[1]):
-                Err1 = Err1 + (S_NG0[0, j] - S_NGT[0, j]) ** 2
-                Err2 = Err2 + S_NGT[0, j] ** 2
-            Error1 = 100 * np.sqrt(Err1 / Err2)
-            convrate = (Error0 - Error1) / Error1
-            if convrate < 0.001 or ii == maxii or Error1 < 0.0005:
-                iconverge = 1
-            Error1_time[ii] = Error1
-            nError1 = nError1 + 1
-
-        else:  # Pristely_Simpson (S_NG0 -> R_NG0)
-            R_NG0_Unnormal = S_to_R(S_NG0, w, t)
-            # compute the relative difference between the computed NGACF & the target R(Normalized)
-            Err1 = 0
-            Err2 = 0
-            for i in range(R_NG0.shape[0]):
-                for j in range(R_NG0.shape[1]):
-                    Err1 = Err1 + (R_NG0[i, j] - R_NGT[i, j]) ** 2
-                    Err2 = Err2 + R_NGT[i, j] ** 2
-            Error1 = 100 * np.sqrt(Err1 / Err2)
-            convrate = abs(Error0 - Error1) / Error1
-
-            if convrate < 0.001 or ii == maxii or Error1 < 0.0005:
-                iconverge = 1
-
-            Error1_time[ii] = Error1
-            nError1 = nError1 + 1
-
-        # Upgrade the underlying PSDF or ES
-        S_G1 = np.zeros_like(S_G0)
-        for i in range(S_NG0.shape[0]):
-            for j in range(S_NG0.shape[1]):
-                if S_NG0[i, j] != 0:
-                    S_G1[i, j] = (S_NGT[i, j] / S_NG0[i, j]) ** beta * S_G0[i, j]
-                else:
-                    S_G1[i, j] = 0
-
-        # Normalize the upgraded underlying PSDF or ES: Method1: Wiener - Khinchine_Simpson(S -> R or ES -> R)
-        R_SG1 = S_to_R(S_G1, w, t)
-
-        for i in range(S_G1.shape[0]):
-            S_G1[i, :] = S_G1[i, :] / R_SG1[i, i]
-
-        if iconverge == 0 and ii != maxii:
-            S_G0 = S_G1
-            Error0 = Error1
-        else:
-            convergeIter = nError1
-            print('\n')
-            print('Job Finished')
-            print('\n')
-            break
-
-    S_G_Converged = S_G0
-    S_NG_Converged = S_NG0
-    return S_G_Converged, S_NG_Converged
-
-
-def itam_kle(R, t, CDF, mu, sig, parameter1, parameter2):
-    # Initial condition
-    nError1 = 0
-    m = len(t)
-    dt = t[1] - t[0]
-    T = t[-1]
-    # Erasing zero values of variations
-    R_NGT = R
-
-    # TF = [False] * m
-    # TF = np.array(TF)
-    # for i in range(m):
-    #     if R[i, i] == 0: TF[i] = True
-    # t[TF] = []
-    # mu[TF] = []
-    # sig[TF] = []
-    # if CDF == 'User':
-    #     parameter1[TF] = []
-    #     parameter2[TF] = []
-    # Normalize the non - stationary and stationary non - Gaussian Covariance to Correlation
-
-    R_NGT_Unnormal = R_NGT
-    R_NGT = R_to_r(R_NGT)
-    # Initial Guess
-    R_G0 = R_NGT
-
-    # Iteration Condition
-    iconverge = 0
-    Error0 = 100
-    maxii = 5
-    Error1_time = np.zeros(maxii)
-
-    for ii in range(maxii):
-        if CDF == 'Lognormal':
-            R_NG0 = translate(R_G0, 'Lognormal_Distribution', '', mu, sig, parameter1, parameter2)
-        elif CDF == 'Beta':
-            R_NG0 = translate(R_G0, 'Beta_Distribution', '', mu, sig, parameter1, parameter2)
-        elif CDF == 'User':
-            # monotonic increasing CDF
-            R_NG0 = translate(R_G0, 'User_Distribution', '', mu, sig, parameter1, parameter2)
-
-        R_NG0_Unnormal = R_NG0
-        # Normalize the computed non - Gaussian ACF
-        rho = np.zeros_like(R_NG0)
-        for i in range(R_NG0.shape[0]):
-            for j in range(R_NG0.shape[1]):
-                if R_NG0[i, i] != 0 and R_NG0[j, j] != 0:
-                    rho[i, j] = (R_NG0[i, j] - mu[i] * mu[j]) / (sig[i] * sig[j])
-                else:
-                    rho[i, j] = 0
-        R_NG0 = rho
-
-        # compute the relative difference between the computed NGACF & the target R(Normalized)
-        Err1 = 0
-        Err2 = 0
-        for i in range(R_NG0.shape[0]):
-            for j in range(R_NG0.shape[1]):
-                Err1 = Err1 + (R_NGT[i, j] - R_NG0[i, j]) ** 2
-                Err2 = Err2 + R_NG0[i, j] ** 2
-        Error1 = 100 * np.sqrt(Err1 / Err2)
-        convrate = abs(Error0 - Error1) / Error1
-        if convrate < 0.001 or ii == maxii or Error1 < 0.0005:
-            iconverge = 1
-        Error1_time[ii] = Error1
-        nError1 = nError1 + 1
-
-        # Upgrade the underlying Gaussian ACF
-        R_G1 = np.zeros_like(R_G0)
-        for i in range(R_G0.shape[0]):
-            for j in range(R_G0.shape[1]):
-                if R_NG0[i, j] != 0:
-                    R_G1[i, j] = (R_NGT[i, j] / R_NG0[i, j]) * R_G0[i, j]
-                else:
-                    R_G1[i, j] = 0
-
-        # Eliminate Numerical error of Upgrading Scheme
-        R_G1[R_G1 < -1.0] = -0.99999
-        R_G1[R_G1 > 1.0] = 0.99999
-        R_G1_Unnormal = R_G1
-
-        # Normalize the Gaussian ACF
-        R_G1 = R_to_r(R_G1)
-        # Iteratively finding the nearest PSD(Qi & Sun, 2006)
-        R_G1 = np.array(nearPD(R_G1))
-        R_G1 = R_to_r(R_G1)
-
-        # Eliminate Numerical error of finding the nearest PSD Scheme
-        R_G1[R_G1 < -1.0] = -0.99999
-        R_G1[R_G1 > 1.0] = 0.99999
-
-        if iconverge == 0 and ii != maxii:
-            R_G0 = R_G1
-            Error0 = Error1
-        else:
-            convergeIter = nError1
-            print('\n')
-            print('[Job Finished]')
-            print('\n')
-            break
-
-    R_G_Converged = R_G0
-    R_NG_Converged = R_NG0_Unnormal
-    return R_G_Converged, R_NG_Converged
-
-
 class Translate:
-    def __init__(self, nsamples, S_NG, w, t,  CDF, mu, sigma, parameter1, parameter2, beta=1.0):
-        self.s_ng = S_NG
-        self.w = w
-        self.t = t
-        self.nw = len(w)
-        self.nt = len(t)
-        self.dw = w[1] - w[0]
-        self.dw = t[1] - t[0]
-        self.nsamples = nsamples
-        self.CDF = CDF
-        self.mu = mu
-        self.sigma = sigma
-        self.parameter1 = parameter1
-        self.parameter2 = parameter2
-        self.beta = beta
-        self.s_g = self.get_s_g_from_s_ng()
-        self.g_samples = self.generate_g_samples()
-        self.ng_samples = self.translate_g_samples()
+    """
+    A class to translate Gaussian Stochastic Processes to non-Gaussian Stochastic Processes
 
-    def get_s_g_from_s_ng(self):
-        s_g = itam_srm(self.s_ng, self.beta, self.w, self.t, self.CDF, self.mu, self.sigma, self.parameter1, self.parameter2)
-        return s_g
+    :param samples_g: Gaussian Stochastic Processes
+    :type samples_g: numpy.ndarray
 
-    def generate_g_samples(self):
-        g_samples = SRM(self.s_g, self.nsamples, self.dw, self.dt, self.nw, 'uni')
-        return g_samples
+    :param R_g: Auto-correlation Function of the Gaussian Stochastic Processes
+    :type R_g: numpy.ndarray
+
+    :param marginal: list of marginal
+    :type marginal: list
+
+    :param params: list of parameters for the marginal
+    :type params: list
+
+    Output:
+    :rtype: samples_ng: numpy.ndarray
+    :rtype: R_ng: numpy.ndarray
+    """
+    # Created by Lohit Vandanapu
+    # Last Modified:08/06/2018 Lohit Vandanapu
+
+    def __init__(self, samples_g, R_g, marginal, params):
+        self.samples_g = samples_g
+        self.R_g = R_g
+        self.num = self.R_g.shape[0]
+        self.dim = len(self.R_g.shape)
+        self.marginal = marginal
+        self.params = params
+        self.samples_ng = self.translate_g_samples()
+        self.R_ng = self.autocorrealtion_distortion()
 
     def translate_g_samples(self):
-        samples_ng = translate_process(self.g_samples, self.CDF, self.mu, self.sigma, self.parameter1, self.parameter2)
+        std = np.sqrt(np.diag(self.R_g)[0])
+        samples_cdf = norm.cdf(self.samples_g, scale=std)
+        samples_ng = inv_cdf(self.marginal)[0](samples_cdf, self.params[0])
         return samples_ng
+
+    def autocorrealtion_distortion(self):
+        r_g = R_to_r(self.R_g)
+        r_g = np.clip(r_g, -0.999, 0.999)
+        R_ng = np.zeros_like(r_g)
+        for i in itertools.product(*[self.num for _ in range(self.dim)]):
+            R_ng[(*i, *[])] = self.solve_integral(r_g[(*i, *[])])
+        return R_ng
+
+    def solve_integral(self, rho):
+        n = 1024
+        zmax = 8
+        zmin = -zmax
+        points, weights = np.polynomial.legendre.leggauss(n)
+        points = - (0.5 * (points + 1) * (zmax - zmin) + zmin)
+        weights = weights * (0.5 * (zmax - zmin))
+
+        xi = np.tile(points, [n, 1])
+        xi = xi.flatten(order='F')
+        eta = np.tile(points, n)
+
+        first = np.tile(weights, n)
+        first = np.reshape(first, [n, n])
+        second = np.transpose(first)
+
+        weights2d = first * second
+        w2d = weights2d.flatten()
+        tmp_f_xi = inv_cdf(self.marginal)[0](stats.norm.cdf(xi), self.params[0])
+        tmp_f_eta = inv_cdf(self.marginal)[0](stats.norm.cdf(eta), self.params[0])
+        coef = tmp_f_xi * tmp_f_eta * w2d
+        rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
+        return rho_non
+
+
+class Inverse_Translate:
+    """
+    A class to perform Iterative Translation Approximation Method to find the underlying  Gaussian Stochastic Processes
+    which upon translation would yield the necessary non-Gaussian Stochastic Processes
+
+    :param samples_ng: Gaussian Stochastic Processes
+    :type samples_ng: numpy.ndarray
+
+    :param R_ng: Auto-correlation Function of the Gaussian Stochastic Processes
+    :type R_ng: numpy.ndarray
+
+    :param marginal: list of marginal
+    :type marginal: list
+
+    :param params: list of parameters for the marginal
+    :type params: list
+
+    Output:
+    :rtype: samples_g: numpy.ndarray
+    :rtype: R_g: numpy.ndarray
+    """
+    # Created by Lohit Vandanapu
+    # Last Modified:08/06/2018 Lohit Vandanapu
+
+    def __init__(self, samples_ng, R_ng, marginal, params):
+        self.samples_ng = samples_ng
+        self.R_ng = R_ng
+        self.num = self.R_ng.shape[0]
+        self.dim = len(self.R_ng.shape)
+        self.marginal = marginal
+        self.params = params
+        self.samples_g = self.inverse_translate_ng_samples()
+        self.R_g = self.itam()
+
+    def inverse_translate_ng_samples(self):
+        samples_cdf = cdf(self.marginal)[0](self.samples_ng, self.params[0])
+        samples_g = inv_cdf(['Normal'])[0](samples_cdf, [[0, 1]])
+        return samples_g
+
+    def itam(self):
+        # Initial Guess
+        corr_norm0 = self.R_ng
+        # Iteration Condition
+        i_converge = 0
+        error0 = 100
+        max_iter = 20
+        corr0 = np.zeros_like(corr_norm0)
+        corr1 = np.zeros_like(corr_norm0)
+
+        for ii in range(max_iter):
+            for i in itertools.product(*[self.num for _ in range(self.dim)]):
+                corr0[(*i, *[])] = self.solve_integral(corr_norm0[(*i, *[])])
+            # compute the relative difference between the computed NGACF & the target R(Normalized)
+            err1 = np.sum((self.R_ng - corr0) ** 2)
+            err2 = np.sum(corr0 ** 2)
+            error1 = 100 * np.sqrt(err1 / err2)
+
+            if abs(error0 - error1) / error1 < 0.001 or ii == max_iter or 100 * np.sqrt(err1 / err2) < 0.0005:
+                i_converge = 1
+
+            corr_norm1 = (self.R_ng / corr0) * corr_norm0
+
+            # Eliminate Numerical error of Upgrading Scheme
+            corr_norm1[corr_norm1 < -1.0] = -0.99999
+            corr_norm1[corr_norm1 > 1.0] = 0.99999
+
+            # Iteratively finding the nearest PSD(Qi & Sun, 2006)
+            corr_norm1 = np.array(near_pd(corr_norm1))
+
+            if i_converge == 0 and ii != max_iter:
+                corr_norm0 = corr_norm1
+                error0 = error1
+
+        return corr_norm1
+
+    def solve_integral(self, rho):
+        n = 1024
+        zmax = 8
+        zmin = -zmax
+        points, weights = np.polynomial.legendre.leggauss(n)
+        points = - (0.5 * (points + 1) * (zmax - zmin) + zmin)
+        weights = weights * (0.5 * (zmax - zmin))
+
+        xi = np.tile(points, [n, 1])
+        xi = xi.flatten(order='F')
+        eta = np.tile(points, n)
+
+        first = np.tile(weights, n)
+        first = np.reshape(first, [n, n])
+        second = np.transpose(first)
+
+        weights2d = first * second
+        w2d = weights2d.flatten()
+        tmp_f_xi = inv_cdf(self.marginal)[0](stats.norm.cdf(xi), self.params[0])
+        tmp_f_eta = inv_cdf(self.marginal)[0](stats.norm.cdf(eta), self.params[0])
+        coef = tmp_f_xi * tmp_f_eta * w2d
+        rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
+        return rho_non
+
+
+# def solve_integral_simpsons_rule(rho):
+#     n = 512
+#     zmax = 6
+#     zmin = -zmax
+#     x1 = np.linspace(zmin, zmax, n)
+#     x2 = np.linspace(zmin, zmax, n)
+#
+#     tmp_f_x1 = inv_cdf(marginal)[0](stats.norm.cdf(x1), params[0])
+#     tmp_f_x2 = inv_cdf(marginal)[0](stats.norm.cdf(x2), params[0])
+#     phi = bi_variate_normal_pdf(x1[:, None], x2, rho)
+#     integrand = tmp_f_x1[:, None]*tmp_f_x2*phi
+#     rho_non = simps(simps(integrand, x2), x1)
+#     return rho_non
+
+
+# rho_n1 = np.zeros_like(rho1)
+# op = solve_integral_simpsons_rule
+# it = np.nditer([rho1, rho_n1], op_flags=[['readonly'], ['writeonly']])
+# for i in range(401):
+#     for j in range(i, 401):
+#         rho_n1[i, j] = op(rho1[i, j])
+

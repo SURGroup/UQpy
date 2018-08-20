@@ -22,7 +22,7 @@ def _getPu(A, W=None):
     return np.matrix(Aret)
 
 
-def nearPD(A, nit=10):
+def near_pd(A, nit=10):
     n = A.shape[0]
     W = np.identity(n)
     # W is the matrix used for the norm (assumed to be Identity matrix here)
@@ -120,22 +120,32 @@ def S_to_R(S, w, t):
 
 def R_to_r(R):
     # Normalize target non - Gaussian Correlation function to Correlation coefficient
-    rho = np.zeros_like(R)
+    r = np.zeros_like(R)
+    dim = len(R.shape)
+    if dim == 1:
+        r = R/R[0]
+    else:
+        for i in range(R.shape[0]):
+            # Stationary
+            index = [i]*dim
+            if R[(*index, *[])] != 0:
+                r[i] = R[i] / R[(*index, *[])]
+            else:
+                r[i] = 0
+    return r
+
+
+def dist_to_R(r, params):
+    # Code as of now works for 2 dimensions
+    # Normalize target non - Gaussian Correlation function to Correlation coefficient
+    R = np.zeros_like(r)
     for i in range(R.shape[0]):
         # Stationary
-        if R.shape[0] == 1:
-            if R[i, i] != 0:
-                rho[i, :] = R[i, :] / R[i, i]
-            else:
-                rho[i, :] = 0
-        # Nonstationary
+        if R[i, i] != 0:
+            R[i, :] = r[i, :]
         else:
-            for j in range(R.shape[1]):
-                if R[i, i] != 0 and R[j, j] != 0:
-                    rho[i, j] = R[i, j] / np.sqrt(R[i, i] * R[j, j])
-                else:
-                    rho[i, j] = 0
-    return rho
+            R[i, :] = 0
+    return R
 
 
 def R_to_S(R, w, t):
@@ -153,68 +163,7 @@ def R_to_S(R, w, t):
     return S
 
 
-def LogN_Var(y1, y2, rx_g, muN1, sigmaN1, muN2, sigmaN2, sy1, sy2, shift1, shift2):
-    y1sq = y1 ** 2
-    y2sq = y2 ** 2
-    y1y2 = y1 * y2
-
-    fg1 = stats.norm.cdf(y1, 0, sy1)
-    g1 = stats.lognorm.ppf(fg1, muN1, sigmaN1)
-    g1 = g1 + shift1
-
-    fg2 = stats.norm.cdf(y2, 0, sy2)
-    g2 = stats.lognorm.ppf(fg2, muN2, sigmaN2)
-    g2 = g2 + shift2
-
-    fy = 1 / (2 * np.pi * sy1 * sy2 * (np.sqrt(1 - (rx_g / (sy1 * sy2)) ** 2))) * np.exp(
-        -1 / (2 * (1 - (rx_g / (sy1 * sy2)) ** 2)) * (
-                y1sq / (sy1 ** 2) + y2sq / (sy2 ** 2) - 2. * (y1y2 * rx_g / (sy1 * sy2)) / (sy1 * sy2)))
-    z = fy * (g1 * g2)
-    return z
-
-
-def Beta_Var(y1, y2, rx_g, lo_lim1, stretch1, lo_lim2, stretch2, alpha, beta, sy1, sy2):
-    y1sq = y1 ** 2
-    y2sq = y2 ** 2
-    y1y2 = y1 * y2
-
-    fg1 = stats.norm.cdf(y1, 0, sy1)
-    g1 = stats.beta.ppf(fg1, alpha, beta)
-    g1 = g1 * stretch1 + lo_lim1
-
-    fg2 = stats.norm.cdf(y2, 0, sy2)
-    g2 = stats.beta.ppf(fg2, alpha, beta)
-    g2 = g2 * stretch2 + lo_lim2
-
-    fy = 1 / (2 * np.pi * sy1 * sy2 * (np.sqrt(1 - (rx_g / (sy1 * sy2)) ** 2))) * np.exp(
-        -1 / (2 * (1 - (rx_g / (sy1 * sy2)) ** 2)) * (
-                y1sq / (sy1 ** 2) + y2sq / (sy2 ** 2) - 2. * (y1y2 * rx_g / (sy1 * sy2)) / (sy1 * sy2)))
-    z = fy * (g1 * g2)
-    return z
-
-
-def User_Var(y1, y2, rx_g, cdf_x, cdf_y, sy1, sy2):
-    y1sq = y1 ** 2
-    y2sq = y2 ** 2
-    y1y2 = y1 * y2
-
-    fg1 = stats.norm.cdf(y1, 0, sy1)
-    g1 = interpolate.interp1d(cdf_y, cdf_x)
-    g1 = g1(fg1)
-
-    fg2 = stats.norm.cdf(y2, 0, sy2)
-    g2 = interpolate.interp1d(cdf_y, cdf_x)
-    g2 = g2(fg2)
-
-    fy = 1 / (2 * np.pi * sy1 * sy2 * (np.sqrt(1 - (rx_g / (sy1 * sy2)) ** 2))) * np.exp(
-        -1 / (2 * (1 - (rx_g / (sy1 * sy2)) ** 2)) * (
-                y1sq / (sy1 ** 2) + y2sq / (sy2 ** 2) - 2. * (y1y2 * rx_g / (sy1 * sy2)) / (sy1 * sy2)))
-    z = fy * (g1 * g2)
-    return z
-
-
 def translate(R_G, name, pseudo, mu, sig, parameter1, parameter2):
-    # TODO: 'dblquad' couldn't be used because of the nature of the function. Simpson's rule was applied rather.
     R_NG = np.zeros_like(R_G)
 
     if name == 'Lognormal_Distribution':
@@ -268,96 +217,6 @@ def translate(R_G, name, pseudo, mu, sig, parameter1, parameter2):
                             R_NG[i, j] = mu[i] * mu[j] + sig[i] * sig[j]
                     else:
                         R_NG[i, j] = 0
-    if name == 'Beta_Distribution':
-        for i in range(R_G.shape[0]):
-            alpha = parameter1[i]
-            beta = parameter2[i]
-            if pseudo == 'pseudo':
-                sy1 = np.sqrt(R_G[i, 0])
-            else:
-                sy1 = np.sqrt(R_G[i, i])
-            lo_lim1 = 0. - sig[i] * np.sqrt(alpha * (alpha + beta + 1) / beta)
-            hi_lim1 = 0. + sig[i] * np.sqrt(beta * (alpha + beta + 1) / alpha)
-            stretch1 = hi_lim1 - lo_lim1
-            for j in range(R_G.shape[1]):
-                if pseudo == 'pseudo':
-                    sy2 = sy1
-                    if sy1 != 0 and sy2 != 0:
-                        if j != 0:
-                            x1 = np.linspace(-6 * sy1, 6 * sy1, 1000)
-                            x2 = np.linspace(-6 * sy2, 6 * sy2, 1000)
-                            f = lambda y1, y2: Beta_Var(y1, y2, R_G[i, j], lo_lim1, stretch1, lo_lim2, stretch2, alpha,
-                                                        beta, sy1, sy2)
-                            z = f(x1[:, None], x2)
-                            # R_NG[i, j] = dblquad(
-                            #     lambda y1, y2: Beta_Var(y1, y2, R_G[i, j], lo_lim1, stretch1, lo_lim2, stretch2, alpha,
-                            #                             beta, sy1, sy2), -6 * sy1, 6 * sy1, lambda x: -6 * sy2,
-                            #     lambda x: 6 * sy2)
-                            R_NG[i, j] = simps(simps(z, x2), x1)
-                        else:
-                            R_NG[i, j] = mu[i] * mu[j] + sig[i] * sig[j]
-                    else:
-                        R_NG[i, j] = 0
-                else:
-                    alpha = parameter1[j]
-                    beta = parameter2[j]
-                    sy2 = np.sqrt(R_G[j, j])
-                    lo_lim2 = 0. - sig[j] * np.sqrt(alpha * (alpha + beta + 1) / beta)
-                    hi_lim2 = 0. + sig[j] * np.sqrt(beta * (alpha + beta + 1) / alpha)
-                    stretch2 = hi_lim2 - lo_lim2
-                    if sy1 != 0 and sy2 != 0:
-                        if i != j:
-                            x1 = np.linspace(-6 * sy1, 6 * sy1, 1000)
-                            x2 = np.linspace(-6 * sy2, 6 * sy2, 1000)
-                            f = lambda y1, y2: Beta_Var(y1, y2, R_G[i, j], lo_lim1, stretch1, lo_lim2, stretch2, alpha,
-                                                        beta, sy1, sy2)
-                            z = f(x1[:, None], x2)
-                            # R_NG[i, j] = dblquad(
-                            #     lambda y1, y2: Beta_Var(y1, y2, R_G[i, j], lo_lim1, stretch1, lo_lim2, stretch2, alpha,
-                            #                             beta, sy1, sy2), -6 * sy1, 6 * sy1, lambda x: -6 * sy2,
-                            #     lambda x: 6 * sy2)
-                            R_NG[i, j] = simps(simps(z, x2), x1)
-                        else:
-                            R_NG[i, j] = mu[i] * mu[j] + sig[i] * sig[j]
-                    else:
-                        R_NG[i, j] = 0
-
-    if name == 'User_Distribution':
-        cdf_x = parameter1
-        cdf_y = parameter2
-        for i in range(R_G.shape[0]):
-            if pseudo == 'pseudo':
-                sy1 = np.sqrt(R_G[i, 0])
-            else:
-                sy1 = np.sqrt(R_G[i, i])
-            for j in range(R_G.shape[1]):
-                if pseudo == 'pseudo':
-                    sy2 = sy1
-                    if sy1 != 0 and sy2 != 0:
-                        if j != 0:
-                            x1 = np.linspace(-6 * sy1, 6 * sy1, 1000)
-                            x2 = np.linspace(-6 * sy2, 6 * sy2, 1000)
-                            f = lambda y1, y2: User_Var(y1, y2, R_G[i, j], cdf_x, cdf_y, sy1, sy2)
-                            z = f(x1[:, None], x2)
-                            # R_NG[i, j] = dblquad(f, -1 * sy1, 1 * sy1, lambda x: -1 * sy2, lambda x: 1 * sy2, epsabs=0.0)
-                            R_NG[i, j] = simps(simps(z, x2), x1)
-                        else:
-                            R_NG[i, j] = mu[i] * mu[j] + sig[i] * sig[j]
-                    else:
-                        R_NG[i, j] = 0
-                else:
-                    sy2 = np.sqrt(R_G[j, j])
-                    if sy1 != 0 and sy2 != 0:
-                        if i != j:
-                            x1 = np.linspace(-6 * sy1, 6 * sy1, 1000)
-                            x2 = np.linspace(-6 * sy2, 6 * sy2, 1000)
-                            f = lambda y1, y2: User_Var(y1, y2, R_G[i, j], cdf_x, cdf_y, sy1, sy2)
-                            z = f(x1[:, None], x2)
-                            R_NG[i, j] = simps(simps(z, x2), x1)
-                        else:
-                            R_NG[i, j] = mu[i] * mu[j] + sig[i] * sig[j]
-                    else:
-                        R_NG[i, j] = 0
     return R_NG
 
 
@@ -393,3 +252,107 @@ def translate_process(Samples_G, Dist, mu, sig, parameter1, parameter2):
             g1 = g1(fg1)
             Samples_NG[i, :] = g1
     return Samples_NG
+
+
+def solve_double_integral(marginal, params, rho_norm):
+    """
+        A function to solve the double integral equation in order to evaluate the modified correlation matrix in the
+        standard normal space given the correlation matrix in the original space. This is achieved by a quadratic
+        two-dimensional Gauss-Legendre integration.
+    """
+
+    n = 2
+    zmax = 8
+    zmin = -zmax
+    points, weights = np.polynomial.legendre.leggauss(n)
+    points = - (0.5 * (points + 1) * (zmax - zmin) + zmin)
+    weights = weights * (0.5 * (zmax - zmin))
+
+    xi = np.tile(points, [n, 1])
+    xi = xi.flatten(order='F')
+    eta = np.tile(points, n)
+
+    first = np.tile(weights, n)
+    first = np.reshape(first, [n, n])
+    second = np.transpose(first)
+
+    weights2d = first * second
+    w2d = weights2d.flatten()
+    rho = np.ones_like(rho_norm)
+
+    for i in range(len(marginal)):
+        icdf_i = marginal[i].icdf
+        moments_i = marginal[i].moments
+        mi = moments_i(params[i])
+        if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
+            raise RuntimeError("The marginal distributions need to have "
+                               "finite mean and variance")
+
+        for j in range(i + 1, len(marginal)):
+            icdf_j = marginal[j].icdf
+            moments_j = marginal[j].moments
+            mj = moments_j(params[j])
+            if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
+                raise RuntimeError("The marginal distributions need to have "
+                                   "finite mean and variance")
+            tmp_f_xi = ((icdf_j(stats.norm.cdf(xi), params[j]) - mj[0]) / np.sqrt(mj[1]))
+            tmp_f_eta = ((icdf_i(stats.norm.cdf(eta), params[i]) - mi[0]) / np.sqrt(mi[1]))
+            coef = tmp_f_xi * tmp_f_eta * w2d
+
+            rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
+            rho[j, i] = rho[i, j]
+
+    return rho
+
+
+def bi_variate_normal_pdf(x1, x2, rho):
+    """
+        A function which evaluates the values of the bi-variate normal probability distribution function
+    """
+    return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
+            np.exp(-1/(2*(1-rho**2)) *
+                   (x1**2 - 2 * rho * x1 * x2 + x2**2)))
+
+
+def itam(marginal, params, corr):
+    # Initial Guess
+    corr_norm0 = corr
+    # Iteration Condition
+    i_converge = 0
+    error0 = 100
+    max_iter = 20
+
+    for ii in range(max_iter):
+        corr0 = solve_double_integral(marginal, params, corr_norm0)
+        # compute the relative difference between the computed NGACF & the target R(Normalized)
+        err1 = 1.0e-10
+        err2 = 1.0e-10
+        for i in range(corr0.shape[0]):
+            for j in range(corr0.shape[1]):
+                err1 = err1 + (corr[i, j] - corr0[i, j]) ** 2
+                err2 = err2 + corr0[i, j] ** 2
+        error1 = 100 * np.sqrt(err1 / err2)
+
+        if abs(error0 - error1) / error1 < 0.001 or ii == max_iter or 100 * np.sqrt(err1 / err2) < 0.0005:
+            i_converge = 1
+
+        corr_norm1 = np.zeros_like(corr_norm0)
+        for i in range(corr_norm0.shape[0]):
+            for j in range(corr_norm0.shape[1]):
+                if corr0[i, j] != 0:
+                    corr_norm1[i, j] = (corr[i, j] / corr0[i, j]) * corr_norm0[i, j]
+                else:
+                    corr_norm1[i, j] = 0
+
+        # Eliminate Numerical error of Upgrading Scheme
+        corr_norm1[corr_norm1 < -1.0] = -0.99999
+        corr_norm1[corr_norm1 > 1.0] = 0.99999
+
+        # Iteratively finding the nearest PSD(Qi & Sun, 2006)
+        corr_norm1 = np.array(near_pd(corr_norm1))
+
+        if i_converge == 0 and ii != max_iter:
+            corr_norm0 = corr_norm1
+            error0 = error1
+
+    return corr_norm1
