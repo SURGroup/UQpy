@@ -12,29 +12,34 @@ class SRM:
     A class to simulate Stochastic Processes from a given power spectrum density based on the Spectral Representation
     Method. This class can simulate both uni-variate and multi-variate multi-dimensional Stochastic Processes.
 
+    Input:
+
     :param nsamples: Number of Stochastic Processes to be generated
     :type nsamples: int
 
     :param S: Power spectrum to be used for generating the samples
     :type S: numpy.ndarray
 
-    :param dw: Array of frequency discretizations across dimensions
-    :type dw: array
+    :param dw: List of frequency discretizations across dimensions
+    :type dw: list
 
-    :param nt: Array of number of time discretizations across dimensions
-    :type nt: array
+    :param nt: List of number of time discretizations across dimensions
+    :type nt: list
 
-    :param nw: Array of number of frequency discretizations across dimensions
-    :type nw: array
+    :param nw: List of number of frequency discretizations across dimensions
+    :type nw: list
 
     :param case: Uni-variate or Multivariate options.
                     1. 'uni' - Uni-variate
                     2. 'multi' - Multi-variate
+    :type case: str
 
     :param g: The cross - Power Spectral Density. Used only for the Multi-variate case.
                     Default: None
+    :type g: numpy.ndarray
 
     Output:
+
     :rtype: samples: numpy.ndarray
     """
     # Created by Lohit Vandanapu
@@ -109,6 +114,8 @@ class BSRM:
     A class to simulate Stochastic Processes from a given power spectrum and bispectrum density based on the
     BiSpectral Representation Method.
 
+    Input:
+
     :param nsamples: Number of Stochastic Processes to be generated
     :type nsamples: int
 
@@ -119,19 +126,20 @@ class BSRM:
     :type B: numpy.ndarray
 
     :param dt: Array of time discretizations across dimensions
-    :type dt: array
+    :type dt: numpy.ndarray
 
     :param dw: Array of frequency discretizations across dimensions
-    :type dw: array
+    :type dw: numpy.ndarray
 
     :param nt: Array of number of time discretizations across dimensions
-    :type nt: array
+    :type nt: numpy.ndarray
 
     :param nw: Array of number of frequency discretizations across dimensions
-    :type nw: array
+    :type nw: numpy.ndarray
 
     Output:
-    :rtype: samples: numpy.ndarray
+
+    :rtype samples: numpy.ndarray
     """
     # Created by Lohit Vandanapu
     # Last Modified:08/04/2018 Lohit Vandanapu
@@ -224,9 +232,12 @@ class BSRM:
         samples = np.fft.fftn(B, [self.nt for _ in range(self.n)])
         return np.real(samples)
 
+
 class KLE:
     """
     A class to simulate Stochastic Processes from a given auto-correlation function based on the Karhunen-Louve Expansion
+
+    Input:
 
     :param nsamples: Number of Stochastic Processes to be generated
     :type nsamples: int
@@ -235,7 +246,8 @@ class KLE:
     :type R: numpy.ndarray
 
     Output:
-    :rtype: samples: numpy.ndarray
+
+    :rtype samples: numpy.ndarray
     """
     # Created by Lohit Vandanapu
     # Last Modified:08/04/2018 Lohit Vandanapu
@@ -256,9 +268,11 @@ class KLE:
         return samples
 
 
-class Translate:
+class Translation:
     """
     A class to translate Gaussian Stochastic Processes to non-Gaussian Stochastic Processes
+
+    Input:
 
     :param samples_g: Gaussian Stochastic Processes
     :type samples_g: numpy.ndarray
@@ -273,8 +287,9 @@ class Translate:
     :type params: list
 
     Output:
-    :rtype: samples_ng: numpy.ndarray
-    :rtype: R_ng: numpy.ndarray
+
+    :rtype samples_ng: numpy.ndarray
+    :rtype R_ng: numpy.ndarray
     """
     # Created by Lohit Vandanapu
     # Last Modified:08/06/2018 Lohit Vandanapu
@@ -290,7 +305,7 @@ class Translate:
         self.R_ng = self.autocorrealtion_distortion()
 
     def translate_g_samples(self):
-        std = np.sqrt(np.diag(self.R_g)[0])
+        std = np.sqrt(np.var(self.samples_g))
         samples_cdf = norm.cdf(self.samples_g, scale=std)
         samples_ng = inv_cdf(self.marginal)[0](samples_cdf, self.params[0])
         return samples_ng
@@ -299,7 +314,7 @@ class Translate:
         r_g = R_to_r(self.R_g)
         r_g = np.clip(r_g, -0.999, 0.999)
         R_ng = np.zeros_like(r_g)
-        for i in itertools.product(*[self.num for _ in range(self.dim)]):
+        for i in itertools.product(*[range(self.num) for _ in range(self.dim)]):
             R_ng[(*i, *[])] = self.solve_integral(r_g[(*i, *[])])
         return R_ng
 
@@ -328,10 +343,12 @@ class Translate:
         return rho_non
 
 
-class Inverse_Translate:
+class InverseTranslation:
     """
     A class to perform Iterative Translation Approximation Method to find the underlying  Gaussian Stochastic Processes
     which upon translation would yield the necessary non-Gaussian Stochastic Processes
+
+    Input:
 
     :param samples_ng: Gaussian Stochastic Processes
     :type samples_ng: numpy.ndarray
@@ -346,8 +363,9 @@ class Inverse_Translate:
     :type params: list
 
     Output:
-    :rtype: samples_g: numpy.ndarray
-    :rtype: R_g: numpy.ndarray
+
+    :rtype samples_g: numpy.ndarray
+    :rtype R_g: numpy.ndarray
     """
     # Created by Lohit Vandanapu
     # Last Modified:08/06/2018 Lohit Vandanapu
@@ -364,7 +382,7 @@ class Inverse_Translate:
 
     def inverse_translate_ng_samples(self):
         samples_cdf = cdf(self.marginal)[0](self.samples_ng, self.params[0])
-        samples_g = inv_cdf(['Normal'])[0](samples_cdf, [[0, 1]])
+        samples_g = inv_cdf(['Normal'])[0](samples_cdf, [0, 1])
         return samples_g
 
     def itam(self):
@@ -378,7 +396,7 @@ class Inverse_Translate:
         corr1 = np.zeros_like(corr_norm0)
 
         for ii in range(max_iter):
-            for i in itertools.product(*[self.num for _ in range(self.dim)]):
+            for i in itertools.product(*[range(self.num) for _ in range(self.dim)]):
                 corr0[(*i, *[])] = self.solve_integral(corr_norm0[(*i, *[])])
             # compute the relative difference between the computed NGACF & the target R(Normalized)
             err1 = np.sum((self.R_ng - corr0) ** 2)
@@ -426,27 +444,3 @@ class Inverse_Translate:
         coef = tmp_f_xi * tmp_f_eta * w2d
         rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
         return rho_non
-
-
-# def solve_integral_simpsons_rule(rho):
-#     n = 512
-#     zmax = 6
-#     zmin = -zmax
-#     x1 = np.linspace(zmin, zmax, n)
-#     x2 = np.linspace(zmin, zmax, n)
-#
-#     tmp_f_x1 = inv_cdf(marginal)[0](stats.norm.cdf(x1), params[0])
-#     tmp_f_x2 = inv_cdf(marginal)[0](stats.norm.cdf(x2), params[0])
-#     phi = bi_variate_normal_pdf(x1[:, None], x2, rho)
-#     integrand = tmp_f_x1[:, None]*tmp_f_x2*phi
-#     rho_non = simps(simps(integrand, x2), x1)
-#     return rho_non
-
-
-# rho_n1 = np.zeros_like(rho1)
-# op = solve_integral_simpsons_rule
-# it = np.nditer([rho1, rho_n1], op_flags=[['readonly'], ['writeonly']])
-# for i in range(401):
-#     for j in range(i, 401):
-#         rho_n1[i, j] = op(rho1[i, j])
-
