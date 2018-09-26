@@ -16,22 +16,7 @@ Uncertainty Quantification with python (UQpy)
 Description
 ===========
 
-UQpy (Uncertainty Quantification with python) is a general purpose Python toolbox for modeling uncertainty in physical and mathematical systems..
-
-Supported methods
-===========
-
-For sampling:
-           1. Monte Carlo simulation (MCS), 
-           2. Latin Hypercube Sampling (LHS), 
-           3. Markov Chain Monte Carlo simulation (MCMC) 
-
-For reliability analysis:
-           1. Subset Simulation
-           
-For surrogate modeling:
-           1. Stochastic Reduced Order Models (SROM).
-
+UQpy (Uncertainty Quantification with python) is a general purpose Python toolbox for modeling uncertainty in physical and mathematical systems.
 
 Dependencies
 ===========
