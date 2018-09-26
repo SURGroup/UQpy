@@ -98,7 +98,7 @@ class MCS:
         for j in range(samples.shape[1]):
             i_cdf = self.distribution[j].icdf
             samples_u_to_x[:, j] = i_cdf(samples[:, j], self.distribution[j].params)
-        print('Successful execution of MCS design..')
+        print('UQpy: Successful execution of MCS design..')
         return samples, samples_u_to_x
 
     ################################################################################################################
@@ -238,7 +238,7 @@ class LHS:
             i_cdf = self.distribution[j].icdf
             samples_u_to_x[:, j] = i_cdf(samples[:, j], self.distribution[j].params)
 
-        print('Successful execution of LHS design..')
+        print('UQpy: Successful execution of LHS design..')
         return samples, samples_u_to_x
 
     def _samples(self, a, b):
@@ -452,7 +452,7 @@ class STS:
                                                   + self.strata.widths[i, j])
             samples_u_to_x[:, j] = i_cdf(samples[:, j], self.dist_params[j])
 
-        print('Successful execution of STS design..')
+        print('UQpy: Successful execution of STS design..')
         return samples, samples_u_to_x
 
     def init_sts(self):
@@ -936,7 +936,7 @@ class MCMC:
         # Return the samples
 
         if self.algorithm is 'MMH' or self.algorithm is 'MH':
-            print('Successful execution of the MCMC design')
+            print('UQpy: Successful execution of the MCMC design')
             return samples[self.nburn:self.nsamples * self.jump + self.nburn:self.jump]
         else:
             output = np.zeros((self.nsamples, self.dimension))
@@ -1083,15 +1083,17 @@ class Correlate:
     :param corr_norm: The correlation matrix of the random variables in the standard normal space.
     :type corr_norm: ndarray
 
-    param: distribution: An object list containing the distributions of the random variables.
-                         Each item in the list is an object of the Distribution class (see Distributions.py).
-                         The list has length equal to dimension.
-    :type distribution: list
+    :param: dimension: A scalar defining the dimension of the problem. If input_samples is an object of a SampleMethods
+                        class, then dimension does not need to be defined. Otherwise, it must be specified.
+    :type dimension: integer
 
     Output:
-    :return: Correlate.samples: Set of correlated normal samples.
-    :rtype: Correlate.samples: ndarray
+    :return: samples: Set of correlated standard normal samples.
+    :rtype: samples: ndarray
 
+    :return: samples_uncorr: The input uncorrelated standard normal samples. These are either inherited from the
+                                input_samples object or are defined by the input_samples array.
+    :rtype: samples_uncorr: ndarray
     """
 
     # Authors: Dimitris G.Giovanis
@@ -1153,17 +1155,18 @@ class Decorrelate:
             :param input_samples: An object of type Correlate or an array of correlated N(0,1) samples
             :type input_samples: object or ndarray
 
-            param: distribution: An object list containing the distributions of the random variables.
-                                 Each item in the list is an object of the Distribution class (see Distributions.py).
-                                 The list has length equal to dimension.
-            :type distribution: list
-
             :param corr_norm: The correlation matrix of the random variables in the standard normal space
             :type corr_norm: ndarray
 
+            :param dimension: The dimension of the problem.
+            :type dimension: integer
+
         Output:
-            :return: Decorrelate.samples: Set of uncorrelated normal samples.
-            :rtype: Decorrelate.samples: ndarray
+            :return Decorrelate.samples: Set of uncorrelated normal samples.
+            :rtype Decorrelate.samples: ndarray
+
+            :return Decorrelate.samples_corr: Original set of correlated normal samples.
+            :rtype Decorrelate.samples_corr: ndarray
     """
 
     # Authors: Dimitris G.Giovanis
