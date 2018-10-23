@@ -83,8 +83,9 @@ class Model:
 
     def log_like_normal(self, x, params):
         params = params.reshape((1, self.n_params))
-        z = RunModel(cpu=1, model_type=self.type, model_script=self.script, dimension=self.n_params,
-                     samples=params)
+        with suppress_stdout():  # disable output
+            z = RunModel(cpu=1, model_type=self.type, model_script=self.script, dimension=self.n_params,
+                         samples=params)
         mean = z.model_eval.QOI[0]
         return multivariate_normal.logpdf(x, mean=mean, cov=self.error_covariance)
 

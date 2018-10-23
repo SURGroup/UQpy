@@ -18,6 +18,8 @@
 
 import numpy as np
 import scipy.stats as stats
+from contextlib import contextmanager
+import sys, os
 
 
 def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
@@ -612,3 +614,14 @@ def r_to_s(r, w, t):
             r[i, j] = 2 / (2 * np.pi) * np.dot(fac, (r[i, :] * np.cos(t * w[j])))
     s[s < 0] = 0
     return s
+
+
+@contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:
+            yield
+        finally:
+            sys.stdout = old_stdout
