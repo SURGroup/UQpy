@@ -20,6 +20,9 @@
 
 from UQpy.SampleMethods import *
 from scipy import integrate
+from scipy.stats import multivariate_normal
+from UQpy.RunModel import RunModel
+from scipy.optimize import minimize
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -29,9 +32,86 @@ warnings.filterwarnings("ignore")
 #                            Information theoretic model selection - AIC, BIC
 ########################################################################################################################
 
+class Model:
+    def __init__(self, model_type = None, model_script = None, model_name = None,
+                 n_params = None, param = None, log_like = None, error_covariance = None,
+                 log_prior = None):
+
+        """
+
+        :param name: name of the model
+        :type data: str
+
+        :param param: parameter vector
+        :type data: ndarray
+
+        :param log_like_func: function that evaluates the log_likelihood, takes as an input the data and parameter vector
+        :type log_like_func: function
+
+        :param ML_fit: function that computes the maximum likelihood parameter estimate, takes as an input the data
+        :type method: function
+
+        """
+        self.type = model_type
+        self.script = model_script
+        self.name = model_name
+        self.n_params = n_params
+        self.error_covariance = error_covariance
+        self.log_prior = log_prior
+
+        if self.type == 'python':
+            # Check that the script is a python file
+            if not self.script.lower().endswith('.py'):
+                raise ValueError('A python script, with extension .py, must be provided.')
+            if n_params is None:
+                raise ValueError('A number of parameters must be defined.')
+            if error_covariance is None:
+                raise ValueError('An error covariance must be defined.')
+            else:
+                self.n_params = n_params
+
+            self.log_like = partial(self.log_like_normal)
+
+        elif self.type == 'pdf':
+            supported_distributions = get_supported_distributions(print_=True)
+            if not self.name in supported_distributions:
+                raise ValueError('probability distribution is not supported')
+            ### what if custom distribution????
+            self.pdf = Distribution(self.name)
+            self.n_params = self.pdf.n_params
+            self.log_like = self.pdf.log_pdf
+
+    def log_like_normal(self, x, params):
+        params = params.reshape((1, self.n_params))
+        z = RunModel(cpu=1, model_type=self.type, model_script=self.script, dimension=self.n_params,
+                     samples=params)
+        mean = z.model_eval.QOI[0]
+        return multivariate_normal.logpdf(x, mean=mean, cov=self.error_covariance)
+
+
+class MLEstimation:
+
+    def __init__(self, model_instance = None, data=None):
+
+        if not isinstance(model_instance, Model):
+            raise ValueError('model_instance should be of type Model')
+
+        self.data = data
+        if model_instance.type == 'pdf':
+            self.param = model_instance.pdf.fit(self.data)
+
+        elif model_instance.type == 'python':
+
+            def log_like_data(param):
+                return -1*model_instance.log_like(self.data, param)
+            x0 = np.zeros((1, model_instance.n_params))
+            res = minimize(log_like_data, x0, method='nelder-mead',options = {'xtol': 1e-8, 'disp': True})
+            self.param = res.x
+
+
 class InfoModelSelection:
 
-    def __init__(self,  data=None, candidate_model=None, method=None):
+    def __init__(self, data=None, candidate_model=None, method=None):
 
         """
 
@@ -54,28 +134,34 @@ class InfoModelSelection:
             self.candidate_model.append(Distribution(candidate_model[i]))
 
         if self.method == 'AIC':
-            self.AIC, self.probabilities, self.delta, self.sorted_model, self.Parameters = self.run_multi_info_ms()
+            self.AIC, self.data_fit_value, self.probabilities, self.delta, \
+            self.sorted_model, self.Parameters = self.run_multi_info_ms()
         elif self.method == 'AICc' or self.method is None:
-            self.AICc, self.probabilities, self.delta, self.sorted_model, self.Parameters = self.run_multi_info_ms()
+            self.AICc, self.data_fit_value, self.probabilities, self.delta, \
+            self.sorted_model, self.Parameters = self.run_multi_info_ms()
         elif self.method == 'BIC':
-            self.BIC, self.probabilities, self.delta, self.sorted_model, self.Parameters = self.run_multi_info_ms()
+            self.BIC, self.data_fit_value, self.probabilities, self.delta, \
+            self.sorted_model, self.Parameters = self.run_multi_info_ms()
 
     def run_multi_info_ms(self):
 
             criterion = np.zeros((len(self.candidate_model)))
+            model_fit_value = np.zeros((len(self.candidate_model)))
             model_sort = ["" for x in range(len(self.candidate_model))]
             params = [0]*len(self.candidate_model)
             for i in range(len(self.candidate_model)):
                 print('UQpy: Running Informative model selection for candidate model:', self.candidate_model[i].name)
-                criterion[i], params[i] = self.info_ms(self.candidate_model[i])
+                criterion[i], model_fit_value[i], params[i] = self.info_ms(self.candidate_model[i])
 
             criterion_sort = np.sort(criterion)
+            model_fit_value_sort = np.zeros((len(self.candidate_model)))
             params_sort = [0]*len(self.candidate_model)
             sort_index = sorted(range(len(self.candidate_model)), key=criterion.__getitem__)
             for i in range((len(self.candidate_model))):
                 s = sort_index[i]
                 model_sort[i] = self.candidate_model[s].name
                 params_sort[i] = params[s]
+                model_fit_value_sort[i] = model_fit_value[s]
 
             criterion_delta = criterion_sort - np.nanmin(criterion_sort)
 
@@ -95,7 +181,7 @@ class InfoModelSelection:
             probabilities = w_criterion / s_
             print('UQpy: Informative model selection analysis completed!')
 
-            return criterion_sort, probabilities, criterion_delta, model_sort, params_sort
+            return criterion_sort, model_fit_value_sort, probabilities, criterion_delta, model_sort, params_sort
 
     def info_ms(self, model):
 
@@ -104,16 +190,17 @@ class InfoModelSelection:
         params = list(fit_i(self.data))
         log_like = np.sum(model.log_pdf(self.data, params))
         k = model.n_params
-        aic_value = 2 * n - 2 * log_like
-        aicc_value = 2 * n - 2 * log_like + (2 * k ** 2 + 2 * k) / (n - k - 1)
+        model_fit_value = - 2 * log_like
+        aic_value = 2 * k - 2 * log_like
+        aicc_value = aic_value + (2 * k ** 2 + 2 * k) / (n - k - 1)
         bic_value = np.log(n) * k - 2 * log_like
 
         if self.method == 'BIC':
-            return bic_value, params
+            return bic_value, model_fit_value, params
         elif self.method == 'AIC':
-            return aic_value, params
+            return aic_value, model_fit_value, params
         elif self.method == 'AICc' or self.method is None:
-            return aicc_value, params
+            return aicc_value, model_fit_value, params
 
 
 ########################################################################################################################
