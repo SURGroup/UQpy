@@ -34,8 +34,7 @@ warnings.filterwarnings("ignore")
 
 class Model:
     def __init__(self, model_type = None, model_script = None, model_name = None,
-                 n_params = None, param = None, log_like = None, error_covariance = None,
-                 log_prior = None):
+                 n_params = None, error_covariance = None, log_prior = None):
 
         """
 
@@ -73,13 +72,13 @@ class Model:
             self.log_like = partial(self.log_like_normal)
 
         elif self.type == 'pdf':
-            supported_distributions = get_supported_distributions(print_=True)
+            supported_distributions = get_supported_distributions(print_=False)
             if not self.name in supported_distributions:
                 raise ValueError('probability distribution is not supported')
             ### what if custom distribution????
             self.pdf = Distribution(self.name)
             self.n_params = self.pdf.n_params
-            self.log_like = self.pdf.log_pdf
+            self.log_like = self.log_like_sum
 
     def log_like_normal(self, x, params):
         params = params.reshape((1, self.n_params))
@@ -89,6 +88,9 @@ class Model:
         mean = z.model_eval.QOI[0]
         return multivariate_normal.logpdf(x, mean=mean, cov=self.error_covariance)
 
+    def log_like_sum(self, x, params):
+        return np.sum(self.pdf.log_pdf(x, params))
+
 
 class MLEstimation:
 
@@ -96,31 +98,34 @@ class MLEstimation:
 
         if not isinstance(model_instance, Model):
             raise ValueError('model_instance should be of type Model')
-
         self.data = data
         if model_instance.type == 'pdf':
+            print('Evaluating max likelihood estimate...')
             self.param = model_instance.pdf.fit(self.data)
+            self.max_log_like = model_instance.log_like(self.data, self.param)
 
         elif model_instance.type == 'python':
 
             def log_like_data(param):
                 return -1*model_instance.log_like(self.data, param)
             x0 = np.zeros((1, model_instance.n_params))
+            print('Evaluating max likelihood estimate...')
             res = minimize(log_like_data, x0, method='nelder-mead',options = {'xtol': 1e-8, 'disp': True})
             self.param = res.x
+            self.max_log_like = (-1)*res.fun
 
 
 class InfoModelSelection:
 
-    def __init__(self, data=None, candidate_model=None, method=None):
+    def __init__(self, candidate_models=None, data=None, method=None):
 
         """
 
         :param data: Available data
         :type data: ndarray
 
-        :param candidate_model: Candidate non-parametric probabilistic models
-        :type candidate_model: list
+        :param candidate_models: Candidate models, must be a list of instances of class Model
+        :type candidate_models: list
 
         :param method: Method to be used
         :type method: str
@@ -129,79 +134,53 @@ class InfoModelSelection:
 
         self.data = data
         self.method = method
-        self.candidate_model = list()
+        self.candidate_models = candidate_models
 
-        for i in range(len(candidate_model)):
-            self.candidate_model.append(Distribution(candidate_model[i]))
+        # Check that all candidate models are of class Model, and that they are all of the same type, pdf or python
+        all_notisinstance = [not isinstance(model, Model) for model in self.candidate_models]
+        if any(all_notisinstance):
+            raise ValueError('All candidate models should be of type Model.')
 
-        if self.method == 'AIC':
-            self.AIC, self.data_fit_value, self.probabilities, self.delta, \
-            self.sorted_model, self.Parameters = self.run_multi_info_ms()
-        elif self.method == 'AICc' or self.method is None:
-            self.AICc, self.data_fit_value, self.probabilities, self.delta, \
-            self.sorted_model, self.Parameters = self.run_multi_info_ms()
-        elif self.method == 'BIC':
-            self.BIC, self.data_fit_value, self.probabilities, self.delta, \
-            self.sorted_model, self.Parameters = self.run_multi_info_ms()
+        all_typesnotequal = [model.type != candidate_models[0].type for model in candidate_models]
+        if any(all_typesnotequal):
+            raise ValueError('All candidate models should be of same type, pdf of python.')
 
-    def run_multi_info_ms(self):
+        # First evaluate ML estimate for all models
+        list_models = candidate_models
+        list_params = []
+        list_criteria = []
+        list_penalty_term = []
+        for i, model in enumerate(candidate_models):
+            with suppress_stdout():
+                ml_estimator = MLEstimation(model_instance = model, data = self.data)
+            list_params.append(ml_estimator.param)
+            max_log_like = ml_estimator.max_log_like
+            k = model.n_params
+            n = np.size(data)
+            if self.method == 'BIC':
+                criterion_value = -2 * max_log_like + np.log(n) * k
+                penalty_term = np.log(n) * k
+            elif self.method == 'AICc':
+                criterion_value = -2 * max_log_like + 2 * k + (2 * k ** 2 + 2 * k) / (n - k - 1)
+                penalty_term = 2 * k + (2 * k ** 2 + 2 * k) / (n - k - 1)
+            else: # default: do AIC
+                criterion_value = -2 * max_log_like + 2 * k
+                penalty_term = 2 * k
+            list_criteria.append(criterion_value)
+            list_penalty_term.append(penalty_term)
 
-            criterion = np.zeros((len(self.candidate_model)))
-            model_fit_value = np.zeros((len(self.candidate_model)))
-            model_sort = ["" for x in range(len(self.candidate_model))]
-            params = [0]*len(self.candidate_model)
-            for i in range(len(self.candidate_model)):
-                print('UQpy: Running Informative model selection for candidate model:', self.candidate_model[i].name)
-                criterion[i], model_fit_value[i], params[i] = self.info_ms(self.candidate_model[i])
+        sort_idx = list(np.argsort(np.array(list_criteria)))
+        self.sorted_models = [candidate_models[i] for i in sort_idx]
+        self.sorted_params = [list_params[i] for i in sort_idx]
+        self.sorted_criteria = [list_criteria[i] for i in sort_idx]
+        self.sorted_penalty_terms = [list_penalty_term[i] for i in sort_idx]
 
-            criterion_sort = np.sort(criterion)
-            model_fit_value_sort = np.zeros((len(self.candidate_model)))
-            params_sort = [0]*len(self.candidate_model)
-            sort_index = sorted(range(len(self.candidate_model)), key=criterion.__getitem__)
-            for i in range((len(self.candidate_model))):
-                s = sort_index[i]
-                model_sort[i] = self.candidate_model[s].name
-                params_sort[i] = params[s]
-                model_fit_value_sort[i] = model_fit_value[s]
+        sorted_criteria = np.array(self.sorted_criteria)
+        delta = sorted_criteria-sorted_criteria[0]
+        prob = np.exp(-delta/2)
+        self.probabilities = prob/np.sum(prob)
 
-            criterion_delta = criterion_sort - np.nanmin(criterion_sort)
-
-            s_ = 1.0
-            w_criterion = np.empty([len(self.candidate_model), 1], dtype=np.float16)
-            w_criterion[0] = 1.0
-
-            delta = np.empty([len(self.candidate_model), 1], dtype=np.float16)
-            delta[0] = 0.0
-
-            for i in range(1, len(self.candidate_model)):
-                delta[i] = criterion_sort[i] - criterion_sort[0]
-                w_criterion[i] = np.exp(-delta[i] / 2)
-                s_ = s_ + w_criterion[i]
-
-
-            probabilities = w_criterion / s_
-            print('UQpy: Informative model selection analysis completed!')
-
-            return criterion_sort, model_fit_value_sort, probabilities, criterion_delta, model_sort, params_sort
-
-    def info_ms(self, model):
-
-        n = self.data.shape[0]
-        fit_i = model.fit
-        params = list(fit_i(self.data))
-        log_like = np.sum(model.log_pdf(self.data, params))
-        k = model.n_params
-        model_fit_value = - 2 * log_like
-        aic_value = 2 * k - 2 * log_like
-        aicc_value = aic_value + (2 * k ** 2 + 2 * k) / (n - k - 1)
-        bic_value = np.log(n) * k - 2 * log_like
-
-        if self.method == 'BIC':
-            return bic_value, model_fit_value, params
-        elif self.method == 'AIC':
-            return aic_value, model_fit_value, params
-        elif self.method == 'AICc' or self.method is None:
-            return aicc_value, model_fit_value, params
+        self.sorted_names = [model.name for model in self.sorted_models]
 
 
 ########################################################################################################################

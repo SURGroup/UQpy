@@ -14,4 +14,4 @@ class RunPythonModel:
         domain = np.linspace(0, 10, 50)
 
         for i in range(self.samples.shape[0]):
-            self.QOI[i] = self.samples[i, 0]*domain
+            self.QOI[i] = self.samples[i, 0]*domain+self.samples[i, 1]*domain**2
