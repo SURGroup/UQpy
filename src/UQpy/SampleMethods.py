@@ -753,7 +753,7 @@ class MCMC:
     # Updated: 4/26/18 by Michael D. Shields
 
     def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None, pdf_target_type=None,
-                 pdf_target=None, pdf_target_params=None, algorithm=None, jump=None, nsamples=None, seed=None,
+                 pdf_target=None, pdf_target_params=None, algorithm=None, jump=1, nsamples=None, seed=None,
                  nburn=None):
 
         self.pdf_proposal_type = pdf_proposal_type
@@ -776,7 +776,7 @@ class MCMC:
         rejects = 0
 
         # Defining an array to store the generated samples
-        samples = np.zeros([self.nsamples * self.jump, self.dimension])
+        samples = np.zeros([self.nsamples * self.jump + self.nburn, self.dimension])
 
         ################################################################################################################
         # Classical Metropolis-Hastings Algorithm with symmetric proposal density
@@ -959,6 +959,9 @@ class MCMC:
         if self.nsamples is None:
             raise NotImplementedError('Exit code: Number of samples not defined.')
 
+        if self.jump == 0:
+            raise ValueError("Exit code: Value of jump must be greater than 0")
+
         # Check seed
         if self.seed is None:
             self.seed = np.zeros(self.dimension)
@@ -1027,7 +1030,7 @@ class MCMC:
 
         # Check pdf_target
         if type(self.pdf_target).__name__ == 'str':
-            self.pdf_target = Distribution(self.pdf_target)
+            self.pdf_target = Distribution(self.pdf_target).pdf
         if self.pdf_target is None and self.algorithm is 'MMH':
             if self.dimension == 1 or self.pdf_target_type is 'marginal_pdf':
                 def target(x, dummy):
@@ -1618,3 +1621,151 @@ class InvNataf:
             else:
                 raise RuntimeError("UQpy: To perform the inverse Nataf transformation without samples, a correlation "
                                    "function 'corr' must be provided.")
+
+
+########################################################################################################################
+########################################################################################################################
+#                                         Importance Sampling
+########################################################################################################################
+
+class IS:
+
+    """
+        Description:
+
+            Perform Importance Sampling (IS) of independent random variables given a target and a
+            proposal distribution.
+
+        Input:
+            :param dimension: A scalar value defining the dimension of the random variables.
+                              Default: len(dist_names).
+            :type dimension: int
+
+            :param pdf_proposal: A list containing the names of the proposal distribution for each random variable.
+                                 Distribution names must match those in the Distributions module.
+                                 If the distribution does not match one from the Distributions module, the user
+                                 must provide custom_dist.py. The length of the string must be 1 (if all
+                                 distributions are the same) or equal to dimension.
+            :type pdf_proposal: string list
+
+            :param pdf_proposal_params: Parameters of the proposal distribution.
+                                        Parameters for each random variable are defined as ndarrays.
+                                        Each item in the list, pdf_proposal_params[i], specifies the parameters for the
+                                        corresponding proposal distribution, pdf_proposal[i].
+            :type pdf_proposal_params: list
+
+            :param pdf_target: A list containing the names of the target distribution for each random variable.
+                                 Distribution names must match those in the Distributions module.
+                                 If the distribution does not match one from the Distributions module, the user
+                                 must provide custom_dist.py. The length of the string must be 1 (if all
+                                 distributions are the same) or equal to dimension.
+            :type target: string list
+
+            :param pdf_target_params: Parameters of the target distribution.
+                                        Parameters for each random variable are defined as ndarrays.
+                                        Each item in the list, pdf_target_params[i], specifies the parameters for the
+                                        corresponding target distribution, pdf_target[i].
+            :type pdf_target_params: list
+
+            :param nsamples: Number of samples to generate.
+                             No Default Value: nsamples must be prescribed.
+            :type nsamples: int
+
+        Output:
+            :return: IS.samples: Set of generated samples
+            :rtype: IS.samples: ndarray
+
+            :return: IS.samplesU01: Set of uniform samples on [0, 1]^dimension
+            :rtype: IS.samplesU01: ndarray
+
+            :return: IS.weights: Importance weights of samples
+            :rtype: IS.weights: ndarray
+    """
+
+    def __init__(self, dimension=None, pdf_proposal=None, pdf_proposal_params=None,
+                 pdf_target_params=None, pdf_target=None,  nsamples=None):
+
+        self.dimension = dimension
+        self.pdf_proposal = pdf_proposal
+        self.pdf_proposal_params = pdf_proposal_params
+        self.pdf_target = pdf_target
+        self.pdf_target_params = pdf_target_params
+        self.nsamples = nsamples
+        self.target_distribution = [None] * self.dimension
+        self.proposal_distribution = [None] * self.dimension
+        self.init_is()
+        for i in range(self.dimension):
+            self.target_distribution[i] = Distribution(self.pdf_target[i], self.pdf_target_params[i])
+            self.proposal_distribution[i] = Distribution(self.pdf_proposal[i], self.pdf_proposal_params[i])
+
+        self.samplesU01, self.samples, self.weights = self.run_is()
+
+    def run_is(self):
+
+        weights = np.zeros(shape=(self.nsamples, self.dimension))
+        samples = np.random.rand(self.nsamples, self.dimension)
+        x = np.zeros_like(samples)
+
+        for j in range(self.dimension):
+            i_cdf_proposal = self.proposal_distribution[j].icdf
+            x[:, j] = i_cdf_proposal(samples[:, j], self.proposal_distribution[j].params)
+
+        for i in range(self.nsamples):
+            p = np.zeros(self.dimension)
+            q = np.zeros_like(p)
+            w = np.zeros_like(p)
+            for j in range(self.dimension):
+                p[j] = self.proposal_distribution[j].pdf(x[i, j], self.proposal_distribution[j].params)
+                q[j] = self.target_distribution[j].pdf(x[i, j], self.target_distribution[j].params)
+                w[j] = q[j]/p[j]
+
+            weights[i, :] = w
+
+        sum_w = np.sum(weights, axis=0)
+
+        return samples, x, weights/sum_w
+
+    ################################################################################################################
+    # Initialize Importance Sampling.
+
+    def init_is(self):
+
+        # Ensure that the number of samples is defined
+        if self.nsamples is None:
+            raise NotImplementedError("Exit code: Number of samples not defined.")
+
+        # Check the dimension
+        if self.dimension is None:
+            self.dimension = len(self.pdf_target)
+
+        # Ensure that target distribution parameters are assigned
+        if self.pdf_target_params is None:
+            raise NotImplementedError("Exit code: Target distribution parameters not defined.")
+
+        # Ensure that proposal distribution parameters are assigned
+        if self.pdf_proposal_params is None:
+            raise NotImplementedError("Exit code: Proposal distribution parameters not defined.")
+
+        # Check target dist_params
+        if type(self.pdf_target_params).__name__ != 'list':
+            self.pdf_target_params = [self.pdf_target_params]
+        if len(self.pdf_target_params) == 1 and self.dimension != 1:
+            self.pdf_target_params = self.pdf_target_params * self.dimension
+        elif len(self.pdf_target_params) != self.dimension:
+            raise NotImplementedError("Length of pdf_target_params list should be 1 or equal to dimension.")
+
+        # Check for dimensional consistency
+        if len(self.pdf_target_params) != len(self.pdf_target):
+            raise NotImplementedError("Exit code: Incompatible dimensions.")
+
+        # Check proposal dist_params
+        if type(self.pdf_proposal_params).__name__ != 'list':
+            self.pdf_proposal_params = [self.pdf_proposal_params]
+        if len(self.pdf_proposal_params) == 1 and self.dimension != 1:
+            self.pdf_proposal_params = self.pdf_proposal_params * self.dimension
+        elif len(self.pdf_proposal_params) != self.dimension:
+            raise NotImplementedError("Length of pdf_proposal_params list should be 1 or equal to dimension.")
+
+        # Check for dimensional consistency
+        if len(self.pdf_proposal_params) != len(self.pdf_proposal):
+            raise NotImplementedError("Exit code: Incompatible dimensions.")
