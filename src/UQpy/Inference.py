@@ -24,6 +24,7 @@ from scipy.stats import multivariate_normal
 from UQpy.RunModel import RunModel
 from scipy.optimize import minimize
 import warnings
+from UQpy.SampleMethods import MCMC
 warnings.filterwarnings("ignore")
 
 
@@ -34,7 +35,7 @@ warnings.filterwarnings("ignore")
 
 class Model:
     def __init__(self, model_type = None, model_script = None, model_name = None,
-                 n_params = None, error_covariance = None, log_prior = None):
+                 n_params = None, error_covariance = 1, cpu_RunModel = 1):
 
         """
 
@@ -56,7 +57,7 @@ class Model:
         self.name = model_name
         self.n_params = n_params
         self.error_covariance = error_covariance
-        self.log_prior = log_prior
+        self.cpu_RunModel = cpu_RunModel
 
         if self.type == 'python':
             # Check that the script is a python file
@@ -64,11 +65,8 @@ class Model:
                 raise ValueError('A python script, with extension .py, must be provided.')
             if n_params is None:
                 raise ValueError('A number of parameters must be defined.')
-            if error_covariance is None:
-                raise ValueError('An error covariance must be defined.')
             else:
                 self.n_params = n_params
-
             self.log_like = partial(self.log_like_normal)
 
         elif self.type == 'pdf':
@@ -83,7 +81,7 @@ class Model:
     def log_like_normal(self, x, params):
         params = params.reshape((1, self.n_params))
         with suppress_stdout():  # disable output
-            z = RunModel(cpu=1, model_type=self.type, model_script=self.script, dimension=self.n_params,
+            z = RunModel(cpu=self.cpu_RunModel, model_type=self.type, model_script=self.script, dimension=self.n_params,
                          samples=params)
         mean = z.model_eval.QOI[0]
         return multivariate_normal.logpdf(x, mean=mean, cov=self.error_covariance)
@@ -94,25 +92,32 @@ class Model:
 
 class MLEstimation:
 
-    def __init__(self, model_instance = None, data=None):
+    def __init__(self, model_instance = None, data=None, iter_optim = 1, method_optim = 'nelder-mead'):
 
         if not isinstance(model_instance, Model):
             raise ValueError('model_instance should be of type Model')
         self.data = data
-        if model_instance.type == 'pdf':
-            print('Evaluating max likelihood estimate...')
-            self.param = model_instance.pdf.fit(self.data)
-            self.max_log_like = model_instance.log_like(self.data, self.param)
 
-        elif model_instance.type == 'python':
+        if model_instance.type == 'python':
 
             def log_like_data(param):
                 return -1*model_instance.log_like(self.data, param)
-            x0 = np.zeros((1, model_instance.n_params))
             print('Evaluating max likelihood estimate...')
-            res = minimize(log_like_data, x0, method='nelder-mead',options = {'xtol': 1e-8, 'disp': True})
-            self.param = res.x
-            self.max_log_like = (-1)*res.fun
+            list_param = []
+            list_max_log_like = []
+            for _ in range(iter_optim):
+                x0 = np.random.rand(1, model_instance.n_params)
+                res = minimize(log_like_data, x0, method=method_optim,options = {'disp': True})
+                list_param.append(res.x)
+                list_max_log_like.append((-1)*res.fun)
+            idx_max = int(np.argmax(list_max_log_like))
+            self.param = np.array(list_param[idx_max])
+            self.max_log_like = list_max_log_like[idx_max]
+
+        elif model_instance.type == 'pdf':
+            print('Evaluating max likelihood estimate...')
+            self.param = model_instance.pdf.fit(self.data)
+            self.max_log_like = model_instance.log_like(self.data, self.param)
 
 
 class InfoModelSelection:
@@ -178,7 +183,7 @@ class InfoModelSelection:
         sorted_criteria = np.array(self.sorted_criteria)
         delta = sorted_criteria-sorted_criteria[0]
         prob = np.exp(-delta/2)
-        self.probabilities = prob/np.sum(prob)
+        self.sorted_probabilities = prob/np.sum(prob)
 
         self.sorted_names = [model.name for model in self.sorted_models]
 
@@ -189,41 +194,14 @@ class InfoModelSelection:
 ########################################################################################################################
 class BayesParameterEstimation:
 
-    def __init__(self, data=None, model=None, theta_prior_params=None, method=None, theta_prior_dist=None,
-                 pdf_proposal_type=None, pdf_proposal_scale=None, algorithm=None, jump=None, nsamples=None, nburn=None,
-                 walkers=None):
+    def __init__(self, data=None, model=None, pdf_proposal_type=None, pdf_proposal_scale=None,
+                 algorithm=None, jump=None, nsamples=None, nburn=None, walkers=None, seed=None):
 
+        if not isinstance(model, Model):
+            raise ValueError('model should be of type Model')
+        self.model = model
         self.data = data
-        self.method = method
-
-        if model is None:
-            raise RuntimeError('A probability model is required.')
-        elif isinstance(model, str):
-            self.model = Distribution(model)
-        elif isinstance(model, list):
-            self.model = Distribution(model[0])
-        elif isinstance(model, Distribution) is True:
-            self.model = model
-
-        if theta_prior_dist is None and theta_prior_params is None:
-            self.theta_prior_distribution = Distribution('Uniform', [0, 10 ** 6])
-
-        elif theta_prior_params is None and theta_prior_dist is not None:
-            raise RuntimeError('The parameters of the prior distribution models should be provided.')
-
-        elif theta_prior_dist is not None and theta_prior_params is not None:
-            if isinstance(theta_prior_dist, str) is True and isinstance(theta_prior_params, str) is True:
-                self.theta_prior_distribution = Distribution(theta_prior_dist[0], theta_prior_params)
-            elif isinstance(theta_prior_dist, list):
-                self.theta_prior_distribution = Distribution(theta_prior_dist[0], theta_prior_params)
-            elif isinstance(theta_prior_dist, str) is True:
-                self.theta_prior_distribution = Distribution(theta_prior_dist, theta_prior_params)
-            elif isinstance(theta_prior_dist, list) is True and isinstance(theta_prior_dist, list) is True:
-                self.theta_prior_distribution = Distribution(theta_prior_dist[0], theta_prior_params[0])
-            elif isinstance(theta_prior_dist, Distribution) is True:
-                self.theta_prior_distribution = theta_prior_dist
-            else:
-                print('Error: The prior models should be of type string or of type Distribution.')
+        self.seed = seed
 
         # Properties for the MCMC
         if pdf_proposal_type is None:
@@ -254,66 +232,45 @@ class BayesParameterEstimation:
             self.nsamples = nsamples
 
         if jump is None:
-            self.jump = 1
+            self.jump = 0
         else:
             self.jump = jump
 
         if nburn is None:
-            self.nburn = 1
+            self.nburn = 0
         else:
             self.nburn = nburn
 
-        self.samples, self.MLE = self.run_bayes_parameter_estimation()
-        del self.algorithm, self.jump, self.method, self.nburn, self.nsamples, self. pdf_proposal_scale
+        self.samples = self.run_bayes_parameter_estimation()
+        del self.algorithm, self.jump, self.nburn, self.nsamples, self. pdf_proposal_scale
         del self.pdf_proposal_type
 
     def run_bayes_parameter_estimation(self):
-        print('UQpy: Running parameter estimation for candidate model:', self.model.name)
 
-        if self.model.n_params > 3:
-            raise RuntimeError('Only distributions with up to three-dimensional parameters are available in UQpy.')
+        if self.model.name is not None:
+            print('UQpy: Running parameter estimation for candidate model:', self.model.name)
+        else:
+            print('UQpy: Running parameter estimation for candidate model')
 
-        from UQpy.SampleMethods import MCMC
+        if self.seed is None:
+            mle = MLEstimation(model_instance=self.model, data=self.data)
+            self.seed = mle.param
 
-        seed = np.array(self.model.fit(self.data))
-
-        '''
+        self.pdf_target = partial(self.target_post)
         z = MCMC(dimension=self.model.n_params, pdf_proposal_type=self.pdf_proposal_type,
                  pdf_proposal_scale=self.pdf_proposal_scale,
-                 algorithm=self.algorithm, jump=self.jump, seed=seed, nburn=self.nburn, nsamples=self.nsamples,
-                 pdf_target_type='joint_pdf', pdf_target=self.ln_prob)
+                 algorithm=self.algorithm, jump=self.jump, seed=self.seed, nburn=self.nburn, nsamples=self.nsamples,
+                 pdf_target_type='joint_pdf', pdf_target=self.pdf_target)
         
-        samples = z.samples
-        '''
-
-        import emcee
-
-        p0 = [seed + 1e-3*np.random.rand(self.model.n_params) for i in range(self.walkers)]
-        sampler = emcee.EnsembleSampler(self.walkers, self.model.n_params, self.lnprob, args=[self.data])
-        sampler.run_mcmc(p0, self.nsamples)
-        samples = sampler.chain[:, 50:, :].reshape((-1, self.model.n_params))
-
-        log_like = np.zeros(samples.shape[0])
-        for i in range(samples.shape[0]):
-            log_like[i] = np.sum(self.model.log_pdf(self.data, samples[i, :]))
-
         print('UQpy: Parameter estimation analysis completed!')
 
-        if self.method == 'MLE' or self.method is None:
-            return samples, samples[np.argmax(log_like)]
+        return z.samples
 
-    def lnprob(self, theta, args):
+    def target_post(self, theta, args):
         _ = args
-        '''non-informative prior'''
-        lp = non_info_prior_dist(self.model.name, theta)
-
-        if not np.isfinite(lp):
-            return -np.inf
-
-        a = self.model.log_pdf(self.data, theta)
-        loglike = np.sum(a)
-
-        return (lp + loglike)
+        param = np.array(theta)
+        '''non-informative prior, p(theta)=1 everywhere'''
+        return np.exp(self.model.log_like(self.data, param))
 
 
 ########################################################################################################################

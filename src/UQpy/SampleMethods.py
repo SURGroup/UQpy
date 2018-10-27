@@ -776,7 +776,7 @@ class MCMC:
         rejects = 0
 
         # Defining an array to store the generated samples
-        samples = np.zeros([self.nsamples * self.jump, self.dimension])
+        samples = np.zeros([self.nsamples * self.jump + self.nburn, self.dimension])
 
         ################################################################################################################
         # Classical Metropolis-Hastings Algorithm with symmetric proposal density
