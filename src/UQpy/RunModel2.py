@@ -4,7 +4,6 @@ import pathlib
 import re
 
 
-
 class RunModel2:
     """
     Run a computational model at specified sample points.
@@ -13,7 +12,19 @@ class RunModel2:
     """
 
     def __init__(self, samples=None, ncores=1, model_script=None, input_template=None, var_names=None,
-                 model_class_name=None, output_script=None, output_class_name=None):
+                 model_class_name=None, output_script=None, output_class_name=None, ncpus=1):
+        """
+
+        :param samples:
+        :param ncores:
+        :param model_script:
+        :param input_template:
+        :param var_names:
+        :param model_class_name:
+        :param output_script:
+        :param output_class_name:
+        :param ncpus:
+        """
 
         # Check if samples are provided
         if samples is None:
@@ -24,6 +35,9 @@ class RunModel2:
 
         # number of cores
         self.ncores = ncores
+
+        # number of jobs
+        self.ncpus = ncpus
 
         # Check if the model script is a python script
         model_extension = pathlib.Path(model_script).suffix
@@ -44,7 +58,7 @@ class RunModel2:
         ################################################################################################################
         # Output handling
         self.output_script = output_script
-        # self.output_class_name = output_class_name
+        self.output_class_name = output_class_name  # TODO: Check if this is necessary or not
 
         # self.qoi_dict = {}
         # Initialize a list of nsim empty lists. The ith empty list will hold the qoi of the ith simulation.
@@ -78,13 +92,14 @@ class RunModel2:
                                          new_folder='InputFiles')
 
                 # Create the command to run the model
+                # TODO: Check if parallel processing is necessary or not. If not, build a different command string.
                 self.model_command = ("parallel -j" + str(self.ncores) + "'python3 -u " + str(self.model_script) +
-                                      " {1} ::: {1.." + str(self.nsim) + "}")
+                                      " {1} ::: {1.." + str(self.nsim) + "}' ")
 
                 # Create the command to process the output
                 self.output_command = ("parallel -j" + str(self.ncores) + "'python3 -u " + str(self.output_script) +
-                                       " {1} ::: {1.." + str(self.nsim) + "} ")
-                # TODO: Add variable n_proc
+                                       " {1} ::: {1.." + str(self.nsim) + "}' ")
+                # TODO: Add variable n_proc which uses the number of cpus and decides the number of jobs
 
         else:  # If there is no template input file
             # Import the python module
@@ -103,10 +118,10 @@ class RunModel2:
                 # If there is a model_class_name given, check if it is in the list.
                 if self.model_class_name in class_list:
                     # TODO: Get the signature of the class to get the arguments.
-                    self.model_command = ("parallel -j" + str(self.ncores)+ "'python3 python_model." + str(self.model_class_name) +
-                                          "(" + str(self.samples) + ")'")
-                    self.output_command = ("parallel -j" + str(self.ncores)+ "'python3 python_model." + str(self.output_class_name) +
-                                           "(" + str(self.samples) + ")'")
+                    self.model_command = ("parallel -j" + str(self.ncores) + "'python3 python_model." +
+                                          str(self.model_class_name) + "(" + str(self.samples) + ")'")
+                    self.output_command = ("parallel -j" + str(self.ncores) + "'python3 python_model." +
+                                           str(self.output_class_name) + "(" + str(self.samples) + ")'")
                     # TODO: Check if output class is necessary. If not, get rid of the output class and get output from
                     # module.
                 else:
@@ -124,14 +139,13 @@ class RunModel2:
         # TODO: Check if qoi output can be captured by subprocess cleanly without the output printed to screen.
         self._collect_output(self.qoi_list, qoi_output, pos)
 
-
     ####################################################################################################################
     # Helper functions
     def _create_input_files(self, file_name, num, text, new_folder='InputFiles'):
         if not os.path.exists(new_folder):
             os.makedirs(new_folder)
         base_name = os.path.splitext(os.path.basename(file_name))
-        new_name = os.path.join(new_folder,base_name[0]+"_"+str(num)+base_name[1])
+        new_name = os.path.join(new_folder, base_name[0] + "_" + str(num) + base_name[1])
         with open(new_name, 'w') as f:
             f.write(text)
         return
@@ -155,7 +169,6 @@ class RunModel2:
     def _collect_output(self, qoi_list, qoi_output, pos):
         qoi_list[pos] = list(qoi_output)
         return qoi_list
-
 
 # if __name__ == "__main__":
 #     RunModel2._input()
