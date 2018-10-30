@@ -42,6 +42,7 @@ class SRM:
 
     :rtype: samples: numpy.ndarray
     """
+
     # Created by Lohit Vandanapu
     # Last Modified:08/04/2018 Lohit Vandanapu
 
@@ -54,13 +55,15 @@ class SRM:
         self.case = case
         if self.case == 'uni':
             self.n = len(S.shape)
-            self.phi = np.random.uniform(size=np.append(self.nsamples, np.ones(self.n, dtype=np.int32) * self.nw)) * 2 * np.pi
+            self.phi = np.random.uniform(
+                size=np.append(self.nsamples, np.ones(self.n, dtype=np.int32) * self.nw)) * 2 * np.pi
             self.samples = self._simulate_uni(self.phi)
         elif self.case == 'multi':
             self.m = self.S.shape[0]
             self.n = len(S.shape[1:])
             self.g = g
-            self.phi = np.random.uniform(size=np.append(self.nsamples, np.append(self.m, np.ones(self.n, dtype=np.int32) * self.nw))) * 2 * np.pi
+            self.phi = np.random.uniform(
+                size=np.append(self.nsamples, np.append(self.m, np.ones(self.n, dtype=np.int32) * self.nw))) * 2 * np.pi
             self.samples = self._simulate_multi(self.phi)
 
     def _simulate_uni(self, phi):
@@ -99,7 +102,7 @@ class SRM:
         samples_list = []
         for i in range(self.m):
             samples = 0
-            for j in range(i+1):
+            for j in range(i + 1):
                 B = H_jk[i, j] * np.sqrt(2 ** (self.n + 1) * np.prod(self.dw)) * np.exp(phi[:, j] * 1.0j)
                 sample = np.fft.fftn(B, np.ones(self.n, dtype=np.int32) * self.nt)
                 samples += np.real(sample)
@@ -141,6 +144,7 @@ class BSRM:
 
     :rtype samples: numpy.ndarray
     """
+
     # Created by Lohit Vandanapu
     # Last Modified:08/04/2018 Lohit Vandanapu
 
@@ -194,7 +198,7 @@ class BSRM:
                 wi = wk - wj
                 if self.B_Ampl[(*wi, *wj)] > 0 and self.PP[(*wi, *[])] * self.PP[(*wj, *[])] != 0:
                     self.Bc2[(*wi, *wj)] = self.B_Ampl[(*wi, *wj)] ** 2 / (
-                                self.PP[(*wi, *[])] * self.PP[(*wj, *[])] * self.S[(*wk, *[])]) * self.dw ** self.n
+                            self.PP[(*wi, *[])] * self.PP[(*wj, *[])] * self.S[(*wk, *[])]) * self.dw ** self.n
                     self.sum_Bc2[(*wk, *[])] = self.sum_Bc2[(*wk, *[])] + self.Bc2[(*wi, *wj)]
                 else:
                     self.Bc2[(*wi, *wj)] = 0
@@ -235,7 +239,8 @@ class BSRM:
 
 class KLE:
     """
-    A class to simulate Stochastic Processes from a given auto-correlation function based on the Karhunen-Louve Expansion
+    A class to simulate Stochastic Processes from a given auto-correlation function based on the Karhunen-Louve
+    Expansion
 
     Input:
 
@@ -249,6 +254,7 @@ class KLE:
 
     :rtype samples: numpy.ndarray
     """
+
     # Created by Lohit Vandanapu
     # Last Modified:08/04/2018 Lohit Vandanapu
 
@@ -291,6 +297,7 @@ class Translation:
     :rtype samples_ng: numpy.ndarray
     :rtype R_ng: numpy.ndarray
     """
+
     # Created by Lohit Vandanapu
     # Last Modified:08/06/2018 Lohit Vandanapu
 
@@ -367,6 +374,7 @@ class InverseTranslation:
     :rtype samples_g: numpy.ndarray
     :rtype R_g: numpy.ndarray
     """
+
     # Created by Lohit Vandanapu
     # Last Modified:08/06/2018 Lohit Vandanapu
 
@@ -393,7 +401,7 @@ class InverseTranslation:
         error0 = 100
         max_iter = 20
         corr0 = np.zeros_like(corr_norm0)
-        corr1 = np.zeros_like(corr_norm0)
+        corr_norm1 = corr_norm0
 
         for ii in range(max_iter):
             for i in itertools.product(*[range(self.num) for _ in range(self.dim)]):
