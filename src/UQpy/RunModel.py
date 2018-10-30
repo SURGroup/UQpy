@@ -1,6 +1,26 @@
+# UQpy is distributed under the MIT license.
+#
+# Copyright (C) 2018  -- Michael D. Shields
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+# persons to whom the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+# Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+"""This module contains functionality for the run model method supported in UQpy."""
+
 import os
 import numpy as np
 import sys
+
 
 class RunModel:
 
@@ -15,7 +35,7 @@ class RunModel:
     :param samples: The sample values at which the model will be evaluated. Samples can be passed directly as an array
                         or can be passed through the text file 'UQpy_Samples.txt'. If passing samples via text file, set
                         samples = None or do not set the samples input.
-    :type samples: numpy array
+    :type samples: ndarray
 
     :param dimension: The dimension of the random variable whose samples are being passed to the model.
     :type dimension: int
@@ -27,7 +47,6 @@ class RunModel:
                                 in list form where there is one item in the list per sample. Each item in the qoi list
                                 may take type the user prefers.
             Default: None
-
     :type model_type: str
 
     :param model_script: Defines the script (must be either a shell script (.sh) or a python script (.py)) used to call
@@ -62,22 +81,23 @@ class RunModel:
     :type cpu: int
 
     Output:
-    :param model_eval: An instance of a sub-class that contains the model solutions. Depending on how the model is run,
-                            model_eval is an instance of a different class.
-                       If model_type = 'python', model_eval is an instance of the class RunPythonModel defined in the
+    :return model_eval: An instance of a sub-class that contains the model solutions. Depending on how the model
+                            is run, model_eval is an instance of a different class.
+                        If model_type = 'python', model_eval is an instance of the class RunPythonModel defined in the
                             python model_script.
-                       If model_type = 'None' and cpu <= 1, model_eval is an instance of the class RunSerial
-                       If model_type = 'None' and cpu > 1, model_eval is an instance of the class RunParallel
-                       Regardless of model_type, model_eval has the following key attributes:
-                            model_eval.samples = Sample values at which the model has been run.
+                        If model_type = 'None' and cpu <= 1, model_eval is an instance of the class RunSerial
+                        If model_type = 'None' and cpu > 1, model_eval is an instance of the class RunParallel
+                        Regardless of model_type, model_eval has the following key attributes:
+                            model_eval.samples = Sample values at which the model has been evaluated.
                             model_eval.QOI = Solution of the model at each sample value.
-    :type: model_eval: The two key attributes of model_eval have the following type.
-                       model_eval.samples = numpy array
-                       model_eval.QOI = list
+    :rtype: model_eval: list
+                        In general it is a list. The two key attributes of model_eval have the following type:
+                                model_eval.samples = numpy array
+                                model_eval.QOI = list
     """
 
-    # Authors: Dimitris Giovanis, Michael D. Shields
-    # Updated: 5/1/18 by Michael D. Shields & Dimitris Giovanis
+    # Authors: Dimitris G. Giovanis, Michael D. Shields
+    # Last Modified: 6/7/18 by Dimitris G. Giovanis
 
     def __init__(self, samples=None, dimension=None, model_type=None, model_script=None, input_script=None,
                  output_script=None,  cpu=None):
@@ -88,13 +108,12 @@ class RunModel:
         self.input_script = input_script
         self.output_script = output_script
         self.dimension = dimension
-        self.model_eval = []
+        self.model_eval = list
 
         # If samples=None, then samples must be imported from UQpy_Samples.txt. Load the file and assign the samples to
         # 'self.samples'. Otherwise, read the samples as input.
         if samples is None and os.path.isfile('UQpy_Samples.txt'):
             self.samples = np.loadtxt('UQpy_Samples.txt', dtype=np.float32)
-            print(self.samples.ndim)
             if self.samples.ndim == 1:
                 if self.dimension == 1:
                     self.samples = self.samples.reshape(self.samples.shape[0], self.dimension)
@@ -116,7 +135,7 @@ class RunModel:
             model_script = self.model_script[:-3]
             python_model = __import__(model_script)
             print("\nEvaluating the model...\n")
-            self.model_eval = python_model.RunPythonModel(self.samples,self.dimension)
+            self.model_eval = python_model.RunPythonModel(self.samples, self.dimension)
 
         ################################################################################################################
         # Run a third-party software model with file-passing
@@ -129,14 +148,13 @@ class RunModel:
             # Run the model from this directory.
             # Move the data generated by the model to the directory 'UQpyOut'
             # Remove 'tmp' after completion.
-
             folder_name = 'UQpyOut'
-            output_directory = os.path.join(os.sep, current_dir, folder_name)
+            output_directory = os.path.join(current_dir, folder_name)
 
             # Create a list of all of the working files
             model_files = list()
-            for fname in os.listdir(current_dir):
-                path = os.path.join(current_dir, fname)
+            for f_name in os.listdir(current_dir):
+                path = os.path.join(current_dir, f_name)
                 if not os.path.isdir(path):
                     model_files.append(path)
 
@@ -145,7 +163,7 @@ class RunModel:
             if os.path.exists(dir_path) and os.path.isdir(dir_path):
                 shutil.rmtree(dir_path)
             os.makedirs('tmp', exist_ok=False)
-            work_dir = os.path.join(os.sep, current_dir, 'tmp')
+            work_dir = os.path.join(current_dir, 'tmp')
 
             # Copy files from the model list to tmp
             for file_name in model_files:
@@ -209,11 +227,11 @@ class RunModel:
         """
         A subclass of RunModel to run a third-party software model serially (without parallel processing).
 
-        Most attributes of this subclass are inhereted from RunModel. The only variable that is not inherited is QOI.
+        Most attributes of this subclass are inherited from RunModel. The only variable that is not inherited is QOI.
 
         Input:
         :param samples: Inherited from RunModel. See its documentation.
-        :type samples: numpy array
+        :type samples: ndarray
 
         :param dimension: Inherited from RunModel. See its documentation.
         :type dimension: int
@@ -228,14 +246,14 @@ class RunModel:
         :type output_script: str
 
         Output:
-        :param QOI: List containing the Quantity of Interest from the simulations
+        :return QOI: List containing the Quantity of Interest from the simulations
                     Each item in the list corresponds to one simulation
-        :type QOI: list
-                    Each item in the list may be of arbitrary data type (e.g. int, float, nparray, etc.)
+        :rtype QOI: list
+                    Each item in the list may be of arbitrary data type (e.g. int, float, ndarray, etc.)
         """
 
-        # Authors: Dimitris Giovanis, Michael D. Shields
-        # Updated: 5/1/18 by Michael D. Shields & Dimitris Giovanis
+        # Authors: Dimitris G. Giovanis, Michael D. Shields
+        # Updated: 6/7/18 by Michael D. Shields & Dimitris G. Giovanis
 
         def __init__(self, samples=None, dimension=None, model_script=None, input_script=None, output_script=None):
 
@@ -244,7 +262,7 @@ class RunModel:
             self.input_script = input_script
             self.output_script = output_script
             self.samples = samples
-            self.QOI = []
+            self.QOI = list()
 
             for i in range(self.samples.shape[0]):
 
@@ -302,7 +320,7 @@ class RunModel:
 
         Input:
         :param samples: Inherited from RunModel. See its documentation.
-        :type samples: numpy array
+        :type samples: ndarray
 
         :param dimension: Inherited from RunModel. See its documentation.
         :type dimension: int
@@ -317,10 +335,10 @@ class RunModel:
         :type output_script: str
 
         Output:
-        :param QOI: List containing the Quantity of Interest from the simulations
+        :return QOI: List containing the Quantity of Interest from the simulations
                     Each item in the list corresponds to one simulation
-        :type QOI: list
-                    Each item in the list may be of arbitrary data type (e.g. int, float, nparray, etc.)
+        :rtype QOI: list
+                    Each item in the list may be of arbitrary data type (e.g. int, float, ndarray, etc.)
         """
 
         # Authors: Dimitris Giovanis, Michael D. Shields
@@ -340,13 +358,13 @@ class RunModel:
             from multiprocessing import Queue
 
             jobs_per_cpu = int(np.floor(self.samples.shape[0]/self.CPUs))
-            jobs_remaining = np.mod(self.samples.shape[0],self.CPUs)
+            jobs_remaining = np.mod(self.samples.shape[0], self.CPUs)
             if jobs_per_cpu == 0:
                 self.CPUs = jobs_remaining
                 print('The number of CPUs used is {}\n '.format(self.CPUs))
 
             # Break the simulation set into sets to be run over each CPU
-            [batches, batch_ind] = self.chunk_samples_cpus()
+            batch_ind = self.chunk_samples_cpu()
 
             # Initialize the parallel processing queue and processes
             que = Queue()
@@ -370,7 +388,7 @@ class RunModel:
 
         ################################################################################################################
         # Function to call the model
-        def run_parallel_model(self, job_inds, que):
+        def run_parallel_model(self, job_index, que):
 
             if self.samples.size == 1:
                 self.samples = self.samples.reshape(1, 1)
@@ -381,7 +399,7 @@ class RunModel:
                 self.samples = self.samples.reshape(self.samples.shape[0], 1)
 
             model_eval = list()
-            for i in job_inds:
+            for i in job_index:
 
                 # Write each value of UQpyOut.txt into a *.txt file
                 np.savetxt('UQpy_run_{0}.txt'.format(int(i)), self.samples[i, :], newline=' ', delimiter=',',
@@ -417,46 +435,25 @@ class RunModel:
                 file_new = src_files.replace("UQpy_eval_{0}.txt".format(int(i)), "Model_{0}.txt".format(int(i)))
                 os.rename(src_files, file_new)
 
-
-            model_eval = que.put([job_inds, model_eval])
+            model_eval = que.put([job_index, model_eval])
 
             return model_eval
 
         ################################################################################################################
         # Chunk the samples into batches
-        def chunk_samples_cpus(self):
 
-            size_ = np.array([np.ceil(self.samples.shape[0]/self.CPUs) for i in range(self.CPUs)]).astype(int)
+        def chunk_samples_cpu(self):
+
+            size_ = np.array([np.ceil(self.samples.shape[0]/self.CPUs)]).astype(int)
             dif = np.sum(size_) - self.samples.shape[0]
             for k in range(dif):
                 size_[k] = size_[k] - 1
-            batches = [None]*self.CPUs
-            batch_ind = [None]*self.CPUs
+            batches = np.zeros(self.CPUs)
+            batch_ind = np.zeros(self.CPUs)
             for i in range(self.CPUs):
                 if i == 0:
                     batch_ind[i] = range(size_[i])
                 else:
                     batch_ind[i] = range(int(np.sum(size_[:i])), int(np.sum(size_[:i+1])))
                 batches[i] = self.samples[batch_ind[i], :]
-            return batches, batch_ind
-
-
-        # This code may be used in the future to extend for distributed computing for HPC use.
-        # def chunk_samples_nodes(samples, args):
-        #
-        #     # In case of cluster divide the samples into chunks in order to sent to each processor
-        #     chunks = args.nodes
-        #     size = np.array([np.ceil(samples.shape[0]/chunks) in range(args.nodes)]).astype(int)
-        #     dif = np.sum(size) - samples.shape[0]
-        #     count = 0
-        #     for k in range(dif):
-        #         size[count] = size[count] - 1
-        #         count = count + 1
-        #     for i in range(args.nodes):
-        #         if i == 0:
-        #             lines = range(0, size[i])
-        #         else:
-        #             lines = range(int(np.sum(size[:i])), int(np.sum(size[:i+1])))
-        #
-        #         np.savetxt('UQpy_Batch_{0}.txt'.format(i+1), samples[lines, :],  fmt='%0.5f')
-        #         np.savetxt('UQpy_Batch_index_{0}.txt'.format(i+1), lines)
+            return batch_ind, batches
