@@ -4,11 +4,11 @@ from setuptools import setup, find_packages
 
 setup(
     name='UQpy',
-    version="0.1.0",
+    version="1.1.0",
     url='https://github.com/SURGroup/UQpy',
-    authors="Dimitris G. Giovanis, Michael D. Shields",
-    author_emails="dgiovan1@jhu.edu, michael.shields@jhu.edu",
-    license='Apache',
+    authors="Michael D. Shields, Dimitris G. Giovanis",
+    author_emails="michael.shields@jhu.edu, dgiovan1@jhu.edu",
+    license='MIT',
     platforms='OSX',
     packages=find_packages("src"),
     package_dir={"": "src"},
@@ -17,10 +17,10 @@ setup(
         "numpy", "scipy", "chaospy", "pyDOE", "scikit-learn"
     ],
     classifiers=[
-        'Development Status :: 1 - Production/Unstable',
+        'Programming Language :: Python :: 3',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Mathematics',
-        'License :: Apache',
+        'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
     ],
 )
