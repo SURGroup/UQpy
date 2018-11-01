@@ -1129,7 +1129,8 @@ class IS:
     # Last Modified: 10/28/18 by Dimitris Giovanis
 
     def __init__(self, dimension=None, pdf_proposal=None, pdf_proposal_params=None,
-                 pdf_target_params=None, pdf_target=None,  nsamples=None):
+                 pdf_target_params=None, pdf_target=None,  nsamples=None, pdf_target_type=None,
+                 pdf_proposal_type=None):
 
         self.dimension = dimension
         self.pdf_proposal = pdf_proposal
@@ -1137,12 +1138,9 @@ class IS:
         self.pdf_target = pdf_target
         self.pdf_target_params = pdf_target_params
         self.nsamples = nsamples
-        self.target_distribution = [None] * self.dimension
-        self.proposal_distribution = [None] * self.dimension
+        self.pdf_target_type = pdf_target_type
+        self.pdf_proposal_type = pdf_proposal_type
         self.init_is()
-        for i in range(self.dimension):
-            self.target_distribution[i] = Distribution(self.pdf_target[i], self.pdf_target_params[i])
-            self.proposal_distribution[i] = Distribution(self.pdf_proposal[i], self.pdf_proposal_params[i])
 
         self.samplesU01, self.samples, self.weights = self.run_is()
 
@@ -1153,16 +1151,16 @@ class IS:
         x = np.zeros_like(samples)
 
         for j in range(self.dimension):
-            i_cdf_proposal = self.proposal_distribution[j].icdf
-            x[:, j] = i_cdf_proposal(samples[:, j], self.proposal_distribution[j].params)
+            i_cdf_proposal = self.pdf_proposal[j].icdf
+            x[:, j] = i_cdf_proposal(samples[:, j], self.pdf_proposal[j].params)
 
         for i in range(self.nsamples):
             p = np.zeros(self.dimension)
             q = np.zeros_like(p)
             w = np.zeros_like(p)
             for j in range(self.dimension):
-                p[j] = self.proposal_distribution[j].pdf(x[i, j], self.proposal_distribution[j].params)
-                q[j] = self.target_distribution[j].pdf(x[i, j], self.target_distribution[j].params)
+                p[j] = self.pdf_proposal[j].pdf(x[i, j], self.pdf_proposal[j].params)
+                q[j] = self.pdf_target[j].pdf(x[i, j], self.pdf_target[j].params)
                 w[j] = q[j]/p[j]
 
             weights[i, :] = w
@@ -1176,45 +1174,71 @@ class IS:
 
     def init_is(self):
 
-        # Ensure that the number of samples is defined
-        if self.nsamples is None:
-            raise NotImplementedError("Exit code: Number of samples not defined.")
-
-        # Check the dimension
         if self.dimension is None:
-            self.dimension = len(self.pdf_target)
+            raise NotImplementedError('Exit code: Dimension is not defined.')
 
-        # Ensure that target distribution parameters are assigned
-        if self.pdf_target_params is None:
-            raise NotImplementedError("Exit code: Target distribution parameters not defined.")
+        # Check nsamples
+        if self.nsamples is None:
+            raise NotImplementedError('Exit code: Number of samples is not defined.')
 
-        # Ensure that proposal distribution parameters are assigned
-        if self.pdf_proposal_params is None:
-            raise NotImplementedError("Exit code: Proposal distribution parameters not defined.")
+        # Check pdf_target_type
+        if self.pdf_target_type is None:
+            self.pdf_target_type = 'joint_pdf'
+        if self.pdf_target_type not in ['joint_pdf', 'marginal_pdf']:
+            raise ValueError('Exit code: Unrecognized type for target distribution. Supported distributions: '
+                             'joint_pdf', 'marginal_pdf.')
 
-        # Check target dist_params
-        if type(self.pdf_target_params).__name__ != 'list':
-            self.pdf_target_params = [self.pdf_target_params]
-        if len(self.pdf_target_params) == 1 and self.dimension != 1:
-            self.pdf_target_params = self.pdf_target_params * self.dimension
-        elif len(self.pdf_target_params) != self.dimension:
-            raise NotImplementedError("Length of pdf_target_params list should be 1 or equal to dimension.")
+        # Check pdf_proposal_type
+        if self.pdf_proposal_type is None:
+            self.pdf_proposal_type = 'joint_pdf'
+        if self.pdf_proposal_type not in ['joint_pdf', 'marginal_pdf']:
+            raise ValueError('Exit code: Unrecognized type for proposal distribution. Supported distributions: '
+                             'joint_pdf', 'marginal_pdf.')
 
-        # Check for dimensional consistency
-        if len(self.pdf_target_params) != len(self.pdf_target):
-            raise NotImplementedError("Exit code: Incompatible dimensions.")
+        if self.pdf_proposal is None:
+            raise ValueError('Exit code: A proposal distribution is required.')
 
-        # Check proposal dist_params
-        if type(self.pdf_proposal_params).__name__ != 'list':
-            self.pdf_proposal_params = [self.pdf_proposal_params]
-        if len(self.pdf_proposal_params) == 1 and self.dimension != 1:
-            self.pdf_proposal_params = self.pdf_proposal_params * self.dimension
-        elif len(self.pdf_proposal_params) != self.dimension:
-            raise NotImplementedError("Length of pdf_proposal_params list should be 1 or equal to dimension.")
+        if self.pdf_target is None:
+            raise ValueError('Exit code: A target distribution is required.')
 
-        # Check for dimensional consistency
-        if len(self.pdf_proposal_params) != len(self.pdf_proposal):
-            raise NotImplementedError("Exit code: Incompatible dimensions.")
+        # Check pdf_target
+        if type(self.pdf_target).__name__ == 'str':
+            if self.dimension == 1:
+                self.pdf_target = [Distribution(self.pdf_target, self.pdf_target_params)]
+                self.pdf_target_params = [self.pdf_target_params]
+            else:
+                self.pdf_target = [Distribution(self.pdf_target, self.pdf_target_params)] * self.dimension
+                self.pdf_target_params = [self.pdf_target_params]* self.dimension
+        elif type(self.pdf_target).__name__ == 'list':
+            for i in range(len(self.pdf_target)):
+                self.pdf_target[i] = Distribution(self.pdf_target[i], self.pdf_target_params[i])
+
+        # Check pdf_proposal
+        if isinstance(self.pdf_proposal, Distribution):
+            self.pdf_proposal = [self.pdf_proposal]
+        if type(self.pdf_proposal).__name__ == 'str':
+            if self.dimension == 1:
+                self.pdf_proposal = [Distribution(self.pdf_proposal, self.pdf_proposal_params)]
+                self.pdf_proposal_params = [self.pdf_proposal_params]
+            else:
+                self.pdf_proposal = [Distribution(self.pdf_proposal, self.pdf_proposal_params)] * self.dimension
+                self.pdf_proposal_params = [self.pdf_proposal_params] * self.dimension
+        elif type(self.pdf_proposal).__name__ == 'list':
+            for i in range(len(self.pdf_proposal)):
+                if isinstance(self.pdf_proposal[i], Distribution):
+                    self.pdf_proposal[i] = self.pdf_proposal[i]
+                else:
+                    self.pdf_proposal[i] = Distribution(self.pdf_proposal[i], self.pdf_proposal_params[i])
+
+            # Check pdf_target_params
+        for i in range(len(self.pdf_target)):
+            if self.pdf_target[i].params is None:
+                raise ValueError('Exit code: Parameters for the target distribution are required.')
+
+            # Check pdf_proposal_params
+        for i in range(len(self.pdf_proposal)):
+            if self.pdf_proposal[i].params is None:
+                raise ValueError('Exit code: Parameters for the proposal distribution are required.')
 
 
 ########################################################################################################################
