@@ -796,7 +796,10 @@ class Distribution:
 
             import custom_dist
             self.name = name
-            self.pdf = getattr(custom_dist, name)
+            if hasattr(custom_dist, 'pdf'):
+                self.pdf = getattr(custom_dist, 'pdf')
+            else:
+                self.pdf = getattr(custom_dist, 'pdf', 'Attribute not defined.')
             if hasattr(custom_dist, 'cdf'):
                 self.cdf = getattr(custom_dist, 'cdf')
             else:
