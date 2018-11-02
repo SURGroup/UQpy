@@ -854,8 +854,8 @@ class MCMC:
 
                         if self.pdf_proposal_type[j] == 'Normal':
                             candidate = np.random.normal(samples[i, j], self.pdf_proposal_scale[j])
-                            p_proposal = pdf_(candidate, self.pdf_target_params)
-                            p_current = pdf_(samples[i, j], self.pdf_target_params)
+                            p_proposal = pdf_(candidate, self.pdf_target_params[j])
+                            p_current = pdf_(samples[i, j], self.pdf_target_params[j])
                             p_accept = p_proposal / p_current
 
                             accept = np.random.random() < p_accept
@@ -869,8 +869,8 @@ class MCMC:
                             candidate = np.random.uniform(low=samples[i, j] - self.pdf_proposal_scale[j] / 2,
                                                           high=samples[i, j] + self.pdf_proposal_scale[j] / 2, size=1)
 
-                            p_proposal = pdf_(candidate, self.pdf_target_params)
-                            p_current = pdf_(samples[i, j], self.pdf_target_params)
+                            p_proposal = pdf_(candidate, self.pdf_target_params[j])
+                            p_current = pdf_(samples[i, j], self.pdf_target_params[j])
                             p_accept = p_proposal / p_current
 
                             accept = np.random.random() < p_accept
@@ -1028,35 +1028,45 @@ class MCMC:
                                           'Affine Invariant Ensemble with Stretch Moves (Stretch).')
 
         # Check pdf_target
-        if type(self.pdf_target).__name__ == 'str':
-            self.pdf_target = Distribution(self.pdf_target).pdf
-        if self.pdf_target is None and self.algorithm is 'MMH':
-            if self.dimension == 1 or self.pdf_target_type is 'marginal_pdf':
-                def target(x, dummy):
-                    _ = dummy
-                    return sp.norm.pdf(x)
-                if self.dimension == 1:
-                    self.pdf_target = [target]
-                else:
-                    self.pdf_target = [target] * self.dimension
-            else:
-                def target(x, dummy):
-                    _ = dummy
-                    return sp.multivariate_normal.pdf(x, mean=np.zeros(self.dimension), cov=np.eye(self.dimension))
-                self.pdf_target = [target]
-        elif self.pdf_target is None:
-            if self.dimension == 1:
-                def target(x, dummy):
-                    _ = dummy
-                    return sp.norm.pdf(x)
-                self.pdf_target = [target]
-            else:
-                def target(x, dummy):
-                    _ = dummy
-                    return sp.multivariate_normal.pdf(x, mean=np.zeros(self.dimension), cov=np.eye(self.dimension))
-                self.pdf_target = [target]
+        if self.pdf_target is None:
+            raise NotImplementedError('UQpy Exit: Must specify a target distribution for MCMC.')
         elif type(self.pdf_target).__name__ != 'list':
             self.pdf_target = [self.pdf_target]
+        if self.pdf_target_type is 'marginal_pdf':
+            for i in range(self.dimension):
+                if type(self.pdf_target[i]).__name__ == 'str':
+                    self.pdf_target[i] = Distribution(self.pdf_target[i]).pdf
+
+
+        # if type(self.pdf_target).__name__ == 'str':
+        #     self.pdf_target = Distribution(self.pdf_target).pdf
+        # if self.pdf_target is None and self.algorithm is 'MMH':
+        #     if self.dimension == 1 or self.pdf_target_type is 'marginal_pdf':
+        #         def target(x, dummy):
+        #             _ = dummy
+        #             return sp.norm.pdf(x)
+        #         if self.dimension == 1:
+        #             self.pdf_target = [target]
+        #         else:
+        #             self.pdf_target = [target] * self.dimension
+        #     else:
+        #         def target(x, dummy):
+        #             _ = dummy
+        #             return sp.multivariate_normal.pdf(x, mean=np.zeros(self.dimension), cov=np.eye(self.dimension))
+        #         self.pdf_target = [target]
+        # elif self.pdf_target is None:
+        #     if self.dimension == 1:
+        #         def target(x, dummy):
+        #             _ = dummy
+        #             return sp.norm.pdf(x)
+        #         self.pdf_target = [target]
+        #     else:
+        #         def target(x, dummy):
+        #             _ = dummy
+        #             return sp.multivariate_normal.pdf(x, mean=np.zeros(self.dimension), cov=np.eye(self.dimension))
+        #         self.pdf_target = [target]
+        # elif type(self.pdf_target).__name__ != 'list':
+        #     self.pdf_target = [self.pdf_target]
 
         # Check pdf_target_params
         if self.pdf_target_params is None:
