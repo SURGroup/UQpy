@@ -743,14 +743,66 @@ class Distribution:
 
             self.moments = partial(moments)
 
+
         elif os.path.isfile('custom_dist.py') is True:
+
             import custom_dist
-            self.name = 'custom'
-            self.pdf = getattr(custom_dist, 'pdf', 'Attribute not defined.')
-            self.cdf = getattr(custom_dist, 'cdf', 'Attribute not defined.')
-            self.icdf = getattr(custom_dist, 'icdf', 'Attribute not defined.')
-            self.log_pdf = getattr(custom_dist, 'log_pdf', 'Attribute not defined.')
-            self.rvs = getattr(custom_dist, 'rvs', 'Attribute not defined.')
-            self.fit = getattr(custom_dist, 'fit', 'Attribute not defined.')
-            self.moments = getattr(custom_dist, 'moments', 'Attribute not defined.')
+
+            self.name = name
+
+            if hasattr(custom_dist, 'pdf'):
+
+                self.pdf = getattr(custom_dist, 'pdf')
+
+            else:
+
+                self.pdf = getattr(custom_dist, 'pdf', 'Attribute not defined.')
+
+            if hasattr(custom_dist, 'cdf'):
+
+                self.cdf = getattr(custom_dist, 'cdf')
+
+            else:
+
+                self.cdf = getattr(custom_dist, 'cdf', 'Attribute not defined.')
+
+            if hasattr(custom_dist, 'icdf'):
+
+                self.icdf = getattr(custom_dist, 'icdf')
+
+            else:
+
+                self.icdf = getattr(custom_dist, 'icdf', 'Attribute not defined.')
+
+            if hasattr(custom_dist, 'log_pdf'):
+
+                self.log_pdf = getattr(custom_dist, 'log_pdf')
+
+            else:
+
+                self.log_pdf = getattr(custom_dist, 'log_pdf', 'Attribute not defined.')
+
+            if hasattr(custom_dist, 'rvs'):
+
+                self.rvs = getattr(custom_dist, 'rvs')
+
+            else:
+
+                self.rvs = getattr(custom_dist, 'rvs', 'Attribute not defined.')
+
+            if hasattr(custom_dist, 'fit'):
+
+                self.fit = getattr(custom_dist, 'fit')
+
+            else:
+
+                self.fit = getattr(custom_dist, 'fit', 'Attribute not defined.')
+
+            if hasattr(custom_dist, 'moments'):
+
+                self.moments = getattr(custom_dist, 'moments')
+
+            else:
+
+                self.moments = getattr(custom_dist, 'moments', 'Attribute not defined.')
 

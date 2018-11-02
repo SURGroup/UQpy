@@ -754,7 +754,7 @@ class MCMC:
 
     def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None, pdf_target_type=None,
                  pdf_target=None, pdf_target_params=None, algorithm=None, jump=None, nsamples=None, seed=None,
-                 nburn=None):
+                 nburn=None, text_out=False):
 
         self.pdf_proposal_type = pdf_proposal_type
         self.pdf_proposal_scale = pdf_proposal_scale
@@ -767,16 +767,18 @@ class MCMC:
         self.dimension = dimension
         self.seed = seed
         self.nburn = nburn
+        self.text_out = text_out
         self.init_mcmc()
         if self.algorithm is 'Stretch':
             self.ensemble_size = len(self.seed)
         self.samples = self.run_mcmc()
 
+
     def run_mcmc(self):
         rejects = 0
 
         # Defining an array to store the generated samples
-        samples = np.zeros([self.nsamples * self.jump, self.dimension])
+        samples = np.zeros([self.nsamples * self.jump + self.nburn, self.dimension])
 
         ################################################################################################################
         # Classical Metropolis-Hastings Algorithm with symmetric proposal density
@@ -936,7 +938,8 @@ class MCMC:
         # Return the samples
 
         if self.algorithm is 'MMH' or self.algorithm is 'MH':
-            print('UQpy: Successful execution of the MCMC design')
+            if self.text_out:
+                print('UQpy: Successful execution of the MCMC design')
             return samples[self.nburn:self.nsamples * self.jump + self.nburn:self.jump]
         else:
             output = np.zeros((self.nsamples, self.dimension))
@@ -1026,7 +1029,7 @@ class MCMC:
 
         # Check pdf_target
         if type(self.pdf_target).__name__ == 'str':
-            self.pdf_target = Distribution(self.pdf_target)
+            self.pdf_target = Distribution(self.pdf_target).pdf
         if self.pdf_target is None and self.algorithm is 'MMH':
             if self.dimension == 1 or self.pdf_target_type is 'marginal_pdf':
                 def target(x, dummy):

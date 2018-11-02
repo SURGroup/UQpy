@@ -100,7 +100,7 @@ class RunModel:
     # Last Modified: 6/7/18 by Dimitris G. Giovanis
 
     def __init__(self, samples=None, dimension=None, model_type=None, model_script=None, input_script=None,
-                 output_script=None,  cpu=None):
+                 output_script=None,  cpu=None, text_out=False):
 
         self.CPUs = cpu
         self.model_type = model_type
@@ -109,6 +109,7 @@ class RunModel:
         self.output_script = output_script
         self.dimension = dimension
         self.model_eval = list
+        self.text_out = text_out
 
         # If samples=None, then samples must be imported from UQpy_Samples.txt. Load the file and assign the samples to
         # 'self.samples'. Otherwise, read the samples as input.
@@ -134,7 +135,8 @@ class RunModel:
 
             model_script = self.model_script[:-3]
             python_model = __import__(model_script)
-            print("\nEvaluating the model...\n")
+            if self.text_out:
+                print("\nEvaluating the model...\n")
             self.model_eval = python_model.RunPythonModel(self.samples, self.dimension)
 
         ################################################################################################################
@@ -186,7 +188,8 @@ class RunModel:
                 parallel_processing = False
 
             # Run the model
-            print("\nEvaluating the model...\n")
+            if self.text_out:
+                print("\nEvaluating the model...\n")
             if parallel_processing is True:
                 self.model_eval = self.RunParallel(samples=self.samples, cpu=self.CPUs, dimension=self.dimension,
                                                    model_script=self.model_script, input_script=self.input_script,

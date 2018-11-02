@@ -165,7 +165,7 @@ class SubsetSimulation:
 
     def __init__(self, dimension=None, samples_init=None, nsamples_ss=None, p_cond=None, pdf_target_type=None,
                  pdf_target=None, pdf_target_params=None, pdf_proposal_type=None, pdf_proposal_scale=None,
-                 algorithm=None, model_type=None, model_script=None, input_script=None, output_script=None):
+                 algorithm=None, model_type=None, model_script=None, input_script=None, output_script=None, seed=None):
 
         self.dimension = dimension
         self.samples_init = samples_init
@@ -185,7 +185,10 @@ class SubsetSimulation:
         self.samples = list()
         self.g_level = list()
         self.delta2 = list()
-
+        if seed is None:
+            self.seed = np.zeros(self.dimension)
+        else:
+            self.seed = seed
         # Hard-wire the maximum number of conditional levels.
         self.max_level = 20
 
@@ -197,9 +200,10 @@ class SubsetSimulation:
             print('UQpy: Running Subset Simulation....')
             [self.pf, self.cov] = self.run_subsim_mmh()
         elif self.algorithm == 'Stretch':
-            self.pf = self.run_subsim_stretch()
+            [self.pf, self.cov] = self.run_subsim_stretch()
         print('Done!')
 
+    # Run Subset Simulation using Modified Metropolis Hastings
     def run_subsim_mmh(self):
         step = 0
         n_keep = int(self.p_cond * self.nsamples_ss)
@@ -209,7 +213,7 @@ class SubsetSimulation:
             x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                           pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
                           pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
-                          algorithm=self.algorithm, nsamples=self.nsamples_ss, seed=np.zeros(self.dimension))
+                          algorithm=self.algorithm, nsamples=self.nsamples_ss, seed=self.seed)
             self.samples.append(x_init.samples)
         else:
             self.samples.append(self.samples_init)
@@ -231,12 +235,12 @@ class SubsetSimulation:
             self.g.append(self.g[step - 1][g_ind[:n_keep]])
 
             for i in range(self.nsamples_ss-n_keep):
-                seed = self.samples[step][i]
+                x0 = self.samples[step][i]
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                               pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
                               pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
-                              algorithm=self.algorithm, nsamples=2, seed=seed)
+                              algorithm=self.algorithm, nsamples=2, seed=x0)
 
                 x_temp = x_mcmc.samples[1].reshape((1, self.dimension))
                 g_model = RunModel(samples=x_temp, cpu=1, model_type=self.model_type, model_script=self.model_script,
@@ -260,10 +264,11 @@ class SubsetSimulation:
 
         n_fail = len([value for value in self.g[step] if value < 0])
         pf = self.p_cond**step*n_fail/self.nsamples_ss
-        cov = np.sum(self.delta2)
+        cov = np.sqrt(np.sum(self.delta2))
 
         return pf, cov
 
+    # Run Subset Simulation using the Affine Invariant Ensemble Sampler
     def run_subsim_stretch(self):
         step = 0
         n_keep = int(self.p_cond * self.nsamples_ss)
@@ -273,7 +278,7 @@ class SubsetSimulation:
             x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                           pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
                           pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
-                          algorithm='MMH', nsamples=self.nsamples_ss, seed=np.zeros(self.dimension))
+                          algorithm='MMH', nsamples=self.nsamples_ss, seed=self.seed)
             self.samples.append(x_init.samples)
         else:
             self.samples.append(self.samples_init)
@@ -286,6 +291,9 @@ class SubsetSimulation:
         g_ind = np.argsort(self.g[step])
         self.g_level.append(self.g[step][g_ind[n_keep]])
 
+        # Estimate coefficient of variation of conditional probability of first level
+        self.delta2.append(self.cov_sus(step) ** 2)
+
         while self.g_level[step] > 0:
 
             step = step + 1
@@ -293,12 +301,12 @@ class SubsetSimulation:
             self.g.append(self.g[step - 1][g_ind[:n_keep]])
 
             for i in range(self.nsamples_ss - n_keep):
-                seed = self.samples[step][i:i+n_keep]
+                x0 = self.samples[step][i:i+n_keep]
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                               pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
                               pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
-                              algorithm=self.algorithm, nsamples=n_keep+1, seed=seed)
+                              algorithm=self.algorithm, nsamples=n_keep+1, seed=x0)
 
                 x_temp = x_mcmc.samples[n_keep].reshape((1, self.dimension))
                 g_model = RunModel(samples=x_temp, cpu=1, model_type=self.model_type,
@@ -318,10 +326,13 @@ class SubsetSimulation:
 
             g_ind = np.argsort(self.g[step])
             self.g_level.append(self.g[step][g_ind[n_keep]])
+            self.delta2.append(self.cov_sus(step) ** 2)
 
         n_fail = len([value for value in self.g[step] if value < 0])
         pf = self.p_cond ** step * n_fail / self.nsamples_ss
-        return pf
+        cov = np.sqrt(np.sum(self.delta2))
+
+        return pf, cov
 
     def init_sus(self):
 
