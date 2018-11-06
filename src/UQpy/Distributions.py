@@ -23,7 +23,7 @@ import os
 
 
 # Authors: Dimitris G.Giovanis, Michael D. Shields
-# Last Modified: 7/18/18 by Dimitris G. Giovanis
+# Last Modified: 11/6/18 by Dimitris G. Giovanis
 
 
 ########################################################################################################################
@@ -33,15 +33,17 @@ import os
 
 class Distribution:
 
-    def __init__(self, name, parameters=None):
+    def __init__(self, name):
 
         """
             Description:
 
-            A module containing functions of a wide variaty of distributions that can be found in the package
+            A module containing functions of a wide variaty of known distributions that can be found in the package
             scipy.stats. The supported distributions are:
             [normal, uniform, binomial, beta, genextreme, chisquare, lognormal, gamma, exponential, cauchy, levy,
             logistic, laplace, maxwell, inverse gauss, pareto, rayleigh].
+            However, a user-defined distribution can be used in UQpy provided a python script .py containing the
+            required functions.
             For the assigned distribution, for a point you can estimate:
 
                 1. pdf: probability density function
@@ -56,15 +58,11 @@ class Distribution:
                 :param name: Name of distribution.
                 :type: name: string
 
-                :param parameters: Parameters of the distribution
-                :type: parameters: ndarray
-
             Output:
                 A handler pointing to the 17 aforementioned distribution functions.
         """
 
         self.name = name
-        self.params = parameters
 
         if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
 
