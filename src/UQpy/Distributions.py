@@ -118,10 +118,10 @@ class Distribution:
                 return stats.uniform.pdf(x, loc=loc, scale=scale)
             self.pdf = partial(pdf)
 
-            def rvs(params):
+            def rvs(params, nsamples):
                 loc = params[0]
                 scale = params[1] - params[0]
-                return stats.uniform.rvs(loc=loc, scale=scale)
+                return stats.uniform.rvs(loc=loc, scale=scale, size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -169,8 +169,8 @@ class Distribution:
                 return stats.binom.pdf(x, n=params[0], p=params[1])
             self.pdf = partial(pdf)
 
-            def rvs(params):
-                return stats.binom.rvs(n=params[0], p=params[1])
+            def rvs(params, nsamples):
+                return stats.binom.rvs(n=params[0], p=params[1], size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -208,8 +208,8 @@ class Distribution:
                 return stats.beta.pdf(x, a=params[0], b=params[1])
             self.pdf = partial(pdf)
 
-            def rvs(params):
-                return stats.beta.rvs(a=params[0], b=params[1])
+            def rvs(params, nsamples):
+                return stats.beta.rvs(a=params[0], b=params[1], size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -251,8 +251,8 @@ class Distribution:
                 return stats.genextreme.pdf(x, c=0, loc=params[0], scale=params[1])
             self.pdf = partial(pdf)
 
-            def rvs(params):
-                return stats.genextreme.rvs(c=0, loc=params[0], scale=params[1])
+            def rvs(params, nsamples):
+                return stats.genextreme.rvs(c=0, loc=params[0], scale=params[1], size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -292,8 +292,8 @@ class Distribution:
                 return stats.chi2.pdf(x, df=params[0], loc=params[1], scale=params[2])
             self.pdf = partial(pdf)
 
-            def rvs(params):
-                return stats.chi2.rvs(df=params[0], loc=params[1], scale=params[2])
+            def rvs(params, nsamples):
+                return stats.chi2.rvs(df=params[0], loc=params[1], scale=params[2], size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -333,9 +333,9 @@ class Distribution:
 
             self.pdf = partial(pdf)
 
-            def rvs(params):
+            def rvs(params, nsamples):
                 import numpy as np
-                return stats.lognorm.rvs(s=params[1], loc=params[2], scale=np.exp(params[0]))
+                return stats.lognorm.rvs(s=params[1], loc=params[2], scale=np.exp(params[0]), size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -386,8 +386,8 @@ class Distribution:
                 return stats.gamma.pdf(x, a=params[0], loc=params[1],  scale=params[2])
             self.pdf = partial(pdf)
 
-            def rvs(params):
-                return stats.gamma.rvs(a=params[0], loc=params[1],  scale=params[2])
+            def rvs(params, nsamples):
+                return stats.gamma.rvs(a=params[0], loc=params[1],  scale=params[2], size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -428,8 +428,8 @@ class Distribution:
                 return stats.expon.pdf(x, loc=params[0], scale=1/params[1])
             self.pdf = partial(pdf)
 
-            def rvs(params):
-                return stats.expon.rvs(loc=params[0], scale=1/params[1])
+            def rvs(params, nsamples):
+                return stats.expon.rvs(loc=params[0], scale=1/params[1], size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -470,8 +470,8 @@ class Distribution:
                 return stats.cauchy.pdf(x, loc=params[0], scale=params[1])
             self.pdf = partial(pdf)
 
-            def rvs(params):
-                return stats.cauchy.rvs(loc=params[0], scale=params[1])
+            def rvs(params, nsamples):
+                return stats.cauchy.rvs(loc=params[0], scale=params[1], size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -512,8 +512,8 @@ class Distribution:
                 return stats.invgauss.pdf(x, mu=params[0], loc=params[1], scale=params[2])
             self.pdf = partial(pdf)
 
-            def rvs(params):
-                return stats.invgauss.rvs(mu=params[0], loc=params[1], scale=params[2])
+            def rvs(params, nsamples):
+                return stats.invgauss.rvs(mu=params[0], loc=params[1], scale=params[2], size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -554,8 +554,8 @@ class Distribution:
                 return stats.logistic.pdf(x, loc=params[0], scale=params[1])
             self.pdf = partial(pdf)
 
-            def rvs(params):
-                return stats.logistic.rvs(loc=params[0], scale=params[1])
+            def rvs(params, nsamples):
+                return stats.logistic.rvs(loc=params[0], scale=params[1], size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -595,8 +595,8 @@ class Distribution:
                 return stats.pareto.pdf(x, b=params[0], loc=params[1], scale=params[2])
             self.pdf = partial(pdf)
 
-            def rvs(params):
-                return stats.pareto.rvs(b=params[0], loc=params[1], scale=params[2])
+            def rvs(params, nsamples):
+                return stats.pareto.rvs(b=params[0], loc=params[1], scale=params[2], size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -636,8 +636,8 @@ class Distribution:
                 return stats.rayleigh.pdf(x, loc=params[0], scale=params[1])
             self.pdf = partial(pdf)
 
-            def rvs(params):
-                return stats.rayleigh.rvs(loc=params[0], scale=params[1])
+            def rvs(params, nsamples):
+                return stats.rayleigh.rvs(loc=params[0], scale=params[1], size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -677,8 +677,8 @@ class Distribution:
                 return stats.levy.pdf(x, loc=params[0], scale=params[1])
             self.pdf = partial(pdf)
 
-            def rvs(params):
-                return stats.levy.rvs(loc=params[0], scale=params[1])
+            def rvs(params, nsamples):
+                return stats.levy.rvs(loc=params[0], scale=params[1], size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -718,8 +718,8 @@ class Distribution:
                 return stats.laplace.pdf(x, loc=params[0], scale=params[1])
             self.pdf = partial(pdf)
 
-            def rvs(params):
-                return stats.laplace.rvs(loc=params[0], scale=params[1])
+            def rvs(params, nsamples):
+                return stats.laplace.rvs(loc=params[0], scale=params[1], size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -759,8 +759,8 @@ class Distribution:
                 return stats.maxwell.pdf(x, loc=params[0], scale=params[1])
             self.pdf = partial(pdf)
 
-            def rvs(params):
-                return stats.maxwell.rvs(loc=params[0], scale=params[1])
+            def rvs(params, nsamples):
+                return stats.maxwell.rvs(loc=params[0], scale=params[1], size=nsamples)
             self.rvs = partial(rvs)
 
             def cdf(x, params):
@@ -792,36 +792,45 @@ class Distribution:
 
             self.moments = partial(moments)
 
-        elif os.path.isfile('custom_dist.py') is True:
+        else:
+            file_name = os.path.join(self.name + '.py')
+            if os.path.isfile(file_name):
+                import importlib
+                custom_dist = importlib.import_module(self.name)
+            else:
+                raise FileExistsError()
 
-            import custom_dist
             self.name = name
             if hasattr(custom_dist, 'pdf'):
-                self.pdf = getattr(custom_dist, 'pdf')
+                self.pdf = partial(getattr(custom_dist, 'pdf'))
+                print()
             else:
                 self.pdf = getattr(custom_dist, 'pdf', 'Attribute not defined.')
+
             if hasattr(custom_dist, 'cdf'):
-                self.cdf = getattr(custom_dist, 'cdf')
+                self.cdf = partial(getattr(custom_dist, 'cdf'))
             else:
                 self.cdf = getattr(custom_dist, 'cdf', 'Attribute not defined.')
+
             if hasattr(custom_dist, 'icdf'):
-                self.icdf = getattr(custom_dist, 'icdf')
+                self.icdf = partial(getattr(custom_dist, 'icdf'))
             else:
                 self.icdf = getattr(custom_dist, 'icdf', 'Attribute not defined.')
+
             if hasattr(custom_dist, 'log_pdf'):
-                self.log_pdf = getattr(custom_dist, 'log_pdf')
+                self.log_pdf = partial(getattr(custom_dist, 'log_pdf'))
             else:
                 self.log_pdf = getattr(custom_dist, 'log_pdf', 'Attribute not defined.')
             if hasattr(custom_dist, 'rvs'):
-                self.rvs = getattr(custom_dist, 'rvs')
+                self.rvs = partial(getattr(custom_dist, 'rvs'))
             else:
                 self.rvs = getattr(custom_dist, 'rvs', 'Attribute not defined.')
             if hasattr(custom_dist, 'fit'):
-                self.fit = getattr(custom_dist, 'fit')
+                self.fit = partial(getattr(custom_dist, 'fit'))
             else:
                 self.fit = getattr(custom_dist, 'fit', 'Attribute not defined.')
             if hasattr(custom_dist, 'moments'):
-                self.moments = getattr(custom_dist, 'moments')
+                self.moments = partial(getattr(custom_dist, 'moments'))
             else:
                 self.moments = getattr(custom_dist, 'moments', 'Attribute not defined.')
 
