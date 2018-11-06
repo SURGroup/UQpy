@@ -44,23 +44,23 @@ class MCS:
                               Default: len(dist_names).
             :type dimension: int
 
-            :param dist_name: A list containing the names of the distributions of the random variables.
+            :param pdf_name: A list containing the names of the distributions of the random variables.
                               Distribution names must match those in the Distributions module.
                               If the distribution does not match one from the Distributions module, the user must
                               provide custom_dist.py. The length of the string must be 1 (if all distributions are the
                               same) or equal to dimension.
-            :type dist_name: string list
+            :type pdf_name: string list
 
-            :param dist_params: Parameters of the distribution.
+            :param pdf_params: Parameters of the distribution.
                                 Parameters for each random variable are defined as ndarrays.
                                 Each item in the list, dist_params[i], specifies the parameters for the corresponding
                                 distribution, dist[i].
-            :type dist_params: list
+            :type pdf_params: list
 
-            param: distribution: An object list containing the distributions of the random variables.
+            param: pdf: An object list containing the distributions of the random variables.
                                  Each item in the list is an object of the Distribution class (see Distributions.py).
                                  The list has length equal to dimension.
-            :type distribution: list
+            :type pdf: list
 
             :param nsamples: Number of samples to generate.
                              No Default Value: nsamples must be prescribed.
@@ -76,27 +76,27 @@ class MCS:
     """
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 6/20/18 by Dimitris G.Giovanis
+    # Last Modified: 11/2/18 by Dimitris G.Giovanis
 
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, nsamples=None):
+    def __init__(self, dimension=None, pdf_name=None, pdf_params=None, nsamples=None):
 
         self.dimension = dimension
         self.nsamples = nsamples
-        self.dist_params = dist_params
-        self.dist_name = dist_name
+        self.pdf_params = pdf_params
+        self.pdf_name = pdf_name
 
         self.init_mcs()
-        self.distribution = [None] * self.dimension
+        self.pdf = [None] * self.dimension
         for i in range(self.dimension):
-            self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
+            self.pdf[i] = Distribution(self.pdf_name[i], self.pdf_params[i])
         self.samplesU01, self.samples = self.run_mcs()
 
     def run_mcs(self):
         samples = np.random.rand(self.nsamples, self.dimension)
         samples_u_to_x = np.zeros_like(samples)
         for j in range(samples.shape[1]):
-            i_cdf = self.distribution[j].icdf
-            samples_u_to_x[:, j] = i_cdf(samples[:, j], self.distribution[j].params)
+            i_cdf = self.pdf[j].icdf
+            samples_u_to_x[:, j] = i_cdf(samples[:, j], self.pdf[j].params)
         print('Successful execution of MCS design..')
         return samples, samples_u_to_x
 
@@ -113,22 +113,22 @@ class MCS:
 
         # Check the dimension
         if self.dimension is None:
-            self.dimension = len(self.dist_name)
+            self.dimension = len(self.pdf_name)
 
         # Ensure that distribution parameters are assigned
-        if self.dist_params is None:
+        if self.pdf_params is None:
             raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
         # Check dist_params
-        if type(self.dist_params).__name__ != 'list':
-            self.dist_params = [self.dist_params]
-        if len(self.dist_params) == 1 and self.dimension != 1:
-            self.dist_params = self.dist_params * self.dimension
-        elif len(self.dist_params) != self.dimension:
+        if type(self.pdf_params).__name__ != 'list':
+            self.pdf_params = [self.pdf_params]
+        if len(self.pdf_params) == 1 and self.dimension != 1:
+            self.pdf_params = self.pdf_params * self.dimension
+        elif len(self.pdf_params) != self.dimension:
             raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension.")
 
         # Check for dimensional consistency
-        if len(self.dist_name) != len(self.dist_params):
+        if len(self.pdf_name) != len(self.pdf_params):
             raise NotImplementedError("Exit code: Incompatible dimensions.")
 
 
@@ -150,24 +150,24 @@ class LHS:
                               If dimension is not provided then dimension is equal to the length of the dist_name.
             :type dimension: int
 
-            :param dist_name: A list containing the names of the distributions of the random variables.
+            :param pdf_name: A list containing the names of the distributions of the random variables.
                               Distribution names must match those in the Distributions module.
                               If the distribution does not match one from the Distributions module, the user must
                               provide custom_dist.py.
                               The length of the string must be 1 (if all distributions are the same) or equal to
                               dimension.
-            :type dist_name: string list
+            :type pdf_name: string list
 
-            :param dist_params: Parameters of the distribution.
+            :param pdf_params: Parameters of the distribution.
                                 Parameters for each random variable are defined as ndarrays.
                                 Each item in the list, dist_params[i], specifies the parameters for the corresponding
                                 distribution, dist[i].
-            :type dist_params: list
+            :type pdf_params: list
 
-            param: distribution: An object list containing the distributions of the random variables.
+            param: pdf: An object list containing the distributions of the random variables.
                                  Each item in the list is an object of the Distribution class (see Distributions.py).
                                  The list has length equal to dimension.
-            :type distribution: list
+            :type pdf: list
 
             :param lhs_criterion: The criterion for generating sample points
                                   Options:
@@ -203,23 +203,23 @@ class LHS:
 
     """
     # Created by: Lohit Vandanapu
-    # Last modified: 6/20/2018 by Dimitris G. Giovanis
+    # Last Modified: 11/2/18 by Dimitris G.Giovanis
 
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, lhs_criterion='random', lhs_metric='euclidean',
+    def __init__(self, dimension=None, pdf_name=None, pdf_params=None, lhs_criterion='random', lhs_metric='euclidean',
                  lhs_iter=100, nsamples=None):
 
         self.dimension = dimension
         self.nsamples = nsamples
-        self.dist_name = dist_name
-        self.dist_params = dist_params
+        self.pdf_name = pdf_name
+        self.pdf_params = pdf_params
         self.lhs_criterion = lhs_criterion
         self.lhs_metric = lhs_metric
         self.lhs_iter = lhs_iter
         self.init_lhs()
 
-        self.distribution = [None] * self.dimension
+        self.pdf = [None] * self.dimension
         for i in range(self.dimension):
-            self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
+            self.pdf[i] = Distribution(self.pdf_name[i], self.pdf_params[i])
 
         self.samplesU01, self.samples = self.run_lhs()
 
@@ -233,8 +233,8 @@ class LHS:
 
         samples_u_to_x = np.zeros_like(samples)
         for j in range(samples.shape[1]):
-            i_cdf = self.distribution[j].icdf
-            samples_u_to_x[:, j] = i_cdf(samples[:, j], self.distribution[j].params)
+            i_cdf = self.pdf[j].icdf
+            samples_u_to_x[:, j] = i_cdf(samples[:, j], self.pdf[j].params)
 
         print('Successful execution of LHS design..')
         return samples, samples_u_to_x
@@ -318,22 +318,22 @@ class LHS:
 
         # Check the dimension
         if self.dimension is None:
-            self.dimension = len(self.dist_name)
+            self.dimension = len(self.pdf_name)
 
         # Ensure that distribution parameters are assigned
-        if self.dist_params is None:
+        if self.pdf_params is None:
             raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
         # Check dist_params
-        if type(self.dist_params).__name__ != 'list':
-            self.dist_params = [self.dist_params]
-        if len(self.dist_params) == 1 and self.dimension != 1:
-            self.dist_params = self.dist_params * self.dimension
-        elif len(self.dist_params) != self.dimension:
+        if type(self.pdf_params).__name__ != 'list':
+            self.pdf_params = [self.pdf_params]
+        if len(self.pdf_params) == 1 and self.dimension != 1:
+            self.pdf_params = self.pdf_params * self.dimension
+        elif len(self.pdf_params) != self.dimension:
             raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension.")
 
         # Check for dimensional consistency
-        if len(self.dist_name) != len(self.dist_params):
+        if len(self.pdf_name) != len(self.pdf_params):
             raise NotImplementedError("Exit code: Incompatible dimensions.")
 
         if self.lhs_criterion is None:
@@ -383,24 +383,24 @@ class STS:
                               Default: Length of sts_design.
             :type dimension: int
 
-            :param dist_name: A list containing the names of the distributions of the random variables.
+            :param pdf_name: A list containing the names of the distributions of the random variables.
                               Distribution names must match those in the Distributions module.
                               If the distribution does not match one from the Distributions module, the user must
                               provide custom_dist.py.
                               The length of the string must be 1 (if all distributions are the same) or equal to
                               dimension.
-            :type dist_name: string list
+            :type pdf_name: string list
 
-            :param dist_params: Parameters of the distribution
+            :param pdf_params: Parameters of the distribution
                                 Parameters for each random variable are defined as ndarrays.
                                 Each item in the list, dist_params[i], specifies the parameters for the corresponding
                                 distribution, dist[i].
-            :type dist_params: list
+            :type pdf_params: list
 
-            param: distribution: An object list containing the distributions of the random variables.
+            param: pdf: An object list containing the distributions of the random variables.
                                  Each item in the list is an object of the Distribution class (see Distributions.py).
                                  The list has length equal to dimension.
-            :type distribution: list
+            :type pdf: list
 
             :param sts_design: Specifies the number of strata in each dimension
             :type sts_design: int list
@@ -422,32 +422,32 @@ class STS:
     """
 
     # Authors: Michael Shields
-    # Last modified: 6/7/2018 by Dimitris Giovanis & Michael Shields
+    # Last Modified: 11/2/18 by Dimitris G.Giovanis
 
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, sts_design=None, input_file=None):
+    def __init__(self, dimension=None, pdf_name=None, pdf_params=None, sts_design=None, input_file=None):
 
         self.dimension = dimension
         self.sts_design = sts_design
         self.input_file = input_file
-        self.dist_name = dist_name
-        self.dist_params = dist_params
+        self.pdf_name = pdf_name
+        self.pdf_params = pdf_params
         self.strata = None
         self.init_sts()
 
-        self.distribution = [None] * self.dimension
+        self.pdf = [None] * self.dimension
         for i in range(self.dimension):
-            self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
+            self.pdf[i] = Distribution(self.pdf_name[i], self.pdf_params[i])
         self.samplesU01, self.samples = self.run_sts()
 
     def run_sts(self):
         samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
         samples_u_to_x = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
         for j in range(0, self.strata.origins.shape[1]):
-            i_cdf = self.distribution[j].icdf
+            i_cdf = self.pdf[j].icdf
             for i in range(0, self.strata.origins.shape[0]):
                 samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
                                                   + self.strata.widths[i, j])
-            samples_u_to_x[:, j] = i_cdf(samples[:, j], self.dist_params[j])
+            samples_u_to_x[:, j] = i_cdf(samples[:, j], self.pdf_params[j])
 
         print('Successful execution of STS design..')
         return samples, samples_u_to_x
@@ -464,23 +464,23 @@ class STS:
             raise NotImplementedError("Exit code: Dimension must be specified.")
 
         # Check dist_name
-        if type(self.dist_name).__name__ != 'list':
-            self.dist_name = [self.dist_name]
-        if len(self.dist_name) == 1 and self.dimension != 1:
-            self.dist_name = self.dist_name * self.dimension
-        elif len(self.dist_name) != self.dimension:
+        if type(self.pdf_name).__name__ != 'list':
+            self.pdf_name = [self.pdf_name]
+        if len(self.pdf_name) == 1 and self.dimension != 1:
+            self.pdf_name = self.pdf_name * self.dimension
+        elif len(self.pdf_name) != self.dimension:
             raise NotImplementedError("Length of i_cdf should be 1 or equal to dimension.")
 
         # Check dist_params
-        if type(self.dist_params).__name__ != 'list':
-            self.dist_params = [self.dist_params]
-        if len(self.dist_params) == 1 and self.dimension != 1:
-            self.dist_params = self.dist_params * self.dimension
-        elif len(self.dist_params) != self.dimension:
+        if type(self.pdf_params).__name__ != 'list':
+            self.pdf_params = [self.pdf_params]
+        if len(self.pdf_params) == 1 and self.dimension != 1:
+            self.pdf_params = self.pdf_params * self.dimension
+        elif len(self.pdf_params) != self.dimension:
             raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension.")
 
         # Ensure that distribution parameters are assigned
-        if self.dist_params is None:
+        if self.pdf_params is None:
             raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
         if self.sts_design is None:
@@ -659,15 +659,22 @@ class MCMC:
                               Default: 1
             :type dimension: int
 
-            :param pdf_proposal_type: Type of proposal density function for MCMC. Only used with algorithm ='MH' or'MMH'
+            :param pdf_proposal_name: Name of proposal density function for MCMC. Only used with algorithm ='MH' or'MMH'
+                Options:
+                        'Normal' : Normal proposal density.
+                        'Uniform' : Uniform proposal density.
+                Default: 'Uniform'
+                If dimension > 1 and algorithm = 'MMH', this may be input as a list to assign different
+                proposal densities to each dimension. Example pdf_proposal_type = ['Normal','Uniform'].
+                If dimension > 1, algorithm = 'MMH' and this is input as a string, the proposal densities
+                for all dimensions are set equal to the assigned proposal type.
+            :type pdf_proposal_name: str or str list
+
+            :param pdf_proposal_type: Type of proposal density function.
                             Options:
-                                    'Normal' : Normal proposal density.
-                                    'Uniform' : Uniform proposal density.
-                            Default: 'Uniform'
-                            If dimension > 1 and algorithm = 'MMH', this may be input as a list to assign different
-                            proposal densities to each dimension. Example pdf_proposal_type = ['Normal','Uniform'].
-                            If dimension > 1, algorithm = 'MMH' and this is input as a string, the proposal densities
-                            for all dimensions are set equal to the assigned proposal type.
+                                'marginal_pdf'
+                                'joint_pdf'
+                            Default: 'marginal_pdf'
             :type pdf_proposal_type: str or str list
 
             :param pdf_proposal_scale: Scale of the proposal distribution
@@ -684,6 +691,10 @@ class MCMC:
                             If dimension > 1, this may be defined as float or float list.
                                 If input as float, pdf_proposal_scale is assigned to all dimensions.
                                 If input as float list, each element is assigned to the corresponding dimension.
+
+
+            :param pdf_target_name: Name of target density function for MCMC.
+            :type pdf_proposal_name: str or str list
 
             :param pdf_target_type: Type of target density function for acceptance/rejection in MMH. Not used for MH or
                                     Stretch.
@@ -747,15 +758,18 @@ class MCMC:
     """
 
     # Authors: Michael D. Shields, Mohit Chauhan, Dimitris G. Giovanis
-    # Updated: 4/26/18 by Michael D. Shields
+    # Last Modified: 11/2/18 by Dimitris G.Giovanis
 
-    def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None, pdf_target_type=None,
-                 pdf_target=None, pdf_target_params=None, algorithm=None, jump=1, nsamples=None, seed=None,
+    def __init__(self, dimension=None, pdf_proposal_name=None, pdf_proposal_type=None, pdf_proposal_scale=None,
+                 pdf_target_type=None, pdf_target_name=None,
+                 pdf_target=None, pdf_target_params=None, algorithm=None, jump=None, nsamples=None, seed=None,
                  nburn=None):
 
+        self.pdf_proposal_name = pdf_proposal_name
         self.pdf_proposal_type = pdf_proposal_type
         self.pdf_proposal_scale = pdf_proposal_scale
         self.pdf_target_type = pdf_target_type
+        self.pdf_target_name = pdf_target_name
         self.pdf_target = pdf_target
         self.pdf_target_params = pdf_target_params
         self.algorithm = algorithm
@@ -767,10 +781,11 @@ class MCMC:
         self.init_mcmc()
         if self.algorithm is 'Stretch':
             self.ensemble_size = len(self.seed)
-        self.samples = self.run_mcmc()
+        self.samples, self.acceptance_rate = self.run_mcmc()
 
     def run_mcmc(self):
         rejects = 0
+        accepts = 0
 
         # Defining an array to store the generated samples
         samples = np.zeros([self.nsamples * self.jump + self.nburn, self.dimension])
@@ -813,6 +828,7 @@ class MCMC:
 
                         if accept:
                             samples[i + 1, :] = candidate
+                            accepts += 1
                         else:
                             samples[i + 1, :] = samples[i, :]
                             rejects += 1
@@ -831,6 +847,7 @@ class MCMC:
 
                     if accept:
                         samples[i + 1, :] = candidate
+                        accepts += 1
                     else:
                         samples[i + 1, :] = samples[i, :]
                         rejects += 1
@@ -872,8 +889,10 @@ class MCMC:
 
                             if accept:
                                 samples[i + 1, j] = candidate
+                                accepts += 1
                             else:
                                 samples[i + 1, j] = samples[i, j]
+                                rejects += 1
 
             elif self.pdf_target_type == 'joint_pdf':
                 pdf_ = self.pdf_target[0]
@@ -899,11 +918,12 @@ class MCMC:
 
                         if accept:
                             current[j] = candidate[j]
+                            accepts += 1
                         else:
                             candidate[j] = current[j]
+                            rejects += 1
 
                     samples[i + 1, :] = current
-
         ################################################################################################################
         # Affine Invariant Ensemble Sampler with stretch moves
 
@@ -935,6 +955,7 @@ class MCMC:
 
         if self.algorithm is 'MMH' or self.algorithm is 'MH':
             print('Successful execution of the MCMC design')
+
             return samples[self.nburn:self.nsamples * self.jump + self.nburn:self.jump]
         else:
             output = np.zeros((self.nsamples, self.dimension))
@@ -956,8 +977,10 @@ class MCMC:
         if self.nsamples is None:
             raise NotImplementedError('Exit code: Number of samples not defined.')
 
-        if self.jump == 0:
+        if self.jump <= 0:
             raise ValueError("Exit code: Value of jump must be greater than 0")
+        elif self.jump is None:
+            self.jump = 1
 
         # Check seed
         if self.seed is None:
@@ -969,28 +992,33 @@ class MCMC:
             if self.seed.shape[0] < 3:
                 raise NotImplementedError("Exit code: Ensemble size must be > 2.")
 
-        # Check jump
-        if self.jump is None:
-            self.jump = 1
-
-        # Check pdf_proposal_type
-        if self.pdf_proposal_type is None:
-            self.pdf_proposal_type = 'Uniform'
+        # Check pdf_proposal_name
+        if self.pdf_proposal_name is None:
+            self.pdf_proposal_name = 'Uniform'
         # If pdf_proposal_type is entered as a string, make it a list
-        if type(self.pdf_proposal_type).__name__ == 'str':
-            self.pdf_proposal_type = [self.pdf_proposal_type]
-        for i in self.pdf_proposal_type:
+        if type(self.pdf_proposal_name).__name__ == 'str':
+            self.pdf_proposal_name = [self.pdf_proposal_name]
+        for i in self.pdf_proposal_name:
             if i not in ['Uniform', 'Normal']:
                 raise ValueError('Exit code: Unrecognized type for proposal distribution. Supported distributions: '
                                  'Uniform, '
                                  'Normal.')
-        if self.algorithm is 'MH' and len(self.pdf_proposal_type) != 1:
+        if self.algorithm is 'MH' and len(self.pdf_proposal_name) != 1:
             raise ValueError('Exit code: MH algorithm can only take one proposal distribution.')
-        elif len(self.pdf_proposal_type) != self.dimension:
-            if len(self.pdf_proposal_type) == 1:
-                self.pdf_proposal_type = self.pdf_proposal_type * self.dimension
+        elif len(self.pdf_proposal_name) != self.dimension:
+            if len(self.pdf_proposal_name) == 1:
+                self.pdf_proposal_name = self.pdf_proposal_name * self.dimension
             else:
                 raise NotImplementedError("Exit code: Incompatible dimensions in 'pdf_proposal_type'.")
+
+        # Check pdf_proposal_type
+        if self.algorithm is 'MMH' and self.pdf_proposal_type is None:
+            self.pdf_proposal_type = 'marginal_pdf'
+        if self.algorithm is 'Stretch':
+            self.pdf_proposal_type = 'joint_pdf'
+        if self.pdf_proposal_type not in ['joint_pdf', 'marginal_pdf']:
+            raise ValueError('Exit code: Unrecognized type for proposal distribution. Supported distributions: '
+                             'joint_pdf', 'marginal_pdf.')
 
         # Check pdf_proposal_scale
         if self.pdf_proposal_scale is None:
@@ -1064,6 +1092,8 @@ class MCMC:
 
         if self.nburn is None:
             self.nburn = 0
+        elif self.nburn <= 0:
+            raise ValueError("Exit code: Value of nburn must be greater than 0")
 
 
 ########################################################################################################################
@@ -1072,7 +1102,6 @@ class MCMC:
 ########################################################################################################################
 
 class IS:
-
     """
         Description:
 
@@ -1084,12 +1113,12 @@ class IS:
                               Default: len(dist_names).
             :type dimension: int
 
-            :param pdf_proposal: A list containing the names of the proposal distribution for each random variable.
+            :param pdf_proposal_name: A list containing the names of the proposal distribution for each random variable.
                                  Distribution names must match those in the Distributions module.
                                  If the distribution does not match one from the Distributions module, the user
                                  must provide custom_dist.py. The length of the string must be 1 (if all
                                  distributions are the same) or equal to dimension.
-            :type pdf_proposal: string list
+            :type pdf_proposal_name: string list
 
             :param pdf_proposal_params: Parameters of the proposal distribution.
                                         Parameters for each random variable are defined as ndarrays.
@@ -1097,18 +1126,27 @@ class IS:
                                         corresponding proposal distribution, pdf_proposal[i].
             :type pdf_proposal_params: list
 
-            :param pdf_target: A list containing the names of the target distribution for each random variable.
+
+            :param pdf_proposal_type:  Type of the proposal distribution.
+                                        Options: 'joint_pdf' and 'marginal_pdf'
+            :type pdf_proposal_type: str
+
+            :param pdf_target_name: A list containing the names of the target distribution for each random variable.
                                  Distribution names must match those in the Distributions module.
                                  If the distribution does not match one from the Distributions module, the user
                                  must provide custom_dist.py. The length of the string must be 1 (if all
                                  distributions are the same) or equal to dimension.
-            :type pdf_target: string list
+            :type pdf_target_name: string list
 
             :param pdf_target_params: Parameters of the target distribution.
                                         Parameters for each random variable are defined as ndarrays.
                                         Each item in the list, pdf_target_params[i], specifies the parameters for the
                                         corresponding target distribution, pdf_target[i].
             :type pdf_target_params: list
+
+            :param pdf_target_type:  Type of the target distribution.
+                                        Options: 'joint_pdf' and 'marginal_pdf'
+            :type pdf_target_type: str
 
             :param nsamples: Number of samples to generate.
                              No Default Value: nsamples must be prescribed.
@@ -1125,17 +1163,16 @@ class IS:
             :rtype: IS.weights: ndarray
     """
 
-    # Authors: Dimitris G.Giovanis
-    # Last Modified: 10/28/18 by Dimitris Giovanis
+    # Authors: Dimitris G.Giovanis & Audrey Olivier
+    # Last Modified: 11/2/18 by Dimitris G.Giovanis
 
-    def __init__(self, dimension=None, pdf_proposal=None, pdf_proposal_params=None,
-                 pdf_target_params=None, pdf_target=None,  nsamples=None, pdf_target_type=None,
-                 pdf_proposal_type=None):
+    def __init__(self, dimension=None, pdf_proposal_name=None, pdf_proposal_params=None, pdf_proposal_type=None,
+                 pdf_target_params=None, pdf_target_name=None, nsamples=None, pdf_target_type=None):
 
         self.dimension = dimension
-        self.pdf_proposal = pdf_proposal
+        self.pdf_proposal_name = pdf_proposal_name
         self.pdf_proposal_params = pdf_proposal_params
-        self.pdf_target = pdf_target
+        self.pdf_target_name = pdf_target_name
         self.pdf_target_params = pdf_target_params
         self.nsamples = nsamples
         self.pdf_target_type = pdf_target_type
@@ -1146,28 +1183,29 @@ class IS:
 
     def run_is(self):
 
-        weights = np.zeros(shape=(self.nsamples, self.dimension))
         samples = np.random.rand(self.nsamples, self.dimension)
         x = np.zeros_like(samples)
+        ps = np.ones((self.nsamples,))
+        qs = np.ones((self.nsamples,))
 
-        for j in range(self.dimension):
-            i_cdf_proposal = self.pdf_proposal[j].icdf
-            x[:, j] = i_cdf_proposal(samples[:, j], self.pdf_proposal[j].params)
-
-        for i in range(self.nsamples):
-            p = np.zeros(self.dimension)
-            q = np.zeros_like(p)
-            w = np.zeros_like(p)
+        # Step 1: sample from proposal
+        if self.pdf_proposal_type == 'marginal_pdf':
             for j in range(self.dimension):
-                p[j] = self.pdf_proposal[j].pdf(x[i, j], self.pdf_proposal[j].params)
-                q[j] = self.pdf_target[j].pdf(x[i, j], self.pdf_target[j].params)
-                w[j] = q[j]/p[j]
+                i_cdf_proposal = self.pdf_proposal[j].icdf
+                x[:, j] = i_cdf_proposal(samples[:, j], self.pdf_proposal[j].params)
+                qs = qs * self.pdf_proposal[j].pdf(x[:, j], self.pdf_proposal[j].params)
 
-            weights[i, :] = w
+        # Step 2: weight the samples
+        if self.pdf_target_type == 'marginal_pdf':
+            for j in range(self.dimension):
+                ps = ps * self.pdf_target[j].pdf(x[:, j], self.pdf_target[j].params)
+        if self.pdf_target_type == 'joint_pdf':
+            ps = self.pdf_target[0].pdf(x, self.pdf_target[0].params)
 
+        weights = qs / ps
         sum_w = np.sum(weights, axis=0)
 
-        return samples, x, weights/sum_w
+        return samples, x, weights / sum_w
 
     ################################################################################################################
     # Initialize Importance Sampling.
@@ -1195,48 +1233,53 @@ class IS:
             raise ValueError('Exit code: Unrecognized type for proposal distribution. Supported distributions: '
                              'joint_pdf', 'marginal_pdf.')
 
-        if self.pdf_proposal is None:
-            raise ValueError('Exit code: A proposal distribution is required.')
+        if self.pdf_proposal_name is None:
+            raise ValueError('Exit code: A proposal distribution is not defined.')
 
-        if self.pdf_target is None:
-            raise ValueError('Exit code: A target distribution is required.')
+        if self.pdf_target_name is None:
+            raise ValueError('Exit code: A target distribution is not defined.')
 
         # Check pdf_target
-        if type(self.pdf_target).__name__ == 'str':
-            if self.dimension == 1:
-                self.pdf_target = [Distribution(self.pdf_target, self.pdf_target_params)]
+        if type(self.pdf_target_name).__name__ == 'str':
+            if self.dimension == 1 or self.pdf_target_type == 'joint_pdf':
+                self.pdf_target = [Distribution(self.pdf_target_name, self.pdf_target_params)]
                 self.pdf_target_params = [self.pdf_target_params]
             else:
-                self.pdf_target = [Distribution(self.pdf_target, self.pdf_target_params)] * self.dimension
-                self.pdf_target_params = [self.pdf_target_params]* self.dimension
-        elif type(self.pdf_target).__name__ == 'list':
-            for i in range(len(self.pdf_target)):
-                self.pdf_target[i] = Distribution(self.pdf_target[i], self.pdf_target_params[i])
+                self.pdf_target = [Distribution(self.pdf_target_name, self.pdf_target_params)] * self.dimension
+                self.pdf_target_params = [self.pdf_target_params] * self.dimension
+        elif type(self.pdf_target_name).__name__ == 'list':
+            for i in range(len(self.pdf_target_name)):
+                self.pdf_target[i] = Distribution(self.pdf_target_name[i], self.pdf_target_params[i])
+        elif type(self.pdf_target_name).__name__ != 'list' and type(self.pdf_target_name).__name__ != 'str':
+            self.pdf_target = [self.pdf_target_name]
 
         # Check pdf_proposal
-        if isinstance(self.pdf_proposal, Distribution):
-            self.pdf_proposal = [self.pdf_proposal]
-        if type(self.pdf_proposal).__name__ == 'str':
+        if isinstance(self.pdf_proposal_name, Distribution):
+            self.pdf_proposal = [self.pdf_proposal_name]
+        if type(self.pdf_proposal_name).__name__ == 'str':
             if self.dimension == 1:
-                self.pdf_proposal = [Distribution(self.pdf_proposal, self.pdf_proposal_params)]
+                self.pdf_proposal = [Distribution(self.pdf_proposal_name, self.pdf_proposal_params)]
                 self.pdf_proposal_params = [self.pdf_proposal_params]
             else:
-                self.pdf_proposal = [Distribution(self.pdf_proposal, self.pdf_proposal_params)] * self.dimension
+                self.pdf_proposal = [Distribution(self.pdf_proposal_name, self.pdf_proposal_params)] * self.dimension
                 self.pdf_proposal_params = [self.pdf_proposal_params] * self.dimension
-        elif type(self.pdf_proposal).__name__ == 'list':
-            for i in range(len(self.pdf_proposal)):
-                if isinstance(self.pdf_proposal[i], Distribution):
-                    self.pdf_proposal[i] = self.pdf_proposal[i]
+        elif type(self.pdf_proposal_name).__name__ == 'list':
+            self.pdf_proposal = [0] * self.dimension
+            for i in range(len(self.pdf_proposal_name)):
+                if isinstance(self.pdf_proposal_name[i], Distribution):
+                    self.pdf_proposal[i] = self.pdf_proposal_name[i]
                 else:
-                    self.pdf_proposal[i] = Distribution(self.pdf_proposal[i], self.pdf_proposal_params[i])
+                    self.pdf_proposal[i] = Distribution(self.pdf_proposal_name[i], self.pdf_proposal_params[i])
+        elif type(self.pdf_proposal).__name__ != 'list':
+            self.pdf_proposal = [self.pdf_proposal_name]
 
             # Check pdf_target_params
-        for i in range(len(self.pdf_target)):
+        for i in range(len(self.pdf_target_params)):
             if self.pdf_target[i].params is None:
                 raise ValueError('Exit code: Parameters for the target distribution are required.')
 
             # Check pdf_proposal_params
-        for i in range(len(self.pdf_proposal)):
+        for i in range(len(self.pdf_proposal_params)):
             if self.pdf_proposal[i].params is None:
                 raise ValueError('Exit code: Parameters for the proposal distribution are required.')
 
