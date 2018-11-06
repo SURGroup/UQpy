@@ -368,7 +368,9 @@ class LHS:
 ########################################################################################################################
 #                                         Stratified Sampling  (STS)
 ########################################################################################################################
+
 class STS:
+
     """
         Description:
 
@@ -418,7 +420,7 @@ class STS:
 
             :return: STS.strata: Instance of the class SampleMethods.Strata
             :rtype: STS.strata: ndarray
-
+    
     """
 
     # Authors: Michael Shields
@@ -505,7 +507,6 @@ class STS:
         # Check sampling criterion
         if self.sts_criterion not in ['random', 'centered']:
             raise NotImplementedError("Exit code: Supported sts criteria: 'random', 'centered'")
-
 
 ########################################################################################################################
 ########################################################################################################################
