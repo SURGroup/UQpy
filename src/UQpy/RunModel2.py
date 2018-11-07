@@ -157,6 +157,7 @@ class RunModel2:
         Execute the python model in serial when there is no template input file
         :return:
         """
+        #TODO: Import the whole file not just the function, we may lose the supporting files
         print('\nPerforming serial execution of the model without template input.\n')
         # Run python model
         for i in range(self.nsim):
