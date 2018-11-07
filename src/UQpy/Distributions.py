@@ -20,6 +20,7 @@
 import scipy.stats as stats
 from functools import partial
 import os
+import numpy as np
 
 
 # Authors: Dimitris G.Giovanis, Michael D. Shields
@@ -32,11 +33,36 @@ import os
 
 def get_supported_distributions(print_ = False):
     supported_distributions = ['normal', 'uniform', 'binomial', 'beta', 'genextreme', 'chisquare', 'lognormal',
-                               'gamma', 'exponential', 'cauchy', 'levy', 'logistic', 'laplace', 'maxwell',
+                               'gamma', 'inv_gamma', 'exponential', 'cauchy', 'levy', 'logistic', 'laplace', 'maxwell',
                                'inv_gauss', 'pareto', 'rayleigh']
     if print_:
         print(supported_distributions)
     return supported_distributions
+
+
+class DistributionFromMarginals:
+
+    def __init__(self, name, parameters=None):
+        self.name = name
+        self.params = parameters
+        self.ndims = len(self.name)
+        self.distributions = [Distribution(name=self.name[i],parameters=self.params[i]) for i in range(self.ndims)]
+
+    def pdf(self, x, params):
+        if np.size(x) == self.ndims:
+            x = x.reshape((1, self.ndims))
+        return np.prod([self.distributions[i].pdf(x[:,i], params[i]) for i in range(self.ndims)])
+
+    def log_pdf(self, x, params):
+        if np.size(x) == self.ndims:
+            x = x.reshape((1, self.ndims))
+        return np.sum([self.distributions[i].log_pdf(x[:,i], params[i]) for i in range(self.ndims)])
+
+    def rvs(self, params, size=1):
+        rvs_list = []
+        for i in range(self.ndims):
+            rvs_list.append(np.array(self.distributions[i].rvs(params[i])).reshape((-1,1)))
+        return np.concatenate(rvs_list, axis=1)
 
 
 class Distribution:
@@ -428,6 +454,46 @@ class Distribution:
 
             self.moments = partial(moments)
 
+        elif self.name.lower() == 'inv_gamma':
+
+            self.n_params = 3
+
+            def pdf(x, params):
+                return stats.invgamma.pdf(x, a=params[0], loc=params[1],  scale=params[2])
+            self.pdf = partial(pdf)
+
+            def rvs(params):
+                return stats.invgamma.rvs(a=params[0], loc=params[1],  scale=params[2])
+            self.rvs = partial(rvs)
+
+            def cdf(x, params):
+                return stats.invgamma.cdf(x,  a=params[0], loc=params[1],  scale=params[2])
+            self.cdf = partial(cdf)
+
+            def icdf(x, params):
+                return stats.invgamma.ppf(x,  a=params[0], loc=params[1],  scale=params[2])
+            self.icdf = partial(icdf)
+
+            def log_pdf(x, params):
+                return stats.invgamma.logpdf(x, a=params[0], loc=params[1],  scale=params[2])
+            self.log_pdf = partial(log_pdf)
+
+            def fit(x):
+                return stats.invgamma.fit(x)
+            self.fit = partial(fit)
+
+            def moments(params):
+
+                y = [np.nan, np.nan, np.nan, np.nan]
+                mean, var, skew, kurt = stats.invgamma.stats(a=params[0], loc=params[1],  scale=params[2], moments='mvsk')
+                y[0] = mean
+                y[1] = var
+                y[2] = skew
+                y[3] = kurt
+                return y
+
+            self.moments = partial(moments)
+
         elif self.name.lower() == 'exponential':
 
             self.n_params = 2
@@ -800,13 +866,16 @@ class Distribution:
 
             self.moments = partial(moments)
 
-        elif os.path.isfile('custom_dist.py') is True:
-            import custom_dist
-            self.pdf = getattr(custom_dist, 'pdf')
-            self.cdf = getattr(custom_dist, 'cdf')
-            self.icdf = getattr(custom_dist, 'icdf')
-            self.log_pdf = getattr(custom_dist, 'log_pdf')
-            self.fit = getattr(custom_dist, 'fit')
-            self.moments = getattr(custom_dist, 'moments')
+        else:
+            name_file = name+'py'
+            if not os.path.isfile(name_file):
+                raise ValueError('The distribution should either be supported or user-defined in a name.py file')
+            import name_file
+            self.pdf = getattr(name_file, 'pdf')
+            self.cdf = getattr(name_file, 'cdf')
+            self.icdf = getattr(name_file, 'icdf')
+            self.log_pdf = getattr(name_file, 'log_pdf')
+            self.fit = getattr(name_file, 'fit')
+            self.moments = getattr(name_file, 'moments')
 
 

@@ -20,12 +20,13 @@
 
 from UQpy.SampleMethods import *
 from scipy import integrate
-from scipy.stats import multivariate_normal
+from scipy.special import gamma
+from scipy.stats import multivariate_normal, chi2, norm
 from UQpy.RunModel import RunModel
 from scipy.optimize import minimize
 import warnings
-from UQpy.SampleMethods import MCMC
 warnings.filterwarnings("ignore")
+import matplotlib.pyplot as plt
 
 
 ########################################################################################################################
@@ -35,7 +36,8 @@ warnings.filterwarnings("ignore")
 
 class Model:
     def __init__(self, model_type = None, model_script = None, model_name = None,
-                 n_params = None, error_covariance = 1, cpu_RunModel = 1):
+                 n_params = None, error_covariance = 1, cpu_RunModel = 1,
+                 prior_name = None, prior_params=None, prior_type=None):
 
         """
 
@@ -70,24 +72,45 @@ class Model:
             self.log_like = partial(self.log_like_normal)
 
         elif self.type == 'pdf':
-            supported_distributions = get_supported_distributions(print_=False)
-            if not self.name in supported_distributions:
-                raise ValueError('probability distribution is not supported')
-            ### what if custom distribution????
             self.pdf = Distribution(self.name)
             self.n_params = self.pdf.n_params
             self.log_like = self.log_like_sum
 
+        self.prior_type = prior_type
+        if prior_name is not None:
+            # first case: define the prior as a list of marginals
+            if type(prior_name) is list:
+                self.prior = DistributionFromMarginals(name=prior_name, parameters=prior_params)
+            # last case: define the prior as a joint pdf
+            else:
+                self.prior = Distribution(name = prior_name, parameters = prior_params)
+        else:
+            self.prior = None
+
     def log_like_normal(self, x, params):
-        params = params.reshape((1, self.n_params))
-        with suppress_stdout():  # disable output
+        if np.size(params) == self.n_params:
+            params = params.reshape((1, self.n_params))
+        if params.shape[1] != self.n_params:
+            raise ValueError('the nb of columns in params should be equal to model.n_params')
+        with suppress_stdout():  # disable printing output comments
             z = RunModel(cpu=self.cpu_RunModel, model_type=self.type, model_script=self.script, dimension=self.n_params,
                          samples=params)
-        mean = z.model_eval.QOI[0]
-        return multivariate_normal.logpdf(x, mean=mean, cov=self.error_covariance)
+        results = np.empty((params.shape[0], ), dtype=float)
+        for i in range(params.shape[0]):
+            mean = z.model_eval.QOI[i]
+            results[i] = multivariate_normal.logpdf(x, mean=mean, cov=self.error_covariance)
+        return results
 
     def log_like_sum(self, x, params):
-        return np.sum(self.pdf.log_pdf(x, params))
+        if np.size(params) == self.n_params:
+            params = params.reshape((1, self.n_params))
+        if params.shape[1] != self.n_params:
+            raise ValueError('the nb of columns in params should be equal to model.n_params')
+        results = np.empty((params.shape[0], ), dtype=float)
+        for i in range(params.shape[0]):
+            param_i = params[i,:].reshape((self.n_params, ))
+            results[i] = np.sum(self.pdf.log_pdf(x, param_i))
+        return results
 
 
 class MLEstimation:
@@ -107,6 +130,7 @@ class MLEstimation:
             list_max_log_like = []
             for _ in range(iter_optim):
                 x0 = np.random.rand(1, model_instance.n_params)
+                print(x0.shape)
                 res = minimize(log_like_data, x0, method=method_optim,options = {'disp': True})
                 list_param.append(res.x)
                 list_max_log_like.append((-1)*res.fun)
@@ -116,7 +140,7 @@ class MLEstimation:
 
         elif model_instance.type == 'pdf':
             print('Evaluating max likelihood estimate...')
-            self.param = model_instance.pdf.fit(self.data)
+            self.param = np.array(model_instance.pdf.fit(self.data))
             self.max_log_like = model_instance.log_like(self.data, self.param)
 
 
@@ -194,56 +218,81 @@ class InfoModelSelection:
 ########################################################################################################################
 class BayesParameterEstimation:
 
-    def __init__(self, data=None, model=None, pdf_proposal_type=None, pdf_proposal_scale=None,
+    def __init__(self, data=None, model=None, sampling_method = None,
+                 pdf_proposal = None, pdf_proposal_type=None, pdf_proposal_scale=None, pdf_proposal_params = None,
                  algorithm=None, jump=None, nsamples=None, nburn=None, walkers=None, seed=None):
 
         if not isinstance(model, Model):
             raise ValueError('model should be of type Model')
+        if data is None:
+            raise ValueError('data should be provided')
+        if nsamples is None:
+            raise ValueError('nsamples should be defined')
+        self.nsamples = nsamples
         self.model = model
         self.data = data
-        self.seed = seed
+        self.sampling_method = sampling_method
 
-        # Properties for the MCMC
-        if pdf_proposal_type is None:
-            self.pdf_proposal_type = 'Uniform'
-        else:
-            self.pdf_proposal_type = pdf_proposal_type
+        if self.sampling_method == 'MCMC':
+            self.seed = seed
 
-        if algorithm is None:
-            self.algorithm = 'Stretch'
-        else:
-            self.algorithm = algorithm
-
-        if pdf_proposal_scale is None:
-            if self.algorithm == 'Stretch':
-                self.pdf_proposal_scale = 2
-                if walkers is None:
-                    self.walkers = 50
-                else:
-                    self.walkers = walkers
+            # Properties for the MCMC
+            if pdf_proposal_type is None:
+                self.pdf_proposal_type = 'Uniform'
             else:
-                self.pdf_proposal_scale = 1
-        else:
-            self.pdf_proposal_scale = pdf_proposal_scale
+                self.pdf_proposal_type = pdf_proposal_type
 
-        if nsamples is None:
-            self.nsamples = 10000
-        else:
-            self.nsamples = nsamples
+            if algorithm is None:
+                self.algorithm = 'Stretch'
+            else:
+                self.algorithm = algorithm
 
-        if jump is None:
-            self.jump = 0
-        else:
-            self.jump = jump
+            if pdf_proposal_scale is None:
+                if self.algorithm == 'Stretch':
+                    self.pdf_proposal_scale = 2
+                    if walkers is None:
+                        self.walkers = 50
+                    else:
+                        self.walkers = walkers
+                else:
+                    self.pdf_proposal_scale = 1
+            else:
+                self.pdf_proposal_scale = pdf_proposal_scale
 
-        if nburn is None:
-            self.nburn = 0
-        else:
-            self.nburn = nburn
+            if jump is None:
+                self.jump = 0
+            else:
+                self.jump = jump
 
-        self.samples = self.run_bayes_parameter_estimation()
-        del self.algorithm, self.jump, self.nburn, self.nsamples, self. pdf_proposal_scale
-        del self.pdf_proposal_type
+            if nburn is None:
+                self.nburn = 0
+            else:
+                self.nburn = nburn
+
+            self.samples, self.accept_ratio = self.run_bayes_parameter_estimation()
+
+            del self.algorithm, self.jump, self.nburn, self.nsamples, self. pdf_proposal_scale
+            del self.pdf_proposal_type
+
+        elif self.sampling_method == 'IS':
+
+            self.pdf_proposal_params = pdf_proposal_params
+            self.pdf_proposal = pdf_proposal
+            self.pdf_proposal_type = pdf_proposal_type
+            # importance distribution is given by the user
+            if self.pdf_proposal is None:
+                if self.model.prior is None:
+                    raise ValueError('a proposal density or a prior should be given')
+                self.pdf_proposal = self.model.prior.name
+                self.pdf_proposal_params = self.model.prior.params
+                self.pdf_proposal_type = self.model.prior_type
+
+            self.samples, self.weights = self.run_bayes_parameter_estimation()
+
+            del self.nsamples, self.pdf_proposal, self.pdf_proposal_params, self.pdf_proposal_type
+
+        else:
+            raise ValueError('sampling_method should be either "MCMC" or "IS"')
 
     def run_bayes_parameter_estimation(self):
 
@@ -252,26 +301,140 @@ class BayesParameterEstimation:
         else:
             print('UQpy: Running parameter estimation for candidate model')
 
-        if self.seed is None:
-            mle = MLEstimation(model_instance=self.model, data=self.data)
-            self.seed = mle.param
+        if self.sampling_method == 'MCMC':
+            if self.seed is None:
+                mle = MLEstimation(model_instance=self.model, data=self.data)
+                self.seed = mle.param
 
-        self.pdf_target = partial(self.target_post)
-        z = MCMC(dimension=self.model.n_params, pdf_proposal_type=self.pdf_proposal_type,
-                 pdf_proposal_scale=self.pdf_proposal_scale,
-                 algorithm=self.algorithm, jump=self.jump, seed=self.seed, nburn=self.nburn, nsamples=self.nsamples,
-                 pdf_target_type='joint_pdf', pdf_target=self.pdf_target)
-        
-        print('UQpy: Parameter estimation analysis completed!')
+            self.pdf_target = partial(self.target_post)
+            self.log_pdf_target = partial(self.log_target_post)
+            z = MCMC(dimension=self.model.n_params, pdf_proposal_type=self.pdf_proposal_type,
+                     pdf_proposal_scale=self.pdf_proposal_scale,
+                     algorithm=self.algorithm, jump=self.jump, seed=self.seed, nburn=self.nburn, nsamples=self.nsamples,
+                     pdf_target_type='joint_pdf', pdf_target=self.pdf_target, log_pdf_target=self.log_pdf_target)
 
-        return z.samples
+            print('UQpy: Parameter estimation analysis completed!')
+
+            return z.samples, z.accept_ratio
+
+        elif self.sampling_method == 'IS':
+
+            self.log_pdf_target = partial(self.log_target_post)
+
+            z = IS(dimension=self.model.n_params, nsamples=self.nsamples,
+                   pdf_proposal = self.pdf_proposal, pdf_proposal_params = self.pdf_proposal_params,
+                   pdf_proposal_type = self.pdf_proposal_type,
+                   pdf_target_type = 'joint_pdf', log_pdf_target=self.log_pdf_target)
+            print(z)
+
+            print('UQpy: Parameter estimation analysis completed!')
+
+            return z.samples, z.weights
+
+        else:
+            raise ValueError('Only IS and MCMC are supported for inference.')
+
+
 
     def target_post(self, theta, args):
         _ = args
-        param = np.array(theta)
-        '''non-informative prior, p(theta)=1 everywhere'''
-        return np.exp(self.model.log_like(self.data, param))
+        if type(theta) is not np.ndarray:
+            theta = np.array(theta)
+        # non-informative prior, p(theta)=1 everywhere
+        if self.model.prior is None:
+            return np.exp(self.model.log_like(x=self.data, params=theta))
+        # prior is given
+        else:
+            return np.exp(self.model.log_like(x=self.data, params=theta) +
+                          self.model.prior.log_pdf(x=theta, params=self.model.prior.params))
 
+    def log_target_post(self, theta, args):
+        _ = args
+        if type(theta) is not np.ndarray:
+            theta = np.array(theta)
+        # non-informative prior, p(theta)=1 everywhere
+        if self.model.prior is None:
+            return self.model.log_like(x=self.data, params=theta)
+        # prior is given
+        else:
+            return self.model.log_like(x=self.data, params=theta) + \
+                   self.model.prior.log_pdf(x=theta, params=self.model.prior.params)
+
+
+class Diagnostics():
+
+    def __init__(self, sampling_method, sampling_outputs):
+
+        if sampling_method not in ['MCMC', 'IS']:
+            raise ValueError('Supported sampling methods for diagnostics are "MCMC", "IS".')
+        self.sampling_method = sampling_method
+        if sampling_outputs is None:
+            raise ValueError('Outputs of the sampling procedure should be provided in sampling_outputs.')
+
+        if self.sampling_method == 'IS':
+            self.effective_sample_size = 1/np.sum(sampling_outputs.weights**2, axis=0)
+            print('Effective sample size is ne={}, for a total number of samples={}'.
+                  format(self.effective_sample_size,np.size(sampling_outputs.weights)))
+            print('max_weight = {}, min_weight = {}'.format(max(sampling_outputs.weights),
+                                                            min(sampling_outputs.weights)))
+            # would also be nice to visualize the weights
+            fig, ax = plt.subplots()
+            ax.hist(sampling_outputs.weights)
+            ax.set_title('histogram of the normalized weights from IS')
+            plt.show()
+            fig, ax = plt.subplots()
+            ax.scatter(sampling_outputs.weights, np.zeros((np.size(sampling_outputs.weights), )),
+                       s=sampling_outputs.weights*200)
+            ax.set_xlabel('weights')
+            plt.show()
+
+        if self.sampling_method == 'MCMC':
+
+            samples = sampling_outputs.samples
+            nsamples, nparams = samples.shape
+
+            # Acceptance ratio
+            print('Acceptance ratio of the chain = {}'.format(sampling_outputs.accept_ratio))
+
+            # Computation of ESS and min ESS
+            eps = 0.05
+            alpha = 0.05
+
+            bn = np.ceil(nsamples**(1/2))
+            an = int(np.ceil(nsamples/bn))
+            idx = np.array_split(np.arange(nsamples), an)
+
+            means_subdivisions = np.empty((an, samples.shape[1]))
+            for i, idx_i in enumerate(idx):
+                x_sub = samples[idx_i, :]
+                means_subdivisions[i,:] = np.mean(x_sub, axis=0)
+            Omega = np.cov(samples.T)
+            Sigma = np.cov(means_subdivisions.T)
+            joint_ESS = nsamples*np.linalg.det(Omega)**(1/nparams)/np.linalg.det(Sigma)**(1/nparams)
+            chi2_value = chi2.ppf(1 - alpha, df=nparams)
+            min_joint_ESS = 2 ** (2 / nparams) * np.pi / (nparams * gamma(nparams / 2)) ** (
+                        2 / nparams) * chi2_value / eps ** 2
+            marginal_ESS = np.empty((nparams, ))
+            min_marginal_ESS = np.empty((nparams,))
+            for j in range(nparams):
+                marginal_ESS[j] = nsamples * Omega[j,j]/Sigma[j,j]
+                min_marginal_ESS[j] = 4 * norm.ppf(alpha/2)**2 / eps**2
+
+            print('Multivariate ESS = {}, minESS = {}'.format(joint_ESS, min_joint_ESS))
+            print('Univariate ESS in each dimension')
+            for j in range(nparams):
+                print('Parameter {}: ESS = {}, minESS = {}'.format(j+1, marginal_ESS[j], min_marginal_ESS[j]))
+
+            # Outputs plots
+            fix, ax = plt.subplots(nrows=nparams, ncols=3, figsize=(10,10))
+            for j in range(samples.shape[1]):
+                ax[j,0].plot(np.arange(nsamples), samples[:,j])
+                ax[j,0].set_title('chain for parameter # {}'.format(j+1))
+                ax[j,1].plot(np.arange(nsamples), np.cumsum(samples[:,j])/np.arange(nsamples))
+                ax[j,1].set_title('parameter convergence')
+                ax[j,2].acorr(samples[:,j]-np.mean(samples[:,j]), maxlags = 50, normed=True)
+                ax[j,2].set_title('ESS = {}'.format(marginal_ESS[j]))
+            plt.show()
 
 ########################################################################################################################
 ########################################################################################################################
