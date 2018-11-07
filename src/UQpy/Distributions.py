@@ -40,8 +40,11 @@ class Distribution:
 
             A module containing functions of a wide variaty of known distributions that can be found in the package
             scipy.stats. The supported distributions are:
+
             [normal, uniform, binomial, beta, genextreme, chisquare, lognormal, gamma, exponential, cauchy, levy,
             logistic, laplace, maxwell, inverse gauss, pareto, rayleigh].
+
+            
             However, a user-defined distribution can be used in UQpy provided a python script .py containing the
             required functions.
             For the assigned distribution, for a point you can estimate:
@@ -831,20 +834,3 @@ class Distribution:
                 self.moments = partial(getattr(custom_dist, 'moments'))
             else:
                 self.moments = getattr(custom_dist, 'moments', 'Attribute not defined.')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
