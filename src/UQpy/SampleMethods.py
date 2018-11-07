@@ -426,7 +426,8 @@ class STS:
     # Authors: Michael Shields
     # Last modified: 6/7/2018 by Dimitris Giovanis & Michael Shields
 
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, sts_design=None, input_file=None):
+    def __init__(self, dimension=None, dist_name=None, dist_params=None, sts_design=None, input_file=None,
+                 sts_criterion="random"):
 
         self.dimension = dimension
         self.sts_design = sts_design
@@ -434,6 +435,7 @@ class STS:
         self.dist_name = dist_name
         self.dist_params = dist_params
         self.strata = None
+        self.sts_criterion = sts_criterion
         self.init_sts()
 
         self.distribution = [None] * self.dimension
@@ -447,9 +449,14 @@ class STS:
         samples_u_to_x = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
         for j in range(0, self.strata.origins.shape[1]):
             i_cdf = self.distribution[j].icdf
-            for i in range(0, self.strata.origins.shape[0]):
-                samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
-                                                  + self.strata.widths[i, j])
+            if self.sts_criterion == "random":
+                for i in range(0, self.strata.origins.shape[0]):
+                    samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
+                                                      + self.strata.widths[i, j])
+            elif self.sts_criterion == "centered":
+                for i in range(0, self.strata.origins.shape[0]):
+                    samples[i, j] = self.strata.origins[i, j] + self.strata.widths[i, j] / 2.
+
             samples_u_to_x[:, j] = i_cdf(samples[:, j], self.dist_params[j])
 
         print('UQpy: Successful execution of STS design..')
@@ -496,6 +503,10 @@ class STS:
                 raise NotImplementedError("Exit code: Incompatible dimensions in 'sts_design'.")
             else:
                 self.strata = Strata(n_strata=self.sts_design)
+
+        # Check sampling criterion
+        if self.sts_criterion not in ['random', 'centered']:
+            raise NotImplementedError("Exit code: Supported sts criteria: 'random', 'centered'")
 
 ########################################################################################################################
 ########################################################################################################################

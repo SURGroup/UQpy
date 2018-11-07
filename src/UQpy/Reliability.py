@@ -19,6 +19,7 @@
 
 from UQpy.RunModel import RunModel
 from UQpy.SampleMethods import MCMC
+from UQpy.Utilities import gradient, eval_hessian
 import numpy as np
 
 
@@ -27,7 +28,6 @@ import numpy as np
 #                                        Subset Simulation
 ########################################################################################################################
 class SubsetSimulation:
-
     """
         Description:
 
@@ -226,7 +226,7 @@ class SubsetSimulation:
         self.g_level.append(self.g[step][g_ind[n_keep]])
 
         # Estimate coefficient of variation of conditional probability of first level
-        self.delta2.append(self.cov_sus(step)**2)
+        self.delta2.append(self.cov_sus(step) ** 2)
 
         while self.g_level[step] > 0 and step < self.max_level:
 
@@ -234,8 +234,13 @@ class SubsetSimulation:
             self.samples.append(self.samples[step - 1][g_ind[0:n_keep]])
             self.g.append(self.g[step - 1][g_ind[:n_keep]])
 
+<<<<<<< HEAD
             for i in range(self.nsamples_ss-n_keep):
                 x0 = self.samples[step][i]
+=======
+            for i in range(self.nsamples_ss - n_keep):
+                seed = self.samples[step][i]
+>>>>>>> 0707d40bc8b4cf6187cd8f84f22eb63e00c9611f
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                               pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
@@ -260,11 +265,16 @@ class SubsetSimulation:
             g_ind = np.argsort(self.g[step])
             self.g_level.append(self.g[step][g_ind[n_keep]])
             # Estimate coefficient of variation of conditional probability of first level
-            self.delta2.append(self.cov_sus(step)**2)
+            self.delta2.append(self.cov_sus(step) ** 2)
 
         n_fail = len([value for value in self.g[step] if value < 0])
+<<<<<<< HEAD
         pf = self.p_cond**step*n_fail/self.nsamples_ss
         cov = np.sqrt(np.sum(self.delta2))
+=======
+        pf = self.p_cond ** step * n_fail / self.nsamples_ss
+        cov = np.sum(self.delta2)
+>>>>>>> 0707d40bc8b4cf6187cd8f84f22eb63e00c9611f
 
         return pf, cov
 
@@ -301,12 +311,20 @@ class SubsetSimulation:
             self.g.append(self.g[step - 1][g_ind[:n_keep]])
 
             for i in range(self.nsamples_ss - n_keep):
+<<<<<<< HEAD
                 x0 = self.samples[step][i:i+n_keep]
+=======
+                seed = self.samples[step][i:i + n_keep]
+>>>>>>> 0707d40bc8b4cf6187cd8f84f22eb63e00c9611f
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                               pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
                               pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
+<<<<<<< HEAD
                               algorithm=self.algorithm, nsamples=n_keep+1, seed=x0)
+=======
+                              algorithm=self.algorithm, nsamples=n_keep + 1, seed=seed)
+>>>>>>> 0707d40bc8b4cf6187cd8f84f22eb63e00c9611f
 
                 x_temp = x_mcmc.samples[n_keep].reshape((1, self.dimension))
                 g_model = RunModel(samples=x_temp, cpu=1, model_type=self.model_type,
@@ -360,7 +378,7 @@ class SubsetSimulation:
         if self.model_script is None:
             raise NotImplementedError('Subset Simulation requires the specification of a computational model. Please '
                                       'specify the model using the model_script input.')
-   
+
     def cov_sus(self, step):
         n = self.g[step].size
         if step == 0:
@@ -392,6 +410,7 @@ class SubsetSimulation:
 
         return di
 
+
 ########################################################################################################################
 ########################################################################################################################
 #                                        First/Second order reliability method
@@ -401,25 +420,24 @@ class SubsetSimulation:
 class TaylorSeries:
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 6/27/18 by Dimitris G. Giovanis
+    # Last Modified: 9/15/18 by Dimitris G. Giovanis
 
     def __init__(self, dimension=None, dist_name=None, dist_params=None, nsamples=None, corr=None, method=None,
-                 init_design_point=None, algorithm=None, model_type=None, model_script=None, input_script=None,
-                 output_script=None, deriv_script=None):
+                 algorithm=None, model_type=None, model_script=None, input_script=None,
+                 output_script=None, brute=True):
 
         self.dimension = dimension
         self.dist_name = dist_name
         self.dist_params = dist_params
         self.nsamples = nsamples
         self.corr = corr
-        self.init_design_point = init_design_point
         self.method = method
         self.algorithm = algorithm
         self.model_type = model_type
         self.model_script = model_script
         self.input_script = input_script
         self.output_script = output_script
-        self.deriv_script = deriv_script
+        self.brute = brute
 
         if self.method == 'FORM':
             print('Running FORM...')
@@ -427,7 +445,18 @@ class TaylorSeries:
             print('Running SORM...')
 
         if self.algorithm == 'HL':
-            [self.u_star, self.x_star, self.beta, self.Pf, self.iterations] = self.form_hl()
+            [self.DesignPoint_Z, self.DesignPoint_X, self.HL_ReliabilityIndex, self.ProbabilityOfFailure_FORM,
+             self.SORM_ReliabilityIndex, self.ProbabilityOfFailure_SORM, self.iterations] = self.form_hl()
+
+        print('Design point in standard normal space: %s' % self.DesignPoint_Z)
+        print('Design point in original space: %s' % self.DesignPoint_X)
+        print('Hasofer-Lind reliability index: %s' % self.HL_ReliabilityIndex)
+        print('FORM probability of failure: %s' % self.ProbabilityOfFailure_FORM)
+
+        if self.method == 'SORM':
+            print('SORM probability of failure: %s' % self.ProbabilityOfFailure_SORM)
+
+        print('Total number of function calls: %s' % self.iterations)
 
     def form_hl(self):
 
@@ -436,81 +465,137 @@ class TaylorSeries:
         n = self.dimension  # number of random variables (dimension)
 
         # initialization
-        max_iter = int(1e3)
+        max_iter = int(self.nsamples)
         tol = 1e-5
-        # Correlation matrix of the random variables in the original space
-        u = np.zeros([max_iter+1, n])
+        u = np.zeros([max_iter + 1, n])
+        x = np.zeros([max_iter + 1, n])
         beta = np.zeros(max_iter)
-
+        from UQpy.SampleMethods import InvNataf, Nataf
         # HL method
+        if self.brute is False:
+            flag_ = False
         for k in range(max_iter):
 
-            if k == 0:
-                u[k, :] = np.array(self.init_design_point)
-
-            from UQpy.SampleMethods import InvNataf
-            dist = InvNataf(samples=u[k, :], dimension=self.dimension, dist_name=self.dist_name,
-                            corr=self.corr, dist_params=self.dist_params)
+            # transform the initial point in the original space:  U to X
+            u_x = Nataf(dimension=self.dimension, input_samples=u[k, :].reshape(1, -1),
+                        dist_name=self.dist_name, dist_params=self.dist_params, corr_norm=self.corr)
+            x[k, :] = u_x.samples
+            jacobian = u_x.jacobian[0]
 
             # 1. evaluate Limit State Function at point
-            g = RunModel(samples=dist.samples, model_type=self.model_type, model_script=self.model_script,
+            g = RunModel(samples=x[k, :].reshape(1, -1), model_type=self.model_type, model_script=self.model_script,
                          input_script=self.input_script, output_script=self.output_script,
                          dimension=self.dimension)
 
             # 2. evaluate Limit State Function gradient at point u_k and direction cosines
-            if self.deriv_script is None:
-                raise RuntimeError('A python script that provides the derivatives of the limit state function'
-                                   'is required for the Hasofer-Lind method.')
-            else:
-                dg = RunModel(samples=dist.samples_z.reshape(self.dimension), model_type=self.model_type,
-                              model_script=self.deriv_script, input_script=self.input_script,
-                              output_script=self.output_script, dimension=self.dimension)
+            dg = gradient(sample=x[k, :].reshape(1, -1), eps=0.01,
+                          model_type=self.model_type, model_script=self.model_script,
+                          input_script=self.input_script,
+                          output_script=self.output_script, dimension=self.dimension, order='second')
 
-            A = np.linalg.solve(dist.Jacobian[0], dg.model_eval.Grad)
-            norm_g = sp.linalg.norm(A)
-            alpha = A / norm_g
-            alpha = alpha.squeeze()
-
-            if self.method == 'FORM':
-                # 3. calculate first order beta
-                beta[k] = -np.inner(u[k, :].T, alpha) + g.model_eval.QOI[0] / norm_g
-                # 4. calculate u_{k+1}
-                u[k + 1, :] = -beta[k] * alpha
-                # next iteration
-                if np.linalg.norm(u[k + 1, :] - u[k, :]) <= tol:
+            if self.brute is False:
+                try:
+                    p = np.linalg.solve(jacobian, dg[0, :])
+                    if np.isnan(p):
+                        break
+                except:
                     break
+            else:
+                p = np.linalg.solve(jacobian, dg[0, :])
+
+            norm_grad = sp.linalg.norm(p)
+            alpha = p / norm_grad
+            alpha = alpha.squeeze()
+            # 3. calculate first order beta
+            beta[k] = -np.inner(u[k, :].T, alpha) + g.model_eval.QOI[0] / norm_grad
+            # 4. calculate u_{k+1}
+            u[k + 1, :] = -beta[k] * alpha
+
+            # next iteration
+
+            if np.linalg.norm(u[k + 1, :] - u[k, :]) <= tol:
+                flag_ = True
+                break
+
+        if flag_ is True:
+            # delete unnecessary data
+            u = u[:k + 1, :]
+
+            # compute design point, reliability index and Pf
+            u_star = u[-1, :]
+            # transform points in the original space
+            u_x = Nataf(dimension=self.dimension, input_samples=u_star.reshape(1, -1),
+                        dist_name=self.dist_name, dist_params=self.dist_params, corr_norm=self.corr)
+            x_star = u_x.samples
+            jacobian = u_x.jacobian[0]
+            beta = beta[k]
+            pf = sp.stats.norm.cdf(-beta)
 
             if self.method == 'SORM':
+                k = 3 * k + 5
 
-                # 3. calculate first order beta
-                beta_ = -np.inner(u[k, :].T, alpha) + g.model_eval.QOI[0] / norm_g
-                Q = np.identity(n=self.dimension)
-                Q[:, -1] = u[k, :].T
-                [Q, R] = np.linalg.qr(Q)
-                Q = np.fliplr(Q)
-                B = np.dot(np.dot(Q.T, dg.model_eval.Hessian), Q)
-                J = np.identity(n=self.dimension-1) + beta_*B[:self.dimension-1, :self.dimension-1]/norm_g
-                correction = 1/np.sqrt(np.linalg.det(J))
-                pf = sp.stats.norm.cdf(-beta_)*correction
-                beta[k] = -sp.stats.norm.ppf(pf)  # corrected index for second-order
+                # transform the initial point in the original space:  U to X
+                u_x = Nataf(dimension=self.dimension, input_samples=u_star.reshape(1, -1),
+                            dist_name=self.dist_name, dist_params=self.dist_params, corr_norm=self.corr)
+                x[k, :] = u_x.samples
+                jacobian = u_x.jacobian[0]
 
-                # 4. calculate u_{k+1}
-                u[k + 1, :] = -beta[k] * alpha
-                # next iteration
-                if np.linalg.norm(u[k + 1, :] - u[k, :]) <= tol:
-                    break
+                # 1. evaluate Limit State Function at point
+                g = RunModel(samples=x[k, :].reshape(1, -1), model_type=self.model_type, model_script=self.model_script,
+                             input_script=self.input_script, output_script=self.output_script,
+                             dimension=self.dimension)
 
-        # delete unnecessary data
-        u = u[:k + 1, :]
+                # 2. evaluate Limit State Function gradient at point u_k and direction cosines
+                dg = gradient(sample=x[k, :].reshape(1, -1), eps=0.01,
+                              model_type=self.model_type, model_script=self.model_script,
+                              input_script=self.input_script,
+                              output_script=self.output_script, dimension=self.dimension, order='second')
 
-        # compute design point, reliability index and Pf
-        u_star = u[-1, :]
-        from UQpy.SampleMethods import Nataf
-        dist_star = Nataf(samples=u_star, dist_name=self.dist_name,
-                          dist_params=self.dist_params, corr_norm=dist.corr_norm)
+                der_ = dg[1, :]
 
-        x_star = dist_star.samples_x
-        beta = beta[k]
-        pf = sp.stats.norm.cdf(-beta)
+                mixed_der = gradient(sample=x_star.reshape(1, -1), eps=0.01,
+                                     model_type=self.model_type, model_script=self.model_script,
+                                     input_script=self.input_script,
+                                     output_script=self.output_script, dimension=self.dimension, order='mixed')
 
-        return u_star, x_star[0], beta, pf, k
+                hessian = eval_hessian(self.dimension, mixed_der, der_)
+
+                q = np.eye(self.dimension)
+                q[:, 0] = u_star.T
+                q_, r_ = np.linalg.qr(q)
+                q0 = np.fliplr(q_)
+                a = np.dot(np.dot(q0.T, hessian), q0)
+                if self.dimension > 1:
+                    jay = np.eye(self.dimension - 1) + beta * a[:self.dimension - 1, :self.dimension - 1] / norm_grad
+                elif self.dimension == 1:
+                    jay = np.eye(self.dimension) + beta * a[:self.dimension, :self.dimension] / norm_grad
+                correction = 1 / np.sqrt(np.linalg.det(jay))
+                pf_srom = pf * correction
+                beta_srom = -sp.stats.norm.ppf(pf_srom)
+
+                return u_star, x_star, beta, pf, beta_srom, pf_srom, k
+
+            elif self.method == 'FORM':
+                k = 3 * k
+                return u_star, x_star, beta, pf, [], [], k
+
+        else:
+            if self.method == 'FORM':
+                k = 0
+                u_star = np.inf
+                x_star = np.inf
+                beta = np.inf
+                pf = np.inf
+
+                return u_star, x_star, beta, pf, [], [], k
+
+            elif self.method == 'SORM':
+                k = 0
+                u_star = np.inf
+                x_star = np.inf
+                beta = np.inf
+                pf = np.inf
+                beta_srom = np.inf
+                pf_srom = np.inf
+
+                return u_star, x_star, beta, pf, beta_srom, pf_srom, k
