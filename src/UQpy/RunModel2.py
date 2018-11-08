@@ -3,7 +3,8 @@ import subprocess
 import pathlib
 import re
 import shlex
-import datetime
+import collections
+import numpy as np
 
 
 class RunModel2:
@@ -59,6 +60,7 @@ class RunModel2:
 
         # Model related
         # TODO: Check if model_script is full path or not. Make sure it works in both cases.
+        # TODO: Create folders for each model evaluation
         # Check if the model script is a python script
         model_extension = pathlib.Path(model_script).suffix
         if model_extension == '.py':
@@ -150,7 +152,6 @@ class RunModel2:
 
         # Call the output function
         print('\nCollecting outputs in parallel execution of the model with template input.\n')
-        # TODO: Make the output collection execute in parallel if possible
         for i in range(self.nsim):
             self._output_parallel(i)
 
@@ -160,6 +161,7 @@ class RunModel2:
         Execute the python model in serial when there is no template input file
         :return:
         """
+        #TODO: Import the whole file not just the function, we may lose the supporting files
         print('\nPerforming serial execution of the model without template input.\n')
         # Run python model
         for i in range(self.nsim):
@@ -275,7 +277,6 @@ class RunModel2:
         :param index: The simulation number
         :return:
         """
-        # TODO: Get the alias to the command to run python as optional input from user
         self.model_command = (["python3", str(self.model_script), str(index)])
         subprocess.run(self.model_command)
 
@@ -363,12 +364,23 @@ class RunModel2:
         return
 
     def _find_and_replace_var_names_with_values(self, var_names, samples, template_text, index, user_format='{:.4E}'):
+        # TODO: deal with cases which have both var1 and var11
         new_text = template_text
         for j in range(len(var_names)):
-            string_regex = re.compile(r"<" + var_names[j] + r">")
+            string_regex = re.compile(r"<" + var_names[j] + r".*?>")
             count = 0
             for string in string_regex.findall(template_text):
-                new_text = new_text[0:new_text.index(string)] + str(user_format.format(float(samples[j]))) \
+                temp = string.replace(var_names[j], "samples["+str(j)+"]")
+                temp = eval(temp[1:-1])
+                if isinstance(temp, collections.Iterable):
+                    temp = np.array(temp).flatten()
+                    to_add = ''
+                    for i in range(len(temp)-1):
+                        to_add += str(temp[i]) + ', '
+                    to_add += str(temp[-1])
+                else:
+                    to_add = str(temp)
+                new_text = new_text[0:new_text.index(string)] + to_add \
                            + new_text[(new_text.index(string) + len(string)):]
                 count += 1
             if index == 0:
@@ -532,7 +544,6 @@ class RunModel2:
     #                 print('You specified the model class name as: ' + str(self.model_object_name))
     #                 raise ValueError("The class name should be specified in the inputs.")
     #
-    # # TODO: Create folders for each model evaluation
     #
     # ####################################################################################################################
     # def _execute(self):
@@ -551,7 +562,6 @@ class RunModel2:
     #             self.parallel_string = "parallel --delay 0.2 --joblog logs/runtask.log --resume -j " + str(
     #                 self.ntasks)
     #             #
-    #             # TODO: Add features for execution on MARCC (SLURM commands)
     #             # self.srun_string = "srun "
     #
     #             self.model_command = ([self.parallel_string, " 'python3 -u " + str(self.model_script) +
