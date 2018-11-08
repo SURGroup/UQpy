@@ -173,9 +173,81 @@ class RunModel2:
         Execute the python model in parallel when there is no template input file
         :return:
         """
-        print('\nPerforming parallel execution of the model with template input.\n')
+        print('\nPerforming parallel execution of the model without template input.\n')
         # TODO: Run python model in parallel using multiprocess
-        self._serial_python_execution()
+        # self._serial_python_execution()
+        import concurrent.futures
+        # Try processes # Does not work - raises TypeError: can't pickle module objects
+        # indices = range(self.nsim)
+        # with concurrent.futures.ProcessPoolExecutor() as executor:
+        #     for index, res in zip(indices, executor.map(self._run_parallel_python, self.samples)):
+        #         self.qoi_list[index] = res
+
+        # Try threads - this works but is slow
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.ntasks) as executor:
+            index = 0
+            for sample in self.samples:
+                res = {executor.submit(self._run_parallel_python, sample): index}
+                for future in concurrent.futures.as_completed(res):
+                    resnum = res[future]
+                    try:
+                        data = future.result()
+                    except Exception as exc:
+                        print('%r generated an exception: %s' % (resnum, exc))
+                    else:
+                        self.qoi_list[index] = data
+                index += 1
+
+        # from multiprocessing import Process
+        # from multiprocessing import Queue
+        #
+        # # Initialize the parallel processing queue and processes
+        # que = Queue()
+        # jobs = [Process(target=self._run_parallel_python_chunked,
+        #                 args=([self.samples[index*self.ntasks:(index+1)*self.ntasks-1]]))
+        #         for index in range(self.ntasks)]
+        # # Start the parallel processes.
+        # for j in jobs:
+        #     j.start()
+        # for j in jobs:
+        #     j.join()
+        #
+        # # Collect the results from the processes and sort them into the original sample order.
+        # results = [que.get(j) for j in jobs]
+        # for i in range(self.nsim):
+        #     k = 0
+        #     for j in results[i][0]:
+        #         self.qoi_list[j] = results[i][1][k]
+        #         k = k + 1
+
+    def _run_parallel_python(self, sample):
+        """
+        Execute the python model in parallel
+        :param sample: One sample point where the model has to be evaluated
+        :return:
+        """
+        exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
+        parallel_output = eval(self.model_object_name + '(sample)')
+        if self.model_is_class:
+            par_res = parallel_output.qoi
+        else:
+            par_res = parallel_output
+
+        return par_res
+
+    def _run_parallel_python_chunked(self, some_samples):
+        par_res = [[] for i in range(some_samples.shape[0])]
+        for i in range(some_samples.shape[0]):
+            exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
+            parallel_output = eval(self.model_object_name + '(some_samples[i])')
+            if self.model_is_class:
+                par_res[i] = parallel_output.qoi
+            else:
+                par_res[i] = parallel_output
+
+        return par_res
+
+
 
     ####################################################################################################################
     def _input_serial(self, index):
