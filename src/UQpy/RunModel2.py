@@ -3,6 +3,7 @@ import subprocess
 import pathlib
 import re
 import shlex
+import datetime
 
 
 class RunModel2:
@@ -17,7 +18,7 @@ class RunModel2:
 
     def __init__(self, samples=None, model_script=None, model_object_name=None,
                  input_template=None, var_names=None, output_script=None, output_object_name=None,
-                 ntasks=1, cores_per_task=1, nodes=1, resume=False):
+                 ntasks=1, cores_per_task=1, nodes=1, resume=False, verbose=True):
         """
         Check input and call appropriate functions in the workflow depending on ntasks and input_template
 
@@ -46,6 +47,7 @@ class RunModel2:
             # TODO: Make it clear if numpy arrays or lists can be passed as samples
             # TODO: Raise a warning if the shape is not defined clearly
             # TODO: Check if fire is installed
+            # TODO: Support verbose options - print messages only if verbose is true
         # Input related
         self.input_template = input_template
         self.var_names = var_names
@@ -325,7 +327,7 @@ class RunModel2:
                 pass
         self.parallel_string = "parallel --delay 0.2 --joblog logs/runtask.log --resume -j " + str(self.ntasks)
         self.model_command_string = (self.parallel_string + " 'python3 -u " + str(self.model_script) +
-                                     "' {1} ::: {1.." + str(self.nsim) + "}")
+                                     "' {1} ::: {0.." + str(self.nsim - 1) + "}")
         # print(self.model_command_string)
 
         # self.model_command = shlex.split(self.model_command_string)
