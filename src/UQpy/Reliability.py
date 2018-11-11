@@ -165,7 +165,8 @@ class SubsetSimulation:
 
     def __init__(self, dimension=None, samples_init=None, nsamples_ss=None, p_cond=None, pdf_target_type=None,
                  pdf_target=None, pdf_target_params=None, pdf_proposal_type=None, pdf_proposal_scale=None,
-                 algorithm=None, model_type=None, model_script=None, input_script=None, output_script=None):
+                 algorithm=None, model_type=None, model_script=None, input_script=None, output_script=None,
+                 chain_cross_cor=False):
 
         self.dimension = dimension
         self.samples_init = samples_init
@@ -181,6 +182,7 @@ class SubsetSimulation:
         self.input_script = input_script
         self.output_script = output_script
         self.p_cond = p_cond
+        self.chain_cross_cor = chain_cross_cor
         self.g = list()
         self.samples = list()
         self.g_level = list()
@@ -222,7 +224,7 @@ class SubsetSimulation:
         self.g_level.append(self.g[step][g_ind[n_keep]])
 
         # Estimate coefficient of variation of conditional probability of first level
-        self.delta2.append(self.cov_sus(step) ** 2)
+        self.delta2.append(self.cov_sus(step))
 
         while self.g_level[step] > 0 and step < self.max_level:
 
@@ -256,11 +258,11 @@ class SubsetSimulation:
             g_ind = np.argsort(self.g[step])
             self.g_level.append(self.g[step][g_ind[n_keep]])
             # Estimate coefficient of variation of conditional probability of first level
-            self.delta2.append(self.cov_sus(step) ** 2)
+            self.delta2.append(self.cov_sus(step))
 
         n_fail = len([value for value in self.g[step] if value < 0])
         pf = self.p_cond ** step * n_fail / self.nsamples_ss
-        cov = np.sum(self.delta2)
+        cov = np.sqrt(np.sum(np.array(self.delta2)**2))
 
         return pf, cov
 
@@ -285,6 +287,9 @@ class SubsetSimulation:
         self.g.append(np.asarray(g_init.model_eval.QOI))
         g_ind = np.argsort(self.g[step])
         self.g_level.append(self.g[step][g_ind[n_keep]])
+        self.delta2.append(self.cov_sus(step))
+
+        # Estimate coefficient of variation of conditional probability of first level
 
         while self.g_level[step] > 0:
 
@@ -318,10 +323,13 @@ class SubsetSimulation:
 
             g_ind = np.argsort(self.g[step])
             self.g_level.append(self.g[step][g_ind[n_keep]])
+            self.delta2.append(self.cov_sus(step))
 
         n_fail = len([value for value in self.g[step] if value < 0])
         pf = self.p_cond ** step * n_fail / self.nsamples_ss
-        return pf
+        cov = np.sqrt(np.sum(np.array(self.delta2)**2))
+
+        return pf, cov
 
     def init_sus(self):
 
@@ -353,33 +361,75 @@ class SubsetSimulation:
     def cov_sus(self, step):
         n = self.g[step].size
         if step == 0:
-            di = np.sqrt((1 - self.p_cond) / (self.p_cond * n))
+            return np.sqrt((1 - self.p_cond) / (self.p_cond * n))
         else:
-            nc = int(self.p_cond * n)
-            r_zero = self.p_cond * (1 - self.p_cond)
-            index = np.zeros(n)
-            index[np.where(self.g[step] < self.g_level[step])] = 1
-            indices = np.zeros(shape=(int(n / nc), nc)).astype(int)
-            for i in range(int(n / nc)):
-                for j in range(nc):
-                    if i == 0:
-                        indices[i, j] = j
-                    else:
-                        indices[i, j] = indices[i - 1, j] + nc
-            gamma = 0
-            rho = np.zeros(int(n / nc) - 1)
-            for k in range(int(n / nc) - 1):
-                z = 0
-                for j in range(int(nc)):
-                    for l in range(int(n / nc) - k):
-                        z = z + index[indices[l, j]] * index[indices[l + k, j]]
+            n_c = int(self.p_cond * n)
+            n_s = int(1 / self.p_cond)
+            indicator = np.reshape(self.g[step] < self.g_level[step], (n_s, n_c))
+            gamma = self.corr_factor_gamma(indicator, n_s, n_c)
+            beta_hat, r_jn0 = self.corr_factor_beta(indicator, n_s, n_c) # Eq. 24
+            if self.chain_cross_cor is True:
+                beta_i = (n_c - 1) * r_jn0 + beta_hat
+                gamma = gamma + beta_i
 
-                rho[k] = (1 / (n - k * nc) * z - self.p_cond ** 2) / r_zero
-                gamma = gamma + 2 * (1 - k * nc / n) * rho[k]
+            return np.sqrt(((1 - self.p_cond) / (self.p_cond * n)) * (1 + gamma))
 
-            di = np.sqrt((1 - self.p_cond) / (self.p_cond * n) * (1 + gamma))
+    def corr_factor_gamma(self, indicator, n_s, n_c):
 
-        return di
+        gamma = np.zeros(n_s - 1)
+        r = np.zeros(n_s - 1)
+        n = n_c * n_s
+
+        sums = 0
+        for k in range(n_c):
+            for ip in range(n_s):
+                sums = sums + (indicator[ip, k] * indicator[ip, k])  # sums inside (Ref. 1 Eq. 22)
+
+        r_0 = (1 / n) * sums - self.p_cond ** 2
+
+        for i in range(n_s - 1):
+            z = 0
+            for k in range(n_c):
+                for ip in range(n_s - i - 1):
+                    z = z + (indicator[ip, k] * indicator[ip + i + 1, k])
+
+            r[i] = (1 / (n - (i + 1) * n_c)) * z - self.p_cond ** 2
+            gamma[i] = (1 - ((i + 1) / n_s)) * (r[i] / r_0)
+
+        gamma = 2 * np.sum(gamma)
+
+        return gamma
+
+    def corr_factor_beta(self, indicator, n_s, n_c):
+
+        beta = np.zeros(n_s - 1)
+        r_jn = np.zeros(n_s - 1)
+        n = n_c * n_s
+
+        sums = 0
+        for j in range(n_c):
+            for k in range(n_c):
+                for l in range(n_s):
+                    sums = sums + (indicator[l, k] * indicator[l, j])
+
+        r_jn0 = (1 / n) * sums - self.p_cond ** 2
+
+        for k in range(n_s - 1):
+            z = 0
+            for j in range(n_c):
+                for n_ in range(n_c - k):
+                    for l in range(n_s - k - 1):
+                        z = z + (indicator[l, j] * indicator[l + k + 1, n_])
+
+            r_jn[k] = (1 / (n - (k + 1) * n_c)) * z - self.p_cond ** 2
+            beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k] / r_jn0)
+
+        beta = 2 * (n_c - 1) * np.sum(beta)
+
+        return beta, r_jn0
+
+
+
 
 
 ########################################################################################################################
