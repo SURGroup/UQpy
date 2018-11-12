@@ -54,7 +54,8 @@ class RunModel2:
 
     def __init__(self, samples=None, model_script=None, model_object_name=None,
                  input_template=None, var_names=None, output_script=None, output_object_name=None,
-                 ntasks=1, cores_per_task=1, nodes=1, resume=False, verbose=True, model_dir=None):
+                 ntasks=1, cores_per_task=1, nodes=1, resume=False, verbose=True, model_dir=None,
+                 cluster=False, ):
 
         # Check if samples are provided
         if samples is None:
@@ -76,8 +77,6 @@ class RunModel2:
             raise ValueError("Variable names should be passed as a list of strings.")
 
         # Model related
-        # TODO: Check if model_script is full path or not. Make sure it works in both cases - if it is a path, import appropriately.
-
         self.model_dir = model_dir
 
         if self.model_dir is not None:
@@ -127,6 +126,9 @@ class RunModel2:
         # Number of nodes
         self.nodes = nodes
 
+        # If running on cluster or not
+        self.cluster = cluster
+
         # Check if there is a template input file or not and execute the appropriate function
         if self.input_template is not None:  # If there is a template input file
             # Check if it is a file and is readable
@@ -152,9 +154,6 @@ class RunModel2:
             self.python_model = __import__(self.model_script[:-3])
             # Run function which checks if the python model has the model object
             self._check_python_model()
-            # Import the python model object - this does not work correctly. Importing later.
-            # exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
-            # print('Imported model object')
 
             # Run the serial execution or parallel execution depending on ntasks
             if self.ntasks == 1:
@@ -298,18 +297,6 @@ class RunModel2:
 
         return par_res
 
-    # def _run_parallel_python_chunked(self, some_samples):
-    #     par_res = [[] for i in range(some_samples.shape[0])]
-    #     for i in range(some_samples.shape[0]):
-    #         exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
-    #         parallel_output = eval(self.model_object_name + '(some_samples[i])')
-    #         if self.model_is_class:
-    #             par_res[i] = parallel_output.qoi
-    #         else:
-    #             par_res[i] = parallel_output
-    #
-    #     return par_res
-
     ####################################################################################################################
     def _input_serial(self, index):
         """
@@ -384,20 +371,19 @@ class RunModel2:
             except OSError:
                 pass
         self.parallel_string = "parallel --delay 0.2 --joblog logs/runtask.log --resume -j " + str(self.ntasks)
-        self.model_command_string = (self.parallel_string + " 'python3 -u " + str(self.model_script) +
-                                     "' {1} ::: {0.." + str(self.nsim - 1) + "}")
-        # print(self.model_command_string)
+
+        # If running on MARCC cluster
+        if self.cluster:
+            self.srun_string = "srun -N " + str(self.ntasks) + " -n " + str(self.cores_per_task) + " exclusive"
+            self.model_command_string = (self.parallel_string + self.srun_string + " 'python3 -u " +
+                                         str(self.model_script) + "' {1} ::: {0.." + str(self.nsim - 1) + "}")
+        else:  # If running locally
+            self.model_command_string = (self.parallel_string + " 'python3 -u " +
+                                         str(self.model_script) + "' {1} ::: {0.." + str(self.nsim - 1) + "}")
 
         # self.model_command = shlex.split(self.model_command_string)
-        # TODO: Identify why using shlex does not work and get rid of shell=True if possible
-        # print(self.model_command)
-
-        # self.model_command = (["parallel", "--delay", "0.2", "--joblog", "logs/runtask.log",
-        #                       "--resume", "-j", str(self.ntasks), "'python3 -u " + str(self.model_script) +
-        #                        "'", "{1} ::: {1.."+str(self.nsim)+"}"])
-        # print(self.model_command)
-
         # subprocess.run(self.model_command)
+
         subprocess.run(self.model_command_string, shell=True)
 
     def _output_parallel(self, index):
@@ -406,7 +392,6 @@ class RunModel2:
         :param index: The simulation number
         :return:
         """
-        # TODO: Make this run in parallel if possible
         self._output_serial(index)
 
     ####################################################################################################################
@@ -543,146 +528,14 @@ class RunModel2:
         qoi_list[pos] = qoi_output
         return qoi_list
 
-    # ####################################################################################################################
-    # # Functions related to running the model - generate input, run the model, and collect the output
-    # def _input(self):
-    #     if self.input_template is not None:
-    #
-    #         print('Here - template input file present!')
-    #
-    #         # Check if var_names is a list of strings
-    #         if self._is_list_of_strings(self.var_names):
-    #             # self.var_names = self.var_names
-    #             self.n_vars = len(self.var_names)
+    # def _run_parallel_python_chunked(self, some_samples):
+    #     par_res = [[] for i in range(some_samples.shape[0])]
+    #     for i in range(some_samples.shape[0]):
+    #         exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
+    #         parallel_output = eval(self.model_object_name + '(some_samples[i])')
+    #         if self.model_is_class:
+    #             par_res[i] = parallel_output.qoi
     #         else:
-    #             raise ValueError("Variable names should be passed as a list of strings.")
+    #             par_res[i] = parallel_output
     #
-    #         with open(self.input_template, 'r') as f:
-    #             self.template_text = str(f.read())
-    #
-    #         # Loop over the number of samples and create input files in a folder in current directory
-    #         print()
-    #         for i in range(self.nsim):
-    #             # print('The samples being sent are: ' + str(self.samples[i]))
-    #
-    #             # Create new text to write to file
-    #             self.new_text = self._find_and_replace_var_names_with_values(var_names=self.var_names,
-    #                                                                          samples=self.samples[i],
-    #                                                                          template_text=self.template_text,
-    #                                                                          index=i,
-    #                                                                          user_format='{:.4E}')
-    #             # Write the new text to the input file
-    #             self._create_input_files(file_name=self.input_template, num=i + 1, text=self.new_text,
-    #                                      new_folder='InputFiles')
-    #         print('Created ' + str(self.nsim) + ' input files in the directory ./InputFiles. \n')
-    #
-    #
-    #     else:  # If there is no template input file
-    #
-    #         print('\nHere - no template input file!\n')
-    #
-    #         # Import the python module
-    #         self.python_model = __import__(self.model_script[:-3])
-    #         # Get the names of the classes in the imported module
-    #         import inspect
-    #         class_list = []
-    #         for name, obj in inspect.getmembers(self.python_model):
-    #             if inspect.isclass(obj):
-    #                 class_list.append(name)
-    #
-    #         # There should be at least one class in the module - if not there, exit with error.
-    #         if class_list is []:
-    #             raise ValueError("The python model should be defined as a class. Refer documentation for details.")
-    #
-    #         else:  # If there is at least one class in the module
-    #             # If the model class name is not given as input and there is only one class, take that class name to
-    #             # run the model.
-    #             if self.model_object_name is None and len(class_list) == 1:
-    #                 self.model_object_name = class_list[0]
-    #
-    #             # If there is a model_object_name given, check if it is in the list.
-    #             if self.model_object_name in class_list:
-    #                 print('The model that will be run: ' + self.model_object_name)
-    #
-    #             else:
-    #                 print('You specified the model class name as: ' + str(self.model_object_name))
-    #                 raise ValueError("The class name should be specified in the inputs.")
-    #
-    #
-    # ####################################################################################################################
-    # def _execute(self):
-    #     if self.input_template is not None:
-    #         # Create the command to run the model
-    #         # Check if parallel processing is necessary or not. If not, build a command string without gnu parallel.
-    #         if self.ntasks == 1:
-    #             for i in range(self.nsim):
-    #                 # self.model_command = (["python3", str(self.model_script), str(i)])
-    #                 # subprocess.run(self.model_command)
-    #                 self.model_command = ("python3 " + str(self.model_script) + ' ' + str(i + 1))
-    #                 os.system(self.model_command)
-    #         else:
-    #             # self.model_command = ("parallel -j " + str(self.ntasks) + " 'python3 -u " + str(self.model_script) +
-    #             #                       " {1} ::: {1.." + str(self.nsim) + "}' ")
-    #             self.parallel_string = "parallel --delay 0.2 --joblog logs/runtask.log --resume -j " + str(
-    #                 self.ntasks)
-    #             #
-    #             # self.srun_string = "srun "
-    #
-    #             self.model_command = ([self.parallel_string, " 'python3 -u " + str(self.model_script) +
-    #                                    " {1} ::: {1.." + str(self.nsim) + "}'"])
-    #     else:
-    #         if self.ntasks == 1:
-    #
-    #             exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
-    #             self.model_output = eval(self.model_object_name + '(self.samples)')
-    #
-    #             # print("\nThe model output is:")
-    #             # print(self.model_output.model_output)
-    #             #
-    #             # print("\nThe qoi is:")
-    #             # print(self.model_output.qoi)
-    #
-    #         else:
-    #             self.model_command = ("parallel -j " + str(self.ntasks) + " 'python3 python_model." +
-    #                                   str(self.model_object_name) + "(" + str(self.samples) + ")'")
-    #
-    #     # Run the model
-    #     # subprocess.run(self.model_command)
-    #     # out_temp = subprocess.getoutput(self.model_command)
-    #     # out_temp = ast.literal_eval(subprocess.getoutput(self.model_command))
-    #     # print(out_temp)
-    #     # print(type(out_temp))
-    #
-    #     # print('The command passed to subprocess.run() is:')
-    #     # print(self.model_command)
-    #
-    #     # command = "parallel 'python3 -u " + str(self.model_name) + " {1} ::: {1.." + str(self.nsim) + "}"
-    #     # os.system(self.model_command)
-    #     # subprocess.run(self.model_command)
-    #
-    # ####################################################################################################################
-    # def _output(self):
-    #
-    #     if self.input_template is not None:
-    #         if self.ntasks == 1:
-    #             for i in range(self.nsim):
-    #                 self.output_command = 'python3 ' + self.output_script + ' ' + str(i + 1)
-    #                 qoi_temp = ast.literal_eval(subprocess.getoutput(self.output_command))
-    #                 print(qoi_temp)
-    #                 print(type(qoi_temp))
-    #                 self._collect_output(self.qoi_list, qoi_temp, i)
-    #         # Create the command to process the output
-    #     #     self.output_command = ("parallel -j " + str(self.ntasks) + " 'python3 -u " + str(self.output_script) +
-    #     #                            " {1} ::: {1.." + str(self.nsim) + "}' ")
-    #     else:
-    #         self.output_command = ("parallel -j " + str(self.ntasks) + " 'python3 python_model." +
-    #                                str(self.output_object_name) + "(" + str(self.samples) + ")'")
-    #
-    #     # subprocess.run(self.output_command)
-    #
-    #     # self._collect_output(self.qoi_list, qoi_output, pos)
-    #     print()
-    #     # print(self.qoi_list)
-
-# if __name__ == "__main__":
-#     RunModel2._input()
+    #     return par_res
