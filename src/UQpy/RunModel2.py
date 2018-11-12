@@ -54,15 +54,17 @@ class RunModel2:
 
     def __init__(self, samples=None, model_script=None, model_object_name=None,
                  input_template=None, var_names=None, output_script=None, output_object_name=None,
-                 ntasks=1, cores_per_task=1, nodes=1, resume=False, verbose=True, model_dir=None,
+                 ntasks=1, cores_per_task=1, nodes=1, resume=False, verbose=False, model_dir=None,
                  cluster=False, ):
 
         # Check if samples are provided
         if samples is None:
             raise ValueError('Samples must be provided as input to RunModel.')
-        else:
+        elif isinstance(samples, (list, np.ndarray)):
             self.samples = samples
             self.nsim = len(self.samples)  # This assumes that the number of rows is the number of simulations.
+        else:
+            raise ValueError("Samples must be passed as a list or numpy ndarray")
 
         # Verbose option
         self.verbose = verbose
@@ -223,7 +225,12 @@ class RunModel2:
         # Run python model
         for i in range(self.nsim):
             exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
-            self.model_output = eval(self.model_object_name + '(self.samples[i])')
+            if isinstance(self.samples, list):
+                sample_to_send = self.samples[i]
+            elif isinstance(self.samples, np.ndarray):
+                sample_to_send = self.samples[None, i]
+            # self.model_output = eval(self.model_object_name + '(self.samples[i])')
+            self.model_output = eval(self.model_object_name + '(sample_to_send)')
             if self.model_is_class:
                 self.qoi_list[i] = self.model_output.qoi
             else:
