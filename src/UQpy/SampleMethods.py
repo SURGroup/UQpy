@@ -609,7 +609,7 @@ class MCMC:
             :param dimension: A scalar value defining the dimension of target density function.
                               Default: 1
             :type dimension: int
-            :param pdf_proposal_name: Type of proposal density function for MCMC. Only used with algorithm ='MH' or'MMH'
+            :param pdf_proposal_type: Type of proposal density function for MCMC. Only used with algorithm ='MH' or'MMH'
                             Options:
                                     'Normal' : Normal proposal density.
                                     'Uniform' : Uniform proposal density.
@@ -618,7 +618,7 @@ class MCMC:
                             proposal densities to each dimension. Example pdf_proposal_name = ['Normal','Uniform'].
                             If dimension > 1, algorithm = 'MMH' and this is input as a string, the proposal densities
                             for all dimensions are set equal to the assigned proposal type.
-            :type pdf_proposal_name: str or str list
+            :type pdf_proposal_type: str or str list
             :param pdf_proposal_scale: Scale of the proposal distribution
                             If algorithm == 'MH' or 'MMH'
                                 For pdf_proposal_type = 'Uniform'
@@ -684,11 +684,11 @@ class MCMC:
     # Authors: Michael D. Shields, Mohit Chauhan, Dimitris G. Giovanis
     # Updated: 4/26/18 by Michael D. Shields
 
-    def __init__(self, dimension=None, pdf_proposal_name=None, pdf_proposal_scale=None,
+    def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None,
                  pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None,
                  algorithm=None, jump=1, nsamples=None, seed=None, burn_in=None):
 
-        self.pdf_proposal_name = pdf_proposal_name
+        self.pdf_proposal_type = pdf_proposal_type
         self.pdf_proposal_scale = pdf_proposal_scale
         self.pdf_target = pdf_target
         self.pdf_target_copula = pdf_target_copula
