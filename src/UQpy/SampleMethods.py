@@ -1092,7 +1092,7 @@ class IS:
         sum_w = np.sum(weights, axis=0)
         return log_weights, weights/sum_w
 
-    def re_sample(self, method='multinomial', size=None):
+    def resample(self, method='multinomial', size=None):
 
         if size is None:
             size = self.nsamples
