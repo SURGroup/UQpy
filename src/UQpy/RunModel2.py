@@ -118,8 +118,8 @@ class RunModel2:
         # Output related
         self.output_script = output_script
         self.output_object_name = output_object_name
-        # Initialize a list of nsim empty lists. The ith empty list will hold the qoi of the ith simulation.
-        self.qoi_list = [[] for i in range(self.nsim)]
+        # Initialize a list of nsim None values. The ith position in the list will hold the qoi of the ith simulation.
+        self.qoi_list = [None] * self.nsim
 
         # Number of tasks
         self.ntasks = ntasks
