@@ -74,13 +74,13 @@ class MCS:
 
     def __init__(self, dist_name=None, dist_params=None, dist_copula = None, nsamples=None):
 
+        self.nsamples = nsamples
         if self.nsamples is None:
             raise ValueError('UQpy error: nsamples must be defined.')
         # ne need to do other checks as they will be done within Distributions.py
         self.dist_name = dist_name
         self.dist_params = dist_params
         self.dist_copula = dist_copula
-        self.nsamples = nsamples
         self.samples = Distribution(name=self.dist_name, copula=self.dist_copula).rvs(params=self.dist_params,
                                                                                       nsamples=nsamples)
         # the output must be a ndarray of size (ndim, nsamples)
@@ -717,11 +717,10 @@ class MCMC:
         self.dimension = dimension
         self.seed = seed
         self.nburn = nburn
-        self.init_mcmc()
         if self.algorithm is 'Stretch':
             self.ensemble_size = len(self.seed)
-        if self.algorithm is 'MMH':
-            self.pdf_target_type = None
+
+        self.init_mcmc()
         self.samples, self.accept_ratio = self.run_mcmc()
 
     def run_mcmc(self):
@@ -965,6 +964,7 @@ class MCMC:
             return np.log(pdf_value)
         # For MMH, keep the functions as lists if they appear as lists
         if self.algorithm == 'MMH':
+            self.pdf_target_type = None
             if self.log_pdf_target is not None:
                 if isinstance(self.log_pdf_target, list):
                     self.pdf_target_type = 'marginal_pdf'
