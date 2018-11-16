@@ -124,6 +124,9 @@ class Model:
             self.pdf = Distribution(self.name)
             self.n_params = self.pdf.n_params
 
+        else:
+            raise ValueError('UQpy error: model_type must be defined, as either "pdf" of "python".')
+
         # Define prior if it is given
         self.prior_params = prior_params
         if prior_name is not None:
@@ -146,7 +149,7 @@ class Model:
                              output_script=self.output_script, output_object_name=self.output_object_name,
                              ntasks=self.ntasks, cores_per_task=self.cores_per_task, nodes=self.nodes,
                              resume=self.resume, verbose=self.verbose, model_dir=self.model_dir,
-                             cluster=self.cluster )
+                             cluster=self.cluster)
             for i in range(params.shape[0]):
                 mean = z.qoi_list[i].reshape((-1,))
                 results[i] = multivariate_normal.logpdf(x, mean=mean, cov=self.error_covariance)
@@ -155,7 +158,6 @@ class Model:
                 param_i = params[i, :].reshape((self.n_params,))
                 results[i] = np.sum(self.pdf.log_pdf(x, param_i))
         return results
-
 
 class MLEstimation:
 
