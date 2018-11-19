@@ -21,6 +21,9 @@
 from UQpy.Utilities import *
 from UQpy.Distributions import *
 
+# Authors: Dimitris G.Giovanis, Audrey Olivier
+# Last Modified: 11/19/18 by Dimitris G. Giovanis
+
 
 ########################################################################################################################
 ########################################################################################################################
@@ -435,7 +438,7 @@ class InvNataf:
             # Check for variables that are non-Gaussian
             count = 0
             for i in range(len(self.distribution)):
-                if self.distribution[i].name.title() == 'Normal' and self.distribution[i].params == [0, 1]:
+                if self.distribution[i].name.title() == 'standard_normal':
                     count = count + 1
 
             if count == len(self.distribution):  # Case where the variables are all standard Gaussian
@@ -495,7 +498,7 @@ class InvNataf:
             # Check for variables that are non-Gaussian
             count = 0
             for i in range(len(self.distribution)):
-                if self.distribution[i].name.title() == 'Normal' and self.distribution[i].params == [0, 1]:
+                if self.distribution[i].name.title() == 'standard_normal':
                     count = count + 1
 
             if count == len(self.distribution):
@@ -551,7 +554,7 @@ class InvNataf:
 
                 count = 0
                 for i in range(len(self.distribution)):
-                    if self.distribution[i].name.title() == 'Normal' and self.distribution[i].params == [0, 1]:
+                    if self.distribution[i].name.title() == 'standard_normal':
                         count = count + 1
 
                 if count == len(self.distribution):
