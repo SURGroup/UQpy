@@ -162,7 +162,7 @@ class LHS:
     """
 
     # Created by: Lohit Vandanapu
-    # Last modified: 6/20/2018 by Dimitris G. Giovanis
+    # Last modified: 11/19/2018 by Dimitris G. Giovanis
 
     def __init__(self, dimension=None, dist_name=None, dist_params=None, lhs_criterion='random', lhs_metric='euclidean',
                  lhs_iter=100, nsamples=None):
@@ -178,7 +178,7 @@ class LHS:
 
         self.distribution = [None] * self.dimension
         for i in range(self.dimension):
-            self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
+            self.distribution[i] = Distribution(self.dist_name[i])
 
         self.samplesU01, self.samples = self.run_lhs()
 
@@ -382,7 +382,8 @@ class STS:
     # Authors: Michael Shields
     # Last modified: 6/7/2018 by Dimitris Giovanis & Michael Shields
 
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, sts_design=None, input_file=None):
+    def __init__(self, dimension=None, dist_name=None, dist_params=None, sts_design=None, input_file=None,
+                 sts_criterion="random"):
 
         self.dimension = dimension
         self.sts_design = sts_design
@@ -390,24 +391,31 @@ class STS:
         self.dist_name = dist_name
         self.dist_params = dist_params
         self.strata = None
+        self.sts_criterion = sts_criterion
         self.init_sts()
 
         self.distribution = [None] * self.dimension
         for i in range(self.dimension):
-            self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
+            self.distribution[i] = Distribution(self.dist_name[i])
         self.samplesU01, self.samples = self.run_sts()
+        del self.dist_name, self.dist_params
 
     def run_sts(self):
         samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
         samples_u_to_x = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
         for j in range(0, self.strata.origins.shape[1]):
             i_cdf = self.distribution[j].icdf
-            for i in range(0, self.strata.origins.shape[0]):
-                samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
-                                                  + self.strata.widths[i, j])
+            if self.sts_criterion == "random":
+                for i in range(0, self.strata.origins.shape[0]):
+                    samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
+                                                      + self.strata.widths[i, j])
+            elif self.sts_criterion == "centered":
+                for i in range(0, self.strata.origins.shape[0]):
+                    samples[i, j] = self.strata.origins[i, j] + self.strata.widths[i, j] / 2.
+
             samples_u_to_x[:, j] = i_cdf(samples[:, j], self.dist_params[j])
 
-        print('Successful execution of STS design..')
+        print('UQpy: Successful execution of STS design..')
         return samples, samples_u_to_x
 
     def init_sts(self):
@@ -452,12 +460,15 @@ class STS:
             else:
                 self.strata = Strata(n_strata=self.sts_design)
 
+        # Check sampling criterion
+        if self.sts_criterion not in ['random', 'centered']:
+            raise NotImplementedError("Exit code: Supported sts criteria: 'random', 'centered'")
+
 
 ########################################################################################################################
 ########################################################################################################################
 #                                         Class Strata
 ########################################################################################################################
-
 
 class Strata:
     """
@@ -591,21 +602,11 @@ class Strata:
 
         return ff
 
-    ####################################################################################################################
-    # Define methods to apply burn and jump afterwards
-    #def apply_burn(self, n_burn):
-    #    return self.samples[n_burn:self.samples.shape[0],:]
 
-    #def apply_jump(self, n_jump):
-    #    if self.algorithm is 'MMH' or self.algorithm is 'MH':
-    #        return self.samples[0:self.samples.shape[0]:self.jump]
-    #    if self.algorithm is 'Stretch':
-    #        output = np.zeros((None, self.dimension))
-    #        for i in range(self.jump * self.ensemble_size - self.ensemble_size, self.samples.shape[0],
-    #                       self.jump * self.ensemble_size):
-    #            output = output.vstack((output, self.samples[i:i + self.ensemble_size, :]))
-    #        return output
-
+########################################################################################################################
+########################################################################################################################
+#                                         Class Markov Chain Monte Carlo
+########################################################################################################################
 
 class MCMC:
     """
@@ -1386,7 +1387,7 @@ class Nataf:
 
             self.distribution = [None] * self.dimension
             for j in range(len(self.dist_name)):
-                self.distribution[j] = Distribution(self.dist_name[j], self.dist_params[j])
+                self.distribution[j] = Distribution(self.dist_name[j])
 
             if not hasattr(self, 'corr_norm'):
                 if corr_norm is None:
@@ -1430,7 +1431,7 @@ class Nataf:
 
             self.distribution = [None] * self.dimension
             for j in range(len(self.dist_name)):
-                self.distribution[j] = Distribution(self.dist_name[j], self.dist_params[j])
+                self.distribution[j] = Distribution(self.dist_name[j])
 
             if corr_norm is None:
                 self.corr_norm = np.identity(n=self.dimension)
@@ -1472,7 +1473,7 @@ class Nataf:
 
                 self.distribution = [None] * self.dimension
                 for j in range(len(self.dist_name)):
-                    self.distribution[j] = Distribution(self.dist_name[j], self.dist_params[j])
+                    self.distribution[j] = Distribution(self.dist_name[j])
 
                 self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
 
@@ -1624,7 +1625,7 @@ class InvNataf:
 
             self.distribution = [None] * self.dimension
             for j in range(len(self.dist_name)):
-                self.distribution[j] = Distribution(self.dist_name[j], self.dist_params[j])
+                self.distribution[j] = Distribution(self.dist_name[j])
 
             # Check for variables that are non-Gaussian
             count = 0
@@ -1681,7 +1682,7 @@ class InvNataf:
 
                 self.distribution = [None] * self.dimension
                 for j in range(len(self.dist_name)):
-                    self.distribution[j] = Distribution(self.dist_name[j], self.dist_params[j])
+                    self.distribution[j] = Distribution(self.dist_name[j])
 
                 count = 0
                 for i in range(len(self.distribution)):
