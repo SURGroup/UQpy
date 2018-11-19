@@ -270,6 +270,8 @@ class SubDistribution:
     def pdf(self, x, params):
         if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
             return stats.norm.pdf(x, loc=params[0], scale=params[1])
+        if self.name.lower() == 'standard_normal':
+            return stats.norm.pdf(x, loc=0.0, scale=1.0)
         elif self.name.lower() == 'uniform':
             return stats.uniform.pdf(x, loc=params[0], scale=params[1])
         elif self.name.lower() == 'binomial':
@@ -321,6 +323,8 @@ class SubDistribution:
     def rvs(self, params, nsamples):
         if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
             return stats.norm.rvs(loc=params[0], scale=params[1], size=nsamples)
+        if self.name.lower() == 'standard_normal':
+            return stats.norm.rvs(loc=0.0, scale=1.0, size=nsamples)
         elif self.name.lower() == 'uniform':
             return stats.uniform.rvs(loc=params[0], scale=params[1], size=nsamples)
         elif self.name.lower() == 'binomial':
@@ -372,6 +376,8 @@ class SubDistribution:
     def cdf(self, x, params):
         if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
             return stats.norm.cdf(x, loc=params[0], scale=params[1])
+        if self.name.lower() == 'standard_normal':
+            return stats.norm.cdf(x, loc=0.0, scale=1.0)
         elif self.name.lower() == 'uniform':
             return stats.uniform.cdf(x, loc=params[0], scale=params[1])
         elif self.name.lower() == 'binomial':
@@ -423,6 +429,8 @@ class SubDistribution:
     def icdf(self, x, params):
         if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
             return stats.norm.ppf(x, loc=params[0], scale=params[1])
+        if self.name.lower() == 'standard_normal':
+            return stats.norm.ppf(x, loc=0.0, scale=1.0)
         elif self.name.lower() == 'uniform':
             return stats.uniform.ppf(x, loc=params[0], scale=params[1])
         elif self.name.lower() == 'binomial':
@@ -474,6 +482,8 @@ class SubDistribution:
     def log_pdf(self, x, params):
         if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
             return stats.norm.logpdf(x, loc=params[0], scale=params[1])
+        if self.name.lower() == 'standard_normal':
+            return stats.norm.logpdf(x, loc=0.0, scale=1.0)
         elif self.name.lower() == 'uniform':
             return stats.uniform.logpdf(x, loc=params[0], scale=params[1])
         elif self.name.lower() == 'binomial':
@@ -523,7 +533,7 @@ class SubDistribution:
                 return getattr(custom_dist, 'log_pdf', 'Attribute  log_pdf not defined.')
 
     def fit(self, x):
-        if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
+        if self.name.lower() == 'normal' or self.name.lower() == 'gaussian' or self.name.lower() == 'standard_normal':
             return stats.norm.fit(x)
         elif self.name.lower() == 'uniform':
             return stats.uniform.fit(x)
@@ -578,6 +588,9 @@ class SubDistribution:
         if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
             mean, var, skew, kurt = stats.norm.stats(scale=params[1],
                                                      loc=params[0], moments='mvsk')
+        elif self.name.lower() == 'standard_normal':
+            mean, var, skew, kurt = stats.norm.stats(scale=1.0,
+                                                     loc=0.0, moments='mvsk')
         elif self.name.lower() == 'uniform':
             mean, var, skew, kurt = stats.uniform.stats(scale=params[1],
                                                         loc=params[0], moments='mvsk')
@@ -642,7 +655,7 @@ class SubDistribution:
         return np.array(y)
 
     def n_params(self):
-        if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
+        if self.name.lower() == 'normal' or self.name.lower() == 'gaussian' or self.name.lower() == 'standard_normal':
             return 2
         elif self.name.lower() == 'uniform':
             return 2
