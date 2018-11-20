@@ -765,7 +765,7 @@ class MCMC:
 
     def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None, pdf_target_type=None,
                  pdf_target=None, pdf_target_params=None, algorithm=None, jump=None, nsamples=None, seed=None,
-                 nburn=None, text_out=False):
+                 nburn=None, verbose=False):
 
         self.pdf_proposal_type = pdf_proposal_type
         self.pdf_proposal_scale = pdf_proposal_scale
@@ -778,7 +778,7 @@ class MCMC:
         self.dimension = dimension
         self.seed = seed
         self.nburn = nburn
-        self.text_out = text_out
+        self.verbose = verbose
         self.init_mcmc()
         if self.algorithm is 'Stretch':
             self.ensemble_size = len(self.seed)
@@ -949,7 +949,7 @@ class MCMC:
         # Return the samples
 
         if self.algorithm is 'MMH' or self.algorithm is 'MH':
-            if self.text_out:
+            if self.verbose:
                 print('UQpy: Successful execution of the MCMC design')
             return samples[self.nburn:self.nsamples * self.jump + self.nburn:self.jump]
         else:

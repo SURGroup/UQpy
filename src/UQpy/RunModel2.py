@@ -17,7 +17,7 @@ class RunModel2:
 
     def __init__(self, samples=None, model_script=None, model_object_name=None,
                  input_template=None, var_names=None, output_script=None, output_object_name=None,
-                 ntasks=1, cores_per_task=1, nodes=1, resume=False):
+                 ntasks=1, cores_per_task=1, nodes=1, resume=False, verbose=False):
         """
         Check input and call appropriate functions in the workflow depending on ntasks and input_template
 
@@ -52,7 +52,7 @@ class RunModel2:
         # Check if var_names is a list of strings
         if self._is_list_of_strings(self.var_names):
             self.n_vars = len(self.var_names)
-        else:
+        elif self.var_names is not None:
             raise ValueError("Variable names should be passed as a list of strings.")
 
         # Model related
@@ -80,6 +80,7 @@ class RunModel2:
         self.cores_per_task = cores_per_task
         # Number of nodes
         self.nodes = nodes
+        self.verbose = verbose
 
         # Check if there is a template input file or not and execute the appropriate function
         if self.input_template is not None:  # If there is a template input file
@@ -119,7 +120,8 @@ class RunModel2:
         Perform serial execution of the model when there is a template input file
         :return:
         """
-        print('\nPerforming serial execution of the model with template input.\n')
+        if self.verbose:
+            print('\nPerforming serial execution of the model with template input.\n')
         # Loop over the number of simulations, executing the model once per loop
         for i in range(self.nsim):
             # Call the input function
@@ -137,17 +139,20 @@ class RunModel2:
         Execute the model in parallel when there is a template input file
         :return:
         """
-        print('\nPerforming parallel execution of the model with template input.\n')
-        # Call the input function
-        print('\nCreating inputs in parallel execution of the model with template input.\n')
+        if self.verbose:
+            print('\nPerforming parallel execution of the model with template input.\n')
+            # Call the input function
+            print('\nCreating inputs in parallel execution of the model with template input.\n')
         self._input_parallel()
 
         # Execute the model
-        print('\nExecuting the model in parallel with template input.\n')
+        if self.verbose:
+            print('\nExecuting the model in parallel with template input.\n')
         self._execute_parallel()
 
         # Call the output function
-        print('\nCollecting outputs in parallel execution of the model with template input.\n')
+        if self.verbose:
+            print('\nCollecting outputs in parallel execution of the model with template input.\n')
         # TODO: Make the output collection execute in parallel if possible
         for i in range(self.nsim):
             self._output_parallel(i)
@@ -158,7 +163,8 @@ class RunModel2:
         Execute the python model in serial when there is no template input file
         :return:
         """
-        print('\nPerforming serial execution of the model without template input.\n')
+        if self.verbose:
+            print('\nPerforming serial execution of the model without template input.\n')
         # Run python model
         for i in range(self.nsim):
             exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
@@ -174,7 +180,8 @@ class RunModel2:
         Execute the python model in parallel when there is no template input file
         :return:
         """
-        print('\nPerforming parallel execution of the model without template input.\n')
+        if self.verbose:
+            print('\nPerforming parallel execution of the model without template input.\n')
         # TODO: Run python model in parallel using multiprocess
         # self._serial_python_execution()
         import concurrent.futures
@@ -406,10 +413,12 @@ class RunModel2:
 
             # If there is a model_object_name given, check if it is in the list.
             if self.model_object_name in class_list:
-                print('The model class that will be run: ' + self.model_object_name)
+                if self.verbose:
+                    print('The model class that will be run: ' + self.model_object_name)
                 self.model_is_class = True
             elif self.model_object_name in function_list:
-                print('The model function that will be run: ' + self.model_object_name)
+                if self.verbose:
+                    print('The model function that will be run: ' + self.model_object_name)
                 self.model_is_class = False
             else:
                 if self.model_object_name is None:

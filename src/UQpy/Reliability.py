@@ -17,10 +17,12 @@
 
 """This module contains functionality for all the reliability methods supported in UQpy."""
 
+from UQpy.RunModel2 import RunModel2
 from UQpy.RunModel import RunModel
 from UQpy.SampleMethods import MCMC
 from UQpy.Utilities import gradient, eval_hessian
 import numpy as np
+import scipy
 
 
 ########################################################################################################################
@@ -156,8 +158,10 @@ class SubsetSimulation:
 
     :return self.pf: Probability of failure estimate
     :rtype self.pf: float
-    :return self.cov: Coefficient of variation
-    :rtype self.cov: float
+    :return self.cov1: Coefficient of variation - Au & Beck, Independent Chains
+    :rtype self.cov1: float
+    :return self.cov2: Coefficient of variation - New Dependent Chains
+    :rtype self.cov2: float
     """
 
     # Authors: Dimitris G.Giovanis, Michael D. Shields
@@ -165,7 +169,8 @@ class SubsetSimulation:
 
     def __init__(self, dimension=None, samples_init=None, nsamples_ss=None, p_cond=None, pdf_target_type=None,
                  pdf_target=None, pdf_target_params=None, pdf_proposal_type=None, pdf_proposal_scale=None,
-                 algorithm=None, model_type=None, model_script=None, input_script=None, output_script=None, seed=None):
+                 algorithm=None, model_type=None, model_script=None, input_script=None, output_script=None, seed=None,
+                 model_object_name=None, ntasks=1):
 
         self.dimension = dimension
         self.samples_init = samples_init
@@ -178,13 +183,16 @@ class SubsetSimulation:
         self.algorithm = algorithm
         self.model_type = model_type
         self.model_script = model_script
+        self.model_object_name = model_object_name
+        self.ntasks = ntasks
         self.input_script = input_script
         self.output_script = output_script
         self.p_cond = p_cond
         self.g = list()
         self.samples = list()
         self.g_level = list()
-        self.delta2 = list()
+        self.d12 = list()
+        self.d22 = list()
         if seed is None:
             self.seed = np.zeros(self.dimension)
         else:
@@ -198,9 +206,9 @@ class SubsetSimulation:
         # Select the appropriate Subset Simulation Algorithm
         if self.algorithm == 'MMH':
             print('UQpy: Running Subset Simulation....')
-            [self.pf, self.cov] = self.run_subsim_mmh()
+            [self.pf, self.cov1, self.cov2] = self.run_subsim_mmh()
         elif self.algorithm == 'Stretch':
-            [self.pf, self.cov] = self.run_subsim_stretch()
+            [self.pf, self.cov1, self.cov2] = self.run_subsim_stretch()
         print('Done!')
 
     # Run Subset Simulation using Modified Metropolis Hastings
@@ -218,15 +226,19 @@ class SubsetSimulation:
         else:
             self.samples.append(self.samples_init)
 
-        g_init = RunModel(samples=self.samples[step], model_type=self.model_type, model_script=self.model_script,
-                          input_script=self.input_script, output_script=self.output_script, dimension=self.dimension)
+        # g_init = RunModel(samples=self.samples[step], model_type=self.model_type, model_script=self.model_script,
+        #                   input_script=self.input_script, output_script=self.output_script, dimension=self.dimension)
+        g_init = RunModel2(samples=self.samples[step], model_script=self.model_script, ntasks=self.ntasks,
+                           model_object_name=self.model_object_name)
 
-        self.g.append(np.asarray(g_init.model_eval.QOI))
+        self.g.append(np.asarray(g_init.qoi_list))
         g_ind = np.argsort(self.g[step])
         self.g_level.append(self.g[step][g_ind[n_keep]])
 
         # Estimate coefficient of variation of conditional probability of first level
-        self.delta2.append(self.cov_sus(step) ** 2)
+        d1, d2 = self.cov_sus(step)
+        self.d12.append(d1 ** 2)
+        self.d22.append(d2 ** 2)
 
         while self.g_level[step] > 0 and step < self.max_level:
 
@@ -234,13 +246,8 @@ class SubsetSimulation:
             self.samples.append(self.samples[step - 1][g_ind[0:n_keep]])
             self.g.append(self.g[step - 1][g_ind[:n_keep]])
 
-<<<<<<< HEAD
             for i in range(self.nsamples_ss-n_keep):
                 x0 = self.samples[step][i]
-=======
-            for i in range(self.nsamples_ss - n_keep):
-                seed = self.samples[step][i]
->>>>>>> 0707d40bc8b4cf6187cd8f84f22eb63e00c9611f
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                               pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
@@ -248,11 +255,13 @@ class SubsetSimulation:
                               algorithm=self.algorithm, nsamples=2, seed=x0)
 
                 x_temp = x_mcmc.samples[1].reshape((1, self.dimension))
-                g_model = RunModel(samples=x_temp, cpu=1, model_type=self.model_type, model_script=self.model_script,
-                                   input_script=self.input_script, output_script=self.output_script,
-                                   dimension=self.dimension)
+                # g_model = RunModel(samples=x_temp, cpu=1, model_type=self.model_type, model_script=self.model_script,
+                #                    input_script=self.input_script, output_script=self.output_script,
+                #                    dimension=self.dimension)
+                g_model = RunModel2(samples=x_temp, model_script=self.model_script, ntasks=self.ntasks,
+                                    model_object_name=self.model_object_name)
 
-                g_temp = g_model.model_eval.QOI
+                g_temp = g_model.qoi_list
 
                 # Accept or reject the sample
                 if g_temp < self.g_level[step - 1]:
@@ -265,18 +274,18 @@ class SubsetSimulation:
             g_ind = np.argsort(self.g[step])
             self.g_level.append(self.g[step][g_ind[n_keep]])
             # Estimate coefficient of variation of conditional probability of first level
-            self.delta2.append(self.cov_sus(step) ** 2)
+            d1, d2 = self.cov_sus(step)
+            self.d12.append(d1 ** 2)
+            self.d22.append(d2 ** 2)
 
         n_fail = len([value for value in self.g[step] if value < 0])
-<<<<<<< HEAD
-        pf = self.p_cond**step*n_fail/self.nsamples_ss
-        cov = np.sqrt(np.sum(self.delta2))
-=======
-        pf = self.p_cond ** step * n_fail / self.nsamples_ss
-        cov = np.sum(self.delta2)
->>>>>>> 0707d40bc8b4cf6187cd8f84f22eb63e00c9611f
 
-        return pf, cov
+        pf = self.p_cond**step*n_fail/self.nsamples_ss
+        cov1 = np.sqrt(np.sum(self.d12))
+        cov2 = np.sqrt(np.sum(self.d22))
+
+
+        return pf, cov1, cov2
 
     # Run Subset Simulation using the Affine Invariant Ensemble Sampler
     def run_subsim_stretch(self):
@@ -293,16 +302,20 @@ class SubsetSimulation:
         else:
             self.samples.append(self.samples_init)
 
-        g_init = RunModel(samples=self.samples[step], model_type=self.model_type, model_script=self.model_script,
-                          input_script=self.input_script, output_script=self.output_script,
-                          dimension=self.dimension)
+        # g_init = RunModel(samples=self.samples[step], model_type=self.model_type, model_script=self.model_script,
+        #                   input_script=self.input_script, output_script=self.output_script,
+        #                   dimension=self.dimension)
+        g_init = RunModel2(samples=self.samples[step], model_script=self.model_script, ntasks=self.ntasks,
+                           model_object_name=self.model_object_name)
 
-        self.g.append(np.asarray(g_init.model_eval.QOI))
+        self.g.append(np.asarray(g_init.qoi_list))
         g_ind = np.argsort(self.g[step])
         self.g_level.append(self.g[step][g_ind[n_keep]])
 
         # Estimate coefficient of variation of conditional probability of first level
-        self.delta2.append(self.cov_sus(step) ** 2)
+        d1, d2 = self.cov_sus(step)
+        self.d12.append(d1 ** 2)
+        self.d22.append(d2 ** 2)
 
         while self.g_level[step] > 0:
 
@@ -311,28 +324,25 @@ class SubsetSimulation:
             self.g.append(self.g[step - 1][g_ind[:n_keep]])
 
             for i in range(self.nsamples_ss - n_keep):
-<<<<<<< HEAD
+
                 x0 = self.samples[step][i:i+n_keep]
-=======
-                seed = self.samples[step][i:i + n_keep]
->>>>>>> 0707d40bc8b4cf6187cd8f84f22eb63e00c9611f
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                               pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
                               pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
-<<<<<<< HEAD
                               algorithm=self.algorithm, nsamples=n_keep+1, seed=x0)
-=======
-                              algorithm=self.algorithm, nsamples=n_keep + 1, seed=seed)
->>>>>>> 0707d40bc8b4cf6187cd8f84f22eb63e00c9611f
+
+
 
                 x_temp = x_mcmc.samples[n_keep].reshape((1, self.dimension))
-                g_model = RunModel(samples=x_temp, cpu=1, model_type=self.model_type,
-                                   model_script=self.model_script,
-                                   input_script=self.input_script, output_script=self.output_script,
-                                   dimension=self.dimension)
+                # g_model = RunModel(samples=x_temp, cpu=1, model_type=self.model_type,
+                #                    model_script=self.model_script,
+                #                    input_script=self.input_script, output_script=self.output_script,
+                #                    dimension=self.dimension)
+                g_model = RunModel2(samples=x_temp, model_script=self.model_script, ntasks=self.ntasks,
+                                    model_object_name=self.model_object_name)
 
-                g_temp = g_model.model_eval.QOI
+                g_temp = g_model.qoi_list
 
                 # Accept or reject the sample
                 if g_temp < self.g_level[step - 1]:
@@ -344,13 +354,16 @@ class SubsetSimulation:
 
             g_ind = np.argsort(self.g[step])
             self.g_level.append(self.g[step][g_ind[n_keep]])
-            self.delta2.append(self.cov_sus(step) ** 2)
+            d1, d2 = self.cov_sus(step)
+            self.d12.append(d1 ** 2)
+            self.d22.append(d2 ** 2)
 
         n_fail = len([value for value in self.g[step] if value < 0])
         pf = self.p_cond ** step * n_fail / self.nsamples_ss
-        cov = np.sqrt(np.sum(self.delta2))
+        cov1 = np.sqrt(np.sum(self.d12))
+        cov2 = np.sqrt(np.sum(self.d22))
 
-        return pf, cov
+        return pf, cov1, cov2
 
     def init_sus(self):
 
@@ -382,34 +395,293 @@ class SubsetSimulation:
     def cov_sus(self, step):
         n = self.g[step].size
         if step == 0:
-            di = np.sqrt((1 - self.p_cond) / (self.p_cond * n))
+            d1 = np.sqrt((1 - self.p_cond) / (self.p_cond * n))
+            d2 = np.sqrt((1 - self.p_cond) / (self.p_cond * n))
+
+            return d1, d2
         else:
-            nc = int(self.p_cond * n)
-            r_zero = self.p_cond * (1 - self.p_cond)
-            index = np.zeros(n)
-            index[np.where(self.g[step] < self.g_level[step])] = 1
-            indices = np.zeros(shape=(int(n / nc), nc)).astype(int)
-            for i in range(int(n / nc)):
-                for j in range(nc):
-                    if i == 0:
-                        indices[i, j] = j
-                    else:
-                        indices[i, j] = indices[i - 1, j] + nc
-            gamma = 0
-            rho = np.zeros(int(n / nc) - 1)
-            for k in range(int(n / nc) - 1):
-                z = 0
-                for j in range(int(nc)):
-                    for l in range(int(n / nc) - k):
-                        z = z + index[indices[l, j]] * index[indices[l + k, j]]
+            n_c = int(self.p_cond * n)
+            n_s = int(1 / self.p_cond)
+            indicator = np.reshape(self.g[step] < self.g_level[step], (n_s, n_c))
+            gamma = self.corr_factor_gamma(indicator, n_s, n_c)
+            # beta_hat, r_jn0 = self.corr_factor_beta(indicator, n_s, n_c, self.p_cond)  # Eq. 24
+            g_temp = np.reshape(self.g[step], (n_s, n_c))
+            # beta_hat, r_jn0 = self.corr_factor_beta(g_temp, n_s, n_c, self.p_cond)
+            beta_hat, r_jn0 = self.corr_factor_beta(indicator, g_temp, n_s, n_c, self.p_cond)
+            # beta_i = (n_c - 1) * r_jn0 + beta_hat
+            beta_i = r_jn0 + beta_hat
 
-                rho[k] = (1 / (n - k * nc) * z - self.p_cond ** 2) / r_zero
-                gamma = gamma + 2 * (1 - k * nc / n) * rho[k]
+            d1 = np.sqrt(((1 - self.p_cond) / (self.p_cond * n)) * (1 + gamma))
+            d2 = np.sqrt(((1 - self.p_cond) / (self.p_cond * n)) * (1 + gamma + beta_i))
 
-            di = np.sqrt((1 - self.p_cond) / (self.p_cond * n) * (1 + gamma))
+            return d1, d2
 
-        return di
+    def corr_factor_gamma(self, indicator, n_s, n_c):
 
+        gamma = np.zeros(n_s - 1)
+        r = np.zeros(n_s)
+        n = n_c * n_s
+
+        I = indicator * 1
+        R = I @ I.T / n_c - self.p_cond ** 2
+        for i in range(R.shape[0]):
+            r[i] = np.sum(np.diag(R, i)) / (R.shape[0] - i)
+
+        R0 = 0.1 * (1 - 0.1)
+        r = r / R0
+
+        for i in range(n_s - 1):
+            gamma[i] = (1 - ((i + 1) / n_s)) * r[i+1]
+        gamma = 2 * np.sum(gamma)
+
+        # gamma = np.zeros(n_s - 1)
+        # r = np.zeros(n_s - 1)
+        # n = n_c * n_s
+        #
+        # sums = 0
+        # for k in range(n_c):
+        #     for ip in range(n_s):
+        #         sums = sums + (indicator[ip, k] * indicator[ip, k])  # sums inside (Ref. 1 Eq. 22)
+        #
+        # r_0 = (1 / n) * sums - self.p_cond ** 2
+        #
+        # for i in range(n_s - 1):
+        #     z = 0
+        #     for k in range(n_c):
+        #         for ip in range(n_s - i - 1):
+        #             z = z + (indicator[ip, k] * indicator[ip + i + 1, k])
+        #
+        #     r[i] = (1 / (n - (i + 1) * n_c)) * z - self.p_cond ** 2
+        #     gamma[i] = (1 - ((i + 1) / n_s)) * (r[i] / r_0)
+        #
+        # gamma = 2 * np.sum(gamma)
+
+        return gamma
+
+    # def corr_factor_beta(self, indicator, n_s, n_c, p_cond):
+    #
+    #     beta = np.zeros(n_s - 1)
+    #     r_jn = np.zeros(n_s)
+    #     I = indicator * 1
+    #
+    #     for i in range(n_s):
+    #         Rx = I[0:n_s-i, :].T @ I[i:, :]
+    #         # np.fill_diagonal(Rx, 0)
+    #         r_jn[i] = np.sum(Rx) / ((n_c * (n_c)) * (n_s - i)) - p_cond ** 2
+    #         # r_jn[i] = np.sum(Rx) / ((n_c * n_c) * (n_s - i)) - p_cond ** 2
+    #     r0 = p_cond * (1 - p_cond)
+    #     r_jn = r_jn / r0
+    #
+    #     for k in range(n_s - 1):
+    #         beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * r_jn[0]
+    #
+    #     beta = 2 * (n_c - 1) * np.sum(beta)
+    #
+    #     return beta, r_jn[0]
+
+
+    # Operate only on pairs with same starting point
+    def corr_factor_beta(self, indicator, g, n_s, n_c, p_cond):
+
+        r_jn = 0
+        U = np.unique(g[0, :])
+        for i in range(U.size):
+            I = indicator[:, g[0, :] == U[i]]
+            r_jn = r_jn + I.shape[1]*(I.shape[1]-1)/2
+
+
+        beta = 0
+
+        # total = 0
+        # r_jn = 0
+        # if U.size < n_c:
+        #     for i in range(U.size):
+        #         I = indicator[:, g[0, :] == U[i]]
+        #         I = I * 1
+        #
+        #         r_temp = I.T @ I
+        #         r0 = np.sum(r_temp) / (((r_temp.shape[0] * r_temp.shape[0])) * n_s) - p_cond ** 2
+        #         r0 = r0 * r_temp.shape[0] * (r_temp.shape[0] - 1) / 2
+        #         r0 = r0
+        #         r_jn = r_jn + r0
+        #         # r = r_temp / (I.shape[1] * (I.shape[1]-1))
+        #         total = total + I.shape[1]
+        #
+        #     r_jn = r_jn / total
+        #     print(r_jn)
+        #
+        # # for i in range(n_c):
+        #
+        #
+        # beta = np.zeros(n_s - 1)
+        # r_jn = np.zeros(n_s)
+        # I = g
+        #
+        # for i in range(n_s):
+        #     Rx = I[0:n_s-i, :].T @ I[i:, :]
+        #     np.fill_diagonal(Rx, 0)
+        #     r_jn[i] = np.sum(Rx) / ((n_c * (n_c-1)) * (n_s - i)) - np.mean(g) ** 2
+        #     print(r_jn)
+        #     # r_jn[i] = np.sum(Rx) / ((n_c * n_c) * (n_s - i)) - p_cond ** 2
+        # r0 = np.var(g)
+        # r_jn = r_jn / r0
+        #
+        # for k in range(n_s - 1):
+        #     beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * r_jn[0]
+        #
+        # beta = 2 * (n_c - 1) * np.sum(beta)
+
+        return beta, r_jn
+
+
+
+    # def corr_factor_beta(self, g, n_s, n_c, p_cond):
+    #
+    #     beta = np.zeros(n_s - 1)
+    #     r_jn = np.zeros(n_s)
+    #     I = g
+    #
+    #     for i in range(n_s):
+    #         Rx = I[0:n_s-i, :].T @ I[i:, :]
+    #         np.fill_diagonal(Rx, 0)
+    #         r_jn[i] = np.sum(Rx) / ((n_c * (n_c-1)) * (n_s - i)) - np.mean(g) ** 2
+    #         print(r_jn)
+    #         # r_jn[i] = np.sum(Rx) / ((n_c * n_c) * (n_s - i)) - p_cond ** 2
+    #     r0 = np.var(g)
+    #     r_jn = r_jn / r0
+    #
+    #     for k in range(n_s - 1):
+    #         beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * r_jn[0]
+    #
+    #     beta = 2 * (n_c - 1) * np.sum(beta)
+    #
+    #     return beta, r_jn[0]
+
+
+    # Version where cross-correlations are computed from g
+    # def corr_factor_beta(self, g, n_s, n_c, p_cond):
+    #
+    #     beta = np.zeros(n_s - 1)
+    #     r_jn = np.zeros(n_s )
+    #     # n = n_c * n_s
+    #     # factor = scipy.misc.comb(n_c,2)
+    #
+    #     # sums = 0
+    #     # for j in range(n_c):
+    #     #     for n_ in range(n_c):
+    #     #         for l in range(n_s):
+    #     #             if n_ != j:
+    #     #                 sums = sums + (indicator[l, n_] * indicator[l, j])
+    #     # I = indicator*1
+    #     # R1 =  np.dot(np.transpose(I), I)/10 - p_cond**2
+    #
+    #     mu_g = np.mean(g)
+    #     R = np.dot(g, g.T)/n_c - mu_g**2
+    #     for i in range(R.shape[0]):
+    #         r_jn[i] = np.sum(np.diag(R,i))/(R.shape[0]-i)
+    #     # R0 = p_cond*(1-p_cond)
+    #     R0 = np.var(g)
+    #     r_jn = r_jn/R0
+    #     # s1 = np.sum(np.dot(np.transpose(I), I))
+    #     # s2 = np.sum(np.dot(np.transpose(I), I)) - np.sum(np.diag(np.dot(np.transpose(I), I)))
+    #     # np.mean(R1)
+    #
+    #     # r_jn0 = (1 / n) * sums - self.p_cond ** 2
+    #     # r_jn0 = 1 / (factor - n_c) * (1 / (n / n_c)) * sums - self.p_cond ** 2
+    #
+    #     for k in range(n_s - 1):
+    #         # z = 0
+    #         # for j in range(n_c):
+    #         #     for n_ in range(n_c - k):
+    #         #         for l in range(n_s - k - 1):
+    #         #             if n_ != j:
+    #         #                 z = z + (indicator[l, j] * indicator[l + k + 1, n_])
+    #         #
+    #         # r_jn[k] = 1 / (factor - n_c) * (1 / (n - (k + 1) * n_c)) * z - self.p_cond ** 2
+    #         beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k])*R0
+    #
+    #     beta = 2 * (n_c - 1) * np.sum(beta)
+    #     # beta = 2 * np.sum(beta)
+    #
+    #     return beta, r_jn[0]
+
+        # Version where cross-correlations are computed just from indicator
+    # def corr_factor_beta(self, indicator, n_s, n_c, p_cond):
+    #
+    #         beta = np.zeros(n_s - 1)
+    #         r_jn = np.zeros(n_s)
+    #         # n = n_c * n_s
+    #         # factor = scipy.misc.comb(n_c,2)
+    #
+    #         # sums = 0
+    #         # for j in range(n_c):
+    #         #     for n_ in range(n_c):
+    #         #         for l in range(n_s):
+    #         #             if n_ != j:
+    #         #                 sums = sums + (indicator[l, n_] * indicator[l, j])
+    #         I = indicator * 1
+    #         # R1 =  np.dot(np.transpose(I), I)/10 - p_cond**2
+    #
+    #         R = np.dot(I, np.transpose(I)) / n_c - p_cond ** 2
+    #         for i in range(R.shape[0]):
+    #             r_jn[i] = np.sum(np.diag(R, i)) / (R.shape[0] - i)
+    #         R0 = p_cond * (1 - p_cond)
+    #         r_jn = r_jn / R0
+    #         # s1 = np.sum(np.dot(np.transpose(I), I))
+    #         # s2 = np.sum(np.dot(np.transpose(I), I)) - np.sum(np.diag(np.dot(np.transpose(I), I)))
+    #         # np.mean(R1)
+    #
+    #         # r_jn0 = (1 / n) * sums - self.p_cond ** 2
+    #         # r_jn0 = 1 / (factor - n_c) * (1 / (n / n_c)) * sums - self.p_cond ** 2
+    #
+    #         for k in range(n_s - 1):
+    #             # z = 0
+    #             # for j in range(n_c):
+    #             #     for n_ in range(n_c - k):
+    #             #         for l in range(n_s - k - 1):
+    #             #             if n_ != j:
+    #             #                 z = z + (indicator[l, j] * indicator[l + k + 1, n_])
+    #             #
+    #             # r_jn[k] = 1 / (factor - n_c) * (1 / (n - (k + 1) * n_c)) * z - self.p_cond ** 2
+    #             beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * R0
+    #
+    #         beta = 2 * (n_c - 1) * np.sum(beta)
+    #         # beta = 2 * np.sum(beta)
+    #
+    #         # r_jn[0] = 0.
+    #         return beta, r_jn[0]
+
+
+        # def cov_sus(self, step):
+        #     n = self.g[step].size
+        #     if step == 0:
+        #         di = np.sqrt((1 - self.p_cond) / (self.p_cond * n))
+        #     else:
+        #         nc = int(self.p_cond * n)
+        #         r_zero = self.p_cond * (1 - self.p_cond)
+        #         index = np.zeros(n)
+        #         index[np.where(self.g[step] < self.g_level[step])] = 1
+        #         indices = np.zeros(shape=(int(n / nc), nc)).astype(int)
+        #         for i in range(int(n / nc)):
+        #             for j in range(nc):
+        #                 if i == 0:
+        #                     indices[i, j] = j
+        #                 else:
+        #                     indices[i, j] = indices[i - 1, j] + nc
+        #         gamma = 0
+        #         rho = np.zeros(int(n / nc) - 1)
+        #         for k in range(int(n / nc) - 1):
+        #             z = 0
+        #             for j in range(int(nc)):
+        #                 for l in range(int(n / nc) - k):
+        #                     z = z + index[indices[l, j]] * index[indices[l + k, j]]
+        #
+        #             rho[k] = (1 / (n - k * nc) * z - self.p_cond ** 2) / r_zero
+        #             gamma = gamma + 2 * (1 - k * nc / n) * rho[k]
+        #
+        #         di = np.sqrt((1 - self.p_cond) / (self.p_cond * n) * (1 + gamma))
+        #
+        #     return di
 
 ########################################################################################################################
 ########################################################################################################################
