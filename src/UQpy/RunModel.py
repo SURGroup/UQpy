@@ -27,7 +27,7 @@ import datetime
 import shutil
 
 
-class RunModel2:
+class RunModel:
     """
     Run a computational model at specified sample points.
 
