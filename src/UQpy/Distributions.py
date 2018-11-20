@@ -82,22 +82,22 @@ class Distribution:
 
         # Compute n_params for the distribution, is it necessary?
         if isinstance(self.name, str):
-            self.n_params = SubDistribution(name=self.name).n_params()
+            self.n_params = Marginals(name=self.name).n_params()
         elif isinstance(self.name, list):
-            n_params_i = [SubDistribution(name=name_i).n_params() for name_i in self.name]
+            n_params_i = [Marginals(name=name_i).n_params() for name_i in self.name]
             if self.copula is None:
                 self.n_params = sum(n_params_i)
 
     def pdf(self, x, params, copula_params=None):
 
         if isinstance(self.name, str):
-            return SubDistribution(name=self.name).pdf(x, params)
+            return Marginals(name=self.name).pdf(x, params)
         elif isinstance(self.name, list):
             if (x.shape[1] != len(self.name)) or (len(params) != len(self.name)):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             prod_pdf = 1
             for i in range(len(self.name)):
-                prod_pdf = prod_pdf * SubDistribution(self.name[i]).pdf(x[:, i], params[i])
+                prod_pdf = prod_pdf * Marginals(self.name[i]).pdf(x[:, i], params[i])
             if self.copula is None:
                 return prod_pdf
             else:
@@ -107,79 +107,79 @@ class Distribution:
     def log_pdf(self, x, params):
 
         if isinstance(self.name, str):
-            return SubDistribution(name=self.name).log_pdf(x, params)
+            return Marginals(name=self.name).log_pdf(x, params)
         elif isinstance(self.name, list):
             if (x.shape[1] != len(self.name)) or (len(params) != len(self.name)):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             if self.copula is None:
                 sum_log_pdf = 0
                 for i in range(len(self.name)):
-                    sum_log_pdf = sum_log_pdf + SubDistribution(self.name[i]).log_pdf(x[:, i], params[i])
+                    sum_log_pdf = sum_log_pdf + Marginals(self.name[i]).log_pdf(x[:, i], params[i])
                 return sum_log_pdf
 
     def rvs(self, params, nsamples=1):
 
         if isinstance(self.name, str):
-            return SubDistribution(name=self.name).rvs(params, nsamples)
+            return Marginals(name=self.name).rvs(params, nsamples)
         elif isinstance(self.name, list):
             if len(params) != len(self.name):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             if self.copula is None:
                 rvs = np.zeros((nsamples, len(self.name)))
                 for i in range(len(self.name)):
-                    rvs[:, i] = SubDistribution(self.name[i]).rvs(params[i], nsamples)
+                    rvs[:, i] = Marginals(self.name[i]).rvs(params[i], nsamples)
                 return rvs
 
     def cdf(self, x, params):
 
         if isinstance(self.name, str):
-            return SubDistribution(name=self.name).cdf(x, params)
+            return Marginals(name=self.name).cdf(x, params)
         elif isinstance(self.name, list):
             if (len(params) != len(self.name)) or (x.shape[1] != len(self.name)):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             if self.copula is None:
                 icdfs = []
                 for i in range(len(self.name)):
-                    icdfs.append(SubDistribution(self.name[i]).icdf(x[:, i], params[i]))
+                    icdfs.append(Marginals(self.name[i]).icdf(x[:, i], params[i]))
                 return icdfs
 
     def icdf(self, x, params):
 
         if isinstance(self.name, str):
-            return SubDistribution(name=self.name).icdf(x, params)
+            return Marginals(name=self.name).icdf(x, params)
         elif isinstance(self.name, list):
             if (len(params) != len(self.name)) or (x.shape[1] != len(self.name)):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             if self.copula is None:
                 icdfs = []
                 for i in range(len(self.name)):
-                    icdfs.append(SubDistribution(self.name[i]).icdf(x[:, i], params[i]))
+                    icdfs.append(Marginals(self.name[i]).icdf(x[:, i], params[i]))
                 return icdfs
 
     def fit(self, x):
 
         if isinstance(self.name, str):
-            return SubDistribution(name=self.name).fit(x)
+            return Marginals(name=self.name).fit(x)
         elif isinstance(self.name, list):
             if x.shape[1] != len(self.name):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             if self.copula is None:
                 params_fit = []
                 for i in range(len(self.name)):
-                    params_fit.append(SubDistribution(self.name[i]).fit(x[:, i]))
+                    params_fit.append(Marginals(self.name[i]).fit(x[:, i]))
                 return params_fit
 
     def moments(self, params):
 
         if isinstance(self.name, str):
-            return SubDistribution(name=self.name).moments(params)
+            return Marginals(name=self.name).moments(params)
         elif isinstance(self.name, list):
             if len(params) != len(self.name):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             if self.copula is None:
                 mean, var, skew, kurt = [0]*len(self.name), [0]*len(self.name), [0]*len(self.name), [0]*len(self.name),
                 for i in range(len(self.name)):
-                    mean[i], var[i], skew[i], kurt[i] = SubDistribution(self.name[i]).moments(params[i])
+                    mean[i], var[i], skew[i], kurt[i] = Marginals(self.name[i]).moments(params[i])
                 return mean, var, skew, kurt
 
 
@@ -208,7 +208,7 @@ class Copula:
             else:
                 uu = np.zeros_like(x)
                 for i in range(uu.shape[1]):
-                    uu[:, i] = SubDistribution(self.dist_name[i]).cdf(x[:, i], dist_params[i])
+                    uu[:, i] = Marginals(self.dist_name[i]).cdf(x[:, i], dist_params[i])
 
                 u = uu[:, 0]
                 v = uu[:, 1]
@@ -224,7 +224,7 @@ class Copula:
             raise ValueError('Copula type not supported!')
 
 
-class SubDistribution:
+class Marginals:
 
     def __init__(self, name=None):
 
