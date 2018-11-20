@@ -17,10 +17,14 @@
 
 """This module contains functionality for all the Inference supported in UQpy."""
 
-from UQpy.SampleMethods import *
-from scipy import integrate
-import warnings
 
+from UQpy.SampleMethods import *
+from scipy.special import gamma
+from scipy.stats import multivariate_normal, chi2, norm
+from UQpy.RunModel import RunModel
+from scipy.optimize import minimize
+import warnings
+import matplotlib.pyplot as plt
 warnings.filterwarnings("ignore")
 
 
@@ -29,90 +33,263 @@ warnings.filterwarnings("ignore")
 #                            Information theoretic model selection - AIC, BIC
 ########################################################################################################################
 
-class InfoModelSelection:
-
-    def __init__(self, data=None, candidate_model=None, method=None):
+class Model:
+    def __init__(self, model_type = None, model_script = None, model_name = None,
+                 n_params = None, error_covariance = 1, verbose=False,
+                 prior_name = None, prior_params=None, prior_copula=None,
+                 model_object_name=None, input_template=None, var_names=None, output_script=None,
+                 output_object_name=None, ntasks=1, cores_per_task=1, nodes=1, resume=False,
+                 model_dir=None, cluster=False,
+                 ):
 
         """
+        Define the model, either as a python script, or a probability model
+
+        Inputs:
+            :param model_type: model type (python script or probability model)
+            :type model_type: str, 'python' or 'pdf'
+
+            :param model_name: name of the model, required only if model_type = 'pdf' (name of the distribution)
+            :type model_name: str
+
+            :param model_script: python script that encodes the model, required only if model_type = 'python'
+            :type model_script: str, format '< >.py'
+
+            :param n_params: number of parameters, required only if model_type == 'python'
+            :type n_params: int
+
+            :param error_covariance: covariance of the Gaussian error for model defined by a python script
+            :type error_covariance: ndarray (full covariance matrix) or float (diagonal values)
+
+            :param cpu_runModel: number of cpus used when using runModel, used only when model_type='python'
+            :type cpu_runModel: int
+
+            :param prior_name: distribution name of the prior pdf
+            :type prior_name: str or list of str
+
+            :param prior_params: parameters of the prior pdf
+            :type prior_params: ndarray or list of ndarrays
+
+            :param prior_copula: copula of the prior, if necessary
+            :param prior_copula: str
+
+            :param model_object_name, input_template, var_names, output_script, output_object_name, ntasks,
+                   cores_per_task, nodes, resume, verbose, model_dir, cluster: parameters of the python model, see
+                   RunModel.py for explanations, required only if model_type == 'python'
+            :param model_object_name, input_template, var_names, output_script, output_object_name, ntasks,
+                   cores_per_task, nodes, resume, verbose, model_dir, cluster: see RunModel
+
+        Output:
+
+            :return Model.log_like: function that computes the log likelihood, given some data and a parameter value
+            :rtype Model.log_like: method
+
+            :return Model.prior: probability distribution of the prior
+            :rtype Model.prior: instance from Distribution class
+
+        """
+        self.type = model_type
+        self.script = model_script
+        self.name = model_name
+        self.n_params = n_params
+        self.error_covariance = error_covariance
+        self.verbose = verbose
+
+        if self.type == 'python':
+            # Check that the script is a python file
+            if not self.script.lower().endswith('.py'):
+                raise ValueError('A python script, with extension .py, must be provided.')
+            if self.n_params is None:
+                raise ValueError('A number of parameters must be defined.')
+            else:
+                self.n_params = n_params
+            if self.name is None:
+                self.name = self.script
+            self.var_names = var_names
+            if self.var_names is None:
+                self.var_names = ['theta_{}'.format(i) for i in range(self.n_params)]
+            self.model_object_name = model_object_name
+            self.input_template = input_template
+            self.output_script = output_script
+            self.output_object_name = output_object_name
+            self.ntasks = ntasks
+            self.cores_per_task = cores_per_task
+            self.nodes = nodes
+            self.resume = resume
+            self.model_dir = model_dir
+            self.cluster = cluster
+
+        elif self.type == 'pdf':
+            self.pdf = Distribution(self.name)
+            self.n_params = self.pdf.n_params
+
+        else:
+            raise ValueError('UQpy error: model_type must be defined, as either "pdf" of "python".')
+
+        # Define prior if it is given
+        self.prior_params = prior_params
+        if prior_name is not None:
+            self.prior = Distribution(name = prior_name, copula = prior_copula)
+            self.prior_params = prior_params
+        else:
+            self.prior = None
+            self.prior_params = None
+
+    def log_like(self, x, params):
+        if np.size(params) == self.n_params:
+            params = params.reshape((1, self.n_params))
+        if params.shape[1] != self.n_params:
+            raise ValueError('the nb of columns in params should be equal to model.n_params')
+        results = np.empty((params.shape[0],), dtype=float)
+        if self.type == 'python':
+            with suppress_stdout():  # disable printing output comments
+                z = RunModel(samples=params, model_script=self.script, model_object_name=self.model_object_name,
+                             input_template=self.input_template, var_names=self.var_names,
+                             output_script=self.output_script, output_object_name=self.output_object_name,
+                             ntasks=self.ntasks, cores_per_task=self.cores_per_task, nodes=self.nodes,
+                             resume=self.resume, verbose=self.verbose, model_dir=self.model_dir,
+                             cluster=self.cluster)
+            for i in range(params.shape[0]):
+                mean = z.qoi_list[i].reshape((-1,))
+                results[i] = multivariate_normal.logpdf(x, mean=mean, cov=self.error_covariance)
+        elif self.type == 'pdf':
+            for i in range(params.shape[0]):
+                param_i = params[i, :].reshape((self.n_params,))
+                results[i] = np.sum(self.pdf.log_pdf(x, param_i))
+        return results
+
+
+class MLEstimation:
+
+    def __init__(self, model = None, data=None, iter_optim = 1, method_optim = 'nelder-mead', verbose=False):
+
+        """
+        Perform maximum likelihood estimation, i.e., given some data y, compute the parameter vector that maximizes the
+        likelihood p(y|theta).
+
+        Inputs:
+            :param model: the model
+            :type model: instance of class Model
+
+            :param data: Available data
+            :type data: ndarray
+
+            :param iter_optim: number of iterations for the maximization procedure (each iteration starts at a random point)
+            :type iter_optim: an integer >= 1, default 1
+
+            :param method_optim: method for optimization, see scipy.optimize.minimize
+            :type method_optim: str
+
+        Output:
+            :return: MLEstimation.param: value of parameter vector that maximizes the likelihood
+            :rtype: MLEstimation.param: ndarray
+
+            :return: MLEstimation.max_log_like: value of the maximum likelihood
+            :rtype: MLEstimation.max_log_like: float
+
+        """
+
+        if not isinstance(model, Model):
+            raise ValueError('UQpy error: model should be of type Model')
+        self.data = data
+
+        if model.type == 'python':
+
+            def log_like_data(param):
+                return -1*model.log_like(self.data, param)[0]
+            if verbose:
+                print('Evaluating max likelihood estimate for model '+model.name)
+            list_param = []
+            list_max_log_like = []
+            for _ in range(iter_optim):
+                x0 = np.random.rand(1, model.n_params)
+                print(x0.shape)
+                res = minimize(log_like_data, x0, method=method_optim,options = {'disp': True})
+                list_param.append(res.x)
+                list_max_log_like.append((-1)*res.fun)
+            idx_max = int(np.argmax(list_max_log_like))
+            self.param = np.array(list_param[idx_max])
+            self.max_log_like = list_max_log_like[idx_max]
+
+        elif model.type == 'pdf':
+            if verbose:
+                print('Evaluating max likelihood estimate for model '+model.name)
+            self.param = np.array(model.pdf.fit(self.data))
+            self.max_log_like = model.log_like(self.data, self.param)[0]
+
+
+class InfoModelSelection:
+
+    def __init__(self, candidate_models=None, data=None, method=None, verbose=False):
+
+        """
+        Perform model selection using information theoretic criteria. Supported criteria are BIC, AIC (default), AICc.
+
+        Inputs:
+
+        :param candidate_models: Candidate models, must be a list of instances of class Model
+        :type candidate_models: list
 
         :param data: Available data
         :type data: ndarray
 
-        :param candidate_model: Candidate non-parametric probabilistic models
-        :type candidate_model: list
-
         :param method: Method to be used
         :type method: str
+
+        Outputs:
+
+        A list of sorted models, their probability based on data and the given criterion, and the parameters that
+        maximize the log likelihood. The penalty term (Ockam razor) is also given.
 
         """
 
         self.data = data
         self.method = method
-        self.candidate_model = list()
 
-        for i in range(len(candidate_model)):
-            self.candidate_model.append(Distribution(candidate_model[i]))
+        # Check that all candidate models are of class Model, and that they are all of the same type, pdf or python
+        all_notisinstance = [not isinstance(model, Model) for model in candidate_models]
+        if any(all_notisinstance):
+            raise ValueError('All candidate models should be of type Model.')
 
-        if self.method == 'AIC':
-            self.AIC, self.probabilities, self.delta, self.sorted_model, self.Parameters = self.run_multi_info_ms()
-        elif self.method == 'AICc' or self.method is None:
-            self.AICc, self.probabilities, self.delta, self.sorted_model, self.Parameters = self.run_multi_info_ms()
-        elif self.method == 'BIC':
-            self.BIC, self.probabilities, self.delta, self.sorted_model, self.Parameters = self.run_multi_info_ms()
+        all_typesnotequal = [model.type != candidate_models[0].type for model in candidate_models]
+        if any(all_typesnotequal):
+            raise ValueError('All candidate models should be of same type, pdf or python.')
 
-    def run_multi_info_ms(self):
+        # First evaluate ML estimate for all models
+        list_params = []
+        list_criteria = []
+        list_penalty_term = []
+        for i, model in enumerate(candidate_models):
+            ml_estimator = MLEstimation(model=model, data=self.data, verbose=verbose)
+            list_params.append(ml_estimator.param)
+            max_log_like = ml_estimator.max_log_like
 
-        criterion = np.zeros((len(self.candidate_model)))
-        model_sort = ["" for x in range(len(self.candidate_model))]
-        params = [0] * len(self.candidate_model)
-        for i in range(len(self.candidate_model)):
-            print('UQpy: Running Informative model selection for candidate model:', self.candidate_model[i].name)
-            criterion[i], params[i] = self.info_ms(self.candidate_model[i])
+            k = model.n_params
+            n = np.size(data)
+            if self.method == 'BIC':
+                criterion_value = -2 * max_log_like + np.log(n) * k
+                penalty_term = np.log(n) * k
+            elif self.method == 'AICc':
+                criterion_value = -2 * max_log_like + 2 * k + (2 * k ** 2 + 2 * k) / (n - k - 1)
+                penalty_term = 2 * k + (2 * k ** 2 + 2 * k) / (n - k - 1)
+            else: # default: do AIC
+                criterion_value = -2 * max_log_like + 2 * k
+                penalty_term = 2 * k
+            list_criteria.append(criterion_value)
+            list_penalty_term.append(penalty_term)
 
-        criterion_sort = np.sort(criterion)
-        params_sort = [0] * len(self.candidate_model)
-        sort_index = sorted(range(len(self.candidate_model)), key=criterion.__getitem__)
-        for i in range((len(self.candidate_model))):
-            s = sort_index[i]
-            model_sort[i] = self.candidate_model[s].name
-            params_sort[i] = params[s]
+        sort_idx = list(np.argsort(np.array(list_criteria)))
+        self.sorted_models = [candidate_models[i] for i in sort_idx]
+        self.sorted_params = [list_params[i] for i in sort_idx]
+        self.sorted_criteria = [list_criteria[i] for i in sort_idx]
+        self.sorted_penalty_terms = [list_penalty_term[i] for i in sort_idx]
 
-        criterion_delta = criterion_sort - np.nanmin(criterion_sort)
+        sorted_criteria = np.array(self.sorted_criteria)
+        delta = sorted_criteria-sorted_criteria[0]
+        prob = np.exp(-delta/2)
+        self.sorted_probabilities = prob/np.sum(prob)
 
-        s_ = 1.0
-        w_criterion = np.empty([len(self.candidate_model), 1], dtype=np.float16)
-        w_criterion[0] = 1.0
-
-        delta = np.empty([len(self.candidate_model), 1], dtype=np.float16)
-        delta[0] = 0.0
-
-        for i in range(1, len(self.candidate_model)):
-            delta[i] = criterion_sort[i] - criterion_sort[0]
-            w_criterion[i] = np.exp(-delta[i] / 2)
-            s_ = s_ + w_criterion[i]
-
-        probabilities = w_criterion / s_
-        print('UQpy: Informative model selection analysis completed!')
-
-        return criterion_sort, probabilities, criterion_delta, model_sort, params_sort
-
-    def info_ms(self, model):
-
-        n = self.data.shape[0]
-        fit_i = model.fit
-        params = list(fit_i(self.data))
-        log_like = np.sum(model.log_pdf(self.data, params))
-        k = model.n_params
-        aic_value = 2 * n - 2 * log_like
-        aicc_value = 2 * n - 2 * log_like + (2 * k ** 2 + 2 * k) / (n - k - 1)
-        bic_value = np.log(n) * k - 2 * log_like
-
-        if self.method == 'BIC':
-            return bic_value, params
-        elif self.method == 'AIC':
-            return aic_value, params
-        elif self.method == 'AICc' or self.method is None:
-            return aicc_value, params
+        self.sorted_names = [model.name for model in self.sorted_models]
 
 
 ########################################################################################################################
@@ -121,142 +298,182 @@ class InfoModelSelection:
 ########################################################################################################################
 class BayesParameterEstimation:
 
-    def __init__(self, data=None, model=None, theta_prior_params=None, method=None, theta_prior_dist=None,
-                 pdf_proposal_type=None, pdf_proposal_scale=None, algorithm=None, jump=None, nsamples=None, nburn=None,
-                 walkers=None):
+    def __init__(self, data=None, model=None, sampling_method = None,
+                 pdf_proposal = None, pdf_proposal_scale=None, pdf_proposal_params = None,
+                 algorithm=None, jump=None, nsamples=None, nburn=None, seed=None, verbose=False):
+
+        if not isinstance(model, Model):
+            raise ValueError('model should be of type Model')
+        if data is None:
+            raise ValueError('data should be provided')
+        if nsamples is None:
+            raise ValueError('nsamples should be defined')
 
         self.data = data
-        self.method = method
+        self.nsamples = nsamples
+        self.sampling_method = sampling_method
+        self.model = model
 
-        if model is None:
-            raise RuntimeError('A probability model is required.')
-        elif isinstance(model, str):
-            self.model = Distribution(model)
-        elif isinstance(model, list):
-            self.model = Distribution(model[0])
-        elif isinstance(model, Distribution) is True:
-            self.model = model
+        if self.sampling_method == 'MCMC':
 
-        if theta_prior_dist is None and theta_prior_params is None:
-            self.theta_prior_distribution = Distribution('Uniform', [0, 10 ** 6])
+            if verbose:
+                print('UQpy: Running parameter estimation for candidate model ', model.name)
 
-        elif theta_prior_params is None and theta_prior_dist is not None:
-            raise RuntimeError('The parameters of the prior distribution models should be provided.')
+            self.seed = seed
+            if self.seed is None:
+                mle = MLEstimation(model=self.model, data=self.data, verbose=verbose)
+                self.seed = mle.param
 
-        elif theta_prior_dist is not None and theta_prior_params is not None:
-            if isinstance(theta_prior_dist, str) is True and isinstance(theta_prior_params, str) is True:
-                self.theta_prior_distribution = Distribution(theta_prior_dist[0], theta_prior_params)
-            elif isinstance(theta_prior_dist, list):
-                self.theta_prior_distribution = Distribution(theta_prior_dist[0], theta_prior_params)
-            elif isinstance(theta_prior_dist, str) is True:
-                self.theta_prior_distribution = Distribution(theta_prior_dist, theta_prior_params)
-            elif isinstance(theta_prior_dist, list) is True and isinstance(theta_prior_dist, list) is True:
-                self.theta_prior_distribution = Distribution(theta_prior_dist[0], theta_prior_params[0])
-            elif isinstance(theta_prior_dist, Distribution) is True:
-                self.theta_prior_distribution = theta_prior_dist
-            else:
-                print('Error: The prior models should be of type string or of type Distribution.')
+            z = MCMC(dimension=self.model.n_params, pdf_proposal_type=pdf_proposal,
+                     pdf_proposal_scale=pdf_proposal_scale,
+                     algorithm=algorithm, jump=jump, seed=self.seed, nburn=nburn,
+                     nsamples=self.nsamples, pdf_target=self.posterior, log_pdf_target=self.log_posterior)
 
-        # Properties for the MCMC
-        if pdf_proposal_type is None:
-            self.pdf_proposal_type = 'Uniform'
+            if verbose:
+                print('UQpy: Parameter estimation analysis completed!')
+
+            self.samples = z.samples
+            self.accept_ratio = z.accept_ratio
+
+        elif self.sampling_method == 'IS':
+
+            # importance distribution is either given by the user, or it is set as the prior of the model
+            if pdf_proposal is None:
+                if self.model.prior is None:
+                    raise ValueError('a proposal density or a prior should be given')
+                pdf_proposal = self.model.prior.name
+                pdf_proposal_params = self.model.prior_params
+
+            if verbose:
+                print('UQpy: Running parameter estimation for candidate model:', model.name)
+
+            z = IS(dimension=self.model.n_params, nsamples=self.nsamples,
+                   pdf_proposal=pdf_proposal, pdf_proposal_params=pdf_proposal_params,
+                   log_pdf_target=self.log_posterior)
+
+            print('UQpy: Parameter estimation analysis completed!')
+
+            self.samples = z.samples
+            self.weights = z.weights
+
         else:
-            self.pdf_proposal_type = pdf_proposal_type
+            raise ValueError('Sampling_method should be either "MCMC" or "IS"')
 
-        if algorithm is None:
-            self.algorithm = 'Stretch'
+        del self.model
+
+    def posterior(self, theta, params):
+        if type(theta) is not np.ndarray:
+            theta = np.array(theta)
+        if len(theta.shape) == 1:
+            theta = theta.reshape((1,np.size(theta)))
+        # non-informative prior, p(theta)=1 everywhere
+        if self.model.prior is None:
+            return np.exp(self.model.log_like(x=self.data, params=theta))
+        # prior is given
         else:
-            self.algorithm = algorithm
+            return np.exp(self.model.log_like(x=self.data, params=theta) +
+                          self.model.prior.log_pdf(x=theta, params=self.model.prior_params))
 
-        if pdf_proposal_scale is None:
-            if self.algorithm == 'Stretch':
-                self.pdf_proposal_scale = 2
-                if walkers is None:
-                    self.walkers = 50
-                else:
-                    self.walkers = walkers
-            else:
-                self.pdf_proposal_scale = 1
+    def log_posterior(self, theta, params):
+        if type(theta) is not np.ndarray:
+            theta = np.array(theta)
+        if len(theta.shape) == 1:
+            theta = theta.reshape((1,np.size(theta)))
+        # non-informative prior, p(theta)=1 everywhere
+        if self.model.prior is None:
+            return self.model.log_like(x=self.data, params=theta)
+        # prior is given
         else:
-            self.pdf_proposal_scale = pdf_proposal_scale
+            return self.model.log_like(x=self.data, params=theta) + \
+                   self.model.prior.log_pdf(x=theta, params=self.model.prior_params)
 
-        if nsamples is None:
-            self.nsamples = 10000
-        else:
-            self.nsamples = nsamples
 
-        if jump is None:
-            self.jump = 1
-        else:
-            self.jump = jump
+class Diagnostics:
 
-        if nburn is None:
-            self.nburn = 1
-        else:
-            self.nburn = nburn
+    def __init__(self, sampling_method, sampling_outputs):
 
-        self.samples, self.MLE = self.run_bayes_parameter_estimation()
-        del self.algorithm, self.jump, self.method, self.nburn, self.nsamples, self.pdf_proposal_scale
-        del self.pdf_proposal_type
+        if sampling_method not in ['MCMC', 'IS']:
+            raise ValueError('Supported sampling methods for diagnostics are "MCMC", "IS".')
+        self.sampling_method = sampling_method
+        if sampling_outputs is None:
+            raise ValueError('Outputs of the sampling procedure should be provided in sampling_outputs.')
 
-    def run_bayes_parameter_estimation(self):
-        print('UQpy: Running parameter estimation for candidate model:', self.model.name)
+        if self.sampling_method == 'IS':
+            self.effective_sample_size = 1/np.sum(sampling_outputs.weights**2, axis=0)
+            print('Effective sample size is ne={}, for a total number of samples={}'.
+                  format(self.effective_sample_size,np.size(sampling_outputs.weights)))
+            print('max_weight = {}, min_weight = {}'.format(max(sampling_outputs.weights),
+                                                            min(sampling_outputs.weights)))
+            # would also be nice to visualize the weights
+            fig, ax = plt.subplots()
+            ax.hist(sampling_outputs.weights)
+            ax.set_title('histogram of the normalized weights from IS')
+            plt.show()
+            fig, ax = plt.subplots()
+            ax.scatter(sampling_outputs.weights, np.zeros((np.size(sampling_outputs.weights), )),
+                       s=sampling_outputs.weights*200)
+            ax.set_xlabel('weights')
+            plt.show()
 
-        if self.model.n_params > 3:
-            raise RuntimeError('Only distributions with up to three-dimensional parameters are available in UQpy.')
+        if self.sampling_method == 'MCMC':
 
-        from UQpy.SampleMethods import MCMC
+            samples = sampling_outputs.samples
+            nsamples, nparams = samples.shape
 
-        seed = np.array(self.model.fit(self.data))
+            # Acceptance ratio
+            print('Acceptance ratio of the chain = {}'.format(sampling_outputs.accept_ratio))
 
-        '''
-        z = MCMC(dimension=self.model.n_params, pdf_proposal_type=self.pdf_proposal_type,
-                 pdf_proposal_scale=self.pdf_proposal_scale,
-                 algorithm=self.algorithm, jump=self.jump, seed=seed, nburn=self.nburn, nsamples=self.nsamples,
-                 pdf_target_type='joint_pdf', pdf_target=self.ln_prob)
+            # Computation of ESS and min ESS
+            eps = 0.05
+            alpha = 0.05
 
-        samples = z.samples
-        '''
+            bn = np.ceil(nsamples**(1/2))
+            an = int(np.ceil(nsamples/bn))
+            idx = np.array_split(np.arange(nsamples), an)
 
-        import emcee
+            means_subdivisions = np.empty((an, samples.shape[1]))
+            for i, idx_i in enumerate(idx):
+                x_sub = samples[idx_i, :]
+                means_subdivisions[i,:] = np.mean(x_sub, axis=0)
+            Omega = np.cov(samples.T)
+            Sigma = np.cov(means_subdivisions.T)
+            joint_ESS = nsamples*np.linalg.det(Omega)**(1/nparams)/np.linalg.det(Sigma)**(1/nparams)
+            chi2_value = chi2.ppf(1 - alpha, df=nparams)
+            min_joint_ESS = 2 ** (2 / nparams) * np.pi / (nparams * gamma(nparams / 2)) ** (
+                        2 / nparams) * chi2_value / eps ** 2
+            marginal_ESS = np.empty((nparams, ))
+            min_marginal_ESS = np.empty((nparams,))
+            for j in range(nparams):
+                marginal_ESS[j] = nsamples * Omega[j,j]/Sigma[j,j]
+                min_marginal_ESS[j] = 4 * norm.ppf(alpha/2)**2 / eps**2
 
-        p0 = [seed + 1e-3 * np.random.rand(self.model.n_params) for i in range(self.walkers)]
-        sampler = emcee.EnsembleSampler(self.walkers, self.model.n_params, self.lnprob, args=[self.data])
-        sampler.run_mcmc(p0, self.nsamples)
-        samples = sampler.chain[:, 50:, :].reshape((-1, self.model.n_params))
+            print('Multivariate ESS = {}, minESS = {}'.format(joint_ESS, min_joint_ESS))
+            print('Univariate ESS in each dimension')
+            for j in range(nparams):
+                print('Parameter {}: ESS = {}, minESS = {}'.format(j+1, marginal_ESS[j], min_marginal_ESS[j]))
 
-        log_like = np.zeros(samples.shape[0])
-        for i in range(samples.shape[0]):
-            log_like[i] = np.sum(self.model.log_pdf(self.data, samples[i, :]))
+            # Outputs plots
+            fix, ax = plt.subplots(nrows=nparams, ncols=3, figsize=(10,10))
+            for j in range(samples.shape[1]):
+                ax[j,0].plot(np.arange(nsamples), samples[:,j])
+                ax[j,0].set_title('chain for parameter # {}'.format(j+1))
+                ax[j,1].plot(np.arange(nsamples), np.cumsum(samples[:,j])/np.arange(nsamples))
+                ax[j,1].set_title('parameter convergence')
+                ax[j,2].acorr(samples[:,j]-np.mean(samples[:,j]), maxlags = 50, normed=True)
+                ax[j,2].set_title('ESS = {}'.format(marginal_ESS[j]))
+            plt.show()
 
-        print('UQpy: Parameter estimation analysis completed!')
-
-        if self.method == 'MLE' or self.method is None:
-            return samples, samples[np.argmax(log_like)]
-
-    def lnprob(self, theta, args):
-        _ = args
-        '''non-informative prior'''
-        lp = non_info_prior_dist(self.model.name, theta)
-
-        if not np.isfinite(lp):
-            return -np.inf
-
-        a = self.model.log_pdf(self.data, theta)
-        loglike = np.sum(a)
-
-        return (lp + loglike)
 
 
 ########################################################################################################################
 ########################################################################################################################
 #                                  Bayesian Inference
 ########################################################################################################################
-
+'''
 class BayesModelSelection:
 
     def __init__(self, data=None, dimension=None, candidate_model=None, pdf_proposal_type=None, pdf_proposal_scale=None,
-                 algorithm=None, jump=None, nsamples=None, nburn=None, prior_probabilities=None,
+                 algorithm=None, jump=None, nsamples=None, nburn=None,  prior_probabilities=None,
                  param_prior_dist=None, prior_hyperparams=None, method=None, walkers=None):
 
         """
@@ -296,7 +513,7 @@ class BayesModelSelection:
             self.prior_hyperparams = [0] * len(prior_hyperparams)
             for i in range(len(param_prior_dist)):
                 self.prior_distribution[i] = 'uniform'
-                self.prior_hyperparams[i] = [0, 10 ** 6]
+                self.prior_hyperparams[i] = [0, 10**6]
 
         if prior_hyperparams is None and param_prior_dist is not None:
             raise RuntimeError('The parameters of the prior distribution models should be provided.')
@@ -307,7 +524,7 @@ class BayesModelSelection:
                 self.prior_hyperparams[i] = prior_hyperparams[i]
 
         if param_prior_dist is not None:
-            self.param_prior_dist = [0] * len(param_prior_dist)
+            self.param_prior_dist = [0]*len(param_prior_dist)
             for i in range(len(param_prior_dist)):
                 self.param_prior_dist[i] = param_prior_dist[i]
 
@@ -317,9 +534,9 @@ class BayesModelSelection:
             self.method = method
 
         if prior_probabilities is None:
-            self.prior_probabilities = [0] * len(self.candidate_model)
+            self.prior_probabilities = [0]*len(self.candidate_model)
             for i in range(len(self.candidate_model)):
-                self.prior_probabilities[i] = 1 / len(self.candidate_model)
+                self.prior_probabilities[i] = 1/len(self.candidate_model)
         else:
             self.prior_probabilities = prior_probabilities
 
@@ -329,7 +546,7 @@ class BayesModelSelection:
         # Initialize the evidence or marginal likelihood
         evi_value = np.zeros(len(self.candidate_model))
         scaled_evi = np.zeros_like(evi_value)
-        pe = [0] * len(self.candidate_model)
+        pe = [0]*len(self.candidate_model)
         for i in range(len(self.candidate_model)):
             print('UQpy: Running Bayesian MS...')
             self.tmp_candidate_model = Distribution(self.candidate_model[i])
@@ -355,7 +572,7 @@ class BayesModelSelection:
                 z1, err_z1 = self.integrate_posterior_3d(x_lim, y_lim, z_lim)
 
             evi_value[i] = z1
-            scaled_evi[i] = evi_value[i] * self.prior_probabilities[i]
+            scaled_evi[i] = evi_value[i]*self.prior_probabilities[i]
 
         print('UQpy: Bayesian MS analysis completed!')
         sum_evi_value = np.sum(evi_value)
@@ -379,12 +596,14 @@ class BayesModelSelection:
         return integrate.tplquad(fun_, x_lim[0], x_lim[1], lambda x: y_lim[0], lambda x: y_lim[1],
                                  lambda x, y: z_lim[0], lambda x, y: z_lim[1])
 
-
+'''
 ########################################################################################################################
 ########################################################################################################################
 #                                  Supporting functions
 ########################################################################################################################
+'''
 def non_info_prior_dist(name, params):
+
     if name.lower() == 'normal' or name.lower() == 'gaussian':
 
         if params[1] < 0:
@@ -450,7 +669,7 @@ def non_info_prior_dist(name, params):
 
     elif name.lower() == 'inv_gauss':
 
-        if params[0] < 0.0028 or params[2] < 0:
+        if params[0] < 0.0028 or params[2]< 0:
             return np.inf
         else:
             return 0.0
@@ -496,3 +715,4 @@ def non_info_prior_dist(name, params):
             return np.inf
         else:
             return 0.0
+'''
