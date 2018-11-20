@@ -1,26 +1,25 @@
-# # UQpy is distributed under the MIT license.
-# #
-# # Copyright (C) 2018  -- Michael D. Shields
-# #
-# # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# # documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
-# # rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
-# # persons to whom the Software is furnished to do so, subject to the following conditions:
-# #
-# # The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
-# # Software.
-# #
-# # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-# # WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-# # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-# # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# UQpy is distributed under the MIT license.
 #
+# Copyright (C) 2018  -- Michael D. Shields
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+# persons to whom the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+# Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 
 import os
 import subprocess
 import pathlib
 import re
-import shlex
 import collections
 import numpy as np
 import datetime
@@ -38,42 +37,79 @@ class RunModel:
     along with the name of the Python script containing the model.
 
 
-    :param samples: Samples to be passed as inputs to the model
+    :param samples: Samples to be passed as inputs to the model. Either a ndarray or a list can be passed as samples.
+    If a ndarray is passed, each row of the ndarray contains one set of samples required for one execution of the model.
+    (The first dimension of the ndarray is considered to be the number of rows.)
+    If a list is passed, each item of the list contains one set of samples required for one execution of the model.
+    :type samples: ndarray or list
 
-    :param model_script: The filename of the Python script which contains commands to execute the model
+    :param model_script: The filename of the Python script which contains commands to execute the model. The model
+    script must be present in the same directory from where RunModel is called.
+    :type model_script: str
 
-    :param model_object_name: The name of the function or class which executes the model
+    :param model_object_name: The name of the function or class within model_script which executes the model. If there
+    is only one function or class in the model_script, then it is not necessary to specify the model_object_name. If
+    there are multiple objects within the model_script, then model_object_name must be specified.
+    :type model_object_name: str
 
     :param input_template: The name of the template input file which will be used to generate input files for each
-    run of the model. Refer documentation for more details.
+    run of the model. This must be specified to choose the workflow where the model to be executed is not in
+    Python.
+    :type input_template: str
 
-    :param var_names: A list containing the names of the variables which are present in the template input files
+    :param var_names: A list containing the names of the variables which are present in the template input files. If an
+    input template is provided and a list of variable names is not passed or if None is passed, then the default
+    variable names x0, x1, x2,...,xn are created and used by RunModel, where n is the number of variables. The
+    number of variables is equal to the shape of the first row if an ndarray is passed as samples or the
+    shape of the first item if a list of samples is passed to RunModel.
+    :type var_names: list of str or None
 
-    :param output_script: The filename of the Python script which contains the commands to process the output
+    :param output_script: The filename of the Python script which contains the commands to process the output. Whenever
+    an input template is used to run the model, an output script must be written to return the output to RunModel.
+    :type output_script: str
 
     :param output_object_name: The name of the function or class which has the output values. If the object is a
     class named cls, the output must be saved as cls.qoi. If it a function, it should return the output quantity of
-    interest
+    interest. If there is only one function or only one class in output_script, then it is not necessary to specify
+    the output_object_name. If there are more than one objects in output_script, then the output_object_name must be
+    specified.
+    :type output_object_name: str
 
-    :param ntasks: Number of tasks to be run in parallel. RunModel uses GNU parallel to execute models which require an
-    input template
+    :param ntasks: Number of tasks to be run in parallel. By default, this is equal to 1 and the models are executed
+    serially. Setting ntasks as equal to a positive integer greater than 1 will trigger the parallel
+    workflow. RunModel uses GNU parallel to execute models which require an input template and the concurrent module
+    to execute Python models in parallel.
+    :type ntasks: int
 
-    :param cores_per_task: Number of cores to be used by each task
+    :param cores_per_task: Number of cores to be used by each task.
+    :type cores_per_task: int
 
     :param nodes: On MARCC, each node has 24 cores_per_task. Specify the number of nodes if more than one node is
     required.
+    :type nodes: int
 
     :param resume: This option can be set to True if a parallel execution of a model with input template failed to
     finish running all jobs. GNU parallel will then run only the jobs which failed to execute.
+    :type resume: Boolean
 
-    :param verbose: This option can be set to False if you do not want RunModel to print status messages to the screen
-    during execution. It is True by default.
+    :param verbose: This option can be set to True if you want RunModel to print status messages to the screen
+    during execution. It is False by default.
+    :type verbose: Boolean
+
+    :param model_dir: Set model_dir to a string which is the name of the directory where you want the model to be
+    executed. model_dir is None by default. If model_dir is passed a string, then a new directory is created by RunModel
+    within the current directory whose name is model_dir appended with a timestamp.
+    :type model_dir: str or None
+
+    :param cluster: Set this option to True if executing on the cluster. Setting cluster to True, enables RunModel to
+    execute the model using the necessary SLURM commands. This is False by default.
+    :type cluster: Boolean
     """
 
     def __init__(self, samples=None, model_script=None, model_object_name=None,
                  input_template=None, var_names=None, output_script=None, output_object_name=None,
                  ntasks=1, cores_per_task=1, nodes=1, resume=False, verbose=False, model_dir=None,
-                 cluster=False, ):
+                 cluster=False):
 
         # Check if samples are provided
         if samples is None:
@@ -96,17 +132,22 @@ class RunModel:
                 self.n_vars = len(self.var_names)
             else:
                 raise ValueError("Variable names should be passed as a list of strings.")
+        elif self.input_template is not None:
+            # If var_names is not passed and there is an input template, create default variable names
+            nvars = samples[0].shape[0]
+            self.var_names = []
+            for i in range(nvars):
+                self.var_names.append('x%d' % i)
 
         # Model related
         self.model_dir = model_dir
+        current_dir = os.getcwd()
 
         if self.model_dir is not None:
             # Create a new directory where the model will be executed
             ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%p")
             work_dir = os.path.join(os.getcwd(), self.model_dir + "_" + ts)
             os.makedirs(work_dir)
-
-            current_dir = os.getcwd()
 
             # Create a list of all of the working files
             model_files = list()
