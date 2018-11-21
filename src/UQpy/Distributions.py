@@ -517,7 +517,7 @@ class Marginals:
         elif self.name.lower() == 'maxwell':
             return stats.maxwell.logpdf(x, loc=params[0], scale=params[1])
         elif self.name.lower() == 'mvnormal':
-            return stats.multivariate_normal.log_pdf(x, mean=params[0], cov=params[2])
+            return stats.multivariate_normal.logpdf(x, mean=params[0], cov=params[1])
         else:
             file_name = os.path.join(self.name + '.py')
             if os.path.isfile(file_name):
@@ -690,7 +690,8 @@ class Marginals:
         elif self.name.lower() == 'maxwell':
             return 2
         elif self.name.lower() == 'mvnormal':
-            raise ValueError('UQpy error: n_params for multivariate normal is not defined.')
+            # raise ValueError('UQpy error: n_params for multivariate normal is not defined.')
+            return None
         else:
             file_name = os.path.join(self.name + '.py')
             if os.path.isfile(file_name):

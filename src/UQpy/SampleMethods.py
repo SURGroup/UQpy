@@ -696,7 +696,7 @@ class MCMC:
 
     def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None,
                  pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None,
-                 algorithm=None, jump=1, nsamples=None, seed=None, nburn=None):
+                 algorithm=None, jump=1, nsamples=None, seed=None, nburn=None, verbose=False):
 
         self.pdf_proposal_type = pdf_proposal_type
         self.pdf_proposal_scale = pdf_proposal_scale
@@ -711,6 +711,7 @@ class MCMC:
         self.seed = seed
         self.nburn = nburn
         self.init_mcmc()
+        self.verbose = verbose
         if self.algorithm is 'Stretch':
             self.ensemble_size = len(self.seed)
         if self.algorithm is 'MMH':
@@ -811,8 +812,8 @@ class MCMC:
                 log_pdf_ = self.log_pdf_target
 
                 for i in range(self.nsamples * self.jump - 1 + self.nburn):
-                    candidate = list(samples[i, :])
-                    current = list(samples[i, :])
+                    candidate = np.copy(samples[i, :])
+                    current = np.copy(samples[i, :])
                     log_p_current = log_pdf_(samples[i, :], self.pdf_target_params)
                     for j in range(self.dimension):
                         if self.pdf_proposal_type[j] == 'Normal':
@@ -845,7 +846,7 @@ class MCMC:
 
             samples[0:self.ensemble_size, :] = self.seed
             log_pdf_ = self.log_pdf_target
-            list_log_p_current = [log_pdf_(samples[i, :], self.pdf_target_params) for i in range(self.ensemble_size)]
+            # list_log_p_current = [log_pdf_(samples[i, :], self.pdf_target_params) for i in range(self.ensemble_size)]
 
             for i in range(self.ensemble_size - 1, self.nsamples * self.jump - 1):
                 complementary_ensemble = samples[i - self.ensemble_size + 2:i + 1, :]
@@ -854,25 +855,28 @@ class MCMC:
                 candidate = s0 + s * (samples[i - self.ensemble_size + 1, :] - s0)
 
                 log_p_candidate = log_pdf_(candidate, self.pdf_target_params)
-                log_p_current = list_log_p_current[i - self.ensemble_size + 1]
+                log_p_current = log_pdf_(samples[i - self.ensemble_size + 1, :], self.pdf_target_params)
+                # log_p_current = list_log_p_current[i - self.ensemble_size + 1]
                 log_p_accept = np.log(s ** (self.dimension - 1)) + log_p_candidate - log_p_current
 
                 accept = np.log(np.random.random()) < log_p_accept
 
                 if accept:
                     samples[i + 1, :] = candidate
-                    list_log_p_current.append(log_p_candidate)
+                    # list_log_p_current.append(log_p_candidate)
                     n_accepts += 1
                 else:
                     samples[i + 1, :] = samples[i - self.ensemble_size + 1, :]
-                    list_log_p_current.append(list_log_p_current[i - self.ensemble_size + 1])
+                    # list_log_p_current.append(list_log_p_current[i - self.ensemble_size + 1])
             accept_ratio = n_accepts / (self.nsamples * self.jump - self.ensemble_size)
+
 
         ################################################################################################################
         # Return the samples
 
         if self.algorithm is 'MMH' or self.algorithm is 'MH':
-            print('Successful execution of the MCMC design')
+            if self.verbose:
+                print('Successful execution of the MCMC design')
             return samples[self.nburn:self.nsamples * self.jump + self.nburn:self.jump], accept_ratio
         else:
             output = np.zeros((self.nsamples, self.dimension))

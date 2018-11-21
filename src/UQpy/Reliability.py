@@ -17,7 +17,6 @@
 
 """This module contains functionality for all the reliability methods supported in UQpy."""
 
-from UQpy.RunModel2 import RunModel2
 from UQpy.RunModel import RunModel
 from UQpy.SampleMethods import MCMC
 from UQpy.Utilities import gradient, eval_hessian
@@ -219,16 +218,14 @@ class SubsetSimulation:
         # Generate the initial samples - Level 0
         if self.samples_init is None:
             x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-                          pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
+                          pdf_proposal_scale=self.pdf_proposal_scale,
                           pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
                           algorithm=self.algorithm, nsamples=self.nsamples_ss, seed=self.seed)
             self.samples.append(x_init.samples)
         else:
             self.samples.append(self.samples_init)
 
-        # g_init = RunModel(samples=self.samples[step], model_type=self.model_type, model_script=self.model_script,
-        #                   input_script=self.input_script, output_script=self.output_script, dimension=self.dimension)
-        g_init = RunModel2(samples=self.samples[step], model_script=self.model_script, ntasks=self.ntasks,
+        g_init = RunModel(samples=self.samples[step], model_script=self.model_script, ntasks=self.ntasks,
                            model_object_name=self.model_object_name)
 
         self.g.append(np.asarray(g_init.qoi_list))
@@ -250,16 +247,14 @@ class SubsetSimulation:
                 x0 = self.samples[step][i]
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-                              pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
+                              pdf_proposal_scale=self.pdf_proposal_scale,
                               pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
                               algorithm=self.algorithm, nsamples=2, seed=x0)
 
                 x_temp = x_mcmc.samples[1].reshape((1, self.dimension))
-                # g_model = RunModel(samples=x_temp, cpu=1, model_type=self.model_type, model_script=self.model_script,
-                #                    input_script=self.input_script, output_script=self.output_script,
-                #                    dimension=self.dimension)
-                g_model = RunModel2(samples=x_temp, model_script=self.model_script, ntasks=self.ntasks,
-                                    model_object_name=self.model_object_name)
+                # x_temp = x_mcmc.samples[1]
+                g_model = RunModel(samples=x_temp, model_script=self.model_script, ntasks=self.ntasks,
+                                   model_object_name=self.model_object_name)
 
                 g_temp = g_model.qoi_list
 
@@ -295,17 +290,14 @@ class SubsetSimulation:
         # Generate the initial samples - Level 0
         if self.samples_init is None:
             x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-                          pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
+                          pdf_proposal_scale=self.pdf_proposal_scale,
                           pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
                           algorithm='MMH', nsamples=self.nsamples_ss, seed=self.seed)
             self.samples.append(x_init.samples)
         else:
             self.samples.append(self.samples_init)
 
-        # g_init = RunModel(samples=self.samples[step], model_type=self.model_type, model_script=self.model_script,
-        #                   input_script=self.input_script, output_script=self.output_script,
-        #                   dimension=self.dimension)
-        g_init = RunModel2(samples=self.samples[step], model_script=self.model_script, ntasks=self.ntasks,
+        g_init = RunModel(samples=self.samples[step], model_script=self.model_script, ntasks=self.ntasks,
                            model_object_name=self.model_object_name)
 
         self.g.append(np.asarray(g_init.qoi_list))
@@ -328,18 +320,13 @@ class SubsetSimulation:
                 x0 = self.samples[step][i:i+n_keep]
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-                              pdf_proposal_scale=self.pdf_proposal_scale, pdf_target_type=self.pdf_target_type,
+                              pdf_proposal_scale=self.pdf_proposal_scale,
                               pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
                               algorithm=self.algorithm, nsamples=n_keep+1, seed=x0)
 
 
-
                 x_temp = x_mcmc.samples[n_keep].reshape((1, self.dimension))
-                # g_model = RunModel(samples=x_temp, cpu=1, model_type=self.model_type,
-                #                    model_script=self.model_script,
-                #                    input_script=self.input_script, output_script=self.output_script,
-                #                    dimension=self.dimension)
-                g_model = RunModel2(samples=x_temp, model_script=self.model_script, ntasks=self.ntasks,
+                g_model = RunModel(samples=x_temp, model_script=self.model_script, ntasks=self.ntasks,
                                     model_object_name=self.model_object_name)
 
                 g_temp = g_model.qoi_list
