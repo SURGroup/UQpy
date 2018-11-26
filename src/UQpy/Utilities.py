@@ -19,7 +19,11 @@
 import numpy as np
 import scipy.stats as stats
 from contextlib import contextmanager
-import sys, os
+import sys
+import os
+import matplotlib.pyplot as plt
+from scipy.special import gamma
+from scipy.stats import chi2, norm
 
 
 def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
@@ -616,8 +620,301 @@ def r_to_s(r, w, t):
     return s
 
 
+def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_object_name=None, input_template=None,
+             var_names=None,
+             output_script=None, output_object_name=None, ntasks=None, cores_per_task=None, nodes=None, resume=None,
+             verbose=None, model_dir=None, cluster=None, order=None):
+    """
+         Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
+
+
+         Input:
+             :param sample: The sample values at which the gradient of the model will be evaluated. Samples can be
+             passed directly as  an array or can be passed through the text file 'UQpy_Samples.txt'.
+             If passing samples via text file, set samples = None or do not set the samples input.
+             :type sample: ndarray
+
+             :param order: The type of derivatives to calculate (1st order, second order, mixed).
+             :type order: str
+
+             :param dimension: Number of random variables.
+             :type dimension: int
+
+             :param eps: step for the finite difference.
+             :type eps: float
+
+             :param model_script: The filename of the Python script which contains commands to execute the model
+
+             :param model_object_name: The name of the function or class which executes the model
+
+             :param input_template: The name of the template input file which will be used to generate input files for
+              each run of the model. Refer documentation for more details.
+
+             :param var_names: A list containing the names of the variables which are present in the template input
+              files
+
+             :param output_script: The filename of the Python script which contains the commands to process the output
+
+             :param output_object_name: The name of the function or class which has the output values. If the object
+              is a class named cls, the output must be saved as cls.qoi. If it a function, it should return the output
+              quantity of interest
+
+             :param ntasks: Number of tasks to be run in parallel. RunModel uses GNU parallel to execute models which
+              require an input template
+
+             :param cores_per_task: Number of cores to be used by each task
+
+             :param nodes: On MARCC, each node has 24 cores_per_task. Specify the number of nodes if more than one
+              node is required.
+
+             :param resume: This option can be set to True if a parallel execution of a model with input template
+              failed to finish running all jobs. GNU parallel will then run only the jobs which failed to execute.
+
+             :param verbose: This option can be set to False if you do not want RunModel to print status messages to
+              the screen during execution. It is True by default.
+
+             :param model_dir: The directory  that contains the Python script which contains commands to execute the
+             model
+
+             :param cluster: This option defines if we run the code into a cluster
+
+         Output:
+             :return du_dj: vector of first-order gradients
+             :rtype: ndarray
+             :return d2u_dj: vector of second-order gradients
+             :rtype: ndarray
+             :return d2u_dij: vector of mixed gradients
+             :rtype: ndarray
+     """
+
+    from UQpy.RunModel import RunModel
+
+    if order is None:
+        raise ValueError('Exit code: Provide type of derivatives: first, second or mixed.')
+
+    if dimension is None:
+     raise ValueError('Error: Dimension must be defined')
+
+    if eps is None:
+        eps = [0.1]*dimension
+    elif isinstance(eps, float):
+        eps = [eps] * dimension
+    elif isinstance(eps, list):
+        if len(eps) != 1 and len(eps) != dimension:
+            raise ValueError('Exit code: Inconsistent dimensions.')
+        if len(eps) == 1:
+            eps = [eps[0]] * dimension
+
+    if order == 'first' or order == 'second':
+        du_dj = np.zeros(dimension)
+        d2u_dj = np.zeros(dimension)
+        for i in range(dimension):
+            x_i1_j = np.array(sample)
+            x_i1_j[0, i] += eps[i]
+            x_1i_j = np.array(sample)
+            x_1i_j[0, i] -= eps[i]
+
+            g0 = RunModel(samples=x_i1_j,  model_script=model_script,
+                          model_object_name=model_object_name,
+                          input_template=input_template, var_names=var_names, output_script=output_script,
+                          output_object_name=output_object_name,
+                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
+                          verbose=verbose, model_dir=model_dir, cluster=cluster)
+
+            g1 = RunModel(samples=x_1i_j,  model_script=model_script,
+                          model_object_name=model_object_name,
+                          input_template=input_template, var_names=var_names, output_script=output_script,
+                          output_object_name=output_object_name,
+                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
+                          verbose=verbose, model_dir=model_dir, cluster=cluster)
+
+            du_dj[i] = (g0.qoi_list[0] - g1.qoi_list[0])/(2*eps[i])
+
+            if order == 'second':
+                g = RunModel(samples=sample, model_script=model_script,
+                             model_object_name=model_object_name,
+                             input_template=input_template, var_names=var_names, output_script=output_script,
+                             output_object_name=output_object_name,
+                             ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
+                             verbose=verbose, model_dir=model_dir, cluster=cluster)
+
+                d2u_dj[i] = (g0.qoi_list[0] - 2 * g.qoi_list[0] + g1.qoi_list[0]) / (eps[i]**2)
+
+        return np.vstack([du_dj, d2u_dj])
+
+    elif order == 'mixed':
+        import itertools
+        range_ = list(range(dimension))
+        d2u_dij = list()
+        for i in itertools.combinations(range_, 2):
+            x_i1_j1 = np.array(sample)
+            x_i1_1j = np.array(sample)
+            x_1i_j1 = np.array(sample)
+            x_1i_1j = np.array(sample)
+
+            x_i1_j1[0, i[0]] += eps[i[0]]
+            x_i1_j1[0, i[1]] += eps[i[1]]
+
+            x_i1_1j[0, i[0]] += eps[i[0]]
+            x_i1_1j[0, i[1]] -= eps[i[1]]
+
+            x_1i_j1[0, i[0]] -= eps[i[0]]
+            x_1i_j1[0, i[1]] += eps[i[1]]
+
+            x_1i_1j[0, i[0]] -= eps[i[0]]
+            x_1i_1j[0, i[1]] -= eps[i[1]]
+
+            g0 = RunModel(samples=x_i1_j1,  model_script=model_script,
+                          model_object_name=model_object_name,
+                          input_template=input_template, var_names=var_names, output_script=output_script,
+                          output_object_name=output_object_name,
+                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
+                          verbose=verbose, model_dir=model_dir, cluster=cluster)
+
+            g1 = RunModel(samples=x_i1_1j,  model_script=model_script,
+                          model_object_name=model_object_name,
+                          input_template=input_template, var_names=var_names, output_script=output_script,
+                          output_object_name=output_object_name,
+                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
+                          verbose=verbose, model_dir=model_dir, cluster=cluster)
+
+            g2 = RunModel(samples=x_1i_j1,  model_script=model_script,
+                          model_object_name=model_object_name,
+                          input_template=input_template, var_names=var_names, output_script=output_script,
+                          output_object_name=output_object_name,
+                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
+                          verbose=verbose, model_dir=model_dir, cluster=cluster)
+
+            g3 = RunModel(samples=x_1i_1j,  model_script=model_script,
+                          model_object_name=model_object_name,
+                          input_template=input_template, var_names=var_names, output_script=output_script,
+                          output_object_name=output_object_name,
+                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
+                          verbose=verbose, model_dir=model_dir, cluster=cluster)
+
+            d2u_dij.append((g0.qoi_list[0] - g1.qoi_list[0] - g2.qoi_list[0] + g3.qoi_list[0])
+                           / (4 * eps[i[0]]*eps[i[1]]))
+
+        return np.array(d2u_dij)
+
+
+def eval_hessian(dimension, mixed_der, der):
+
+    """
+    Calculate the hessian matrix with finite differences
+    Parameters:
+
+    """
+    hessian = np.diag(der)
+    import itertools
+    range_ = list(range(dimension))
+    add_ = 0
+    for i in itertools.combinations(range_, 2):
+        hessian[i[0], i[1]] = mixed_der[add_]
+        hessian[i[1], i[0]] = hessian[i[0], i[1]]
+        add_ += 1
+    return hessian
+
+
+def diagnostics(sampling_method, sampling_outputs, figsize=(8,8), eps_ESS=0.05, alpha_ESS=0.05):
+
+    """
+         Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
+
+
+         Input:
+             :param sampling_method: sampling method used to generate samples
+             :type sampling_method: str, 'MCMC' or 'IS'
+
+             :param sampling_outputs: output object of a sampling method
+             :type sampling_outputs: object of class MCMC or IS
+
+             :param figsize: size of the figure for output plots
+             :type figsize: tuple (width, height)
+
+             :param eps_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
+             :type eps_ESS: float in [0,1]
+
+             :param alpha_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
+             :type alpha_ESS: float in [0,1]
+
+         Output:
+             returns various diagnostics values/plots to evaluate importance sampling and MCMC sampling outputs
+     """
+
+    if sampling_outputs is None:
+        raise ValueError('Outputs of the sampling procedure should be provided in sampling_outputs.')
+
+    if sampling_method == 'IS':
+        effective_sample_size = 1/np.sum(sampling_outputs.weights**2, axis=0)
+        print('Effective sample size is ne={}, for a total number of samples={}'.
+              format(effective_sample_size,np.size(sampling_outputs.weights)))
+        print('max_weight = {}, min_weight = {}'.format(max(sampling_outputs.weights),
+                                                        min(sampling_outputs.weights)))
+
+        # Output plots
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.scatter(sampling_outputs.weights, np.zeros((np.size(sampling_outputs.weights), )),
+                   s=sampling_outputs.weights*200)
+        ax.set_xlabel('weights')
+        plt.show(fig)
+
+    elif sampling_method == 'MCMC':
+
+        samples = sampling_outputs.samples
+        nsamples, nparams = samples.shape
+
+        # Acceptance ratio
+        print('Acceptance ratio of the chain = {}'.format(sampling_outputs.accept_ratio))
+
+        # Computation of ESS and min ESS
+        eps = eps_ESS
+        alpha = alpha_ESS
+
+        bn = np.ceil(nsamples**(1/2))
+        an = int(np.ceil(nsamples/bn))
+        idx = np.array_split(np.arange(nsamples), an)
+
+        means_subdivisions = np.empty((an, samples.shape[1]))
+        for i, idx_i in enumerate(idx):
+            x_sub = samples[idx_i, :]
+            means_subdivisions[i,:] = np.mean(x_sub, axis=0)
+        Omega = np.cov(samples.T)
+        Sigma = np.cov(means_subdivisions.T)
+        joint_ESS = nsamples*np.linalg.det(Omega)**(1/nparams)/np.linalg.det(Sigma)**(1/nparams)
+        chi2_value = chi2.ppf(1 - alpha, df=nparams)
+        min_joint_ESS = 2 ** (2 / nparams) * np.pi / (nparams * gamma(nparams / 2)) ** (
+                    2 / nparams) * chi2_value / eps ** 2
+        marginal_ESS = np.empty((nparams, ))
+        min_marginal_ESS = np.empty((nparams,))
+        for j in range(nparams):
+            marginal_ESS[j] = nsamples * Omega[j,j]/Sigma[j,j]
+            min_marginal_ESS[j] = 4 * norm.ppf(alpha/2)**2 / eps**2
+
+        print('Multivariate ESS = {}, minESS = {} \n\n'.format(joint_ESS, min_joint_ESS))
+        print('Univariate ESS in each dimension')
+        for j in range(nparams):
+            print('Parameter {}: ESS = {}, minESS = {}'.format(j+1, marginal_ESS[j], min_marginal_ESS[j]))
+
+        # Output plots
+        fig, ax = plt.subplots(nrows=nparams, ncols=3, figsize=figsize)
+        for j in range(samples.shape[1]):
+            ax[j,0].plot(np.arange(nsamples), samples[:,j])
+            ax[j,0].set_title('chain for parameter # {}'.format(j+1))
+            ax[j,1].plot(np.arange(nsamples), np.cumsum(samples[:,j])/np.arange(nsamples))
+            ax[j,1].set_title('parameter convergence')
+            ax[j,2].acorr(samples[:,j]-np.mean(samples[:,j]), maxlags = 50, normed=True)
+            ax[j,2].set_title('ESS = {}'.format(marginal_ESS[j]))
+        plt.show(fig)
+
+    else:
+        raise ValueError('Supported sampling methods for diagnostics are "MCMC", "IS".')
+    return fig, ax
+
+
 @contextmanager
 def suppress_stdout():
+    """ A function to suppress output"""
     with open(os.devnull, "w") as devnull:
         old_stdout = sys.stdout
         sys.stdout = devnull

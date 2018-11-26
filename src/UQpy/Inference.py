@@ -26,7 +26,6 @@ from UQpy.RunModel import RunModel
 from scipy.optimize import minimize
 import warnings
 warnings.filterwarnings("ignore")
-import matplotlib.pyplot as plt
 
 
 ########################################################################################################################
@@ -386,82 +385,6 @@ class BayesParameterEstimation:
         else:
             return self.model.log_like(x=self.data, params=theta) + \
                    self.model.prior.log_pdf(x=theta, params=self.model.prior_params)
-
-
-class Diagnostics():
-
-    def __init__(self, sampling_method, sampling_outputs):
-
-        if sampling_method not in ['MCMC', 'IS']:
-            raise ValueError('Supported sampling methods for diagnostics are "MCMC", "IS".')
-        self.sampling_method = sampling_method
-        if sampling_outputs is None:
-            raise ValueError('Outputs of the sampling procedure should be provided in sampling_outputs.')
-
-        if self.sampling_method == 'IS':
-            self.effective_sample_size = 1/np.sum(sampling_outputs.weights**2, axis=0)
-            print('Effective sample size is ne={}, for a total number of samples={}'.
-                  format(self.effective_sample_size,np.size(sampling_outputs.weights)))
-            print('max_weight = {}, min_weight = {}'.format(max(sampling_outputs.weights),
-                                                            min(sampling_outputs.weights)))
-            # would also be nice to visualize the weights
-            fig, ax = plt.subplots()
-            ax.hist(sampling_outputs.weights)
-            ax.set_title('histogram of the normalized weights from IS')
-            plt.show()
-            fig, ax = plt.subplots()
-            ax.scatter(sampling_outputs.weights, np.zeros((np.size(sampling_outputs.weights), )),
-                       s=sampling_outputs.weights*200)
-            ax.set_xlabel('weights')
-            plt.show()
-
-        if self.sampling_method == 'MCMC':
-
-            samples = sampling_outputs.samples
-            nsamples, nparams = samples.shape
-
-            # Acceptance ratio
-            print('Acceptance ratio of the chain = {}'.format(sampling_outputs.accept_ratio))
-
-            # Computation of ESS and min ESS
-            eps = 0.05
-            alpha = 0.05
-
-            bn = np.ceil(nsamples**(1/2))
-            an = int(np.ceil(nsamples/bn))
-            idx = np.array_split(np.arange(nsamples), an)
-
-            means_subdivisions = np.empty((an, samples.shape[1]))
-            for i, idx_i in enumerate(idx):
-                x_sub = samples[idx_i, :]
-                means_subdivisions[i,:] = np.mean(x_sub, axis=0)
-            Omega = np.cov(samples.T)
-            Sigma = np.cov(means_subdivisions.T)
-            joint_ESS = nsamples*np.linalg.det(Omega)**(1/nparams)/np.linalg.det(Sigma)**(1/nparams)
-            chi2_value = chi2.ppf(1 - alpha, df=nparams)
-            min_joint_ESS = 2 ** (2 / nparams) * np.pi / (nparams * gamma(nparams / 2)) ** (
-                        2 / nparams) * chi2_value / eps ** 2
-            marginal_ESS = np.empty((nparams, ))
-            min_marginal_ESS = np.empty((nparams,))
-            for j in range(nparams):
-                marginal_ESS[j] = nsamples * Omega[j,j]/Sigma[j,j]
-                min_marginal_ESS[j] = 4 * norm.ppf(alpha/2)**2 / eps**2
-
-            print('Multivariate ESS = {}, minESS = {}'.format(joint_ESS, min_joint_ESS))
-            print('Univariate ESS in each dimension')
-            for j in range(nparams):
-                print('Parameter {}: ESS = {}, minESS = {}'.format(j+1, marginal_ESS[j], min_marginal_ESS[j]))
-
-            # Outputs plots
-            fix, ax = plt.subplots(nrows=nparams, ncols=3, figsize=(10,10))
-            for j in range(samples.shape[1]):
-                ax[j,0].plot(np.arange(nsamples), samples[:,j])
-                ax[j,0].set_title('chain for parameter # {}'.format(j+1))
-                ax[j,1].plot(np.arange(nsamples), np.cumsum(samples[:,j])/np.arange(nsamples))
-                ax[j,1].set_title('parameter convergence')
-                ax[j,2].acorr(samples[:,j]-np.mean(samples[:,j]), maxlags = 50, normed=True)
-                ax[j,2].set_title('ESS = {}'.format(marginal_ESS[j]))
-            plt.show()
 
 ########################################################################################################################
 ########################################################################################################################
