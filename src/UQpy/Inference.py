@@ -20,10 +20,9 @@
 
 from UQpy.SampleMethods import *
 from scipy import integrate
-from scipy.special import gamma
-from scipy.stats import multivariate_normal, chi2, norm
+from scipy.stats import multivariate_normal
 from UQpy.RunModel import RunModel
-from scipy.optimize import minimize
+from scipy.optimize import minimize, fmin_l_bfgs_b
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -35,11 +34,11 @@ warnings.filterwarnings("ignore")
 
 class Model:
     def __init__(self, model_type = None, model_script = None, model_name = None,
-                 n_params = None, error_covariance = 1, verbose=False,
+                 n_params = None, error_covariance = 1.0, verbose=False,
                  prior_name = None, prior_params=None, prior_copula=None,
                  model_object_name=None, input_template=None, var_names=None, output_script=None,
                  output_object_name=None, ntasks=1, cores_per_task=1, nodes=1, resume=False,
-                 model_dir=None, cluster=False,
+                 model_dir=None, cluster=False
                  ):
 
         """
@@ -92,7 +91,6 @@ class Model:
         self.script = model_script
         self.name = model_name
         self.n_params = n_params
-        self.error_covariance = error_covariance
         self.verbose = verbose
 
         if self.type == 'python':
@@ -108,6 +106,9 @@ class Model:
             self.var_names = var_names
             if self.var_names is None:
                 self.var_names = ['theta_{}'.format(i) for i in range(self.n_params)]
+            self.error_covariance = error_covariance
+            if isinstance(error_covariance, float) or isinstance(error_covariance, int):
+                self.error_covariance = error_covariance * np.eye(self.n_params)
             self.model_object_name = model_object_name
             self.input_template = input_template
             self.output_script = output_script
@@ -158,9 +159,14 @@ class Model:
                 results[i] = np.sum(self.pdf.log_pdf(x, param_i))
         return results
 
+    def log_like_prime(self, x, params):
+        return None
+
+
 class MLEstimation:
 
-    def __init__(self, model = None, data=None, iter_optim = 1, method_optim = 'nelder-mead', verbose=False):
+    def __init__(self, model = None, data=None, method_optim = 'l_bfgs_b', x0 = None, iter_optim = 1,
+                 bounds = None, verbose=False):
 
         """
         Perform maximum likelihood estimation, i.e., given some data y, compute the parameter vector that maximizes the
@@ -194,18 +200,40 @@ class MLEstimation:
 
         if model.type == 'python':
 
-            def log_like_data(param):
-                return -1*model.log_like(self.data, param)[0]
+            def neg_log_like_data(param):
+                return -1 * model.log_like(self.data, param)[0]
+            def neg_log_like_data_prime(param):
+                return -1 * model.log_like_prime(self.data, param)
             if verbose:
                 print('Evaluating max likelihood estimate for model '+model.name)
             list_param = []
             list_max_log_like = []
-            for _ in range(iter_optim):
-                x0 = np.random.rand(1, model.n_params)
-                print(x0.shape)
-                res = minimize(log_like_data, x0, method=method_optim,options = {'disp': True})
-                list_param.append(res.x)
-                list_max_log_like.append((-1)*res.fun)
+            if iter_optim > 1 or x0 is None:
+                x0 = np.random.rand(iter_optim, model.n_params)
+                if bounds is not None:
+                    x0 = bounds[0,:] + (bounds[1,:]-bounds[0,:]) * x0
+            else:
+                x0 = x0.reshape((1,-1))
+            # first case: use l_bfgs_b algorithm
+            if method_optim.lower() == 'l_bfgs_b':
+                # check if a jacobian exists, otherwise approximate it
+                if neg_log_like_data_prime(x0[0,:]) is None:
+                    approx_grad = True
+                    fprime = None
+                else:
+                    approx_grad = False
+                    fprime = neg_log_like_data_prime
+                for i in range(iter_optim):
+                    x, f, _ = fmin_l_bfgs_b(neg_log_like_data, x0[i,:], approx_grad = approx_grad,
+                                            fprime = fprime)
+                    list_param.append(x)
+                    list_max_log_like.append((-1)*f)
+            # second case: use any other method that does not require a Jacobian
+            else:
+                for i in range(iter_optim):
+                    res = minimize(neg_log_like_data, x0[i,:], method=method_optim)
+                    list_param.append(res.x)
+                    list_max_log_like.append((-1)*res.fun)
             idx_max = int(np.argmax(list_max_log_like))
             self.param = np.array(list_param[idx_max])
             self.max_log_like = list_max_log_like[idx_max]
