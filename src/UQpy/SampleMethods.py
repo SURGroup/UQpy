@@ -42,23 +42,21 @@ class MCS:
 
         Input:
             :param dist_name: A string or string list containing the names of the distributions of the random variables.
-                              Distribution names must match those in the Distributions module.
-                              If the distribution does not match one from the Distributions module, the user must
-                              provide a custom distribution file with name dist_name.py. See documentation for the
-                              Distributions module. The length of the list must equal the dimension of the random
-                              vector.
+            Distribution names must match those in the Distributions module.
+            If the distribution does not match one from the Distributions module, the user must provide a custom
+            distribution file with name dist_name.py. See documentation for the Distributions module. The length of the
+            list must equal the dimension of the random vector.
             :type dist_name: string or string list
 
             :param dist_params: Parameters of the distribution.
-                                Parameters for each random variable are defined as ndarrays.
-                                Each item in the list, dist_params[i], specifies the parameters for the corresponding
-                                distribution, dist_name[i].
-                                Relevant parameters for each distribution can be found in the documentation for the
-                                Distributions module.
+            Parameters for each random variable are defined as ndarrays.
+            Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
+            dist_name[i]. Relevant parameters for each distribution can be found in the documentation for the
+            Distributions module.
             :type dist_params: ndarray or list
 
             :param nsamples: Number of samples to generate.
-                             No Default Value: nsamples must be prescribed.
+            No Default Value: nsamples must be prescribed.
             :type nsamples: int
 
             :param verbose: A boolean declaring whether to write text to the terminal.
