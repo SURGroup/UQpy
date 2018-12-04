@@ -43,8 +43,8 @@ class RunModel:
     If a list is passed, each item of the list contains one set of samples required for one execution of the model.
     :type samples: ndarray or list
 
-    :param model_script: The filename of the Python script which contains commands to execute the model. The model
-    script must be present in the same directory from where RunModel is called.
+    :param model_script: The filename (with extension) of the Python script which contains commands to execute the
+    model. The model script must be present in the same directory from where RunModel is called.
     :type model_script: str
 
     :param model_object_name: The name of the function or class within model_script which executes the model. If there
@@ -84,12 +84,14 @@ class RunModel:
     :param cores_per_task: Number of cores to be used by each task.
     :type cores_per_task: int
 
-    :param nodes: On MARCC, each node has 24 cores_per_task. Specify the number of nodes if more than one node is
+    :param nodes: On MARCC, each node has 24 cores. Specify the number of nodes if more than one node is
     required.
     :type nodes: int
 
     :param resume: This option can be set to True if a parallel execution of a model with input template failed to
-    finish running all jobs. GNU parallel will then run only the jobs which failed to execute.
+    finish running all jobs. GNU parallel will then run only the jobs which failed to execute. To use this feature,
+    execute the same call to RunModel which failed to finish but with the resume option set to True. The same set of
+    samples must be passed to resume processing from the last successful execution of the model.
     :type resume: Boolean
 
     :param verbose: This option can be set to True if you want RunModel to print status messages to the screen
@@ -104,6 +106,11 @@ class RunModel:
     :param cluster: Set this option to True if executing on the cluster. Setting cluster to True, enables RunModel to
     execute the model using the necessary SLURM commands. This is False by default.
     :type cluster: Boolean
+
+    Output:
+    :return: RunModel.qoi_list: Outputs from the model execution. This is a list of length equal to the number of
+    simulations. Each item of this list contains the quantity of interest from that simulation.
+    :rtype: RunModel.qoi_list: list
     """
 
     def __init__(self, samples=None, model_script=None, model_object_name=None,
