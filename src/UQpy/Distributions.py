@@ -81,12 +81,12 @@ class Distribution:
             self.copula = None
 
         # Compute n_params for the distribution, is it necessary?
-        if isinstance(self.name, str):
-            self.n_params = Marginals(name=self.name).n_params()
-        elif isinstance(self.name, list):
-            n_params_i = [Marginals(name=name_i).n_params() for name_i in self.name]
-            if self.copula is None:
-                self.n_params = sum(n_params_i)
+        # if isinstance(self.name, str):
+        #     self.n_params = Marginals(name=self.name).n_params()
+        # elif isinstance(self.name, list):
+        #     n_params_i = [Marginals(name=name_i).n_params() for name_i in self.name]
+        #     if self.copula is None:
+        #         self.n_params = sum(n_params_i)
 
     def pdf(self, x, params, copula_params=None):
 
@@ -369,7 +369,7 @@ class Marginals:
 
             if hasattr(custom_dist, 'rvs'):
                 rvs = getattr(custom_dist, 'rvs')
-                return rvs(params)
+                return rvs(nsamples, params)
             else:
                 return getattr(custom_dist, 'rvs', 'Attribute rvs not defined.')
 

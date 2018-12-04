@@ -29,7 +29,7 @@ from functools import partial
 
 ########################################################################################################################
 ########################################################################################################################
-#                                         Monte Carlo simulation
+#                                         Monte Carlo Simulation
 ########################################################################################################################
 
 
@@ -41,25 +41,28 @@ class MCS:
             distribution using inverse transform method.
 
         Input:
-            :param dist_name: A list containing the names of the distributions of the random variables.
+            :param dist_name: A string or string list containing the names of the distributions of the random variables.
                               Distribution names must match those in the Distributions module.
                               If the distribution does not match one from the Distributions module, the user must
-                              provide custom_dist.py. The length of the string must be 1 (if all distributions are the
-                              same) or equal to dimension.
-            :type dist_name: string list
+                              provide a custom distribution file with name dist_name.py. See documentation for the
+                              Distributions module. The length of the list must equal the dimension of the random
+                              vector.
+            :type dist_name: string or string list
 
             :param dist_params: Parameters of the distribution.
                                 Parameters for each random variable are defined as ndarrays.
                                 Each item in the list, dist_params[i], specifies the parameters for the corresponding
-                                distribution, dist[i].
-            :type dist_params: list
-
-            :param: dist_copula: copula that encodes the dependence structure within variables, optional
-            :type dist_copula: str
+                                distribution, dist_name[i].
+                                Relevant parameters for each distribution can be found in the documentation for the
+                                Distributions module.
+            :type dist_params: ndarray or list
 
             :param nsamples: Number of samples to generate.
                              No Default Value: nsamples must be prescribed.
             :type nsamples: int
+
+            :param verbose: A boolean declaring whether to write text to the terminal.
+            :type verbose: bool
 
         Output:
             :return: MCS.samples: Set of generated samples
@@ -70,17 +73,25 @@ class MCS:
     # Authors: Dimitris G.Giovanis
     # Last Modified: 11/12/2018 by Audrey Olivier
 
-    def __init__(self, dist_name=None, dist_params=None, dist_copula=None, nsamples=None):
+    def __init__(self, dist_name=None, dist_params=None, dist_copula=None, nsamples=None, var_names=None,
+                 verbose=False):
 
         if nsamples is None:
             raise ValueError('UQpy error: nsamples must be defined.')
-        # ne need to do other checks as they will be done within Distributions.py
+        # No need to do other checks as they will be done within Distributions.py
         self.dist_name = dist_name
         self.dist_params = dist_params
         self.dist_copula = dist_copula
         self.nsamples = nsamples
-        self.samples = Distribution(name=self.dist_name, copula=self.dist_copula).rvs(params=self.dist_params,
-                                                                                      nsamples=nsamples)
+        self.var_names = var_names
+        if verbose:
+            print('UQpy: Running Monte Carlo Sampling...')
+        self.samples = Distribution(name=self.dist_name).rvs(params=self.dist_params, nsamples=nsamples)
+
+        if verbose:
+            print('UQpy: Monte Carlo Sampling Complete.')
+
+        # Shape the array as (1,n) if nsamples=1, and (n,1) if nsamples=n
         if len(self.samples.shape) == 1:
             if self.nsamples == 1:
                 self.samples = self.samples.reshape((1, -1))
