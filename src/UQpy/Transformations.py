@@ -85,7 +85,7 @@ class Correlate:
             self.corr_norm = corr_norm
             self.distribution = [None] * self.dimension
             for i in range(self.dimension):
-                self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
+                self.distribution[i] = Distribution(self.dist_name[i])
 
             if self.corr_norm is None:
                 raise RuntimeError("A correlation matrix is required.")
@@ -155,7 +155,7 @@ class Decorrelate:
             self.corr_norm = corr_norm
             self.distribution = [None] * self.dimension
             for i in range(self.dimension):
-                self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
+                self.distribution[i] = Distribution(self.dist_name[i])
 
             if self.corr_norm is None:
                 raise RuntimeError("A correlation matrix is required.")
