@@ -41,25 +41,28 @@ class MCS:
             distribution using inverse transform method.
 
         Input:
-            :param dist_name: A list containing the names of the distributions of the random variables.
+            :param dist_name: A string or string list containing the names of the distributions of the random variables.
                               Distribution names must match those in the Distributions module.
                               If the distribution does not match one from the Distributions module, the user must
-                              provide custom_dist.py. The length of the string must be 1 (if all distributions are the
-                              same) or equal to dimension.
-            :type dist_name: string list
+                              provide a custom distribution file with name dist_name.py. See documentation for the
+                              Distributions module. The length of the list must equal the dimension of the random
+                              vector.
+            :type dist_name: string or string list
 
             :param dist_params: Parameters of the distribution.
                                 Parameters for each random variable are defined as ndarrays.
                                 Each item in the list, dist_params[i], specifies the parameters for the corresponding
-                                distribution, dist[i].
-            :type dist_params: list
-
-            :param: dist_copula: copula that encodes the dependence structure within variables, optional
-            :type dist_copula: str
+                                distribution, dist_name[i].
+                                Relevant parameters for each distribution can be found in the documentation for the
+                                Distributions module.
+            :type dist_params: ndarray or list
 
             :param nsamples: Number of samples to generate.
                              No Default Value: nsamples must be prescribed.
             :type nsamples: int
+
+            :param verbose: A boolean declaring whether to write text to the terminal.
+            :type verbose: bool
 
         Output:
             :return: MCS.samples: Set of generated samples
@@ -70,17 +73,25 @@ class MCS:
     # Authors: Dimitris G.Giovanis
     # Last Modified: 11/12/2018 by Audrey Olivier
 
-    def __init__(self, dist_name=None, dist_params=None, dist_copula=None, nsamples=None):
+    def __init__(self, dist_name=None, dist_params=None, dist_copula=None, nsamples=None, var_names=None,
+                 verbose=False):
 
-        if self.nsamples is None:
+        if nsamples is None:
             raise ValueError('UQpy error: nsamples must be defined.')
-        # ne need to do other checks as they will be done within Distributions.py
+        # No need to do other checks as they will be done within Distributions.py
         self.dist_name = dist_name
         self.dist_params = dist_params
         self.dist_copula = dist_copula
         self.nsamples = nsamples
-        self.samples = Distribution(name=self.dist_name, copula=self.dist_copula).rvs(params=self.dist_params,
-                                                                                      nsamples=nsamples)
+        self.var_names = var_names
+        if verbose:
+            print('UQpy: Running Monte Carlo Sampling...')
+        self.samples = Distribution(name=self.dist_name).rvs(params=self.dist_params, nsamples=nsamples)
+
+        if verbose:
+            print('UQpy: Monte Carlo Sampling Complete.')
+
+        # Shape the array as (1,n) if nsamples=1, and (n,1) if nsamples=n
         if len(self.samples.shape) == 1:
             if self.nsamples == 1:
                 self.samples = self.samples.reshape((1, -1))
@@ -668,10 +679,10 @@ class MCMC:
                                 For 'MH' and 'MMH': zeros(1 x dimension)
                                 For 'Stretch': No default, this must be specified.
             :type seed: float or numpy array
-            :param burn_in: Length of burn-in. Number of samples at the beginning of the chain to discard.
+            :param nburn: Length of burn-in. Number of samples at the beginning of the chain to discard.
                             This option is only used for the 'MMH' and 'MH' algorithms.
                             Default: nburn = 0
-            :type burn_in: int
+            :type nburn: int
         Output:
             :return: MCMC.samples: Set of MCMC samples following the target distribution
             :rtype: MCMC.samples: ndarray
@@ -686,7 +697,7 @@ class MCMC:
 
     def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None,
                  pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None,
-                 algorithm=None, jump=1, nsamples=None, seed=None, burn_in=None):
+                 algorithm=None, jump=1, nsamples=None, seed=None, nburn=None):
 
         self.pdf_proposal_type = pdf_proposal_type
         self.pdf_proposal_scale = pdf_proposal_scale
@@ -699,7 +710,7 @@ class MCMC:
         self.nsamples = nsamples
         self.dimension = dimension
         self.seed = seed
-        self.burn_in = burn_in
+        self.nburn = nburn
         self.init_mcmc()
         if self.algorithm is 'Stretch':
             self.ensemble_size = len(self.seed)
@@ -711,7 +722,7 @@ class MCMC:
         n_accepts = 0
 
         # Defining an array to store the generated samples
-        samples = np.zeros([self.nsamples * self.jump + self.burn_in, self.dimension])
+        samples = np.zeros([self.nsamples * self.jump + self.nburn, self.dimension])
 
         ################################################################################################################
         # Classical Metropolis-Hastings Algorithm with symmetric proposal density
@@ -721,7 +732,7 @@ class MCMC:
             log_p_current = log_pdf_(samples[0, :], self.pdf_target_params)
 
             # Loop over the samples
-            for i in range(self.nsamples * self.jump - 1 + self.burn_in):
+            for i in range(self.nsamples * self.jump - 1 + self.nburn):
                 if self.pdf_proposal_type[0] == 'Normal':
                     cholesky_cov = np.diag(self.pdf_proposal_scale)
                     z_normal = np.random.normal(size=(self.dimension, 1))
@@ -751,7 +762,7 @@ class MCMC:
                         n_accepts += 1
                     else:
                         samples[i + 1, :] = samples[i, :]
-            accept_ratio = n_accepts/(self.nsamples * self.jump - 1 + self.burn_in)
+            accept_ratio = n_accepts/(self.nsamples * self.jump - 1 + self.nburn)
 
         ################################################################################################################
         # Modified Metropolis-Hastings Algorithm with symmetric proposal density
@@ -762,7 +773,7 @@ class MCMC:
             if self.pdf_target_type == 'marginal_pdf':
                 list_log_p_current = [self.pdf_target[j](samples[0, j], self.pdf_target_params) for j in
                                       range(self.dimension)]
-                for i in range(self.nsamples * self.jump - 1 + self.burn_in):
+                for i in range(self.nsamples * self.jump - 1 + self.nburn):
                     for j in range(self.dimension):
 
                         log_pdf_ = self.log_pdf_target[j]
@@ -800,7 +811,7 @@ class MCMC:
             else:
                 log_pdf_ = self.log_pdf_target
 
-                for i in range(self.nsamples * self.jump - 1 + self.burn_in):
+                for i in range(self.nsamples * self.jump - 1 + self.nburn):
                     candidate = list(samples[i, :])
                     current = list(samples[i, :])
                     log_p_current = log_pdf_(samples[i, :], self.pdf_target_params)
@@ -826,7 +837,7 @@ class MCMC:
                             candidate[j] = current[j]   # ????????? I don't get that one
 
                     samples[i + 1, :] = current
-            accept_ratio = n_accepts / (self.nsamples * self.jump - 1 + self.burn_in)
+            accept_ratio = n_accepts / (self.nsamples * self.jump - 1 + self.nburn)
 
         ################################################################################################################
         # Affine Invariant Ensemble Sampler with stretch moves
@@ -863,7 +874,7 @@ class MCMC:
 
         if self.algorithm is 'MMH' or self.algorithm is 'MH':
             print('Successful execution of the MCMC design')
-            return samples[self.burn_in:self.nsamples * self.jump + self.burn_in:self.jump], accept_ratio
+            return samples[self.nburn:self.nsamples * self.jump + self.nburn:self.jump], accept_ratio
         else:
             output = np.zeros((self.nsamples, self.dimension))
             j = 0
@@ -886,8 +897,8 @@ class MCMC:
             raise NotImplementedError('Exit code: Number of samples not defined.')
 
         # Check nburn
-        if self.burn_in is None:
-            self.burn_in = 0
+        if self.nburn is None:
+            self.nburn = 0
 
         # Check jump
         if self.jump is None:
@@ -1086,9 +1097,9 @@ class IS:
         # evaluate ps (log_pdf_target)
         log_ps = self.log_pdf_target(x, params=self.pdf_target_params)
 
-        log_weights = log_ps-log_qs
+        log_weights = log_ps - log_qs
         # this rescale is used to avoid having NaN of Inf when taking the exp
-        weights = np.exp(log_weights)
+        weights = np.exp(log_weights-max(log_weights))
         sum_w = np.sum(weights, axis=0)
         return log_weights, weights/sum_w
 

@@ -534,16 +534,17 @@ class TaylorSeries:
         tol = 1e-5
         u = np.zeros([max_iter + 1, n])
         if self.seed is not None:
-            u[0, :] = InvNataf(dimension=self.dimension, input_samples=self.seed.reshape(1, -1),
-                               dist_name=self.dist_name, dist_params=self.dist_params, corr=self.corr).samples
+            u[0, :] = Nataf(dimension=self.dimension, input_samples=self.seed.reshape(1, -1),
+                            dist_name=self.dist_name, dist_params=self.dist_params, corr=self.corr).samples
         x = np.zeros_like(u)
         beta = np.zeros(max_iter)
         converge_ = False
 
         for k in range(max_iter):
             # transform the initial point in the original space:  U to X
-            u_x = Nataf(dimension=self.dimension, input_samples=u[k, :].reshape(1, -1),
-                        dist_name=self.dist_name, dist_params=self.dist_params, corr_norm=self.corr)
+            u_x = InvNataf(dimension=self.dimension, input_samples=u[k, :].reshape(1, -1),
+                           dist_name=self.dist_name, dist_params=self.dist_params, corr_norm=self.corr)
+
             x[k, :] = u_x.samples
             jacobian = u_x.jacobian[0]
 
@@ -617,6 +618,7 @@ class TaylorSeries:
             # 4. calculate u_{k+1}
             u[k + 1, :] = -beta[k] * alpha
             # next iteration
+            print(x[k, :])
             if np.linalg.norm(u[k + 1, :] - u[k, :]) <= tol:
                 converge_ = True
                 # delete unnecessary data
@@ -624,8 +626,8 @@ class TaylorSeries:
                 # compute design point, reliability index and Pf
                 u_star = u[-1, :]
                 # transform points in the original space
-                u_x = Nataf(dimension=self.dimension, input_samples=u_star.reshape(1, -1),
-                            dist_name=self.dist_name, dist_params=self.dist_params, corr_norm=self.corr)
+                u_x = InvNataf(dimension=self.dimension, input_samples=u_star.reshape(1, -1),
+                               dist_name=self.dist_name, dist_params=self.dist_params, corr_norm=self.corr)
                 x_star = u_x.samples
                 beta = beta[k]
                 pf = stats.norm.cdf(-beta)

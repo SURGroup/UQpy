@@ -240,12 +240,15 @@ def correlation_distortion(marginal, params, rho_norm):
     w2d = weights2d.flatten()
     rho = np.ones_like(rho_norm)
 
-    print('UQpy: Computing Nataf correlation distortion...')
+    print('UQpy: Computing correlation distortion...')
     for i in range(len(marginal)):
         i_cdf_i = marginal[i].icdf
         moments_i = marginal[i].moments
         mi = moments_i(params[i])
-        if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
+        if mi.any() == 'Attribute moments not defined.':
+            rho = rho_norm
+            break
+        elif not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
             raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
 
         for j in range(i + 1, len(marginal)):

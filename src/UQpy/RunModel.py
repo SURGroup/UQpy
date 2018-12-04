@@ -21,6 +21,8 @@ class RunModel:
 
     :param samples: Samples to be passed as inputs to the model
 
+    :param model_dir: The directory  that contains the Python script which contains commands to execute the model
+
     :param model_script: The filename of the Python script which contains commands to execute the model
 
     :param model_object_name: The name of the function or class which executes the model
@@ -49,12 +51,14 @@ class RunModel:
 
     :param verbose: This option can be set to False if you do not want RunModel to print status messages to the screen
     during execution. It is True by default.
+
+    :param cluster: This option defines if we run the code into a cluster
     """
 
     def __init__(self, samples=None, model_script=None, model_object_name=None,
                  input_template=None, var_names=None, output_script=None, output_object_name=None,
                  ntasks=1, cores_per_task=1, nodes=1, resume=False, verbose=False, model_dir=None,
-                 cluster=False, ):
+                 cluster=False):
 
         # Check if samples are provided
         if samples is None:

@@ -161,7 +161,7 @@ class Model:
 
 class MLEstimation:
 
-    def __init__(self, model = None, data=None, iter_optim = 1, method_optim = 'nelder-mead', verbose=False):
+    def __init__(self, model=None, data=None, iter_optim=1, method_optim='nelder-mead', verbose=False):
 
         """
         Perform maximum likelihood estimation, i.e., given some data y, compute the parameter vector that maximizes the
@@ -247,12 +247,12 @@ class InfoModelSelection:
         self.method = method
 
         # Check that all candidate models are of class Model, and that they are all of the same type, pdf or python
-        all_notisinstance = [not isinstance(model, Model) for model in candidate_models]
-        if any(all_notisinstance):
+        all_not_isinstance = [not isinstance(model, Model) for model in candidate_models]
+        if any(all_not_isinstance):
             raise ValueError('All candidate models should be of type Model.')
 
-        all_typesnotequal = [model.type != candidate_models[0].type for model in candidate_models]
-        if any(all_typesnotequal):
+        all_types_not_equal = [model.type != candidate_models[0].type for model in candidate_models]
+        if any(all_types_not_equal):
             raise ValueError('All candidate models should be of same type, pdf or python.')
 
         # First evaluate ML estimate for all models
@@ -272,7 +272,7 @@ class InfoModelSelection:
             elif self.method == 'AICc':
                 criterion_value = -2 * max_log_like + 2 * k + (2 * k ** 2 + 2 * k) / (n - k - 1)
                 penalty_term = 2 * k + (2 * k ** 2 + 2 * k) / (n - k - 1)
-            else: # default: do AIC
+            else:  # default: do AIC
                 criterion_value = -2 * max_log_like + 2 * k
                 penalty_term = 2 * k
             list_criteria.append(criterion_value)
@@ -298,8 +298,8 @@ class InfoModelSelection:
 ########################################################################################################################
 class BayesParameterEstimation:
 
-    def __init__(self, data=None, model=None, sampling_method = None,
-                 pdf_proposal = None, pdf_proposal_scale=None, pdf_proposal_params = None,
+    def __init__(self, data=None, model=None, sampling_method=None,
+                 pdf_proposal=None, pdf_proposal_scale=None, pdf_proposal_params=None,
                  algorithm=None, jump=None, nsamples=None, nburn=None, seed=None, verbose=False):
 
         if not isinstance(model, Model):
@@ -365,7 +365,7 @@ class BayesParameterEstimation:
         if type(theta) is not np.ndarray:
             theta = np.array(theta)
         if len(theta.shape) == 1:
-            theta = theta.reshape((1,np.size(theta)))
+            theta = theta.reshape((1, np.size(theta)))
         # non-informative prior, p(theta)=1 everywhere
         if self.model.prior is None:
             return np.exp(self.model.log_like(x=self.data, params=theta))
@@ -378,7 +378,7 @@ class BayesParameterEstimation:
         if type(theta) is not np.ndarray:
             theta = np.array(theta)
         if len(theta.shape) == 1:
-            theta = theta.reshape((1,np.size(theta)))
+            theta = theta.reshape((1, np.size(theta)))
         # non-informative prior, p(theta)=1 everywhere
         if self.model.prior is None:
             return self.model.log_like(x=self.data, params=theta)
@@ -444,7 +444,7 @@ class Diagnostics:
             marginal_ESS = np.empty((nparams, ))
             min_marginal_ESS = np.empty((nparams,))
             for j in range(nparams):
-                marginal_ESS[j] = nsamples * Omega[j,j]/Sigma[j,j]
+                marginal_ESS[j] = nsamples * Omega[j,j]/Sigma[j, j]
                 min_marginal_ESS[j] = 4 * norm.ppf(alpha/2)**2 / eps**2
 
             print('Multivariate ESS = {}, minESS = {}'.format(joint_ESS, min_joint_ESS))
@@ -453,13 +453,13 @@ class Diagnostics:
                 print('Parameter {}: ESS = {}, minESS = {}'.format(j+1, marginal_ESS[j], min_marginal_ESS[j]))
 
             # Outputs plots
-            fix, ax = plt.subplots(nrows=nparams, ncols=3, figsize=(10,10))
+            fix, ax = plt.subplots(nrows=nparams, ncols=3, figsize=(10, 10))
             for j in range(samples.shape[1]):
                 ax[j,0].plot(np.arange(nsamples), samples[:,j])
                 ax[j,0].set_title('chain for parameter # {}'.format(j+1))
                 ax[j,1].plot(np.arange(nsamples), np.cumsum(samples[:,j])/np.arange(nsamples))
                 ax[j,1].set_title('parameter convergence')
-                ax[j,2].acorr(samples[:,j]-np.mean(samples[:,j]), maxlags = 50, normed=True)
+                ax[j,2].acorr(samples[:, j]-np.mean(samples[:,j]), maxlags=50, normed=True)
                 ax[j,2].set_title('ESS = {}'.format(marginal_ESS[j]))
             plt.show()
 
