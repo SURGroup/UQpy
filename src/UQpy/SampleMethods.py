@@ -1111,7 +1111,7 @@ class IS:
 
         log_weights = log_ps-log_qs
         # this rescale is used to avoid having NaN of Inf when taking the exp
-        weights = np.exp(log_weights)
+        weights = np.exp(log_weights - max(log_weights))
         sum_w = np.sum(weights, axis=0)
         return log_weights, weights/sum_w
 
