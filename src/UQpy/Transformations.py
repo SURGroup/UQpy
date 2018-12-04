@@ -22,7 +22,7 @@ from UQpy.Utilities import *
 from UQpy.Distributions import *
 
 # Authors: Dimitris G.Giovanis, Audrey Olivier
-# Last Modified: 11/19/18 by Dimitris G. Giovanis
+# Last Modified: 12/4/2018 by Dimitris G. Giovanis
 
 
 ########################################################################################################################
@@ -125,7 +125,7 @@ class Decorrelate:
     """
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 6/24/18 by Dimitris G. Giovanis
+    # Last Modified: 12/4/2018 by Dimitris G. Giovanis
 
     def __init__(self, input_samples=None, corr_norm=None, dimension=None):
 
@@ -172,11 +172,11 @@ class Decorrelate:
 ########################################################################################################################
 
 
-class Nataf:
+class InvNataf:
     """
         Description:
 
-            A class to perform the Nataf transformation of samples from N(0, 1) to a user-defined distribution.
+            A class to perform the inverse Nataf transformation of samples from N(0, 1) to a user-defined distribution.
 
         Input:
             :param input_samples: An object of a SampleMethods class containing N(0,1) samples or an array of N(0,1)
@@ -233,12 +233,12 @@ class Nataf:
 
             for i in range(len(self.distribution)):
                 if self.distribution[i].name.title() != 'Normal' or self.distribution[i].params != [0, 1]:
-                    raise RuntimeError("In order to use class 'Nataf' the random variables should be standard normal")
+                    raise RuntimeError("In order to use class 'InvNataf' the random variables should be standard normal")
 
             self.dist_name = dist_name
             self.dist_params = dist_params
             if self.dist_name is None or self.dist_params is None:
-                raise RuntimeError("In order to use class 'Nataf', marginal distributions and their parameters must"
+                raise RuntimeError("In order to use class 'InvNataf', marginal distributions and their parameters must"
                                    "be provided.")
 
             # Ensure the dimensions of dist_name are consistent
@@ -276,13 +276,13 @@ class Nataf:
         elif isinstance(input_samples, np.ndarray):
             self.samplesN01 = input_samples
             if dimension is None:
-                raise RuntimeError("UQpy: Dimension must be specified in 'Nataf' when entering samples as an array.")
+                raise RuntimeError("UQpy: Dimension must be specified in 'InvNataf' when entering samples as an array.")
             self.dimension = dimension
 
             self.dist_name = dist_name
             self.dist_params = dist_params
             if self.dist_name is None or self.dist_params is None:
-                raise RuntimeError("UQpy: Marginal distributions and their parameters must be specified in 'Nataf' "
+                raise RuntimeError("UQpy: Marginal distributions and their parameters must be specified in 'InvNataf' "
                                    "when entering samples as an array.")
 
             # Ensure the dimensions of dist_name are consistent
@@ -319,7 +319,7 @@ class Nataf:
                 self.dist_params = dist_params
                 self.corr_norm = corr_norm
                 if self.dist_name is None or self.dist_params is None:
-                    raise RuntimeError("UQpy: In order to use class 'Nataf', marginal distributions and their "
+                    raise RuntimeError("UQpy: In order to use class 'InvNataf', marginal distributions and their "
                                        "parameters must be provided.")
 
                 if dimension is not None:
@@ -346,7 +346,7 @@ class Nataf:
                 self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
 
             else:
-                raise RuntimeError("UQpy: To perform the Nataf transformation without samples, a correlation function"
+                raise RuntimeError("UQpy: To perform the inverse Nataf transformation without samples, a correlation function"
                                    "'corr_norm' must be provided.")
 
 
@@ -356,13 +356,13 @@ class Nataf:
 ########################################################################################################################
 
 
-class InvNataf:
+class Nataf:
     """
         Description:
-            A class to perform the inverse Nataf transformation of samples in standard normal space.
+            A class to perform the Nataf transformation of samples in standard normal space.
 
         Input:
-            :param input_samples: An object of type MCS, LHS
+            :param input_samples: An object of type SampleMethods or ndarray
             :type input_samples: object
 
             :param dist_name: A list containing the names of the distributions of the random variables.
@@ -411,7 +411,7 @@ class InvNataf:
     """
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 7/19/18 by Dimitris G. Giovanis
+    # Last Modified: 12/4/2018 by Dimitris G. Giovanis
 
     def __init__(self, input_samples=None, dimension=None, corr=None, dist_name=None, dist_params=None, beta=None,
                  itam_error1=None, itam_error2=None):
@@ -425,7 +425,7 @@ class InvNataf:
             # Allow to inherit distribution from samples or the user to specify the distribution
             if dist_name is None or dist_params is None:
                 if not hasattr(self, 'distribution'):
-                    raise RuntimeError("In order to use class 'InvNataf' the distributions and their parameters must"
+                    raise RuntimeError("In order to use class 'Nataf' the distributions and their parameters must"
                                        "be provided.")
 
             # Allow to inherit correlation from samples or the user to specify the correlation
@@ -466,17 +466,17 @@ class InvNataf:
         # If samples is an array
         elif isinstance(input_samples, np.ndarray):
             if dimension is None:
-                raise RuntimeError("UQpy: Dimension must be specified in 'InvNataf' when entering samples as an array.")
+                raise RuntimeError("UQpy: Dimension must be specified in 'Nataf' when entering samples as an array.")
             self.dimension = dimension
             self.samplesNG = input_samples
             if corr is None:
-                raise RuntimeError("UQpy: corr must be specified in 'InvNataf' when entering samples as an array.")
+                raise RuntimeError("UQpy: corr must be specified in 'Nataf' when entering samples as an array.")
             self.corr = corr
 
             self.dist_name = dist_name
             self.dist_params = dist_params
             if self.dist_name is None or self.dist_params is None:
-                raise RuntimeError("UQpy: Marginal distributions and their parameters must be specified in 'InvNataf' "
+                raise RuntimeError("UQpy: Marginal distributions and their parameters must be specified in 'Nataf' "
                                    "when entering samples as an array.")
 
             # Ensure the dimensions of dist_name are consistent
@@ -528,7 +528,7 @@ class InvNataf:
                 self.dist_params = dist_params
                 self.corr = corr
                 if self.dist_name is None or self.dist_params is None:
-                    raise RuntimeError("UQpy: In order to use class 'InvNataf', marginal distributions and their "
+                    raise RuntimeError("UQpy: In order to use class 'Nataf', marginal distributions and their "
                                        "parameters must be provided.")
 
                 if dimension is not None:
@@ -571,5 +571,5 @@ class InvNataf:
                                               itam_error2)
 
             else:
-                raise RuntimeError("UQpy: To perform the inverse Nataf transformation without samples, a correlation "
+                raise RuntimeError("UQpy: To perform the Nataf transformation without samples, a correlation "
                                    "function 'corr' must be provided.")
