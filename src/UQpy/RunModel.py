@@ -208,9 +208,10 @@ class RunModel:
                 self.template_text = str(f.read())
 
             # Import the output script
-            self.output_module = __import__(self.output_script[:-3])
-            # Run function which checks if the output module has the output object
-            self._check_output_module()
+            if self.output_script is not None:
+                self.output_module = __import__(self.output_script[:-3])
+                # Run function which checks if the output module has the output object
+                self._check_output_module()
 
             # Run the serial execution or parallel execution depending on ntasks
             if self.ntasks == 1:
@@ -252,7 +253,8 @@ class RunModel:
             self._execute_serial(i)
 
             # Call the output function
-            self._output_serial(i)
+            if self.output_script is not None:
+                self._output_serial(i)
 
     ####################################################################################################################
     def _parallel_execution(self):
