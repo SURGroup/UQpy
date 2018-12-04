@@ -22,7 +22,7 @@ from UQpy.Utilities import *
 from UQpy.Distributions import *
 
 # Authors: Dimitris G.Giovanis, Audrey Olivier
-# Last Modified: 11/19/18 by Dimitris G. Giovanis
+# Last Modified: 12/4/2018 by Dimitris G. Giovanis
 
 
 ########################################################################################################################
@@ -125,7 +125,7 @@ class Decorrelate:
     """
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 6/24/18 by Dimitris G. Giovanis
+    # Last Modified: 12/4/2018 by Dimitris G. Giovanis
 
     def __init__(self, input_samples=None, corr_norm=None, dimension=None):
 
@@ -172,11 +172,11 @@ class Decorrelate:
 ########################################################################################################################
 
 
-class Nataf:
+class InvNataf:
     """
         Description:
 
-            A class to perform the Nataf transformation of samples from N(0, 1) to a user-defined distribution.
+            A class to perform the inverse Nataf transformation of samples from N(0, 1) to a user-defined distribution.
 
         Input:
             :param input_samples: An object of a SampleMethods class containing N(0,1) samples or an array of N(0,1)
@@ -356,13 +356,13 @@ class Nataf:
 ########################################################################################################################
 
 
-class InvNataf:
+class Nataf:
     """
         Description:
-            A class to perform the inverse Nataf transformation of samples in standard normal space.
+            A class to perform the Nataf transformation of samples in standard normal space.
 
         Input:
-            :param input_samples: An object of type MCS, LHS
+            :param input_samples: An object of type SampleMethods or ndarray
             :type input_samples: object
 
             :param dist_name: A list containing the names of the distributions of the random variables.
@@ -411,7 +411,7 @@ class InvNataf:
     """
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 7/19/18 by Dimitris G. Giovanis
+    # Last Modified: 12/4/2018 by Dimitris G. Giovanis
 
     def __init__(self, input_samples=None, dimension=None, corr=None, dist_name=None, dist_params=None, beta=None,
                  itam_error1=None, itam_error2=None):
