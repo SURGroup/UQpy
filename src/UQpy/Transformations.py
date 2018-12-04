@@ -22,7 +22,7 @@ from UQpy.Utilities import *
 from UQpy.Distributions import *
 
 # Authors: Dimitris G.Giovanis, Audrey Olivier
-# Last Modified: 12/4/2018 by Dimitris G. Giovanis
+# Last Modified: 12/4/18 by Dimitris G. Giovanis
 
 
 ########################################################################################################################
@@ -67,8 +67,8 @@ class Correlate:
             self.corr_norm = corr_norm
             self.samples_uncorr = self.samples.copy()
 
-            for i in range(len(self.distribution)):
-                if self.distribution[i].name != 'Normal' or self.distribution[i].params != [0, 1]:
+            for i in range(len(self.dist_name)):
+                if self.dist_name[i].lower() != 'normal' or self.dist_params[i] != [0, 1]:
                     raise RuntimeError("In order to use class 'Correlate' the random variables should be standard"
                                        "normal")
 
@@ -80,7 +80,7 @@ class Correlate:
                 raise RuntimeError("Dimension must be specified when entering samples as an array.")
 
             self.dimension = dimension
-            self.dist_name = ['Normal'] * self.dimension
+            self.dist_name = ['normal'] * self.dimension
             self.dist_params = [[0, 1]] * self.dimension
             self.corr_norm = corr_norm
             self.distribution = [None] * self.dimension
@@ -125,7 +125,7 @@ class Decorrelate:
     """
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 12/4/2018 by Dimitris G. Giovanis
+    # Last Modified: 6/24/18 by Dimitris G. Giovanis
 
     def __init__(self, input_samples=None, corr_norm=None, dimension=None):
 
@@ -138,8 +138,8 @@ class Decorrelate:
             self.corr_norm = corr_norm
             self.samples_corr = self.samples.copy()
 
-            for i in range(len(self.distribution)):
-                if self.distribution[i].name != 'Normal' or self.distribution[i].params != [0, 1]:
+            for i in range(len(self.dist_name)):
+                if self.dist_name[i].lower() != 'normal' or self.dist_params[i] != [0, 1]:
                     raise RuntimeError("In order to use class 'Decorrelate' the random variables should be standard "
                                        "normal.")
 
@@ -150,7 +150,7 @@ class Decorrelate:
             if dimension is None:
                 raise RuntimeError("Dimension must be specified when entering samples as an array.")
             self.dimension = dimension
-            self.dist_name = ['Normal'] * self.dimension
+            self.dist_name = ['normal'] * self.dimension
             self.dist_params = [[0, 1]] * self.dimension
             self.corr_norm = corr_norm
             self.distribution = [None] * self.dimension
@@ -168,7 +168,7 @@ class Decorrelate:
 
 ########################################################################################################################
 ########################################################################################################################
-#                                         Nataf transformation
+#                                         Inverse Nataf transformation
 ########################################################################################################################
 
 
@@ -206,17 +206,17 @@ class InvNataf:
             :type distribution: list
 
         Output:
-            :return: Nataf.corr: The distorted correlation matrix of the random variables in the standard space;
-            :rtype: Nataf.corr: ndarray
+            :return: InvNataf.corr: The distorted correlation matrix of the random variables in the standard space;
+            :rtype: InvNataf.corr: ndarray
 
-            :return: Nataf.samplesN01: An array of N(0,1) samples;
-            :rtype: Nataf.corr: ndarray
+            :return: InvNataf.samplesN01: An array of N(0,1) samples;
+            :rtype: InvNataf.corr: ndarray
 
-            :return: Nataf.samples: An array of samples following the prescribed distributions;
-            :rtype: Nataf.corr: ndarray
+            :return: InvNataf.samples: An array of samples following the prescribed distributions;
+            :rtype: InvNataf.corr: ndarray
 
-            :return: Nataf.jacobian: An array containing the Jacobian of the transformation.
-            :rtype: Nataf.jacobian: ndarray
+            :return: InvNataf.jacobian: An array containing the Jacobian of the transformation.
+            :rtype: InvNataf.jacobian: ndarray
 
     """
 
@@ -231,15 +231,13 @@ class InvNataf:
             for k, v in _dict.items():
                 setattr(self, k, v)
 
-            for i in range(len(self.distribution)):
-                if self.distribution[i].name.title() != 'Normal' or self.distribution[i].params != [0, 1]:
-                    raise RuntimeError("In order to use class 'InvNataf' the random variables should be standard normal")
-
+            self.dimension = len(dist_name)
             self.dist_name = dist_name
             self.dist_params = dist_params
-            if self.dist_name is None or self.dist_params is None:
-                raise RuntimeError("In order to use class 'InvNataf', marginal distributions and their parameters must"
-                                   "be provided.")
+            if dist_name is None or dist_params is None:
+                if not hasattr(self, 'dist_name') or not hasattr(self, 'dist_params'):
+                    raise RuntimeError("In order to use class 'InvNataf' the distributions and their parameters must"
+                                       "be provided.")
 
             # Ensure the dimensions of dist_name are consistent
             if type(self.dist_name).__name__ != 'list':
@@ -346,23 +344,23 @@ class InvNataf:
                 self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
 
             else:
-                raise RuntimeError("UQpy: To perform the inverse Nataf transformation without samples, a correlation function"
-                                   "'corr_norm' must be provided.")
+                raise RuntimeError("UQpy: To perform the inverse Nataf transformation without samples, a correlation "
+                                   "function 'corr_norm' must be provided.")
 
 
 ########################################################################################################################
 ########################################################################################################################
-#                                         Inverse Nataf transformation
+#                                         Nataf transformation
 ########################################################################################################################
 
 
 class Nataf:
     """
         Description:
-            A class to perform the Nataf transformation of samples in standard normal space.
+            A class to perform the Nataf transformation of samples from a user-defined distribution to N(0, 1).
 
         Input:
-            :param input_samples: An object of type SampleMethods or ndarray
+            :param input_samples: An object of type SampleMethods, ndarray and InvNataf
             :type input_samples: object
 
             :param dist_name: A list containing the names of the distributions of the random variables.
@@ -397,21 +395,21 @@ class Nataf:
 
 
         Output:
-            :return: invNataf.corr: The distorted correlation matrix of the random variables in the standard space;
-            :rtype: invNataf.corr: ndarray
-
-            :return: invNataf.samplesN01: An array of N(0,1) samples;
+            :return: Nataf.corr: The distorted correlation matrix of the random variables in the standard space;
             :rtype: Nataf.corr: ndarray
 
-            :return: invNataf.samples: An array of samples following the normal distribution.
-            :rtype: invNataf.corr: ndarray
+            :return: Nataf.samplesN01: An array of N(0,1) samples;
+            :rtype: Nataf.corr: ndarray
 
-            :return: invNataf.jacobian: An array containing the Jacobian of the transformation.
-            :rtype: invNataf.jacobian: ndarray
+            :return: Nataf.samples: An array of samples following the normal distribution.
+            :rtype: Nataf.corr: ndarray
+
+            :return: Nataf.jacobian: An array containing the Jacobian of the transformation.
+            :rtype: Nataf.jacobian: ndarray
     """
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 12/4/2018 by Dimitris G. Giovanis
+    # Last Modified: 4/12/2018 by Dimitris G. Giovanis
 
     def __init__(self, input_samples=None, dimension=None, corr=None, dist_name=None, dist_params=None, beta=None,
                  itam_error1=None, itam_error2=None):
@@ -424,7 +422,7 @@ class Nataf:
 
             # Allow to inherit distribution from samples or the user to specify the distribution
             if dist_name is None or dist_params is None:
-                if not hasattr(self, 'distribution'):
+                if not hasattr(self, 'dist_name') or not hasattr(self, 'dist_params'):
                     raise RuntimeError("In order to use class 'Nataf' the distributions and their parameters must"
                                        "be provided.")
 
@@ -435,13 +433,17 @@ class Nataf:
             else:
                 self.corr = corr
 
-            # Check for variables that are non-Gaussian
+            self.distribution = [None] * len(self.dist_name)
+            for j in range(len(self.dist_name)):
+                self.distribution[j] = Distribution(self.dist_name[j])
+
+            # Check for variables that are  standard normal
             count = 0
-            for i in range(len(self.distribution)):
-                if self.distribution[i].name.title() == 'standard_normal':
+            for i in range(len(self.dist_name)):
+                if self.dist_name[i].lower() == 'normal' and self.dist_params[i] == [0, 1]:
                     count = count + 1
 
-            if count == len(self.distribution):  # Case where the variables are all standard Gaussian
+            if count == len(self.dist_name):  # Case where the variables are all standard normal
                 self.samplesN01 = self.samples.copy()
                 m, n = np.shape(self.samples)
                 self.samples = input_samples
@@ -472,7 +474,6 @@ class Nataf:
             if corr is None:
                 raise RuntimeError("UQpy: corr must be specified in 'Nataf' when entering samples as an array.")
             self.corr = corr
-
             self.dist_name = dist_name
             self.dist_params = dist_params
             if self.dist_name is None or self.dist_params is None:
@@ -498,7 +499,7 @@ class Nataf:
             # Check for variables that are non-Gaussian
             count = 0
             for i in range(len(self.distribution)):
-                if self.distribution[i].name.title() == 'standard_normal':
+                if self.dist_name[i].lower() == 'normal' and self.dist_params[i] == [0, 1]:
                     count = count + 1
 
             if count == len(self.distribution):
@@ -553,8 +554,8 @@ class Nataf:
                     self.distribution[j] = Distribution(self.dist_name[j])
 
                 count = 0
-                for i in range(len(self.distribution)):
-                    if self.distribution[i].name.title() == 'standard_normal':
+                for i in range(len(self.dist_name)):
+                    if self.dist_name[i].lower() == 'normal' and self.dist_params[i] == [0, 1]:
                         count = count + 1
 
                 if count == len(self.distribution):
