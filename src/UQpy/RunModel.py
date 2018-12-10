@@ -30,86 +30,113 @@ class RunModel:
     """
     Run a computational model at specified sample points.
 
-    This class is the interface between UQpy and models. The model is called in a Python script whose name must be
-    passed as one the arguments to the RunModel call. If the model is in Python, UQpy can interface with the model
-    without the need for an input file. In this case, UQpy imports the model module and executes the model object. If
-    the model is not in Python, RunModel must be provided the name of a template input file and an output Python script
-    along with the name of the Python script containing the model.
+    This class is the interface between UQpy and computational models. The model is called in a Python script whose
+    name must be passed as one the arguments to the RunModel call. If the model is in Python, UQpy can interface with
+    the model without the need for an input file. In this case, UQpy imports the model module and executes the model
+    object. If the model is not in Python, RunModel must be provided the name of a template input file and an output
+    Python script along with the name of the Python script that runs the model.
 
 
-    :param samples: Samples to be passed as inputs to the model. Either a ndarray or a list can be passed as samples.
-    If a ndarray is passed, each row of the ndarray contains one set of samples required for one execution of the model.
-    (The first dimension of the ndarray is considered to be the number of rows.)
+    :param samples: Samples to be passed as inputs to the model. Samples can be passed either as an ndarray or a list.
+    If an ndarray is passed, each row of the ndarray contains one set of samples required for one execution of the
+    model. (The first dimension of the ndarray is considered to be the number of rows.)
     If a list is passed, each item of the list contains one set of samples required for one execution of the model.
     :type samples: ndarray or list
 
     :param model_script: The filename (with extension) of the Python script which contains commands to execute the
-    model. The model script must be present in the same directory from where RunModel is called.
+    model. The model script must be present in the current working directory from which RunModel is called.
     :type model_script: str
 
-    :param model_object_name: The name of the function or class within model_script which executes the model. If there
-    is only one function or class in the model_script, then it is not necessary to specify the model_object_name. If
-    there are multiple objects within the model_script, then model_object_name must be specified.
+    :param model_object_name: In the Python model workflow, model_object_name specifies the name of the function or
+    class within model_script which executes the model. If there is only one function or class in the model_script, then
+    it is not necessary to specify the model_object_name. If there are multiple objects within the model_script, then
+    model_object_name must be specified.
+    model_object_name is not used in the third-party software model workflow.
     :type model_object_name: str
 
     :param input_template: The name of the template input file which will be used to generate input files for each
-    run of the model. This must be specified to choose the workflow where the model to be executed is not in
-    Python.
+    run of the model. When operating RunModel with a third-party software model, input_template must be specified.
+    input_template is not used in the Python model workflow.
     :type input_template: str
 
-    :param var_names: A list containing the names of the variables which are present in the template input files. If an
-    input template is provided and a list of variable names is not passed or if None is passed, then the default
+    :param var_names: A list containing the names of the variables present in the template input file. If an
+    input template is provided and a list of variable names is not passed, ie if var_names=None, then the default
     variable names x0, x1, x2,...,xn are created and used by RunModel, where n is the number of variables. The
-    number of variables is equal to the shape of the first row if an ndarray is passed as samples or the
-    shape of the first item if a list of samples is passed to RunModel.
+    number of variables is equal to the shape of the first row if samples is passed as an ndarray or the shape of the
+    first item if samples is passed as a list.
+    varnamesis not used in the Python model workflow.
     :type var_names: list of str or None
 
-    :param output_script: The filename of the Python script which contains the commands to process the output. Whenever
-    an input template is used to run the model, an output script must be written to return the output to RunModel.
+    :param output_script: The filename of the Python script which contains the commands to process the output from
+    third-party software model evaluation. The output_script is used to return the output quantities of interest to
+    RunModel for subsequent UQpy processing (e.g. for adaptive methods that utilize the results of previous simualtions
+    to initialize new simulations).
+    output_script is not used in the Python model workflow. In the Python model workflow, all model postprocessing is
+    handled within model_script.
+    If, in the third-party software model workflow, output_script = None (the default), then RunModel.qoi_list is empty
+    and postprocessing must be handled outside of UQpy.
     :type output_script: str
 
-    :param output_object_name: The name of the function or class which has the output values. If the object is a
-    class named cls, the output must be saved as cls.qoi. If it a function, it should return the output quantity of
-    interest. If there is only one function or only one class in output_script, then it is not necessary to specify
-    the output_object_name. If there are more than one objects in output_script, then the output_object_name must be
-    specified.
+    :param output_object_name: The name of the function or class that is used to collect the output values from
+    third-party software model output files.
+    If the object is aclass named cls, for example, the output must be saved as cls.qoi. If it is a function, it should
+    return the output quantity of interest. If there is only one function or only one class in output_script, then it is
+    not necessary to specify output_object_name. If there are multiple objects in output_script, then output_object_name
+    must be specified.
+    outputobjectname is not used in the Python model workflow.
     :type output_object_name: str
 
-    :param ntasks: Number of tasks to be run in parallel. By default, this is equal to 1 and the models are executed
-    serially. Setting ntasks as equal to a positive integer greater than 1 will trigger the parallel
-    workflow. RunModel uses GNU parallel to execute models which require an input template and the concurrent module
+    :param ntasks: Number of tasks to be run in parallel.
+    By default, ntasks = 1 and the models are executed serially. Setting ntasks equal to a positive integer greater than
+    1 will trigger the parallel workflow.
+    RunModel uses GNU parallel to execute models which require an input template in parallel and the concurrent module
     to execute Python models in parallel.
     :type ntasks: int
 
     :param cores_per_task: Number of cores to be used by each task.
+    In cases where a third-party model runs across multiple CPUs, this optional attribute allocates the necessary
+    resources to each model evaluation.
+    cores_per_task is not used in the Python model workflow
     :type cores_per_task: int
 
-    :param nodes: On MARCC, each node has 24 cores. Specify the number of nodes if more than one node is
-    required.
+    :param nodes: Number of nodes across which to distribute parallel jobs on an HPC cluster in the third-party software
+    model workflow.
+    If more than one compute node is required to execute the runs in parallel, nodes must be specified. For example, on
+    the Maryland Advanced Research Computing Center (MARCC), an HPC shared by Johns Hopkins University and the
+    University of Maryland, each compute node has 24 cores. To run an analysis with more than 24 parallel jobs on MARCC
+    requires nodes > 1.
+    nodes is not used in the Python model workflow.
     :type nodes: int
 
-    :param resume: This option can be set to True if a parallel execution of a model with input template failed to
-    finish running all jobs. GNU parallel will then run only the jobs which failed to execute. To use this feature,
-    execute the same call to RunModel which failed to finish but with the resume option set to True. The same set of
-    samples must be passed to resume processing from the last successful execution of the model.
+    :param resume: If resume = True, GNU parallel enables UQpy to resume execution of any model evaluations that failed
+    to execute in the third-party software model workflow.
+    To use this feature, execute the same call to RunModel which failed to complete but with resume = True.  The same
+    set of samples must be passed to resume processing from the last successful execution of the model.
+    resume is not used in the Python model workflow.
     :type resume: Boolean
 
-    :param verbose: This option can be set to True if you want RunModel to print status messages to the screen
-    during execution. It is False by default.
+    :param verbose: Set verbose = True if you want RunModel to print status messages to the terminal during execution.
+    verbose = False by default.
     :type verbose: Boolean
 
-    :param model_dir: Set model_dir to a string which is the name of the directory where you want the model to be
-    executed. model_dir is None by default. If model_dir is passed a string, then a new directory is created by RunModel
-    within the current directory whose name is model_dir appended with a timestamp.
-    :type model_dir: str or None
+    :param model_dir: Specifies the name of the sub-directory from which the model will be executed and to which output
+    files will be saved.
+    model_dir = None by default, which results in model execution from the Python current working directory. If
+    model_dir is passed a string, then a new directory is created by RunModel within the current directory whose name is
+    model_dir appended with a timestamp.
+    :type model_dir: str
 
-    :param cluster: Set this option to True if executing on the cluster. Setting cluster to True, enables RunModel to
-    execute the model using the necessary SLURM commands. This is False by default.
+    :param cluster: Set cluster = True if executing on an HPC cluster. Setting cluster = True enables RunModel to
+    execute the model using the necessary SLURM commands. cluster = False by default.
+    RunModel is configured for HPC clusters that operate with the SLURM scheduler. In order to execute a third-party
+    model with RunModel on an HPC cluster, the HPC must use SLURM.
+    cluster is not used for the Python model workflow.
     :type cluster: Boolean
 
     Output:
-    :return: RunModel.qoi_list: Outputs from the model execution. This is a list of length equal to the number of
-    simulations. Each item of this list contains the quantity of interest from that simulation.
+    :return: RunModel.qoi_list: A list containing the output quantities of interest extracted from the model output
+    files by output_script. This is a list of length equal to the number of simulations. Each item of this list contains
+    the quantity of interest from the associated simulation.
     :rtype: RunModel.qoi_list: list
     """
 
