@@ -19,26 +19,27 @@
 
 
 from UQpy.SampleMethods import *
-from scipy import integrate
-from scipy.stats import multivariate_normal
+from scipy.special import gamma
+from scipy.stats import multivariate_normal, chi2, norm
 from UQpy.RunModel import RunModel
 from scipy.optimize import minimize
 import warnings
+import matplotlib.pyplot as plt
 warnings.filterwarnings("ignore")
 
 
 ########################################################################################################################
 ########################################################################################################################
-#                            Define the model - probability model or python model
+#                            Information theoretic model selection - AIC, BIC
 ########################################################################################################################
 
 class Model:
-    def __init__(self, model_type=None, model_script=None, model_name=None,
-                 n_params=None, error_covariance=1.0,
-                 prior_name=None, prior_params=None, prior_copula=None,
+    def __init__(self, model_type = None, model_script = None, model_name = None,
+                 n_params = None, error_covariance = 1, verbose=False,
+                 prior_name = None, prior_params=None, prior_copula=None,
                  model_object_name=None, input_template=None, var_names=None, output_script=None,
                  output_object_name=None, ntasks=1, cores_per_task=1, nodes=1, resume=False,
-                 model_dir=None, cluster=False, verbose=False,
+                 model_dir=None, cluster=False,
                  ):
 
         """
@@ -54,7 +55,7 @@ class Model:
             :param model_script: python script that encodes the model, required only if model_type = 'python'
             :type model_script: str, format '< >.py'
 
-            :param n_params: number of parameters to be estimated, required
+            :param n_params: number of parameters, required only if model_type == 'python'
             :type n_params: int
 
             :param error_covariance: covariance of the Gaussian error for model defined by a python script
@@ -88,25 +89,25 @@ class Model:
 
         """
         self.type = model_type
+        self.script = model_script
         self.name = model_name
-        if n_params is None:
-            raise ValueError('A number of parameters must be defined.')
         self.n_params = n_params
+        self.error_covariance = error_covariance
         self.verbose = verbose
 
         if self.type == 'python':
             # Check that the script is a python file
-            if not model_script.lower().endswith('.py'):
+            if not self.script.lower().endswith('.py'):
                 raise ValueError('A python script, with extension .py, must be provided.')
-            self.script = model_script
+            if self.n_params is None:
+                raise ValueError('A number of parameters must be defined.')
+            else:
+                self.n_params = n_params
             if self.name is None:
                 self.name = self.script
             self.var_names = var_names
             if self.var_names is None:
                 self.var_names = ['theta_{}'.format(i) for i in range(self.n_params)]
-            self.error_covariance = error_covariance
-            if isinstance(error_covariance, float) or isinstance(error_covariance, int):
-                self.error_covariance = error_covariance * np.eye(self.n_params)
             self.model_object_name = model_object_name
             self.input_template = input_template
             self.output_script = output_script
@@ -119,13 +120,14 @@ class Model:
             self.cluster = cluster
 
         elif self.type == 'pdf':
-            self.pdf = Distribution(name=self.name)
-
+            self.pdf = Distribution(self.name)
+            self.n_params = self.pdf.n_params
 
         else:
             raise ValueError('UQpy error: model_type must be defined, as either "pdf" of "python".')
 
         # Define prior if it is given
+        self.prior_params = prior_params
         if prior_name is not None:
             self.prior = Distribution(name = prior_name, copula = prior_copula)
             self.prior_params = prior_params
@@ -133,38 +135,33 @@ class Model:
             self.prior = None
             self.prior_params = None
 
-    def log_like(self, data, params):
-        """ Computes the log-likelihood of model
-            inputs: data, ndarray of dimension (ndata, )
-                    params, ndarray of dimension (nsamples, n_params) or (n_params,)
-            output: ndarray of size (nsamples, ), contains log likelihood of p(data | params[i,:])
-        """
-        if params.shape == (self.n_params,):
+    def log_like(self, x, params):
+        if np.size(params) == self.n_params:
             params = params.reshape((1, self.n_params))
         if params.shape[1] != self.n_params:
             raise ValueError('the nb of columns in params should be equal to model.n_params')
         results = np.empty((params.shape[0],), dtype=float)
         if self.type == 'python':
-            z = RunModel(samples=params, model_script=self.script, model_object_name=self.model_object_name,
-                         input_template=self.input_template, var_names=self.var_names,
-                         output_script=self.output_script, output_object_name=self.output_object_name,
-                         ntasks=self.ntasks, cores_per_task=self.cores_per_task, nodes=self.nodes,
-                         resume=self.resume, verbose=self.verbose, model_dir=self.model_dir,
-                         cluster=self.cluster)
+            with suppress_stdout():  # disable printing output comments
+                z = RunModel(samples=params, model_script=self.script, model_object_name=self.model_object_name,
+                             input_template=self.input_template, var_names=self.var_names,
+                             output_script=self.output_script, output_object_name=self.output_object_name,
+                             ntasks=self.ntasks, cores_per_task=self.cores_per_task, nodes=self.nodes,
+                             resume=self.resume, verbose=self.verbose, model_dir=self.model_dir,
+                             cluster=self.cluster)
             for i in range(params.shape[0]):
                 mean = z.qoi_list[i].reshape((-1,))
-                results[i] = multivariate_normal.logpdf(data, mean=mean, cov=self.error_covariance)
+                results[i] = multivariate_normal.logpdf(x, mean=mean, cov=self.error_covariance)
         elif self.type == 'pdf':
             for i in range(params.shape[0]):
                 param_i = params[i, :].reshape((self.n_params,))
-                results[i] = np.sum(self.pdf.log_pdf(data, param_i))
+                results[i] = np.sum(self.pdf.log_pdf(x, param_i))
         return results
 
 
 class MLEstimation:
 
-    def __init__(self, model=None, data=None, method_optim=None, x0=None, iter_optim=1,
-                 bounds=None, verbose=False):
+    def __init__(self, model = None, data=None, iter_optim = 1, method_optim = 'nelder-mead', verbose=False):
 
         """
         Perform maximum likelihood estimation, i.e., given some data y, compute the parameter vector that maximizes the
@@ -175,17 +172,13 @@ class MLEstimation:
             :type model: instance of class Model
 
             :param data: Available data
-            :type data: ndarray of size (ndata, )
+            :type data: ndarray
 
-            :param iter_optim: number of iterations for the maximization procedure
-                (each iteration starts at a random point)
+            :param iter_optim: number of iterations for the maximization procedure (each iteration starts at a random point)
             :type iter_optim: an integer >= 1, default 1
 
             :param method_optim: method for optimization, see scipy.optimize.minimize
             :type method_optim: str
-
-            :param bounds: bounds in each dimension
-            :type bounds: list (of length n_params) of lists (each of dimension 2)
 
         Output:
             :return: MLEstimation.param: value of parameter vector that maximizes the likelihood
@@ -200,41 +193,29 @@ class MLEstimation:
             raise ValueError('UQpy error: model should be of type Model')
         self.data = data
 
-        # Use the fit method if it exists
-        if model.type == 'pdf' and not (model.pdf.fit(self.data) == 'Method fit not defined.'):
-            if verbose:
-                print('Evaluating max likelihood estimate for model ' + model.name + ' using its fit method.')
-            self.param = np.array(model.pdf.fit(self.data))
-            self.max_log_like = model.log_like(self.data, self.param)[0]
+        if model.type == 'python':
 
-        # Otherwise do an optimization problem...
-        else:
-            def neg_log_like_data(param):
-                return -1 * model.log_like(self.data, param)[0]
-
+            def log_like_data(param):
+                return -1*model.log_like(self.data, param)[0]
             if verbose:
-                print('Evaluating max likelihood estimate for model ' + model.name + ' using optimization procedure.')
+                print('Evaluating max likelihood estimate for model '+model.name)
             list_param = []
             list_max_log_like = []
-            if iter_optim > 1 or x0 is None:
-                x0 = np.random.rand(iter_optim, model.n_params)
-                if bounds is not None:
-                    bounds = np.array(bounds)
-                    x0 = bounds[:,0].reshape((1,-1)) + (bounds[:,1]-bounds[:,0]).reshape((1,-1)) * x0
-            else:
-                x0 = x0.reshape((1,-1))
-            # second case: use any other method that does not require a Jacobian
-            # TODO: a maximization that uses a Jacobian which can be given analytically by user
-            for i in range(iter_optim):
-                res = minimize(neg_log_like_data, x0[i,:], method=method_optim, bounds=bounds)
+            for _ in range(iter_optim):
+                x0 = np.random.rand(1, model.n_params)
+                print(x0.shape)
+                res = minimize(log_like_data, x0, method=method_optim,options = {'disp': True})
                 list_param.append(res.x)
                 list_max_log_like.append((-1)*res.fun)
             idx_max = int(np.argmax(list_max_log_like))
             self.param = np.array(list_param[idx_max])
             self.max_log_like = list_max_log_like[idx_max]
 
-        if verbose:
-            print('Max likelihood estimation completed.')
+        elif model.type == 'pdf':
+            if verbose:
+                print('Evaluating max likelihood estimate for model '+model.name)
+            self.param = np.array(model.pdf.fit(self.data))
+            self.max_log_like = model.log_like(self.data, self.param)[0]
 
 
 class InfoModelSelection:
@@ -317,8 +298,8 @@ class InfoModelSelection:
 ########################################################################################################################
 class BayesParameterEstimation:
 
-    def __init__(self, data=None, model=None, sampling_method=None,
-                 pdf_proposal=None, pdf_proposal_scale=None, pdf_proposal_params=None,
+    def __init__(self, data=None, model=None, sampling_method = None,
+                 pdf_proposal = None, pdf_proposal_scale=None, pdf_proposal_params = None,
                  algorithm=None, jump=None, nsamples=None, nburn=None, seed=None, verbose=False):
 
         if not isinstance(model, Model):
@@ -387,10 +368,10 @@ class BayesParameterEstimation:
             theta = theta.reshape((1,np.size(theta)))
         # non-informative prior, p(theta)=1 everywhere
         if self.model.prior is None:
-            return np.exp(self.model.log_like(data=self.data, params=theta))
+            return np.exp(self.model.log_like(x=self.data, params=theta))
         # prior is given
         else:
-            return np.exp(self.model.log_like(data=self.data, params=theta) +
+            return np.exp(self.model.log_like(x=self.data, params=theta) +
                           self.model.prior.log_pdf(x=theta, params=self.model.prior_params))
 
     def log_posterior(self, theta, params):
@@ -400,17 +381,95 @@ class BayesParameterEstimation:
             theta = theta.reshape((1,np.size(theta)))
         # non-informative prior, p(theta)=1 everywhere
         if self.model.prior is None:
-            return self.model.log_like(data=self.data, params=theta)
+            return self.model.log_like(x=self.data, params=theta)
         # prior is given
         else:
-            return self.model.log_like(data=self.data, params=theta) + \
+            return self.model.log_like(x=self.data, params=theta) + \
                    self.model.prior.log_pdf(x=theta, params=self.model.prior_params)
 
-########################################################################################################################
-########################################################################################################################
-#                                  Bayesian Model Selection
-########################################################################################################################
 
+class Diagnostics:
+
+    def __init__(self, sampling_method, sampling_outputs):
+
+        if sampling_method not in ['MCMC', 'IS']:
+            raise ValueError('Supported sampling methods for diagnostics are "MCMC", "IS".')
+        self.sampling_method = sampling_method
+        if sampling_outputs is None:
+            raise ValueError('Outputs of the sampling procedure should be provided in sampling_outputs.')
+
+        if self.sampling_method == 'IS':
+            self.effective_sample_size = 1/np.sum(sampling_outputs.weights**2, axis=0)
+            print('Effective sample size is ne={}, for a total number of samples={}'.
+                  format(self.effective_sample_size,np.size(sampling_outputs.weights)))
+            print('max_weight = {}, min_weight = {}'.format(max(sampling_outputs.weights),
+                                                            min(sampling_outputs.weights)))
+            # would also be nice to visualize the weights
+            fig, ax = plt.subplots()
+            ax.hist(sampling_outputs.weights)
+            ax.set_title('histogram of the normalized weights from IS')
+            plt.show()
+            fig, ax = plt.subplots()
+            ax.scatter(sampling_outputs.weights, np.zeros((np.size(sampling_outputs.weights), )),
+                       s=sampling_outputs.weights*200)
+            ax.set_xlabel('weights')
+            plt.show()
+
+        if self.sampling_method == 'MCMC':
+
+            samples = sampling_outputs.samples
+            nsamples, nparams = samples.shape
+
+            # Acceptance ratio
+            print('Acceptance ratio of the chain = {}'.format(sampling_outputs.accept_ratio))
+
+            # Computation of ESS and min ESS
+            eps = 0.05
+            alpha = 0.05
+
+            bn = np.ceil(nsamples**(1/2))
+            an = int(np.ceil(nsamples/bn))
+            idx = np.array_split(np.arange(nsamples), an)
+
+            means_subdivisions = np.empty((an, samples.shape[1]))
+            for i, idx_i in enumerate(idx):
+                x_sub = samples[idx_i, :]
+                means_subdivisions[i,:] = np.mean(x_sub, axis=0)
+            Omega = np.cov(samples.T)
+            Sigma = np.cov(means_subdivisions.T)
+            joint_ESS = nsamples*np.linalg.det(Omega)**(1/nparams)/np.linalg.det(Sigma)**(1/nparams)
+            chi2_value = chi2.ppf(1 - alpha, df=nparams)
+            min_joint_ESS = 2 ** (2 / nparams) * np.pi / (nparams * gamma(nparams / 2)) ** (
+                        2 / nparams) * chi2_value / eps ** 2
+            marginal_ESS = np.empty((nparams, ))
+            min_marginal_ESS = np.empty((nparams,))
+            for j in range(nparams):
+                marginal_ESS[j] = nsamples * Omega[j,j]/Sigma[j,j]
+                min_marginal_ESS[j] = 4 * norm.ppf(alpha/2)**2 / eps**2
+
+            print('Multivariate ESS = {}, minESS = {}'.format(joint_ESS, min_joint_ESS))
+            print('Univariate ESS in each dimension')
+            for j in range(nparams):
+                print('Parameter {}: ESS = {}, minESS = {}'.format(j+1, marginal_ESS[j], min_marginal_ESS[j]))
+
+            # Outputs plots
+            fix, ax = plt.subplots(nrows=nparams, ncols=3, figsize=(10,10))
+            for j in range(samples.shape[1]):
+                ax[j,0].plot(np.arange(nsamples), samples[:,j])
+                ax[j,0].set_title('chain for parameter # {}'.format(j+1))
+                ax[j,1].plot(np.arange(nsamples), np.cumsum(samples[:,j])/np.arange(nsamples))
+                ax[j,1].set_title('parameter convergence')
+                ax[j,2].acorr(samples[:,j]-np.mean(samples[:,j]), maxlags = 50, normed=True)
+                ax[j,2].set_title('ESS = {}'.format(marginal_ESS[j]))
+            plt.show()
+
+
+
+########################################################################################################################
+########################################################################################################################
+#                                  Bayesian Inference
+########################################################################################################################
+'''
 class BayesModelSelection:
 
     def __init__(self, data=None, dimension=None, candidate_model=None, pdf_proposal_type=None, pdf_proposal_scale=None,
@@ -537,121 +596,4 @@ class BayesModelSelection:
         return integrate.tplquad(fun_, x_lim[0], x_lim[1], lambda x: y_lim[0], lambda x: y_lim[1],
                                  lambda x, y: z_lim[0], lambda x, y: z_lim[1])
 
-
-########################################################################################################################
-########################################################################################################################
-#                                  Supporting functions
-########################################################################################################################
-def non_info_prior_dist(name, params):
-
-    if name.lower() == 'normal' or name.lower() == 'gaussian':
-
-        if params[1] < 0:
-            return np.inf
-        else:
-            return 0.0
-
-    elif name.lower() == 'uniform':
-
-        if params[1] < params[0]:
-            return np.inf
-        else:
-            return 0.0
-
-    elif name.lower() == 'beta':
-
-        if params[0] > 0 and params[1] > 0:
-            return 0.0
-        else:
-            return np.inf
-
-    elif name.lower() == 'gumberl_r':
-
-        if params[1] < 0:
-            return np.inf
-        else:
-            return 0.0
-
-    elif name.lower() == 'chisquare':
-
-        if params[1] < 0:
-            return np.inf
-        else:
-            return 0.0
-
-    elif name.lower() == 'lognormal':
-
-        if params[1] < 0:
-            return np.inf
-        else:
-            return 0.0
-
-    elif name.lower() == 'gamma':
-
-        if params[0] < 0 or params[2] < 0:
-            return np.inf
-        else:
-            return 0.0
-
-    elif name.lower() == 'exponential':
-
-        if params[1] < 0:
-            return np.inf
-        else:
-            return 0.0
-
-    elif name.lower() == 'cauchy':
-
-        if params[1] < 0:
-            return np.inf
-        else:
-            return 0.0
-
-    elif name.lower() == 'inv_gauss':
-
-        if params[0] < 0.0028 or params[2]< 0:
-            return np.inf
-        else:
-            return 0.0
-
-    elif name.lower() == 'logistic':
-
-        if params[1] < 0:
-            return np.inf
-        else:
-            return 0.0
-
-    elif name.lower() == 'pareto':
-
-        if params[0] < 0 or params[2] < 0:
-            return np.inf
-        else:
-            return 0.0
-
-    elif name.lower() == 'rayleigh':
-
-        if params[1] < 0:
-            return np.inf
-        else:
-            return 0.0
-
-    elif name.lower() == 'levy':
-
-        if params[1] < 0:
-            return np.inf
-        else:
-            return 0.0
-
-    elif name.lower() == 'laplace':
-
-        if params[1] < 0:
-            return np.inf
-        else:
-            return 0.0
-
-    elif name.lower() == 'maxwell':
-
-        if params[1] < 0:
-            return np.inf
-        else:
-            return 0.0
+'''

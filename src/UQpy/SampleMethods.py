@@ -1073,20 +1073,19 @@ class IS:
     # Last Modified: 11/02/18 by Audrey Olivier
 
     def __init__(self, dimension=None, nsamples=None,
-                 pdf_proposal=None, pdf_proposal_params=None,
-                 pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None,
-                 pdf_target_copula_params=None
+                 pdf_proposal=None, pdf_proposal_params=None, pdf_proposal_copula=None,
+                 pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None
                  ):
 
         self.dimension = dimension
         self.nsamples = nsamples
         self.pdf_proposal = pdf_proposal
         self.pdf_proposal_params = pdf_proposal_params
+        self.pdf_proposal_copula = pdf_proposal_copula
         self.pdf_target = pdf_target
         self.log_pdf_target = log_pdf_target
         self.pdf_target_params = pdf_target_params
         self.pdf_target_copula = pdf_target_copula
-        self.pdf_target_copula_params = pdf_target_copula_params
 
         self.init_is()
 
@@ -1097,7 +1096,7 @@ class IS:
 
     def sampling_step(self):
 
-        proposal_pdf_ = Distribution(name=self.pdf_proposal)
+        proposal_pdf_ = Distribution(name=self.pdf_proposal, copula=self.pdf_proposal_copula)
         samples = proposal_pdf_.rvs(params=self.pdf_proposal_params, nsamples=self.nsamples)
         return samples
 
@@ -1105,10 +1104,10 @@ class IS:
 
         x = self.samples
         # evaluate qs (log_pdf_proposal)
-        proposal_pdf_ = Distribution(name=self.pdf_proposal)
+        proposal_pdf_ = Distribution(name=self.pdf_proposal, copula=self.pdf_proposal_copula)
         log_qs = proposal_pdf_.log_pdf(x, params=self.pdf_proposal_params)
         # evaluate ps (log_pdf_target)
-        log_ps = self.log_pdf_target(x, params=self.pdf_target_params, copula_params=self.pdf_target_copula_params)
+        log_ps = self.log_pdf_target(x, params=self.pdf_target_params)
 
         log_weights = log_ps-log_qs
         # this rescale is used to avoid having NaN of Inf when taking the exp
@@ -1151,26 +1150,24 @@ class IS:
         if self.log_pdf_target is not None:
             # log_pdf_target can be defined as a function that takes either one or two inputs. In the latter case,
             # the second input is params, which is fixed to params=self.pdf_target_params
-            if not callable(self.log_pdf_target) or len(signature(self.log_pdf_target).parameters) > 3:
+            if not callable(self.log_pdf_target) or len(signature(self.log_pdf_target).parameters) > 2:
                 raise ValueError('UQpy error: when defined as a function, '
-                                 'log_pdf_target takes one, two or three inputs (x, params, params_copula).')
+                                 'log_pdf_target takes one (x) or two (x, params) inputs.')
         else:
             # pdf_target can be a str of list of strings, then compute the log_pdf
             if isinstance(self.pdf_target, str) or (isinstance(self.pdf_target, list) and
                                                     isinstance(self.pdf_target[0], str)):
                 p = Distribution(name=self.pdf_target, copula=self.pdf_target_copula)
-                print(p)
-                print(len(signature(p.log_pdf).parameters))
-                self.log_pdf_target = p.log_pdf
+                self.log_pdf_target = partial(p.log_pdf, params=self.pdf_target_params)
             # otherwise it may be a function that computes the pdf, then just take the logarithm
             else:
-                if not callable(self.pdf_target) or len(signature(self.pdf_target).parameters) > 3:
+                if not callable(self.pdf_target) or len(signature(self.pdf_target).parameters) != 2:
                     raise ValueError('UQpy error: when defined as a function, '
-                                     'pdf_target takes three (x, params, params_copula) inputs.')
+                                     'pdf_target takes two (x, params) inputs.')
 
                 # helper function
-                def compute_log_pdf(x, params, copula_params, pdf_func):
-                    pdf_value = max(pdf_func(x, params, copula_params), 10**(-320))
+                def compute_log_pdf(x, params, pdf_func):
+                    pdf_value = max(pdf_func(x, params), 10**(-320))
                     return np.log(pdf_value)
                 self.log_pdf_target = partial(compute_log_pdf, pdf_func=self.pdf_target)
 

@@ -21,9 +21,6 @@ import scipy.stats as stats
 from contextlib import contextmanager
 import sys
 import os
-import matplotlib.pyplot as plt
-from scipy.special import gamma
-from scipy.stats import chi2, norm
 
 
 def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
@@ -814,114 +811,6 @@ def eval_hessian(dimension, mixed_der, der):
         hessian[i[1], i[0]] = hessian[i[0], i[1]]
         add_ += 1
     return hessian
-
-
-def diagnostics(sampling_method, sampling_outputs, figsize=None, eps_ESS=0.05, alpha_ESS=0.05):
-
-    """
-         Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
-
-
-         Input:
-             :param sampling_method: sampling method used to generate samples
-             :type sampling_method: str, 'MCMC' or 'IS'
-
-             :param sampling_outputs: output object of a sampling method
-             :type sampling_outputs: object of class MCMC or IS
-
-             :param figsize: size of the figure for output plots
-             :type figsize: tuple (width, height)
-
-             :param eps_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
-             :type eps_ESS: float in [0,1]
-
-             :param alpha_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
-             :type alpha_ESS: float in [0,1]
-
-         Output:
-             returns various diagnostics values/plots to evaluate importance sampling and MCMC sampling outputs
-     """
-
-    if sampling_outputs is None:
-        raise ValueError('UQpy error: outputs of the sampling procedure should be provided in sampling_outputs.')
-    if eps_ESS < 0  or eps_ESS > 1:
-        raise ValueError('UQpy error: eps_ESS should be a float between 0 and 1.')
-    if alpha_ESS < 0  or alpha_ESS > 1:
-        raise ValueError('UQpy error: alpha_ESS should be a float between 0 and 1.')
-
-    if sampling_method == 'IS':
-        print('Diagnostics for Importance Sampling \n')
-        effective_sample_size = 1/np.sum(sampling_outputs.weights**2, axis=0)
-        print('Effective sample size is ne={}, out of a total number of samples={} \n'.
-              format(effective_sample_size,np.size(sampling_outputs.weights)))
-        print('max_weight = {}, min_weight = {} \n'.format(max(sampling_outputs.weights),
-                                                        min(sampling_outputs.weights)))
-
-        # Output plots
-        if figsize is None:
-            figsize = (8,3)
-        fig, ax = plt.subplots(figsize=figsize)
-        ax.scatter(sampling_outputs.weights, np.zeros((np.size(sampling_outputs.weights), )),
-                   s=sampling_outputs.weights*300, marker='o')
-        ax.set_xlabel('weights')
-        ax.set_title('Normalized weights out of importance sampling')
-        plt.show(fig)
-
-    elif sampling_method == 'MCMC':
-        print('Diagnostics for MCMC \n')
-        samples = sampling_outputs.samples
-        nsamples, nparams = samples.shape
-
-        # Acceptance ratio
-        print('Acceptance ratio of the chain = {}. \n'.format(sampling_outputs.accept_ratio))
-
-        # Computation of ESS and min ESS
-        eps = eps_ESS
-        alpha = alpha_ESS
-
-        bn = np.ceil(nsamples**(1/2)) # nb of samples per bin
-        an = int(np.ceil(nsamples/bn)) # nb of bins, for computation of
-        idx = np.array_split(np.arange(nsamples), an)
-
-        means_subdivisions = np.empty((an, samples.shape[1]))
-        for i, idx_i in enumerate(idx):
-            x_sub = samples[idx_i, :]
-            means_subdivisions[i,:] = np.mean(x_sub, axis=0)
-        Omega = np.cov(samples.T)
-        Sigma = np.cov(means_subdivisions.T)
-        joint_ESS = nsamples*np.linalg.det(Omega)**(1/nparams)/np.linalg.det(Sigma)**(1/nparams)
-        chi2_value = chi2.ppf(1 - alpha, df=nparams)
-        min_joint_ESS = 2 ** (2 / nparams) * np.pi / (nparams * gamma(nparams / 2)) ** (
-                    2 / nparams) * chi2_value / eps ** 2
-        marginal_ESS = np.empty((nparams, ))
-        min_marginal_ESS = np.empty((nparams,))
-        for j in range(nparams):
-            marginal_ESS[j] = nsamples * Omega[j,j]/Sigma[j,j]
-            min_marginal_ESS[j] = 4 * norm.ppf(alpha/2)**2 / eps**2
-
-        print('Univariate Effective Sample Size in each dimension: \n')
-        for j in range(nparams):
-            print('Parameter # {}: ESS = {}, minimum ESS recommended = {} \n'.
-                  format(j+1, marginal_ESS[j], min_marginal_ESS[j]))
-        print('Multivariate Effective Sample Size: \n')
-        print('Multivariate ESS = {}, minimum ESS recommended = {} \n'.format(joint_ESS, min_joint_ESS))
-
-        # Output plots
-        if figsize is None:
-            figsize = (20,5)
-        fig, ax = plt.subplots(nrows=nparams, ncols=3, figsize=figsize)
-        for j in range(samples.shape[1]):
-            ax[j,0].plot(np.arange(nsamples), samples[:,j])
-            ax[j,0].set_title('chain - parameter # {}'.format(j+1))
-            ax[j,1].plot(np.arange(nsamples), np.cumsum(samples[:,j])/np.arange(nsamples))
-            ax[j,1].set_title('parameter convergence')
-            ax[j,2].acorr(samples[:,j]-np.mean(samples[:,j]), maxlags = 50, normed=True)
-            ax[j,2].set_title('correlation between samples')
-        plt.show(fig)
-
-    else:
-        raise ValueError('Supported sampling methods for diagnostics are "MCMC", "IS".')
-    return fig, ax
 
 
 @contextmanager
