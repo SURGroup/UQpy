@@ -816,7 +816,7 @@ def eval_hessian(dimension, mixed_der, der):
     return hessian
 
 
-def diagnostics(sampling_method, sampling_outputs, figsize=(8,8), eps_ESS=0.05, alpha_ESS=0.05):
+def diagnostics(sampling_method, sampling_outputs, figsize=None, eps_ESS=0.05, alpha_ESS=0.05):
 
     """
          Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
@@ -843,36 +843,44 @@ def diagnostics(sampling_method, sampling_outputs, figsize=(8,8), eps_ESS=0.05, 
      """
 
     if sampling_outputs is None:
-        raise ValueError('Outputs of the sampling procedure should be provided in sampling_outputs.')
+        raise ValueError('UQpy error: outputs of the sampling procedure should be provided in sampling_outputs.')
+    if eps_ESS < 0  or eps_ESS > 1:
+        raise ValueError('UQpy error: eps_ESS should be a float between 0 and 1.')
+    if alpha_ESS < 0  or alpha_ESS > 1:
+        raise ValueError('UQpy error: alpha_ESS should be a float between 0 and 1.')
 
     if sampling_method == 'IS':
+        print('Diagnostics for Importance Sampling \n')
         effective_sample_size = 1/np.sum(sampling_outputs.weights**2, axis=0)
-        print('Effective sample size is ne={}, for a total number of samples={}'.
+        print('Effective sample size is ne={}, out of a total number of samples={} \n'.
               format(effective_sample_size,np.size(sampling_outputs.weights)))
-        print('max_weight = {}, min_weight = {}'.format(max(sampling_outputs.weights),
+        print('max_weight = {}, min_weight = {} \n'.format(max(sampling_outputs.weights),
                                                         min(sampling_outputs.weights)))
 
         # Output plots
+        if figsize is None:
+            figsize = (8,3)
         fig, ax = plt.subplots(figsize=figsize)
         ax.scatter(sampling_outputs.weights, np.zeros((np.size(sampling_outputs.weights), )),
-                   s=sampling_outputs.weights*200)
+                   s=sampling_outputs.weights*300, marker='o')
         ax.set_xlabel('weights')
+        ax.set_title('Normalized weights out of importance sampling')
         plt.show(fig)
 
     elif sampling_method == 'MCMC':
-
+        print('Diagnostics for MCMC \n')
         samples = sampling_outputs.samples
         nsamples, nparams = samples.shape
 
         # Acceptance ratio
-        print('Acceptance ratio of the chain = {}'.format(sampling_outputs.accept_ratio))
+        print('Acceptance ratio of the chain = {}. \n'.format(sampling_outputs.accept_ratio))
 
         # Computation of ESS and min ESS
         eps = eps_ESS
         alpha = alpha_ESS
 
-        bn = np.ceil(nsamples**(1/2))
-        an = int(np.ceil(nsamples/bn))
+        bn = np.ceil(nsamples**(1/2)) # nb of samples per bin
+        an = int(np.ceil(nsamples/bn)) # nb of bins, for computation of
         idx = np.array_split(np.arange(nsamples), an)
 
         means_subdivisions = np.empty((an, samples.shape[1]))
@@ -891,20 +899,24 @@ def diagnostics(sampling_method, sampling_outputs, figsize=(8,8), eps_ESS=0.05, 
             marginal_ESS[j] = nsamples * Omega[j,j]/Sigma[j,j]
             min_marginal_ESS[j] = 4 * norm.ppf(alpha/2)**2 / eps**2
 
-        print('Multivariate ESS = {}, minESS = {} \n\n'.format(joint_ESS, min_joint_ESS))
-        print('Univariate ESS in each dimension')
+        print('Univariate Effective Sample Size in each dimension: \n')
         for j in range(nparams):
-            print('Parameter {}: ESS = {}, minESS = {}'.format(j+1, marginal_ESS[j], min_marginal_ESS[j]))
+            print('Parameter # {}: ESS = {}, minimum ESS recommended = {} \n'.
+                  format(j+1, marginal_ESS[j], min_marginal_ESS[j]))
+        print('Multivariate Effective Sample Size: \n')
+        print('Multivariate ESS = {}, minimum ESS recommended = {} \n'.format(joint_ESS, min_joint_ESS))
 
         # Output plots
+        if figsize is None:
+            figsize = (20,5)
         fig, ax = plt.subplots(nrows=nparams, ncols=3, figsize=figsize)
         for j in range(samples.shape[1]):
             ax[j,0].plot(np.arange(nsamples), samples[:,j])
-            ax[j,0].set_title('chain for parameter # {}'.format(j+1))
+            ax[j,0].set_title('chain - parameter # {}'.format(j+1))
             ax[j,1].plot(np.arange(nsamples), np.cumsum(samples[:,j])/np.arange(nsamples))
             ax[j,1].set_title('parameter convergence')
             ax[j,2].acorr(samples[:,j]-np.mean(samples[:,j]), maxlags = 50, normed=True)
-            ax[j,2].set_title('ESS = {}'.format(marginal_ESS[j]))
+            ax[j,2].set_title('correlation between samples')
         plt.show(fig)
 
     else:
