@@ -22,23 +22,23 @@ from UQpy.SampleMethods import *
 from scipy import integrate
 from scipy.stats import multivariate_normal
 from UQpy.RunModel import RunModel
-from scipy.optimize import minimize, fmin_l_bfgs_b
+from scipy.optimize import minimize
 import warnings
 warnings.filterwarnings("ignore")
 
 
 ########################################################################################################################
 ########################################################################################################################
-#                            Information theoretic model selection - AIC, BIC
+#                            Define the model - probability model or python model
 ########################################################################################################################
 
 class Model:
-    def __init__(self, model_type = None, model_script = None, model_name = None,
-                 n_params = None, error_covariance = 1.0, verbose=False,
-                 prior_name = None, prior_params=None, prior_copula=None,
+    def __init__(self, model_type=None, model_script=None, model_name=None,
+                 n_params=None, error_covariance=1.0,
+                 prior_name=None, prior_params=None, prior_copula=None,
                  model_object_name=None, input_template=None, var_names=None, output_script=None,
                  output_object_name=None, ntasks=1, cores_per_task=1, nodes=1, resume=False,
-                 model_dir=None, cluster=False
+                 model_dir=None, cluster=False, verbose=False,
                  ):
 
         """
@@ -54,7 +54,7 @@ class Model:
             :param model_script: python script that encodes the model, required only if model_type = 'python'
             :type model_script: str, format '< >.py'
 
-            :param n_params: number of parameters, required only if model_type == 'python'
+            :param n_params: number of parameters to be estimated, required
             :type n_params: int
 
             :param error_covariance: covariance of the Gaussian error for model defined by a python script
@@ -88,19 +88,17 @@ class Model:
 
         """
         self.type = model_type
-        self.script = model_script
         self.name = model_name
+        if n_params is None:
+            raise ValueError('A number of parameters must be defined.')
         self.n_params = n_params
         self.verbose = verbose
 
         if self.type == 'python':
             # Check that the script is a python file
-            if not self.script.lower().endswith('.py'):
+            if not model_script.lower().endswith('.py'):
                 raise ValueError('A python script, with extension .py, must be provided.')
-            if self.n_params is None:
-                raise ValueError('A number of parameters must be defined.')
-            else:
-                self.n_params = n_params
+            self.script = model_script
             if self.name is None:
                 self.name = self.script
             self.var_names = var_names
@@ -121,14 +119,13 @@ class Model:
             self.cluster = cluster
 
         elif self.type == 'pdf':
-            self.pdf = Distribution(self.name)
-            self.n_params = self.pdf.n_params
+            self.pdf = Distribution(name=self.name)
+
 
         else:
             raise ValueError('UQpy error: model_type must be defined, as either "pdf" of "python".')
 
         # Define prior if it is given
-        self.prior_params = prior_params
         if prior_name is not None:
             self.prior = Distribution(name = prior_name, copula = prior_copula)
             self.prior_params = prior_params
@@ -136,37 +133,38 @@ class Model:
             self.prior = None
             self.prior_params = None
 
-    def log_like(self, x, params):
-        if np.size(params) == self.n_params:
+    def log_like(self, data, params):
+        """ Computes the log-likelihood of model
+            inputs: data, ndarray of dimension (ndata, )
+                    params, ndarray of dimension (nsamples, n_params) or (n_params,)
+            output: ndarray of size (nsamples, ), contains log likelihood of p(data | params[i,:])
+        """
+        if params.shape == (self.n_params,):
             params = params.reshape((1, self.n_params))
         if params.shape[1] != self.n_params:
             raise ValueError('the nb of columns in params should be equal to model.n_params')
         results = np.empty((params.shape[0],), dtype=float)
         if self.type == 'python':
-            with suppress_stdout():  # disable printing output comments
-                z = RunModel(samples=params, model_script=self.script, model_object_name=self.model_object_name,
-                             input_template=self.input_template, var_names=self.var_names,
-                             output_script=self.output_script, output_object_name=self.output_object_name,
-                             ntasks=self.ntasks, cores_per_task=self.cores_per_task, nodes=self.nodes,
-                             resume=self.resume, verbose=self.verbose, model_dir=self.model_dir,
-                             cluster=self.cluster)
+            z = RunModel(samples=params, model_script=self.script, model_object_name=self.model_object_name,
+                         input_template=self.input_template, var_names=self.var_names,
+                         output_script=self.output_script, output_object_name=self.output_object_name,
+                         ntasks=self.ntasks, cores_per_task=self.cores_per_task, nodes=self.nodes,
+                         resume=self.resume, verbose=self.verbose, model_dir=self.model_dir,
+                         cluster=self.cluster)
             for i in range(params.shape[0]):
                 mean = z.qoi_list[i].reshape((-1,))
-                results[i] = multivariate_normal.logpdf(x, mean=mean, cov=self.error_covariance)
+                results[i] = multivariate_normal.logpdf(data, mean=mean, cov=self.error_covariance)
         elif self.type == 'pdf':
             for i in range(params.shape[0]):
                 param_i = params[i, :].reshape((self.n_params,))
-                results[i] = np.sum(self.pdf.log_pdf(x, param_i))
+                results[i] = np.sum(self.pdf.log_pdf(data, param_i))
         return results
-
-    def log_like_prime(self, x, params):
-        return None
 
 
 class MLEstimation:
 
-    def __init__(self, model = None, data=None, method_optim = 'l_bfgs_b', x0 = None, iter_optim = 1,
-                 bounds = None, verbose=False):
+    def __init__(self, model=None, data=None, method_optim=None, x0=None, iter_optim=1,
+                 bounds=None, verbose=False):
 
         """
         Perform maximum likelihood estimation, i.e., given some data y, compute the parameter vector that maximizes the
@@ -177,13 +175,17 @@ class MLEstimation:
             :type model: instance of class Model
 
             :param data: Available data
-            :type data: ndarray
+            :type data: ndarray of size (ndata, )
 
-            :param iter_optim: number of iterations for the maximization procedure (each iteration starts at a random point)
+            :param iter_optim: number of iterations for the maximization procedure
+                (each iteration starts at a random point)
             :type iter_optim: an integer >= 1, default 1
 
             :param method_optim: method for optimization, see scipy.optimize.minimize
             :type method_optim: str
+
+            :param bounds: bounds in each dimension
+            :type bounds: list (of length n_params) of lists (each of dimension 2)
 
         Output:
             :return: MLEstimation.param: value of parameter vector that maximizes the likelihood
@@ -198,51 +200,41 @@ class MLEstimation:
             raise ValueError('UQpy error: model should be of type Model')
         self.data = data
 
-        if model.type == 'python':
+        # Use the fit method if it exists
+        if model.type == 'pdf' and not (model.pdf.fit(self.data) == 'Method fit not defined.'):
+            if verbose:
+                print('Evaluating max likelihood estimate for model ' + model.name + ' using its fit method.')
+            self.param = np.array(model.pdf.fit(self.data))
+            self.max_log_like = model.log_like(self.data, self.param)[0]
 
+        # Otherwise do an optimization problem...
+        else:
             def neg_log_like_data(param):
                 return -1 * model.log_like(self.data, param)[0]
-            def neg_log_like_data_prime(param):
-                return -1 * model.log_like_prime(self.data, param)
+
             if verbose:
-                print('Evaluating max likelihood estimate for model '+model.name)
+                print('Evaluating max likelihood estimate for model ' + model.name + ' using optimization procedure.')
             list_param = []
             list_max_log_like = []
             if iter_optim > 1 or x0 is None:
                 x0 = np.random.rand(iter_optim, model.n_params)
                 if bounds is not None:
-                    x0 = bounds[0,:] + (bounds[1,:]-bounds[0,:]) * x0
+                    bounds = np.array(bounds)
+                    x0 = bounds[:,0].reshape((1,-1)) + (bounds[:,1]-bounds[:,0]).reshape((1,-1)) * x0
             else:
                 x0 = x0.reshape((1,-1))
-            # first case: use l_bfgs_b algorithm
-            if method_optim.lower() == 'l_bfgs_b':
-                # check if a jacobian exists, otherwise approximate it
-                if neg_log_like_data_prime(x0[0,:]) is None:
-                    approx_grad = True
-                    fprime = None
-                else:
-                    approx_grad = False
-                    fprime = neg_log_like_data_prime
-                for i in range(iter_optim):
-                    x, f, _ = fmin_l_bfgs_b(neg_log_like_data, x0[i,:], approx_grad = approx_grad,
-                                            fprime = fprime)
-                    list_param.append(x)
-                    list_max_log_like.append((-1)*f)
             # second case: use any other method that does not require a Jacobian
-            else:
-                for i in range(iter_optim):
-                    res = minimize(neg_log_like_data, x0[i,:], method=method_optim)
-                    list_param.append(res.x)
-                    list_max_log_like.append((-1)*res.fun)
+            # TODO: a maximization that uses a Jacobian which can be given analytically by user
+            for i in range(iter_optim):
+                res = minimize(neg_log_like_data, x0[i,:], method=method_optim, bounds=bounds)
+                list_param.append(res.x)
+                list_max_log_like.append((-1)*res.fun)
             idx_max = int(np.argmax(list_max_log_like))
             self.param = np.array(list_param[idx_max])
             self.max_log_like = list_max_log_like[idx_max]
 
-        elif model.type == 'pdf':
-            if verbose:
-                print('Evaluating max likelihood estimate for model '+model.name)
-            self.param = np.array(model.pdf.fit(self.data))
-            self.max_log_like = model.log_like(self.data, self.param)[0]
+        if verbose:
+            print('Max likelihood estimation completed.')
 
 
 class InfoModelSelection:
@@ -325,8 +317,8 @@ class InfoModelSelection:
 ########################################################################################################################
 class BayesParameterEstimation:
 
-    def __init__(self, data=None, model=None, sampling_method = None,
-                 pdf_proposal = None, pdf_proposal_scale=None, pdf_proposal_params = None,
+    def __init__(self, data=None, model=None, sampling_method=None,
+                 pdf_proposal=None, pdf_proposal_scale=None, pdf_proposal_params=None,
                  algorithm=None, jump=None, nsamples=None, nburn=None, seed=None, verbose=False):
 
         if not isinstance(model, Model):
@@ -395,10 +387,10 @@ class BayesParameterEstimation:
             theta = theta.reshape((1,np.size(theta)))
         # non-informative prior, p(theta)=1 everywhere
         if self.model.prior is None:
-            return np.exp(self.model.log_like(x=self.data, params=theta))
+            return np.exp(self.model.log_like(data=self.data, params=theta))
         # prior is given
         else:
-            return np.exp(self.model.log_like(x=self.data, params=theta) +
+            return np.exp(self.model.log_like(data=self.data, params=theta) +
                           self.model.prior.log_pdf(x=theta, params=self.model.prior_params))
 
     def log_posterior(self, theta, params):
@@ -408,15 +400,15 @@ class BayesParameterEstimation:
             theta = theta.reshape((1,np.size(theta)))
         # non-informative prior, p(theta)=1 everywhere
         if self.model.prior is None:
-            return self.model.log_like(x=self.data, params=theta)
+            return self.model.log_like(data=self.data, params=theta)
         # prior is given
         else:
-            return self.model.log_like(x=self.data, params=theta) + \
+            return self.model.log_like(data=self.data, params=theta) + \
                    self.model.prior.log_pdf(x=theta, params=self.model.prior_params)
 
 ########################################################################################################################
 ########################################################################################################################
-#                                  Bayesian Inference
+#                                  Bayesian Model Selection
 ########################################################################################################################
 
 class BayesModelSelection:
