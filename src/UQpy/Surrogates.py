@@ -305,7 +305,9 @@ class Krig:
 
             Description:
 
-                Kriging surrogate creates an approximate model to predict the function value at unknown locations.
+                Krig generates an surrogate model to approxiamtely predict the function value at unknown locations. This
+                class returns a functions, i.e. Krig.interpolate. This functions estimates the approximate functional
+                value and mean square error at unknown/new samples.
 
                 References:
                 S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, "DACE -- A MATLAB Kriging Toolbox",
@@ -328,21 +330,32 @@ class Krig:
                 :param corr_model_params: Initial values corresponding to hyperparameters/scale parameters.
                 :type corr_model_params: ndarray
 
+                :param bounds: Bounds for hyperparameters used to solve optimization problem to estimate maximum
+                               likelihood estimator. This should be a closed bound.
+                               Default: [0.001, 10**7] for each hyperparamter.
+                :type bounds: list
+
+                :param op: Indicator to solve MLE problem or not. If 'Yes' corr_model_params will be used as initial
+                           solution for optimization problem. Otherwise, corr_model_params will be directly use as
+                           hyperparamter. Default: 'Yes'.
+                :type op: str
+
+                :param n_opt: Number of times optimization problem is to be solved with different starting point.
+                              Default: 1
+                :type n_opt: int
+
             Output:
                 :return: Krig.interpolate: This function predicts the function value and uncertainty associated with
                                            it at unknown samples.
                 :rtype: Krig.interpolate: function
-
-                :return: Krig.jacobian: This function predicts the gradient of function and uncertainty associated with
-                                        it at unknown samples.
-                :rtype: Krig.jacobian: function
 
         """
 
     # Authors: Mohit Chauhan, Matthew Lombardo
     # Last modified: 12/17/2018 by Mohit S. Chauhan
 
-    def __init__(self, samples=None, values=None, reg_model=None, corr_model=None, corr_model_params=None, bounds=None):
+    def __init__(self, samples=None, values=None, reg_model=None, corr_model=None, corr_model_params=None, bounds=None,
+                 op='Yes', n_opt=1):
 
         self.samples = samples
         self.values = values
@@ -350,70 +363,83 @@ class Krig:
         self.corr_model = corr_model
         self.corr_model_params = corr_model_params
         self.bounds = bounds
+        self.n_opt = n_opt
+        self.op = op
+        self.mean_s, self.std_s = np.zeros(samples.shape[1]), np.zeros(samples.shape[1])
+        self.mean_y, self.std_y = np.zeros(values.shape[1]), np.zeros(values.shape[1])
         self.init_krig()
         self.beta, self.gamma, self.sig, self.F_dash, self.C_inv, self.G = self.run_krig()
 
     def run_krig(self):
         print('UQpy: Performing Krig...')
-        s_ = self.samples
-        y_ = self.values
+        # Normalizing the data
+        self.mean_s, self.std_s = np.mean(self.samples, 0), np.std(self.samples, 0)
+        self.mean_y, self.std_y = np.mean(self.values, 0), np.std(self.values, 0)
+        s_ = (self.samples - self.mean_s)/self.std_s
+        y_ = (self.values - self.mean_y)/self.std_y
         # Number of samples and dimensions of samples and values
         m_, n_ = s_.shape
         q = int(np.size(y_)/m_)
 
         f_, jf_ = self.reg_model(s_)
 
-        # Update the initial values of hyperparameters to ensure that covariance matrix is positive definite
-        r_ = self.corr_model(x=s_, s=s_, params=self.corr_model_params)
-        while np.linalg.det(r_) < 10**(-12):
-            print(self.corr_model_params, np.linalg.det(r_))
-            self.corr_model_params = 1.5*self.corr_model_params
-            r_ = self.corr_model(x=s_, s=s_, params=self.corr_model_params)
-
         from scipy import optimize
 
-        def log_likelihood(p0, s, m, n, f, y):
-            print(p0)
+        def log_likelihood(p0, s, m, n, f, y, re=0):
             r__, dr_ = self.corr_model(x=s, s=s, params=p0, dt=True)
             try:
                 cc = np.linalg.cholesky(r__)
             except np.linalg.LinAlgError:
-                return np.inf, np.zeros(n)
+                if re == 0:
+                    return np.inf, np.zeros(n)
+                else:
+                    return np.inf
+
+            if np.prod(np.diagonal(cc)) == 0:
+                if re == 0:
+                    return np.inf, np.zeros(n)
+                else:
+                    return np.inf
 
             c_in = np.linalg.inv(cc)
             r_in = np.matmul(c_in.T, c_in)
 
-            f_das = np.matmul(c_in, f)
-            y_das = np.matmul(c_in, y)
-            q_ll, g_ll = np.linalg.qr(f_das)
-            bt = np.linalg.solve(g_ll, np.matmul(np.transpose(q_ll), y_das))
-
-            tmp = y_das - np.matmul(f_das, bt)
+            tmp = y
             alpha = np.matmul(r_in, tmp)
             t4 = np.matmul(tmp.T, alpha)
 
-            ll = (np.log(np.prod(np.diagonal(cc))) + m*np.log(np.sum(t4)/m) + m * np.log(2 * np.pi)) / 2
+            ll = (np.log(np.prod(np.diagonal(cc))) + t4 + m * np.log(2 * np.pi))/2
+            if re == 1:
+                return ll
 
             grad = np.zeros(n)
-            for i in range(n):
-                # TODO: Find efficient ways to estimate gradient
-                t1 = np.trace(np.matmul(r_in, dr_[:, :, i]))
-                r_bar = np.matmul(r_in, np.matmul(dr_[:, :, i], r_in))
-                f__ = np.linalg.cholesky(np.matmul(f.T, np.matmul(r_in, f)))
-                f_in = np.linalg.inv(f__)
-                fr_bar = np.matmul(f_in.T, f_in)
-                fr = np.matmul(f, np.matmul(fr_bar, f.T))
-                t2 = 2*np.matmul(tmp.T, np.matmul(r_in, np.matmul(fr, np.matmul(r_in, np.matmul((np.matmul(fr, r_in) -
-                                                                                                 np.eye(m)), y_das)))))
-                t3 = np.matmul(tmp.T, np.matmul(r_in, tmp))
-                t4 = np.matmul(tmp.T, np.matmul(r_bar, tmp))
-                grad[i] = 0.5*(t1 - (m/t3) * (t2 - t4))
+            h = 0.005
+            for dr in range(n):
+                temp = np.zeros(n)
+                temp[dr] = 1
+                low = p0 - h / 2 * temp
+                hi = p0 + h / 2 * temp
+                f_hi = log_likelihood(hi, s, m, n, f, y, 1)
+                f_low = log_likelihood(low, s, m, n, f, y, 1)
+                if f_hi == np.inf or f_low == np.inf:
+                    grad[dr] = 0
+                else:
+                    grad[dr] = (f_hi-f_low)/h
 
             return ll, grad
 
-        p_ = optimize.fmin_l_bfgs_b(log_likelihood, self.corr_model_params, args=(s_, m_, n_, f_, y_),
-                                    bounds=self.bounds)
-        self.corr_model_params = p_[0]
+        if self.op == 'Yes':
+            sp = self.corr_model_params
+            p = np.zeros([self.n_opt, n_])
+            pf = np.zeros([self.n_opt, 1])
+            for i__ in range(self.n_opt):
+                p_ = optimize.fmin_l_bfgs_b(log_likelihood, sp, args=(s_, m_, n_, f_, y_), bounds=self.bounds)
+                p[i__, :] = p_[0]
+                pf[i__, 0] = p_[1]
+                if i__ != self.n_opt - 1:
+                    sp = stats.reciprocal.rvs([j[0] for j in self.bounds], [j[1] for j in self.bounds], 1)
+            t = np.argmin(pf)
+            self.corr_model_params = p[t, :]
 
         r_ = self.corr_model(x=s_, s=s_, params=self.corr_model_params)
         c = np.linalg.cholesky(r_)                   # Eq: 3.8, DACE
@@ -439,9 +465,12 @@ class Krig:
         return beta, gamma, sigma, f_dash, c_inv, g_
 
     def interpolate(self, x, dy=False):
+        x = (x - self.mean_s)/self.std_s
+        s_ = (self.samples - self.mean_s) / self.std_s
         fx, jf = self.reg_model(x)
-        rx = self.corr_model(x=x, s=self.samples, params=self.corr_model_params)
+        rx = self.corr_model(x=x, s=s_, params=self.corr_model_params)
         y = np.einsum('ij,jk->ik', fx, self.beta) + np.einsum('ij,jk->ik', rx.T, self.gamma)
+        y = self.mean_y + y * self.std_y
         if dy:
             r_dash = np.einsum('ij,jk->ik', self.C_inv, rx)
             u = np.einsum('ij,jk->ik', self.F_dash.T, r_dash)-fx.T
@@ -451,26 +480,6 @@ class Krig:
             return y, mse.reshape(y.shape)
         else:
             return y
-
-    def jacobian(self, x):
-        fx, jf = self.reg_model(x)
-        rx, drdx = self.corr_model(x=x, s=self.samples, params=self.corr_model_params, dx=True)
-        y_grad = np.einsum('ijk,jm->ik', jf, self.beta) + np.einsum('ijk,jm->ki', drdx.T, self.gamma)
-        # TODO: Formula used to estimate mse_grad is wrong.
-        # if dy:
-        #     # Calculating: t1 = inv(f_dash.T*f_dash)
-        #     cf = np.linalg.cholesky(np.einsum('ij,jk->ik', self.F_dash.T, self.F_dash))
-        #     cf_inv = np.linalg.inv(cf)
-        #     t1 = np.matmul(np.transpose(cf_inv), cf_inv)
-        #     # Calculating: t2 = f_dash.T*inv(R)*r.T - jf*beta
-        #     t2 = np.einsum('ij,mjk->mik', self.F_dash.T, np.matmul(self.C_inv, rx.T)) - np.einsum('ijk,jm->imk', jf,
-        #                                                                                           self.beta)
-        #     # Calculating: t3 = inv(R)*r'
-        #     r_inv = np.matmul(self.C_inv.T, self.C_inv)
-        #     t3 = np.einsum('ij,jk->ik', r_inv, rx.T)
-        #     mse_grad = (2 * self.sig ** 2) * (np.matmul(t1, t2) - t3)
-        #     return y_grad, mse_grad
-        return y_grad
 
     def init_krig(self):
         if self.reg_model is None:
@@ -491,16 +500,18 @@ class Krig:
                 s = np.atleast_2d(s)
                 if model == 'Constant':
                     fx = np.ones([np.size(s, 0), 1])
-                    jf = np.zeros([np.size(s, 0), 1])
+                    jf = np.zeros([np.size(s, 0), np.size(s, 1), 1])
                     return fx, jf
                 if model == 'Linear':
                     fx = np.concatenate((np.ones([np.size(s, 0), 1]), s), 1)
-                    jf = np.concatenate((np.zeros([np.size(s, 1), 1]), np.eye(np.size(s, 1))), 1)
+                    jf_b = np.zeros([np.size(s, 0), np.size(s, 1), np.size(s, 1)])
+                    np.einsum('jii->ji', jf_b)[:] = 1
+                    jf = np.concatenate((np.zeros([np.size(s, 0), np.size(s, 1), 1]), jf_b), 2)
                     return fx, jf
                 if model == 'Quadratic':
                     fx = np.zeros([np.size(s, 0), int((np.size(s, 1) + 1) * (np.size(s, 1) + 2) / 2)])
                     jf = np.zeros(
-                        [np.size(s, 1), int((np.size(s, 1) + 1) * (np.size(s, 1) + 2) / 2), np.size(s, 0)])
+                        [np.size(s, 0), np.size(s, 1), int((np.size(s, 1) + 1) * (np.size(s, 1) + 2) / 2)])
                     for i in range(np.size(s, 0)):
                         temp = np.hstack((1, s[i, :]))
                         for j in range(np.size(s, 1)):
@@ -517,14 +528,14 @@ class Krig:
                                 h_ = tmp[:, j::]
                             else:
                                 h_ = np.hstack((h_, tmp[:, j::]))
-                        jf[:, :, i] = np.hstack((np.zeros([np.size(s, 1), 1]), np.eye(np.size(s, 1)), h_))
-                    return fx, jf.T
+                        jf[i, :, :] = np.hstack((np.zeros([np.size(s, 1), 1]), np.eye(np.size(s, 1)), h_))
+                    return fx, jf
 
             return r
 
         if type(self.reg_model).__name__ == 'function':
             self.reg_model = self.reg_model
-        elif self.reg_model in ['Linear', 'Quadratic']:
+        elif self.reg_model in ['Constant', 'Linear', 'Quadratic']:
             self.reg_model = regress(model=self.reg_model)
         else:
             raise NotImplementedError("Exit code: Doesn't recognize the Regression model.")
@@ -535,17 +546,17 @@ class Krig:
                 rx, drdt, drdx = 0, 0, 0
                 x = np.atleast_2d(x)
                 # Create stack matrix, where each block is x_i with all s
-                stack = np.tile(np.swapaxes(np.atleast_3d(x), 1, 2), (1, np.size(s, 0), 1)) - np.tile(s, (
+                stack = - np.tile(np.swapaxes(np.atleast_3d(x), 1, 2), (1, np.size(s, 0), 1)) + np.tile(s, (
                     np.size(x, 0),
                     1, 1))
                 if model == 'Exponential':
                     rx = np.exp(np.sum(-params * abs(stack), axis=2)).T
                     drdt = -abs(stack) * np.tile(rx, (np.size(x, 1), 1, 1)).T
-                    drdx = -params * np.sign(stack) * np.tile(rx, (np.size(x, 1), 1, 1)).T
+                    drdx = params * np.sign(stack) * np.tile(rx, (np.size(x, 1), 1, 1)).T
                 elif model == 'Gaussian':
                     rx = np.exp(np.sum(-params * (stack ** 2), axis=2)).T
                     drdt = -(stack ** 2) * np.tile(rx, (np.size(x, 1), 1, 1)).T
-                    drdx = -2 * params * abs(stack) * np.tile(rx, (np.size(x, 1), 1, 1)).T
+                    drdx = 2 * params * stack * np.tile(rx, (np.size(x, 1), 1, 1)).T
                 elif model == 'Linear':
                     # Taking stack and turning each d value into 1-theta*dij
                     after_parameters = 1 - params * abs(stack)
@@ -685,7 +696,7 @@ class Krig:
 
         if type(self.corr_model).__name__ == 'function':
             self.corr_model = self.corr_model
-        elif self.corr_model in ['Exponential', 'Gaussian', 'Linear', 'Spherical', 'Cubic', 'Spline']:
+        elif self.corr_model in ['Exponential', 'Gaussian', 'Linear', 'Spherical', 'Cubic', 'Spline', 'Other']:
             self.corr_model = corr(model=self.corr_model)
         else:
             raise NotImplementedError("Exit code: Doesn't recognize the Correlation model.")

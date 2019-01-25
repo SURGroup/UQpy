@@ -403,7 +403,7 @@ class STS:
         for i in range(self.dimension):
             self.distribution[i] = Distribution(self.dist_name[i])
         self.samplesU01, self.samples = self.run_sts()
-        del self.dist_name, self.dist_params
+        del self.dist_name
 
     def run_sts(self):
         samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
@@ -637,7 +637,7 @@ class RSS:
             :type model: str
 
             :param meta: A string specifying the method used to estimate the gradient.
-                         Options: Delaunay, Kriging_UQpy and Kriging_Sklearn
+                         Options: Delaunay, Kriging
             :type meta: str
 
             :param cell: A string specifying the stratification of sample domain.
@@ -647,28 +647,25 @@ class RSS:
             :param nsamples: Final size of the samples.
             :type nsamples: int
 
-            :param min_train_size: An list or array containing weights associated with different samples.
-                                         Options:
-                                            If weights_distribution is None, then default value is assigned.
-                                            If size of weights_distribution is 1xd, then it is assigned as dot product
-                                                of weights_distribution and default value.
-                                            Otherwise size of weights_distribution should be equal to Nxd.
-                                         Default: weights_distribution = Nxd dimensional array with all elements equal
-                                         to 1.
+            :param min_train_size: Minimum size of training data around new sample used to update surrogate.
+                                   Default: nsamples
             :type min_train_size: int
 
             :param step_size: Step size to calculate the gradient using central difference. Only required if Delaunay is
                               used as surrogate approximation.
             :type step_size: float
 
-            :param corr_model: Correlation model used to estimate gradient by defining kriging surrogate. Only required
-                               if Krig_UQpy is used as surrogate approximation.
+            :param reg_model: Regression model used to estimate gradient by using kriging surrogate. Only required
+                               if kriging is used as surrogate approximation.
+            :type reg_model: str
+
+            :param corr_model: Correlation model used to estimate gradient by using kriging surrogate. Only required
+                               if kriging is used as surrogate approximation.
             :type corr_model: str
 
-            :param corr_model_params: Correlation model parameters used to estimate gradient by defining kriging
-                                      surrogate. If meta=Kriging_UQpy, it is an array defining initial estimate of
-                                      hyperparameters (optional). If meta=Kriging_Sklearn, it is correlation function.
-            :type corr_model_params: array or function
+            :param corr_model_params: Correlation model parameters used to estimate hyperparamters for kriging
+                                      surrogate.
+            :type corr_model_params: ndarray
 
         Output:
             :return: RSS.samples: Final/expanded samples.
@@ -683,7 +680,8 @@ class RSS:
     # Last modified: 12/03/2018 by Mohit S. Chauhan
 
     def __init__(self, x=None, model=None, meta='Delaunay', cell='Rectangular', nsamples=None,
-                 min_train_size=None, step_size=0.005, corr_model='Gaussian', corr_model_params=None):
+                 min_train_size=None, step_size=0.005, corr_model='Gaussian', reg_model='Quadratic',
+                 corr_model_params=None, n_opt=None):
 
         self.x = x
         self.model = model
@@ -696,6 +694,8 @@ class RSS:
         self.step_size = step_size
         self.corr_model = corr_model
         self.corr_model_params = corr_model_params
+        self.reg_model = reg_model
+        self.n_opt = n_opt
         self.init_rss()
         self.samples = x.samples
         self.samplesU01 = x.samplesU01
@@ -726,16 +726,17 @@ class RSS:
                 dydx[:, dirr] = ((f.__call__(hi) - f.__call__(low)) / h)[:, 0]
             return dydx
 
-        def surrogate(x, y, corr_m_p, corr_m, xt):
+        def surrogate(x, y, corr_m_p, reg_m, corr_m, xt, n):
             if self.meta == 'Delaunay':
                 tck = LinearNDInterpolator(x, y, fill_value=0)
                 gr = cent_diff(tck, xt, self.step_size)
-            elif self.meta == 'Kriging_UQpy':
+            elif self.meta == 'Kriging':
                 with suppress_stdout():  # disable printing output comments
-                    tck = Krig(samples=x, values=y, reg_model='Quadratic', corr_model=corr_m,
-                               corr_model_params=corr_m_p, bounds=[[0.001, 10 ** 7]] * x.shape[1])
+                    tck = Krig(samples=x, values=y, reg_model=reg_m, corr_model=corr_m, corr_model_params=corr_m_p,
+                               n_opt=n)
                 corr_m_p = tck.corr_model_params
-                gr = tck.jacobian(xt)
+                gr = cent_diff(tck.interpolate, xt, self.step_size)
+                # gr = tck.jacobian(xt)
             elif self.meta == 'Kriging_Sklearn':
                 gp = GaussianProcessRegressor(kernel=corr_m, n_restarts_optimizer=0)
                 gp.fit(x, y)
@@ -778,15 +779,15 @@ class RSS:
                 values = np.array(RunModel(self.points, model_script=self.model).qoi_list)
             if self.cell == 'Rectangular':
                 dydx1, self.corr_model_params = surrogate(self.points, values, self.corr_model_params,
-                                                          self.corr_model,
-                                                          self.strata.origins + 0.5 * self.strata.widths)
+                                                          self.reg_model, self.corr_model,
+                                                          self.strata.origins + 0.5 * self.strata.widths, self.n_opt)
             else:
-                dydx1, self.corr_model_params = surrogate(self.points, values, self.corr_model_params,
-                                                          self.corr_model, np.mean(tri.points[tri.simplices], 1))
+                dydx1, self.corr_model_params = surrogate(self.points, values, self.corr_model_params, self.reg_model,
+                                                          self.corr_model, np.mean(tri.points[tri.simplices], 1),
+                                                          self.n_opt)
 
         initial_s = np.size(self.samplesU01, 0)
         for i in range(initial_s, self.nsamples):
-
             if self.cell == 'Rectangular':
                 # Determine the stratum to break
                 if self.option == 'Gradient':
@@ -859,15 +860,17 @@ class RSS:
                             var[j, k] = (weights[j] * math.factorial(dimension) / math.factorial(dimension + 2)) * (
                                     dimension * std ** 2)
                         s[j, 0] = np.sum(dydx1[j, :] * var[j, :] * dydx1[j, :] * (weights[j] ** 2))
+
                 if self.option == 'Refined':
                     w = np.argwhere(weights[:, 0] == np.amax(weights[:, 0]))
                     bin2add = w[0, np.random.randint(len(w))]
                 else:
                     bin2add = np.argmax(s)
-                # Creating sub-simplex, node is an array containing mid-point of edges
+
+                # Creating sub-simplex
                 tmp = self.points[tri.simplices[bin2add, :]]
                 col_one = np.array(list(itertools.combinations(np.arange(dimension + 1), dimension)))
-                node = np.zeros_like(tmp)
+                node = np.zeros_like(tmp)    # node: an array containing mid-point of edges
                 for m in range(dimension + 1):
                     node[m, :] = np.sum(tmp[col_one[m] - 1, :], 0) / dimension
 
@@ -922,18 +925,19 @@ class RSS:
                     dydx1 = np.vstack([dydx1, np.zeros(dimension)])
                     dydx1[in_update, :], self.corr_model_params = surrogate(self.points[in_train, :],
                                                                             values[in_train, :],
-                                                                            self.corr_model_params, self.corr_model,
+                                                                            self.corr_model_params, self.reg_model,
+                                                                            self.corr_model,
                                                                             self.strata.origins[in_update, :] +
-                                                                            .5 * self.strata.widths[in_update, :])
+                                                                            .5 * self.strata.widths[in_update, :], 1)
                 else:
                     dydx1 = np.vstack([dydx1, np.zeros([tri.simplices.shape[0] - dydx1.shape[0], dimension])])
                     dydx1[in_update, :], self.corr_model_params = surrogate(self.points[in_train, :],
                                                                             values[in_train, :],
                                                                             self.corr_model_params,
-                                                                            self.corr_model,
+                                                                            self.reg_model, self.corr_model,
                                                                             np.mean(tri.points[
                                                                                         tri.simplices[in_update, :]],
-                                                                                    1))
+                                                                                    1), 1)
         print('Done!')
         if self.option == 'Gradient':
             if self.cell == 'Rectangular':
@@ -943,7 +947,7 @@ class RSS:
                 return values[2 ** dimension:, :]
 
     def init_rss(self):
-        if self.x not in ['STS', 'RSS']:
+        if type(self.x).__name__ not in ['STS', 'RSS']:
             raise NotImplementedError("Exit code: x should be a class object from STS or RSS class.")
 
         if self.model is not None:
@@ -951,13 +955,13 @@ class RSS:
 
         if self.meta is None:
             self.meta = 'Delaunay'
-        elif self.meta not in ['Delaunay', 'Kriging_UQpy', 'Kriging_Sklearn']:
-            raise NotImplementedError("Exit code: meta is not specified correctly.")
+        elif self.meta not in ['Delaunay', 'Kriging', 'Kriging_Sklearn']:
+            raise NotImplementedError("Exit code: Input 'meta' is not specified correctly.")
 
         if self.cell is None:
             self.cell = 'Rectangular'
         elif self.cell not in ['Rectangular', 'Voronoi']:
-            raise NotImplementedError("Exit code: cell is not specified correctly.")
+            raise NotImplementedError("Exit code: Input 'cell' is not specified correctly.")
 
         if type(self.nsamples).__name__ != 'int':
             raise NotImplementedError("Exit code: nsamples should be integer.")
