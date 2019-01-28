@@ -81,132 +81,111 @@ class Distribution:
 
     def pdf(self, x, params, copula_params=None):
 
-        try:
-            if isinstance(self.name, str):
-                return SubDistribution(name=self.name).pdf(x, params)
-            elif isinstance(self.name, list):
-                if (x.shape[1] != len(self.name)) or (len(params) != len(self.name)):
-                    raise ValueError('UQpy error: Inconsistent dimensions')
-                prod_pdf = 1
-                for i in range(len(self.name)):
-                    prod_pdf = prod_pdf * SubDistribution(self.name[i]).pdf(x[:, i], params[i])
-                if self.copula is None:
-                    return prod_pdf
-                else:
-                    _, c = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
-                    return prod_pdf * c
-        except AttributeError:
-            return 'Method pdf not defined.'
+        if isinstance(self.name, str):
+            return SubDistribution(name=self.name).pdf(x, params)
+        elif isinstance(self.name, list):
+            if (x.shape[1] != len(self.name)) or (len(params) != len(self.name)):
+                raise ValueError('UQpy error: Inconsistent dimensions')
+            prod_pdf = 1
+            for i in range(len(self.name)):
+                prod_pdf = prod_pdf * SubDistribution(self.name[i]).pdf(x[:, i], params[i])
+            if self.copula is None:
+                return prod_pdf
+            else:
+                _, c = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
+                return prod_pdf * c
 
     def log_pdf(self, x, params, copula_params=None):
 
-        try:
-            if isinstance(self.name, str):
-                return SubDistribution(name=self.name).log_pdf(x, params)
-            elif isinstance(self.name, list):
-                if (x.shape[1] != len(self.name)) or (len(params) != len(self.name)):
-                    raise ValueError('UQpy error: Inconsistent dimensions')
-                sum_log_pdf = 0
-                for i in range(len(self.name)):
-                    sum_log_pdf = sum_log_pdf + SubDistribution(self.name[i]).log_pdf(x[:, i], params[i])
-                if self.copula is None:
-                    return sum_log_pdf
-                else:
-                    _, c = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
-                    return sum_log_pdf + np.log(c)
-        except AttributeError:
-            return 'Method log_pdf not defined.'
+        if isinstance(self.name, str):
+            return SubDistribution(name=self.name).log_pdf(x, params)
+        elif isinstance(self.name, list):
+            if (x.shape[1] != len(self.name)) or (len(params) != len(self.name)):
+                raise ValueError('UQpy error: Inconsistent dimensions')
+            sum_log_pdf = 0
+            for i in range(len(self.name)):
+                sum_log_pdf = sum_log_pdf + SubDistribution(self.name[i]).log_pdf(x[:, i], params[i])
+            if self.copula is None:
+                return sum_log_pdf
+            else:
+                _, c = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
+                return sum_log_pdf + np.log(c)
 
     def cdf(self, x, params, copula_params=None):
 
-        try:
-            if isinstance(self.name, str):
-                return SubDistribution(name=self.name).cdf(x, params)
-            elif isinstance(self.name, list):
-                if (len(params) != len(self.name)) or (x.shape[1] != len(self.name)):
-                    raise ValueError('UQpy error: Inconsistent dimensions')
-                if self.copula is None:
-                    cdfs = np.zeros_like(x)
-                    for i in range(len(self.name)):
-                        cdfs[:,i] = SubDistribution(self.name[i]).cdf(x[:, i], params[i])
-                    return np.prod(cdfs, axis=1)
-                else:
-                    c, _ = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
-                    return c
-        except AttributeError:
-            return 'Method cdf not defined.'
+        if isinstance(self.name, str):
+            return SubDistribution(name=self.name).cdf(x, params)
+        elif isinstance(self.name, list):
+            if (len(params) != len(self.name)) or (x.shape[1] != len(self.name)):
+                raise ValueError('UQpy error: Inconsistent dimensions')
+            if self.copula is None:
+                cdfs = np.zeros_like(x)
+                for i in range(len(self.name)):
+                    cdfs[:,i] = SubDistribution(self.name[i]).cdf(x[:, i], params[i])
+                return np.prod(cdfs, axis=1)
+            else:
+                c, _ = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
+                return c
 
     def icdf(self, x, params):
 
-        try:
-            if isinstance(self.name, str):
-                return SubDistribution(name=self.name).icdf(x, params)
-            elif isinstance(self.name, list):
-                if (len(params) != len(self.name)) or (x.shape[1] != len(self.name)):
-                    raise ValueError('UQpy error: Inconsistent dimensions')
-                if self.copula is None:
-                    icdfs = []
-                    for i in range(len(self.name)):
-                        icdfs.append(SubDistribution(self.name[i]).icdf(x[:, i], params[i]))
-                    return icdfs
-                else:
-                    return 'Method icdf not defined for distributions with copula.'
-        except AttributeError:
-            return 'Method icdf not defined.'
+        if isinstance(self.name, str):
+            return SubDistribution(name=self.name).icdf(x, params)
+        elif isinstance(self.name, list):
+            if (len(params) != len(self.name)) or (x.shape[1] != len(self.name)):
+                raise ValueError('UQpy error: Inconsistent dimensions')
+            if self.copula is None:
+                icdfs = []
+                for i in range(len(self.name)):
+                    icdfs.append(SubDistribution(self.name[i]).icdf(x[:, i], params[i]))
+                return icdfs
+            else:
+                raise AttributeError('Method icdf not defined for distributions with copula.')
 
     def rvs(self, params, nsamples=1):
 
-        try:
-            if isinstance(self.name, str):
-                return SubDistribution(name=self.name).rvs(params, nsamples)
-            elif isinstance(self.name, list):
-                if len(params) != len(self.name):
-                    raise ValueError('UQpy error: Inconsistent dimensions')
-                if self.copula is None:
-                    rvs = np.zeros((nsamples, len(self.name)))
-                    for i in range(len(self.name)):
-                        rvs[:, i] = SubDistribution(self.name[i]).rvs(params[i], nsamples)
-                    return rvs
-                else:
-                    return('Method rvs not defined for distributions with copula.')
-        except AttributeError:
-            return 'Method rvs not defined.'
+        if isinstance(self.name, str):
+            return SubDistribution(name=self.name).rvs(params, nsamples)
+        elif isinstance(self.name, list):
+            if len(params) != len(self.name):
+                raise ValueError('UQpy error: Inconsistent dimensions')
+            if self.copula is None:
+                rvs = np.zeros((nsamples, len(self.name)))
+                for i in range(len(self.name)):
+                    rvs[:, i] = SubDistribution(self.name[i]).rvs(params[i], nsamples)
+                return rvs
+            else:
+                raise AttributeError('Method rvs not defined for distributions with copula.')
 
     def fit(self, x):
 
-        try:
-            if isinstance(self.name, str):
-                return SubDistribution(name=self.name).fit(x)
-            elif isinstance(self.name, list):
-                if x.shape[1] != len(self.name):
-                    raise ValueError('UQpy error: Inconsistent dimensions')
-                if self.copula is None:
-                    params_fit = []
-                    for i in range(len(self.name)):
-                        params_fit.append(SubDistribution(self.name[i]).fit(x[:, i]))
-                    return params_fit
-                else:
-                    return 'Method fit not defined.'
-        except AttributeError:
-            return 'Method fit not defined.'
+        if isinstance(self.name, str):
+            return SubDistribution(name=self.name).fit(x)
+        elif isinstance(self.name, list):
+            if x.shape[1] != len(self.name):
+                raise ValueError('UQpy error: Inconsistent dimensions')
+            if self.copula is None:
+                params_fit = []
+                for i in range(len(self.name)):
+                    params_fit.append(SubDistribution(self.name[i]).fit(x[:, i]))
+                return params_fit
+            else:
+                raise AttributeError('Method fit not defined for distributions with copula.')
 
     def moments(self, params):
 
-        try:
-            if isinstance(self.name, str):
-                return SubDistribution(name=self.name).moments(params)
-            elif isinstance(self.name, list):
-                if len(params) != len(self.name):
-                    raise ValueError('UQpy error: Inconsistent dimensions')
-                if self.copula is None:
-                    mean, var, skew, kurt = [0]*len(self.name), [0]*len(self.name), [0]*len(self.name), [0]*len(self.name),
-                    for i in range(len(self.name)):
-                        mean[i], var[i], skew[i], kurt[i] = SubDistribution(self.name[i]).moments(params[i])
-                    return mean, var, skew, kurt
-                else:
-                    return 'Method moments not defined.'
-        except AttributeError:
-            return 'Method cdf not defined.'
+        if isinstance(self.name, str):
+            return SubDistribution(name=self.name).moments(params)
+        elif isinstance(self.name, list):
+            if len(params) != len(self.name):
+                raise ValueError('UQpy error: Inconsistent dimensions')
+            if self.copula is None:
+                mean, var, skew, kurt = [0]*len(self.name), [0]*len(self.name), [0]*len(self.name), [0]*len(self.name),
+                for i in range(len(self.name)):
+                    mean[i], var[i], skew[i], kurt[i] = SubDistribution(self.name[i]).moments(params[i])
+                return mean, var, skew, kurt
+            else:
+                raise AttributeError('Method moments not defined for distributions with copula.')
 
 
 class Copula:
@@ -356,7 +335,7 @@ class SubDistribution:
 
             tmp = getattr(custom_dist, 'pdf', None)
             if tmp is None:
-                raise AttributeError('Method pdf not defined.')
+                raise AttributeError('Method pdf not defined for distribution '+self.name+'.')
             else:
                 return tmp(x, params)
 
@@ -407,7 +386,7 @@ class SubDistribution:
 
             tmp = getattr(custom_dist, 'rvs', None)
             if tmp is None:
-                raise AttributeError('Method rvs not defined.')
+                raise AttributeError('Method rvs not defined for distribution '+self.name+'.')
             else:
                 return tmp(params, nsamples)
 
@@ -446,7 +425,7 @@ class SubDistribution:
             return stats.laplace.cdf(x, loc=params[0], scale=params[1])
         elif self.name.lower() == 'maxwell':
             return stats.maxwell.cdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'maxwell':
+        elif self.name.lower() == 'mvnormal':
             return stats.multivariate_normal.cdf(x, mean=params[0], cov=params[1])
         else:
             file_name = os.path.join(self.name + '.py')
@@ -458,7 +437,7 @@ class SubDistribution:
 
             tmp = getattr(custom_dist, 'cdf', None)
             if tmp is None:
-                raise AttributeError('Method cdf not defined.')
+                raise AttributeError('Method cdf not defined for distribution '+self.name+'.')
             else:
                 return tmp(x, params)
 
@@ -498,7 +477,7 @@ class SubDistribution:
         elif self.name.lower() == 'maxwell':
             return stats.maxwell.ppf(x, loc=params[0], scale=params[1])
         elif self.name.lower() == 'mvnormal':
-            raise ValueError('Method icdf not defined.')
+            raise ValueError('Method icdf not defined for mvnormal distribution.')
         else:
             file_name = os.path.join(self.name + '.py')
             if os.path.isfile(file_name):
@@ -509,7 +488,7 @@ class SubDistribution:
 
             tmp = getattr(custom_dist, 'icdf', None)
             if tmp is None:
-                raise AttributeError('Method icdf not defined.')
+                raise AttributeError('Method icdf not defined for distribution '+self.name+'.')
             else:
                 return tmp(x, params)
 
@@ -560,7 +539,7 @@ class SubDistribution:
 
             tmp = getattr(custom_dist, 'log_pdf', None)
             if tmp is None:
-                raise AttributeError('Method log_pdf not defined.')
+                raise AttributeError('Method log_pdf not defined for distribution '+self.name+'.')
             else:
                 return tmp(x, params)
 
@@ -600,7 +579,7 @@ class SubDistribution:
         elif self.name.lower() == 'maxwell':
             return stats.maxwell.fit(x)
         elif self.name.lower() == 'mvnormal':
-            raise AttributeError('Method fit not defined.')
+            raise AttributeError('Method fit not defined for mvnormal distribution.')
         else:
             file_name = os.path.join(self.name + '.py')
             if os.path.isfile(file_name):
@@ -611,7 +590,7 @@ class SubDistribution:
 
             tmp = getattr(custom_dist, 'fit', None)
             if tmp is None:
-                raise AttributeError('Method fit not defined.')
+                raise AttributeError('Method fit not defined for distribution '+self.name+'.')
             else:
                 return tmp(x)
 
@@ -663,7 +642,7 @@ class SubDistribution:
         elif self.name.lower() == 'maxwell':
             mean, var, skew, kurt = stats.maxwell.stats(loc=params[0], scale=params[1], moments='mvsk')
         elif self.name.lower() == 'mvnormal':
-            raise AttributeError('Method moments not defined.')
+            raise AttributeError('Method moments not defined for mvnormal distribution.')
         else:
             file_name = os.path.join(self.name + '.py')
             if os.path.isfile(file_name):
@@ -674,7 +653,7 @@ class SubDistribution:
 
             tmp = getattr(custom_dist, 'moments', None)
             if tmp is None:
-                raise AttributeError('Method moments not defined.')
+                raise AttributeError('Method moments not defined for distribution '+self.name+'.')
             else:
                 return tmp(params)
 
