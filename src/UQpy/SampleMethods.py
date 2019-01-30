@@ -667,6 +667,10 @@ class RSS:
                                       surrogate.
             :type corr_model_params: ndarray
 
+            :param n_opt: Number of times optimization problem is to be solved with different starting point.
+                          Default: 1
+            :type n_opt: int
+
         Output:
             :return: RSS.samples: Final/expanded samples.
             :rtype: RSS.samples: ndarray
@@ -782,8 +786,9 @@ class RSS:
                                                           self.reg_model, self.corr_model,
                                                           self.strata.origins + 0.5 * self.strata.widths, self.n_opt)
             else:
+                simplex = getattr(tri, 'simplices')
                 dydx1, self.corr_model_params = surrogate(self.points, values, self.corr_model_params, self.reg_model,
-                                                          self.corr_model, np.mean(tri.points[tri.simplices], 1),
+                                                          self.corr_model, np.mean(tri.points[simplex], 1),
                                                           self.n_opt)
 
         initial_s = np.size(self.samplesU01, 0)
@@ -842,16 +847,17 @@ class RSS:
                 self.samples = np.vstack([self.samples, new])
 
             elif self.cell == 'Voronoi':
+                simplex = getattr(tri, 'simplices')
                 # Estimate the variance over the stratum by Delta Method
-                weights = np.zeros(((np.size(tri.simplices, 0)), 1))
-                var = np.zeros((np.size(tri.simplices, 0), dimension))
-                s = np.zeros(((np.size(tri.simplices, 0)), 1))
-                for j in range((np.size(tri.simplices, 0))):
+                weights = np.zeros(((np.size(simplex, 0)), 1))
+                var = np.zeros((np.size(simplex, 0), dimension))
+                s = np.zeros(((np.size(simplex, 0)), 1))
+                for j in range((np.size(simplex, 0))):
                     # Define Simplex
-                    sim = self.points[tri.simplices[j, :]]
+                    sim = self.points[simplex[j, :]]
                     # Estimate the volume of simplex
                     v1 = np.concatenate((np.ones([np.size(sim, 0), 1]), sim), 1)
-                    weights[j] = (1 / math.factorial(np.size(tri.simplices[j, :]) - 1)) * np.linalg.det(v1)
+                    weights[j] = (1 / math.factorial(np.size(simplex[j, :]) - 1)) * np.linalg.det(v1)
                     if self.option == 'Gradient':
                         for k in range(dimension):
                             # Estimate standard deviation of points
@@ -868,7 +874,7 @@ class RSS:
                     bin2add = np.argmax(s)
 
                 # Creating sub-simplex
-                tmp = self.points[tri.simplices[bin2add, :]]
+                tmp = self.points[simplex[bin2add, :]]
                 col_one = np.array(list(itertools.combinations(np.arange(dimension + 1), dimension)))
                 node = np.zeros_like(tmp)    # node: an array containing mid-point of edges
                 for m in range(dimension + 1):
@@ -889,6 +895,7 @@ class RSS:
                 raise NotImplementedError("Exit code: Does not identify 'cell'.")
 
             if self.option == 'Gradient':
+
                 with suppress_stdout():  # disable printing output comments
                     y_new = RunModel(np.atleast_2d(self.samples[i, :]), model_script=self.model).qoi_list
                 values = np.vstack([values, y_new])
@@ -899,8 +906,9 @@ class RSS:
                         in_train = np.arange(self.points.shape[0])
                         in_update = np.arange(i)
                     else:
+                        simplex = getattr(tri, 'simplices')
                         in_train = np.arange(self.points.shape[0])
-                        in_update = np.arange(tri.simplices.shape[0])
+                        in_update = np.arange(simplex.shape[0])
                 else:
                     # Local surrogate updating: Update the surrogate model using min_train_size
                     if self.cell == 'Rectangular':
@@ -913,11 +921,12 @@ class RSS:
                         in_update = local(self.samplesU01[i, :], self.strata.origins + .5 * self.strata.widths,
                                           self.min_train_size / 2, np.amax(self.strata.widths))
                     else:
+                        simplex = getattr(tri, 'simplices')
                         # in_train: Indices of samples used to update surrogate approximation
                         in_train = local(self.samplesU01[i, :], self.samplesU01, self.min_train_size,
                                          np.amax(np.sqrt(self.strata.weights)))
                         # in_update: Indices of centroid of simplex, where gradient is updated
-                        in_update = local(self.samplesU01[i, :], np.mean(tri.points[tri.simplices], 1),
+                        in_update = local(self.samplesU01[i, :], np.mean(tri.points[simplex], 1),
                                           self.min_train_size / 2, np.amax(np.sqrt(self.strata.weights)))
 
                 # Update the surrogate model & the store the updated gradients
@@ -930,13 +939,14 @@ class RSS:
                                                                             self.strata.origins[in_update, :] +
                                                                             .5 * self.strata.widths[in_update, :], 1)
                 else:
-                    dydx1 = np.vstack([dydx1, np.zeros([tri.simplices.shape[0] - dydx1.shape[0], dimension])])
+                    simplex = getattr(tri, 'simplices')
+                    dydx1 = np.vstack([dydx1, np.zeros([simplex.shape[0] - dydx1.shape[0], dimension])])
                     dydx1[in_update, :], self.corr_model_params = surrogate(self.points[in_train, :],
                                                                             values[in_train, :],
                                                                             self.corr_model_params,
                                                                             self.reg_model, self.corr_model,
                                                                             np.mean(tri.points[
-                                                                                        tri.simplices[in_update, :]],
+                                                                                        simplex[in_update, :]],
                                                                                     1), 1)
         print('Done!')
         if self.option == 'Gradient':
