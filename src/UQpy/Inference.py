@@ -59,9 +59,6 @@ class Model:
             :param error_covariance: covariance of the Gaussian error for model defined by a python script
             :type error_covariance: ndarray (full covariance matrix) or float (diagonal values)
 
-            :param cpu_runModel: number of cpus used when using runModel, used only when model_type='python'
-            :type cpu_runModel: int
-
             :param prior_name: distribution name of the prior pdf
             :type prior_name: str or list of str
 
@@ -500,7 +497,7 @@ class BayesModelSelection:
 
     def __init__(self, candidate_models=None, data=None, prior_probabilities=None,
                  pdf_proposal_type=None, pdf_proposal_scale=None, algorithm=None, jump=None, nsamples=None,
-                 nburn=None, method=None, seed=None, sorted_outputs = True, verbose=False):
+                 nburn=None, seed=None, sorted_outputs = True, verbose=False):
 
         """
             Perform model selection using Bayesian criteria.

@@ -59,6 +59,9 @@ class MCS:
             No Default Value: nsamples must be prescribed.
             :type nsamples: int
 
+            :param var_names: names of variables
+            :type var_names: list of strings
+
             :param verbose: A boolean declaring whether to write text to the terminal.
             :type verbose: bool
 
