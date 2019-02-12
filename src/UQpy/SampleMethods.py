@@ -19,20 +19,21 @@
 
 import copy
 from scipy.spatial.distance import pdist
-import scipy.stats as sp
 import random
 from UQpy.Distributions import *
 from UQpy.Utilities import *
 from os import sys
+from inspect import signature
+from functools import partial
+
 
 ########################################################################################################################
 ########################################################################################################################
-#                                         Monte Carlo simulation
+#                                         Monte Carlo Simulation
 ########################################################################################################################
 
 
 class MCS:
-
     """
         Description:
 
@@ -40,97 +41,58 @@ class MCS:
             distribution using inverse transform method.
 
         Input:
-            :param dimension: A scalar value defining the dimension of the random variables.
-                              Default: len(dist_names).
-            :type dimension: int
-
-            :param dist_name: A list containing the names of the distributions of the random variables.
-                              Distribution names must match those in the Distributions module.
-                              If the distribution does not match one from the Distributions module, the user must
-                              provide custom_dist.py. The length of the string must be 1 (if all distributions are the
-                              same) or equal to dimension.
-            :type dist_name: string list
+            :param dist_name: A string or string list containing the names of the distributions of the random variables.
+            Distribution names must match those in the Distributions module.
+            If the distribution does not match one from the Distributions module, the user must provide a custom
+            distribution file with name dist_name.py. See documentation for the Distributions module. The length of the
+            list must equal the dimension of the random vector.
+            :type dist_name: string or string list
 
             :param dist_params: Parameters of the distribution.
-                                Parameters for each random variable are defined as ndarrays.
-                                Each item in the list, dist_params[i], specifies the parameters for the corresponding
-                                distribution, dist[i].
-            :type dist_params: list
-
-            param: distribution: An object list containing the distributions of the random variables.
-                                 Each item in the list is an object of the Distribution class (see Distributions.py).
-                                 The list has length equal to dimension.
-            :type distribution: list
+            Parameters for each random variable are defined as ndarrays.
+            Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
+            dist_name[i]. Relevant parameters for each distribution can be found in the documentation for the
+            Distributions module.
+            :type dist_params: ndarray or list
 
             :param nsamples: Number of samples to generate.
-                             No Default Value: nsamples must be prescribed.
+            No Default Value: nsamples must be prescribed.
             :type nsamples: int
+
+            :param verbose: A boolean declaring whether to write text to the terminal.
+            :type verbose: bool
 
         Output:
             :return: MCS.samples: Set of generated samples
-            :rtype: MCS.samples: ndarray
-
-            :return: MCS.samplesU01: Set of uniform samples on [0, 1]^dimension
-            :rtype: MCS.samplesU01: ndarray
+            :rtype: MCS.samples: ndarray of dimension (nsamples, ndim)
 
     """
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 6/20/18 by Dimitris G.Giovanis
+    # Last Modified: 11/12/2018 by Audrey Olivier
 
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, nsamples=None):
+    def __init__(self, dist_name=None, dist_params=None, nsamples=None, var_names=None, verbose=False):
 
-        self.dimension = dimension
-        self.nsamples = nsamples
-        self.dist_params = dist_params
+        if nsamples is None:
+            raise ValueError('UQpy error: nsamples must be defined.')
+        # No need to do other checks as they will be done within Distributions.py
         self.dist_name = dist_name
+        self.dist_params = dist_params
+        self.nsamples = nsamples
+        self.var_names = var_names
+        if verbose:
+            print('UQpy: Running Monte Carlo Sampling...')
+        self.samples = Distribution(name=self.dist_name).rvs(params=self.dist_params, nsamples=nsamples)
 
-        self.init_mcs()
-        self.distribution = [None] * self.dimension
-        for i in range(self.dimension):
-            self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
-        self.samplesU01, self.samples = self.run_mcs()
-        del self.dist_name, self.dist_params
+        if verbose:
+            print('UQpy: Monte Carlo Sampling Complete.')
 
-    def run_mcs(self):
-        samples = np.random.rand(self.nsamples, self.dimension)
-        samples_u_to_x = np.zeros_like(samples)
-        for j in range(samples.shape[1]):
-            i_cdf = self.distribution[j].icdf
-            samples_u_to_x[:, j] = i_cdf(samples[:, j], self.distribution[j].params)
-        print('UQpy: Successful execution of MCS design..')
-        return samples, samples_u_to_x
-
-    ################################################################################################################
-    # Initialize Monte Carlo simulation.
-    # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters 3. Number of samples
-    # Optional: dimension, names of random variables
-
-    def init_mcs(self):
-
-        # Ensure that the number of samples is defined
-        if self.nsamples is None:
-            raise NotImplementedError("Exit code: Number of samples not defined.")
-
-        # Check the dimension
-        if self.dimension is None:
-            self.dimension = len(self.dist_name)
-
-        # Ensure that distribution parameters are assigned
-        if self.dist_params is None:
-            raise NotImplementedError("Exit code: Distribution parameters not defined.")
-
-        # Check dist_params
-        if type(self.dist_params).__name__ != 'list':
-            self.dist_params = [self.dist_params]
-        if len(self.dist_params) == 1 and self.dimension != 1:
-            self.dist_params = self.dist_params * self.dimension
-        elif len(self.dist_params) != self.dimension:
-            raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension.")
-
-        # Check for dimensional consistency
-        if len(self.dist_name) != len(self.dist_params):
-            raise NotImplementedError("Exit code: Incompatible dimensions.")
+        # Shape the array as (1,n) if nsamples=1, and (n,1) if nsamples=n
+        if len(self.samples.shape) == 1:
+            if self.nsamples == 1:
+                self.samples = self.samples.reshape((1, -1))
+            else:
+                self.samples = self.samples.reshape((-1, 1))
 
 
 ########################################################################################################################
@@ -139,7 +101,6 @@ class MCS:
 ########################################################################################################################
 
 class LHS:
-
     """
         Description:
 
@@ -203,6 +164,7 @@ class LHS:
             :rtype: LHS.samplesU01: ndarray.
 
     """
+
     # Created by: Lohit Vandanapu
     # Last modified: 6/20/2018 by Dimitris G. Giovanis
 
@@ -220,10 +182,9 @@ class LHS:
 
         self.distribution = [None] * self.dimension
         for i in range(self.dimension):
-            self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
+            self.distribution[i] = Distribution(self.dist_name[i])
 
         self.samplesU01, self.samples = self.run_lhs()
-        del self.dist_name, self.dist_params
 
     def run_lhs(self):
 
@@ -238,7 +199,7 @@ class LHS:
             i_cdf = self.distribution[j].icdf
             samples_u_to_x[:, j] = i_cdf(samples[:, j], self.distribution[j].params)
 
-        print('UQpy: Successful execution of LHS design..')
+        print('Successful execution of LHS design..')
         return samples, samples_u_to_x
 
     def _samples(self, a, b):
@@ -368,9 +329,7 @@ class LHS:
 ########################################################################################################################
 #                                         Stratified Sampling  (STS)
 ########################################################################################################################
-
 class STS:
-
     """
         Description:
 
@@ -420,7 +379,7 @@ class STS:
 
             :return: STS.strata: Instance of the class SampleMethods.Strata
             :rtype: STS.strata: ndarray
-    
+
     """
 
     # Authors: Michael Shields
@@ -440,9 +399,9 @@ class STS:
 
         self.distribution = [None] * self.dimension
         for i in range(self.dimension):
-            self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
+            self.distribution[i] = Distribution(self.dist_name[i])
         self.samplesU01, self.samples = self.run_sts()
-        del self.dist_name, self.dist_params
+        del self.dist_name
 
     def run_sts(self):
         samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
@@ -515,7 +474,6 @@ class STS:
 
 
 class Strata:
-
     """
         Description:
 
@@ -650,40 +608,474 @@ class Strata:
 
 ########################################################################################################################
 ########################################################################################################################
-#                                         Markov Chain Monte Carlo  (MCMC)
+#                                         Refined Stratified Sampling (RSS)
+########################################################################################################################
+
+
+class RSS:
+    """
+
+        Description:
+
+            Generate new samples using adaptive sampling methods, i.e. Refined Stratified Sampling and Gradient
+            Enhanced Refined Stratified Sampling.
+
+            References:
+            Michael D. Shields, Kirubel Teferra, Adam Hapij and Raymond P. Daddazio, "Refined Stratified Sampling for
+                efficient Monte Carlo based uncertainty quantification", Reliability Engineering & System Safety,
+                ISSN: 0951-8320, Vol: 142, Page: 310-325, 2015.
+
+            M. D. Shields, "Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems",
+                Reliability Engineering & System Safety, ISSN: 0951-8320, Vol: 175, Page: 207-224, 2018.
+        Input:
+            :param x: A class object, it should be generated using STS or RSS class.
+            :type x: class
+
+            :param model: Python model which is used to evaluate the function value
+            :type model: str
+
+            :param meta: A string specifying the method used to estimate the gradient.
+                         Options: Delaunay, Kriging
+            :type meta: str
+
+            :param cell: A string specifying the stratification of sample domain.
+                         Options: Rectangular and Voronoi
+            :type cell: str
+
+            :param nsamples: Final size of the samples.
+            :type nsamples: int
+
+            :param min_train_size: Minimum size of training data around new sample used to update surrogate.
+                                   Default: nsamples
+            :type min_train_size: int
+
+            :param step_size: Step size to calculate the gradient using central difference. Only required if Delaunay is
+                              used as surrogate approximation.
+            :type step_size: float
+
+            :param reg_model: Regression model used to estimate gradient by using kriging surrogate. Only required
+                               if kriging is used as surrogate approximation.
+            :type reg_model: str
+
+            :param corr_model: Correlation model used to estimate gradient by using kriging surrogate. Only required
+                               if kriging is used as surrogate approximation.
+            :type corr_model: str
+
+            :param corr_model_params: Correlation model parameters used to estimate hyperparamters for kriging
+                                      surrogate.
+            :type corr_model_params: ndarray
+
+            :param n_opt: Number of times optimization problem is to be solved with different starting point.
+                          Default: 1
+            :type n_opt: int
+
+        Output:
+            :return: RSS.samples: Final/expanded samples.
+            :rtype: RSS.samples: ndarray
+
+            :return: RSS.values: Function value evaluated at the expanded samples.
+            :rtype: RSS.values: ndarray
+
+    """
+
+    # Authors: Mohit S. Chauhan
+    # Last modified: 12/03/2018 by Mohit S. Chauhan
+
+    def __init__(self, x=None, model=None, meta='Delaunay', cell='Rectangular', nsamples=None,
+                 min_train_size=None, step_size=0.005, corr_model='Gaussian', reg_model='Quadratic',
+                 corr_model_params=None, n_opt=None):
+
+        self.x = x
+        self.model = model
+        self.option = 'Refined'
+        self.meta = meta
+        self.cell = cell
+        self.nsamples = nsamples
+        self.points = 0
+        self.min_train_size = min_train_size
+        self.step_size = step_size
+        self.corr_model = corr_model
+        self.corr_model_params = corr_model_params
+        self.reg_model = reg_model
+        self.n_opt = n_opt
+        self.init_rss()
+        self.samples = x.samples
+        self.samplesU01 = x.samplesU01
+        self.distribution = x.distribution
+        self.dist_params = x.dist_params
+        self.strata = x.strata
+        self.values = self.run_rss()
+
+    def run_rss(self):
+        from UQpy.RunModel import RunModel
+        from UQpy.Surrogates import Krig
+        from sklearn.gaussian_process import GaussianProcessRegressor
+        from scipy.interpolate import LinearNDInterpolator
+        from scipy.spatial import Delaunay
+        import numpy.matlib as matlib
+        import itertools
+        import math
+
+        print('UQpy: Performing RSS design...')
+
+        def cent_diff(f, x, h):
+            dydx = np.zeros((np.size(x, 0), np.size(x, 1)))
+            for dirr in range(np.size(x, 1)):
+                temp = np.zeros((np.size(x, 0), np.size(x, 1)))
+                temp[:, dirr] = np.ones(np.size(x, 0))
+                low = x - h / 2 * temp
+                hi = x + h / 2 * temp
+                dydx[:, dirr] = ((f.__call__(hi) - f.__call__(low)) / h)[:, 0]
+            return dydx
+
+        def surrogate(x, y, corr_m_p, reg_m, corr_m, xt, n):
+            if self.meta == 'Delaunay':
+                tck = LinearNDInterpolator(x, y, fill_value=0)
+                gr = cent_diff(tck, xt, self.step_size)
+            elif self.meta == 'Kriging':
+                with suppress_stdout():  # disable printing output comments
+                    tck = Krig(samples=x, values=y, reg_model=reg_m, corr_model=corr_m, corr_model_params=corr_m_p,
+                               n_opt=n)
+                corr_m_p = tck.corr_model_params
+                gr = cent_diff(tck.interpolate, xt, self.step_size)
+                # gr = tck.jacobian(xt)
+            elif self.meta == 'Kriging_Sklearn':
+                gp = GaussianProcessRegressor(kernel=corr_m, n_restarts_optimizer=0)
+                gp.fit(x, y)
+                gr = cent_diff(gp.predict, xt, self.step_size)
+            else:
+                raise NotImplementedError("Exit code: Does not identify 'meta'.")
+            return gr, corr_m_p
+
+        def local(pt, x, mts, max_dim):
+            # Identify the indices of 'mts' number of points in array 'x', which are closest to point 'pt'.
+            ff = 0.2
+            train = []
+            while len(train) < mts:
+                a = x > matlib.repmat(pt - ff * max_dim, x.shape[0], 1)
+                b = x < matlib.repmat(pt + ff * max_dim, x.shape[0], 1)
+                x_ind = a & b
+                train = []
+                for k_ in range(x.shape[0]):
+                    if np.array_equal(x_ind[k_, :], np.ones(x.shape[1])):
+                        train.append(k_)
+                ff = ff + 0.1
+            return train
+
+        values, dydx1, tri = 0, 0, 0
+        dimension = self.samples.shape[1]
+
+        if self.cell == 'Voronoi':
+            lst = np.array(list(itertools.product([0, 1], repeat=dimension)))
+            self.points = np.vstack([lst, self.samplesU01])
+            tri = Delaunay(self.points)
+        else:
+            if self.meta == 'Delaunay':
+                lst = np.array(list(itertools.product([0, 1], repeat=dimension)))
+                self.points = np.vstack([lst, self.samplesU01])
+            else:
+                self.points = self.samplesU01
+
+        if self.option == 'Gradient':
+            with suppress_stdout():  # disable printing output comments
+                values = np.array(RunModel(self.points, model_script=self.model).qoi_list)
+            if self.cell == 'Rectangular':
+                dydx1, self.corr_model_params = surrogate(self.points, values, self.corr_model_params,
+                                                          self.reg_model, self.corr_model,
+                                                          self.strata.origins + 0.5 * self.strata.widths, self.n_opt)
+            else:
+                simplex = getattr(tri, 'simplices')
+                dydx1, self.corr_model_params = surrogate(self.points, values, self.corr_model_params, self.reg_model,
+                                                          self.corr_model, np.mean(tri.points[simplex], 1),
+                                                          self.n_opt)
+
+        initial_s = np.size(self.samplesU01, 0)
+        for i in range(initial_s, self.nsamples):
+            if self.cell == 'Rectangular':
+                # Determine the stratum to break
+                if self.option == 'Gradient':
+                    # Estimate the variance within each stratum by assuming a uniform distribution over the stratum.
+                    # All input variables are independent
+                    var = (1 / 12) * self.strata.widths ** 2
+                    # Estimate the variance over the stratum by Delta Method
+                    s = np.zeros([i, 1])
+                    for j in range(i):
+                        s[j, 0] = np.sum(dydx1[j, :] * var[j, :] * dydx1[j, :] * (self.strata.weights[j] ** 2))
+                    bin2break = np.argmax(s)
+                else:
+                    w = np.argwhere(self.strata.weights == np.amax(self.strata.weights))
+                    bin2break = w[np.random.randint(len(w))]
+
+                # Determine the largest dimension of the stratum and define this as the cut direction
+                if self.option == 'Refined':
+                    # Cut the stratum in a random direction
+                    cut_dir_temp = self.strata.widths[bin2break, :]
+                    t = np.argwhere(cut_dir_temp[0] == np.amax(cut_dir_temp[0]))
+                    dir2break = t[np.random.randint(len(t))]
+                else:
+                    # Cut the stratum in the direction of maximum gradient
+                    cut_dir_temp = self.strata.widths[bin2break, :]
+                    t = np.argwhere(cut_dir_temp == np.amax(cut_dir_temp))
+                    dir2break = t[np.argmax(abs(dydx1[bin2break, t]))]
+
+                # Divide the stratum bin2break in the direction dir2break
+                self.strata.widths[bin2break, dir2break] = self.strata.widths[bin2break, dir2break] / 2
+                self.strata.widths = np.vstack([self.strata.widths, self.strata.widths[bin2break, :]])
+
+                self.strata.origins = np.vstack([self.strata.origins, self.strata.origins[bin2break, :]])
+                if self.samplesU01[bin2break, dir2break] < self.strata.origins[-1, dir2break] + \
+                        self.strata.widths[bin2break, dir2break]:
+                    self.strata.origins[-1, dir2break] = self.strata.origins[-1, dir2break] + self.strata.widths[
+                        bin2break, dir2break]
+                else:
+                    self.strata.origins[bin2break, dir2break] = self.strata.origins[bin2break, dir2break] + \
+                                                                self.strata.widths[bin2break, dir2break]
+
+                self.strata.weights[bin2break] = self.strata.weights[bin2break] / 2
+                self.strata.weights = np.append(self.strata.weights, self.strata.weights[bin2break])
+
+                # Add an uniform random sample inside new stratum
+                new = np.random.uniform(self.strata.origins[i, :], self.strata.origins[i, :] + self.strata.widths[i, :])
+                # Adding new sample to points, samplesU01 and samples attributes
+                self.points = np.vstack([self.points, new])
+                self.samplesU01 = np.vstack([self.samplesU01, new])
+                for j in range(0, dimension):
+                    icdf = self.distribution[j].icdf
+                    new[j] = icdf(new[j], self.dist_params[j])
+                self.samples = np.vstack([self.samples, new])
+
+            elif self.cell == 'Voronoi':
+                simplex = getattr(tri, 'simplices')
+                # Estimate the variance over the stratum by Delta Method
+                weights = np.zeros(((np.size(simplex, 0)), 1))
+                var = np.zeros((np.size(simplex, 0), dimension))
+                s = np.zeros(((np.size(simplex, 0)), 1))
+                for j in range((np.size(simplex, 0))):
+                    # Define Simplex
+                    sim = self.points[simplex[j, :]]
+                    # Estimate the volume of simplex
+                    v1 = np.concatenate((np.ones([np.size(sim, 0), 1]), sim), 1)
+                    weights[j] = (1 / math.factorial(np.size(simplex[j, :]) - 1)) * np.linalg.det(v1)
+                    if self.option == 'Gradient':
+                        for k in range(dimension):
+                            # Estimate standard deviation of points
+                            from statistics import stdev
+                            std = stdev(sim[:, k].tolist())
+                            var[j, k] = (weights[j] * math.factorial(dimension) / math.factorial(dimension + 2)) * (
+                                    dimension * std ** 2)
+                        s[j, 0] = np.sum(dydx1[j, :] * var[j, :] * dydx1[j, :] * (weights[j] ** 2))
+
+                if self.option == 'Refined':
+                    w = np.argwhere(weights[:, 0] == np.amax(weights[:, 0]))
+                    bin2add = w[0, np.random.randint(len(w))]
+                else:
+                    bin2add = np.argmax(s)
+
+                # Creating sub-simplex
+                tmp = self.points[simplex[bin2add, :]]
+                col_one = np.array(list(itertools.combinations(np.arange(dimension + 1), dimension)))
+                node = np.zeros_like(tmp)    # node: an array containing mid-point of edges
+                for m in range(dimension + 1):
+                    node[m, :] = np.sum(tmp[col_one[m] - 1, :], 0) / dimension
+
+                # Using Simplex class to generate new sample
+                new = Simplex(nodes=node, nsamples=1).samples
+                # Adding new sample to points, samplesU01 and samples attributes
+                self.points = np.vstack([self.points, new])
+                self.samplesU01 = np.vstack([self.samplesU01, new])
+                for j in range(0, dimension):
+                    icdf = self.distribution[j].icdf
+                    new[0, j] = icdf(new[0, j], self.dist_params[j])
+                self.samples = np.vstack([self.samples, new])
+                # Creating Delaunay triangulation from the new points
+                tri = Delaunay(self.points)
+            else:
+                raise NotImplementedError("Exit code: Does not identify 'cell'.")
+
+            if self.option == 'Gradient':
+
+                with suppress_stdout():  # disable printing output comments
+                    y_new = RunModel(np.atleast_2d(self.samples[i, :]), model_script=self.model).qoi_list
+                values = np.vstack([values, y_new])
+
+                if np.size(self.samples, 0) < self.min_train_size:
+                    # Global surrogate updating: Update the surrogate model using all the points
+                    if self.cell == 'Rectangular':
+                        in_train = np.arange(self.points.shape[0])
+                        in_update = np.arange(i)
+                    else:
+                        simplex = getattr(tri, 'simplices')
+                        in_train = np.arange(self.points.shape[0])
+                        in_update = np.arange(simplex.shape[0])
+                else:
+                    # Local surrogate updating: Update the surrogate model using min_train_size
+                    if self.cell == 'Rectangular':
+                        if self.meta == 'Delaunay':
+                            in_train = local(self.samplesU01[i, :], self.points, self.min_train_size,
+                                             np.amax(self.strata.widths))
+                        else:
+                            in_train = local(self.samplesU01[i, :], self.samplesU01, self.min_train_size,
+                                             np.amax(self.strata.widths))
+                        in_update = local(self.samplesU01[i, :], self.strata.origins + .5 * self.strata.widths,
+                                          self.min_train_size / 2, np.amax(self.strata.widths))
+                    else:
+                        simplex = getattr(tri, 'simplices')
+                        # in_train: Indices of samples used to update surrogate approximation
+                        in_train = local(self.samplesU01[i, :], self.samplesU01, self.min_train_size,
+                                         np.amax(np.sqrt(self.strata.weights)))
+                        # in_update: Indices of centroid of simplex, where gradient is updated
+                        in_update = local(self.samplesU01[i, :], np.mean(tri.points[simplex], 1),
+                                          self.min_train_size / 2, np.amax(np.sqrt(self.strata.weights)))
+
+                # Update the surrogate model & the store the updated gradients
+                if self.cell == 'Rectangular':
+                    dydx1 = np.vstack([dydx1, np.zeros(dimension)])
+                    dydx1[in_update, :], self.corr_model_params = surrogate(self.points[in_train, :],
+                                                                            values[in_train, :],
+                                                                            self.corr_model_params, self.reg_model,
+                                                                            self.corr_model,
+                                                                            self.strata.origins[in_update, :] +
+                                                                            .5 * self.strata.widths[in_update, :], 1)
+                else:
+                    simplex = getattr(tri, 'simplices')
+                    dydx1 = np.vstack([dydx1, np.zeros([simplex.shape[0] - dydx1.shape[0], dimension])])
+                    dydx1[in_update, :], self.corr_model_params = surrogate(self.points[in_train, :],
+                                                                            values[in_train, :],
+                                                                            self.corr_model_params,
+                                                                            self.reg_model, self.corr_model,
+                                                                            np.mean(tri.points[
+                                                                                        simplex[in_update, :]],
+                                                                                    1), 1)
+        print('Done!')
+        if self.option == 'Gradient':
+            if self.cell == 'Rectangular':
+                if self.meta != 'Delaunay':
+                    return values
+            else:
+                return values[2 ** dimension:, :]
+
+    def init_rss(self):
+        if type(self.x).__name__ not in ['STS', 'RSS']:
+            raise NotImplementedError("Exit code: x should be a class object from STS or RSS class.")
+
+        if self.model is not None:
+            self.option = 'Gradient'
+
+        if self.meta is None:
+            self.meta = 'Delaunay'
+        elif self.meta not in ['Delaunay', 'Kriging', 'Kriging_Sklearn']:
+            raise NotImplementedError("Exit code: Input 'meta' is not specified correctly.")
+
+        if self.cell is None:
+            self.cell = 'Rectangular'
+        elif self.cell not in ['Rectangular', 'Voronoi']:
+            raise NotImplementedError("Exit code: Input 'cell' is not specified correctly.")
+
+        if type(self.nsamples).__name__ != 'int':
+            raise NotImplementedError("Exit code: nsamples should be integer.")
+        if self.nsamples <= self.x.samples.shape[0]:
+            raise NotImplementedError("Exit code: Already have desired number of samples.")
+
+        if self.min_train_size is None:
+            self.min_train_size = self.nsamples
+
+
+########################################################################################################################
+########################################################################################################################
+#                                        Generating random samples inside a Simplex
+########################################################################################################################
+class Simplex:
+    """
+        Description:
+
+            Generate random samples inside a simplex using uniform probability distribution.
+
+            References:
+            W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, "Simplex-stochastic collocation method with improved
+                calability",Journal of Computational Physics, 310:301–328 2016.
+        Input:
+            :param nodes: The vertices of the simplex
+            :type nodes: ndarray
+
+            :param nsamples: The number of samples to be generated inside the simplex
+            :type nsamples: int
+        Output:
+            :return samples: New generated samples
+            :rtype samples: ndarray
+    """
+
+    # Authors: Dimitris G.Giovanis
+    # Last modified: 11/28/2018 by Mohit S. Chauhan
+
+    def __init__(self, nodes=None, nsamples=1):
+        self.nodes = np.atleast_2d(nodes)
+        self.nsamples = nsamples
+        self.init_sis()
+        self.samples = self.run_sis()
+
+    def run_sis(self):
+        dimension = self.nodes.shape[1]
+        if dimension > 1:
+            sample = np.zeros([self.nsamples, dimension])
+            for i in range(self.nsamples):
+                r = np.zeros([dimension])
+                ad = np.zeros(shape=(dimension, len(self.nodes)))
+                for j in range(dimension):
+                    b_ = list()
+                    for k in range(1, len(self.nodes)):
+                        ai = self.nodes[k, j] - self.nodes[k - 1, j]
+                        b_.append(ai)
+                    ad[j] = np.hstack((self.nodes[0, j], b_))
+                    r[j] = np.random.uniform(0.0, 1.0, 1) ** (1 / (dimension - j))
+                d = np.cumprod(r)
+                r_ = np.hstack((1, d))
+                sample[i, :] = np.dot(ad, r_)
+        else:
+            a = min(self.nodes)
+            b = max(self.nodes)
+            sample = a + (b - a) * np.random.rand(dimension, self.nsamples).reshape(self.nsamples, dimension)
+        return sample
+
+    def init_sis(self):
+        if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
+            raise NotImplementedError("Exit code: Number of samples to be generated 'nsamples' should be a positive "
+                                      "integer.")
+
+        if self.nodes.shape[0] != self.nodes.shape[1] + 1:
+            raise NotImplementedError("Size of simplex (nodes) is not consistent.")
+
+
+########################################################################################################################
+########################################################################################################################
+#                                         Class Markov Chain Monte Carlo
 ########################################################################################################################
 
 
 class MCMC:
-
     """
         Description:
             Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
             This class generates samples using Metropolis-Hastings(MH), Modified Metropolis-Hastings,
             or Affine Invariant Ensemble Sampler with stretch moves.
-
             References:
             S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
                 Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
             J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
                 no. 1, pp. 65–80, 2010.
-
         Input:
             :param dimension: A scalar value defining the dimension of target density function.
                               Default: 1
             :type dimension: int
-
             :param pdf_proposal_type: Type of proposal density function for MCMC. Only used with algorithm ='MH' or'MMH'
                             Options:
                                     'Normal' : Normal proposal density.
                                     'Uniform' : Uniform proposal density.
                             Default: 'Uniform'
                             If dimension > 1 and algorithm = 'MMH', this may be input as a list to assign different
-                            proposal densities to each dimension. Example pdf_proposal_type = ['Normal','Uniform'].
+                            proposal densities to each dimension. Example pdf_proposal_name = ['Normal','Uniform'].
                             If dimension > 1, algorithm = 'MMH' and this is input as a string, the proposal densities
                             for all dimensions are set equal to the assigned proposal type.
             :type pdf_proposal_type: str or str list
-
             :param pdf_proposal_scale: Scale of the proposal distribution
                             If algorithm == 'MH' or 'MMH'
                                 For pdf_proposal_type = 'Uniform'
@@ -698,16 +1090,6 @@ class MCMC:
                             If dimension > 1, this may be defined as float or float list.
                                 If input as float, pdf_proposal_scale is assigned to all dimensions.
                                 If input as float list, each element is assigned to the corresponding dimension.
-
-            :param pdf_target_type: Type of target density function for acceptance/rejection in MMH. Not used for MH or
-                                    Stretch.
-                            Options:
-                                'marginal_pdf': Check acceptance/rejection for a candidate in MMH using the marginal pdf
-                                                For independent variables only
-                                'joint_pdf': Check acceptance/rejection for a candidate in MMH using the joint pdf
-                            Default: 'marginal_pdf'
-            :type pdf_target_type: str
-
             :param pdf_target: Target density function from which to draw random samples
                             The target joint probability density must be a function, or list of functions, or a string.
                             If type == 'str'
@@ -719,10 +1101,8 @@ class MCMC:
                             size [dimensions x 1] where each item of the list defines a marginal pdf.
                             Default: Multivariate normal distribution having zero mean and unit standard deviation.
             :type pdf_target: function, function list, or str
-
             :param pdf_target_params: Parameters of the target pdf.
             :type pdf_target_params: list
-
             :param algorithm:  Algorithm used to generate random samples.
                             Options:
                                 'MH': Metropolis Hastings Algorithm
@@ -730,15 +1110,12 @@ class MCMC:
                                 'Stretch': Affine Invariant Ensemble MCMC with stretch moves
                             Default: 'MMH'
             :type algorithm: str
-
             :param jump: Number of samples between accepted states of the Markov chain.
                                 Default value: 1 (Accepts every state)
             :type: jump: int
-
             :param nsamples: Number of samples to generate
                                 No Default Value: nsamples must be prescribed
             :type nsamples: int
-
             :param seed: Seed of the Markov chain(s)
                             For 'MH' and 'MMH', this is a single point, defined as a numpy array of dimension
                              (1 x dimension).
@@ -748,30 +1125,34 @@ class MCMC:
                                 For 'MH' and 'MMH': zeros(1 x dimension)
                                 For 'Stretch': No default, this must be specified.
             :type seed: float or numpy array
-
             :param nburn: Length of burn-in. Number of samples at the beginning of the chain to discard.
                             This option is only used for the 'MMH' and 'MH' algorithms.
                             Default: nburn = 0
             :type nburn: int
-
-
         Output:
             :return: MCMC.samples: Set of MCMC samples following the target distribution
             :rtype: MCMC.samples: ndarray
+
+            :return: MCMC.accept_ratio: Acceptance ratio of the MCMC samples
+            :rtype: MCMC.accept_ratio: float
+
     """
 
     # Authors: Michael D. Shields, Mohit Chauhan, Dimitris G. Giovanis
     # Updated: 4/26/18 by Michael D. Shields
 
-    def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None, pdf_target_type=None,
-                 pdf_target=None, pdf_target_params=None, algorithm=None, jump=None, nsamples=None, seed=None,
-                 nburn=None):
+    def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None,
+                 pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None,
+                 pdf_target_copula_params=None, algorithm=None, jump=1, nsamples=None, seed=None, nburn=None,
+                 verbose=False):
 
         self.pdf_proposal_type = pdf_proposal_type
         self.pdf_proposal_scale = pdf_proposal_scale
-        self.pdf_target_type = pdf_target_type
         self.pdf_target = pdf_target
+        self.log_pdf_target = log_pdf_target
         self.pdf_target_params = pdf_target_params
+        self.pdf_target_copula = pdf_target_copula
+        self.pdf_target_copula_params = pdf_target_copula_params
         self.algorithm = algorithm
         self.jump = jump
         self.nsamples = nsamples
@@ -779,75 +1160,59 @@ class MCMC:
         self.seed = seed
         self.nburn = nburn
         self.init_mcmc()
+        self.verbose = verbose
         if self.algorithm is 'Stretch':
             self.ensemble_size = len(self.seed)
-        self.samples = self.run_mcmc()
+        if self.algorithm is 'MMH':
+            self.pdf_target_type = None
+        self.samples, self.accept_ratio = self.run_mcmc()
 
     def run_mcmc(self):
-        rejects = 0
+        n_accepts = 0
 
         # Defining an array to store the generated samples
-        samples = np.zeros([self.nsamples * self.jump, self.dimension])
+        samples = np.zeros([self.nsamples * self.jump + self.nburn, self.dimension])
 
         ################################################################################################################
         # Classical Metropolis-Hastings Algorithm with symmetric proposal density
         if self.algorithm == 'MH':
-
-            from numpy.random import normal, multivariate_normal, uniform
-
             samples[0, :] = self.seed
+            log_pdf_ = partial(self.log_pdf_target, params=self.pdf_target_params,
+                               copula_params=self.pdf_target_copula_params)
+            log_p_current = log_pdf_(samples[0, :])
 
-            pdf_ = self.pdf_target[0]
-
+            # Loop over the samples
             for i in range(self.nsamples * self.jump - 1 + self.nburn):
                 if self.pdf_proposal_type[0] == 'Normal':
-                    if self.dimension == 1:
-                        candidate = normal(samples[i, :], np.array(self.pdf_proposal_scale))
-                        p_proposal = pdf_(candidate, self.pdf_target_params)
-                        p_current = pdf_(samples[i, :], self.pdf_target_params)
-                        p_accept = p_proposal / p_current
-
-                        accept = np.random.random() < p_accept
-
-                        if accept:
-                            samples[i + 1, :] = candidate
-                        else:
-                            samples[i + 1, :] = samples[i, :]
-                            rejects += 1
-                    else:
-                        if i == 0:
-                            self.pdf_proposal_scale = np.diag(np.array(self.pdf_proposal_scale))
-
-                        candidate = multivariate_normal(samples[i, :], np.array(self.pdf_proposal_scale))
-                        p_proposal = pdf_(candidate, self.pdf_target_params)
-                        p_current = pdf_(samples[i, :], self.pdf_target_params)
-                        p_accept = p_proposal / p_current
-
-                        accept = np.random.random() < p_accept
-
-                        if accept:
-                            samples[i + 1, :] = candidate
-                        else:
-                            samples[i + 1, :] = samples[i, :]
-                            rejects += 1
-
-                elif self.pdf_proposal_type == 'Uniform':
-
-                    candidate = uniform(low=samples[i, :] - np.array(self.pdf_proposal_scale) / 2,
-                                        high=samples[i, :] + np.array(self.pdf_proposal_scale) / 2,
-                                        size=self.dimension)
-                    p_proposal = pdf_(candidate, self.pdf_target_params)
-
-                    p_current = pdf_(samples[i, :], self.pdf_target_params)
-                    p_accept = p_proposal / p_current
-
-                    accept = np.random.random() < p_accept
+                    cholesky_cov = np.diag(self.pdf_proposal_scale)
+                    z_normal = np.random.normal(size=(self.dimension, 1))
+                    candidate = samples[i, :] + np.matmul(cholesky_cov, z_normal).reshape((self.dimension,))
+                    log_p_candidate = log_pdf_(candidate)
+                    log_p_accept = log_p_candidate - log_p_current
+                    accept = np.log(np.random.random()) < log_p_accept
 
                     if accept:
                         samples[i + 1, :] = candidate
+                        log_p_current = log_p_candidate
+                        n_accepts += 1
                     else:
                         samples[i + 1, :] = samples[i, :]
-                        rejects += 1
+
+                elif self.pdf_proposal_type[0] == 'Uniform':
+                    low = -np.array(self.pdf_proposal_scale) / 2
+                    high = np.array(self.pdf_proposal_scale) / 2
+                    candidate = samples[i, :] + np.random.uniform(low=low, high=high, size=self.dimension)
+                    log_p_candidate = log_pdf_(candidate)
+                    log_p_accept = log_p_candidate - log_p_current
+                    accept = np.log(np.random.random()) < log_p_accept
+
+                    if accept:
+                        samples[i + 1, :] = candidate
+                        log_p_current = log_p_candidate
+                        n_accepts += 1
+                    else:
+                        samples[i + 1, :] = samples[i, :]
+            accept_ratio = n_accepts/(self.nsamples * self.jump - 1 + self.nburn)
 
         ################################################################################################################
         # Modified Metropolis-Hastings Algorithm with symmetric proposal density
@@ -856,66 +1221,76 @@ class MCMC:
             samples[0, :] = self.seed[0:]
 
             if self.pdf_target_type == 'marginal_pdf':
+                list_log_p_current = [self.pdf_target[j](samples[0, j], self.pdf_target_params,
+                                                         self.pdf_target_copula_params)
+                                      for j in range(self.dimension)]
                 for i in range(self.nsamples * self.jump - 1 + self.nburn):
                     for j in range(self.dimension):
 
-                        pdf_ = self.pdf_target[j]
+                        log_pdf_ = partial(self.log_pdf_target[j], params=self.pdf_target_params,
+                                           copula_params=self.pdf_target_copula_params)
 
                         if self.pdf_proposal_type[j] == 'Normal':
-                            candidate = np.random.normal(samples[i, j], self.pdf_proposal_scale[j])
-                            p_proposal = pdf_(candidate, self.pdf_target_params)
-                            p_current = pdf_(samples[i, j], self.pdf_target_params)
-                            p_accept = p_proposal / p_current
+                            candidate = np.random.normal(samples[i, j], self.pdf_proposal_scale[j], size=1)
+                            log_p_candidate = log_pdf_(candidate)
+                            log_p_current = list_log_p_current[j]
+                            log_p_accept = log_p_candidate - log_p_current
 
-                            accept = np.random.random() < p_accept
+                            accept = np.log(np.random.random()) < log_p_accept
 
                             if accept:
                                 samples[i + 1, j] = candidate
+                                list_log_p_current[j] = log_p_candidate
+                                n_accepts += 1
                             else:
                                 samples[i + 1, j] = samples[i, j]
 
                         elif self.pdf_proposal_type[j] == 'Uniform':
                             candidate = np.random.uniform(low=samples[i, j] - self.pdf_proposal_scale[j] / 2,
                                                           high=samples[i, j] + self.pdf_proposal_scale[j] / 2, size=1)
+                            log_p_candidate = log_pdf_(candidate)
+                            log_p_current = list_log_p_current[j]
+                            log_p_accept = log_p_candidate - log_p_current
 
-                            p_proposal = pdf_(candidate, self.pdf_target_params)
-                            p_current = pdf_(samples[i, j], self.pdf_target_params)
-                            p_accept = p_proposal / p_current
-
-                            accept = np.random.random() < p_accept
+                            accept = np.log(np.random.random()) < log_p_accept
 
                             if accept:
                                 samples[i + 1, j] = candidate
+                                list_log_p_current[j] = log_p_candidate
+                                n_accepts += 1
                             else:
                                 samples[i + 1, j] = samples[i, j]
-
-            elif self.pdf_target_type == 'joint_pdf':
-                pdf_ = self.pdf_target[0]
+            else:
+                log_pdf_ = partial(self.log_pdf_target, params=self.pdf_target_params,
+                                   copula_params=self.pdf_target_copula_params)
 
                 for i in range(self.nsamples * self.jump - 1 + self.nburn):
-                    candidate = list(samples[i, :])
-
-                    current = list(samples[i, :])
+                    candidate = np.copy(samples[i, :])
+                    current = np.copy(samples[i, :])
+                    log_p_current = log_pdf_(samples[i, :])
                     for j in range(self.dimension):
                         if self.pdf_proposal_type[j] == 'Normal':
                             candidate[j] = np.random.normal(samples[i, j], self.pdf_proposal_scale[j])
 
                         elif self.pdf_proposal_type[j] == 'Uniform':
                             candidate[j] = np.random.uniform(low=samples[i, j] - self.pdf_proposal_scale[j] / 2,
-                                                             high=samples[i, j] + self.pdf_proposal_scale[j] / 2)
+                                                             high=samples[i, j] + self.pdf_proposal_scale[j] / 2,
+                                                             size=1)
 
-                        p_proposal = pdf_(candidate, self.pdf_target_params)
-                        p_current = pdf_(current, self.pdf_target_params)
-                        p_accept = p_proposal / p_current
+                        log_p_candidate = log_pdf_(candidate)
+                        log_p_accept = log_p_candidate - log_p_current
 
-                        accept = np.random.random() < p_accept
+                        accept = np.log(np.random.random()) < log_p_accept
 
                         if accept:
                             current[j] = candidate[j]
+                            log_p_current = log_p_candidate
+                            n_accepts += 1
                         else:
-                            candidate[j] = current[j]
+                            candidate[j] = current[j]   # ????????? I don't get that one
 
                     samples[i + 1, :] = current
+            accept_ratio = n_accepts / (self.nsamples * self.jump - 1 + self.nburn)
 
         ################################################################################################################
         # Affine Invariant Ensemble Sampler with stretch moves
@@ -923,51 +1298,70 @@ class MCMC:
         elif self.algorithm == 'Stretch':
 
             samples[0:self.ensemble_size, :] = self.seed
+            log_pdf_ = partial(self.log_pdf_target, params=self.pdf_target_params,
+                               copula_params=self.pdf_target_copula_params)
+            # list_log_p_current = [log_pdf_(samples[i, :], self.pdf_target_params) for i in range(self.ensemble_size)]
 
-            pdf_ = self.pdf_target[0]
-
-            for i in range(self.ensemble_size-1, self.nsamples * self.jump - 1):
-                complementary_ensemble = samples[i-self.ensemble_size+2:i+1, :]
+            for i in range(self.ensemble_size - 1, self.nsamples * self.jump - 1):
+                complementary_ensemble = samples[i - self.ensemble_size + 2:i + 1, :]
                 s0 = random.choice(complementary_ensemble)
-                s = (1+(self.pdf_proposal_scale[0]-1)*random.random())**2/self.pdf_proposal_scale[0]
-                candidate = s0+s*(samples[i-self.ensemble_size+1, :]-s0)
+                s = (1 + (self.pdf_proposal_scale[0] - 1) * random.random()) ** 2 / self.pdf_proposal_scale[0]
+                candidate = s0 + s * (samples[i - self.ensemble_size + 1, :] - s0)
 
-                p_proposal = pdf_(candidate, self.pdf_target_params)
-                p_current = pdf_(samples[i-self.ensemble_size + 1, :], self.pdf_target_params)
-                p_accept = s**(self.dimension-1)*p_proposal/p_current
+                log_p_candidate = log_pdf_(candidate)
+                log_p_current = log_pdf_(samples[i - self.ensemble_size + 1, :])
+                # log_p_current = list_log_p_current[i - self.ensemble_size + 1]
+                log_p_accept = np.log(s ** (self.dimension - 1)) + log_p_candidate - log_p_current
 
-                accept = np.random.random() < p_accept
+                accept = np.log(np.random.random()) < log_p_accept
 
                 if accept:
                     samples[i + 1, :] = candidate
+                    # list_log_p_current.append(log_p_candidate)
+                    n_accepts += 1
                 else:
-                    samples[i + 1, :] = samples[i-self.ensemble_size + 1, :]
+                    samples[i + 1, :] = samples[i - self.ensemble_size + 1, :]
+                    # list_log_p_current.append(list_log_p_current[i - self.ensemble_size + 1])
+            accept_ratio = n_accepts / (self.nsamples * self.jump - self.ensemble_size)
+
 
         ################################################################################################################
         # Return the samples
 
         if self.algorithm is 'MMH' or self.algorithm is 'MH':
-            print('UQpy: Successful execution of the MCMC design')
-            return samples[self.nburn:self.nsamples * self.jump + self.nburn:self.jump]
+            if self.verbose:
+                print('Successful execution of the MCMC design')
+            return samples[self.nburn:self.nsamples * self.jump + self.nburn:self.jump], accept_ratio
         else:
             output = np.zeros((self.nsamples, self.dimension))
             j = 0
-            for i in range(self.jump*self.ensemble_size-self.ensemble_size, samples.shape[0],
-                           self.jump*self.ensemble_size):
-                output[j:j+self.ensemble_size, :] = samples[i:i+self.ensemble_size, :]
-                j = j+self.ensemble_size
-            return output
+            for i in range(self.jump * self.ensemble_size - self.ensemble_size, samples.shape[0],
+                           self.jump * self.ensemble_size):
+                output[j:j + self.ensemble_size, :] = samples[i:i + self.ensemble_size, :]
+                j = j + self.ensemble_size
+            return output, accept_ratio
 
     ####################################################################################################################
     # Check to ensure consistency of the user input and assign defaults
     def init_mcmc(self):
 
+        # Check dimension
         if self.dimension is None:
             self.dimension = 1
 
         # Check nsamples
         if self.nsamples is None:
             raise NotImplementedError('Exit code: Number of samples not defined.')
+
+        # Check nburn
+        if self.nburn is None:
+            self.nburn = 0
+
+        # Check jump
+        if self.jump is None:
+            self.jump = 1
+        if self.jump == 0:
+            raise ValueError("Exit code: Value of jump must be greater than 0")
 
         # Check seed
         if self.seed is None:
@@ -979,15 +1373,21 @@ class MCMC:
             if self.seed.shape[0] < 3:
                 raise NotImplementedError("Exit code: Ensemble size must be > 2.")
 
-        # Check jump
-        if self.jump is None:
-            self.jump = 1
+        # Check algorithm
+        if self.algorithm is None:
+            self.algorithm = 'MMH'
+        else:
+            if self.algorithm not in ['MH', 'MMH', 'Stretch']:
+                raise NotImplementedError('Exit code: Unrecognized MCMC algorithm. Supported algorithms: '
+                                          'Metropolis-Hastings (MH), '
+                                          'Modified Metropolis-Hastings (MMH), '
+                                          'Affine Invariant Ensemble with Stretch Moves (Stretch).')
 
         # Check pdf_proposal_type
         if self.pdf_proposal_type is None:
             self.pdf_proposal_type = 'Uniform'
         # If pdf_proposal_type is entered as a string, make it a list
-        if type(self.pdf_proposal_type).__name__ == 'str':
+        if isinstance(self.pdf_proposal_type, str):
             self.pdf_proposal_type = [self.pdf_proposal_type]
         for i in self.pdf_proposal_type:
             if i not in ['Uniform', 'Normal']:
@@ -1008,7 +1408,7 @@ class MCMC:
                 self.pdf_proposal_scale = 2
             else:
                 self.pdf_proposal_scale = 1
-        if type(self.pdf_proposal_scale).__name__ != 'list':
+        if not isinstance(self.pdf_proposal_scale, list):
             self.pdf_proposal_scale = [self.pdf_proposal_scale]
         if len(self.pdf_proposal_scale) != self.dimension:
             if len(self.pdf_proposal_scale) == 1:
@@ -1016,618 +1416,193 @@ class MCMC:
             else:
                 raise NotImplementedError("Exit code: Incompatible dimensions in 'pdf_proposal_scale'.")
 
-        # Check pdf_target_type
-        if self.algorithm is 'MMH' and self.pdf_target_type is None:
-            self.pdf_target_type = 'marginal_pdf'
-        if self.algorithm is 'Stretch':
-            self.pdf_target_type = 'joint_pdf'
-        if self.pdf_target_type not in ['joint_pdf', 'marginal_pdf']:
-            raise ValueError('Exit code: Unrecognized type for target distribution. Supported distributions: '
-                             'joint_pdf', 'marginal_pdf.')
+        # Check log_pdf_target and pdf_target
+        if self.log_pdf_target is None and self.pdf_target is None:
+            raise ValueError('UQpy error: a target function must be provided, in log_pdf_target of pdf_target')
+        if isinstance(self.log_pdf_target, list) and len(self.log_pdf_target) != self.dimension:
+            raise ValueError('UQpy error: inconsistent dimensions.')
+        if isinstance(self.pdf_target, list) and len(self.pdf_target) != self.dimension:
+            raise ValueError('UQpy error: inconsistent dimensions.')
 
-        # Check algorithm
-        if self.algorithm is None:
-            self.algorithm = 'MMH'
-        else:
-            if self.algorithm not in ['MH', 'MMH', 'Stretch']:
-                raise NotImplementedError('Exit code: Unrecognized MCMC algorithm. Supported algorithms: '
-                                          'Metropolis-Hastings (MH), '
-                                          'Modified Metropolis-Hastings (MMH), '
-                                          'Affine Invariant Ensemble with Stretch Moves (Stretch).')
-
-        # Check pdf_target
-        if type(self.pdf_target).__name__ == 'str':
-            self.pdf_target = Distribution(self.pdf_target)
-        if self.pdf_target is None and self.algorithm is 'MMH':
-            if self.dimension == 1 or self.pdf_target_type is 'marginal_pdf':
-                def target(x, dummy):
-                    _ = dummy
-                    return sp.norm.pdf(x)
-                if self.dimension == 1:
-                    self.pdf_target = [target]
-                else:
-                    self.pdf_target = [target] * self.dimension
+        # Define a helper function
+        def compute_log_pdf(x, params, copula_params, pdf_func):
+            pdf_value = max(pdf_func(x, params, copula_params), 10 ** (-320))
+            return np.log(pdf_value)
+        # For MMH, keep the functions as lists if they appear as lists
+        if self.algorithm == 'MMH':
+            if self.log_pdf_target is not None:
+                if isinstance(self.log_pdf_target, list):
+                    self.pdf_target_type = 'marginal_pdf'
             else:
-                def target(x, dummy):
-                    _ = dummy
-                    return sp.multivariate_normal.pdf(x, mean=np.zeros(self.dimension), cov=np.eye(self.dimension))
-                self.pdf_target = [target]
-        elif self.pdf_target is None:
-            if self.dimension == 1:
-                def target(x, dummy):
-                    _ = dummy
-                    return sp.norm.pdf(x)
-                self.pdf_target = [target]
-            else:
-                def target(x, dummy):
-                    _ = dummy
-                    return sp.multivariate_normal.pdf(x, mean=np.zeros(self.dimension), cov=np.eye(self.dimension))
-                self.pdf_target = [target]
-        elif type(self.pdf_target).__name__ != 'list':
-            self.pdf_target = [self.pdf_target]
-
-        # Check pdf_target_params
-        if self.pdf_target_params is None:
-            self.pdf_target_params = []
-        if type(self.pdf_target_params).__name__ != 'list':
-            self.pdf_target_params = [self.pdf_target_params]
-
-        if self.nburn is None:
-            self.nburn = 0
-
-
-########################################################################################################################
-########################################################################################################################
-#                                         Correlate standard normal samples
-########################################################################################################################
-
-class Correlate:
-
-    """
-    Description:
-    A class to correlate standard normal samples ~ N(0, 1) given a correlation matrix.
-
-    Input:
-    :param input_samples: An object of a SampleMethods class or an array of standard normal samples ~ N(0, 1).
-    :type input_samples: object or ndarray
-
-    :param corr_norm: The correlation matrix of the random variables in the standard normal space.
-    :type corr_norm: ndarray
-
-    :param: dimension: A scalar defining the dimension of the problem. If input_samples is an object of a SampleMethods
-                        class, then dimension does not need to be defined. Otherwise, it must be specified.
-    :type dimension: integer
-
-    Output:
-    :return: samples: Set of correlated standard normal samples.
-    :rtype: samples: ndarray
-
-    :return: samples_uncorr: The input uncorrelated standard normal samples. These are either inherited from the
-                                input_samples object or are defined by the input_samples array.
-    :rtype: samples_uncorr: ndarray
-    """
-
-    # Authors: Dimitris G.Giovanis
-    # Last Modified: 7/4/18 by Michael D. Shields
-
-    def __init__(self, input_samples=None, corr_norm=None, dimension=None):
-
-        # If samples is not an array (It should be an instance of a SampleMethods class)
-        if isinstance(input_samples, np.ndarray) is False:
-            _dict = {**input_samples.__dict__}
-            for k, v in _dict.items():
-                setattr(self, k, v)
-
-            self.corr_norm = corr_norm
-            self.samples_uncorr = self.samples.copy()
-
-            for i in range(len(self.distribution)):
-                if self.distribution[i].name != 'Normal' or self.distribution[i].params != [0, 1]:
-                    raise RuntimeError("In order to use class 'Correlate' the random variables should be standard"
-                                       "normal")
-
-        # If samples is an array
-        else:
-            print('Caution: The samples provided must be uncorrelated standard normal random variables.')
-            self.samples_uncorr = input_samples
-            if dimension is None:
-                raise RuntimeError("Dimension must be specified when entering samples as an array.")
-
-            self.dimension = dimension
-            self.dist_name = ['Normal'] * self.dimension
-            self.dist_params = [[0, 1]] * self.dimension
-            self.corr_norm = corr_norm
-            self.distribution = [None] * self.dimension
-            for i in range(self.dimension):
-                self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
-
-            if self.corr_norm is None:
-                raise RuntimeError("A correlation matrix is required.")
-
-        if np.linalg.norm(self.corr_norm - np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
-            self.samples = self.samples_uncorr.copy()
-        else:
-            self.samples = run_corr(self.samples_uncorr, self.corr_norm)
-
-
-########################################################################################################################
-########################################################################################################################
-#                                         Decorrelate standard normal samples
-########################################################################################################################
-
-class Decorrelate:
-
-    """
-        Description:
-
-            A class to decorrelate already correlated normal samples given their correlation matrix.
-
-        Input:
-            :param input_samples: An object of type Correlate or an array of correlated N(0,1) samples
-            :type input_samples: object or ndarray
-
-            :param corr_norm: The correlation matrix of the random variables in the standard normal space
-            :type corr_norm: ndarray
-
-            :param dimension: The dimension of the problem.
-            :type dimension: integer
-
-        Output:
-            :return Decorrelate.samples: Set of uncorrelated normal samples.
-            :rtype Decorrelate.samples: ndarray
-
-            :return Decorrelate.samples_corr: Original set of correlated normal samples.
-            :rtype Decorrelate.samples_corr: ndarray
-    """
-
-    # Authors: Dimitris G.Giovanis
-    # Last Modified: 6/24/18 by Dimitris G. Giovanis
-
-    def __init__(self, input_samples=None, corr_norm=None, dimension=None):
-
-        # If samples is not an array (It should be an instance of the Correlate class)
-        if isinstance(input_samples, np.ndarray) is False:
-            _dict = {**input_samples.__dict__}
-            for k, v in _dict.items():
-                setattr(self, k, v)
-
-            self.corr_norm = corr_norm
-            self.samples_corr = self.samples.copy()
-
-            for i in range(len(self.distribution)):
-                if self.distribution[i].name != 'Normal' or self.distribution[i].params != [0, 1]:
-                    raise RuntimeError("In order to use class 'Decorrelate' the random variables should be standard "
-                                       "normal.")
-
-        # If samples is an array
-        else:
-            print('Caution: The samples provided must be correlated standard normal random variables.')
-            self.samples_corr = input_samples
-            if dimension is None:
-                raise RuntimeError("Dimension must be specified when entering samples as an array.")
-            self.dimension = dimension
-            self.dist_name = ['Normal'] * self.dimension
-            self.dist_params = [[0, 1]] * self.dimension
-            self.corr_norm = corr_norm
-            self.distribution = [None] * self.dimension
-            for i in range(self.dimension):
-                self.distribution[i] = Distribution(self.dist_name[i], self.dist_params[i])
-
-            if self.corr_norm is None:
-                raise RuntimeError("A correlation matrix is required.")
-
-        if np.linalg.norm(self.corr_norm - np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
-            self.samples = self.samples_corr
-        else:
-            self.samples = run_decorr(self.samples_corr, self.corr_norm)
-
-
-########################################################################################################################
-########################################################################################################################
-#                                         Nataf transformation
-########################################################################################################################
-
-
-class Nataf:
-
-    """
-        Description:
-
-            A class to perform the Nataf transformation of samples from N(0, 1) to a user-defined distribution.
-
-        Input:
-            :param input_samples: An object of a SampleMethods class containing N(0,1) samples or an array of N(0,1)
-                                  samples.
-            :type input_samples: object or ndarray
-
-            :param dist_name: A list containing the names of the distributions of the random variables.
-                              Distribution names must match those in the Distributions module.
-                              If the distribution does not match one from the Distributions module,the user must provide
-                              custom_dist.py.
-                              The length of the string must be 1 (if all distributions are the same) or equal to
-                              dimension.
-            :type dist_name: string list
-
-            :param dist_params: Parameters of the distribution.
-                                Parameters for each random variable are defined as ndarrays
-                                Each item in the list, dist_params[i], specifies the parameters for the corresponding
-                                distribution, dist[i].
-            :type dist_params: list
-
-            :param corr_norm: The correlation matrix of the random variables in the standard normal space
-            :type corr_norm: ndarray
-
-            param: distribution: An object list containing the distributions of the random variables.
-                                 Each item in the list is an object of the Distribution class (see Distributions.py).
-                                 The list has length equal to dimension.
-            :type distribution: list
-
-        Output:
-            :return: Nataf.corr: The distorted correlation matrix of the random variables in the standard space;
-            :rtype: Nataf.corr: ndarray
-
-            :return: Nataf.samplesN01: An array of N(0,1) samples;
-            :rtype: Nataf.corr: ndarray
-
-            :return: Nataf.samples: An array of samples following the prescribed distributions;
-            :rtype: Nataf.corr: ndarray
-
-            :return: Nataf.jacobian: An array containing the Jacobian of the transformation.
-            :rtype: Nataf.jacobian: ndarray
-
-    """
-
-    # Authors: Dimitris G. Giovanis
-    # Last Modified: 7/15/18 by Michael D. Shields
-
-    def __init__(self, input_samples=None, corr_norm=None, dist_name=None, dist_params=None, dimension=None):
-
-        # Check if samples is a SampleMethods Object or an array
-        if isinstance(input_samples, np.ndarray) is False and input_samples is not None:
-            _dict = {**input_samples.__dict__}
-            for k, v in _dict.items():
-                setattr(self, k, v)
-
-            for i in range(len(self.distribution)):
-                if self.distribution[i].name.title() != 'Normal' or self.distribution[i].params != [0, 1]:
-                    raise RuntimeError("In order to use class 'Nataf' the random variables should be standard normal")
-
-            self.dist_name = dist_name
-            self.dist_params = dist_params
-            if self.dist_name is None or self.dist_params is None:
-                raise RuntimeError("In order to use class 'Nataf', marginal distributions and their parameters must"
-                                   "be provided.")
-
-            # Ensure the dimensions of dist_name are consistent
-            if type(self.dist_name).__name__ != 'list':
-                self.dist_name = [self.dist_name]
-            if len(self.dist_name) == 1 and self.dimension != 1:
-                self.dist_name = self.dist_name * self.dimension
-
-            # Ensure that dist_params is a list of length dimension
-            if type(self.dist_params).__name__ != 'list':
-                self.dist_params = [self.dist_params]
-            if len(self.dist_params) == 1 and self.dimension != 1:
-                self.dist_params = self.dist_params * self.dimension
-
-            self.distribution = [None] * self.dimension
-            for j in range(len(self.dist_name)):
-                self.distribution[j] = Distribution(self.dist_name[j], self.dist_params[j])
-
-            if not hasattr(self, 'corr_norm'):
-                if corr_norm is None:
-                    self.corr_norm = np.identity(n=self.dimension)
-                    self.corr = self.corr_norm
-                elif corr_norm is not None:
-                    self.corr_norm = corr_norm
-                    self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
-            else:
-                self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
-
-            self.samplesN01 = self.samples.copy()
-            self.samples = np.zeros_like(self.samples)
-
-            self.samples, self.jacobian = transform_g_to_ng(self.corr_norm, self.distribution, self.dist_params,
-                                                            self.samplesN01)
-
-        elif isinstance(input_samples, np.ndarray):
-            self.samplesN01 = input_samples
-            if dimension is None:
-                raise RuntimeError("UQpy: Dimension must be specified in 'Nataf' when entering samples as an array.")
-            self.dimension = dimension
-
-            self.dist_name = dist_name
-            self.dist_params = dist_params
-            if self.dist_name is None or self.dist_params is None:
-                raise RuntimeError("UQpy: Marginal distributions and their parameters must be specified in 'Nataf' "
-                                   "when entering samples as an array.")
-
-            # Ensure the dimensions of dist_name are consistent
-            if type(self.dist_name).__name__ != 'list':
-                self.dist_name = [self.dist_name]
-            if len(self.dist_name) == 1 and self.dimension != 1:
-                self.dist_name = self.dist_name * self.dimension
-
-            # Ensure that dist_params is a list of length dimension
-            if type(self.dist_params).__name__ != 'list':
-                self.dist_params = [self.dist_params]
-            if len(self.dist_params) == 1 and self.dimension != 1:
-                self.dist_params = self.dist_params * self.dimension
-
-            self.distribution = [None] * self.dimension
-            for j in range(len(self.dist_name)):
-                self.distribution[j] = Distribution(self.dist_name[j], self.dist_params[j])
-
-            if corr_norm is None:
-                self.corr_norm = np.identity(n=self.dimension)
-                self.corr = self.corr_norm
-            elif corr_norm is not None:
-                self.corr_norm = corr_norm
-                self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
-
-            self.samples = np.zeros_like(self.samplesN01)
-
-            self.samples, self.jacobian = transform_g_to_ng(self.corr_norm, self.distribution, self.dist_params,
-                                                            self.samplesN01)
-
-        elif input_samples is None:
-            if corr_norm is not None:
-                self.dist_name = dist_name
-                self.dist_params = dist_params
-                self.corr_norm = corr_norm
-                if self.dist_name is None or self.dist_params is None:
-                    raise RuntimeError("UQpy: In order to use class 'Nataf', marginal distributions and their "
-                                       "parameters must be provided.")
-
-                if dimension is not None:
-                    self.dimension = dimension
-                else:
-                    self.dimension = len(self.dist_name)
-
-                # Ensure the dimensions of dist_name are consistent
-                if type(self.dist_name).__name__ != 'list':
-                    self.dist_name = [self.dist_name]
-                if len(self.dist_name) == 1 and self.dimension != 1:
-                    self.dist_name = self.dist_name * self.dimension
-
-                # Ensure that dist_params is a list of length dimension
-                if type(self.dist_params).__name__ != 'list':
-                    self.dist_params = [self.dist_params]
-                if len(self.dist_params) == 1 and self.dimension != 1:
-                    self.dist_params = self.dist_params * self.dimension
-
-                self.distribution = [None] * self.dimension
-                for j in range(len(self.dist_name)):
-                    self.distribution[j] = Distribution(self.dist_name[j], self.dist_params[j])
-
-                self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
-
-            else:
-                raise RuntimeError("UQpy: To perform the Nataf transformation without samples, a correlation function"
-                                   "'corr_norm' must be provided.")
-
-
-########################################################################################################################
-########################################################################################################################
-#                                         Inverse Nataf transformation
-########################################################################################################################
-
-
-class InvNataf:
-
-    """
-        Description:
-            A class to perform the inverse Nataf transformation of samples in standard normal space.
-
-        Input:
-            :param input_samples: An object of type MCS, LHS
-            :type input_samples: object
-
-            :param dist_name: A list containing the names of the distributions of the random variables.
-                            Distribution names must match those in the Distributions module.
-                            If the distribution does not match one from the Distributions module, the user must provide
-                            custom_dist.py.
-                            The length of the string must be 1 (if all distributions are the same) or equal to dimension
-            :type dist_name: string list
-
-            :param dist_params: Parameters of the distribution
-                    Parameters for each random variable are defined as ndarrays
-                    Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
-                        dist[i]
-            :type dist_params: list
-
-            param: distribution: An object list containing the distributions of the random variables.
-                   Each item in the list is an object of the Distribution class (see Distributions.py).
-                   The list has length equal to dimension.
-            :type distribution: list
-
-            :param corr The correlation matrix of the random variables in the parameter space.
-            :type corr: ndarray
-
-            :param itam_error1:
-            :type itam_error1: float
-
-            :param itam_error2:
-            :type itam_error1: float
-
-            :param beta:
-            :type itam_error1: float
-
-
-        Output:
-            :return: invNataf.corr: The distorted correlation matrix of the random variables in the standard space;
-            :rtype: invNataf.corr: ndarray
-
-            :return: invNataf.samplesN01: An array of N(0,1) samples;
-            :rtype: Nataf.corr: ndarray
-
-            :return: invNataf.samples: An array of samples following the normal distribution.
-            :rtype: invNataf.corr: ndarray
-
-            :return: invNataf.jacobian: An array containing the Jacobian of the transformation.
-            :rtype: invNataf.jacobian: ndarray
-    """
-
-    # Authors: Dimitris G.Giovanis
-    # Last Modified: 7/19/18 by Dimitris G. Giovanis
-
-    def __init__(self, input_samples=None, dimension=None, corr=None, dist_name=None, dist_params=None, beta=None,
-                 itam_error1=None, itam_error2=None):
-
-        # If samples is an instance of a SampleMethods class
-        if isinstance(input_samples, np.ndarray) is False and input_samples is not None:
-            _dict = {**input_samples.__dict__}
-            for k, v in _dict.items():
-                setattr(self, k, v)
-
-            # Allow to inherit distribution from samples or the user to specify the distribution
-            if dist_name is None or dist_params is None:
-                if not hasattr(self, 'distribution'):
-                    raise RuntimeError("In order to use class 'InvNataf' the distributions and their parameters must"
-                                       "be provided.")
-
-            # Allow to inherit correlation from samples or the user to specify the correlation
-            if corr is None:
-                if not hasattr(self, 'corr'):
-                    self.corr = np.identity(n=self.dimension)
-            else:
-                self.corr = corr
-
-            # Check for variables that are non-Gaussian
-            count = 0
-            for i in range(len(self.distribution)):
-                if self.distribution[i].name.title() == 'Normal' and self.distribution[i].params == [0, 1]:
-                    count = count + 1
-
-            if count == len(self.distribution):  # Case where the variables are all standard Gaussian
-                self.samplesN01 = self.samples.copy()
-                m, n = np.shape(self.samples)
-                self.samples = input_samples
-                self.Jacobian = list()
-                for i in range(m):
-                    self.Jacobian.append(np.identity(n=self.dimension))
-                self.corr_norm = self.corr
-            else:
-                if np.linalg.norm(self.corr - np.identity(n=self.corr.shape[0])) < 10 ** (-8):
-                    self.corr_norm = self.corr.copy()
-                else:
-                    self.corr_norm = itam(self.distribution, self.dist_params, self.corr, beta, itam_error1,
-                                          itam_error2)
-
-                self.Jacobian = list()
-                self.samplesNG = self.samples.copy()
-                self.samples = np.zeros_like(self.samplesNG)
-
-                self.samples, self.jacobian = transform_ng_to_g(self.corr_norm, self.distribution, self.dist_params,
-                                                                self.samplesNG)
-
-        # If samples is an array
-        elif isinstance(input_samples, np.ndarray):
-            if dimension is None:
-                raise RuntimeError("UQpy: Dimension must be specified in 'InvNataf' when entering samples as an array.")
-            self.dimension = dimension
-            self.samplesNG = input_samples
-            if corr is None:
-                raise RuntimeError("UQpy: corr must be specified in 'InvNataf' when entering samples as an array.")
-            self.corr = corr
-
-            self.dist_name = dist_name
-            self.dist_params = dist_params
-            if self.dist_name is None or self.dist_params is None:
-                raise RuntimeError("UQpy: Marginal distributions and their parameters must be specified in 'InvNataf' "
-                                   "when entering samples as an array.")
-
-            # Ensure the dimensions of dist_name are consistent
-            if type(self.dist_name).__name__ != 'list':
-                self.dist_name = [self.dist_name]
-            if len(self.dist_name) == 1 and self.dimension != 1:
-                self.dist_name = self.dist_name * self.dimension
-
-            # Ensure that dist_params is a list of length dimension
-            if type(self.dist_params).__name__ != 'list':
-                self.dist_params = [self.dist_params]
-            if len(self.dist_params) == 1 and self.dimension != 1:
-                self.dist_params = self.dist_params * self.dimension
-
-            self.distribution = [None] * self.dimension
-            for j in range(len(self.dist_name)):
-                self.distribution[j] = Distribution(self.dist_name[j], self.dist_params[j])
-
-            # Check for variables that are non-Gaussian
-            count = 0
-            for i in range(len(self.distribution)):
-                if self.distribution[i].name.title() == 'Normal' and self.distribution[i].params == [0, 1]:
-                    count = count + 1
-
-            if count == len(self.distribution):
-                self.samples = self.samplesNG.copy()
-                self.jacobian = list()
-                for i in range(len(self.distribution)):
-                    self.jacobian.append(np.identity(n=self.dimension))
-                self.corr_norm = self.corr
-            else:
-                if np.linalg.norm(self.corr - np.identity(n=self.corr.shape[0])) < 10 ** (-8):
-                    self.corr_norm = self.corr
-                else:
-                    self.corr = corr
-                    self.corr_norm = itam(self.distribution, self.dist_params, self.corr, beta, itam_error1,
-                                          itam_error2)
-
-                self.Jacobian = list()
-                self.samples = np.zeros_like(self.samplesNG)
-
-                self.samples, self.jacobian = transform_ng_to_g(self.corr_norm, self.distribution, self.dist_params,
-                                                                self.samplesNG)
-
-        # Perform ITAM to identify underlying Gaussian correlation without samples.
-        elif input_samples is None:
-            if corr is not None:
-                self.dist_name = dist_name
-                self.dist_params = dist_params
-                self.corr = corr
-                if self.dist_name is None or self.dist_params is None:
-                    raise RuntimeError("UQpy: In order to use class 'InvNataf', marginal distributions and their "
-                                       "parameters must be provided.")
-
-                if dimension is not None:
-                    self.dimension = dimension
-                else:
-                    self.dimension = len(self.dist_name)
-
-                # Ensure the dimensions of dist_name are consistent
-                if type(self.dist_name).__name__ != 'list':
-                    self.dist_name = [self.dist_name]
-                if len(self.dist_name) == 1 and self.dimension != 1:
-                    self.dist_name = self.dist_name * self.dimension
-
-                # Ensure that dist_params is a list of length dimension
-                if type(self.dist_params).__name__ != 'list':
-                    self.dist_params = [self.dist_params]
-                if len(self.dist_params) == 1 and self.dimension != 1:
-                    self.dist_params = self.dist_params * self.dimension
-
-                self.distribution = [None] * self.dimension
-                for j in range(len(self.dist_name)):
-                    self.distribution[j] = Distribution(self.dist_name[j], self.dist_params[j])
-
-                count = 0
-                for i in range(len(self.distribution)):
-                    if self.distribution[i].name.title() == 'Normal' and self.distribution[i].params == [0, 1]:
-                        count = count + 1
-
-                if count == len(self.distribution):
-                    self.jacobian = list()
-                    for i in range(len(self.distribution)):
-                        self.jacobian.append(np.identity(n=self.dimension))
-                    self.corr_norm = self.corr
-                else:
-                    if np.linalg.norm(self.corr - np.identity(n=self.corr.shape[0])) < 10 ** (-8):
-                        self.corr_norm = self.corr
+                if isinstance(self.pdf_target, list):
+                    self.pdf_target_type = 'marginal_pdf'
+                    if isinstance(self.pdf_target[0], str):
+                        self.log_pdf_target = [Distribution(pdf_target_j).log_pdf
+                                               for pdf_target_j in self.pdf_target]
                     else:
-                        self.corr = corr
-                        self.corr_norm = itam(self.distribution, self.dist_params, self.corr, beta, itam_error1,
-                                              itam_error2)
-
+                        self.log_pdf_target = [partial(compute_log_pdf, pdf_func=pdf_target_j)
+                                               for pdf_target_j in self.pdf_target]
+                elif isinstance(self.pdf_target, str):
+                    self.log_pdf_target = Distribution(self.pdf_target).log_pdf
+                elif callable(self.pdf_target):
+                    self.log_pdf_target = partial(compute_log_pdf, pdf_func=self.pdf_target)
+        else:
+            if self.log_pdf_target is not None:
+                if isinstance(self.log_pdf_target, list):
+                    raise ValueError('For MH and Stretch, log_pdf_target must be a callable function')
             else:
-                raise RuntimeError("UQpy: To perform the inverse Nataf transformation without samples, a correlation "
-                                   "function 'corr' must be provided.")
+                if isinstance(self.pdf_target, str) or (isinstance(self.pdf_target, list)
+                                                        and isinstance(self.pdf_target[0], str)):
+                    self.log_pdf_target = Distribution(self.pdf_target).log_pdf
+                elif callable(self.pdf_target):
+                    self.log_pdf_target = partial(compute_log_pdf, pdf_func=self.pdf_target)
+                else:
+                    raise ValueError('For MH and Stretch, pdf_target must be a callable function, a str or list of str')
+
+
+########################################################################################################################
+########################################################################################################################
+#                                         Importance Sampling
+########################################################################################################################
+
+class IS:
+    """
+        Description:
+
+            Perform Importance Sampling (IS) of independent random variables given a target and a
+            proposal distribution.
+
+        Input:
+
+            :param pdf_proposal: A list containing the names of the proposal distribution for each random variable.
+                                 Distribution names must match those in the Distributions module.
+                                 If the distribution does not match one from the Distributions module, the user
+                                 must provide custom_dist.py. The length of the string must be 1 (if all
+                                 distributions are the same) or equal to dimension.
+            :type pdf_proposal: string list
+
+            :param pdf_proposal_params: Parameters of the proposal distribution.
+                                        Parameters for each random variable are defined as ndarrays.
+                                        Each item in the list, pdf_proposal_params[i], specifies the parameters for the
+                                        corresponding proposal distribution, pdf_proposal[i].
+            :type pdf_proposal_params: list
+
+            :param pdf_target: A list containing the names of the target distribution for each random variable.
+                                 Distribution names must match those in the Distributions module.
+                                 If the distribution does not match one from the Distributions module, the user
+                                 must provide custom_dist.py. The length of the string must be 1 (if all
+                                 distributions are the same) or equal to dimension.
+            :type pdf_target: string list
+
+            :param pdf_target_params: Parameters of the target distribution.
+                                        Parameters for each random variable are defined as ndarrays.
+                                        Each item in the list, pdf_target_params[i], specifies the parameters for the
+                                        corresponding target distribution, pdf_target[i].
+            :type pdf_target_params: list
+
+            :param nsamples: Number of samples to generate.
+                             No Default Value: nsamples must be prescribed.
+            :type nsamples: int
+
+        Output:
+            :return: IS.samples: Set of generated samples
+            :rtype: IS.samples: ndarray
+
+            :return: IS.weights: Importance weights of samples
+            :rtype: IS.weights: ndarray
+    """
+
+    # Authors: Dimitris G.Giovanis
+    # Last Modified: 11/02/18 by Audrey Olivier
+
+    def __init__(self, nsamples=None,
+                 pdf_proposal=None, pdf_proposal_params=None,
+                 pdf_target=None, log_pdf_target=None, pdf_target_params=None,
+                 pdf_target_copula=None, pdf_target_copula_params=None
+                 ):
+
+        self.nsamples = nsamples
+        self.pdf_proposal = pdf_proposal
+        self.pdf_proposal_params = pdf_proposal_params
+        self.pdf_target = pdf_target
+        self.log_pdf_target = log_pdf_target
+        self.pdf_target_params = pdf_target_params
+        self.pdf_target_copula = pdf_target_copula
+        self.pdf_target_copula_params = pdf_target_copula_params
+
+        self.init_is()
+
+        # Step 1: sample from proposal
+        self.samples = self.sampling_step()
+        # Step 2: weight samples
+        self.unnormalized_log_weights, self.weights = self.weighting_step()
+
+    def sampling_step(self):
+
+        proposal_pdf_ = Distribution(name=self.pdf_proposal)
+        samples = proposal_pdf_.rvs(params=self.pdf_proposal_params, nsamples=self.nsamples)
+        return samples
+
+    def weighting_step(self):
+
+        x = self.samples
+        # evaluate qs (log_pdf_proposal)
+        proposal_pdf_ = Distribution(name=self.pdf_proposal)
+        log_qs = proposal_pdf_.log_pdf(x, params=self.pdf_proposal_params)
+        # evaluate ps (log_pdf_target)
+        log_ps = self.log_pdf_target(x, params=self.pdf_target_params, copula_params=self.pdf_target_copula_params)
+
+        log_weights = log_ps-log_qs
+        # this rescale is used to avoid having NaN of Inf when taking the exp
+        weights = np.exp(log_weights - max(log_weights))
+        sum_w = np.sum(weights, axis=0)
+        return log_weights, weights/sum_w
+
+    def resample(self, method='multinomial', size=None):
+        from .Utilities import resample
+        return resample(self.samples, self.weights, method=method, size=size)
+
+    ################################################################################################################
+    # Initialize Importance Sampling.
+
+    def init_is(self):
+
+        # Check nsamples
+        if self.nsamples is None:
+            raise NotImplementedError('Exit code: Number of samples is not defined.')
+
+        # Check log_pdf_target, pdf_target
+        if self.pdf_target is None and self.log_pdf_target is None:
+            raise ValueError('UQpy error: a target pdf must be defined (pdf_target or log_pdf_target).')
+        # The code first checks if log_pdf_target is defined, if yes, no need to check pdf_target
+        if self.log_pdf_target is not None:
+            # log_pdf_target can be defined as a function that takes either one or two inputs. In the latter case,
+            # the second input is params, which is fixed to params=self.pdf_target_params
+            if not callable(self.log_pdf_target) or len(signature(self.log_pdf_target).parameters) > 3:
+                raise ValueError('UQpy error: when defined as a function, '
+                                 'log_pdf_target takes up to three inputs (x, params, copula_params).')
+        else:
+            # pdf_target can be a str of list of strings, then compute the log_pdf
+            if isinstance(self.pdf_target, str) or (isinstance(self.pdf_target, list) and
+                                                    isinstance(self.pdf_target[0], str)):
+                p = Distribution(name=self.pdf_target, copula=self.pdf_target_copula)
+                self.log_pdf_target = partial(p.log_pdf, params=self.pdf_target_params)
+            # otherwise it may be a function that computes the pdf, then just take the logarithm
+            else:
+                if not callable(self.pdf_target) or len(signature(self.pdf_target).parameters) > 3:
+                    raise ValueError('UQpy error: when defined as a function, '
+                                     'pdf_target takes three (x, params, copula_params) inputs.')
+
+                # helper function
+                def compute_log_pdf(x, params, copula_params, pdf_func):
+                    pdf_value = max(pdf_func(x, params, copula_params), 10**(-320))
+                    return np.log(pdf_value)
+                self.log_pdf_target = partial(compute_log_pdf, pdf_func=self.pdf_target)
+
+        # Check pdf_proposal_name
+        if self.pdf_proposal is None:
+            raise ValueError('Exit code: A proposal distribution is required.')
+        # can be given as a name or a list of names, transform it to a distribution class
+        if not isinstance(self.pdf_proposal, str) and not (isinstance(self.pdf_proposal, list)
+           and isinstance(self.pdf_proposal[0], str)):
+            raise ValueError('UQpy error: proposal pdf must be given as a str or a list of str')

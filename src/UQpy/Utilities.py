@@ -17,10 +17,17 @@
 
 
 import numpy as np
+import matplotlib.pyplot as plt
 import scipy.stats as stats
+from contextlib import contextmanager
+import sys
+import os
+from scipy.special import gamma
+from scipy.stats import chi2, norm
 
 
 def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
+
     """
         Description:
 
@@ -76,6 +83,7 @@ def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
 
 
 def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
+
     """
         Description:
 
@@ -131,6 +139,7 @@ def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
 
 
 def run_corr(samples, corr):
+
     """
         Description:
 
@@ -159,6 +168,7 @@ def run_corr(samples, corr):
 
 
 def run_decorr(samples, corr):
+
     """
         Description:
 
@@ -189,6 +199,7 @@ def run_decorr(samples, corr):
 
 
 def correlation_distortion(marginal, params, rho_norm):
+
     """
         Description:
 
@@ -260,6 +271,7 @@ def correlation_distortion(marginal, params, rho_norm):
 
 
 def itam(marginal, params, corr, beta, thresh1, thresh2):
+
     """
         Description:
 
@@ -311,14 +323,14 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
     iter_ = 0
 
     print("UQpy: Initializing Iterative Translation Approximation Method (ITAM)")
-    while iter_ < max_iter and error1 > thresh1 and abs(error1 - error0) / error0 > thresh2:
+    while iter_ < max_iter and error1 > thresh1 and abs(error1-error0)/error0 > thresh2:
         error0 = error1
         corr0 = correlation_distortion(marginal, params, corr_norm0)
         error1 = np.linalg.norm(corr - corr0)
 
         max_ratio = np.amax(np.ones((len(corr), len(corr))) / abs(corr_norm0))
 
-        corr_norm = np.nan_to_num((corr / corr0) ** beta * corr_norm0)
+        corr_norm = np.nan_to_num((corr / corr0)**beta * corr_norm0)
 
         # Do not allow off-diagonal correlations to equal or exceed one
         corr_norm[corr_norm < -1.0] = (max_ratio + 1) / 2 * corr_norm0[corr_norm < -1.0]
@@ -339,6 +351,7 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
 
 
 def bi_variate_normal_pdf(x1, x2, rho):
+
     """
 
         Description:
@@ -358,12 +371,13 @@ def bi_variate_normal_pdf(x1, x2, rho):
         Output:
 
     """
-    return (1 / (2 * np.pi * np.sqrt(1 - rho ** 2)) *
-            np.exp(-1 / (2 * (1 - rho ** 2)) *
-                   (x1 ** 2 - 2 * rho * x1 * x2 + x2 ** 2)))
+    return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
+            np.exp(-1/(2*(1-rho**2)) *
+                   (x1**2 - 2 * rho * x1 * x2 + x2**2)))
 
 
 def _get_a_plus(a):
+
     """
         Description:
 
@@ -385,6 +399,7 @@ def _get_a_plus(a):
 
 
 def _get_ps(a, w=None):
+
     """
         Description:
 
@@ -398,6 +413,7 @@ def _get_ps(a, w=None):
 
 
 def _get_pu(a, w=None):
+
     """
         Description:
 
@@ -411,6 +427,7 @@ def _get_pu(a, w=None):
 
 
 def nearest_psd(a, nit=10):
+
     """
         Description:
             A function to compute the nearest positive semi definite matrix of a given matrix
@@ -433,6 +450,7 @@ def nearest_psd(a, nit=10):
     delta_s = 0
     y_k = a.copy()
     for k in range(nit):
+
         r_k = y_k - delta_s
         x_k = _get_ps(r_k, w=w)
         delta_s = x_k - r_k
@@ -442,6 +460,7 @@ def nearest_psd(a, nit=10):
 
 
 def nearest_pd(a):
+
     """
         Description:
 
@@ -486,13 +505,14 @@ def nearest_pd(a):
     k = 1
     while not is_pd(a3):
         min_eig = np.min(np.real(np.linalg.eigvals(a3)))
-        a3 += np.eye(a.shape[0]) * (-min_eig * k ** 2 + spacing)
+        a3 += np.eye(a.shape[0]) * (-min_eig * k**2 + spacing)
         k += 1
 
     return a3
 
 
 def is_pd(b):
+
     """
         Description:
 
@@ -512,6 +532,7 @@ def is_pd(b):
 
 
 def estimate_psd(samples, nt, t):
+
     """
         Description: A function to estimate the Power Spectrum of a stochastic process given an ensemble of samples
 
@@ -636,6 +657,7 @@ def estimate_cross_trispectrum(samples):
 
 
 def s_to_r(s, w, t):
+
     """
         Description:
 
@@ -667,6 +689,7 @@ def s_to_r(s, w, t):
 
 
 def r_to_s(r, w, t):
+
     """
         Description: A function to transform the autocorrelation function to a power spectrum
 
@@ -695,8 +718,9 @@ def r_to_s(r, w, t):
     return s
 
 
-def gradient(sample=None, dimension=None, eps=None, model_type=None, model_script=None, input_script=None,
-             output_script=None, cpu=None, order=None):
+def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_object_name=None, input_template=None, var_names=None,
+             output_script=None, output_object_name=None, ntasks=None, cores_per_task=None, nodes=None, resume=None,
+             verbose=None, model_dir=None, cluster=None, order=None):
     """
          Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
 
@@ -707,57 +731,49 @@ def gradient(sample=None, dimension=None, eps=None, model_type=None, model_scrip
              If passing samples via text file, set samples = None or do not set the samples input.
              :type sample: ndarray
 
-             :param dimension: The dimension of the random variable whose samples are being passed to the model.
-             :type dimension: int
-
-             :param order: The type of derivatives to calculate (1st order, secodn order, mixed).
+             :param order: The type of derivatives to calculate (1st order, second order, mixed).
              :type order: str
 
+             :param dimension: Number of random variables.
+             :type dimension: int
+
              :param eps: step for the finite difference.
-             :type eps: list
+             :type eps: float
 
-             :param model_type: Define the model as a python file or as a third party software model
-             (e.g. Matlab, Abaqus, etc.)
-                     Options: None - Run a third party software model
-                              'python' - Run a python model. When selected, the python file must contain a class
-                                         RunPythonModel that takes, as input, samples and dimension and returns quantity
-                                          of interest (qoi) in in list form where there is one item in the list per
-                                          sample. Each item in the qoi list may take type the user prefers.
-                     Default: None
-             :type model_type: str
+             :param model_script: The filename of the Python script which contains commands to execute the model
 
-             :param model_script: Defines the script (must be either a shell script (.sh) or a python script (.py)) used
-              to call the model.
-                                  This is a user-defined script that must be provided.
-                                  If model_type = 'python', this must be a python script (.py) having a specified class
-                                     structure. Details on this structure can be found in the UQpy documentation.
-             :type: model_script: str
+             :param model_object_name: The name of the function or class which executes the model
 
-             :param input_script: Defines the script (must be either a shell script (.sh) or a python script (.py)) that
-             takes samples generated by UQpy from the sample file generated by UQpy (UQpy_run_{0}.txt) and
-                                     imports them into a usable input file for the third party solver. Details on
-                                     UQpy_run_{0}.txt can be found in the UQpy documentation.
-                                  If model_type = None, this is a user-defined script that the user must provide.
-                                  If model_type = 'python', this is not used.
-             :type: input_script: str
+             :param input_template: The name of the template input file which will be used to generate input files for
+              each run of the model. Refer documentation for more details.
 
-             :param output_script: (Optional) Defines the script (must be either a shell script (.sh) or python script
-             (.py)) that extracts quantities of interest from third-party output files and saves them to a file
-                                     (UQpy_eval_{}.txt) that can be read for postprocessing and adaptive sampling method
-                                      by UQpy.
-                           If model_type = None, this is an optional user-defined script. If not provided, all run files
-                             and output files will be saved in the folder 'UQpyOut' placed in the current working
-                             directory. If provided, text files UQpy_eval_{}.txt are placed in this directory and all
-                             other files are deleted.
-                                   If model_type = 'python', this is not used.
-             :type output_script: str
+             :param var_names: A list containing the names of the variables which are present in the template input
+              files
 
-             :param cpu: Number of CPUs over which to run the job.
-                         UQpy distributes the total number of model evaluations over this number of CPUs
-                         Default: 1 - Runs serially
-             :type cpu: int
+             :param output_script: The filename of the Python script which contains the commands to process the output
 
+             :param output_object_name: The name of the function or class which has the output values. If the object
+              is a class named cls, the output must be saved as cls.qoi. If it a function, it should return the output
+              quantity of interest
 
+             :param ntasks: Number of tasks to be run in parallel. RunModel uses GNU parallel to execute models which
+              require an input template
+
+             :param cores_per_task: Number of cores to be used by each task
+
+             :param nodes: On MARCC, each node has 24 cores_per_task. Specify the number of nodes if more than one
+              node is required.
+
+             :param resume: This option can be set to True if a parallel execution of a model with input template
+              failed to finish running all jobs. GNU parallel will then run only the jobs which failed to execute.
+
+             :param verbose: This option can be set to False if you do not want RunModel to print status messages to
+              the screen during execution. It is True by default.
+
+             :param model_dir: The directory  that contains the Python script which contains commands to execute the
+             model
+
+             :param cluster: This option defines if we run the code into a cluster
 
          Output:
              :return du_dj: vector of first-order gradients
@@ -766,7 +782,6 @@ def gradient(sample=None, dimension=None, eps=None, model_type=None, model_scrip
              :rtype: ndarray
              :return d2u_dij: vector of mixed gradients
              :rtype: ndarray
-
      """
 
     from UQpy.RunModel import RunModel
@@ -775,10 +790,10 @@ def gradient(sample=None, dimension=None, eps=None, model_type=None, model_scrip
         raise ValueError('Exit code: Provide type of derivatives: first, second or mixed.')
 
     if dimension is None:
-        dimension = sample[0].shape[1]
+     raise ValueError('Error: Dimension must be defined')
 
     if eps is None:
-        eps = [0.1] * dimension
+        eps = [0.1]*dimension
     elif isinstance(eps, float):
         eps = [eps] * dimension
     elif isinstance(eps, list):
@@ -791,27 +806,36 @@ def gradient(sample=None, dimension=None, eps=None, model_type=None, model_scrip
         du_dj = np.zeros(dimension)
         d2u_dj = np.zeros(dimension)
         for i in range(dimension):
-            x_i1_j = np.array(sample[0])
-            x_i1_j[i] += eps[i]
-            x_1i_j = np.array(sample[0])
-            x_1i_j[i] -= eps[i]
+            x_i1_j = np.array(sample)
+            x_i1_j[0, i] += eps[i]
+            x_1i_j = np.array(sample)
+            x_1i_j[0, i] -= eps[i]
 
-            g0 = RunModel(samples=np.array([x_i1_j]), model_type=model_type, model_script=model_script,
-                          dimension=dimension,
-                          input_script=input_script, output_script=output_script, cpu=cpu)
+            g0 = RunModel(samples=x_i1_j,  model_script=model_script,
+                          model_object_name=model_object_name,
+                          input_template=input_template, var_names=var_names, output_script=output_script,
+                          output_object_name=output_object_name,
+                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
+                          verbose=verbose, model_dir=model_dir, cluster=cluster)
 
-            g1 = RunModel(samples=np.array([x_1i_j]), model_type=model_type, model_script=model_script,
-                          dimension=dimension,
-                          input_script=input_script, output_script=output_script, cpu=cpu)
+            g1 = RunModel(samples=x_1i_j,  model_script=model_script,
+                          model_object_name=model_object_name,
+                          input_template=input_template, var_names=var_names, output_script=output_script,
+                          output_object_name=output_object_name,
+                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
+                          verbose=verbose, model_dir=model_dir, cluster=cluster)
 
-            du_dj[i] = (g0.model_eval.QOI[0] - g1.model_eval.QOI[0]) / (2 * eps[i])
+            du_dj[i] = (g0.qoi_list[0] - g1.qoi_list[0])/(2*eps[i])
 
             if order == 'second':
-                g = RunModel(samples=np.array(sample), model_type=model_type, model_script=model_script,
-                             dimension=dimension,
-                             input_script=input_script, output_script=output_script, cpu=cpu)
+                g = RunModel(samples=sample, model_script=model_script,
+                             model_object_name=model_object_name,
+                             input_template=input_template, var_names=var_names, output_script=output_script,
+                             output_object_name=output_object_name,
+                             ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
+                             verbose=verbose, model_dir=model_dir, cluster=cluster)
 
-                d2u_dj[i] = (g0.model_eval.QOI[0] - 2 * g.model_eval.QOI[0] + g1.model_eval.QOI[0]) / (eps[i] ** 2)
+                d2u_dj[i] = (g0.qoi_list[0] - 2 * g.qoi_list[0] + g1.qoi_list[0]) / (eps[i]**2)
 
         return np.vstack([du_dj, d2u_dj])
 
@@ -820,44 +844,59 @@ def gradient(sample=None, dimension=None, eps=None, model_type=None, model_scrip
         range_ = list(range(dimension))
         d2u_dij = list()
         for i in itertools.combinations(range_, 2):
-            x_i1_j1 = np.array(sample[0])
-            x_i1_1j = np.array(sample[0])
-            x_1i_j1 = np.array(sample[0])
-            x_1i_1j = np.array(sample[0])
+            x_i1_j1 = np.array(sample)
+            x_i1_1j = np.array(sample)
+            x_1i_j1 = np.array(sample)
+            x_1i_1j = np.array(sample)
 
-            x_i1_j1[i[0]] += eps[i[0]]
-            x_i1_j1[i[1]] += eps[i[1]]
+            x_i1_j1[0, i[0]] += eps[i[0]]
+            x_i1_j1[0, i[1]] += eps[i[1]]
 
-            x_i1_1j[i[0]] += eps[i[0]]
-            x_i1_1j[i[1]] -= eps[i[1]]
+            x_i1_1j[0, i[0]] += eps[i[0]]
+            x_i1_1j[0, i[1]] -= eps[i[1]]
 
-            x_1i_j1[i[0]] -= eps[i[0]]
-            x_1i_j1[i[1]] += eps[i[1]]
+            x_1i_j1[0, i[0]] -= eps[i[0]]
+            x_1i_j1[0, i[1]] += eps[i[1]]
 
-            x_1i_1j[i[0]] -= eps[i[0]]
-            x_1i_1j[i[1]] -= eps[i[1]]
+            x_1i_1j[0, i[0]] -= eps[i[0]]
+            x_1i_1j[0, i[1]] -= eps[i[1]]
 
-            g0 = RunModel(samples=np.array([x_i1_j1]), model_type=model_type, model_script=model_script,
-                          dimension=dimension, input_script=input_script, output_script=output_script, cpu=cpu)
+            g0 = RunModel(samples=x_i1_j1,  model_script=model_script,
+                          model_object_name=model_object_name,
+                          input_template=input_template, var_names=var_names, output_script=output_script,
+                          output_object_name=output_object_name,
+                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
+                          verbose=verbose, model_dir=model_dir, cluster=cluster)
 
-            g1 = RunModel(samples=np.array([x_i1_1j]), model_type=model_type, model_script=model_script,
-                          dimension=dimension, input_script=input_script, output_script=output_script, cpu=cpu)
+            g1 = RunModel(samples=x_i1_1j,  model_script=model_script,
+                          model_object_name=model_object_name,
+                          input_template=input_template, var_names=var_names, output_script=output_script,
+                          output_object_name=output_object_name,
+                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
+                          verbose=verbose, model_dir=model_dir, cluster=cluster)
 
-            g2 = RunModel(samples=np.array([x_1i_j1]), model_type=model_type, model_script=model_script,
-                          dimension=dimension, input_script=input_script, output_script=output_script, cpu=cpu)
+            g2 = RunModel(samples=x_1i_j1,  model_script=model_script,
+                          model_object_name=model_object_name,
+                          input_template=input_template, var_names=var_names, output_script=output_script,
+                          output_object_name=output_object_name,
+                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
+                          verbose=verbose, model_dir=model_dir, cluster=cluster)
 
-            g3 = RunModel(samples=np.array([x_1i_1j]), model_type=model_type, model_script=model_script,
-                          dimension=dimension, input_script=input_script, output_script=output_script, cpu=cpu)
+            g3 = RunModel(samples=x_1i_1j,  model_script=model_script,
+                          model_object_name=model_object_name,
+                          input_template=input_template, var_names=var_names, output_script=output_script,
+                          output_object_name=output_object_name,
+                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
+                          verbose=verbose, model_dir=model_dir, cluster=cluster)
 
-            d2u_dij.append((g0.model_eval.QOI[0] - g1.model_eval.QOI[0] - g2.model_eval.QOI[0] + g3.model_eval.QOI[0])
-                           / (4 * eps[i[0]] * eps[i[1]]))
-
-            print()
+            d2u_dij.append((g0.qoi_list[0] - g1.qoi_list[0] - g2.qoi_list[0] + g3.qoi_list[0])
+                           / (4 * eps[i[0]]*eps[i[1]]))
 
         return np.array(d2u_dij)
 
 
 def eval_hessian(dimension, mixed_der, der):
+
     """
     Calculate the hessian matrix with finite differences
     Parameters:
@@ -872,3 +911,149 @@ def eval_hessian(dimension, mixed_der, der):
         hessian[i[1], i[0]] = hessian[i[0], i[1]]
         add_ += 1
     return hessian
+
+def diagnostics(sampling_method, sampling_outputs=None, samples=None, weights=None,
+                figsize=None, eps_ESS=0.05, alpha_ESS=0.05):
+
+    """
+         Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
+
+
+         Input:
+             :param sampling_method: sampling method used to generate samples
+             :type sampling_method: str, 'MCMC' or 'IS'
+
+             :param sampling_outputs: output object of a sampling method
+             :type sampling_outputs: object of class MCMC or IS
+
+             :param samples: output samples of a sampling method (alternative to giving sampling_outputs for MCMC)
+             :type samples: ndarray
+
+             :param weights: output weights of IS (alternative to giving sampling_outputs for IS)
+             :type weights: ndarray
+
+             :param figsize: size of the figure for output plots
+             :type figsize: tuple (width, height)
+
+             :param eps_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
+             :type eps_ESS: float in [0,1]
+
+             :param alpha_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
+             :type alpha_ESS: float in [0,1]
+
+         Output:
+             returns various diagnostics values/plots to evaluate importance sampling and MCMC sampling outputs
+     """
+
+    if eps_ESS < 0  or eps_ESS > 1:
+        raise ValueError('UQpy error: eps_ESS should be a float between 0 and 1.')
+    if alpha_ESS < 0  or alpha_ESS > 1:
+        raise ValueError('UQpy error: alpha_ESS should be a float between 0 and 1.')
+
+    if sampling_method == 'IS':
+        if (sampling_outputs is None) and (weights is None):
+            raise ValueError('UQpy error: sampling_outputs or weights should be provided')
+        if sampling_outputs is not None:
+            weights = sampling_outputs.weights
+        print('Diagnostics for Importance Sampling \n')
+        effective_sample_size = 1/np.sum(weights**2, axis=0)
+        print('Effective sample size is ne={}, out of a total number of samples={} \n'.
+              format(effective_sample_size,np.size(weights)))
+        print('max_weight = {}, min_weight = {} \n'.format(max(weights), min(weights)))
+
+        # Output plots
+        if figsize is None:
+            figsize = (8,3)
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.scatter(weights, np.zeros((np.size(weights), )), s=weights*300, marker='o')
+        ax.set_xlabel('weights')
+        ax.set_title('Normalized weights out of importance sampling')
+        plt.show(fig)
+
+    elif sampling_method == 'MCMC':
+        if (sampling_outputs is None) and (samples is None):
+            raise ValueError('UQpy error: sampling_outputs or samples should be provided')
+        if sampling_outputs is not None:
+            samples = sampling_outputs.weights
+        print('Diagnostics for MCMC \n')
+        nsamples, nparams = samples.shape
+
+        # Acceptance ratio
+        if sampling_outputs is not None:
+            print('Acceptance ratio of the chain = {}. \n'.format(sampling_outputs.accept_ratio))
+
+        # Computation of ESS and min ESS
+        eps = eps_ESS
+        alpha = alpha_ESS
+
+        bn = np.ceil(nsamples**(1/2)) # nb of samples per bin
+        an = int(np.ceil(nsamples/bn)) # nb of bins, for computation of
+        idx = np.array_split(np.arange(nsamples), an)
+
+        means_subdivisions = np.empty((an, samples.shape[1]))
+        for i, idx_i in enumerate(idx):
+            x_sub = samples[idx_i, :]
+            means_subdivisions[i,:] = np.mean(x_sub, axis=0)
+        Omega = np.cov(samples.T)
+        Sigma = np.cov(means_subdivisions.T)
+        joint_ESS = nsamples*np.linalg.det(Omega)**(1/nparams)/np.linalg.det(Sigma)**(1/nparams)
+        chi2_value = chi2.ppf(1 - alpha, df=nparams)
+        min_joint_ESS = 2 ** (2 / nparams) * np.pi / (nparams * gamma(nparams / 2)) ** (
+                    2 / nparams) * chi2_value / eps ** 2
+        marginal_ESS = np.empty((nparams, ))
+        min_marginal_ESS = np.empty((nparams,))
+        for j in range(nparams):
+            marginal_ESS[j] = nsamples * Omega[j,j]/Sigma[j,j]
+            min_marginal_ESS[j] = 4 * norm.ppf(alpha/2)**2 / eps**2
+
+        print('Univariate Effective Sample Size in each dimension:')
+        for j in range(nparams):
+            print('Parameter # {}: ESS = {}, minimum ESS recommended = {}'.
+                  format(j+1, marginal_ESS[j], min_marginal_ESS[j]))
+        print('\nMultivariate Effective Sample Size:')
+        print('Multivariate ESS = {}, minimum ESS recommended = {}'.format(joint_ESS, min_joint_ESS))
+
+        # Output plots
+        if figsize is None:
+            figsize = (20,4*nparams)
+        fig, ax = plt.subplots(nrows=nparams, ncols=3, figsize=figsize)
+        for j in range(samples.shape[1]):
+            ax[j,0].plot(np.arange(nsamples), samples[:,j])
+            ax[j,0].set_title('chain - parameter # {}'.format(j+1))
+            ax[j,1].plot(np.arange(nsamples), np.cumsum(samples[:,j])/np.arange(nsamples))
+            ax[j,1].set_title('parameter convergence')
+            ax[j,2].acorr(samples[:,j]-np.mean(samples[:,j]), maxlags = 50, normed=True)
+            ax[j,2].set_title('correlation between samples')
+        plt.show(fig)
+
+    else:
+        raise ValueError('Supported sampling methods for diagnostics are "MCMC", "IS".')
+    return fig, ax
+
+
+def resample(samples, weights, method='multinomial', size=None):
+    nsamples = samples.shape[0]
+    if size is None:
+        size = nsamples
+    if method == 'multinomial':
+        multinomial_run = np.random.multinomial(size, weights, size=1)[0]
+        idx = list()
+        for j in range(nsamples):
+            if multinomial_run[j] > 0:
+                idx.extend([j for _ in range(multinomial_run[j])])
+        output = samples[idx, :]
+        return output
+    else:
+        raise ValueError('Exit code: Current available method: multinomial')
+
+
+@contextmanager
+def suppress_stdout():
+    """ A function to suppress output"""
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:
+            yield
+        finally:
+            sys.stdout = old_stdout
