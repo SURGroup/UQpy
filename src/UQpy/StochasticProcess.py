@@ -1,6 +1,6 @@
 """This module contains functionality for all the stochastic process generation supported by UQpy."""
 
-from UQpy.tools import *
+from UQpy.Utilities import *
 from UQpy.Distributions import *
 from scipy.linalg import sqrtm
 from scipy.stats import norm
