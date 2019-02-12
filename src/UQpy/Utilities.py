@@ -21,7 +21,6 @@ import scipy.stats as stats
 
 
 def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
-
     """
         Description:
 
@@ -77,7 +76,6 @@ def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
 
 
 def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
-
     """
         Description:
 
@@ -133,7 +131,6 @@ def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
 
 
 def run_corr(samples, corr):
-
     """
         Description:
 
@@ -162,7 +159,6 @@ def run_corr(samples, corr):
 
 
 def run_decorr(samples, corr):
-
     """
         Description:
 
@@ -193,7 +189,6 @@ def run_decorr(samples, corr):
 
 
 def correlation_distortion(marginal, params, rho_norm):
-
     """
         Description:
 
@@ -265,7 +260,6 @@ def correlation_distortion(marginal, params, rho_norm):
 
 
 def itam(marginal, params, corr, beta, thresh1, thresh2):
-
     """
         Description:
 
@@ -317,14 +311,14 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
     iter_ = 0
 
     print("UQpy: Initializing Iterative Translation Approximation Method (ITAM)")
-    while iter_ < max_iter and error1 > thresh1 and abs(error1-error0)/error0 > thresh2:
+    while iter_ < max_iter and error1 > thresh1 and abs(error1 - error0) / error0 > thresh2:
         error0 = error1
         corr0 = correlation_distortion(marginal, params, corr_norm0)
         error1 = np.linalg.norm(corr - corr0)
 
         max_ratio = np.amax(np.ones((len(corr), len(corr))) / abs(corr_norm0))
 
-        corr_norm = np.nan_to_num((corr / corr0)**beta * corr_norm0)
+        corr_norm = np.nan_to_num((corr / corr0) ** beta * corr_norm0)
 
         # Do not allow off-diagonal correlations to equal or exceed one
         corr_norm[corr_norm < -1.0] = (max_ratio + 1) / 2 * corr_norm0[corr_norm < -1.0]
@@ -345,7 +339,6 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
 
 
 def bi_variate_normal_pdf(x1, x2, rho):
-
     """
 
         Description:
@@ -365,13 +358,12 @@ def bi_variate_normal_pdf(x1, x2, rho):
         Output:
 
     """
-    return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
-            np.exp(-1/(2*(1-rho**2)) *
-                   (x1**2 - 2 * rho * x1 * x2 + x2**2)))
+    return (1 / (2 * np.pi * np.sqrt(1 - rho ** 2)) *
+            np.exp(-1 / (2 * (1 - rho ** 2)) *
+                   (x1 ** 2 - 2 * rho * x1 * x2 + x2 ** 2)))
 
 
 def _get_a_plus(a):
-
     """
         Description:
 
@@ -393,7 +385,6 @@ def _get_a_plus(a):
 
 
 def _get_ps(a, w=None):
-
     """
         Description:
 
@@ -407,7 +398,6 @@ def _get_ps(a, w=None):
 
 
 def _get_pu(a, w=None):
-
     """
         Description:
 
@@ -421,7 +411,6 @@ def _get_pu(a, w=None):
 
 
 def nearest_psd(a, nit=10):
-
     """
         Description:
             A function to compute the nearest positive semi definite matrix of a given matrix
@@ -444,7 +433,6 @@ def nearest_psd(a, nit=10):
     delta_s = 0
     y_k = a.copy()
     for k in range(nit):
-
         r_k = y_k - delta_s
         x_k = _get_ps(r_k, w=w)
         delta_s = x_k - r_k
@@ -454,7 +442,6 @@ def nearest_psd(a, nit=10):
 
 
 def nearest_pd(a):
-
     """
         Description:
 
@@ -499,14 +486,13 @@ def nearest_pd(a):
     k = 1
     while not is_pd(a3):
         min_eig = np.min(np.real(np.linalg.eigvals(a3)))
-        a3 += np.eye(a.shape[0]) * (-min_eig * k**2 + spacing)
+        a3 += np.eye(a.shape[0]) * (-min_eig * k ** 2 + spacing)
         k += 1
 
     return a3
 
 
 def is_pd(b):
-
     """
         Description:
 
@@ -526,7 +512,6 @@ def is_pd(b):
 
 
 def estimate_psd(samples, nt, t):
-
     """
         Description: A function to estimate the Power Spectrum of a stochastic process given an ensemble of samples
 
@@ -552,8 +537,105 @@ def estimate_psd(samples, nt, t):
     return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
 
 
-def s_to_r(s, w, t):
+def wiener_kinchin_r(r):
+    return np.fft.fftn(r)
 
+
+def estimate_power_spectrum(samples):
+    nsamples, nt = samples.shape
+    nw = int(nt / 2)
+    Xw = np.fft.ifft(samples, axis=1)
+    Xw = Xw[:, :nw]
+    # Initializing the array before hand
+    s_P = np.zeros([nsamples, nw])
+    s_P = s_P + 1.0j * s_P
+    for i1 in range(nw):
+        s_P[..., i1] = s_P[..., i1] + np.einsum('i, i-> i', Xw[..., i1], np.conj(Xw[..., i1]))
+    m_P = np.mean(s_P, axis=0)
+    return m_P
+
+
+def estimate_bispectrum(samples):
+    nsamples, nt = samples.shape
+    nw = int(nt / 2)
+    Xw = np.fft.ifft(samples, axis=1)
+    Xw = Xw[:, :nw]
+    # Initializing the array before hand
+    s_B = np.zeros([nsamples, nw, nw])
+    s_B = s_B + 1.0j * s_B
+    for i1 in range(nw):
+        for i2 in range(nw - i1):
+            s_B[..., i1, i2] = s_B[..., i1, i2] + np.einsum('i, i, i-> i', Xw[..., i1], Xw[..., i2],
+                                                            np.conj(Xw[..., i1 + i2]))
+    m_B = np.mean(s_B, axis=0)
+    return m_B
+
+
+def estimate_trispectrum(samples):
+    nsamples, nt = samples.shape
+    nw = int(nt / 2)
+    Xw = np.fft.ifft(samples, axis=1)
+    Xw = Xw[:, :nw]
+    # Initializing the array before hand
+    s_T = np.zeros([nsamples, nw, nw, nw])
+    s_T = s_T + 1.0j * s_T
+    for i1 in range(nw):
+        for i2 in range(nw - i1):
+            for i3 in range(nw - i1 - i2):
+                s_T[..., i1, i2, i3] = s_T[..., i1, i2, i3] + np.einsum('i, i, i, i-> i', Xw[:, i1], Xw[:, i2],
+                                                                        Xw[:, i3], np.conj(Xw[:, i1 + i2 + i3]))
+    m_T = np.mean(s_T, axis=0)
+    return m_T
+
+
+def estimate_cross_power_spectrum(samples):
+    nsamples, m, nt = samples.shape
+    nw = int(nt / 2)
+    Xw = np.fft.ifft(samples, axis=2)
+    Xw = Xw[:, :, :nw]
+    # Initializing the array before hand
+    s_P = np.zeros([nsamples, m, m, nw])
+    s_P = s_P + 1.0j * s_P
+    for i1 in range(nw):
+        s_P[..., i1] = s_P[..., i1] + np.einsum('ij, ik-> ijk', Xw[..., i1], np.conj(Xw[..., i1]))
+    m_P = np.mean(s_P, axis=0)
+    return m_P
+
+
+def estimate_cross_bispectrum(samples):
+    nsamples, m, nt = samples.shape
+    nw = int(nt / 2)
+    Xw = np.fft.ifft(samples, axis=2)
+    Xw = Xw[:, :, :nw]
+    # Initializing the array before hand
+    s_B = np.zeros([nsamples, m, m, m, nw, nw])
+    s_B = s_B + 1.0j * s_B
+    for i1 in range(nw):
+        for i2 in range(nw - i1):
+            s_B[..., i1, i2] = s_B[..., i1, i2] + np.einsum('ij, ik, il-> ijkl', Xw[..., i1], Xw[..., i2],
+                                                            np.conj(Xw[..., i1 + i2]))
+    m_B = np.mean(s_B, axis=0)
+    return m_B
+
+
+def estimate_cross_trispectrum(samples):
+    nsamples, m, nt = samples.shape
+    nw = int(nt / 2)
+    Xw = np.fft.ifft(samples, axis=2)
+    Xw = Xw[:, :, :nw]
+    # Initializing the array before hand
+    s_T = np.zeros([nsamples, m, m, m, m, nw, nw, nw])
+    s_T = s_T + 1.0j * s_T
+    for i1 in range(nw):
+        for i2 in range(nw - i1):
+            for i3 in range(nw - i1 - i2):
+                s_T[..., i1, i2, i3] = s_T[..., i1, i2, i3] + np.einsum('ij, ij, il, im-> ijklm', Xw[:, i1], Xw[:, i2],
+                                                                        Xw[:, i3], np.conj(Xw[:, i1 + i2 + i3]))
+    m_T = np.mean(s_T, axis=0)
+    return m_T
+
+
+def s_to_r(s, w, t):
     """
         Description:
 
@@ -585,7 +667,6 @@ def s_to_r(s, w, t):
 
 
 def r_to_s(r, w, t):
-
     """
         Description: A function to transform the autocorrelation function to a power spectrum
 
@@ -614,7 +695,7 @@ def r_to_s(r, w, t):
     return s
 
 
-def gradient(sample=None, dimension=None, eps=None,  model_type=None, model_script=None, input_script=None,
+def gradient(sample=None, dimension=None, eps=None, model_type=None, model_script=None, input_script=None,
              output_script=None, cpu=None, order=None):
     """
          Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
@@ -697,7 +778,7 @@ def gradient(sample=None, dimension=None, eps=None,  model_type=None, model_scri
         dimension = sample[0].shape[1]
 
     if eps is None:
-        eps = [0.1]*dimension
+        eps = [0.1] * dimension
     elif isinstance(eps, float):
         eps = [eps] * dimension
     elif isinstance(eps, list):
@@ -715,22 +796,22 @@ def gradient(sample=None, dimension=None, eps=None,  model_type=None, model_scri
             x_1i_j = np.array(sample[0])
             x_1i_j[i] -= eps[i]
 
-            g0 = RunModel(samples=np.array([x_i1_j]),  model_type=model_type, model_script=model_script,
+            g0 = RunModel(samples=np.array([x_i1_j]), model_type=model_type, model_script=model_script,
                           dimension=dimension,
                           input_script=input_script, output_script=output_script, cpu=cpu)
 
-            g1 = RunModel(samples=np.array([x_1i_j]),  model_type=model_type, model_script=model_script,
+            g1 = RunModel(samples=np.array([x_1i_j]), model_type=model_type, model_script=model_script,
                           dimension=dimension,
                           input_script=input_script, output_script=output_script, cpu=cpu)
 
-            du_dj[i] = (g0.model_eval.QOI[0] - g1.model_eval.QOI[0])/(2*eps[i])
+            du_dj[i] = (g0.model_eval.QOI[0] - g1.model_eval.QOI[0]) / (2 * eps[i])
 
             if order == 'second':
                 g = RunModel(samples=np.array(sample), model_type=model_type, model_script=model_script,
                              dimension=dimension,
                              input_script=input_script, output_script=output_script, cpu=cpu)
 
-                d2u_dj[i] = (g0.model_eval.QOI[0] - 2 * g.model_eval.QOI[0] + g1.model_eval.QOI[0]) / (eps[i]**2)
+                d2u_dj[i] = (g0.model_eval.QOI[0] - 2 * g.model_eval.QOI[0] + g1.model_eval.QOI[0]) / (eps[i] ** 2)
 
         return np.vstack([du_dj, d2u_dj])
 
@@ -756,20 +837,20 @@ def gradient(sample=None, dimension=None, eps=None,  model_type=None, model_scri
             x_1i_1j[i[0]] -= eps[i[0]]
             x_1i_1j[i[1]] -= eps[i[1]]
 
-            g0 = RunModel(samples=np.array([x_i1_j1]),  model_type=model_type, model_script=model_script,
+            g0 = RunModel(samples=np.array([x_i1_j1]), model_type=model_type, model_script=model_script,
                           dimension=dimension, input_script=input_script, output_script=output_script, cpu=cpu)
 
-            g1 = RunModel(samples=np.array([x_i1_1j]),  model_type=model_type, model_script=model_script,
+            g1 = RunModel(samples=np.array([x_i1_1j]), model_type=model_type, model_script=model_script,
                           dimension=dimension, input_script=input_script, output_script=output_script, cpu=cpu)
 
-            g2 = RunModel(samples=np.array([x_1i_j1]),  model_type=model_type, model_script=model_script,
+            g2 = RunModel(samples=np.array([x_1i_j1]), model_type=model_type, model_script=model_script,
                           dimension=dimension, input_script=input_script, output_script=output_script, cpu=cpu)
 
-            g3 = RunModel(samples=np.array([x_1i_1j]),  model_type=model_type, model_script=model_script,
+            g3 = RunModel(samples=np.array([x_1i_1j]), model_type=model_type, model_script=model_script,
                           dimension=dimension, input_script=input_script, output_script=output_script, cpu=cpu)
 
             d2u_dij.append((g0.model_eval.QOI[0] - g1.model_eval.QOI[0] - g2.model_eval.QOI[0] + g3.model_eval.QOI[0])
-                           / (4 * eps[i[0]]*eps[i[1]]))
+                           / (4 * eps[i[0]] * eps[i[1]]))
 
             print()
 
@@ -777,7 +858,6 @@ def gradient(sample=None, dimension=None, eps=None,  model_type=None, model_scri
 
 
 def eval_hessian(dimension, mixed_der, der):
-
     """
     Calculate the hessian matrix with finite differences
     Parameters:
@@ -792,4 +872,3 @@ def eval_hessian(dimension, mixed_der, der):
         hessian[i[1], i[0]] = hessian[i[0], i[1]]
         add_ += 1
     return hessian
-

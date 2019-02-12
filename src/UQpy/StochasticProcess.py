@@ -283,11 +283,14 @@ class Translation:
     :param samples_g: Gaussian Stochastic Processes
     :type samples_g: numpy.ndarray
 
+    # :param S_g: Power Spectrum of the Gaussian Stochastic Processes
+    # :type S_g: numpy.ndarray
+
     :param R_g: Auto-correlation Function of the Gaussian Stochastic Processes
     :type R_g: numpy.ndarray
 
-    :param marginal: list of marginal
-    :type marginal: list
+    :param marginal: name of marginal
+    :type marginal: str
 
     :param params: list of parameters for the marginal
     :type params: list
@@ -299,22 +302,32 @@ class Translation:
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:08/06/2018 Lohit Vandanapu
+    # Last Modified:13/01/2019 Lohit Vandanapu
 
-    def __init__(self, samples_g, R_g, marginal, params):
+    def __init__(self, samples_g, marginal, params, dt, dw, nt, nw, S_g=None, R_g=None):
         self.samples_g = samples_g
-        self.R_g = R_g
+        if R_g or S_g is None:
+            print('Atleast one of them should be specified')
+        else:
+            if R_g is None:
+                self.S_g = S_g
+                self.R_g = S_g # Perform Weiner Kinchin transform
+            elif S_g is None:
+                self.R_g = R_g
+                self.S_g = R_g # Perform Weiner Kinchin Transform
         self.num = self.R_g.shape[0]
         self.dim = len(self.R_g.shape)
         self.marginal = marginal
         self.params = params
         self.samples_ng = self.translate_g_samples()
         self.R_ng = self.autocorrealtion_distortion()
+        self.S_ng = self.R_ng # Perform Weiner Khinchin Transform
 
     def translate_g_samples(self):
         std = np.sqrt(np.var(self.samples_g))
         samples_cdf = norm.cdf(self.samples_g, scale=std)
-        samples_ng = inv_cdf(self.marginal)[0](samples_cdf, self.params[0])
+        # samples_ng = inv_cdf(self.marginal)[0](samples_cdf, self.params[0])
+        samples_ng = Distribution(self.marginal, self.params).icdf(samples_cdf, self.params)
         return samples_ng
 
     def autocorrealtion_distortion(self):
@@ -326,6 +339,8 @@ class Translation:
         return R_ng
 
     def solve_integral(self, rho):
+        if rho == 1.0:
+            rho = 0.999
         n = 1024
         zmax = 8
         zmin = -zmax
@@ -343,10 +358,14 @@ class Translation:
 
         weights2d = first * second
         w2d = weights2d.flatten()
-        tmp_f_xi = inv_cdf(self.marginal)[0](stats.norm.cdf(xi), self.params[0])
-        tmp_f_eta = inv_cdf(self.marginal)[0](stats.norm.cdf(eta), self.params[0])
+        # tmp_f_xi = inv_cdf(self.marginal)[0](stats.norm.cdf(xi), self.params[0])
+        # tmp_f_eta = inv_cdf(self.marginal)[0](stats.norm.cdf(eta), self.params[0])
+        tmp_f_xi = Distribution(self.marginal, self.params).icdf(stats.norm.cdf(xi), self.params)
+        tmp_f_eta = Distribution(self.marginal, self.params).icdf(stats.norm.cdf(eta), self.params)
         coef = tmp_f_xi * tmp_f_eta * w2d
         rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
+        rho_non = (rho_non - (Distribution(self.marginal, self.params).moments(self.params)[0]) ** 2) / \
+                  Distribution(self.marginal, self.params).moments(self.params)[1]
         return rho_non
 
 
@@ -363,8 +382,8 @@ class InverseTranslation:
     :param R_ng: Auto-correlation Function of the Gaussian Stochastic Processes
     :type R_ng: numpy.ndarray
 
-    :param marginal: list of marginal
-    :type marginal: list
+    :param marginal: mane of the marginal
+    :type marginal: str
 
     :param params: list of parameters for the marginal
     :type params: list
@@ -376,11 +395,19 @@ class InverseTranslation:
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:08/06/2018 Lohit Vandanapu
+    # Last Modified:13/01/2019 Lohit Vandanapu
 
-    def __init__(self, samples_ng, R_ng, marginal, params):
+    def __init__(self, samples_ng, marginal, params, R_ng=None, S_ng=None):
         self.samples_ng = samples_ng
-        self.R_ng = R_ng
+        if R_ng or S_ng is None:
+            print('Atleast one of them should be specified')
+        else:
+            if R_ng is None:
+                self.S_ng = S_ng
+                self.R_ng = S_ng # Perform Weiner Kinchin transform
+            elif S_g is None:
+                self.R_ng = R_ng
+                self.S_ng = R_ng # Perform Weiner Kinchin Transform
         self.num = self.R_ng.shape[0]
         self.dim = len(self.R_ng.shape)
         self.marginal = marginal
@@ -389,8 +416,10 @@ class InverseTranslation:
         self.R_g = self.itam()
 
     def inverse_translate_ng_samples(self):
-        samples_cdf = cdf(self.marginal)[0](self.samples_ng, self.params[0])
-        samples_g = inv_cdf(['Normal'])[0](samples_cdf, [0, 1])
+        # samples_cdf = cdf(self.marginal)[0](self.samples_ng, self.params[0])
+        # samples_g = inv_cdf(['Normal'])[0](samples_cdf, [0, 1])
+        samples_cdf = Distribution(self.marginal, self.params).cdf(self.samples_ng, self.params)
+        samples_g = Distribution('Normal', [0, 1]).icdf(samples_cdf, [0, 1])
         return samples_g
 
     def itam(self):
@@ -430,6 +459,8 @@ class InverseTranslation:
         return corr_norm1
 
     def solve_integral(self, rho):
+        if rho == 1.0:
+            rho = 0.999
         n = 1024
         zmax = 8
         zmin = -zmax
@@ -447,8 +478,12 @@ class InverseTranslation:
 
         weights2d = first * second
         w2d = weights2d.flatten()
-        tmp_f_xi = inv_cdf(self.marginal)[0](stats.norm.cdf(xi), self.params[0])
-        tmp_f_eta = inv_cdf(self.marginal)[0](stats.norm.cdf(eta), self.params[0])
+        tmp_f_xi = Distribution(self.marginal, self.params).icdf(stats.norm.cdf(xi), self.params)
+        tmp_f_eta = Distribution(self.marginal, self.params).icdf(stats.norm.cdf(eta), self.params)
+        # tmp_f_xi = inv_cdf(self.marginal)[0](stats.norm.cdf(xi), self.params[0])
+        # tmp_f_eta = inv_cdf(self.marginal)[0](stats.norm.cdf(eta), self.params[0])
         coef = tmp_f_xi * tmp_f_eta * w2d
         rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
+        rho_non = (rho_non - (Distribution(self.marginal, self.params).moments(self.params)[0]) ** 2) / \
+                  Distribution(self.marginal, self.params).moments(self.params)[1]
         return rho_non
