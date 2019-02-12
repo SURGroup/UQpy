@@ -10,7 +10,9 @@ import itertools
 class SRM:
     """
     A class to simulate Stochastic Processes from a given power spectrum density based on the Spectral Representation
-    Method. This class can simulate both uni-variate and multi-variate multi-dimensional Stochastic Processes.
+    Method. This class can simulate both uni-variate and multi-variate multi-dimensional Stochastic Processes. Uses
+    Singular Value Decomposition as opposed to Cholesky Decomposition to be more robust with near-Positive Definite
+    multi-dimensional Power Spectra.
 
     Input:
 
@@ -34,19 +36,15 @@ class SRM:
                     2. 'multi' - Multi-variate
     :type case: str
 
-    :param g: The cross - Power Spectral Density. Used only for the Multi-variate case.
-                    Default: None
-    :type g: numpy.ndarray
-
     Output:
 
     :rtype: samples: numpy.ndarray
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:08/04/2018 Lohit Vandanapu
+    # Last Modified:02/12/2019 Lohit Vandanapu
 
-    def __init__(self, nsamples, S, dw, nt, nw, case='uni', g=None):
+    def __init__(self, nsamples, S, dw, nt, nw, case='uni'):
         self.S = S
         self.dw = dw
         self.nt = nt
@@ -60,10 +58,9 @@ class SRM:
             self.samples = self._simulate_uni(self.phi)
         elif self.case == 'multi':
             self.m = self.S.shape[0]
-            self.n = len(S.shape[1:])
-            self.g = g
+            self.n = len(S.shape[2:])
             self.phi = np.random.uniform(
-                size=np.append(self.nsamples, np.append(self.m, np.ones(self.n, dtype=np.int32) * self.nw))) * 2 * np.pi
+                size=np.append(self.nsamples, np.append(np.ones(self.n, dtype=np.int32) * self.nw, self.m))) * 2 * np.pi
             self.samples = self._simulate_multi(self.phi)
 
     def _simulate_uni(self, phi):
@@ -73,49 +70,21 @@ class SRM:
         return samples
 
     def _simulate_multi(self, phi):
-        # Assembly of S_jk
-        S_sqrt = np.sqrt(self.S)
-        S_jk = np.einsum('i...,j...->ij...', S_sqrt, S_sqrt)
-        # Assembly of g_jk
-        g_jk = np.zeros_like(S_jk)
-        l = 0
-        for i in range(self.m):
-            for j in range(i + 1, self.m):
-                g_jk[i, j] = self.g[l]
-                l = l + 1
-        g_jk = np.einsum('ij...->ji...', g_jk) + g_jk
-
-        for i in range(self.m):
-            g_jk[i, i] = np.ones_like(S_jk[0, 0])
-        S = S_jk * g_jk
-
-        S = np.einsum('ij...->...ij', S)
-        S1 = S[..., :, :]
-        H_jk = np.zeros_like(S1)
-        for i in range(len(S1)):
-            try:
-                H_jk[i] = np.linalg.cholesky(S1[i])
-            except:
-                H_jk[i] = np.linalg.cholesky(nearestPD(S1[i]))
-        H_jk = H_jk.reshape(S.shape)
-        H_jk = np.einsum('...ij->ij...', H_jk)
-        samples_list = []
-        for i in range(self.m):
-            samples = 0
-            for j in range(i + 1):
-                B = H_jk[i, j] * np.sqrt(2 ** (self.n + 1) * np.prod(self.dw)) * np.exp(phi[:, j] * 1.0j)
-                sample = np.fft.fftn(B, np.ones(self.n, dtype=np.int32) * self.nt)
-                samples += np.real(sample)
-            samples_list.append(samples)
-        samples_list = np.array(samples_list)
-        # samples = translate_process(samples, self.Dist, self.mu, self.sig, self.parameter1, self.parameter2)
-        return np.einsum('ij...->ji...', samples_list)
-
+        S = np.einsum('ij...->...ij', self.S)
+        Coeff = np.sqrt(2 ** (self.n + 1)) * np.sqrt(np.prod(self.dw))
+        U, s, V = np.linalg.svd(S)
+        R = np.einsum('...ij,...j->...ij', U, np.sqrt(s))
+        F = Coeff * np.einsum('...ij,n...j -> n...i', R, np.exp(phi * 1.0j))
+        F[np.isnan(F)] = 0
+        samples = np.real(np.fft.fftn(F, s=[self.nt for _ in range(self.n)], axes=tuple(np.arange(1, 1+self.n))))
+        return samples
 
 class BSRM:
     """
-    A class to simulate Stochastic Processes from a given power spectrum and bispectrum density based on the
-    BiSpectral Representation Method.
+    A class to simulate Stochastic Processes from a given power spectrum and bispectrum density based on the BiSpectral
+    Representation Method.This class can simulate both uni-variate and multi-variate multi-dimensional Stochastic
+    Processes. This class uses Singular Value Decomposition as opposed to Cholesky Decomposition to be more robust with
+    near-Positive Definite multi-dimensional Power Spectra.
 
     Input:
 
@@ -146,9 +115,9 @@ class BSRM:
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:08/04/2018 Lohit Vandanapu
+    # Last Modified:02/12/2019 Lohit Vandanapu
 
-    def __init__(self, n_sim, S, B, dt, dw, nt, nw, case='uni', g=None):
+    def __init__(self, n_sim, S, B, dt, dw, nt, nw, case='uni'):
         self.n_sim = n_sim
         self.nw = nw
         self.nt = nt
