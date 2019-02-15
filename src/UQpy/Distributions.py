@@ -21,36 +21,35 @@ import scipy.stats as stats
 import os
 import numpy as np
 
-
 # Authors: Dimitris G.Giovanis, Michael D. Shields
-# Last Modified: 12/4/18 by Dimitris G. Giovanis
-
+# Last Modified: 12/10/2018 by Audrey Olivier
 
 ########################################################################################################################
 #        Define the probability distribution of the random parameters
 ########################################################################################################################
 
+
 class Distribution:
     """
         Description:
 
-        Main distribution class available to the user. The user can define a probability distribution by providing:
-        - a name that points to a univariate/multivariate distribution (see supported distributions in SubDistribution
-        class or custom distribution)
-        - a list of names that points to a list of univariate distributions. In that case, a multivariate distribution
-        is built for which all dimensions are independent and given by Distribution(name)
-        - a list of names and a copula, in that case a multivariate distribution is built using Distribution(name)
-        for the marginal pdfs, while the dependence structure is given by the copula.
+            Main distribution class available to the user. The user can define a probability distribution by providing:
+            - a name that points to a univariate/multivariate distribution (see supported distributions in SubDistribution
+            class or custom distribution)
+            - a list of names that points to a list of univariate distributions. In that case, a multivariate distribution
+            is built for which all dimensions are independent and given by Distribution(name)
+            - a list of names and a copula, in that case a multivariate distribution is built using Distribution(name)
+            for the marginal pdfs, while the dependence structure is given by the copula.
 
-        The following methods are defined:
+            The following methods are defined:
 
-            1. pdf: probability density function
-            2. cdf: cumulative distribution function
-            3. icdf inverse cumulative distribution function
-            4. rvs: generate random numbers (it doesn't need a point)
-            5. log_pdf: logarithm of the pdf
-            6. fit: Estimates the parameters of the distribution over arbitrary data
-            7. moments: Calculate the first four moments of the distribution (mean, variance, skewness, kyrtosis)
+                1. pdf: probability density function
+                2. cdf: cumulative distribution function
+                3. icdf inverse cumulative distribution function
+                4. rvs: generate random numbers (it doesn't need a point)
+                5. log_pdf: logarithm of the pdf
+                6. fit: Estimates the parameters of the distribution over arbitrary data
+                7. moments: Calculate the first four moments of the distribution (mean, variance, skewness, kurtosis)
 
         Input:
             :param name: Name of distribution.
@@ -80,14 +79,6 @@ class Distribution:
         else:
             self.copula = None
 
-        # Compute n_params for the distribution, is it necessary?
-        # if isinstance(self.name, str):
-        #     self.n_params = SubDistribution(name=self.name).n_params()
-        # elif isinstance(self.name, list):
-        #     n_params_i = [SubDistribution(name=name_i).n_params() for name_i in self.name]
-        #     if self.copula is None:
-        #         self.n_params = sum(n_params_i)
-
     def pdf(self, x, params, copula_params=None):
 
         if isinstance(self.name, str):
@@ -101,36 +92,26 @@ class Distribution:
             if self.copula is None:
                 return prod_pdf
             else:
-                c = self.copula.pdf_term(x=x, dist_params=params, copula_params=copula_params)
+                _, c = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
                 return prod_pdf * c
 
-    def log_pdf(self, x, params):
+    def log_pdf(self, x, params, copula_params=None):
 
         if isinstance(self.name, str):
             return SubDistribution(name=self.name).log_pdf(x, params)
         elif isinstance(self.name, list):
             if (x.shape[1] != len(self.name)) or (len(params) != len(self.name)):
                 raise ValueError('UQpy error: Inconsistent dimensions')
+            sum_log_pdf = 0
+            for i in range(len(self.name)):
+                sum_log_pdf = sum_log_pdf + SubDistribution(self.name[i]).log_pdf(x[:, i], params[i])
             if self.copula is None:
-                sum_log_pdf = 0
-                for i in range(len(self.name)):
-                    sum_log_pdf = sum_log_pdf + SubDistribution(self.name[i]).log_pdf(x[:, i], params[i])
                 return sum_log_pdf
+            else:
+                _, c = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
+                return sum_log_pdf + np.log(c)
 
-    def rvs(self, params, nsamples=1):
-
-        if isinstance(self.name, str):
-            return SubDistribution(name=self.name).rvs(params, nsamples)
-        elif isinstance(self.name, list):
-            if len(params) != len(self.name):
-                raise ValueError('UQpy error: Inconsistent dimensions')
-            if self.copula is None:
-                rvs = np.zeros((nsamples, len(self.name)))
-                for i in range(len(self.name)):
-                    rvs[:, i] = SubDistribution(self.name[i]).rvs(params[i], nsamples)
-                return rvs
-
-    def cdf(self, x, params):
+    def cdf(self, x, params, copula_params=None):
 
         if isinstance(self.name, str):
             return SubDistribution(name=self.name).cdf(x, params)
@@ -138,10 +119,13 @@ class Distribution:
             if (len(params) != len(self.name)) or (x.shape[1] != len(self.name)):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             if self.copula is None:
-                icdfs = []
+                cdfs = np.zeros_like(x)
                 for i in range(len(self.name)):
-                    icdfs.append(SubDistribution(self.name[i]).icdf(x[:, i], params[i]))
-                return icdfs
+                    cdfs[:,i] = SubDistribution(self.name[i]).cdf(x[:, i], params[i])
+                return np.prod(cdfs, axis=1)
+            else:
+                c, _ = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
+                return c
 
     def icdf(self, x, params):
 
@@ -155,6 +139,23 @@ class Distribution:
                 for i in range(len(self.name)):
                     icdfs.append(SubDistribution(self.name[i]).icdf(x[:, i], params[i]))
                 return icdfs
+            else:
+                raise AttributeError('Method icdf not defined for distributions with copula.')
+
+    def rvs(self, params, nsamples=1):
+
+        if isinstance(self.name, str):
+            return SubDistribution(name=self.name).rvs(params, nsamples)
+        elif isinstance(self.name, list):
+            if len(params) != len(self.name):
+                raise ValueError('UQpy error: Inconsistent dimensions')
+            if self.copula is None:
+                rvs = np.zeros((nsamples, len(self.name)))
+                for i in range(len(self.name)):
+                    rvs[:, i] = SubDistribution(self.name[i]).rvs(params[i], nsamples)
+                return rvs
+            else:
+                raise AttributeError('Method rvs not defined for distributions with copula.')
 
     def fit(self, x):
 
@@ -168,6 +169,8 @@ class Distribution:
                 for i in range(len(self.name)):
                     params_fit.append(SubDistribution(self.name[i]).fit(x[:, i]))
                 return params_fit
+            else:
+                raise AttributeError('Method fit not defined for distributions with copula.')
 
     def moments(self, params):
 
@@ -181,20 +184,39 @@ class Distribution:
                 for i in range(len(self.name)):
                     mean[i], var[i], skew[i], kurt[i] = SubDistribution(self.name[i]).moments(params[i])
                 return mean, var, skew, kurt
+            else:
+                raise AttributeError('Method moments not defined for distributions with copula.')
 
 
 class Copula:
+    """
+        Description:
+
+            This class computes terms required to compute cdf, pdf and log_pdf for a multivariate distribution whose
+            dependence structure is defined with a copula. The following copula are supported:
+            [gumbel]
+
+        Input:
+            :param copula_name: Name of copula.
+            :type: copula_name: string
+
+            :param dist_name: names of the marginal distributions.
+            :type: dist_name: list of strings
+
+        Output:
+            A handler pointing to a copula and its associated methods, in particular its method evaluate_copula, which
+            evaluates the terms c, c_ necessary to evaluate the cdf and pdf, respectively, of the multivariate
+            Distribution.
+    """
 
     def __init__(self, copula_name=None, dist_name=None):
 
-        if copula_name is None:
-            raise ValueError('UQpy error: a name must be provided for the copula.')
-        if copula_name.lower() not in ['gumbel']:
-            raise ValueError('UQpy error: supported copulas are Gumbel, ...')
+        if copula_name is None or dist_name is None:
+            raise ValueError('Both copula_name and dist_name must be provided.')
         self.copula_name = copula_name
         self.dist_name = dist_name
 
-    def pdf_term(self, x, dist_params, copula_params):
+    def evaluate_copula(self, x, dist_params, copula_params):
 
         if self.copula_name.lower() == 'gumbel':
             if x.shape[1] > 2:
@@ -203,13 +225,13 @@ class Copula:
                 copula_params = [copula_params]
             if copula_params[0] < 1:
                 raise ValueError('The parameter for Gumbel copula must be defined in [1, +oo)')
-            if copula_params[0] == 1:
-                return np.ones(x.shape[0])
-            else:
-                uu = np.zeros_like(x)
-                for i in range(uu.shape[1]):
-                    uu[:, i] = SubDistribution(self.dist_name[i]).cdf(x[:, i], dist_params[i])
 
+            uu = np.zeros_like(x)
+            for i in range(uu.shape[1]):
+                uu[:, i] = SubDistribution(self.dist_name[i]).cdf(x[:, i], dist_params[i])
+            if copula_params[0] == 1:
+                return np.prod(uu, axis=1), np.ones(x.shape[0])
+            else:
                 u = uu[:, 0]
                 v = uu[:, 1]
                 c = np.exp(-((-np.log(u)) ** copula_params[0]+(-np.log(v)) ** copula_params[0]) **
@@ -219,19 +241,16 @@ class Copula:
                      (-2 + 2/copula_params[0]) * (np.log(u) * np.log(v)) ** (copula_params[0]-1) *\
                      (1 + (copula_params[0] - 1) * ((-np.log(u)) ** copula_params[0] +
                                                     (-np.log(v)) ** copula_params[0]) ** (-1/copula_params[0]))
-                return c_
+                return c, c_
         else:
             raise ValueError('Copula type not supported!')
 
 
 class SubDistribution:
+    """
+        Description:
 
-    def __init__(self, name=None):
-
-        """
-            Description:
-
-            A module containing functions of a wide variaty of known distributions that can be found in the package
+            A module containing functions of a wide variety of known distributions that can be found in the package
             scipy.stats. This subclass is called by the Distribution class whenever appropriate.
 
             The supported univariate distributions are:
@@ -254,13 +273,15 @@ class SubDistribution:
                 6. fit: Estimates the parameters of the distribution over arbitrary data
                 7. moments: Calculate the first four moments of the distribution (mean, variance, skewness, kyrtosis)
 
-            Input:
-                :param name: Name of distribution.
-                :type: name: string
+        Input:
+            :param name: Name of distribution.
+            :type: name: string
 
-            Output:
-                A handler pointing to the aforementioned distribution functions.
-        """
+        Output:
+            A handler pointing to the aforementioned distribution functions.
+    """
+
+    def __init__(self, name=None):
 
         self.name = name
 
@@ -312,11 +333,11 @@ class SubDistribution:
             else:
                 raise FileExistsError()
 
-            if hasattr(custom_dist, 'pdf'):
-                pdf = getattr(custom_dist, 'pdf')
-                return pdf(x, params)
+            tmp = getattr(custom_dist, 'pdf', None)
+            if tmp is None:
+                raise AttributeError('Method pdf not defined for distribution '+self.name+'.')
             else:
-                return getattr(custom_dist, 'pdf', 'Attribute pdf not defined.')
+                return tmp(x, params)
 
     def rvs(self, params, nsamples):
         if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
@@ -363,11 +384,11 @@ class SubDistribution:
             else:
                 raise FileExistsError()
 
-            if hasattr(custom_dist, 'rvs'):
-                rvs = getattr(custom_dist, 'rvs')
-                return rvs(nsamples, params)
+            tmp = getattr(custom_dist, 'rvs', None)
+            if tmp is None:
+                raise AttributeError('Method rvs not defined for distribution '+self.name+'.')
             else:
-                return getattr(custom_dist, 'rvs', 'Attribute rvs not defined.')
+                return tmp(params, nsamples)
 
     def cdf(self, x, params):
         if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
@@ -404,7 +425,7 @@ class SubDistribution:
             return stats.laplace.cdf(x, loc=params[0], scale=params[1])
         elif self.name.lower() == 'maxwell':
             return stats.maxwell.cdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'maxwell':
+        elif self.name.lower() == 'mvnormal':
             return stats.multivariate_normal.cdf(x, mean=params[0], cov=params[1])
         else:
             file_name = os.path.join(self.name + '.py')
@@ -414,11 +435,11 @@ class SubDistribution:
             else:
                 raise FileExistsError()
 
-            if hasattr(custom_dist, 'cdf'):
-                cdf = getattr(custom_dist, 'cdf')
-                return cdf(x, params)
+            tmp = getattr(custom_dist, 'cdf', None)
+            if tmp is None:
+                raise AttributeError('Method cdf not defined for distribution '+self.name+'.')
             else:
-                return getattr(custom_dist, 'cdf', 'Attribute cdf not defined.')
+                return tmp(x, params)
 
     def icdf(self, x, params):
         if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
@@ -456,7 +477,7 @@ class SubDistribution:
         elif self.name.lower() == 'maxwell':
             return stats.maxwell.ppf(x, loc=params[0], scale=params[1])
         elif self.name.lower() == 'mvnormal':
-            raise ValueError('UQpy error: multivariate normal does not have an icdf method.')
+            raise ValueError('Method icdf not defined for mvnormal distribution.')
         else:
             file_name = os.path.join(self.name + '.py')
             if os.path.isfile(file_name):
@@ -465,11 +486,11 @@ class SubDistribution:
             else:
                 raise FileExistsError()
 
-            if hasattr(custom_dist, 'icdf'):
-                icdf = getattr(custom_dist, 'icdf')
-                return icdf(x, params)
+            tmp = getattr(custom_dist, 'icdf', None)
+            if tmp is None:
+                raise AttributeError('Method icdf not defined for distribution '+self.name+'.')
             else:
-                return getattr(custom_dist, 'icdf', 'Attribute icd not defined.')
+                return tmp(x, params)
 
     def log_pdf(self, x, params):
         if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
@@ -516,11 +537,11 @@ class SubDistribution:
             else:
                 raise FileExistsError()
 
-            if hasattr(custom_dist, 'log_pdf'):
-                log_pdf = getattr(custom_dist, 'log_pdf')
-                return log_pdf(x, params)
+            tmp = getattr(custom_dist, 'log_pdf', None)
+            if tmp is None:
+                raise AttributeError('Method log_pdf not defined for distribution '+self.name+'.')
             else:
-                return getattr(custom_dist, 'log_pdf', 'Attribute  log_pdf not defined.')
+                return tmp(x, params)
 
     def fit(self, x):
         if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
@@ -558,7 +579,7 @@ class SubDistribution:
         elif self.name.lower() == 'maxwell':
             return stats.maxwell.fit(x)
         elif self.name.lower() == 'mvnormal':
-            raise ValueError('UQpy error: fit method for multivariate normal is not defined.')
+            raise AttributeError('Method fit not defined for mvnormal distribution.')
         else:
             file_name = os.path.join(self.name + '.py')
             if os.path.isfile(file_name):
@@ -567,11 +588,11 @@ class SubDistribution:
             else:
                 raise FileExistsError()
 
-            if hasattr(custom_dist, 'fit'):
-                fit = getattr(custom_dist, 'fit')
-                return fit(x)
+            tmp = getattr(custom_dist, 'fit', None)
+            if tmp is None:
+                raise AttributeError('Method fit not defined for distribution '+self.name+'.')
             else:
-                return getattr(custom_dist, 'fit', 'Attribute fit not defined.')
+                return tmp(x)
 
     def moments(self, params):
         y = [np.nan, np.nan, np.nan, np.nan]
@@ -621,7 +642,7 @@ class SubDistribution:
         elif self.name.lower() == 'maxwell':
             mean, var, skew, kurt = stats.maxwell.stats(loc=params[0], scale=params[1], moments='mvsk')
         elif self.name.lower() == 'mvnormal':
-            raise ValueError('UQpy error: moments method for multivariate normal is not defined.')
+            raise AttributeError('Method moments not defined for mvnormal distribution.')
         else:
             file_name = os.path.join(self.name + '.py')
             if os.path.isfile(file_name):
@@ -629,66 +650,15 @@ class SubDistribution:
                 custom_dist = importlib.import_module(self.name)
             else:
                 raise FileExistsError()
-            if hasattr(custom_dist, 'moments'):
-                moments = getattr(custom_dist, 'moments')
-                return moments(params)
+
+            tmp = getattr(custom_dist, 'moments', None)
+            if tmp is None:
+                raise AttributeError('Method moments not defined for distribution '+self.name+'.')
             else:
-                return getattr(custom_dist, 'moments', 'Attribute moments not defined.')
+                return tmp(params)
 
         y[0] = mean
         y[1] = var
         y[2] = skew
         y[3] = kurt
         return np.array(y)
-
-    def n_params(self):
-        if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
-            return 2
-        elif self.name.lower() == 'uniform':
-            return 2
-        elif self.name.lower() == 'binomial':
-            return 2
-        elif self.name.lower() == 'beta':
-            return 2
-        elif self.name.lower() == 'gumbel_r':
-            return 2
-        elif self.name.lower() == 'chisquare':
-            return 3
-        elif self.name.lower() == 'lognormal':
-            return 3
-        elif self.name.lower() == 'gamma':
-            return 3
-        elif self.name.lower() == 'exponential':
-            return 2
-        elif self.name.lower() == 'cauchy':
-            return 2
-        elif self.name.lower() == 'inv_gauss':
-            return 3
-        elif self.name.lower() == 'logistic':
-            return 2
-        elif self.name.lower() == 'pareto':
-            return 3
-        elif self.name.lower() == 'rayleigh':
-            return 2
-        elif self.name.lower() == 'levy':
-            return 2
-        elif self.name.lower() == 'laplace':
-            return 2
-        elif self.name.lower() == 'maxwell':
-            return 2
-        elif self.name.lower() == 'mvnormal':
-            # raise ValueError('UQpy error: n_params for multivariate normal is not defined.')
-            return None
-        else:
-            file_name = os.path.join(self.name + '.py')
-            if os.path.isfile(file_name):
-                import importlib
-                custom_dist = importlib.import_module(self.name)
-            else:
-                raise FileExistsError()
-
-            if hasattr(custom_dist, 'n_params'):
-                n_params = getattr(custom_dist, 'n_params')
-                return n_params()
-            else:
-                return getattr(custom_dist, 'n_params', 'Attribute n_params not defined.')
