@@ -252,8 +252,8 @@ class Translation:
     :param samples_g: Gaussian Stochastic Processes
     :type samples_g: numpy.ndarray
 
-    # :param S_g: Power Spectrum of the Gaussian Stochastic Processes
-    # :type S_g: numpy.ndarray
+    :param S_g: Power Spectrum of the Gaussian Stochastic Processes
+    :type S_g: numpy.ndarray
 
     :param R_g: Auto-correlation Function of the Gaussian Stochastic Processes
     :type R_g: numpy.ndarray
@@ -271,26 +271,26 @@ class Translation:
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:13/01/2019 Lohit Vandanapu
+    # Last Modified:02/12/2019 Lohit Vandanapu
 
     def __init__(self, samples_g, marginal, params, dt, dw, nt, nw, S_g=None, R_g=None):
         self.samples_g = samples_g
         if R_g or S_g is None:
-            print('Atleast one of them should be specified')
+            print('Either the Power Spectrum or the Autocorrelation function should be specified')
         else:
             if R_g is None:
                 self.S_g = S_g
-                self.R_g = S_g # Perform Weiner Kinchin transform
+                self.R_g = r_to_s(S_g, np.arange(0, nw)*dw, np.arange(0, nt)*dt)
             elif S_g is None:
                 self.R_g = R_g
-                self.S_g = R_g # Perform Weiner Kinchin Transform
+                self.S_g = s_to_r(R_g, np.arange(0, nw)*dw, np.arange(0, nt)*dt)
         self.num = self.R_g.shape[0]
         self.dim = len(self.R_g.shape)
         self.marginal = marginal
         self.params = params
         self.samples_ng = self.translate_g_samples()
         self.R_ng = self.autocorrealtion_distortion()
-        self.S_ng = self.R_ng # Perform Weiner Khinchin Transform
+        self.S_ng = r_to_s(self.R_ng, np.arange(0, nw)*dw, np.arange(0, nt)*dt)
 
     def translate_g_samples(self):
         std = np.sqrt(np.var(self.samples_g))
@@ -300,7 +300,7 @@ class Translation:
         return samples_ng
 
     def autocorrealtion_distortion(self):
-        r_g = R_to_r(self.R_g)
+        # r_g = R_to_r(self.R_g)
         r_g = np.clip(r_g, -0.999, 0.999)
         R_ng = np.zeros_like(r_g)
         for i in itertools.product(*[range(self.num) for _ in range(self.dim)]):
@@ -364,25 +364,28 @@ class InverseTranslation:
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:13/01/2019 Lohit Vandanapu
+    # Last Modified:02/13/2019 Lohit Vandanapu
 
-    def __init__(self, samples_ng, marginal, params, R_ng=None, S_ng=None):
+    def __init__(self, samples_ng, marginal, params, dt, dw, nt, nw, R_ng=None, S_ng=None):
         self.samples_ng = samples_ng
+        self.w = np.arange(0, nw)*dw
+        self.t = np.arange(0, nt)*dt
         if R_ng or S_ng is None:
-            print('Atleast one of them should be specified')
+            print('Either the Power Spectrum or the Autocorrelation function should be specified')
         else:
             if R_ng is None:
                 self.S_ng = S_ng
-                self.R_ng = S_ng # Perform Weiner Kinchin transform
-            elif S_g is None:
+                self.R_ng = s_to_r(S_ng, self.w, self.t)
+            elif S_ng is None:
                 self.R_ng = R_ng
-                self.S_ng = R_ng # Perform Weiner Kinchin Transform
+                self.S_ng = r_to_s(R_ng, self.w, self.t)
         self.num = self.R_ng.shape[0]
         self.dim = len(self.R_ng.shape)
         self.marginal = marginal
         self.params = params
         self.samples_g = self.inverse_translate_ng_samples()
-        self.R_g = self.itam()
+        self.S_g = self.itam()
+        self.R_r = s_to_r(self.S_g, self.w, self.t)
 
     def inverse_translate_ng_samples(self):
         # samples_cdf = cdf(self.marginal)[0](self.samples_ng, self.params[0])
@@ -393,39 +396,41 @@ class InverseTranslation:
 
     def itam(self):
         # Initial Guess
-        corr_norm0 = self.R_ng
-        # Iteration Condition
+        target_s = self.S_ng
+        # Iteration Conditions
         i_converge = 0
         error0 = 100
-        max_iter = 20
-        corr0 = np.zeros_like(corr_norm0)
-        corr_norm1 = corr_norm0
+        max_iter = 1
+        target_r = s_to_r(target_s, self.w, self.t)
+        r_g_iterate = target_r
+        s_g_iterate = target_s
+        r_ng_iterate = np.zeros_like(target_r)
+        s_ng_iterate = np.zeros_like(target_s)
 
         for ii in range(max_iter):
-            for i in itertools.product(*[range(self.num) for _ in range(self.dim)]):
-                corr0[(*i, *[])] = self.solve_integral(corr_norm0[(*i, *[])])
+            # for i in itertools.product(*[range(self.num) for _ in range(self.dim)]):
+            for i in range(len(target_r)):
+                r_ng_iterate[i] = self.solve_integral(r_g_iterate)
+            s_ng_iterate = s_to_r(r_ng_iterate, self.w, self.t)
+
             # compute the relative difference between the computed NGACF & the target R(Normalized)
-            err1 = np.sum((self.R_ng - corr0) ** 2)
-            err2 = np.sum(corr0 ** 2)
+            err1 = np.sum((target_s - s_ng_iterate) ** 2)
+            err2 = np.sum(target_s ** 2)
             error1 = 100 * np.sqrt(err1 / err2)
 
             if abs(error0 - error1) / error1 < 0.001 or ii == max_iter or 100 * np.sqrt(err1 / err2) < 0.0005:
                 i_converge = 1
 
-            corr_norm1 = (self.R_ng / corr0) * corr_norm0
+            s_g_next_iterate = (target_s / s_ng_iterate) * s_g_iterate
 
             # Eliminate Numerical error of Upgrading Scheme
-            corr_norm1[corr_norm1 < -1.0] = -0.99999
-            corr_norm1[corr_norm1 > 1.0] = 0.99999
-
-            # Iteratively finding the nearest PSD(Qi & Sun, 2006)
-            corr_norm1 = np.array(near_pd(corr_norm1))
+            s_g_next_iterate[s_g_next_iterate < 0] = 0
 
             if i_converge == 0 and ii != max_iter:
-                corr_norm0 = corr_norm1
+                s_g_iterate = s_g_next_iterate
                 error0 = error1
 
-        return corr_norm1
+        return s_g_iterate
 
     def solve_integral(self, rho):
         if rho == 1.0:

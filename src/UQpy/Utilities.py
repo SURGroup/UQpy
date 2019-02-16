@@ -558,10 +558,6 @@ def estimate_psd(samples, nt, t):
     return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
 
 
-def wiener_kinchin_r(r):
-    return np.fft.fftn(r)
-
-
 def estimate_power_spectrum(samples):
     nsamples, nt = samples.shape
     nw = int(nt / 2)
@@ -678,13 +674,9 @@ def s_to_r(s, w, t):
     fac[1: len(w) - 1: 2] = 4
     fac[2: len(w) - 2: 2] = 2
     fac = fac * dw / 3
-    r = np.zeros([s.shape[0], len(t)])
-    for i in range(s.shape[0]):
-        for j in range(len(t)):
-            if s.shape[0] == 1:
-                r[i, j] = 2 * np.dot(fac, s[i, :] * np.cos(w * t[j]))
-            else:
-                r[i, j] = 2 * np.dot(fac, np.sqrt((s[i, :] * s[j, :])) * np.cos(w * (t[i] - t[j])))
+    r = np.zeros(len(t))
+    for j in range(len(t)):
+        r[j] = 2 * np.dot(fac, s * np.cos(w * t[j]))
     return r
 
 
@@ -710,10 +702,9 @@ def r_to_s(r, w, t):
     fac[2: len(t) - 2: 2] = 2
     fac = fac * dt / 3
 
-    s = np.zeros([r.shape[0], len(w)])
-    for i in range(r.shape[0]):
-        for j in range(len(w)):
-            r[i, j] = 2 / (2 * np.pi) * np.dot(fac, (r[i, :] * np.cos(t * w[j])))
+    s = np.zeros(len(w))
+    for j in range(len(w)):
+        s[j] = 2 / (2 * np.pi) * np.dot(fac, (r * np.cos(t * w[j])))
     s[s < 0] = 0
     return s
 

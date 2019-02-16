@@ -106,6 +106,7 @@ class RunModel:
     University of Maryland, each compute node has 24 cores. To run an analysis with more than 24 parallel jobs on MARCC
     requires nodes > 1.
     nodes is not used in the Python model workflow.
+
     :type nodes: int
 
     :param resume: If resume = True, GNU parallel enables UQpy to resume execution of any model evaluations that failed
