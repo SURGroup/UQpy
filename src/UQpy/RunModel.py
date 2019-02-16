@@ -337,8 +337,6 @@ class RunModel:
                 else:
                     new_dir_name = os.path.join(work_dir, os.path.basename(full_file_name))
                     shutil.copytree(full_file_name, new_dir_name)
-            # Change current working directory to model run directory
-            os.chdir(os.path.join(current_dir, work_dir))
 
         self._input_parallel(ts)
 
@@ -352,8 +350,13 @@ class RunModel:
         if self.verbose:
             print('\nCollecting outputs in parallel execution of the model with template input.\n')
 
+        current_dir = os.getcwd()
         for i in range(self.nsim):
+            # Change current working directory to model run directory
+            work_dir = os.path.join(os.getcwd(), "run_" + str(i) + '_' + ts)
+            os.chdir(os.path.join(current_dir, work_dir))
             self._output_parallel(i)
+            os.chdir(os.path.join(work_dir, current_dir))
 
     ####################################################################################################################
     def _serial_python_execution(self):
@@ -460,7 +463,7 @@ class RunModel:
                                                                      index=index,
                                                                      user_format='{:.4E}')
         # Write the new text to the input file
-        self._create_input_files(file_name=self.input_template, num=index + 1, text=self.new_text,
+        self._create_input_files(file_name=self.input_template, num=index, text=self.new_text,
                                  new_folder='InputFiles')
 
     def _execute_serial(self, index):
@@ -501,7 +504,7 @@ class RunModel:
                                                                     user_format='{:.4E}')
             folder_to_write = 'run_' + str(i) + '_' + timestamp + '/InputFiles'
             # Write the new text to the input file
-            self._create_input_files(file_name=self.input_template, num=i + 1, text=new_text,
+            self._create_input_files(file_name=self.input_template, num=i, text=new_text,
                                      new_folder=folder_to_write)
         if self.verbose:
             print('Created ' + str(self.nsim) + ' input files in the directory ./InputFiles. \n')
@@ -521,15 +524,20 @@ class RunModel:
             except OSError:
                 pass
         self.parallel_string = "parallel --delay 0.2 --joblog logs/runtask.log --resume -j " + str(self.ntasks)
-        destination = 'run_' + '{1}' + '_' + timestamp
+
         # If running on MARCC cluster
         if self.cluster:
             self.srun_string = "srun -N " + str(self.ntasks) + " -n " + str(self.cores_per_task) + " exclusive"
-            self.model_command_string = (self.parallel_string + self.srun_string + " 'python3 -u " +
-                                         str(self.model_script) + "' {1} ::: {0.." + str(self.nsim - 1) + "}")
+            self.model_command_string = (
+                        self.parallel_string + self.srun_string + " 'cd run_{1}_" + timestamp + "&& python3 -u " +
+                        str(self.model_script) + "' {1}  ::: {0.." + str(self.nsim - 1) + "}")
+            # self.model_command_string = (self.parallel_string + self.srun_string + " 'python3 -u " +
+            #                              str(self.model_script) + "' {1} ::: {0.." + str(self.nsim - 1) + "}")
         else:  # If running locally
-            self.model_command_string = (self.parallel_string + " '" + destination + "| python3 -u " +
-                                         str(self.model_script) + "' {1} ::: {0.." + str(self.nsim - 1) + "}")
+            self.model_command_string = (self.parallel_string + " 'cd run_{1}_" + timestamp + "&& python3 -u " +
+                                         str(self.model_script) + "' {1}  ::: {0.." + str(self.nsim - 1) + "}")
+            # self.model_command_string = (self.parallel_string + " '" + "cd " + destination + "| pwd | python3 -u " +
+            #                              str(self.model_script) + "' {1} ::: {0.." + str(self.nsim - 1) + "}")
 
         # self.model_command = shlex.split(self.model_command_string)
         # subprocess.run(self.model_command)
@@ -689,9 +697,6 @@ class RunModel:
     #             par_res[i] = parallel_output
     #
     #     return par_res
-
-
-
 
 # """This module contains functionality for the run model method supported in UQpy."""
 #
