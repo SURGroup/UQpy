@@ -177,19 +177,32 @@ class RunModel:
         # Model related
         self.model_dir = model_dir
         current_dir = os.getcwd()
+        self.return_dir = current_dir
+
+        # Create a list of all of the working files
+        model_files = list()
+        for f_name in os.listdir(current_dir):
+            path = os.path.join(current_dir, f_name)
+            # if not os.path.isdir(path):
+            #     model_files.append(path)
+            model_files.append(path)
+        self.model_files = model_files
 
         if self.model_dir is not None:
             # Create a new directory where the model will be executed
             ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%p")
             work_dir = os.path.join(os.getcwd(), self.model_dir + "_" + ts)
             os.makedirs(work_dir)
+            self.return_dir = work_dir
 
-            # Create a list of all of the working files
-            model_files = list()
-            for f_name in os.listdir(current_dir):
-                path = os.path.join(current_dir, f_name)
-                if not os.path.isdir(path):
-                    model_files.append(path)
+            # # Create a list of all of the working files
+            # model_files = list()
+            # for f_name in os.listdir(current_dir):
+            #     path = os.path.join(current_dir, f_name)
+            #     # if not os.path.isdir(path):
+            #     #     model_files.append(path)
+            #     model_files.append(path)
+            # self.model_files = model_files
 
             # Copy files from the model list to model run directory
             for file_name in model_files:
@@ -273,7 +286,23 @@ class RunModel:
             print('\nPerforming serial execution of the model with template input.\n')
 
         # Loop over the number of simulations, executing the model once per loop
+        ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%p")
         for i in range(self.nsim):
+            # Create a directory for each model run
+            work_dir = os.path.join(os.getcwd(), "run_" + str(i) + '_' + ts)
+            os.makedirs(work_dir)
+            # Copy files from the model list to model run directory
+            current_dir = os.getcwd()
+            for file_name in self.model_files:
+                full_file_name = os.path.join(current_dir, file_name)
+                if not os.path.isdir(full_file_name):
+                    shutil.copy(full_file_name, work_dir)
+                else:
+                    new_dir_name = os.path.join(work_dir, os.path.basename(full_file_name))
+                    shutil.copytree(full_file_name, new_dir_name)
+            # Change current working directory to model run directory
+            os.chdir(os.path.join(current_dir, work_dir))
+
             # Call the input function
             self._input_serial(i)
 
@@ -283,6 +312,9 @@ class RunModel:
             # Call the output function
             if self.output_script is not None:
                 self._output_serial(i)
+
+            # Return to the previous directory
+            os.chdir(self.return_dir)
 
     ####################################################################################################################
     def _parallel_execution(self):
