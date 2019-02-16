@@ -178,7 +178,7 @@ class RunModel:
         current_dir = os.getcwd()
         self.return_dir = current_dir
 
-        # Create a list of all of the working files
+        # Create a list of all of the files and directories in the working directory
         model_files = list()
         for f_name in os.listdir(current_dir):
             path = os.path.join(current_dir, f_name)
@@ -194,19 +194,14 @@ class RunModel:
             os.makedirs(work_dir)
             self.return_dir = work_dir
 
-            # # Create a list of all of the working files
-            # model_files = list()
-            # for f_name in os.listdir(current_dir):
-            #     path = os.path.join(current_dir, f_name)
-            #     # if not os.path.isdir(path):
-            #     #     model_files.append(path)
-            #     model_files.append(path)
-            # self.model_files = model_files
-
             # Copy files from the model list to model run directory
             for file_name in model_files:
                 full_file_name = os.path.join(current_dir, file_name)
-                shutil.copy(full_file_name, work_dir)
+                if not os.path.isdir(full_file_name):
+                    shutil.copy(full_file_name, work_dir)
+                else:
+                    new_dir_name = os.path.join(work_dir, os.path.basename(full_file_name))
+                    shutil.copytree(full_file_name, new_dir_name)
 
             # Change current working directory to model run directory
             os.chdir(os.path.join(current_dir, work_dir))
