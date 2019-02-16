@@ -106,6 +106,7 @@ class RunModel:
     University of Maryland, each compute node has 24 cores. To run an analysis with more than 24 parallel jobs on MARCC
     requires nodes > 1.
     nodes is not used in the Python model workflow.
+
     :type nodes: int
 
     :param resume: If resume = True, GNU parallel enables UQpy to resume execution of any model evaluations that failed
@@ -321,13 +322,31 @@ class RunModel:
             # Call the input function
             print('\nCreating inputs in parallel execution of the model with template input.\n')
 
-        self._input_parallel()
+        ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%p")
+
+        for i in range(self.nsim):
+            # Create a directory for each model run
+            work_dir = os.path.join(os.getcwd(), "run_" + str(i) + '_' + ts)
+            os.makedirs(work_dir)
+            # Copy files from the model list to model run directory
+            current_dir = os.getcwd()
+            for file_name in self.model_files:
+                full_file_name = os.path.join(current_dir, file_name)
+                if not os.path.isdir(full_file_name):
+                    shutil.copy(full_file_name, work_dir)
+                else:
+                    new_dir_name = os.path.join(work_dir, os.path.basename(full_file_name))
+                    shutil.copytree(full_file_name, new_dir_name)
+            # Change current working directory to model run directory
+            os.chdir(os.path.join(current_dir, work_dir))
+
+        self._input_parallel(ts)
 
         # Execute the model
         if self.verbose:
             print('\nExecuting the model in parallel with template input.\n')
 
-        self._execute_parallel()
+        self._execute_parallel(ts)
 
         # Call the output function
         if self.verbose:
@@ -467,7 +486,7 @@ class RunModel:
         else:
             self.qoi_list[index] = self.model_output
 
-    def _input_parallel(self):
+    def _input_parallel(self, timestamp):
         """
         Create all the input files required
         :return:
@@ -480,13 +499,14 @@ class RunModel:
                                                                     template_text=self.template_text,
                                                                     index=i,
                                                                     user_format='{:.4E}')
+            folder_to_write = 'run_' + str(i) + '_' + timestamp + '/InputFiles'
             # Write the new text to the input file
             self._create_input_files(file_name=self.input_template, num=i + 1, text=new_text,
-                                     new_folder='InputFiles')
+                                     new_folder=folder_to_write)
         if self.verbose:
             print('Created ' + str(self.nsim) + ' input files in the directory ./InputFiles. \n')
 
-    def _execute_parallel(self):
+    def _execute_parallel(self, timestamp):
         """
         Build the command string and execute the model in parallel using subprocess and gnu parallel
         :return:
@@ -501,14 +521,14 @@ class RunModel:
             except OSError:
                 pass
         self.parallel_string = "parallel --delay 0.2 --joblog logs/runtask.log --resume -j " + str(self.ntasks)
-
+        destination = 'run_' + '{1}' + '_' + timestamp
         # If running on MARCC cluster
         if self.cluster:
             self.srun_string = "srun -N " + str(self.ntasks) + " -n " + str(self.cores_per_task) + " exclusive"
             self.model_command_string = (self.parallel_string + self.srun_string + " 'python3 -u " +
                                          str(self.model_script) + "' {1} ::: {0.." + str(self.nsim - 1) + "}")
         else:  # If running locally
-            self.model_command_string = (self.parallel_string + " 'python3 -u " +
+            self.model_command_string = (self.parallel_string + " '" + destination + "| python3 -u " +
                                          str(self.model_script) + "' {1} ::: {0.." + str(self.nsim - 1) + "}")
 
         # self.model_command = shlex.split(self.model_command_string)

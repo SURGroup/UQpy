@@ -558,6 +558,100 @@ def estimate_psd(samples, nt, t):
     return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
 
 
+def estimate_power_spectrum(samples):
+    nsamples, nt = samples.shape
+    nw = int(nt / 2)
+    Xw = np.fft.ifft(samples, axis=1)
+    Xw = Xw[:, :nw]
+    # Initializing the array before hand
+    s_P = np.zeros([nsamples, nw])
+    s_P = s_P + 1.0j * s_P
+    for i1 in range(nw):
+        s_P[..., i1] = s_P[..., i1] + np.einsum('i, i-> i', Xw[..., i1], np.conj(Xw[..., i1]))
+    m_P = np.mean(s_P, axis=0)
+    return m_P
+
+
+def estimate_bispectrum(samples):
+    nsamples, nt = samples.shape
+    nw = int(nt / 2)
+    Xw = np.fft.ifft(samples, axis=1)
+    Xw = Xw[:, :nw]
+    # Initializing the array before hand
+    s_B = np.zeros([nsamples, nw, nw])
+    s_B = s_B + 1.0j * s_B
+    for i1 in range(nw):
+        for i2 in range(nw - i1):
+            s_B[..., i1, i2] = s_B[..., i1, i2] + np.einsum('i, i, i-> i', Xw[..., i1], Xw[..., i2],
+                                                            np.conj(Xw[..., i1 + i2]))
+    m_B = np.mean(s_B, axis=0)
+    return m_B
+
+
+def estimate_trispectrum(samples):
+    nsamples, nt = samples.shape
+    nw = int(nt / 2)
+    Xw = np.fft.ifft(samples, axis=1)
+    Xw = Xw[:, :nw]
+    # Initializing the array before hand
+    s_T = np.zeros([nsamples, nw, nw, nw])
+    s_T = s_T + 1.0j * s_T
+    for i1 in range(nw):
+        for i2 in range(nw - i1):
+            for i3 in range(nw - i1 - i2):
+                s_T[..., i1, i2, i3] = s_T[..., i1, i2, i3] + np.einsum('i, i, i, i-> i', Xw[:, i1], Xw[:, i2],
+                                                                        Xw[:, i3], np.conj(Xw[:, i1 + i2 + i3]))
+    m_T = np.mean(s_T, axis=0)
+    return m_T
+
+
+def estimate_cross_power_spectrum(samples):
+    nsamples, m, nt = samples.shape
+    nw = int(nt / 2)
+    Xw = np.fft.ifft(samples, axis=2)
+    Xw = Xw[:, :, :nw]
+    # Initializing the array before hand
+    s_P = np.zeros([nsamples, m, m, nw])
+    s_P = s_P + 1.0j * s_P
+    for i1 in range(nw):
+        s_P[..., i1] = s_P[..., i1] + np.einsum('ij, ik-> ijk', Xw[..., i1], np.conj(Xw[..., i1]))
+    m_P = np.mean(s_P, axis=0)
+    return m_P
+
+
+def estimate_cross_bispectrum(samples):
+    nsamples, m, nt = samples.shape
+    nw = int(nt / 2)
+    Xw = np.fft.ifft(samples, axis=2)
+    Xw = Xw[:, :, :nw]
+    # Initializing the array before hand
+    s_B = np.zeros([nsamples, m, m, m, nw, nw])
+    s_B = s_B + 1.0j * s_B
+    for i1 in range(nw):
+        for i2 in range(nw - i1):
+            s_B[..., i1, i2] = s_B[..., i1, i2] + np.einsum('ij, ik, il-> ijkl', Xw[..., i1], Xw[..., i2],
+                                                            np.conj(Xw[..., i1 + i2]))
+    m_B = np.mean(s_B, axis=0)
+    return m_B
+
+
+def estimate_cross_trispectrum(samples):
+    nsamples, m, nt = samples.shape
+    nw = int(nt / 2)
+    Xw = np.fft.ifft(samples, axis=2)
+    Xw = Xw[:, :, :nw]
+    # Initializing the array before hand
+    s_T = np.zeros([nsamples, m, m, m, m, nw, nw, nw])
+    s_T = s_T + 1.0j * s_T
+    for i1 in range(nw):
+        for i2 in range(nw - i1):
+            for i3 in range(nw - i1 - i2):
+                s_T[..., i1, i2, i3] = s_T[..., i1, i2, i3] + np.einsum('ij, ij, il, im-> ijklm', Xw[:, i1], Xw[:, i2],
+                                                                        Xw[:, i3], np.conj(Xw[:, i1 + i2 + i3]))
+    m_T = np.mean(s_T, axis=0)
+    return m_T
+
+
 def s_to_r(s, w, t):
 
     """
@@ -580,13 +674,9 @@ def s_to_r(s, w, t):
     fac[1: len(w) - 1: 2] = 4
     fac[2: len(w) - 2: 2] = 2
     fac = fac * dw / 3
-    r = np.zeros([s.shape[0], len(t)])
-    for i in range(s.shape[0]):
-        for j in range(len(t)):
-            if s.shape[0] == 1:
-                r[i, j] = 2 * np.dot(fac, s[i, :] * np.cos(w * t[j]))
-            else:
-                r[i, j] = 2 * np.dot(fac, np.sqrt((s[i, :] * s[j, :])) * np.cos(w * (t[i] - t[j])))
+    r = np.zeros(len(t))
+    for j in range(len(t)):
+        r[j] = 2 * np.dot(fac, s * np.cos(w * t[j]))
     return r
 
 
@@ -612,16 +702,14 @@ def r_to_s(r, w, t):
     fac[2: len(t) - 2: 2] = 2
     fac = fac * dt / 3
 
-    s = np.zeros([r.shape[0], len(w)])
-    for i in range(r.shape[0]):
-        for j in range(len(w)):
-            r[i, j] = 2 / (2 * np.pi) * np.dot(fac, (r[i, :] * np.cos(t * w[j])))
+    s = np.zeros(len(w))
+    for j in range(len(w)):
+        s[j] = 2 / (2 * np.pi) * np.dot(fac, (r * np.cos(t * w[j])))
     s[s < 0] = 0
     return s
 
 
-def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_object_name=None, input_template=None,
-             var_names=None,
+def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_object_name=None, input_template=None, var_names=None,
              output_script=None, output_object_name=None, ntasks=None, cores_per_task=None, nodes=None, resume=None,
              verbose=None, model_dir=None, cluster=None, order=None):
     """
