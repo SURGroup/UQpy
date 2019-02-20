@@ -74,8 +74,7 @@ class Correlate:
 
         # If samples is an array
         else:
-            print('Caution: The samples provided must be realizations of '
-                  'uncorrelated standard normal random variables.')
+            print('Caution: The samples provided must be uncorrelated standard normal random variables.')
             self.samples_uncorr = input_samples
             if dimension is None:
                 raise RuntimeError("Dimension must be specified when entering samples as an array.")

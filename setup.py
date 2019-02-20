@@ -4,24 +4,23 @@ from setuptools import setup, find_packages
 
 setup(
     name='UQpy',
-    version="0.1.0",
+    version="1.1.0",
     url='https://github.com/SURGroup/UQpy',
     authors="Michael D. Shields, Dimitris G. Giovanis",
     author_emails="michael.shields@jhu.edu, dgiovan1@jhu.edu",
-    license='Apache',
+    license='MIT',
     platforms='OSX',
     packages=find_packages("src"),
     package_dir={"": "src"},
     package_data={"":["*.pdf"]},
     install_requires=[
-        "numpy", "scipy", "chaospy", "pyDOE", "scikit-learn"
+        "numpy", "scipy", "chaospy", "pyDOE", "scikit-learn", 'fire'
     ],
     classifiers=[
-        'Programming Language :: Python :: 3'
-        'Development Status :: 1 - Production/Unstable',
+        'Programming Language :: Python :: 3',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Mathematics',
-        'License :: Apache',
+        'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
     ],
 )
