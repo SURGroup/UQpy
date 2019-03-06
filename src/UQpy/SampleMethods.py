@@ -82,7 +82,7 @@ class MCS:
         self.var_names = var_names
         if verbose:
             print('UQpy: Running Monte Carlo Sampling...')
-        self.samples = Distribution(name=self.dist_name).rvs(params=self.dist_params, nsamples=nsamples)
+        self.samples = Distribution(dist_name=self.dist_name).rvs(params=self.dist_params, nsamples=nsamples)
 
         if verbose:
             print('UQpy: Monte Carlo Sampling Complete.')
@@ -182,7 +182,7 @@ class LHS:
 
         self.distribution = [None] * self.dimension
         for i in range(self.dimension):
-            self.distribution[i] = Distribution(self.dist_name[i])
+            self.distribution[i] = Distribution(dist_name=self.dist_name[i])
 
         self.samplesU01, self.samples = self.run_lhs()
 
@@ -399,7 +399,7 @@ class STS:
 
         self.distribution = [None] * self.dimension
         for i in range(self.dimension):
-            self.distribution[i] = Distribution(self.dist_name[i])
+            self.distribution[i] = Distribution(dist_name=self.dist_name[i])
         self.samplesU01, self.samples = self.run_sts()
         del self.dist_name
 
@@ -1539,7 +1539,7 @@ class IS:
 
     def sampling_step(self):
 
-        proposal_pdf_ = Distribution(name=self.pdf_proposal)
+        proposal_pdf_ = Distribution(dist_name=self.pdf_proposal)
         samples = proposal_pdf_.rvs(params=self.pdf_proposal_params, nsamples=self.nsamples)
         return samples
 
@@ -1547,7 +1547,7 @@ class IS:
 
         x = self.samples
         # evaluate qs (log_pdf_proposal)
-        proposal_pdf_ = Distribution(name=self.pdf_proposal)
+        proposal_pdf_ = Distribution(dist_name=self.pdf_proposal)
         log_qs = proposal_pdf_.log_pdf(x, params=self.pdf_proposal_params)
         # evaluate ps (log_pdf_target)
         log_ps = self.log_pdf_target(x, params=self.pdf_target_params, copula_params=self.pdf_target_copula_params)
@@ -1585,7 +1585,7 @@ class IS:
             # pdf_target can be a str of list of strings, then compute the log_pdf
             if isinstance(self.pdf_target, str) or (isinstance(self.pdf_target, list) and
                                                     isinstance(self.pdf_target[0], str)):
-                p = Distribution(name=self.pdf_target, copula=self.pdf_target_copula)
+                p = Distribution(dist_name=self.pdf_target, copula=self.pdf_target_copula)
                 self.log_pdf_target = partial(p.log_pdf, params=self.pdf_target_params)
             # otherwise it may be a function that computes the pdf, then just take the logarithm
             else:

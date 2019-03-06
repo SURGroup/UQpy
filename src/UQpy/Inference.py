@@ -116,14 +116,14 @@ class Model:
             self.cluster = cluster
 
         elif self.type == 'pdf':
-            self.pdf = Distribution(name=self.name)
+            self.pdf = Distribution(dist_name=self.name)
 
         else:
             raise ValueError('UQpy error: model_type must be defined, as either "pdf" of "python".')
 
         # Define prior if it is given
         if prior_name is not None:
-            self.prior = Distribution(name = prior_name, copula = prior_copula)
+            self.prior = Distribution(dist_name=prior_name, copula = prior_copula)
             self.prior_params = prior_params
         else:
             self.prior = None
@@ -598,9 +598,9 @@ class BayesModelSelection:
                 print('UQpy: Running MCMC for model '+self.tmp_candidate_model.name)
 
             pe_i = BayesParameterEstimation(data=self.data, model=self.tmp_candidate_model, verbose=self.verbose,
-                                            sampling_method = 'MCMC',
-                                            pdf_proposal = (None if self.pdf_proposal_type is None
-                                                            else self.pdf_proposal_type[i]),
+                                            sampling_method='MCMC',
+                                            pdf_proposal=(None if self.pdf_proposal_type is None
+                                                          else self.pdf_proposal_type[i]),
                                             pdf_proposal_scale=(None if self.pdf_proposal_scale is None
                                                                 else self.pdf_proposal_scale[i]),
                                             algorithm=(None if self.algorithm is None else self.algorithm[i]),
