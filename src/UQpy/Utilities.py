@@ -848,9 +848,9 @@ def diagnostics(sampling_method, sampling_outputs=None, samples=None, weights=No
              returns various diagnostics values/plots to evaluate importance sampling and MCMC sampling outputs
      """
 
-    if eps_ESS < 0  or eps_ESS > 1:
+    if (eps_ESS < 0) or (eps_ESS > 1):
         raise ValueError('UQpy error: eps_ESS should be a float between 0 and 1.')
-    if alpha_ESS < 0  or alpha_ESS > 1:
+    if (alpha_ESS < 0) or (alpha_ESS > 1):
         raise ValueError('UQpy error: alpha_ESS should be a float between 0 and 1.')
 
     if sampling_method == 'IS':
@@ -866,7 +866,7 @@ def diagnostics(sampling_method, sampling_outputs=None, samples=None, weights=No
 
         # Output plots
         if figsize is None:
-            figsize = (8,3)
+            figsize = (8, 3)
         fig, ax = plt.subplots(figsize=figsize)
         ax.scatter(weights, np.zeros((np.size(weights), )), s=weights*300, marker='o')
         ax.set_xlabel('weights')
@@ -877,7 +877,7 @@ def diagnostics(sampling_method, sampling_outputs=None, samples=None, weights=No
         if (sampling_outputs is None) and (samples is None):
             raise ValueError('UQpy error: sampling_outputs or samples should be provided')
         if sampling_outputs is not None:
-            samples = sampling_outputs.weights
+            samples = sampling_outputs.samples
         print('Diagnostics for MCMC \n')
         nsamples, nparams = samples.shape
 
@@ -921,12 +921,12 @@ def diagnostics(sampling_method, sampling_outputs=None, samples=None, weights=No
             figsize = (20,4*nparams)
         fig, ax = plt.subplots(nrows=nparams, ncols=3, figsize=figsize)
         for j in range(samples.shape[1]):
-            ax[j,0].plot(np.arange(nsamples), samples[:,j])
-            ax[j,0].set_title('chain - parameter # {}'.format(j+1))
-            ax[j,1].plot(np.arange(nsamples), np.cumsum(samples[:,j])/np.arange(nsamples))
-            ax[j,1].set_title('parameter convergence')
-            ax[j,2].acorr(samples[:,j]-np.mean(samples[:,j]), maxlags = 50, normed=True)
-            ax[j,2].set_title('correlation between samples')
+            ax[j, 0].plot(np.arange(nsamples), samples[:,j])
+            ax[j, 0].set_title('chain - parameter # {}'.format(j+1))
+            ax[j, 1].plot(np.arange(nsamples), np.cumsum(samples[:,j])/np.arange(nsamples))
+            ax[j, 1].set_title('parameter convergence')
+            ax[j, 2].acorr(samples[:,j]-np.mean(samples[:,j]), maxlags = 50, normed=True)
+            ax[j, 2].set_title('correlation between samples')
         plt.show(fig)
 
     else:

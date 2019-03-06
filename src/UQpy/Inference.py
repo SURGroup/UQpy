@@ -34,7 +34,7 @@ warnings.filterwarnings("ignore")
 class Model:
     def __init__(self, model_type=None, model_script=None, model_name=None,
                  n_params=None, error_covariance=1.0,
-                 prior_name=None, prior_params=None, prior_copula=None,
+                 prior_name=None, prior_params=None, prior_copula=None, prior_copula_params=None,
                  model_object_name=None, input_template=None, var_names=None, output_script=None,
                  output_object_name=None, ntasks=1, cores_per_task=1, nodes=1, resume=False,
                  model_dir=None, cluster=False, verbose=False,
@@ -67,6 +67,9 @@ class Model:
 
             :param prior_copula: copula of the prior, if necessary
             :param prior_copula: str
+
+            :param prior_copula_params: parameters of the copula of the prior, if necessary
+            :param prior_copula_params: str
 
             :param model_object_name, input_template, var_names, output_script, output_object_name, ntasks,
                    cores_per_task, nodes, resume, verbose, model_dir, cluster: parameters of the python model, see
@@ -113,18 +116,20 @@ class Model:
             self.cluster = cluster
 
         elif self.type == 'pdf':
-            self.pdf = Distribution(name=self.name)
+            self.pdf = Distribution(dist_name=self.name)
 
         else:
             raise ValueError('UQpy error: model_type must be defined, as either "pdf" of "python".')
 
         # Define prior if it is given
         if prior_name is not None:
-            self.prior = Distribution(name = prior_name, copula = prior_copula)
+            self.prior = Distribution(dist_name=prior_name, copula=prior_copula)
             self.prior_params = prior_params
+            self.prior_copula_params = prior_copula_params
         else:
             self.prior = None
             self.prior_params = None
+            self.prior_copula_params = None
 
     def log_like(self, data, params):
         """ Computes the log-likelihood of model
@@ -441,7 +446,9 @@ class BayesParameterEstimation:
             if pdf_proposal is None:
                 if self.model.prior is None:
                     raise ValueError('a proposal density or a prior should be given')
-                pdf_proposal = self.model.prior.name
+                if self.model.prior.copula is not None:
+                    raise ValueError('when the prior is the proposal density, it cannot have a copula')
+                pdf_proposal = self.model.prior.dist_name
                 pdf_proposal_params = self.model.prior_params
 
             if verbose:
@@ -472,7 +479,8 @@ class BayesParameterEstimation:
         # prior is given
         else:
             return np.exp(self.model.log_like(data=self.data, params=theta) +
-                          self.model.prior.log_pdf(x=theta, params=self.model.prior_params))
+                          self.model.prior.log_pdf(x=theta, params=self.model.prior_params,
+                                                   copula_params=self.model.prior_copula_params))
 
     def log_posterior(self, theta, params=None, copula_params=None):
         if type(theta) is not np.ndarray:
@@ -485,7 +493,8 @@ class BayesParameterEstimation:
         # prior is given
         else:
             return self.model.log_like(data=self.data, params=theta) + \
-                   self.model.prior.log_pdf(x=theta, params=self.model.prior_params)
+                   self.model.prior.log_pdf(x=theta, params=self.model.prior_params,
+                                            copula_params=self.model.prior_copula_params)
 
 ########################################################################################################################
 ########################################################################################################################
@@ -497,7 +506,7 @@ class BayesModelSelection:
 
     def __init__(self, candidate_models=None, data=None, prior_probabilities=None,
                  pdf_proposal_type=None, pdf_proposal_scale=None, algorithm=None, jump=None, nsamples=None,
-                 nburn=None, seed=None, sorted_outputs = True, verbose=False):
+                 nburn=None, seed=None, sorted_outputs=True, verbose=False):
 
         """
             Perform model selection using Bayesian criteria.
