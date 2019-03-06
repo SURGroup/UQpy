@@ -37,6 +37,9 @@ class Distribution:
             - a name that points to a univariate/multivariate distribution (see supported distributions in
             SubDistribution class or custom distribution)
             - a list of names that points to a list of univariate distributions. In that case, a multivariate
+            - a name that points to a univariate/multivariate distribution (see supported distributions in 
+            SubDistribution class or custom distribution)
+            - a list of names that points to a list of univariate distributions. In that case, a multivariate
             distribution is built for which all dimensions are independent and given by Distribution(name)
             - a list of names and a copula, in that case a multivariate distribution is built using Distribution(name)
             for the marginal pdfs, while the dependence structure is given by the copula.
@@ -479,6 +482,7 @@ class SubDistribution:
             return stats.maxwell.ppf(x, loc=params[0], scale=params[1])
         elif self.dist_name.lower() == 'mvnormal':
             raise ValueError('Method "icdf" not defined for mvnormal distribution.')
+
         else:
             file_name = os.path.join(self.dist_name + '.py')
             if os.path.isfile(file_name):
@@ -490,6 +494,7 @@ class SubDistribution:
             tmp = getattr(custom_dist, 'icdf', None)
             if tmp is None:
                 raise UserWarning('Method "icdf" not defined by the user in '+self.dist_name+'.')
+
             else:
                 return tmp(x, params)
 
@@ -644,6 +649,7 @@ class SubDistribution:
             mean, var, skew, kurt = stats.maxwell.stats(loc=params[0], scale=params[1], moments='mvsk')
         elif self.dist_name.lower() == 'mvnormal':
             raise AttributeError('Method "moments" not defined for mvnormal distribution.')
+
         else:
             file_name = os.path.join(self.dist_name + '.py')
             if os.path.isfile(file_name):
