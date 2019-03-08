@@ -354,20 +354,15 @@ class InfoModelSelection:
         # return outputs in sorted order, from most probable model to least probable model
         if sorted_outputs:
             sort_idx = list(np.argsort(np.array(criteria)))
-            self.sorted_models = [candidate_models[i] for i in sort_idx]
-            self.sorted_model_names = [model.name for model in self.sorted_models]
-            self.sorted_fitted_params = [fitted_params[i] for i in sort_idx]
-            self.sorted_criteria = [criteria[i] for i in sort_idx]
-            self.sorted_penalty_terms = [penalty_terms[i] for i in sort_idx]
-            self.sorted_probabilities = [probabilities[i] for i in sort_idx]
-        # or return the outputs in the order they were given
+        # or in initial order
         else:
-            self.models = candidate_models
-            self.model_names = [model.name for model in self.models]
-            self.fitted_params = fitted_params
-            self.criteria = criteria
-            self.penalty_terms = penalty_terms
-            self.probabilities = list(probabilities)
+            sort_idx = list(range(len(candidate_models)))
+        self.models = [candidate_models[i] for i in sort_idx]
+        self.model_names = [model.name for model in self.models]
+        self.fitted_params = [fitted_params[i] for i in sort_idx]
+        self.criteria = [criteria[i] for i in sort_idx]
+        self.penalty_terms = [penalty_terms[i] for i in sort_idx]
+        self.probabilities = [probabilities[i] for i in sort_idx]
 
 
 ########################################################################################################################
@@ -468,7 +463,7 @@ class BayesParameterEstimation:
 
         del self.model
 
-    def posterior(self, theta, params=None, copula_params=None):
+    def posterior(self, theta):
         if type(theta) is not np.ndarray:
             theta = np.array(theta)
         if len(theta.shape) == 1:
@@ -482,7 +477,7 @@ class BayesParameterEstimation:
                           self.model.prior.log_pdf(x=theta, params=self.model.prior_params,
                                                    copula_params=self.model.prior_copula_params))
 
-    def log_posterior(self, theta, params=None, copula_params=None):
+    def log_posterior(self, theta):
         if type(theta) is not np.ndarray:
             theta = np.array(theta)
         if len(theta.shape) == 1:
@@ -577,17 +572,13 @@ class BayesModelSelection:
         # sort the models
         if sorted_outputs:
             sort_idx = list(np.argsort(np.array(model_probabilities)))[::-1]
-            self.sorted_models = [candidate_models[i] for i in sort_idx]
-            self.sorted_model_names = [model.name for model in self.sorted_models]
-            self.sorted_mcmc_outputs = [parameter_estimation[i] for i in sort_idx]
-            self.sorted_probabilities = [model_probabilities[i] for i in sort_idx]
-            self.sorted_evidences = [evidence[i] for i in sort_idx]
         else:
-            self.models = candidate_models
-            self.model_names = [model.name for model in self.models]
-            self.mcmc_outputs = parameter_estimation
-            self.probabilities = model_probabilities
-            self.evidences = evidence
+            sort_idx = list(range(len(candidate_models)))
+        self.models = [candidate_models[i] for i in sort_idx]
+        self.model_names = [model.name for model in self.models]
+        self.mcmc_outputs = [parameter_estimation[i] for i in sort_idx]
+        self.probabilities = [model_probabilities[i] for i in sort_idx]
+        self.evidences = [evidence[i] for i in sort_idx]
 
     def run_multi_bayes_ms(self):
 
@@ -603,9 +594,10 @@ class BayesModelSelection:
             if self.verbose:
                 print('UQpy: Running MCMC for model '+self.tmp_candidate_model.name)
 
-            pe_i = BayesParameterEstimation(data=self.data, model=self.tmp_candidate_model, verbose=self.verbose,
-                                            sampling_method = 'MCMC',
-                                            pdf_proposal = (None if self.pdf_proposal_type is None
+            pe_i = BayesParameterEstimation(data=self.data, model=self.tmp_candidate_model,
+                                            verbose=self.verbose,
+                                            sampling_method='MCMC',
+                                            pdf_proposal=(None if self.pdf_proposal_type is None
                                                             else self.pdf_proposal_type[i]),
                                             pdf_proposal_scale=(None if self.pdf_proposal_scale is None
                                                                 else self.pdf_proposal_scale[i]),
