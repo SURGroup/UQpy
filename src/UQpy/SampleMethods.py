@@ -1574,7 +1574,10 @@ class IS:
         x = self.samples
         # evaluate qs (log_pdf_proposal)
         proposal_pdf_ = Distribution(dist_name=self.pdf_proposal)
-        log_qs = proposal_pdf_.log_pdf(x, params=self.pdf_proposal_params)
+        try:
+            log_qs = proposal_pdf_.log_pdf(x, params=self.pdf_proposal_params)
+        except AttributeError:
+            log_qs = np.log(proposal_pdf_.pdf(x, params=self.pdf_proposal_params))
         # evaluate ps (log_pdf_target)
         kwargs = {}
         if self.pdf_target_params is not None:
