@@ -53,7 +53,7 @@ class Distribution:
 
         Input:
             :param dist_name: Name of distribution.
-            :type: name: string or list of strings
+            :type: dist_name: string or list of strings
 
             :param copula: copula to create dependence within dimensions, used only if name is a list
             :type: copula: str or None (default None)
@@ -276,7 +276,7 @@ class SubDistribution:
 
         Input:
             :param dist_name: Name of distribution.
-            :type: name: string
+            :type: dist_name: string
 
         Output:
             A handler pointing to the aforementioned distribution functions.
@@ -324,7 +324,7 @@ class SubDistribution:
             return stats.laplace.pdf(x, loc=params[0], scale=params[1])
         elif self.dist_name.lower() == 'maxwell':
             return stats.maxwell.pdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'truncnorm':
+        elif self.dist_name.lower() == 'truncnorm':
             return stats.truncnorm.pdf(x, a=params[0], b=params[1], loc=params[2], scale=params[3])
         elif self.dist_name.lower() == 'mvnormal':
             return stats.multivariate_normal.pdf(x, mean=params[0], cov=params[1])
@@ -377,7 +377,7 @@ class SubDistribution:
             return stats.laplace.rvs(loc=params[0], scale=params[1], size=nsamples)
         elif self.dist_name.lower() == 'maxwell':
             return stats.maxwell.rvs(loc=params[0], scale=params[1], size=nsamples)
-        elif self.name.lower() == 'truncnorm':
+        elif self.dist_name.lower() == 'truncnorm':
             return stats.truncnorm.rvs(a=params[0], b=params[1], loc=params[2], scale=params[3], size=nsamples)
         elif self.dist_name.lower() == 'mvnormal':
             return stats.multivariate_normal.rvs(mean=params[0], cov=params[1], size=nsamples)
@@ -430,7 +430,7 @@ class SubDistribution:
             return stats.laplace.cdf(x, loc=params[0], scale=params[1])
         elif self.dist_name.lower() == 'maxwell':
             return stats.maxwell.cdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'truncnorm':
+        elif self.dist_name.lower() == 'truncnorm':
             return stats.truncnorm.cdf(x, a=params[0], b=params[1], loc=params[2], scale=params[3])
         elif self.dist_name.lower() == 'mvnormal':
             return stats.multivariate_normal.cdf(x, mean=params[0], cov=params[1])
@@ -483,7 +483,7 @@ class SubDistribution:
             return stats.laplace.ppf(x, loc=params[0], scale=params[1])
         elif self.dist_name.lower() == 'maxwell':
             return stats.maxwell.ppf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'truncnorm':
+        elif self.dist_name.lower() == 'truncnorm':
             return stats.truncnorm.ppf(x, a=params[0], b=params[1], loc=params[2], scale=params[3])
         elif self.dist_name.lower() == 'mvnormal':
             raise ValueError('Method icdf not defined for mvnormal distribution.')
@@ -536,7 +536,7 @@ class SubDistribution:
             return stats.laplace.logpdf(x, loc=params[0], scale=params[1])
         elif self.dist_name.lower() == 'maxwell':
             return stats.maxwell.logpdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'truncnorm':
+        elif self.dist_name.lower() == 'truncnorm':
             return stats.truncnorm.logpdf(x, a=params[0], b=params[1], loc=params[2], scale=params[3])
         elif self.dist_name.lower() == 'mvnormal':
             return stats.multivariate_normal.logpdf(x, mean=params[0], cov=params[1])
@@ -589,7 +589,7 @@ class SubDistribution:
             return stats.laplace.fit(x)
         elif self.dist_name.lower() == 'maxwell':
             return stats.maxwell.fit(x)
-        elif self.name.lower() == 'truncnorm':
+        elif self.dist_name.lower() == 'truncnorm':
             return stats.truncnorm.fit(x)
         elif self.dist_name.lower() == 'mvnormal':
             raise AttributeError('Method fit not defined for mvnormal distribution.')
@@ -654,7 +654,7 @@ class SubDistribution:
             mean, var, skew, kurt = stats.laplace.stats(loc=params[0], scale=params[1], moments='mvsk')
         elif self.dist_name.lower() == 'maxwell':
             mean, var, skew, kurt = stats.maxwell.stats(loc=params[0], scale=params[1], moments='mvsk')
-        elif self.name.lower() == 'truncnorm':
+        elif self.dist_name.lower() == 'truncnorm':
             mean, var, skew, kurt = stats.truncnorm.stats(a=params[0], b=params[1], loc=params[2], scale=params[3],
                                                           moments='mvsk')
         elif self.dist_name.lower() == 'mvnormal':
