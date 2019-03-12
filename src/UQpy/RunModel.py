@@ -308,6 +308,14 @@ class RunModel:
             if self.output_script is not None:
                 self._output_serial(i)
 
+            # Remove the copied files and folders
+            for file_name in self.model_files:
+                full_file_name = os.path.join(work_dir, os.path.basename(file_name))
+                if not os.path.isdir(full_file_name):
+                    os.remove(full_file_name)
+                else:
+                    shutil.rmtree(full_file_name)
+
             # Return to the previous directory
             os.chdir(self.return_dir)
 
@@ -355,7 +363,19 @@ class RunModel:
             # Change current working directory to model run directory
             work_dir = os.path.join(os.getcwd(), "run_" + str(i) + '_' + ts)
             os.chdir(os.path.join(current_dir, work_dir))
+
+            # Run output processing function
             self._output_parallel(i)
+
+            # Remove the copied files and folders
+            for file_name in self.model_files:
+                full_file_name = os.path.join(work_dir, os.path.basename(file_name))
+                if not os.path.isdir(full_file_name):
+                    os.remove(full_file_name)
+                else:
+                    shutil.rmtree(full_file_name)
+
+            # Change back to the upper directory
             os.chdir(os.path.join(work_dir, current_dir))
 
     ####################################################################################################################
@@ -527,10 +547,10 @@ class RunModel:
 
         # If running on MARCC cluster
         if self.cluster:
-            self.srun_string = "srun -N " + str(self.ntasks) + " -n " + str(self.cores_per_task) + " exclusive"
+            self.srun_string = "srun -N " + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive"
             self.model_command_string = (
-                        self.parallel_string + self.srun_string + " 'cd run_{1}_" + timestamp + "&& python3 -u " +
-                        str(self.model_script) + "' {1}  ::: {0.." + str(self.nsim - 1) + "}")
+                    self.parallel_string + self.srun_string + " 'cd run_{1}_" + timestamp + "&& python3 -u " +
+                    str(self.model_script) + "' {1}  ::: {0.." + str(self.nsim - 1) + "}")
             # self.model_command_string = (self.parallel_string + self.srun_string + " 'python3 -u " +
             #                              str(self.model_script) + "' {1} ::: {0.." + str(self.nsim - 1) + "}")
         else:  # If running locally

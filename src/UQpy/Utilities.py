@@ -965,7 +965,8 @@ def diagnostics(sampling_method, sampling_outputs=None, samples=None, weights=No
         if (sampling_outputs is None) and (samples is None):
             raise ValueError('UQpy error: sampling_outputs or samples should be provided')
         if sampling_outputs is not None:
-            samples = sampling_outputs.weights
+            # samples = sampling_outputs.weights
+            samples = sampling_outputs.samples
         print('Diagnostics for MCMC \n')
         nsamples, nparams = samples.shape
 

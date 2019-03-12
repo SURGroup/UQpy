@@ -17,12 +17,12 @@
 
 """This module contains functionality for all the Inference supported in UQpy."""
 
-
 from UQpy.SampleMethods import *
 from scipy.stats import multivariate_normal
 from UQpy.RunModel import RunModel
 from scipy.optimize import minimize
 import warnings
+
 warnings.filterwarnings("ignore")
 
 
@@ -100,7 +100,7 @@ class Model:
             self.script = model_script
             self.model_object_name = model_object_name
             if self.name is None:
-                self.name = self.script+self.model_object_name
+                self.name = self.script + self.model_object_name
             self.var_names = var_names
             if self.var_names is None:
                 self.var_names = ['theta_{}'.format(i) for i in range(self.n_params)]
@@ -123,7 +123,7 @@ class Model:
 
         # Define prior if it is given
         if prior_name is not None:
-            self.prior = Distribution(name = prior_name, copula = prior_copula)
+            self.prior = Distribution(name=prior_name, copula=prior_copula)
             self.prior_params = prior_params
         else:
             self.prior = None
@@ -247,15 +247,15 @@ class MLEstimation:
             x0 = np.random.rand(self.iter_optim, self.model.n_params)
             if self.bounds is not None:
                 bounds = np.array(self.bounds)
-                x0 = bounds[:,0].reshape((1,-1)) + (bounds[:,1]-bounds[:,0]).reshape((1,-1)) * x0
+                x0 = bounds[:, 0].reshape((1, -1)) + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) * x0
         else:
-            x0 = self.x0.reshape((1,-1))
+            x0 = self.x0.reshape((1, -1))
         # second case: use any other method that does not require a Jacobian
         # TODO: a maximization that uses a Jacobian which can be given analytically by user
         for i in range(self.iter_optim):
-            res = minimize(neg_log_like_data, x0[i,:], method=self.method_optim, bounds=self.bounds)
+            res = minimize(neg_log_like_data, x0[i, :], method=self.method_optim, bounds=self.bounds)
             list_param.append(res.x)
-            list_max_log_like.append((-1)*res.fun)
+            list_max_log_like.append((-1) * res.fun)
         idx_max = int(np.argmax(list_max_log_like))
         param = np.array(list_param[idx_max])
         max_log_like = list_max_log_like[idx_max]
@@ -314,7 +314,7 @@ class InfoModelSelection:
         for input_arg in input_args:
             if input_arg is None:
                 continue
-            if (not isinstance(input_arg, list)) or (len(input_arg)!=len(candidate_models)):
+            if (not isinstance(input_arg, list)) or (len(input_arg) != len(candidate_models)):
                 raise ValueError('UQpy error: input argument should be given as a list of len=nb of models.')
 
         # First evaluate ML estimate for all models
@@ -339,7 +339,7 @@ class InfoModelSelection:
             elif self.method == 'AICc':
                 criterion_value = -2 * max_log_like + 2 * k + (2 * k ** 2 + 2 * k) / (n - k - 1)
                 penalty_term = 2 * k + (2 * k ** 2 + 2 * k) / (n - k - 1)
-            else: # default: do AIC
+            else:  # default: do AIC
                 criterion_value = -2 * max_log_like + 2 * k
                 penalty_term = 2 * k
             criteria.append(criterion_value)
@@ -468,7 +468,7 @@ class BayesParameterEstimation:
         if type(theta) is not np.ndarray:
             theta = np.array(theta)
         if len(theta.shape) == 1:
-            theta = theta.reshape((1,np.size(theta)))
+            theta = theta.reshape((1, np.size(theta)))
         # non-informative prior, p(theta)=1 everywhere
         if self.model.prior is None:
             return np.exp(self.model.log_like(data=self.data, params=theta))
@@ -481,7 +481,7 @@ class BayesParameterEstimation:
         if type(theta) is not np.ndarray:
             theta = np.array(theta)
         if len(theta.shape) == 1:
-            theta = theta.reshape((1,np.size(theta)))
+            theta = theta.reshape((1, np.size(theta)))
         # non-informative prior, p(theta)=1 everywhere
         if self.model.prior is None:
             return self.model.log_like(data=self.data, params=theta)
@@ -489,6 +489,7 @@ class BayesParameterEstimation:
         else:
             return self.model.log_like(data=self.data, params=theta) + \
                    self.model.prior.log_pdf(x=theta, params=self.model.prior_params)
+
 
 ########################################################################################################################
 ########################################################################################################################
@@ -500,7 +501,7 @@ class BayesModelSelection:
 
     def __init__(self, candidate_models=None, data=None, prior_probabilities=None,
                  pdf_proposal_type=None, pdf_proposal_scale=None, algorithm=None, jump=None, nsamples=None,
-                 nburn=None, method=None, seed=None, sorted_outputs = True, verbose=False):
+                 nburn=None, method=None, seed=None, sorted_outputs=True, verbose=False):
 
         """
             Perform model selection using Bayesian criteria.
@@ -549,7 +550,7 @@ class BayesModelSelection:
         for input_item in [algorithm, jump, nsamples, nburn, seed, pdf_proposal_type, pdf_proposal_scale]:
             if input_item is None:
                 continue
-            if (not isinstance(input_item, list)) or (len(input_item)!=len(candidate_models)):
+            if (not isinstance(input_item, list)) or (len(input_item) != len(candidate_models)):
                 raise ValueError('Inputs of model selection using MCMC nust be given as lists of len=nb of models.')
         self.pdf_proposal_type = pdf_proposal_type
         self.pdf_proposal_scale = pdf_proposal_scale
@@ -559,10 +560,10 @@ class BayesModelSelection:
         self.nburn = nburn
         self.seed = seed
         self.tmp_candidate_model = None
-        self.verbose=verbose
+        self.verbose = verbose
 
         if prior_probabilities is None:
-            self.prior_probabilities = [1/len(self.candidate_models) for _ in self.candidate_models]
+            self.prior_probabilities = [1 / len(self.candidate_models) for _ in self.candidate_models]
         else:
             self.prior_probabilities = prior_probabilities
 
@@ -590,17 +591,17 @@ class BayesModelSelection:
         # Initialize the evidence or marginal likelihood
         evi_value = np.zeros((len(self.candidate_models),))
         scaled_evi = np.zeros_like(evi_value)
-        pe = [0]*len(self.candidate_models)
+        pe = [0] * len(self.candidate_models)
         # Perform MCMC for all candidate models
         for i in range(len(self.candidate_models)):
             self.tmp_candidate_model = self.candidate_models[i]
             if self.verbose:
-                print('UQpy: Running MCMC for model '+self.tmp_candidate_model.name)
+                print('UQpy: Running MCMC for model ' + self.tmp_candidate_model.name)
 
             pe_i = BayesParameterEstimation(data=self.data, model=self.tmp_candidate_model, verbose=self.verbose,
-                                            sampling_method = 'MCMC',
-                                            pdf_proposal = (None if self.pdf_proposal_type is None
-                                                            else self.pdf_proposal_type[i]),
+                                            sampling_method='MCMC',
+                                            pdf_proposal=(None if self.pdf_proposal_type is None
+                                                          else self.pdf_proposal_type[i]),
                                             pdf_proposal_scale=(None if self.pdf_proposal_scale is None
                                                                 else self.pdf_proposal_scale[i]),
                                             algorithm=(None if self.algorithm is None else self.algorithm[i]),
@@ -611,7 +612,7 @@ class BayesModelSelection:
                                             )
             pe[i] = pe_i
             evi_value[i] = self.estimate_evidence(pe_i.samples)
-            scaled_evi[i] = evi_value[i]*self.prior_probabilities[i]
+            scaled_evi[i] = evi_value[i] * self.prior_probabilities[i]
 
         sum_evi_value = np.sum(scaled_evi)
         model_prob = scaled_evi / sum_evi_value
@@ -620,9 +621,9 @@ class BayesModelSelection:
 
         return model_prob, evi_value, pe
 
-    def estimate_evidence(self,samples):
+    def estimate_evidence(self, samples):
         # The method used here is the harmonic mean
         likelihood_given_sample = [self.tmp_candidate_model.log_like(self.data, x)
                                    for x in samples[int(0.5 * len(samples)):]]
-        temp = np.mean([1/np.exp(x) for x in likelihood_given_sample])
-        return 1/temp
+        temp = np.mean([1 / np.exp(x) for x in likelihood_given_sample])
+        return 1 / temp
