@@ -22,7 +22,7 @@ import os
 import numpy as np
 
 # Authors: Dimitris G.Giovanis, Michael D. Shields
-# Last Modified: 12/10/2018 by Audrey Olivier
+# Last Modified: 12/10/2018 by Audrey Olivier, 3/12/2019 by Aakash.
 
 ########################################################################################################################
 #        Define the probability distribution of the random parameters
