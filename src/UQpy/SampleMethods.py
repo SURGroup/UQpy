@@ -1389,7 +1389,7 @@ class MCMC:
 
         # Check pdf_proposal_type
         if self.pdf_proposal_type is None:
-            self.pdf_proposal_type = 'Uniform'
+            self.pdf_proposal_type = 'Normal'
         # If pdf_proposal_type is entered as a string, make it a list
         if isinstance(self.pdf_proposal_type, str):
             self.pdf_proposal_type = [self.pdf_proposal_type]
@@ -1443,41 +1443,75 @@ class MCMC:
                 kwargs['copula_params'] = copula_params
             pdf_value = max(pdf_func(x, **kwargs), 10 ** (-320))
             return np.log(pdf_value)
+        # Either pdf_target or log_pdf_target must be defined
+        if (self.pdf_target is None) and (self.log_pdf_target is None):
+            raise ValueError('The target distribution must be defined, using inputs'
+                             ' log_pdf_target or pdf_target.')
         # For MMH with pdf_target_type == 'marginals', pdf_target or its log should be lists
         if (self.algorithm == 'MMH') and (self.pdf_target_type == 'marginal'):
             if self.log_pdf_target is not None:
                 if not isinstance(self.log_pdf_target, list):
                     raise ValueError('For MMH algo with pdf_target_type="marginal", '
                                      'log_pdf_target should be a list')
+                if isinstance(self.log_pdf_target[0], str):
+                    p_js = [Distribution(dist_name=pdf_target_j) for pdf_target_j in self.pdf_target]
+                    try:
+                        [p_j.log_pdf(x=None, params=None) for p_j in p_js]
+                    except TypeError:
+                        self.log_pdf_target = [p_j.log_pdf for p_j in p_js]
+                    except AttributeError:
+                        raise AttributeError('log_pdf_target given as a list of strings must point to Distributions '
+                                             'with an existing log_pdf method.')
+                elif callable(self.log_pdf_target[0]):
+                    pass
+                else:
+                    raise ValueError('log_pdf_target must be a list of strings or a list of callables')
             else:
                 if not isinstance(self.pdf_target, list):
                     raise ValueError('For MMH algo with pdf_target_type="marginal", '
                                      'pdf_target should be a list')
                 if isinstance(self.pdf_target[0], str):
-                    p_js = [Distribution(pdf_target_j) for pdf_target_j in self.pdf_target]
+                    p_js = [Distribution(dist_name=pdf_target_j) for pdf_target_j in self.pdf_target]
                     try:
-                        [p_j.log_pdf(x=None, params=None, copula_params=None) for p_j in p_js]
+                        [p_j.pdf(x=None, params=None) for p_j in p_js]
                     except TypeError:
-                        self.log_pdf_target = [p_j.log_pdf for p_j in p_js]
-                    except AttributeError:
                         self.log_pdf_target = [partial(compute_log_pdf, pdf_func=p_j.pdf) for p_j in p_js]
-                else:
+                    except AttributeError:
+                        raise AttributeError('pdf_target given as a list of strings must point to Distributions '
+                                             'with an existing pdf method.')
+                elif callable(self.pdf_target[0]):
                     self.log_pdf_target = [partial(compute_log_pdf, pdf_func=pdf_target_j)
                                            for pdf_target_j in self.pdf_target]
+                else:
+                    raise ValueError('pdf_target must be a list of strings or a list of callables')
         else:
             if self.log_pdf_target is not None:
-                if isinstance(self.log_pdf_target, list):
-                    raise ValueError('For MH and Stretch, log_pdf_target must be a callable function')
-            else:
-                if isinstance(self.pdf_target, str) or (isinstance(self.pdf_target, list)
-                                                        and isinstance(self.pdf_target[0], str)):
-                    p = Distribution(self.pdf_target)
+                if isinstance(self.log_pdf_target, str) or (isinstance(self.log_pdf_target, list)
+                                                            and isinstance(self.log_pdf_target[0], str)):
+                    p = Distribution(dist_name=self.log_pdf_target, copula=self.pdf_target_copula)
                     try:
                         p.log_pdf(x=None, params=None, copula_params=None)
                     except TypeError:
                         self.log_pdf_target = p.log_pdf
                     except AttributeError:
+                        raise AttributeError('log_pdf_target given as a string must point to a Distribution '
+                                             'with an existing log_pdf method.')
+                elif callable(self.log_pdf_target):
+                    pass
+                else:
+                    raise ValueError('For MH and Stretch, log_pdf_target must be a callable function, '
+                                     'a str or list of str')
+            else:
+                if isinstance(self.pdf_target, str) or (isinstance(self.pdf_target, list)
+                                                        and isinstance(self.pdf_target[0], str)):
+                    p = Distribution(dist_name=self.pdf_target, copula=self.pdf_target_copula)
+                    try:
+                        p.pdf(x=None, params=None, copula_params=None)
+                    except TypeError:
                         self.log_pdf_target = partial(compute_log_pdf, pdf_func=p.pdf)
+                    except AttributeError:
+                        raise AttributeError('pdf_target given as a string must point to a Distribution '
+                                             'with an existing pdf method.')
                 elif callable(self.pdf_target):
                     self.log_pdf_target = partial(compute_log_pdf, pdf_func=self.pdf_target)
                 else:
@@ -1615,28 +1649,42 @@ class IS:
             pdf_value = np.fmax(tmp, 10 ** (-320)*np.ones_like(tmp))
             return np.log(pdf_value)
         # Check log_pdf_target, pdf_target
-        if self.pdf_target is None and self.log_pdf_target is None:
+        if (self.pdf_target is None) and (self.log_pdf_target is None):
             raise ValueError('UQpy error: a target pdf must be defined (pdf_target or log_pdf_target).')
         # The code first checks if log_pdf_target is defined, if yes, no need to check pdf_target
         if self.log_pdf_target is not None:
-            # log_pdf_target can be defined as a function that takes either one or two inputs. In the latter case,
-            # the second input is params, which is fixed to params=self.pdf_target_params
-            if not callable(self.log_pdf_target):
-                raise ValueError('UQpy error: log_pdf_target should be a callable.')
+            # log_pdf_target can be defined as a callable or string.
+            if isinstance(self.log_pdf_target, str) or (isinstance(self.log_pdf_target, list) and
+                                                        isinstance(self.log_pdf_target[0], str)):
+                p = Distribution(dist_name=self.log_pdf_target, copula=self.pdf_target_copula)
+                try:
+                    p.log_pdf(x=None, params=None, copula_params=None)
+                except TypeError:
+                    self.log_pdf_target = p.log_pdf
+                except AttributeError:
+                    raise AttributeError('log_pdf_target given as a string must point to a Distribution '
+                                         'with an existing log_pdf method.')
+            elif callable(self.log_pdf_target):
+                pass
+            else:
+                raise ValueError('log_pdf_target should be a callable or a string/list of strings.')
         else:
             # pdf_target can be a str of list of strings, then compute the log_pdf
             if isinstance(self.pdf_target, str) or (isinstance(self.pdf_target, list) and
                                                     isinstance(self.pdf_target[0], str)):
                 p = Distribution(dist_name=self.pdf_target, copula=self.pdf_target_copula)
                 try:
-                    p.log_pdf(x=None, params=None, copula_params=None)
+                    p.pdf(x=None, params=None, copula_params=None)
                 except TypeError:
-                    self.log_pdf_target = p.log_pdf
-                except AttributeError:
                     self.log_pdf_target = partial(compute_log_pdf, pdf_func=p.pdf)
+                except AttributeError:
+                    raise AttributeError('pdf_target given as a string must point to a Distribution '
+                                         'with an existing pdf method.')
             # otherwise it may be a function that computes the pdf, then just take the logarithm
-            else:
+            elif callable(self.pdf_target):
                 self.log_pdf_target = partial(compute_log_pdf, pdf_func=self.pdf_target)
+            else:
+                raise ValueError('pdf_target should be a callable or a string/list of strings.')
 
         # Check pdf_proposal_name
         if self.pdf_proposal is None:
