@@ -185,7 +185,10 @@ class Model:
         elif self.type == 'pdf':
             for i in range(samples_with_fixed.shape[0]):
                 param_i = samples_with_fixed[i, :].reshape((-1,))
-                results[i] = np.sum(self.pdf.log_pdf(data, param_i))
+                try:
+                    results[i] = np.sum(self.pdf.log_pdf(data, param_i))
+                except AttributeError:
+                    results[i] = np.sum(np.log(self.pdf.pdf(data, param_i)))
         return results
 
 
@@ -422,7 +425,8 @@ class InfoModelSelection:
 class BayesParameterEstimation:
 
     def __init__(self, model=None, data=None, sampling_method=None,
-                 pdf_proposal=None, pdf_proposal_scale=None, pdf_proposal_params=None,
+                 pdf_proposal_type=None, pdf_proposal_scale=None,
+                 pdf_proposal=None, pdf_proposal_params=None,
                  algorithm=None, jump=None, nsamples=None, nburn=None, seed=None, verbose=False):
 
         """
@@ -439,9 +443,9 @@ class BayesParameterEstimation:
             :param sampling_method: Method to be used
             :type sampling_method: str, 'MCMC' or 'IS'
 
-            :param pdf_proposal, pdf_proposal_scale, pdf_proposal_params, algorithm, jump, nsamples, nburn,
+            :param pdf_proposal_type, pdf_proposal_scale, pdf_proposal, pdf_proposal_params, algorithm, jump, nsamples, nburn,
              seed: inputs to the sampling method, see MCMC and IS
-            :type pdf_proposal, pdf_proposal_scale, pdf_proposal_params, algorithm, jump, nsamples, nburn,
+            :type pdf_proposal_type, pdf_proposal_scale, pdf_proposal, pdf_proposal_params, algorithm, jump, nsamples, nburn,
              seed: see MCMC and IS
 
             Outputs:
@@ -478,7 +482,7 @@ class BayesParameterEstimation:
             dimension = self.model.n_params
             if self.model.error_adapt:
                 dimension = self.model.n_params + 1
-            z = MCMC(dimension=dimension, pdf_proposal_type=pdf_proposal,
+            z = MCMC(dimension=dimension, pdf_proposal_type=pdf_proposal_type,
                      pdf_proposal_scale=pdf_proposal_scale,
                      algorithm=algorithm, jump=jump, seed=self.seed, nburn=nburn,
                      nsamples=self.nsamples, log_pdf_target=self.log_posterior)
@@ -533,14 +537,17 @@ class BayesParameterEstimation:
         if self.model.prior is None:
             log_pdf_prior_params = 0
         else:
-            log_pdf_prior_params = self.model.prior.log_pdf(x=params, params=self.model.prior_params,
-                                                            copula_params=self.model.prior_copula_params)
+            try:
+                log_pdf_prior_params = self.model.prior.log_pdf(x=params, params=self.model.prior_params,
+                                                                copula_params=self.model.prior_copula_params)
+            except AttributeError:
+                log_pdf_prior_params = np.log(self.model.prior.pdf(x=params, params=self.model.prior_params,
+                                                                   copula_params=self.model.prior_copula_params))
         if (self.model.prior_error is None) or (not self.model.error_adapt):
             log_pdf_prior_error = 0
         else:
             log_pdf_prior_error = self.model.prior_error.log_pdf(x=error_cov, params=self.model.prior_error_params,
                                                                  copula_params=self.model.prior_error_copula_params)
-
 
         return self.model.log_like(data=self.data, params=params, error_cov=error_cov) + \
                log_pdf_prior_params + log_pdf_prior_error
@@ -651,8 +658,8 @@ class BayesModelSelection:
             pe_i = BayesParameterEstimation(data=self.data, model=self.tmp_candidate_model,
                                             verbose=self.verbose,
                                             sampling_method='MCMC',
-                                            pdf_proposal=(None if self.pdf_proposal_type is None
-                                                            else self.pdf_proposal_type[i]),
+                                            pdf_proposal_type=(None if self.pdf_proposal_type is None
+                                                               else self.pdf_proposal_type[i]),
                                             pdf_proposal_scale=(None if self.pdf_proposal_scale is None
                                                                 else self.pdf_proposal_scale[i]),
                                             algorithm=(None if self.algorithm is None else self.algorithm[i]),

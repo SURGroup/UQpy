@@ -1147,7 +1147,7 @@ class MCMC:
     def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None,
                  pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None,
                  pdf_target_copula_params=None, pdf_target_type='joint_pdf',
-                 algorithm=None, jump=1, nsamples=None, seed=None, nburn=None,
+                 algorithm='MH', jump=1, nsamples=None, seed=None, nburn=0,
                  verbose=False):
 
         self.pdf_proposal_type = pdf_proposal_type
@@ -1380,13 +1380,12 @@ class MCMC:
 
         # Check algorithm
         if self.algorithm is None:
-            self.algorithm = 'MMH'
-        else:
-            if self.algorithm not in ['MH', 'MMH', 'Stretch']:
-                raise NotImplementedError('Exit code: Unrecognized MCMC algorithm. Supported algorithms: '
-                                          'Metropolis-Hastings (MH), '
-                                          'Modified Metropolis-Hastings (MMH), '
-                                          'Affine Invariant Ensemble with Stretch Moves (Stretch).')
+            self.algorithm = 'MH'
+        if self.algorithm not in ['MH', 'MMH', 'Stretch']:
+            raise NotImplementedError('Exit code: Unrecognized MCMC algorithm. Supported algorithms: '
+                                      'Metropolis-Hastings (MH), '
+                                      'Modified Metropolis-Hastings (MMH), '
+                                      'Affine Invariant Ensemble with Stretch Moves (Stretch).')
 
         # Check pdf_proposal_type
         if self.pdf_proposal_type is None:
@@ -1622,9 +1621,8 @@ class IS:
         if self.log_pdf_target is not None:
             # log_pdf_target can be defined as a function that takes either one or two inputs. In the latter case,
             # the second input is params, which is fixed to params=self.pdf_target_params
-            if not callable(self.log_pdf_target) or len(signature(self.log_pdf_target).parameters) > 3:
-                raise ValueError('UQpy error: when defined as a function, '
-                                 'log_pdf_target takes up to three inputs (x, params, copula_params).')
+            if not callable(self.log_pdf_target):
+                raise ValueError('UQpy error: log_pdf_target should be a callable.')
         else:
             # pdf_target can be a str of list of strings, then compute the log_pdf
             if isinstance(self.pdf_target, str) or (isinstance(self.pdf_target, list) and
