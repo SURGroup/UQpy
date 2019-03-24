@@ -1,6 +1,6 @@
 """This module contains functionality for all the stochastic process generation supported by UQpy."""
 
-from UQpy.tools import *
+from UQpy.Utilities import *
 from UQpy.Distributions import *
 from scipy.linalg import sqrtm
 from scipy.stats import norm
@@ -10,7 +10,9 @@ import itertools
 class SRM:
     """
     A class to simulate Stochastic Processes from a given power spectrum density based on the Spectral Representation
-    Method. This class can simulate both uni-variate and multi-variate multi-dimensional Stochastic Processes.
+    Method. This class can simulate both uni-variate and multi-variate multi-dimensional Stochastic Processes. Uses
+    Singular Value Decomposition as opposed to Cholesky Decomposition to be more robust with near-Positive Definite
+    multi-dimensional Power Spectra.
 
     Input:
 
@@ -34,19 +36,15 @@ class SRM:
                     2. 'multi' - Multi-variate
     :type case: str
 
-    :param g: The cross - Power Spectral Density. Used only for the Multi-variate case.
-                    Default: None
-    :type g: numpy.ndarray
-
     Output:
 
     :rtype: samples: numpy.ndarray
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:08/04/2018 Lohit Vandanapu
+    # Last Modified:02/12/2019 Lohit Vandanapu
 
-    def __init__(self, nsamples, S, dw, nt, nw, case='uni', g=None):
+    def __init__(self, nsamples, S, dw, nt, nw, case='uni'):
         self.S = S
         self.dw = dw
         self.nt = nt
@@ -60,10 +58,9 @@ class SRM:
             self.samples = self._simulate_uni(self.phi)
         elif self.case == 'multi':
             self.m = self.S.shape[0]
-            self.n = len(S.shape[1:])
-            self.g = g
+            self.n = len(S.shape[2:])
             self.phi = np.random.uniform(
-                size=np.append(self.nsamples, np.append(self.m, np.ones(self.n, dtype=np.int32) * self.nw))) * 2 * np.pi
+                size=np.append(self.nsamples, np.append(np.ones(self.n, dtype=np.int32) * self.nw, self.m))) * 2 * np.pi
             self.samples = self._simulate_multi(self.phi)
 
     def _simulate_uni(self, phi):
@@ -73,49 +70,21 @@ class SRM:
         return samples
 
     def _simulate_multi(self, phi):
-        # Assembly of S_jk
-        S_sqrt = np.sqrt(self.S)
-        S_jk = np.einsum('i...,j...->ij...', S_sqrt, S_sqrt)
-        # Assembly of g_jk
-        g_jk = np.zeros_like(S_jk)
-        l = 0
-        for i in range(self.m):
-            for j in range(i + 1, self.m):
-                g_jk[i, j] = self.g[l]
-                l = l + 1
-        g_jk = np.einsum('ij...->ji...', g_jk) + g_jk
-
-        for i in range(self.m):
-            g_jk[i, i] = np.ones_like(S_jk[0, 0])
-        S = S_jk * g_jk
-
-        S = np.einsum('ij...->...ij', S)
-        S1 = S[..., :, :]
-        H_jk = np.zeros_like(S1)
-        for i in range(len(S1)):
-            try:
-                H_jk[i] = np.linalg.cholesky(S1[i])
-            except:
-                H_jk[i] = np.linalg.cholesky(nearestPD(S1[i]))
-        H_jk = H_jk.reshape(S.shape)
-        H_jk = np.einsum('...ij->ij...', H_jk)
-        samples_list = []
-        for i in range(self.m):
-            samples = 0
-            for j in range(i + 1):
-                B = H_jk[i, j] * np.sqrt(2 ** (self.n + 1) * np.prod(self.dw)) * np.exp(phi[:, j] * 1.0j)
-                sample = np.fft.fftn(B, np.ones(self.n, dtype=np.int32) * self.nt)
-                samples += np.real(sample)
-            samples_list.append(samples)
-        samples_list = np.array(samples_list)
-        # samples = translate_process(samples, self.Dist, self.mu, self.sig, self.parameter1, self.parameter2)
-        return np.einsum('ij...->ji...', samples_list)
-
+        S = np.einsum('ij...->...ij', self.S)
+        Coeff = np.sqrt(2 ** (self.n + 1)) * np.sqrt(np.prod(self.dw))
+        U, s, V = np.linalg.svd(S)
+        R = np.einsum('...ij,...j->...ij', U, np.sqrt(s))
+        F = Coeff * np.einsum('...ij,n...j -> n...i', R, np.exp(phi * 1.0j))
+        F[np.isnan(F)] = 0
+        samples = np.real(np.fft.fftn(F, s=[self.nt for _ in range(self.n)], axes=tuple(np.arange(1, 1+self.n))))
+        return samples
 
 class BSRM:
     """
-    A class to simulate Stochastic Processes from a given power spectrum and bispectrum density based on the
-    BiSpectral Representation Method.
+    A class to simulate Stochastic Processes from a given power spectrum and bispectrum density based on the BiSpectral
+    Representation Method.This class can simulate both uni-variate and multi-variate multi-dimensional Stochastic
+    Processes. This class uses Singular Value Decomposition as opposed to Cholesky Decomposition to be more robust with
+    near-Positive Definite multi-dimensional Power Spectra.
 
     Input:
 
@@ -146,9 +115,9 @@ class BSRM:
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:08/04/2018 Lohit Vandanapu
+    # Last Modified:02/12/2019 Lohit Vandanapu
 
-    def __init__(self, n_sim, S, B, dt, dw, nt, nw, case='uni', g=None):
+    def __init__(self, n_sim, S, B, dt, dw, nt, nw, case='uni'):
         self.n_sim = n_sim
         self.nw = nw
         self.nt = nt
@@ -283,11 +252,14 @@ class Translation:
     :param samples_g: Gaussian Stochastic Processes
     :type samples_g: numpy.ndarray
 
+    :param S_g: Power Spectrum of the Gaussian Stochastic Processes
+    :type S_g: numpy.ndarray
+
     :param R_g: Auto-correlation Function of the Gaussian Stochastic Processes
     :type R_g: numpy.ndarray
 
-    :param marginal: list of marginal
-    :type marginal: list
+    :param marginal: name of marginal
+    :type marginal: str
 
     :param params: list of parameters for the marginal
     :type params: list
@@ -299,26 +271,36 @@ class Translation:
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:08/06/2018 Lohit Vandanapu
+    # Last Modified:02/12/2019 Lohit Vandanapu
 
-    def __init__(self, samples_g, R_g, marginal, params):
+    def __init__(self, samples_g, marginal, params, dt, dw, nt, nw, S_g=None, R_g=None):
         self.samples_g = samples_g
-        self.R_g = R_g
+        if R_g or S_g is None:
+            print('Either the Power Spectrum or the Autocorrelation function should be specified')
+        else:
+            if R_g is None:
+                self.S_g = S_g
+                self.R_g = r_to_s(S_g, np.arange(0, nw)*dw, np.arange(0, nt)*dt)
+            elif S_g is None:
+                self.R_g = R_g
+                self.S_g = s_to_r(R_g, np.arange(0, nw)*dw, np.arange(0, nt)*dt)
         self.num = self.R_g.shape[0]
         self.dim = len(self.R_g.shape)
         self.marginal = marginal
         self.params = params
         self.samples_ng = self.translate_g_samples()
         self.R_ng = self.autocorrealtion_distortion()
+        self.S_ng = r_to_s(self.R_ng, np.arange(0, nw)*dw, np.arange(0, nt)*dt)
 
     def translate_g_samples(self):
         std = np.sqrt(np.var(self.samples_g))
         samples_cdf = norm.cdf(self.samples_g, scale=std)
-        samples_ng = inv_cdf(self.marginal)[0](samples_cdf, self.params[0])
+        # samples_ng = inv_cdf(self.marginal)[0](samples_cdf, self.params[0])
+        samples_ng = Distribution(self.marginal, self.params).icdf(samples_cdf, self.params)
         return samples_ng
 
     def autocorrealtion_distortion(self):
-        r_g = R_to_r(self.R_g)
+        # r_g = R_to_r(self.R_g)
         r_g = np.clip(r_g, -0.999, 0.999)
         R_ng = np.zeros_like(r_g)
         for i in itertools.product(*[range(self.num) for _ in range(self.dim)]):
@@ -326,6 +308,8 @@ class Translation:
         return R_ng
 
     def solve_integral(self, rho):
+        if rho == 1.0:
+            rho = 0.999
         n = 1024
         zmax = 8
         zmin = -zmax
@@ -343,10 +327,14 @@ class Translation:
 
         weights2d = first * second
         w2d = weights2d.flatten()
-        tmp_f_xi = inv_cdf(self.marginal)[0](stats.norm.cdf(xi), self.params[0])
-        tmp_f_eta = inv_cdf(self.marginal)[0](stats.norm.cdf(eta), self.params[0])
+        # tmp_f_xi = inv_cdf(self.marginal)[0](stats.norm.cdf(xi), self.params[0])
+        # tmp_f_eta = inv_cdf(self.marginal)[0](stats.norm.cdf(eta), self.params[0])
+        tmp_f_xi = Distribution(self.marginal, self.params).icdf(stats.norm.cdf(xi), self.params)
+        tmp_f_eta = Distribution(self.marginal, self.params).icdf(stats.norm.cdf(eta), self.params)
         coef = tmp_f_xi * tmp_f_eta * w2d
         rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
+        rho_non = (rho_non - (Distribution(self.marginal, self.params).moments(self.params)[0]) ** 2) / \
+                  Distribution(self.marginal, self.params).moments(self.params)[1]
         return rho_non
 
 
@@ -363,8 +351,8 @@ class InverseTranslation:
     :param R_ng: Auto-correlation Function of the Gaussian Stochastic Processes
     :type R_ng: numpy.ndarray
 
-    :param marginal: list of marginal
-    :type marginal: list
+    :param marginal: mane of the marginal
+    :type marginal: str
 
     :param params: list of parameters for the marginal
     :type params: list
@@ -376,60 +364,77 @@ class InverseTranslation:
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:08/06/2018 Lohit Vandanapu
+    # Last Modified:02/13/2019 Lohit Vandanapu
 
-    def __init__(self, samples_ng, R_ng, marginal, params):
+    def __init__(self, samples_ng, marginal, params, dt, dw, nt, nw, R_ng=None, S_ng=None):
         self.samples_ng = samples_ng
-        self.R_ng = R_ng
+        self.w = np.arange(0, nw)*dw
+        self.t = np.arange(0, nt)*dt
+        if R_ng or S_ng is None:
+            print('Either the Power Spectrum or the Autocorrelation function should be specified')
+        else:
+            if R_ng is None:
+                self.S_ng = S_ng
+                self.R_ng = s_to_r(S_ng, self.w, self.t)
+            elif S_ng is None:
+                self.R_ng = R_ng
+                self.S_ng = r_to_s(R_ng, self.w, self.t)
         self.num = self.R_ng.shape[0]
         self.dim = len(self.R_ng.shape)
         self.marginal = marginal
         self.params = params
         self.samples_g = self.inverse_translate_ng_samples()
-        self.R_g = self.itam()
+        self.S_g = self.itam()
+        self.R_r = s_to_r(self.S_g, self.w, self.t)
 
     def inverse_translate_ng_samples(self):
-        samples_cdf = cdf(self.marginal)[0](self.samples_ng, self.params[0])
-        samples_g = inv_cdf(['Normal'])[0](samples_cdf, [0, 1])
+        # samples_cdf = cdf(self.marginal)[0](self.samples_ng, self.params[0])
+        # samples_g = inv_cdf(['Normal'])[0](samples_cdf, [0, 1])
+        samples_cdf = Distribution(self.marginal, self.params).cdf(self.samples_ng, self.params)
+        samples_g = Distribution('Normal', [0, 1]).icdf(samples_cdf, [0, 1])
         return samples_g
 
     def itam(self):
         # Initial Guess
-        corr_norm0 = self.R_ng
-        # Iteration Condition
+        target_s = self.S_ng
+        # Iteration Conditions
         i_converge = 0
         error0 = 100
-        max_iter = 20
-        corr0 = np.zeros_like(corr_norm0)
-        corr_norm1 = corr_norm0
+        max_iter = 1
+        target_r = s_to_r(target_s, self.w, self.t)
+        r_g_iterate = target_r
+        s_g_iterate = target_s
+        r_ng_iterate = np.zeros_like(target_r)
+        s_ng_iterate = np.zeros_like(target_s)
 
         for ii in range(max_iter):
-            for i in itertools.product(*[range(self.num) for _ in range(self.dim)]):
-                corr0[(*i, *[])] = self.solve_integral(corr_norm0[(*i, *[])])
+            # for i in itertools.product(*[range(self.num) for _ in range(self.dim)]):
+            for i in range(len(target_r)):
+                r_ng_iterate[i] = self.solve_integral(r_g_iterate)
+            s_ng_iterate = s_to_r(r_ng_iterate, self.w, self.t)
+
             # compute the relative difference between the computed NGACF & the target R(Normalized)
-            err1 = np.sum((self.R_ng - corr0) ** 2)
-            err2 = np.sum(corr0 ** 2)
+            err1 = np.sum((target_s - s_ng_iterate) ** 2)
+            err2 = np.sum(target_s ** 2)
             error1 = 100 * np.sqrt(err1 / err2)
 
             if abs(error0 - error1) / error1 < 0.001 or ii == max_iter or 100 * np.sqrt(err1 / err2) < 0.0005:
                 i_converge = 1
 
-            corr_norm1 = (self.R_ng / corr0) * corr_norm0
+            s_g_next_iterate = (target_s / s_ng_iterate) * s_g_iterate
 
             # Eliminate Numerical error of Upgrading Scheme
-            corr_norm1[corr_norm1 < -1.0] = -0.99999
-            corr_norm1[corr_norm1 > 1.0] = 0.99999
-
-            # Iteratively finding the nearest PSD(Qi & Sun, 2006)
-            corr_norm1 = np.array(near_pd(corr_norm1))
+            s_g_next_iterate[s_g_next_iterate < 0] = 0
 
             if i_converge == 0 and ii != max_iter:
-                corr_norm0 = corr_norm1
+                s_g_iterate = s_g_next_iterate
                 error0 = error1
 
-        return corr_norm1
+        return s_g_iterate
 
     def solve_integral(self, rho):
+        if rho == 1.0:
+            rho = 0.999
         n = 1024
         zmax = 8
         zmin = -zmax
@@ -447,8 +452,12 @@ class InverseTranslation:
 
         weights2d = first * second
         w2d = weights2d.flatten()
-        tmp_f_xi = inv_cdf(self.marginal)[0](stats.norm.cdf(xi), self.params[0])
-        tmp_f_eta = inv_cdf(self.marginal)[0](stats.norm.cdf(eta), self.params[0])
+        tmp_f_xi = Distribution(self.marginal, self.params).icdf(stats.norm.cdf(xi), self.params)
+        tmp_f_eta = Distribution(self.marginal, self.params).icdf(stats.norm.cdf(eta), self.params)
+        # tmp_f_xi = inv_cdf(self.marginal)[0](stats.norm.cdf(xi), self.params[0])
+        # tmp_f_eta = inv_cdf(self.marginal)[0](stats.norm.cdf(eta), self.params[0])
         coef = tmp_f_xi * tmp_f_eta * w2d
         rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
+        rho_non = (rho_non - (Distribution(self.marginal, self.params).moments(self.params)[0]) ** 2) / \
+                  Distribution(self.marginal, self.params).moments(self.params)[1]
         return rho_non

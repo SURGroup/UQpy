@@ -59,6 +59,9 @@ class MCS:
             No Default Value: nsamples must be prescribed.
             :type nsamples: int
 
+            :param var_names: names of variables
+            :type var_names: list of strings
+
             :param verbose: A boolean declaring whether to write text to the terminal.
             :type verbose: bool
 
@@ -71,20 +74,18 @@ class MCS:
     # Authors: Dimitris G.Giovanis
     # Last Modified: 11/12/2018 by Audrey Olivier
 
-    def __init__(self, dist_name=None, dist_params=None, dist_copula=None, nsamples=None, var_names=None,
-                 verbose=False):
+    def __init__(self, dist_name=None, dist_params=None, nsamples=None, var_names=None, verbose=False):
 
         if nsamples is None:
             raise ValueError('UQpy error: nsamples must be defined.')
         # No need to do other checks as they will be done within Distributions.py
         self.dist_name = dist_name
         self.dist_params = dist_params
-        self.dist_copula = dist_copula
         self.nsamples = nsamples
         self.var_names = var_names
         if verbose:
             print('UQpy: Running Monte Carlo Sampling...')
-        self.samples = Distribution(name=self.dist_name).rvs(params=self.dist_params, nsamples=nsamples)
+        self.samples = Distribution(dist_name=self.dist_name).rvs(params=self.dist_params, nsamples=nsamples)
 
         if verbose:
             print('UQpy: Monte Carlo Sampling Complete.')
@@ -184,7 +185,7 @@ class LHS:
 
         self.distribution = [None] * self.dimension
         for i in range(self.dimension):
-            self.distribution[i] = Distribution(self.dist_name[i])
+            self.distribution[i] = Distribution(dist_name=self.dist_name[i])
 
         self.samplesU01, self.samples = self.run_lhs()
 
@@ -403,7 +404,7 @@ class STS:
         for i in range(self.dimension):
             self.distribution[i] = Distribution(self.dist_name[i])
         self.samplesU01, self.samples = self.run_sts()
-        del self.dist_name, self.dist_params
+        del self.dist_name
 
     def run_sts(self):
         samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
@@ -607,6 +608,446 @@ class Strata:
 
         return ff
 
+
+########################################################################################################################
+########################################################################################################################
+#                                         Refined Stratified Sampling (RSS)
+########################################################################################################################
+
+
+class RSS:
+    """
+
+        Description:
+
+            Generate new samples using adaptive sampling methods, i.e. Refined Stratified Sampling and Gradient
+            Enhanced Refined Stratified Sampling.
+
+            References:
+            Michael D. Shields, Kirubel Teferra, Adam Hapij and Raymond P. Daddazio, "Refined Stratified Sampling for
+                efficient Monte Carlo based uncertainty quantification", Reliability Engineering & System Safety,
+                ISSN: 0951-8320, Vol: 142, Page: 310-325, 2015.
+
+            M. D. Shields, "Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems",
+                Reliability Engineering & System Safety, ISSN: 0951-8320, Vol: 175, Page: 207-224, 2018.
+        Input:
+            :param x: A class object, it should be generated using STS or RSS class.
+            :type x: class
+
+            :param model: Python model which is used to evaluate the function value
+            :type model: str
+
+            :param meta: A string specifying the method used to estimate the gradient.
+                         Options: Delaunay, Kriging
+            :type meta: str
+
+            :param cell: A string specifying the stratification of sample domain.
+                         Options: Rectangular and Voronoi
+            :type cell: str
+
+            :param nsamples: Final size of the samples.
+            :type nsamples: int
+
+            :param min_train_size: Minimum size of training data around new sample used to update surrogate.
+                                   Default: nsamples
+            :type min_train_size: int
+
+            :param step_size: Step size to calculate the gradient using central difference. Only required if Delaunay is
+                              used as surrogate approximation.
+            :type step_size: float
+
+            :param reg_model: Regression model used to estimate gradient by using kriging surrogate. Only required
+                               if kriging is used as surrogate approximation.
+            :type reg_model: str
+
+            :param corr_model: Correlation model used to estimate gradient by using kriging surrogate. Only required
+                               if kriging is used as surrogate approximation.
+            :type corr_model: str
+
+            :param corr_model_params: Correlation model parameters used to estimate hyperparamters for kriging
+                                      surrogate.
+            :type corr_model_params: ndarray
+
+            :param n_opt: Number of times optimization problem is to be solved with different starting point.
+                          Default: 1
+            :type n_opt: int
+
+        Output:
+            :return: RSS.samples: Final/expanded samples.
+            :rtype: RSS.samples: ndarray
+
+            :return: RSS.values: Function value evaluated at the expanded samples.
+            :rtype: RSS.values: ndarray
+
+    """
+
+    # Authors: Mohit S. Chauhan
+    # Last modified: 12/03/2018 by Mohit S. Chauhan
+
+    def __init__(self, x=None, model=None, meta='Delaunay', cell='Rectangular', nsamples=None,
+                 min_train_size=None, step_size=0.005, corr_model='Gaussian', reg_model='Quadratic',
+                 corr_model_params=None, n_opt=None):
+
+        self.x = x
+        self.model = model
+        self.option = 'Refined'
+        self.meta = meta
+        self.cell = cell
+        self.nsamples = nsamples
+        self.points = 0
+        self.min_train_size = min_train_size
+        self.step_size = step_size
+        self.corr_model = corr_model
+        self.corr_model_params = corr_model_params
+        self.reg_model = reg_model
+        self.n_opt = n_opt
+        self.init_rss()
+        self.samples = x.samples
+        self.samplesU01 = x.samplesU01
+        self.distribution = x.distribution
+        self.dist_params = x.dist_params
+        self.strata = x.strata
+        self.values = self.run_rss()
+
+    def run_rss(self):
+        from UQpy.RunModel import RunModel
+        from UQpy.Surrogates import Krig
+        from sklearn.gaussian_process import GaussianProcessRegressor
+        from scipy.interpolate import LinearNDInterpolator
+        from scipy.spatial import Delaunay
+        import numpy.matlib as matlib
+        import itertools
+        import math
+
+        print('UQpy: Performing RSS design...')
+
+        def cent_diff(f, x, h):
+            dydx = np.zeros((np.size(x, 0), np.size(x, 1)))
+            for dirr in range(np.size(x, 1)):
+                temp = np.zeros((np.size(x, 0), np.size(x, 1)))
+                temp[:, dirr] = np.ones(np.size(x, 0))
+                low = x - h / 2 * temp
+                hi = x + h / 2 * temp
+                dydx[:, dirr] = ((f.__call__(hi) - f.__call__(low)) / h)[:, 0]
+            return dydx
+
+        def surrogate(x, y, corr_m_p, reg_m, corr_m, xt, n):
+            if self.meta == 'Delaunay':
+                tck = LinearNDInterpolator(x, y, fill_value=0)
+                gr = cent_diff(tck, xt, self.step_size)
+            elif self.meta == 'Kriging':
+                with suppress_stdout():  # disable printing output comments
+                    tck = Krig(samples=x, values=y, reg_model=reg_m, corr_model=corr_m, corr_model_params=corr_m_p,
+                               n_opt=n)
+                corr_m_p = tck.corr_model_params
+                gr = cent_diff(tck.interpolate, xt, self.step_size)
+                # gr = tck.jacobian(xt)
+            elif self.meta == 'Kriging_Sklearn':
+                gp = GaussianProcessRegressor(kernel=corr_m, n_restarts_optimizer=0)
+                gp.fit(x, y)
+                gr = cent_diff(gp.predict, xt, self.step_size)
+            else:
+                raise NotImplementedError("Exit code: Does not identify 'meta'.")
+            return gr, corr_m_p
+
+        def local(pt, x, mts, max_dim):
+            # Identify the indices of 'mts' number of points in array 'x', which are closest to point 'pt'.
+            ff = 0.2
+            train = []
+            while len(train) < mts:
+                a = x > matlib.repmat(pt - ff * max_dim, x.shape[0], 1)
+                b = x < matlib.repmat(pt + ff * max_dim, x.shape[0], 1)
+                x_ind = a & b
+                train = []
+                for k_ in range(x.shape[0]):
+                    if np.array_equal(x_ind[k_, :], np.ones(x.shape[1])):
+                        train.append(k_)
+                ff = ff + 0.1
+            return train
+
+        values, dydx1, tri = 0, 0, 0
+        dimension = self.samples.shape[1]
+
+        if self.cell == 'Voronoi':
+            lst = np.array(list(itertools.product([0, 1], repeat=dimension)))
+            self.points = np.vstack([lst, self.samplesU01])
+            tri = Delaunay(self.points)
+        else:
+            if self.meta == 'Delaunay':
+                lst = np.array(list(itertools.product([0, 1], repeat=dimension)))
+                self.points = np.vstack([lst, self.samplesU01])
+            else:
+                self.points = self.samplesU01
+
+        if self.option == 'Gradient':
+            with suppress_stdout():  # disable printing output comments
+                values = np.array(RunModel(self.points, model_script=self.model).qoi_list)
+            if self.cell == 'Rectangular':
+                dydx1, self.corr_model_params = surrogate(self.points, values, self.corr_model_params,
+                                                          self.reg_model, self.corr_model,
+                                                          self.strata.origins + 0.5 * self.strata.widths, self.n_opt)
+            else:
+                simplex = getattr(tri, 'simplices')
+                dydx1, self.corr_model_params = surrogate(self.points, values, self.corr_model_params, self.reg_model,
+                                                          self.corr_model, np.mean(tri.points[simplex], 1),
+                                                          self.n_opt)
+
+        initial_s = np.size(self.samplesU01, 0)
+        for i in range(initial_s, self.nsamples):
+            if self.cell == 'Rectangular':
+                # Determine the stratum to break
+                if self.option == 'Gradient':
+                    # Estimate the variance within each stratum by assuming a uniform distribution over the stratum.
+                    # All input variables are independent
+                    var = (1 / 12) * self.strata.widths ** 2
+                    # Estimate the variance over the stratum by Delta Method
+                    s = np.zeros([i, 1])
+                    for j in range(i):
+                        s[j, 0] = np.sum(dydx1[j, :] * var[j, :] * dydx1[j, :] * (self.strata.weights[j] ** 2))
+                    bin2break = np.argmax(s)
+                else:
+                    w = np.argwhere(self.strata.weights == np.amax(self.strata.weights))
+                    bin2break = w[np.random.randint(len(w))]
+
+                # Determine the largest dimension of the stratum and define this as the cut direction
+                if self.option == 'Refined':
+                    # Cut the stratum in a random direction
+                    cut_dir_temp = self.strata.widths[bin2break, :]
+                    t = np.argwhere(cut_dir_temp[0] == np.amax(cut_dir_temp[0]))
+                    dir2break = t[np.random.randint(len(t))]
+                else:
+                    # Cut the stratum in the direction of maximum gradient
+                    cut_dir_temp = self.strata.widths[bin2break, :]
+                    t = np.argwhere(cut_dir_temp == np.amax(cut_dir_temp))
+                    dir2break = t[np.argmax(abs(dydx1[bin2break, t]))]
+
+                # Divide the stratum bin2break in the direction dir2break
+                self.strata.widths[bin2break, dir2break] = self.strata.widths[bin2break, dir2break] / 2
+                self.strata.widths = np.vstack([self.strata.widths, self.strata.widths[bin2break, :]])
+
+                self.strata.origins = np.vstack([self.strata.origins, self.strata.origins[bin2break, :]])
+                if self.samplesU01[bin2break, dir2break] < self.strata.origins[-1, dir2break] + \
+                        self.strata.widths[bin2break, dir2break]:
+                    self.strata.origins[-1, dir2break] = self.strata.origins[-1, dir2break] + self.strata.widths[
+                        bin2break, dir2break]
+                else:
+                    self.strata.origins[bin2break, dir2break] = self.strata.origins[bin2break, dir2break] + \
+                                                                self.strata.widths[bin2break, dir2break]
+
+                self.strata.weights[bin2break] = self.strata.weights[bin2break] / 2
+                self.strata.weights = np.append(self.strata.weights, self.strata.weights[bin2break])
+
+                # Add an uniform random sample inside new stratum
+                new = np.random.uniform(self.strata.origins[i, :], self.strata.origins[i, :] + self.strata.widths[i, :])
+                # Adding new sample to points, samplesU01 and samples attributes
+                self.points = np.vstack([self.points, new])
+                self.samplesU01 = np.vstack([self.samplesU01, new])
+                for j in range(0, dimension):
+                    icdf = self.distribution[j].icdf
+                    new[j] = icdf(new[j], self.dist_params[j])
+                self.samples = np.vstack([self.samples, new])
+
+            elif self.cell == 'Voronoi':
+                simplex = getattr(tri, 'simplices')
+                # Estimate the variance over the stratum by Delta Method
+                weights = np.zeros(((np.size(simplex, 0)), 1))
+                var = np.zeros((np.size(simplex, 0), dimension))
+                s = np.zeros(((np.size(simplex, 0)), 1))
+                for j in range((np.size(simplex, 0))):
+                    # Define Simplex
+                    sim = self.points[simplex[j, :]]
+                    # Estimate the volume of simplex
+                    v1 = np.concatenate((np.ones([np.size(sim, 0), 1]), sim), 1)
+                    weights[j] = (1 / math.factorial(np.size(simplex[j, :]) - 1)) * np.linalg.det(v1)
+                    if self.option == 'Gradient':
+                        for k in range(dimension):
+                            # Estimate standard deviation of points
+                            from statistics import stdev
+                            std = stdev(sim[:, k].tolist())
+                            var[j, k] = (weights[j] * math.factorial(dimension) / math.factorial(dimension + 2)) * (
+                                    dimension * std ** 2)
+                        s[j, 0] = np.sum(dydx1[j, :] * var[j, :] * dydx1[j, :] * (weights[j] ** 2))
+
+                if self.option == 'Refined':
+                    w = np.argwhere(weights[:, 0] == np.amax(weights[:, 0]))
+                    bin2add = w[0, np.random.randint(len(w))]
+                else:
+                    bin2add = np.argmax(s)
+
+                # Creating sub-simplex
+                tmp = self.points[simplex[bin2add, :]]
+                col_one = np.array(list(itertools.combinations(np.arange(dimension + 1), dimension)))
+                node = np.zeros_like(tmp)    # node: an array containing mid-point of edges
+                for m in range(dimension + 1):
+                    node[m, :] = np.sum(tmp[col_one[m] - 1, :], 0) / dimension
+
+                # Using Simplex class to generate new sample
+                new = Simplex(nodes=node, nsamples=1).samples
+                # Adding new sample to points, samplesU01 and samples attributes
+                self.points = np.vstack([self.points, new])
+                self.samplesU01 = np.vstack([self.samplesU01, new])
+                for j in range(0, dimension):
+                    icdf = self.distribution[j].icdf
+                    new[0, j] = icdf(new[0, j], self.dist_params[j])
+                self.samples = np.vstack([self.samples, new])
+                # Creating Delaunay triangulation from the new points
+                tri = Delaunay(self.points)
+            else:
+                raise NotImplementedError("Exit code: Does not identify 'cell'.")
+
+            if self.option == 'Gradient':
+
+                with suppress_stdout():  # disable printing output comments
+                    y_new = RunModel(np.atleast_2d(self.samples[i, :]), model_script=self.model).qoi_list
+                values = np.vstack([values, y_new])
+
+                if np.size(self.samples, 0) < self.min_train_size:
+                    # Global surrogate updating: Update the surrogate model using all the points
+                    if self.cell == 'Rectangular':
+                        in_train = np.arange(self.points.shape[0])
+                        in_update = np.arange(i)
+                    else:
+                        simplex = getattr(tri, 'simplices')
+                        in_train = np.arange(self.points.shape[0])
+                        in_update = np.arange(simplex.shape[0])
+                else:
+                    # Local surrogate updating: Update the surrogate model using min_train_size
+                    if self.cell == 'Rectangular':
+                        if self.meta == 'Delaunay':
+                            in_train = local(self.samplesU01[i, :], self.points, self.min_train_size,
+                                             np.amax(self.strata.widths))
+                        else:
+                            in_train = local(self.samplesU01[i, :], self.samplesU01, self.min_train_size,
+                                             np.amax(self.strata.widths))
+                        in_update = local(self.samplesU01[i, :], self.strata.origins + .5 * self.strata.widths,
+                                          self.min_train_size / 2, np.amax(self.strata.widths))
+                    else:
+                        simplex = getattr(tri, 'simplices')
+                        # in_train: Indices of samples used to update surrogate approximation
+                        in_train = local(self.samplesU01[i, :], self.samplesU01, self.min_train_size,
+                                         np.amax(np.sqrt(self.strata.weights)))
+                        # in_update: Indices of centroid of simplex, where gradient is updated
+                        in_update = local(self.samplesU01[i, :], np.mean(tri.points[simplex], 1),
+                                          self.min_train_size / 2, np.amax(np.sqrt(self.strata.weights)))
+
+                # Update the surrogate model & the store the updated gradients
+                if self.cell == 'Rectangular':
+                    dydx1 = np.vstack([dydx1, np.zeros(dimension)])
+                    dydx1[in_update, :], self.corr_model_params = surrogate(self.points[in_train, :],
+                                                                            values[in_train, :],
+                                                                            self.corr_model_params, self.reg_model,
+                                                                            self.corr_model,
+                                                                            self.strata.origins[in_update, :] +
+                                                                            .5 * self.strata.widths[in_update, :], 1)
+                else:
+                    simplex = getattr(tri, 'simplices')
+                    dydx1 = np.vstack([dydx1, np.zeros([simplex.shape[0] - dydx1.shape[0], dimension])])
+                    dydx1[in_update, :], self.corr_model_params = surrogate(self.points[in_train, :],
+                                                                            values[in_train, :],
+                                                                            self.corr_model_params,
+                                                                            self.reg_model, self.corr_model,
+                                                                            np.mean(tri.points[
+                                                                                        simplex[in_update, :]],
+                                                                                    1), 1)
+        print('Done!')
+        if self.option == 'Gradient':
+            if self.cell == 'Rectangular':
+                if self.meta != 'Delaunay':
+                    return values
+            else:
+                return values[2 ** dimension:, :]
+
+    def init_rss(self):
+        if type(self.x).__name__ not in ['STS', 'RSS']:
+            raise NotImplementedError("Exit code: x should be a class object from STS or RSS class.")
+
+        if self.model is not None:
+            self.option = 'Gradient'
+
+        if self.meta is None:
+            self.meta = 'Delaunay'
+        elif self.meta not in ['Delaunay', 'Kriging', 'Kriging_Sklearn']:
+            raise NotImplementedError("Exit code: Input 'meta' is not specified correctly.")
+
+        if self.cell is None:
+            self.cell = 'Rectangular'
+        elif self.cell not in ['Rectangular', 'Voronoi']:
+            raise NotImplementedError("Exit code: Input 'cell' is not specified correctly.")
+
+        if type(self.nsamples).__name__ != 'int':
+            raise NotImplementedError("Exit code: nsamples should be integer.")
+        if self.nsamples <= self.x.samples.shape[0]:
+            raise NotImplementedError("Exit code: Already have desired number of samples.")
+
+        if self.min_train_size is None:
+            self.min_train_size = self.nsamples
+
+
+########################################################################################################################
+########################################################################################################################
+#                                        Generating random samples inside a Simplex
+########################################################################################################################
+class Simplex:
+    """
+        Description:
+
+            Generate random samples inside a simplex using uniform probability distribution.
+
+            References:
+            W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, "Simplex-stochastic collocation method with improved
+                calability",Journal of Computational Physics, 310:301–328 2016.
+        Input:
+            :param nodes: The vertices of the simplex
+            :type nodes: ndarray
+
+            :param nsamples: The number of samples to be generated inside the simplex
+            :type nsamples: int
+        Output:
+            :return samples: New generated samples
+            :rtype samples: ndarray
+    """
+
+    # Authors: Dimitris G.Giovanis
+    # Last modified: 11/28/2018 by Mohit S. Chauhan
+
+    def __init__(self, nodes=None, nsamples=1):
+        self.nodes = np.atleast_2d(nodes)
+        self.nsamples = nsamples
+        self.init_sis()
+        self.samples = self.run_sis()
+
+    def run_sis(self):
+        dimension = self.nodes.shape[1]
+        if dimension > 1:
+            sample = np.zeros([self.nsamples, dimension])
+            for i in range(self.nsamples):
+                r = np.zeros([dimension])
+                ad = np.zeros(shape=(dimension, len(self.nodes)))
+                for j in range(dimension):
+                    b_ = list()
+                    for k in range(1, len(self.nodes)):
+                        ai = self.nodes[k, j] - self.nodes[k - 1, j]
+                        b_.append(ai)
+                    ad[j] = np.hstack((self.nodes[0, j], b_))
+                    r[j] = np.random.uniform(0.0, 1.0, 1) ** (1 / (dimension - j))
+                d = np.cumprod(r)
+                r_ = np.hstack((1, d))
+                sample[i, :] = np.dot(ad, r_)
+        else:
+            a = min(self.nodes)
+            b = max(self.nodes)
+            sample = a + (b - a) * np.random.rand(dimension, self.nsamples).reshape(self.nsamples, dimension)
+        return sample
+
+    def init_sis(self):
+        if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
+            raise NotImplementedError("Exit code: Number of samples to be generated 'nsamples' should be a positive "
+                                      "integer.")
+
+        if self.nodes.shape[0] != self.nodes.shape[1] + 1:
+            raise NotImplementedError("Size of simplex (nodes) is not consistent.")
+
+
 ########################################################################################################################
 ########################################################################################################################
 #                                         Class Markov Chain Monte Carlo
@@ -687,10 +1128,10 @@ class MCMC:
                                 For 'MH' and 'MMH': zeros(1 x dimension)
                                 For 'Stretch': No default, this must be specified.
             :type seed: float or numpy array
-            :param burn_in: Length of burn-in. Number of samples at the beginning of the chain to discard.
+            :param nburn: Length of burn-in. Number of samples at the beginning of the chain to discard.
                             This option is only used for the 'MMH' and 'MH' algorithms.
                             Default: nburn = 0
-            :type burn_in: int
+            :type nburn: int
         Output:
             :return: MCMC.samples: Set of MCMC samples following the target distribution
             :rtype: MCMC.samples: ndarray
@@ -705,26 +1146,28 @@ class MCMC:
 
     def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None,
                  pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None,
-                 algorithm=None, jump=1, nsamples=None, seed=None, nburn=None, verbose=False):
+                 pdf_target_copula_params=None, pdf_target_type='joint_pdf',
+                 algorithm='MH', jump=1, nsamples=None, seed=None, nburn=0,
+                 verbose=False):
 
         self.pdf_proposal_type = pdf_proposal_type
         self.pdf_proposal_scale = pdf_proposal_scale
         self.pdf_target = pdf_target
-        self.pdf_target_copula = pdf_target_copula
         self.log_pdf_target = log_pdf_target
         self.pdf_target_params = pdf_target_params
+        self.pdf_target_copula = pdf_target_copula
+        self.pdf_target_copula_params = pdf_target_copula_params
         self.algorithm = algorithm
         self.jump = jump
         self.nsamples = nsamples
         self.dimension = dimension
         self.seed = seed
         self.nburn = nburn
+        self.pdf_target_type = pdf_target_type
         self.init_mcmc()
         self.verbose = verbose
         if self.algorithm is 'Stretch':
             self.ensemble_size = len(self.seed)
-        if self.algorithm is 'MMH':
-            self.pdf_target_type = None
         self.samples, self.accept_ratio = self.run_mcmc()
 
     def run_mcmc(self):
@@ -733,12 +1176,19 @@ class MCMC:
         # Defining an array to store the generated samples
         samples = np.zeros([self.nsamples * self.jump + self.nburn, self.dimension])
 
+        # Define a kwargs for the parameter arguments
+        kwargs = {}
+        if self.pdf_target_params is not None:
+            kwargs['params'] = self.pdf_target_params
+        if self.pdf_target_copula_params is not None:
+            kwargs['copula_params'] = self.pdf_target_copula_params
+
         ################################################################################################################
         # Classical Metropolis-Hastings Algorithm with symmetric proposal density
         if self.algorithm == 'MH':
             samples[0, :] = self.seed
-            log_pdf_ = self.log_pdf_target
-            log_p_current = log_pdf_(samples[0, :], self.pdf_target_params)
+            log_pdf_ = partial(self.log_pdf_target, **kwargs)
+            log_p_current = log_pdf_(samples[0, :])
 
             # Loop over the samples
             for i in range(self.nsamples * self.jump - 1 + self.nburn):
@@ -746,7 +1196,7 @@ class MCMC:
                     cholesky_cov = np.diag(self.pdf_proposal_scale)
                     z_normal = np.random.normal(size=(self.dimension, 1))
                     candidate = samples[i, :] + np.matmul(cholesky_cov, z_normal).reshape((self.dimension,))
-                    log_p_candidate = log_pdf_(candidate, self.pdf_target_params)
+                    log_p_candidate = log_pdf_(candidate)
                     log_p_accept = log_p_candidate - log_p_current
                     accept = np.log(np.random.random()) < log_p_accept
 
@@ -761,7 +1211,7 @@ class MCMC:
                     low = -np.array(self.pdf_proposal_scale) / 2
                     high = np.array(self.pdf_proposal_scale) / 2
                     candidate = samples[i, :] + np.random.uniform(low=low, high=high, size=self.dimension)
-                    log_p_candidate = log_pdf_(candidate, self.pdf_target_params)
+                    log_p_candidate = log_pdf_(candidate)
                     log_p_accept = log_p_candidate - log_p_current
                     accept = np.log(np.random.random()) < log_p_accept
 
@@ -780,16 +1230,16 @@ class MCMC:
             samples[0, :] = self.seed[0:]
 
             if self.pdf_target_type == 'marginal_pdf':
-                list_log_p_current = [self.pdf_target[j](samples[0, j], self.pdf_target_params) for j in
-                                      range(self.dimension)]
+                list_log_p_current = [self.pdf_target[j](samples[0, j], **kwargs)
+                                      for j in range(self.dimension)]
                 for i in range(self.nsamples * self.jump - 1 + self.nburn):
                     for j in range(self.dimension):
 
-                        log_pdf_ = self.log_pdf_target[j]
+                        log_pdf_ = partial(self.log_pdf_target[j], **kwargs)
 
                         if self.pdf_proposal_type[j] == 'Normal':
                             candidate = np.random.normal(samples[i, j], self.pdf_proposal_scale[j], size=1)
-                            log_p_candidate = log_pdf_(candidate, self.pdf_target_params)
+                            log_p_candidate = log_pdf_(candidate)
                             log_p_current = list_log_p_current[j]
                             log_p_accept = log_p_candidate - log_p_current
 
@@ -805,7 +1255,7 @@ class MCMC:
                         elif self.pdf_proposal_type[j] == 'Uniform':
                             candidate = np.random.uniform(low=samples[i, j] - self.pdf_proposal_scale[j] / 2,
                                                           high=samples[i, j] + self.pdf_proposal_scale[j] / 2, size=1)
-                            log_p_candidate = log_pdf_(candidate, self.pdf_target_params)
+                            log_p_candidate = log_pdf_(candidate)
                             log_p_current = list_log_p_current[j]
                             log_p_accept = log_p_candidate - log_p_current
 
@@ -818,12 +1268,12 @@ class MCMC:
                             else:
                                 samples[i + 1, j] = samples[i, j]
             else:
-                log_pdf_ = self.log_pdf_target
+                log_pdf_ = partial(self.log_pdf_target, **kwargs)
 
                 for i in range(self.nsamples * self.jump - 1 + self.nburn):
                     candidate = np.copy(samples[i, :])
                     current = np.copy(samples[i, :])
-                    log_p_current = log_pdf_(samples[i, :], self.pdf_target_params)
+                    log_p_current = log_pdf_(samples[i, :])
                     for j in range(self.dimension):
                         if self.pdf_proposal_type[j] == 'Normal':
                             candidate[j] = np.random.normal(samples[i, j], self.pdf_proposal_scale[j])
@@ -833,7 +1283,7 @@ class MCMC:
                                                              high=samples[i, j] + self.pdf_proposal_scale[j] / 2,
                                                              size=1)
 
-                        log_p_candidate = log_pdf_(candidate, self.pdf_target_params)
+                        log_p_candidate = log_pdf_(candidate)
                         log_p_accept = log_p_candidate - log_p_current
 
                         accept = np.log(np.random.random()) < log_p_accept
@@ -843,7 +1293,7 @@ class MCMC:
                             log_p_current = log_p_candidate
                             n_accepts += 1
                         else:
-                            candidate[j] = current[j]   # ????????? I don't get that one
+                            candidate[j] = current[j]
 
                     samples[i + 1, :] = current
             accept_ratio = n_accepts / (self.nsamples * self.jump - 1 + self.nburn)
@@ -854,7 +1304,7 @@ class MCMC:
         elif self.algorithm == 'Stretch':
 
             samples[0:self.ensemble_size, :] = self.seed
-            log_pdf_ = self.log_pdf_target
+            log_pdf_ = partial(self.log_pdf_target, **kwargs)
             # list_log_p_current = [log_pdf_(samples[i, :], self.pdf_target_params) for i in range(self.ensemble_size)]
 
             for i in range(self.ensemble_size - 1, self.nsamples * self.jump - 1):
@@ -863,8 +1313,8 @@ class MCMC:
                 s = (1 + (self.pdf_proposal_scale[0] - 1) * random.random()) ** 2 / self.pdf_proposal_scale[0]
                 candidate = s0 + s * (samples[i - self.ensemble_size + 1, :] - s0)
 
-                log_p_candidate = log_pdf_(candidate, self.pdf_target_params)
-                log_p_current = log_pdf_(samples[i - self.ensemble_size + 1, :], self.pdf_target_params)
+                log_p_candidate = log_pdf_(candidate)
+                log_p_current = log_pdf_(samples[i - self.ensemble_size + 1, :])
                 # log_p_current = list_log_p_current[i - self.ensemble_size + 1]
                 log_p_accept = np.log(s ** (self.dimension - 1)) + log_p_candidate - log_p_current
 
@@ -930,17 +1380,16 @@ class MCMC:
 
         # Check algorithm
         if self.algorithm is None:
-            self.algorithm = 'MMH'
-        else:
-            if self.algorithm not in ['MH', 'MMH', 'Stretch']:
-                raise NotImplementedError('Exit code: Unrecognized MCMC algorithm. Supported algorithms: '
-                                          'Metropolis-Hastings (MH), '
-                                          'Modified Metropolis-Hastings (MMH), '
-                                          'Affine Invariant Ensemble with Stretch Moves (Stretch).')
+            self.algorithm = 'MH'
+        if self.algorithm not in ['MH', 'MMH', 'Stretch']:
+            raise NotImplementedError('Exit code: Unrecognized MCMC algorithm. Supported algorithms: '
+                                      'Metropolis-Hastings (MH), '
+                                      'Modified Metropolis-Hastings (MMH), '
+                                      'Affine Invariant Ensemble with Stretch Moves (Stretch).')
 
         # Check pdf_proposal_type
         if self.pdf_proposal_type is None:
-            self.pdf_proposal_type = 'Uniform'
+            self.pdf_proposal_type = 'Normal'
         # If pdf_proposal_type is entered as a string, make it a list
         if isinstance(self.pdf_proposal_type, str):
             self.pdf_proposal_type = [self.pdf_proposal_type]
@@ -979,39 +1428,95 @@ class MCMC:
         if isinstance(self.pdf_target, list) and len(self.pdf_target) != self.dimension:
             raise ValueError('UQpy error: inconsistent dimensions.')
 
+        # Check MMH
+        if self.algorithm is 'MMH':
+            if (self.pdf_target_type == 'marginal_pdf') and (self.pdf_target_copula is not None):
+                raise ValueError('UQpy error: MMH with pdf_target_type="marginal" cannot be used when the'
+                                 'target pdf has a copula, use pdf_target_type="joint" instead')
+
         # Define a helper function
-        def compute_log_pdf(x, params, pdf_func):
-            pdf_value = max(pdf_func(x, params), 10 ** (-320))
+        def compute_log_pdf(x, pdf_func, params=None, copula_params=None):
+            kwargs = {}
+            if params is not None:
+                kwargs['params'] = params
+            if copula_params is not None:
+                kwargs['copula_params'] = copula_params
+            pdf_value = max(pdf_func(x, **kwargs), 10 ** (-320))
             return np.log(pdf_value)
-        # For MMH, keep the functions as lists if they appear as lists
-        if self.algorithm == 'MMH':
+        # Either pdf_target or log_pdf_target must be defined
+        if (self.pdf_target is None) and (self.log_pdf_target is None):
+            raise ValueError('The target distribution must be defined, using inputs'
+                             ' log_pdf_target or pdf_target.')
+        # For MMH with pdf_target_type == 'marginals', pdf_target or its log should be lists
+        if (self.algorithm == 'MMH') and (self.pdf_target_type == 'marginal'):
             if self.log_pdf_target is not None:
-                if isinstance(self.log_pdf_target, list):
-                    self.pdf_target_type = 'marginal_pdf'
+                if not isinstance(self.log_pdf_target, list):
+                    raise ValueError('For MMH algo with pdf_target_type="marginal", '
+                                     'log_pdf_target should be a list')
+                if isinstance(self.log_pdf_target[0], str):
+                    p_js = [Distribution(dist_name=pdf_target_j) for pdf_target_j in self.pdf_target]
+                    try:
+                        [p_j.log_pdf(x=None, params=None) for p_j in p_js]
+                    except TypeError:
+                        self.log_pdf_target = [p_j.log_pdf for p_j in p_js]
+                    except AttributeError:
+                        raise AttributeError('log_pdf_target given as a list of strings must point to Distributions '
+                                             'with an existing log_pdf method.')
+                elif callable(self.log_pdf_target[0]):
+                    pass
+                else:
+                    raise ValueError('log_pdf_target must be a list of strings or a list of callables')
             else:
-                if isinstance(self.pdf_target, list):
-                    self.pdf_target_type = 'marginal_pdf'
-                    if isinstance(self.pdf_target[0], str):
-                        self.log_pdf_target = [Distribution(pdf_target_j).log_pdf for pdf_target_j in self.pdf_target]
-                    else:
-                        self.log_pdf_target = [partial(compute_log_pdf, pdf_func=pdf_target_j)
-                                               for pdf_target_j in self.pdf_target]
-                elif isinstance(self.pdf_target, str):
-                    self.log_pdf_target = Distribution(self.pdf_target).log_pdf
-                elif callable(self.pdf_target):
-                    self.log_pdf_target = partial(compute_log_pdf, pdf_func=self.pdf_target)
+                if not isinstance(self.pdf_target, list):
+                    raise ValueError('For MMH algo with pdf_target_type="marginal", '
+                                     'pdf_target should be a list')
+                if isinstance(self.pdf_target[0], str):
+                    p_js = [Distribution(dist_name=pdf_target_j) for pdf_target_j in self.pdf_target]
+                    try:
+                        [p_j.pdf(x=None, params=None) for p_j in p_js]
+                    except TypeError:
+                        self.log_pdf_target = [partial(compute_log_pdf, pdf_func=p_j.pdf) for p_j in p_js]
+                    except AttributeError:
+                        raise AttributeError('pdf_target given as a list of strings must point to Distributions '
+                                             'with an existing pdf method.')
+                elif callable(self.pdf_target[0]):
+                    self.log_pdf_target = [partial(compute_log_pdf, pdf_func=pdf_target_j)
+                                           for pdf_target_j in self.pdf_target]
+                else:
+                    raise ValueError('pdf_target must be a list of strings or a list of callables')
         else:
             if self.log_pdf_target is not None:
-                if isinstance(self.log_pdf_target, list):
-                    raise ValueError('For MH and Stretch, log_pdf_target must be a callable function')
+                if isinstance(self.log_pdf_target, str) or (isinstance(self.log_pdf_target, list)
+                                                            and isinstance(self.log_pdf_target[0], str)):
+                    p = Distribution(dist_name=self.log_pdf_target, copula=self.pdf_target_copula)
+                    try:
+                        p.log_pdf(x=None, params=None, copula_params=None)
+                    except TypeError:
+                        self.log_pdf_target = p.log_pdf
+                    except AttributeError:
+                        raise AttributeError('log_pdf_target given as a string must point to a Distribution '
+                                             'with an existing log_pdf method.')
+                elif callable(self.log_pdf_target):
+                    pass
+                else:
+                    raise ValueError('For MH and Stretch, log_pdf_target must be a callable function, '
+                                     'a str or list of str')
             else:
                 if isinstance(self.pdf_target, str) or (isinstance(self.pdf_target, list)
                                                         and isinstance(self.pdf_target[0], str)):
-                    self.log_pdf_target = Distribution(self.pdf_target).log_pdf
+                    p = Distribution(dist_name=self.pdf_target, copula=self.pdf_target_copula)
+                    try:
+                        p.pdf(x=None, params=None, copula_params=None)
+                    except TypeError:
+                        self.log_pdf_target = partial(compute_log_pdf, pdf_func=p.pdf)
+                    except AttributeError:
+                        raise AttributeError('pdf_target given as a string must point to a Distribution '
+                                             'with an existing pdf method.')
                 elif callable(self.pdf_target):
                     self.log_pdf_target = partial(compute_log_pdf, pdf_func=self.pdf_target)
                 else:
-                    raise ValueError('For MH and Stretch, pdf_target must be a callable function, a str or list of str')
+                    raise ValueError('For MH and Stretch, pdf_target must be a callable function, '
+                                     'a str or list of str')
 
 
 ########################################################################################################################
@@ -1027,9 +1532,6 @@ class IS:
             proposal distribution.
 
         Input:
-            :param dimension: A scalar value defining the dimension of the random variables.
-                              Default: len(dist_names).
-            :type dimension: int
 
             :param pdf_proposal: A list containing the names of the proposal distribution for each random variable.
                                  Distribution names must match those in the Distributions module.
@@ -1072,20 +1574,20 @@ class IS:
     # Authors: Dimitris G.Giovanis
     # Last Modified: 11/02/18 by Audrey Olivier
 
-    def __init__(self, dimension=None, nsamples=None,
-                 pdf_proposal=None, pdf_proposal_params=None, pdf_proposal_copula=None,
-                 pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None
+    def __init__(self, nsamples=None,
+                 pdf_proposal=None, pdf_proposal_params=None,
+                 pdf_target=None, log_pdf_target=None, pdf_target_params=None,
+                 pdf_target_copula=None, pdf_target_copula_params=None
                  ):
 
-        self.dimension = dimension
         self.nsamples = nsamples
         self.pdf_proposal = pdf_proposal
         self.pdf_proposal_params = pdf_proposal_params
-        self.pdf_proposal_copula = pdf_proposal_copula
         self.pdf_target = pdf_target
         self.log_pdf_target = log_pdf_target
         self.pdf_target_params = pdf_target_params
         self.pdf_target_copula = pdf_target_copula
+        self.pdf_target_copula_params = pdf_target_copula_params
 
         self.init_is()
 
@@ -1096,7 +1598,7 @@ class IS:
 
     def sampling_step(self):
 
-        proposal_pdf_ = Distribution(name=self.pdf_proposal, copula=self.pdf_proposal_copula)
+        proposal_pdf_ = Distribution(dist_name=self.pdf_proposal)
         samples = proposal_pdf_.rvs(params=self.pdf_proposal_params, nsamples=self.nsamples)
         return samples
 
@@ -1104,10 +1606,18 @@ class IS:
 
         x = self.samples
         # evaluate qs (log_pdf_proposal)
-        proposal_pdf_ = Distribution(name=self.pdf_proposal, copula=self.pdf_proposal_copula)
-        log_qs = proposal_pdf_.log_pdf(x, params=self.pdf_proposal_params)
+        proposal_pdf_ = Distribution(dist_name=self.pdf_proposal)
+        try:
+            log_qs = proposal_pdf_.log_pdf(x, params=self.pdf_proposal_params)
+        except AttributeError:
+            log_qs = np.log(proposal_pdf_.pdf(x, params=self.pdf_proposal_params))
         # evaluate ps (log_pdf_target)
-        log_ps = self.log_pdf_target(x, params=self.pdf_target_params)
+        kwargs = {}
+        if self.pdf_target_params is not None:
+            kwargs['params'] = self.pdf_target_params
+        if self.pdf_target_copula_params is not None:
+            kwargs['copula_params'] = self.pdf_target_copula_params
+        log_ps = self.log_pdf_target(x, **kwargs)
 
         log_weights = log_ps-log_qs
         # this rescale is used to avoid having NaN of Inf when taking the exp
@@ -1116,60 +1626,65 @@ class IS:
         return log_weights, weights/sum_w
 
     def resample(self, method='multinomial', size=None):
-
-        if size is None:
-            size = self.nsamples
-        if method == 'multinomial':
-            multinomial_run = np.random.multinomial(size, self.weights, size=1)[0]
-            idx = list()
-            for j in range(self.nsamples):
-                if multinomial_run[j] > 0:
-                    idx.extend([j for _ in range(multinomial_run[j])])
-            output = self.samples[idx, :]
-            return output
-        else:
-            raise ValueError('Exit code: Current available method: multinomial')
+        from .Utilities import resample
+        return resample(self.samples, self.weights, method=method, size=size)
 
     ################################################################################################################
     # Initialize Importance Sampling.
 
     def init_is(self):
 
-        # Check dimension
-        if self.dimension is None:
-            raise NotImplementedError('Exit code: Dimension is not defined.')
-
         # Check nsamples
         if self.nsamples is None:
             raise NotImplementedError('Exit code: Number of samples is not defined.')
 
+        # helper function
+        def compute_log_pdf(x, params, copula_params, pdf_func):
+            kwargs = {}
+            if params is not None:
+                kwargs['params'] = params
+            if copula_params is not None:
+                kwargs['copula_params'] = copula_params
+            tmp = pdf_func(x, **kwargs)
+            pdf_value = np.fmax(tmp, 10 ** (-320)*np.ones_like(tmp))
+            return np.log(pdf_value)
         # Check log_pdf_target, pdf_target
-        if self.pdf_target is None and self.log_pdf_target is None:
+        if (self.pdf_target is None) and (self.log_pdf_target is None):
             raise ValueError('UQpy error: a target pdf must be defined (pdf_target or log_pdf_target).')
         # The code first checks if log_pdf_target is defined, if yes, no need to check pdf_target
         if self.log_pdf_target is not None:
-            # log_pdf_target can be defined as a function that takes either one or two inputs. In the latter case,
-            # the second input is params, which is fixed to params=self.pdf_target_params
-            if not callable(self.log_pdf_target) or len(signature(self.log_pdf_target).parameters) > 2:
-                raise ValueError('UQpy error: when defined as a function, '
-                                 'log_pdf_target takes one (x) or two (x, params) inputs.')
+            # log_pdf_target can be defined as a callable or string.
+            if isinstance(self.log_pdf_target, str) or (isinstance(self.log_pdf_target, list) and
+                                                        isinstance(self.log_pdf_target[0], str)):
+                p = Distribution(dist_name=self.log_pdf_target, copula=self.pdf_target_copula)
+                try:
+                    p.log_pdf(x=None, params=None, copula_params=None)
+                except TypeError:
+                    self.log_pdf_target = p.log_pdf
+                except AttributeError:
+                    raise AttributeError('log_pdf_target given as a string must point to a Distribution '
+                                         'with an existing log_pdf method.')
+            elif callable(self.log_pdf_target):
+                pass
+            else:
+                raise ValueError('log_pdf_target should be a callable or a string/list of strings.')
         else:
             # pdf_target can be a str of list of strings, then compute the log_pdf
             if isinstance(self.pdf_target, str) or (isinstance(self.pdf_target, list) and
                                                     isinstance(self.pdf_target[0], str)):
-                p = Distribution(name=self.pdf_target, copula=self.pdf_target_copula)
-                self.log_pdf_target = partial(p.log_pdf, params=self.pdf_target_params)
+                p = Distribution(dist_name=self.pdf_target, copula=self.pdf_target_copula)
+                try:
+                    p.pdf(x=None, params=None, copula_params=None)
+                except TypeError:
+                    self.log_pdf_target = partial(compute_log_pdf, pdf_func=p.pdf)
+                except AttributeError:
+                    raise AttributeError('pdf_target given as a string must point to a Distribution '
+                                         'with an existing pdf method.')
             # otherwise it may be a function that computes the pdf, then just take the logarithm
-            else:
-                if not callable(self.pdf_target) or len(signature(self.pdf_target).parameters) != 2:
-                    raise ValueError('UQpy error: when defined as a function, '
-                                     'pdf_target takes two (x, params) inputs.')
-
-                # helper function
-                def compute_log_pdf(x, params, pdf_func):
-                    pdf_value = max(pdf_func(x, params), 10**(-320))
-                    return np.log(pdf_value)
+            elif callable(self.pdf_target):
                 self.log_pdf_target = partial(compute_log_pdf, pdf_func=self.pdf_target)
+            else:
+                raise ValueError('pdf_target should be a callable or a string/list of strings.')
 
         # Check pdf_proposal_name
         if self.pdf_proposal is None:

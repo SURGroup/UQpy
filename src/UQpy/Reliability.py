@@ -19,15 +19,14 @@
 
 from UQpy.RunModel import RunModel
 from UQpy.SampleMethods import MCMC
-from UQpy.Utilities import gradient, eval_hessian
-import numpy as np
-import scipy
-
+from UQpy.Transformations import *
 
 ########################################################################################################################
 ########################################################################################################################
 #                                        Subset Simulation
 ########################################################################################################################
+
+
 class SubsetSimulation:
     """
         Description:
@@ -226,7 +225,7 @@ class SubsetSimulation:
             self.samples.append(self.samples_init)
 
         g_init = RunModel(samples=self.samples[step], model_script=self.model_script, ntasks=self.ntasks,
-                           model_object_name=self.model_object_name)
+                          model_object_name=self.model_object_name)
 
         self.g.append(np.asarray(g_init.qoi_list).reshape((-1,)))
         g_ind = np.argsort(self.g[step])
@@ -279,7 +278,6 @@ class SubsetSimulation:
         cov1 = np.sqrt(np.sum(self.d12))
         cov2 = np.sqrt(np.sum(self.d22))
 
-
         return pf, cov1, cov2
 
     # Run Subset Simulation using the Affine Invariant Ensemble Sampler
@@ -298,7 +296,7 @@ class SubsetSimulation:
             self.samples.append(self.samples_init)
 
         g_init = RunModel(samples=self.samples[step], model_script=self.model_script, ntasks=self.ntasks,
-                           model_object_name=self.model_object_name)
+                          model_object_name=self.model_object_name)
 
         self.g.append(np.asarray(g_init.qoi_list).reshape((-1,)))
         # self.g.append(np.asarray(g_init.qoi_list))
@@ -325,10 +323,9 @@ class SubsetSimulation:
                               pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
                               algorithm=self.algorithm, nsamples=n_keep+1, seed=x0)
 
-
                 x_temp = x_mcmc.samples[n_keep].reshape((1, self.dimension))
                 g_model = RunModel(samples=x_temp, model_script=self.model_script, ntasks=self.ntasks,
-                                    model_object_name=self.model_object_name)
+                                   model_object_name=self.model_object_name)
 
                 g_temp = g_model.qoi_list
 
@@ -408,15 +405,15 @@ class SubsetSimulation:
 
         gamma = np.zeros(n_s - 1)
         r = np.zeros(n_s)
-        n = n_c * n_s
+        # n = n_c * n_s
 
-        I = indicator * 1
-        R = I @ I.T / n_c - self.p_cond ** 2
-        for i in range(R.shape[0]):
-            r[i] = np.sum(np.diag(R, i)) / (R.shape[0] - i)
+        ii = indicator * 1
+        r_ = ii @ ii.T / n_c - self.p_cond ** 2
+        for i in range(r_.shape[0]):
+            r[i] = np.sum(np.diag(r_, i)) / (r_.shape[0] - i)
 
-        R0 = 0.1 * (1 - 0.1)
-        r = r / R0
+        r0 = 0.1 * (1 - 0.1)
+        r = r / r0
 
         for i in range(n_s - 1):
             gamma[i] = (1 - ((i + 1) / n_s)) * r[i+1]
@@ -467,16 +464,14 @@ class SubsetSimulation:
     #
     #     return beta, r_jn[0]
 
-
     # Operate only on pairs with same starting point
     def corr_factor_beta(self, indicator, g, n_s, n_c, p_cond):
 
         r_jn = 0
-        U = np.unique(g[0, :])
-        for i in range(U.size):
-            I = indicator[:, g[0, :] == U[i]]
-            r_jn = r_jn + I.shape[1]*(I.shape[1]-1)/2
-
+        u = np.unique(g[0, :])
+        for i in range(u.size):
+            ii = indicator[:, g[0, :] == u[i]]
+            r_jn = r_jn + ii.shape[1]*(ii.shape[1]-1)/2
 
         beta = 0
 
@@ -639,7 +634,6 @@ class SubsetSimulation:
     #         # r_jn[0] = 0.
     #         return beta, r_jn[0]
 
-
         # def cov_sus(self, step):
         #     n = self.g[step].size
         #     if step == 0:
@@ -671,33 +665,80 @@ class SubsetSimulation:
         #
         #     return di
 
+
 ########################################################################################################################
 ########################################################################################################################
 #                                        First/Second order reliability method
 ########################################################################################################################
 
-
 class TaylorSeries:
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 9/15/18 by Dimitris G. Giovanis
+    # Last Modified: 11/19/18 by Dimitris G. Giovanis
 
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, nsamples=None, corr=None, method=None,
-                 algorithm=None, model_type=None, model_script=None, input_script=None,
-                 output_script=None, brute=True):
+    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=1000, corr=None, method=None, seed=None,
+                 algorithm=None, model_script=None, model_object_name=None, input_template=None, var_names=None,
+                 output_script=None, output_object_name=None, n_tasks=1, cores_per_task=1, nodes=1, resume=False,
+                 verbose=False, model_dir=None, cluster=False):
+        """
+            Description: A class that performs reliability analysis of a model using the First Order Reliability Method
+                         (FORM) and Second Order Reliability Method (SORM) that belong to the family of Taylor series
+                         expansion methods.
 
+            Input:
+                :param dimension: Number of random variables
+                :type dimension: int
+
+                :param dist_name: Probability distribution model for each random variable (see Distributions class).
+                :type dist_name: list/string
+
+                :param dist_params: Probability distribution model parameters for each random variable.
+                                   (see Distributions class).
+                :type dist_params: list
+
+                :param n_iter: Maximum number of iterations for the Hasofer-Lind algorithm
+                :type n_iter: int
+
+                :param seed: Initial seed
+                :type seed: np.array
+
+                :param corr: Correlation structure of the random vector (See Transformation class).
+                :type corr: ndarray
+
+                :param method: Method used for the reliability problem -- available methods: 'FORM', 'SORM'
+                :type method: str
+
+                :param algorithm: Algorithm used to solve the optimization problem -- available algorithms: 'HL'.
+                :type algorithm: str
+
+                :param model_script, model_object_name, input_template, var_names, output_script, output_object_name,
+                       ntasks, cores_per_task, nodes, resume, verbose, model_dir, cluster: See RunModel class.
+        """
         self.dimension = dimension
         self.dist_name = dist_name
         self.dist_params = dist_params
-        self.nsamples = nsamples
-        self.corr = corr
+        self.n_iter = n_iter
         self.method = method
         self.algorithm = algorithm
-        self.model_type = model_type
+        self.seed = seed
+        self.model_object_name = model_object_name
         self.model_script = model_script
-        self.input_script = input_script
+        self.output_object_name = output_object_name
+        self.input_template = input_template
+        if var_names is None:
+            var_names = ['dummy'] * self.dimension
+        if corr is None:
+            corr = np.eye(dimension)
+        self.corr = corr
+        self.var_names = var_names
+        self.n_tasks = n_tasks
+        self.cores_per_task = cores_per_task
+        self.nodes = nodes
+        self.resume = resume
+        self.verbose = verbose
+        self.model_dir = model_dir
+        self.cluster = cluster
         self.output_script = output_script
-        self.brute = brute
 
         if self.method == 'FORM':
             print('Running FORM...')
@@ -705,9 +746,10 @@ class TaylorSeries:
             print('Running SORM...')
 
         if self.algorithm == 'HL':
-            [self.DesignPoint_Z, self.DesignPoint_X, self.HL_ReliabilityIndex, self.ProbabilityOfFailure_FORM,
-             self.SORM_ReliabilityIndex, self.ProbabilityOfFailure_SORM, self.iterations] = self.form_hl()
+            [self.DesignPoint_U, self.DesignPoint_X, self.HL_beta, self.Prob_FORM,
+             self.Prob_SORM, self.iterations] = self.form_hl()
 
+        '''
         print('Design point in standard normal space: %s' % self.DesignPoint_Z)
         print('Design point in original space: %s' % self.DesignPoint_X)
         print('Hasofer-Lind reliability index: %s' % self.HL_ReliabilityIndex)
@@ -717,145 +759,164 @@ class TaylorSeries:
             print('SORM probability of failure: %s' % self.ProbabilityOfFailure_SORM)
 
         print('Total number of function calls: %s' % self.iterations)
+        '''
 
     def form_hl(self):
-
-        # Hasofer-Lind (HL) algorithm
-        import scipy as sp
         n = self.dimension  # number of random variables (dimension)
-
         # initialization
-        max_iter = int(self.nsamples)
+        max_iter = self.n_iter
         tol = 1e-5
         u = np.zeros([max_iter + 1, n])
-        x = np.zeros([max_iter + 1, n])
+        if self.seed is not None:
+            u[0, :] = Nataf(dimension=self.dimension, input_samples=self.seed.reshape(1, -1),
+                            dist_name=self.dist_name, dist_params=self.dist_params, corr=self.corr).samples
+        x = np.zeros_like(u)
         beta = np.zeros(max_iter)
-        from UQpy.SampleMethods import InvNataf, Nataf
-        # HL method
-        if self.brute is False:
-            flag_ = False
-        for k in range(max_iter):
+        converge_ = False
 
+        for k in range(max_iter):
             # transform the initial point in the original space:  U to X
-            u_x = Nataf(dimension=self.dimension, input_samples=u[k, :].reshape(1, -1),
-                        dist_name=self.dist_name, dist_params=self.dist_params, corr_norm=self.corr)
+            u_x = InvNataf(dimension=self.dimension, input_samples=u[k, :].reshape(1, -1),
+                           dist_name=self.dist_name, dist_params=self.dist_params, corr_norm=self.corr)
+
             x[k, :] = u_x.samples
             jacobian = u_x.jacobian[0]
 
             # 1. evaluate Limit State Function at point
-            g = RunModel(samples=x[k, :].reshape(1, -1), model_type=self.model_type, model_script=self.model_script,
-                         input_script=self.input_script, output_script=self.output_script,
-                         dimension=self.dimension)
+
+            g = RunModel(samples=x[k, :].reshape(1, -1), model_script=self.model_script,
+                         model_object_name=self.model_object_name,
+                         input_template=self.input_template, var_names=self.var_names, output_script=self.output_script,
+                         output_object_name=self.output_object_name,
+                         ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes, resume=self.resume,
+                         verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
 
             # 2. evaluate Limit State Function gradient at point u_k and direction cosines
-            dg = gradient(sample=x[k, :].reshape(1, -1), eps=0.01,
-                          model_type=self.model_type, model_script=self.model_script,
-                          input_script=self.input_script,
-                          output_script=self.output_script, dimension=self.dimension, order='second')
+            dg = gradient(sample=x[k, :].reshape(1, -1), dimension=self.dimension, eps=0.1,
+                          model_script=self.model_script,
+                          model_object_name=self.model_object_name,
+                          input_template=self.input_template, var_names=self.var_names,
+                          output_script=self.output_script,
+                          output_object_name=self.output_object_name,
+                          ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes, resume=self.resume,
+                          verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster, order='second')
 
-            if self.brute is False:
-                try:
-                    p = np.linalg.solve(jacobian, dg[0, :])
-                    if np.isnan(p):
-                        break
-                except:
-                    break
-            else:
+            try:
                 p = np.linalg.solve(jacobian, dg[0, :])
+            except:
+                print('Bad transformation')
+                if self.method == 'FORM':
+                    u_star = np.inf
+                    x_star = np.inf
+                    beta = np.inf
+                    pf = np.inf
 
-            norm_grad = sp.linalg.norm(p)
+                    return u_star, x_star, beta, pf, [], k
+
+                elif self.method == 'SORM':
+                    u_star = np.inf
+                    x_star = np.inf
+                    beta = np.inf
+                    pf = np.inf
+                    pf_srom = np.inf
+
+                    return u_star, x_star, beta, pf, pf_srom, k
+
+            try:
+                np.isnan(p)
+            except:
+
+                print('Bad transformation')
+                if self.method == 'FORM':
+                    u_star = np.inf
+                    x_star = np.inf
+                    beta = np.inf
+                    pf = np.inf
+
+                    return u_star, x_star, beta, pf, [], k
+
+                elif self.method == 'SORM':
+                    u_star = np.inf
+                    x_star = np.inf
+                    beta = np.inf
+                    pf = np.inf
+                    pf_srom = np.inf
+
+                    return u_star, x_star, beta, pf, pf_srom, k
+
+            norm_grad = np.linalg.norm(p)
             alpha = p / norm_grad
             alpha = alpha.squeeze()
             # 3. calculate first order beta
-            beta[k] = -np.inner(u[k, :].T, alpha) + g.model_eval.QOI[0] / norm_grad
+            beta[k] = -np.inner(u[k, :].T, alpha) + g.qoi_list[0] / norm_grad
             # 4. calculate u_{k+1}
             u[k + 1, :] = -beta[k] * alpha
-
             # next iteration
-
+            print(x[k, :])
             if np.linalg.norm(u[k + 1, :] - u[k, :]) <= tol:
-                flag_ = True
-                break
+                converge_ = True
+                # delete unnecessary data
+                u = u[:k + 1, :]
+                # compute design point, reliability index and Pf
+                u_star = u[-1, :]
+                # transform points in the original space
+                u_x = InvNataf(dimension=self.dimension, input_samples=u_star.reshape(1, -1),
+                               dist_name=self.dist_name, dist_params=self.dist_params, corr_norm=self.corr)
+                x_star = u_x.samples
+                beta = beta[k]
+                pf = stats.norm.cdf(-beta)
+                if self.method == 'SORM':
+                    k = 3 * (k+1) + 5
+                    der_ = dg[1, :]
+                    mixed_der = gradient(sample=x_star.reshape(1, -1), eps=0.1, dimension=self.dimension,
+                                         model_script=self.model_script,
+                                         model_object_name=self.model_object_name,
+                                         input_template=self.input_template, var_names=self.var_names,
+                                         output_script=self.output_script,
+                                         output_object_name=self.output_object_name,
+                                         ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes,
+                                         resume=self.resume,
+                                         verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster,
+                                         order='mixed')
 
-        if flag_ is True:
-            # delete unnecessary data
-            u = u[:k + 1, :]
+                    hessian = eval_hessian(self.dimension, mixed_der, der_)
+                    q = np.eye(self.dimension)
+                    q[:, 0] = u_star.T
+                    q_, r_ = np.linalg.qr(q)
+                    q0 = np.fliplr(q_)
+                    a = np.dot(np.dot(q0.T, hessian), q0)
+                    if self.dimension > 1:
+                        jay = np.eye(self.dimension - 1) + beta * a[:self.dimension - 1,
+                                                                    :self.dimension - 1] / norm_grad
+                    elif self.dimension == 1:
+                        jay = np.eye(self.dimension) + beta * a[:self.dimension, :self.dimension] / norm_grad
+                    correction = 1 / np.sqrt(np.linalg.det(jay))
+                    pf_srom = pf * correction
 
-            # compute design point, reliability index and Pf
-            u_star = u[-1, :]
-            # transform points in the original space
-            u_x = Nataf(dimension=self.dimension, input_samples=u_star.reshape(1, -1),
-                        dist_name=self.dist_name, dist_params=self.dist_params, corr_norm=self.corr)
-            x_star = u_x.samples
-            jacobian = u_x.jacobian[0]
-            beta = beta[k]
-            pf = sp.stats.norm.cdf(-beta)
+                    return u_star, x_star, beta, pf, pf_srom, k
 
-            if self.method == 'SORM':
-                k = 3 * k + 5
+                elif self.method == 'FORM':
+                    k = 3 * (k + 1)
+                    return u_star, x_star, beta, pf,  [], k
+            else:
+                continue
 
-                # transform the initial point in the original space:  U to X
-                u_x = Nataf(dimension=self.dimension, input_samples=u_star.reshape(1, -1),
-                            dist_name=self.dist_name, dist_params=self.dist_params, corr_norm=self.corr)
-                x[k, :] = u_x.samples
-                jacobian = u_x.jacobian[0]
+        if converge_ is False:
+            print("{0} did not converge".format(self.method))
 
-                # 1. evaluate Limit State Function at point
-                g = RunModel(samples=x[k, :].reshape(1, -1), model_type=self.model_type, model_script=self.model_script,
-                             input_script=self.input_script, output_script=self.output_script,
-                             dimension=self.dimension)
-
-                # 2. evaluate Limit State Function gradient at point u_k and direction cosines
-                dg = gradient(sample=x[k, :].reshape(1, -1), eps=0.01,
-                              model_type=self.model_type, model_script=self.model_script,
-                              input_script=self.input_script,
-                              output_script=self.output_script, dimension=self.dimension, order='second')
-
-                der_ = dg[1, :]
-
-                mixed_der = gradient(sample=x_star.reshape(1, -1), eps=0.01,
-                                     model_type=self.model_type, model_script=self.model_script,
-                                     input_script=self.input_script,
-                                     output_script=self.output_script, dimension=self.dimension, order='mixed')
-
-                hessian = eval_hessian(self.dimension, mixed_der, der_)
-
-                q = np.eye(self.dimension)
-                q[:, 0] = u_star.T
-                q_, r_ = np.linalg.qr(q)
-                q0 = np.fliplr(q_)
-                a = np.dot(np.dot(q0.T, hessian), q0)
-                if self.dimension > 1:
-                    jay = np.eye(self.dimension - 1) + beta * a[:self.dimension - 1, :self.dimension - 1] / norm_grad
-                elif self.dimension == 1:
-                    jay = np.eye(self.dimension) + beta * a[:self.dimension, :self.dimension] / norm_grad
-                correction = 1 / np.sqrt(np.linalg.det(jay))
-                pf_srom = pf * correction
-                beta_srom = -sp.stats.norm.ppf(pf_srom)
-
-                return u_star, x_star, beta, pf, beta_srom, pf_srom, k
-
-            elif self.method == 'FORM':
-                k = 3 * k
-                return u_star, x_star, beta, pf, [], [], k
-
-        else:
             if self.method == 'FORM':
-                k = 0
                 u_star = np.inf
                 x_star = np.inf
                 beta = np.inf
                 pf = np.inf
 
-                return u_star, x_star, beta, pf, [], [], k
+                return u_star, x_star, beta, pf, [], k
 
             elif self.method == 'SORM':
-                k = 0
                 u_star = np.inf
                 x_star = np.inf
                 beta = np.inf
                 pf = np.inf
-                beta_srom = np.inf
                 pf_srom = np.inf
 
-                return u_star, x_star, beta, pf, beta_srom, pf_srom, k
+                return u_star, x_star, beta, pf, pf_srom, k
