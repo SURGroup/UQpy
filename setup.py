@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='UQpy',
-    version="1.1.0",
+    version="2.0.0",
     url='https://github.com/SURGroup/UQpy',
     authors="Michael D. Shields, Dimitris G. Giovanis",
     author_emails="michael.shields@jhu.edu, dgiovan1@jhu.edu",
