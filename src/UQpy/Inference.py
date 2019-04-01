@@ -444,7 +444,7 @@ class BayesParameterEstimation:
             if pdf_proposal is None:
                 if self.model.prior is None:
                     raise ValueError('a proposal density or a prior should be given')
-                pdf_proposal = self.model.prior.name
+                pdf_proposal = self.model.prior.dist_name
                 pdf_proposal_params = self.model.prior_params
 
             if verbose:
@@ -626,3 +626,4 @@ class BayesModelSelection:
                                    for x in samples[int(0.5 * len(samples)):]]
         temp = np.mean([1/np.exp(x) for x in likelihood_given_sample])
         return 1/temp
+

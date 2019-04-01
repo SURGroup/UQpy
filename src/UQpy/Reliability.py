@@ -664,11 +664,11 @@ class SubsetSimulation:
         #
         #     return di
 
-
 ########################################################################################################################
 ########################################################################################################################
 #                                        First/Second order reliability method
 ########################################################################################################################
+
 
 class TaylorSeries:
 
@@ -780,7 +780,6 @@ class TaylorSeries:
 
             x[k, :] = u_x.samples
             jacobian = u_x.jacobian[0]
-
             # 1. evaluate Limit State Function at point
 
             g = RunModel(samples=x[k, :].reshape(1, -1), model_script=self.model_script,
@@ -799,7 +798,6 @@ class TaylorSeries:
                           output_object_name=self.output_object_name,
                           ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes, resume=self.resume,
                           verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster, order='second')
-
             try:
                 p = np.linalg.solve(jacobian, dg[0, :])
             except:
@@ -847,11 +845,11 @@ class TaylorSeries:
             alpha = p / norm_grad
             alpha = alpha.squeeze()
             # 3. calculate first order beta
-            beta[k] = -np.inner(u[k, :].T, alpha) + g.qoi_list[0] / norm_grad
+            beta[k + 1] = -np.inner(u[k, :].T, alpha)  + g.qoi_list[0] / norm_grad
+            #-np.inner(u[k, :].T, alpha) + g.qoi_list[0] / norm_grad
             # 4. calculate u_{k+1}
-            u[k + 1, :] = -beta[k] * alpha
+            u[k + 1, :] = -beta[k + 1] * alpha
             # next iteration
-            print(x[k, :])
             if np.linalg.norm(u[k + 1, :] - u[k, :]) <= tol:
                 converge_ = True
                 # delete unnecessary data
@@ -896,7 +894,7 @@ class TaylorSeries:
 
                 elif self.method == 'FORM':
                     k = 3 * (k + 1)
-                    return u_star, x_star, beta, pf,  [], k
+                    return u_star, x_star[0], beta, pf,  [], k
             else:
                 continue
 
