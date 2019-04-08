@@ -200,7 +200,7 @@ class LHS:
         samples_u_to_x = np.zeros_like(samples)
         for j in range(samples.shape[1]):
             i_cdf = self.distribution[j].icdf
-            samples_u_to_x[:, j] = i_cdf(samples[:, j], self.distribution[j].params)
+            samples_u_to_x[:, j] = i_cdf(samples[:, j], self.dist_params[j])
 
         print('Successful execution of LHS design..')
         return samples, samples_u_to_x
