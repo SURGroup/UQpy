@@ -54,6 +54,7 @@ class SubsetSimulation:
 
             :param pdf_proposal_type, pdf_proposal_scale, pdf_target, log_pdf_target, pdf_target_params, jump, nburn,
                     pdf_target_copula, pdf_target_copula_params, pdf_target_type, algorithm: See MCMC in SampleMethods
+
             :param model_script, model_object_name, input_template, var_names, output_script, output_object_name,
                        ntasks, cores_per_task, nodes, resume, verbose, model_dir, cluster: See RunModel class.
 
@@ -146,10 +147,6 @@ class SubsetSimulation:
                           algorithm=self.algorithm, jump=self.jump, nsamples=self.nsamples_ss, seed=self.seed,
                           nburn=self.nburn, verbose=self.verbose)
 
-            #x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-            #              pdf_proposal_scale=self.pdf_proposal_scale,
-            #              pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
-            #              algorithm=self.algorithm, nsamples=self.nsamples_ss, seed=self.seed)
             self.samples.append(x_init.samples)
         else:
             self.samples.append(self.samples_init)
@@ -189,13 +186,8 @@ class SubsetSimulation:
                               algorithm= self.algorithm, jump=self.jump, nsamples=2, seed=x0,
                               nburn=self.nburn, verbose=self.verbose)
 
-                #x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-                #              pdf_proposal_scale=self.pdf_proposal_scale,
-                #              pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
-                #              algorithm=self.algorithm, nsamples=2, seed=x0)
-
                 x_temp = x_mcmc.samples[1].reshape((1, self.dimension))
-                # x_temp = x_mcmc.samples[1]
+
                 g_model = RunModel(samples=x_temp, model_script=self.model_script,
                                    model_object_name=self.model_object_name,
                                    input_template=self.input_template, var_names=self.var_names,
@@ -237,7 +229,7 @@ class SubsetSimulation:
 
         # Generate the initial samples - Level 0
         if self.samples_init is None:
-            x_init = MCMC(self, dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
+            x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                           pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
                           log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
                           pdf_target_copula=self.pdf_target_copula,
@@ -276,7 +268,7 @@ class SubsetSimulation:
 
                 x0 = self.samples[step][i:i+n_keep]
 
-                x_mcmc = MCMC(self, dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
+                x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                               pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
                               log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
                               pdf_target_copula=self.pdf_target_copula,
@@ -284,11 +276,6 @@ class SubsetSimulation:
                               pdf_target_type=self.pdf_target_type,
                               algorithm= self.algorithm, jump=self.jump, nsamples=n_keep+1, seed=x0,
                               nburn=self.nburn, verbose=self.verbose)
-
-                #x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-                #              pdf_proposal_scale=self.pdf_proposal_scale,
-                #              pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
-                #              algorithm=self.algorithm, nsamples=n_keep+1, seed=x0)
 
                 x_temp = x_mcmc.samples[n_keep].reshape((1, self.dimension))
                 g_model = RunModel(samples=x_temp, model_script=self.model_script,
