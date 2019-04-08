@@ -1,217 +1,1152 @@
-material_opt_micro: reading mesh [line2, tri3, quad4, tetra4, hexa8] (/anaconda3/lib/python3.6/site-packages/sfepy/meshes/3d/matrix_fiber_rand.vtk)...
-material_opt_micro: ...done in 0.01 s
-material_opt_micro: warning: bad element orientation, trying to correct...
-material_opt_micro: ...corrected
-material_opt_micro: creating regions...
-material_opt_micro:     Y
-material_opt_micro:     Ym
-material_opt_micro:     Near
-material_opt_micro:     Far
-material_opt_micro:     Bottom
-material_opt_micro:     Top
-material_opt_micro:     Left
-material_opt_micro:     Right
-material_opt_micro:     Corners
-material_opt_micro:     Yf
-material_opt_micro: ...done in 0.02 s
-material_opt_micro: using solvers:
-                ts: no ts
+sfepy: left over: ['mesh_hook', 'stiffness_from_lame', 'UserMeshIO', 'mu', 'lam', 'kappa', 'mu_mr', 'mu_nh', 'K', 'gen_block_mesh', 'verbose', '_filename']
+sfepy: reading mesh [user] (function:mesh_hook)...
+sfepy: ...done in 0.00 s
+sfepy: creating regions...
+sfepy:     Omega
+sfepy:     Bottom
+sfepy:     Top
+sfepy: ...done in 0.01 s
+sfepy: using solvers:
+                ts: ts
                nls: newton
                 ls: ls
-he: computing Volume_total...
-he: computing dependency pis...
-he: ...done
-he: computing dependency corrs_rs...
-he:   equation "balance_of_forces":
-he:   dw_lin_elastic.5.Y(mat.D, v, u)
-                = - dw_lin_elastic.5.Y(mat.D, v, Pi)
-he:   equation "tmp":
-he:   d_volume.5.Y( u )
-he:   updating materials...
-he:   ...done in 0.00 s
-he: ...done
-he:   updating variables...
-he:   ...done
-he: computing vol...
-he:   equation "tmp":
-he:   d_volume.5.Ym(u)
-he:   updating materials...
-he:   ...done in 0.00 s
-he:   equation "tmp":
-he:   d_volume.5.Yf(u)
-he:   updating materials...
-he:   ...done in 0.00 s
-he: ...done
-he:   setting up dof connectivities...
-he:   ...done in 0.00 s
-he:   matrix shape: (1806, 1806)
-he:   assembling matrix graph...
-he:   ...done in 0.01 s
-he:   matrix structural nonzeros: 48690 (1.49e-02% fill)
-he:   updating materials...
-he:       mat
-he:   ...done in 0.01 s
-he:   using solvers:
-                ts: no ts
-               nls: newton
-                ls: ls
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 1.389378e+10 (rel: 1.000000e+00)
-he:     residual:    0.08 [s]
-he:       matrix:    0.11 [s]
-he:        solve:    0.18 [s]
-he:   nls: iter: 1, residual: 6.344026e-05 (rel: 4.566090e-15)
-he:   solved in 1 steps in 0.53 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 1.382069e+09 (rel: 1.000000e+00)
-he:     residual:    0.04 [s]
-he:       matrix:    0.14 [s]
-he:        solve:    0.27 [s]
-he:   nls: iter: 1, residual: 3.782802e-05 (rel: 2.737056e-14)
-he:   solved in 1 steps in 0.78 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 9.787459e+08 (rel: 1.000000e+00)
-he:     residual:    0.04 [s]
-he:       matrix:    0.11 [s]
-he:        solve:    0.16 [s]
-he:   nls: iter: 1, residual: 9.557557e-06 (rel: 9.765106e-15)
-he:   solved in 1 steps in 0.60 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 1.382069e+09 (rel: 1.000000e+00)
-he:     residual:    0.03 [s]
-he:       matrix:    0.10 [s]
-he:        solve:    0.16 [s]
-he:   nls: iter: 1, residual: 3.864849e-05 (rel: 2.796422e-14)
-he:   solved in 1 steps in 0.65 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 1.388547e+10 (rel: 1.000000e+00)
-he:     residual:    0.03 [s]
-he:       matrix:    0.10 [s]
-he:        solve:    0.17 [s]
-he:   nls: iter: 1, residual: 6.121362e-05 (rel: 4.408466e-15)
-he:   solved in 1 steps in 0.68 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 9.757932e+08 (rel: 1.000000e+00)
-he:     residual:    0.03 [s]
-he:       matrix:    0.11 [s]
-he:        solve:    0.18 [s]
-he:   nls: iter: 1, residual: 9.185989e-06 (rel: 9.413869e-15)
-he:   solved in 1 steps in 0.70 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 9.787459e+08 (rel: 1.000000e+00)
-he:     residual:    0.03 [s]
-he:       matrix:    0.11 [s]
-he:        solve:    0.15 [s]
-he:   nls: iter: 1, residual: 9.639440e-06 (rel: 9.848767e-15)
-he:   solved in 1 steps in 0.63 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 9.757932e+08 (rel: 1.000000e+00)
-he:     residual:    0.03 [s]
-he:       matrix:    0.10 [s]
-he:        solve:    0.16 [s]
-he:   nls: iter: 1, residual: 9.135185e-06 (rel: 9.361804e-15)
-he:   solved in 1 steps in 0.59 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 1.243862e+10 (rel: 1.000000e+00)
-he:     residual:    0.04 [s]
-he:       matrix:    0.11 [s]
-he:        solve:    0.20 [s]
-he:   nls: iter: 1, residual: 3.043848e-05 (rel: 2.447094e-15)
-he:   solved in 1 steps in 0.70 seconds
-he: ...done
-he: computing D...
-he:   equation "tmp":
-he:   dw_lin_elastic.5.Y(mat.D, Pi1, Pi2 )
-he:   updating materials...
-he:       mat
-he:   ...done in 0.01 s
-he: ...done
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: setting up dof connectivities...
-material_opt_macro: ...done in 0.00 s
-material_opt_macro: matrix shape: (690, 690)
-material_opt_macro: assembling matrix graph...
-material_opt_macro: ...done in 0.00 s
-material_opt_macro: matrix structural nonzeros: 35854 (7.53e-02% fill)
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: updating materials...
-material_opt_macro:     load
-material_opt_macro:     solid
-material_opt_macro: ...done in 0.00 s
-material_opt_macro: nls: iter: 0, residual: 1.424786e+03 (rel: 1.000000e+00)
-material_opt_macro:   residual:    0.00 [s]
-material_opt_macro:     matrix:    0.01 [s]
-material_opt_macro:      solve:    0.00 [s]
-material_opt_macro: nls: iter: 1, residual: 2.336994e-10 (rel: 1.640243e-13)
-material_opt_macro: solved in 1 steps in 0.02 seconds
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: updating materials...
-material_opt_macro:     load
-material_opt_macro:     solid
-material_opt_macro: ...done in 0.00 s
-material_opt_macro: nls: iter: 0, residual: 1.424786e+03 (rel: 1.000000e+00)
-material_opt_macro:   residual:    0.00 [s]
-material_opt_macro:     matrix:    0.01 [s]
-material_opt_macro:      solve:    0.00 [s]
-material_opt_macro: nls: iter: 1, residual: 1.943497e-09 (rel: 1.364062e-12)
-material_opt_macro: solved in 1 steps in 0.02 seconds
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: updating materials...
-material_opt_macro:     load
-material_opt_macro:     solid
-material_opt_macro: ...done in 0.00 s
-material_opt_macro: nls: iter: 0, residual: 1.424786e+03 (rel: 1.000000e+00)
-material_opt_macro:   residual:    0.00 [s]
-material_opt_macro:     matrix:    0.01 [s]
-material_opt_macro:      solve:    0.00 [s]
-material_opt_macro: nls: iter: 1, residual: 1.964643e-09 (rel: 1.378904e-12)
-material_opt_macro: solved in 1 steps in 0.02 seconds
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: updating materials...
-material_opt_macro:     load
-material_opt_macro:     solid
-material_opt_macro: ...done in 0.00 s
-material_opt_macro: nls: iter: 0, residual: 1.424786e+03 (rel: 1.000000e+00)
-material_opt_macro:   residual:    0.00 [s]
-material_opt_macro:     matrix:    0.01 [s]
-material_opt_macro:      solve:    0.00 [s]
-material_opt_macro: nls: iter: 1, residual: 1.575128e-09 (rel: 1.105519e-12)
-material_opt_macro: solved in 1 steps in 0.02 seconds
+sfepy: equation "Mooney-Rivlin":
+sfepy: dw_tl_he_neohook.i.Omega(solid.mu_mr, v, u)
+                           + dw_tl_he_mooney_rivlin.i.Omega(solid.kappa, v, u)
+                           + dw_tl_bulk_penalty.i.Omega(solid.K, v, u)
+                           = dw_surface_ltr.isurf.Top(load.val, v)
+sfepy: updating variables...
+sfepy: ...done
+sfepy: setting up dof connectivities...
+sfepy: ...done in 0.00 s
+sfepy: matrix shape: (28, 28)
+sfepy: assembling matrix graph...
+sfepy: ...done in 0.00 s
+sfepy: matrix structural nonzeros: 688 (8.78e-01% fill)
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: ====== time 0.000000e+00 (step  1 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: initial residual: 0.000000e+00
+sfepy: ====== time 4.000000e-02 (step  2 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.812312e-02 (rel: 3.624624e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.560016e-05 (rel: 5.120033e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 5.592777e-11 (rel: 1.118555e-10)
+sfepy: ====== time 8.000000e-02 (step  3 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.954522e-02 (rel: 3.909044e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.829350e-05 (rel: 5.658701e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 7.158719e-11 (rel: 1.431744e-10)
+sfepy: ====== time 1.200000e-01 (step  4 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 2.118522e-02 (rel: 4.237044e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 3.115139e-05 (rel: 6.230278e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 9.124731e-11 (rel: 1.824946e-10)
+sfepy: ====== time 1.600000e-01 (step  5 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 2.307925e-02 (rel: 4.615850e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 3.416054e-05 (rel: 6.832109e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 1.157856e-10 (rel: 2.315712e-10)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 6.379859e-15 (rel: 1.275972e-14)
+sfepy: ====== time 2.000000e-01 (step  6 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 2.526831e-02 (rel: 5.053663e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 3.731867e-05 (rel: 7.463734e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 1.460928e-10 (rel: 2.921856e-10)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 4.684283e-15 (rel: 9.368566e-15)
+sfepy: ====== time 2.400000e-01 (step  7 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 2.779818e-02 (rel: 5.559635e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 4.065431e-05 (rel: 8.130863e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 1.831693e-10 (rel: 3.663387e-10)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 6.429955e-15 (rel: 1.285991e-14)
+sfepy: ====== time 2.800000e-01 (step  8 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 3.071890e-02 (rel: 6.143781e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 4.425952e-05 (rel: 8.851903e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 2.280248e-10 (rel: 4.560496e-10)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 8.088643e-15 (rel: 1.617729e-14)
+sfepy: ====== time 3.200000e-01 (step  9 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 3.408379e-02 (rel: 6.816758e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 4.833546e-05 (rel: 9.667092e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 2.817203e-10 (rel: 5.634407e-10)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 1.527858e-14 (rel: 3.055716e-14)
+sfepy: ====== time 3.600000e-01 (step 10 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 3.794751e-02 (rel: 7.589501e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 5.324146e-05 (rel: 1.064829e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 3.451429e-10 (rel: 6.902858e-10)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 4.807407e-15 (rel: 9.614813e-15)
+sfepy: ====== time 4.000000e-01 (step 11 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 4.236323e-02 (rel: 8.472645e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 5.951925e-05 (rel: 1.190385e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 4.188649e-10 (rel: 8.377298e-10)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 5.114261e-15 (rel: 1.022852e-14)
+sfepy: ====== time 4.400000e-01 (step 12 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 4.737864e-02 (rel: 9.475729e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 6.784935e-05 (rel: 1.356987e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 5.026185e-10 (rel: 1.005237e-09)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 7.183066e-15 (rel: 1.436613e-14)
+sfepy: ====== time 4.800000e-01 (step 13 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 5.303083e-02 (rel: 1.060617e-01)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 7.891470e-05 (rel: 1.578294e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 5.943562e-10 (rel: 1.188712e-09)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 7.623442e-15 (rel: 1.524688e-14)
+sfepy: ====== time 5.200000e-01 (step 14 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 5.934018e-02 (rel: 1.186804e-01)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 9.320814e-05 (rel: 1.864163e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 6.892586e-10 (rel: 1.378517e-09)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 1.115208e-14 (rel: 2.230416e-14)
+sfepy: ====== time 5.600000e-01 (step 15 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 6.630402e-02 (rel: 1.326080e-01)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 1.108669e-04 (rel: 2.217338e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 7.788290e-10 (rel: 1.557658e-09)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 1.092992e-14 (rel: 2.185984e-14)
+sfepy: ====== time 6.000000e-01 (step 16 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 7.389081e-02 (rel: 1.477816e-01)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 1.315917e-04 (rel: 2.631835e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 8.511151e-10 (rel: 1.702230e-09)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 6.829451e-15 (rel: 1.365890e-14)
+sfepy: ====== time 6.400000e-01 (step 17 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 8.203618e-02 (rel: 1.640724e-01)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 1.546535e-04 (rel: 3.093071e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 8.922919e-10 (rel: 1.784584e-09)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 5.488591e-15 (rel: 1.097718e-14)
+sfepy: ====== time 6.800000e-01 (step 18 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 9.064203e-02 (rel: 1.812841e-01)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 1.789680e-04 (rel: 3.579360e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 8.900506e-10 (rel: 1.780101e-09)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 6.076887e-15 (rel: 1.215377e-14)
+sfepy: ====== time 7.200000e-01 (step 19 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 9.957964e-02 (rel: 1.991593e-01)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.032254e-04 (rel: 4.064508e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 8.376062e-10 (rel: 1.675212e-09)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 9.190072e-15 (rel: 1.838014e-14)
+sfepy: ====== time 7.600000e-01 (step 20 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.086971e-01 (rel: 2.173942e-01)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.260600e-04 (rel: 4.521201e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 7.368308e-10 (rel: 1.473662e-09)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 1.220236e-14 (rel: 2.440471e-14)
+sfepy: ====== time 8.000000e-01 (step 21 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.178302e-01 (rel: 2.356605e-01)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.462314e-04 (rel: 4.924628e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 5.990294e-10 (rel: 1.198059e-09)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 5.434425e-15 (rel: 1.086885e-14)
+sfepy: ====== time 8.400000e-01 (step 22 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.268154e-01 (rel: 2.536308e-01)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.627801e-04 (rel: 5.255602e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 4.434810e-10 (rel: 8.869621e-10)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 1.373808e-14 (rel: 2.747617e-14)
+sfepy: ====== time 8.800000e-01 (step 23 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.355021e-01 (rel: 2.710041e-01)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.751254e-04 (rel: 5.502508e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 2.960556e-10 (rel: 5.921112e-10)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 1.356654e-14 (rel: 2.713309e-14)
+sfepy: ====== time 9.200000e-01 (step 24 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.437631e-01 (rel: 2.875261e-01)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.830882e-04 (rel: 5.661764e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 1.941204e-10 (rel: 3.882408e-10)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 1.846178e-14 (rel: 3.692355e-14)
+sfepy: ====== time 9.600000e-01 (step 25 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.515013e-01 (rel: 3.030026e-01)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.868459e-04 (rel: 5.736917e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 1.804582e-10 (rel: 3.609165e-10)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 2.161145e-14 (rel: 4.322291e-14)
+sfepy: ====== time 1.000000e+00 (step 26 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.586524e-01 (rel: 3.173048e-01)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.868418e-04 (rel: 5.736837e-04)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 2.247152e-10 (rel: 4.494304e-10)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 4, residual: 1.182479e-14 (rel: 2.364957e-14)
+sfepy: solved in 26 steps in 0.40 seconds
+sfepy: equation "Mooney-Rivlin":
+sfepy: dw_tl_he_neohook.i.Omega(solid.mu_mr, v, u)
+                           + dw_tl_he_mooney_rivlin.i.Omega(solid.kappa, v, u)
+                           + dw_tl_bulk_penalty.i.Omega(solid.K, v, u)
+                           = dw_surface_ltr.isurf.Top(load.val, v)
+sfepy: updating variables...
+sfepy: ...done
+sfepy: setting up dof connectivities...
+sfepy: ...done in 0.00 s
+sfepy: matrix shape: (28, 28)
+sfepy: assembling matrix graph...
+sfepy: ...done in 0.00 s
+sfepy: matrix structural nonzeros: 688 (8.78e-01% fill)
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: ====== time 0.000000e+00 (step  1 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: initial residual: 0.000000e+00
+sfepy: ====== time 4.000000e-02 (step  2 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.898663e-02 (rel: 3.797327e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.703881e-05 (rel: 5.407761e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 5.920207e-11 (rel: 1.184041e-10)
+sfepy: ====== time 8.000000e-02 (step  3 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.771421e-02 (rel: 3.542842e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.419533e-05 (rel: 4.839067e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 4.566414e-11 (rel: 9.132829e-11)
+sfepy: ====== time 1.200000e-01 (step  4 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.659606e-02 (rel: 3.319212e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.160559e-05 (rel: 4.321118e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 3.516865e-11 (rel: 7.033730e-11)
+sfepy: ====== time 1.600000e-01 (step  5 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.561160e-02 (rel: 3.122319e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 1.926220e-05 (rel: 3.852440e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 2.705608e-11 (rel: 5.411216e-11)
+sfepy: ====== time 2.000000e-01 (step  6 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.474292e-02 (rel: 2.948584e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 1.715351e-05 (rel: 3.430703e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 2.080308e-11 (rel: 4.160616e-11)
+sfepy: ====== time 2.400000e-01 (step  7 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.397455e-02 (rel: 2.794911e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 1.526488e-05 (rel: 3.052977e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 1.599601e-11 (rel: 3.199203e-11)
+sfepy: ====== time 2.800000e-01 (step  8 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.329314e-02 (rel: 2.658629e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 1.357988e-05 (rel: 2.715977e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 1.230240e-11 (rel: 2.460480e-11)
+sfepy: ====== time 3.200000e-01 (step  9 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.268720e-02 (rel: 2.537440e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 1.208131e-05 (rel: 2.416263e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 9.472814e-12 (rel: 1.894563e-11)
+sfepy: ====== time 3.600000e-01 (step 10 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.214686e-02 (rel: 2.429371e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 1.075196e-05 (rel: 2.150392e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 7.296210e-12 (rel: 1.459242e-11)
+sfepy: ====== time 4.000000e-01 (step 11 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.166365e-02 (rel: 2.332730e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 9.575140e-06 (rel: 1.915028e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 5.625728e-12 (rel: 1.125146e-11)
+sfepy: ====== time 4.400000e-01 (step 12 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.123033e-02 (rel: 2.246065e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 8.535080e-06 (rel: 1.707016e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 4.330166e-12 (rel: 8.660332e-12)
+sfepy: ====== time 4.800000e-01 (step 13 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.084068e-02 (rel: 2.168135e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 7.617115e-06 (rel: 1.523423e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 3.345723e-12 (rel: 6.691445e-12)
+sfepy: ====== time 5.200000e-01 (step 14 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.048938e-02 (rel: 2.097875e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 6.807801e-06 (rel: 1.361560e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 2.577824e-12 (rel: 5.155648e-12)
+sfepy: ====== time 5.600000e-01 (step 15 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 1.017187e-02 (rel: 2.034374e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 6.094947e-06 (rel: 1.218989e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 1.990410e-12 (rel: 3.980821e-12)
+sfepy: ====== time 6.000000e-01 (step 16 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 9.884255e-03 (rel: 1.976851e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 5.467591e-06 (rel: 1.093518e-05)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 1.538560e-12 (rel: 3.077120e-12)
+sfepy: ====== time 6.400000e-01 (step 17 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 9.623183e-03 (rel: 1.924637e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 4.915946e-06 (rel: 9.831891e-06)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 1.197752e-12 (rel: 2.395504e-12)
+sfepy: ====== time 6.800000e-01 (step 18 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 9.385785e-03 (rel: 1.877157e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 4.431316e-06 (rel: 8.862631e-06)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 9.195597e-13 (rel: 1.839119e-12)
+sfepy: ====== time 7.200000e-01 (step 19 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 9.169600e-03 (rel: 1.833920e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 4.006016e-06 (rel: 8.012032e-06)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 7.156977e-13 (rel: 1.431395e-12)
+sfepy: ====== time 7.600000e-01 (step 20 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 8.972517e-03 (rel: 1.794503e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 3.633279e-06 (rel: 7.266558e-06)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 5.494238e-13 (rel: 1.098848e-12)
+sfepy: ====== time 8.000000e-01 (step 21 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 8.792725e-03 (rel: 1.758545e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 3.307167e-06 (rel: 6.614334e-06)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 4.368651e-13 (rel: 8.737303e-13)
+sfepy: ====== time 8.400000e-01 (step 22 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 8.628673e-03 (rel: 1.725735e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 3.022485e-06 (rel: 6.044969e-06)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 3.414750e-13 (rel: 6.829500e-13)
+sfepy: ====== time 8.800000e-01 (step 23 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 8.479032e-03 (rel: 1.695806e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.774705e-06 (rel: 5.549410e-06)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 2.713697e-13 (rel: 5.427394e-13)
+sfepy: ====== time 9.200000e-01 (step 24 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 8.342669e-03 (rel: 1.668534e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.559894e-06 (rel: 5.119789e-06)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 2.184820e-13 (rel: 4.369640e-13)
+sfepy: ====== time 9.600000e-01 (step 25 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 8.218622e-03 (rel: 1.643724e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.374651e-06 (rel: 4.749302e-06)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 1.789149e-13 (rel: 3.578298e-13)
+sfepy: ====== time 1.000000e+00 (step 26 of 26) =====
+sfepy: updating variables...
+sfepy: ...done
+sfepy: updating materials...
+sfepy:     load
+sfepy:     solid
+sfepy: ...done in 0.00 s
+sfepy: nls: iter: 0, residual: 5.000000e-01 (rel: 1.000000e+00)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 1, residual: 8.106076e-03 (rel: 1.621215e-02)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 2, residual: 2.216048e-06 (rel: 4.432095e-06)
+sfepy:   residual:    0.00 [s]
+sfepy:     matrix:    0.00 [s]
+sfepy:      solve:    0.00 [s]
+sfepy: nls: iter: 3, residual: 1.432760e-13 (rel: 2.865520e-13)
+sfepy: solved in 26 steps in 0.33 seconds

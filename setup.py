@@ -14,7 +14,7 @@ setup(
     package_dir={"": "src"},
     package_data={"":["*.pdf"]},
     install_requires=[
-        "numpy", "scipy", "chaospy", "pyDOE", "scikit-learn", 'fire'
+        "numpy", "scipy", "matplotlib", "scikit-learn", 'fire'
     ],
     classifiers=[
         'Programming Language :: Python :: 3',
