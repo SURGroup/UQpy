@@ -1176,26 +1176,19 @@ class MCMC:
         # Defining an array to store the generated samples
         samples = np.zeros([self.nsamples * self.jump + self.nburn, self.dimension])
 
-        # Define a kwargs for the parameter arguments
-        kwargs = {}
-        if self.pdf_target_params is not None:
-            kwargs['params'] = self.pdf_target_params
-        if self.pdf_target_copula_params is not None:
-            kwargs['copula_params'] = self.pdf_target_copula_params
-
         ################################################################################################################
         # Classical Metropolis-Hastings Algorithm with symmetric proposal density
         if self.algorithm == 'MH':
-            samples[0, :] = self.seed
-            log_pdf_ = partial(self.log_pdf_target, **kwargs)
+            samples[0, :] = self.seed.reshape((-1,))
+            log_pdf_ = self.log_pdf_target
             log_p_current = log_pdf_(samples[0, :])
 
             # Loop over the samples
             for i in range(self.nsamples * self.jump - 1 + self.nburn):
                 if self.pdf_proposal_type[0] == 'Normal':
                     cholesky_cov = np.diag(self.pdf_proposal_scale)
-                    z_normal = np.random.normal(size=(self.dimension, 1))
-                    candidate = samples[i, :] + np.matmul(cholesky_cov, z_normal).reshape((self.dimension,))
+                    z_normal = np.random.normal(size=(self.dimension, ))
+                    candidate = samples[i, :] + np.matmul(cholesky_cov, z_normal)
                     log_p_candidate = log_pdf_(candidate)
                     log_p_accept = log_p_candidate - log_p_current
                     accept = np.log(np.random.random()) < log_p_accept
@@ -1210,7 +1203,7 @@ class MCMC:
                 elif self.pdf_proposal_type[0] == 'Uniform':
                     low = -np.array(self.pdf_proposal_scale) / 2
                     high = np.array(self.pdf_proposal_scale) / 2
-                    candidate = samples[i, :] + np.random.uniform(low=low, high=high, size=self.dimension)
+                    candidate = samples[i, :] + np.random.uniform(low=low, high=high, size=(self.dimension, ))
                     log_p_candidate = log_pdf_(candidate)
                     log_p_accept = log_p_candidate - log_p_current
                     accept = np.log(np.random.random()) < log_p_accept
@@ -1227,15 +1220,17 @@ class MCMC:
         # Modified Metropolis-Hastings Algorithm with symmetric proposal density
         elif self.algorithm == 'MMH':
 
-            samples[0, :] = self.seed[0:]
+            samples[0, :] = self.seed.reshape((-1,))
 
             if self.pdf_target_type == 'marginal_pdf':
-                list_log_p_current = [self.pdf_target[j](samples[0, j], **kwargs)
-                                      for j in range(self.dimension)]
+                list_log_p_current = []
+                for j in range(self.dimension):
+                    log_pdf_ = self.log_pdf_target[j]
+                    list_log_p_current.append(log_pdf_(samples[0, j]))
                 for i in range(self.nsamples * self.jump - 1 + self.nburn):
                     for j in range(self.dimension):
 
-                        log_pdf_ = partial(self.log_pdf_target[j], **kwargs)
+                        log_pdf_ = self.log_pdf_target[j]
 
                         if self.pdf_proposal_type[j] == 'Normal':
                             candidate = np.random.normal(samples[i, j], self.pdf_proposal_scale[j], size=1)
@@ -1248,7 +1243,7 @@ class MCMC:
                             if accept:
                                 samples[i + 1, j] = candidate
                                 list_log_p_current[j] = log_p_candidate
-                                n_accepts += 1
+                                n_accepts += 1 / self.dimension
                             else:
                                 samples[i + 1, j] = samples[i, j]
 
@@ -1264,11 +1259,11 @@ class MCMC:
                             if accept:
                                 samples[i + 1, j] = candidate
                                 list_log_p_current[j] = log_p_candidate
-                                n_accepts += 1
+                                n_accepts += 1 / self.dimension
                             else:
                                 samples[i + 1, j] = samples[i, j]
             else:
-                log_pdf_ = partial(self.log_pdf_target, **kwargs)
+                log_pdf_ = self.log_pdf_target
 
                 for i in range(self.nsamples * self.jump - 1 + self.nburn):
                     candidate = np.copy(samples[i, :])
@@ -1304,7 +1299,7 @@ class MCMC:
         elif self.algorithm == 'Stretch':
 
             samples[0:self.ensemble_size, :] = self.seed
-            log_pdf_ = partial(self.log_pdf_target, **kwargs)
+            log_pdf_ = self.log_pdf_target
             # list_log_p_current = [log_pdf_(samples[i, :], self.pdf_target_params) for i in range(self.ensemble_size)]
 
             for i in range(self.ensemble_size - 1, self.nsamples * self.jump - 1):
@@ -1321,7 +1316,7 @@ class MCMC:
                 accept = np.log(np.random.random()) < log_p_accept
 
                 if accept:
-                    samples[i + 1, :] = candidate
+                    samples[i + 1, :] = candidate.reshape((-1, ))
                     # list_log_p_current.append(log_p_candidate)
                     n_accepts += 1
                 else:
@@ -1369,12 +1364,17 @@ class MCMC:
             raise ValueError("Exit code: Value of jump must be greater than 0")
 
         # Check seed
-        if self.seed is None:
-            self.seed = np.zeros(self.dimension)
         if self.algorithm is not 'Stretch':
+            if self.seed is None:
+                self.seed = np.zeros(self.dimension)
             if self.seed.__len__() != self.dimension:
                 raise NotImplementedError("Exit code: Incompatible dimensions in 'seed'.")
+            self.seed = self.seed.reshape((1, -1))
         else:
+            if self.seed is None or len(self.seed.shape) != 2:
+                raise NotImplementedError("For Stretch algorithm, a seed must be given as a ndarray")
+            if self.seed.shape[1] != self.dimension:
+                raise NotImplementedError("Exit code: Incompatible dimensions in 'seed'.")
             if self.seed.shape[0] < 3:
                 raise NotImplementedError("Exit code: Ensemble size must be > 2.")
 
@@ -1428,76 +1428,105 @@ class MCMC:
         if isinstance(self.pdf_target, list) and len(self.pdf_target) != self.dimension:
             raise ValueError('UQpy error: inconsistent dimensions.')
 
+        # Check pdf_target_type
+        if self.pdf_target_type not in ['joint_pdf', 'marginal_pdf']:
+            raise ValueError('pdf_target_type should be "joint_pdf", "marginal_pdf"')
+
         # Check MMH
         if self.algorithm is 'MMH':
             if (self.pdf_target_type == 'marginal_pdf') and (self.pdf_target_copula is not None):
                 raise ValueError('UQpy error: MMH with pdf_target_type="marginal" cannot be used when the'
                                  'target pdf has a copula, use pdf_target_type="joint" instead')
 
+        # If pdf_target or log_pdf_target are given as lists, they should be of the right dimension
+        if isinstance(self.log_pdf_target, list):
+            if len(self.log_pdf_target) != self.dimension:
+                raise ValueError('log_pdf_target given as a list should have length equal to dimension')
+            if (self.pdf_target_params is not None) and (len(self.log_pdf_target) != len(self.pdf_target_params)):
+                raise ValueError('pdf_target_params should be given as a list of length equal to log_pdf_target')
+        if isinstance(self.pdf_target, list):
+            if len(self.pdf_target) != self.dimension:
+                raise ValueError('pdf_target given as a list should have length equal to dimension')
+            if (self.pdf_target_params is not None) and (len(self.pdf_target) != len(self.pdf_target_params)):
+                raise ValueError('pdf_target_params should be given as a list of length equal to pdf_target')
+
+
         # Define a helper function
         def compute_log_pdf(x, pdf_func, params=None, copula_params=None):
-            kwargs = {}
+            kwargs_ = {}
             if params is not None:
-                kwargs['params'] = params
+                kwargs_['params'] = params
             if copula_params is not None:
-                kwargs['copula_params'] = copula_params
-            pdf_value = max(pdf_func(x, **kwargs), 10 ** (-320))
+                kwargs_['copula_params'] = copula_params
+            pdf_value = max(pdf_func(x, **kwargs_), 10 ** (-320))
             return np.log(pdf_value)
+
         # Either pdf_target or log_pdf_target must be defined
         if (self.pdf_target is None) and (self.log_pdf_target is None):
             raise ValueError('The target distribution must be defined, using inputs'
                              ' log_pdf_target or pdf_target.')
         # For MMH with pdf_target_type == 'marginals', pdf_target or its log should be lists
-        if (self.algorithm == 'MMH') and (self.pdf_target_type == 'marginal'):
+        if (self.algorithm == 'MMH') and (self.pdf_target_type == 'marginal_pdf'):
+            kwargs = [{}]*self.dimension
+            for j in range(self.dimension):
+                if self.pdf_target_params is not None:
+                    kwargs[j]['params'] = self.pdf_target_params[j]
+                if self.pdf_target_copula_params is not None:
+                    kwargs[j]['copula_params'] = self.pdf_target_copula_params[j]
+
             if self.log_pdf_target is not None:
                 if not isinstance(self.log_pdf_target, list):
-                    raise ValueError('For MMH algo with pdf_target_type="marginal", '
+                    raise ValueError('For MMH algo with pdf_target_type="marginal_pdf", '
                                      'log_pdf_target should be a list')
                 if isinstance(self.log_pdf_target[0], str):
                     p_js = [Distribution(dist_name=pdf_target_j) for pdf_target_j in self.pdf_target]
                     try:
-                        [p_j.log_pdf(x=None, params=None) for p_j in p_js]
-                    except TypeError:
-                        self.log_pdf_target = [p_j.log_pdf for p_j in p_js]
+                        [p_j.log_pdf(x=self.seed[0, j], **kwargs[j]) for (j, p_j) in enumerate(p_js)]
+                        self.log_pdf_target = [partial(p_j.log_pdf, **kwargs[j]) for (j, p_j) in enumerate(p_js)]
                     except AttributeError:
                         raise AttributeError('log_pdf_target given as a list of strings must point to Distributions '
                                              'with an existing log_pdf method.')
                 elif callable(self.log_pdf_target[0]):
-                    pass
+                    self.log_pdf_target = [partial(pdf_target_j, **kwargs[j]) for (j, pdf_target_j)
+                                           in enumerate(self.log_pdf_target)]
                 else:
                     raise ValueError('log_pdf_target must be a list of strings or a list of callables')
             else:
                 if not isinstance(self.pdf_target, list):
-                    raise ValueError('For MMH algo with pdf_target_type="marginal", '
+                    raise ValueError('For MMH algo with pdf_target_type="marginal_pdf", '
                                      'pdf_target should be a list')
                 if isinstance(self.pdf_target[0], str):
                     p_js = [Distribution(dist_name=pdf_target_j) for pdf_target_j in self.pdf_target]
                     try:
-                        [p_j.pdf(x=None, params=None) for p_j in p_js]
-                    except TypeError:
-                        self.log_pdf_target = [partial(compute_log_pdf, pdf_func=p_j.pdf) for p_j in p_js]
+                        self.log_pdf_target = [partial(compute_log_pdf, pdf_func=p_j.pdf, **kwargs[j])
+                                               for (j, p_j) in enumerate(p_js)]
                     except AttributeError:
                         raise AttributeError('pdf_target given as a list of strings must point to Distributions '
                                              'with an existing pdf method.')
                 elif callable(self.pdf_target[0]):
-                    self.log_pdf_target = [partial(compute_log_pdf, pdf_func=pdf_target_j)
-                                           for pdf_target_j in self.pdf_target]
+                    self.log_pdf_target = [partial(compute_log_pdf, pdf_func=pdf_target_j, **kwargs[j])
+                                           for (j, pdf_target_j) in enumerate(self.pdf_target)]
                 else:
                     raise ValueError('pdf_target must be a list of strings or a list of callables')
         else:
+            kwargs = {}
+            if self.pdf_target_params is not None:
+                kwargs['params'] = self.pdf_target_params
+            if self.pdf_target_copula_params is not None:
+                kwargs['copula_params'] = self.pdf_target_copula_params
+
             if self.log_pdf_target is not None:
                 if isinstance(self.log_pdf_target, str) or (isinstance(self.log_pdf_target, list)
                                                             and isinstance(self.log_pdf_target[0], str)):
                     p = Distribution(dist_name=self.log_pdf_target, copula=self.pdf_target_copula)
                     try:
-                        p.log_pdf(x=None, params=None, copula_params=None)
-                    except TypeError:
-                        self.log_pdf_target = p.log_pdf
+                        p.log_pdf(x=self.seed, **kwargs)
+                        self.log_pdf_target = partial(p.log_pdf, **kwargs)
                     except AttributeError:
                         raise AttributeError('log_pdf_target given as a string must point to a Distribution '
                                              'with an existing log_pdf method.')
                 elif callable(self.log_pdf_target):
-                    pass
+                    self.log_pdf_target = partial(self.log_pdf_target, **kwargs)
                 else:
                     raise ValueError('For MH and Stretch, log_pdf_target must be a callable function, '
                                      'a str or list of str')
@@ -1506,14 +1535,13 @@ class MCMC:
                                                         and isinstance(self.pdf_target[0], str)):
                     p = Distribution(dist_name=self.pdf_target, copula=self.pdf_target_copula)
                     try:
-                        p.pdf(x=None, params=None, copula_params=None)
-                    except TypeError:
-                        self.log_pdf_target = partial(compute_log_pdf, pdf_func=p.pdf)
+                        p.pdf(x=self.seed, **kwargs)
+                        self.log_pdf_target = partial(compute_log_pdf, pdf_func=p.pdf, **kwargs)
                     except AttributeError:
                         raise AttributeError('pdf_target given as a string must point to a Distribution '
                                              'with an existing pdf method.')
                 elif callable(self.pdf_target):
-                    self.log_pdf_target = partial(compute_log_pdf, pdf_func=self.pdf_target)
+                    self.log_pdf_target = partial(compute_log_pdf, pdf_func=self.pdf_target, **kwargs)
                 else:
                     raise ValueError('For MH and Stretch, pdf_target must be a callable function, '
                                      'a str or list of str')
