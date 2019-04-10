@@ -8,7 +8,7 @@ Uncertainty Quantification with python (UQpy)
 ====
 
 :Authors: Michael D. Shields, Dimitris G. Giovanis
-:Contributors: Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu, Jiaxin Zhang
+:Contributors: Aakash Bangalore Satish, Mohit Singh Chauhan, Audrey Olivier, Lohit Vandanapu, Jiaxin Zhang
 :Contact: UQpy.info@gmail.com
 :Version: 2.0.X
 
