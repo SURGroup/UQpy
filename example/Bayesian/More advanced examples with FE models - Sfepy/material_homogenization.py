@@ -179,6 +179,12 @@ micro_filename = data_dir + '/examples/homogenization/' + 'homogenization_opt.py
 macro_filename = data_dir + '/examples/homogenization/' + 'linear_elasticity_opt.py'
 
 def one_simulation(x0, plot_meshes_bool=False):
+    """
+    This function is the main callable here: it takes in as input the parameter vector, 
+    here x0=[E_fiber, nu_fiber, E_matrix, nu_matrix], and returns the simulated output 
+    (here slope of the force-elongation curve obtained during a tensile test), to be compared
+    with the measured data.
+    """
     x0 = x0.reshape((-1, ))
     phis = [0, 30, 60, 90]
     #exp_data = zip([0, 30, 60, 90], [1051140., 197330., 101226., 95474.])

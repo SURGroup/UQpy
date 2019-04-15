@@ -110,7 +110,7 @@ class Model:
             self.script = model_script
             self.model_object_name = model_object_name
             if self.name is None:
-                self.name = self.script+self.model_object_name
+                self.name = self.script[:-3]+'_'+self.model_object_name
             self.var_names = var_names
             if self.var_names is None:
                 self.var_names = ['theta_{}'.format(i) for i in range(self.n_params)]
@@ -256,10 +256,10 @@ class MLEstimation:
         elif model.type == 'pdf':
             # Use the fit method if it exists
             try:
-                if verbose:
-                    print('Evaluating max likelihood estimate for model ' + model.name + ' using its fit method.')
                 self.param = np.array(model.pdf.fit(self.data))
                 self.max_log_like = model.log_like(self.data, self.param)[0]
+                if verbose:
+                    print('Evaluating max likelihood estimate for model ' + model.name + ' using its fit method.')
             # Else use the optimization procedure
             except AttributeError:
                 if verbose:
@@ -278,8 +278,6 @@ class MLEstimation:
                 return -1 * self.model.log_like(self.data, param, error_cov=1.0)[0]
             return -1 * self.model.log_like(self.data, param)[0]
 
-        if self.verbose:
-            print('Evaluating max likelihood estimate for model ' + self.model.name + ' using optimization procedure.')
         list_param = []
         list_max_log_like = []
         if self.iter_optim > 1 or self.x0 is None:
@@ -424,7 +422,7 @@ class InfoModelSelection:
 
 class BayesParameterEstimation:
 
-    def __init__(self, model=None, data=None, sampling_method=None,
+    def __init__(self, model=None, data=None, sampling_method='MCMC',
                  pdf_proposal_type=None, pdf_proposal_scale=None,
                  pdf_proposal=None, pdf_proposal_params=None,
                  algorithm=None, jump=None, nsamples=None, nburn=None, seed=None, verbose=False):

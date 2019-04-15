@@ -10,6 +10,6 @@ def cdf(x, params):
 def icdf(x, params):
     return stats.weibull_min.ppf(x, params[0], params[1])
 
-def rvs(nsamples, params):
+def rvs(params,nsamples):
     return stats.weibull_min.rvs(params[0], params[1], size=nsamples)
 

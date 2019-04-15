@@ -1,5 +1,5 @@
 material_opt_micro: reading mesh [line2, tri3, quad4, tetra4, hexa8] (/anaconda3/lib/python3.6/site-packages/sfepy/meshes/3d/matrix_fiber_rand.vtk)...
-material_opt_micro: ...done in 0.01 s
+material_opt_micro: ...done in 0.02 s
 material_opt_micro: warning: bad element orientation, trying to correct...
 material_opt_micro: ...corrected
 material_opt_micro: creating regions...
@@ -13,7 +13,7 @@ material_opt_micro:     Left
 material_opt_micro:     Right
 material_opt_micro:     Corners
 material_opt_micro:     Yf
-material_opt_micro: ...done in 0.02 s
+material_opt_micro: ...done in 0.03 s
 material_opt_micro: using solvers:
                 ts: no ts
                nls: newton
@@ -30,9 +30,9 @@ he:   d_volume.5.Y( u )
 he:   updating materials...
 he:   ...done in 0.00 s
 he: ...done
-he: computing vol...
 he:   updating variables...
 he:   ...done
+he: computing vol...
 he:   equation "tmp":
 he:   d_volume.5.Ym(u)
 he:   updating materials...
@@ -59,159 +59,3 @@ he:   updating variables...
 he:   ...done
 he:   updating variables...
 he:   ...done
-he:   nls: iter: 0, residual: 1.389378e+10 (rel: 1.000000e+00)
-he:     residual:    0.06 [s]
-he:       matrix:    0.11 [s]
-he:        solve:    0.23 [s]
-he:   nls: iter: 1, residual: 6.344026e-05 (rel: 4.566090e-15)
-he:   solved in 1 steps in 0.57 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 1.382069e+09 (rel: 1.000000e+00)
-he:     residual:    0.04 [s]
-he:       matrix:    0.11 [s]
-he:        solve:    0.17 [s]
-he:   nls: iter: 1, residual: 3.782802e-05 (rel: 2.737056e-14)
-he:   solved in 1 steps in 0.69 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 9.787459e+08 (rel: 1.000000e+00)
-he:     residual:    0.03 [s]
-he:       matrix:    0.11 [s]
-he:        solve:    0.16 [s]
-he:   nls: iter: 1, residual: 9.557557e-06 (rel: 9.765106e-15)
-he:   solved in 1 steps in 0.65 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 1.382069e+09 (rel: 1.000000e+00)
-he:     residual:    0.04 [s]
-he:       matrix:    0.12 [s]
-he:        solve:    0.17 [s]
-he:   nls: iter: 1, residual: 3.864849e-05 (rel: 2.796422e-14)
-he:   solved in 1 steps in 0.75 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 1.388547e+10 (rel: 1.000000e+00)
-he:     residual:    0.04 [s]
-he:       matrix:    0.11 [s]
-he:        solve:    0.18 [s]
-he:   nls: iter: 1, residual: 6.121362e-05 (rel: 4.408466e-15)
-he:   solved in 1 steps in 0.72 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 9.757932e+08 (rel: 1.000000e+00)
-he:     residual:    0.03 [s]
-he:       matrix:    0.11 [s]
-he:        solve:    0.16 [s]
-he:   nls: iter: 1, residual: 9.185989e-06 (rel: 9.413869e-15)
-he:   solved in 1 steps in 0.67 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 9.787459e+08 (rel: 1.000000e+00)
-he:     residual:    0.04 [s]
-he:       matrix:    0.12 [s]
-he:        solve:    0.17 [s]
-he:   nls: iter: 1, residual: 9.639440e-06 (rel: 9.848767e-15)
-he:   solved in 1 steps in 0.71 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 9.757932e+08 (rel: 1.000000e+00)
-he:     residual:    0.03 [s]
-he:       matrix:    0.11 [s]
-he:        solve:    0.17 [s]
-he:   nls: iter: 1, residual: 9.135185e-06 (rel: 9.361804e-15)
-he:   solved in 1 steps in 0.70 seconds
-he:   updating variables...
-he:   ...done
-he:   updating variables...
-he:   ...done
-he:   nls: iter: 0, residual: 1.243862e+10 (rel: 1.000000e+00)
-he:     residual:    0.04 [s]
-he:       matrix:    0.13 [s]
-he:        solve:    0.19 [s]
-he:   nls: iter: 1, residual: 3.043848e-05 (rel: 2.447094e-15)
-he:   solved in 1 steps in 0.73 seconds
-he: ...done
-he: computing D...
-he:   equation "tmp":
-he:   dw_lin_elastic.5.Y(mat.D, Pi1, Pi2 )
-he:   updating materials...
-he:       mat
-he:   ...done in 0.01 s
-he: ...done
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: setting up dof connectivities...
-material_opt_macro: ...done in 0.00 s
-material_opt_macro: matrix shape: (690, 690)
-material_opt_macro: assembling matrix graph...
-material_opt_macro: ...done in 0.00 s
-material_opt_macro: matrix structural nonzeros: 35854 (7.53e-02% fill)
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: updating materials...
-material_opt_macro:     load
-material_opt_macro:     solid
-material_opt_macro: ...done in 0.00 s
-material_opt_macro: nls: iter: 0, residual: 1.424786e+03 (rel: 1.000000e+00)
-material_opt_macro:   residual:    0.00 [s]
-material_opt_macro:     matrix:    0.01 [s]
-material_opt_macro:      solve:    0.00 [s]
-material_opt_macro: nls: iter: 1, residual: 2.336994e-10 (rel: 1.640243e-13)
-material_opt_macro: solved in 1 steps in 0.02 seconds
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: updating materials...
-material_opt_macro:     load
-material_opt_macro:     solid
-material_opt_macro: ...done in 0.00 s
-material_opt_macro: nls: iter: 0, residual: 1.424786e+03 (rel: 1.000000e+00)
-material_opt_macro:   residual:    0.00 [s]
-material_opt_macro:     matrix:    0.01 [s]
-material_opt_macro:      solve:    0.00 [s]
-material_opt_macro: nls: iter: 1, residual: 1.943497e-09 (rel: 1.364062e-12)
-material_opt_macro: solved in 1 steps in 0.02 seconds
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: updating materials...
-material_opt_macro:     load
-material_opt_macro:     solid
-material_opt_macro: ...done in 0.00 s
-material_opt_macro: nls: iter: 0, residual: 1.424786e+03 (rel: 1.000000e+00)
-material_opt_macro:   residual:    0.00 [s]
-material_opt_macro:     matrix:    0.01 [s]
-material_opt_macro:      solve:    0.00 [s]
-material_opt_macro: nls: iter: 1, residual: 1.964643e-09 (rel: 1.378904e-12)
-material_opt_macro: solved in 1 steps in 0.02 seconds
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: updating variables...
-material_opt_macro: ...done
-material_opt_macro: updating materials...
-material_opt_macro:     load
-material_opt_macro:     solid
-material_opt_macro: ...done in 0.00 s
-material_opt_macro: nls: iter: 0, residual: 1.424786e+03 (rel: 1.000000e+00)
-material_opt_macro:   residual:    0.00 [s]
-material_opt_macro:     matrix:    0.01 [s]
-material_opt_macro:      solve:    0.00 [s]
-material_opt_macro: nls: iter: 1, residual: 1.575128e-09 (rel: 1.105519e-12)
-material_opt_macro: solved in 1 steps in 0.02 seconds

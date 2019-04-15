@@ -52,105 +52,11 @@ class SubsetSimulation:
                                 Default: p_cond = 0.1
             :type p_cond: float
 
-            :param algorithm:  Algorithm used to generate MCMC samples.
-                            Options:
-                                'MH': Metropolis Hastings Algorithm
-                                'MMH': Component-wise Modified Metropolis Hastings Algorithm
-                                'Stretch': Affine Invariant Ensemble MCMC with stretch moves
-                            Default: 'MMH'
-            :type algorithm: str
+            :param pdf_proposal_type, pdf_proposal_scale, pdf_target, log_pdf_target, pdf_target_params, jump, nburn,
+                    pdf_target_copula, pdf_target_copula_params, pdf_target_type, algorithm: See MCMC in SampleMethods
 
-            :param pdf_target_type: Type of target density function for acceptance/rejection in MMH. Not used for MH
-                                    or Stretch.
-                            Options:
-                                'marginal_pdf': Check acceptance/rejection for a candidate in MMH using the marginal pdf
-                                                For independent variables only
-                                'joint_pdf': Check acceptance/rejection for a candidate in MMH using the joint pdf
-                            Default: 'marginal_pdf'
-            :type pdf_target_type: str
-
-            :param pdf_target: Target density function from which to draw random samples
-                            The target joint probability density must be a function, or list of functions, or a string.
-                            If type == 'str'
-                                The assigned string must refer to a custom pdf defined in the file custom_pdf.py in
-                                the working directory.
-                            If type == function
-                                The function must be defined in the python script calling MCMC
-                            If dimension > 1 and pdf_target_type='marginal_pdf', the input to pdf_target is a list of
-                            size [dimensions x 1] where each item of the list defines a marginal pdf.
-                            Default: Multivariate normal distribution having zero mean and unit standard deviation
-            :type pdf_target: function, function list, or str
-
-            :param pdf_target_params: Parameters of the target pdf
-            :type pdf_target_params: list
-
-            :param pdf_proposal_type: Type of proposal density function for MCMC. Only used with algorithm = 'MH' or
-                                      'MMH'
-                            Options:
-                                'Normal' : Normal proposal density
-                                'Uniform' : Uniform proposal density
-                            Default: 'Uniform'
-                            If dimension > 1 and algorithm = 'MMH', this may be input as a list to assign different
-                            proposal densities to each dimension. Example pdf_proposal_type = ['Normal','Uniform'].
-                            If dimension > 1, algorithm = 'MMH' and this is input as a string, the proposal densities
-                            for all dimensions are set equal to the assigned proposal type.
-            :type pdf_proposal_type: str or str list
-
-            :param pdf_proposal_scale: Scale of the proposal distribution
-                            If algorithm == 'MH' or 'MMH'
-                                For pdf_proposal_type = 'Uniform'
-                                    Proposal is Uniform in [x-pdf_proposal_scale/2, x+pdf_proposal_scale/2]
-                                For pdf_proposal_type = 'Normal'
-                                    Proposal is Normal with standard deviation equal to pdf_proposal_scale
-                            If algorithm == 'Stretch'
-                                pdf_proposal_scale sets the scale of the stretch density
-                                    g(z) = 1/sqrt(z) for z in [1/pdf_proposal_scale, pdf_proposal_scale]
-                            Default value: dimension x 1 list of ones
-            :type pdf_proposal_scale: float or float list
-                            If dimension > 1, this may be defined as float or float list
-                                If input as float, pdf_proposal_scale is assigned to all dimensions
-                                If input as float list, each element is assigned to the corresponding dimension
-
-            :param model_type: Define the model as a python file or as a third party software model (e.g. Matlab,
-                               Abaqus, etc.)
-                    Options: None - Run a third party software model
-                             'python' - Run a python model. When selected, the python file must contain a class
-                                        RunPythonModel
-                                        that takes, as input, samples and dimension and returns quantity of interest
-                                        (qoi) in
-                                        in list form where there is one item in the list per sample. Each item in the
-                                        qoi list may take type the user prefers.
-                    Default: None
-            :type model_type: str
-
-            :param model_script: Defines the script (must be either a shell script (.sh) or a python script (.py)) used
-                                 to call
-                                    the model.
-                                 This is a user-defined script that must be provided.
-                                 If model_type = 'python', this must be a python script (.py) having a specified class
-                                    structure. Details on this structure can be found in the UQpy documentation.
-            :type: model_script: str
-
-            :param input_script: Defines the script (must be either a shell script (.sh) or a python script (.py))
-                                that takes
-                                samples generated by UQpy from the sample file generated by UQpy (UQpy_run_{0}.txt) and
-                                imports them into a usable input file for the third party solver. Details on
-                                UQpy_run_{0}.txt can be found in the UQpy documentation.
-                                 If model_type = None, this is a user-defined script that the user must provide.
-                                 If model_type = 'python', this is not used.
-            :type: input_script: str
-
-            :param output_script: (Optional) Defines the script (must be either a shell script (.sh) or python
-                                  script (.py))
-                                  that extracts quantities of interest from third-party output files and saves them
-                                  to a file (UQpy_eval_{}.txt) that can be read for postprocessing and adaptive
-                                  sampling methods by UQpy.
-                                  If model_type = None, this is an optional user-defined script. If not provided, all
-                                  run files and output files will be saved in the folder 'UQpyOut' placed in the current
-                                  working directory. If provided, the text files UQpy_eval_{}.txt are placed in this
-                                  directory and all other files are deleted.
-                                  If model_type = 'python', this is not used.
-            :type output_script: str
+            :param model_script, model_object_name, input_template, var_names, output_script, output_object_name,
+                       ntasks, cores_per_task, nodes, resume, verbose, model_dir, cluster: See RunModel class.
 
     Output:
 
@@ -163,15 +69,24 @@ class SubsetSimulation:
     """
 
     # Authors: Dimitris G.Giovanis, Michael D. Shields
-    # Last Modified: 6/7/18 by Dimitris G. Giovanis
+    # Last Modified: 4/7/19 by Dimitris G. Giovanis
 
-    def __init__(self, dimension=None, samples_init=None, nsamples_ss=None, p_cond=None, pdf_target_type=None,
-                 pdf_target=None, pdf_target_params=None, pdf_proposal_type=None, pdf_proposal_scale=None,
-                 algorithm=None, model_type=None, model_script=None, input_script=None, output_script=None, seed=None,
-                 model_object_name=None, ntasks=1):
+    def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None,
+                 pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None,
+                 pdf_target_copula_params=None, pdf_target_type='joint_pdf', seed=None,
+                 algorithm='MH', jump=1, nsamples_ss=None, nburn=0, samples_init=None, p_cond=None,
+                 verbose=False,  model_script=None, model_object_name=None, input_template=None, var_names=None,
+                 output_script=None, output_object_name=None, n_tasks=1, cores_per_task=1, nodes=1, resume=False,
+                 model_dir=None, cluster=False):
 
         self.dimension = dimension
+        self.log_pdf_target = log_pdf_target
+        self.pdf_target_copula = pdf_target_copula
         self.samples_init = samples_init
+        self.pdf_target_copula_params = pdf_target_copula_params
+        self.jump = jump
+        self.nburn = nburn
+        self.verbose = verbose
         self.pdf_target_type = pdf_target_type
         self.pdf_target = pdf_target
         self.pdf_target_params = pdf_target_params
@@ -179,12 +94,19 @@ class SubsetSimulation:
         self.pdf_proposal_scale = pdf_proposal_scale
         self.nsamples_ss = nsamples_ss
         self.algorithm = algorithm
-        self.model_type = model_type
+
+        self.input_template = input_template
+        self.var_names = var_names
         self.model_script = model_script
         self.model_object_name = model_object_name
-        self.ntasks = ntasks
-        self.input_script = input_script
+        self.output_object_name = output_object_name
+        self.n_tasks = n_tasks
+        self.cluster = cluster
+        self.model_dir = model_dir
         self.output_script = output_script
+        self.cores_per_task = cores_per_task
+        self.nodes = nodes
+        self.resume = resume
         self.p_cond = p_cond
         self.g = list()
         self.samples = list()
@@ -192,7 +114,7 @@ class SubsetSimulation:
         self.d12 = list()
         self.d22 = list()
         if seed is None:
-            self.seed = np.zeros(self.dimension).reshape((-1,self.dimension))
+            self.seed = np.zeros(self.dimension)
         else:
             self.seed = seed
         # Hard-wire the maximum number of conditional levels.
@@ -217,17 +139,27 @@ class SubsetSimulation:
         # Generate the initial samples - Level 0
         if self.samples_init is None:
             x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-                          pdf_proposal_scale=self.pdf_proposal_scale,
-                          pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
-                          algorithm=self.algorithm, nsamples=self.nsamples_ss, seed=self.seed)
+                          pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
+                          log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
+                          pdf_target_copula=self.pdf_target_copula,
+                          pdf_target_copula_params=self.pdf_target_copula_params,
+                          pdf_target_type=self.pdf_target_type,
+                          algorithm=self.algorithm, jump=self.jump, nsamples=self.nsamples_ss, seed=self.seed,
+                          nburn=self.nburn, verbose=self.verbose)
+
             self.samples.append(x_init.samples)
         else:
             self.samples.append(self.samples_init)
 
-        g_init = RunModel(samples=self.samples[step], model_script=self.model_script, ntasks=self.ntasks,
-                          model_object_name=self.model_object_name)
+        g_init = RunModel(samples=self.samples[step], model_script=self.model_script,
+                          model_object_name=self.model_object_name,
+                          input_template=self.input_template, var_names=self.var_names,
+                          output_script=self.output_script,
+                          output_object_name=self.output_object_name,
+                          ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes, resume=self.resume,
+                          verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
 
-        self.g.append(np.asarray(g_init.qoi_list).reshape((-1,)))
+        self.g.append(np.asarray(g_init.qoi_list).reshape(-1,))
         g_ind = np.argsort(self.g[step])
         self.g_level.append(self.g[step][g_ind[n_keep]])
 
@@ -239,21 +171,31 @@ class SubsetSimulation:
         while self.g_level[step] > 0 and step < self.max_level:
 
             step = step + 1
-            self.samples.append(self.samples[step - 1][g_ind[0:n_keep]])
+            self.samples.append(self.samples[step - 1][g_ind[0:n_keep], :])
             self.g.append(self.g[step - 1][g_ind[:n_keep]])
 
             for i in range(self.nsamples_ss-n_keep):
-                x0 = self.samples[step][i].reshape((-1, self.dimension))
+                x0 = self.samples[step][i]
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-                              pdf_proposal_scale=self.pdf_proposal_scale,
-                              pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
-                              algorithm=self.algorithm, nsamples=2, seed=x0)
+                              pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
+                              log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
+                              pdf_target_copula=self.pdf_target_copula,
+                              pdf_target_copula_params=self.pdf_target_copula_params,
+                              pdf_target_type=self.pdf_target_type,
+                              algorithm= self.algorithm, jump=self.jump, nsamples=2, seed=x0,
+                              nburn=self.nburn, verbose=self.verbose)
 
                 x_temp = x_mcmc.samples[1].reshape((1, self.dimension))
-                # x_temp = x_mcmc.samples[1]
-                g_model = RunModel(samples=x_temp, model_script=self.model_script, ntasks=self.ntasks,
-                                   model_object_name=self.model_object_name)
+
+                g_model = RunModel(samples=x_temp, model_script=self.model_script,
+                                   model_object_name=self.model_object_name,
+                                   input_template=self.input_template, var_names=self.var_names,
+                                   output_script=self.output_script,
+                                   output_object_name=self.output_object_name,
+                                   ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes,
+                                   resume=self.resume,
+                                   verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
 
                 g_temp = g_model.qoi_list
 
@@ -288,18 +230,26 @@ class SubsetSimulation:
         # Generate the initial samples - Level 0
         if self.samples_init is None:
             x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-                          pdf_proposal_scale=self.pdf_proposal_scale,
-                          pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
-                          algorithm='MMH', nsamples=self.nsamples_ss, seed=self.seed)
+                          pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
+                          log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
+                          pdf_target_copula=self.pdf_target_copula,
+                          pdf_target_copula_params=self.pdf_target_copula_params,
+                          pdf_target_type=self.pdf_target_type,
+                          algorithm='MMH', jump=self.jump, nsamples=self.nsamples_ss, seed=self.seed,
+                          nburn=self.nburn, verbose=self.verbose)
             self.samples.append(x_init.samples)
         else:
             self.samples.append(self.samples_init)
 
-        g_init = RunModel(samples=self.samples[step], model_script=self.model_script, ntasks=self.ntasks,
-                          model_object_name=self.model_object_name)
+        g_init = RunModel(samples=self.samples[step], model_script=self.model_script,
+                          model_object_name=self.model_object_name,
+                          input_template=self.input_template, var_names=self.var_names,
+                          output_script=self.output_script,
+                          output_object_name=self.output_object_name,
+                          ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes, resume=self.resume,
+                          verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
 
-        self.g.append(np.asarray(g_init.qoi_list).reshape((-1,)))
-        # self.g.append(np.asarray(g_init.qoi_list))
+        self.g.append(np.asarray(g_init.qoi_list))
         g_ind = np.argsort(self.g[step])
         self.g_level.append(self.g[step][g_ind[n_keep]])
 
@@ -311,7 +261,7 @@ class SubsetSimulation:
         while self.g_level[step] > 0:
 
             step = step + 1
-            self.samples.append(self.samples[step - 1][g_ind[:n_keep]])
+            self.samples.append(self.samples[step - 1][g_ind[0:n_keep]])
             self.g.append(self.g[step - 1][g_ind[:n_keep]])
 
             for i in range(self.nsamples_ss - n_keep):
@@ -319,13 +269,23 @@ class SubsetSimulation:
                 x0 = self.samples[step][i:i+n_keep]
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-                              pdf_proposal_scale=self.pdf_proposal_scale,
-                              pdf_target=self.pdf_target, pdf_target_params=self.pdf_target_params,
-                              algorithm=self.algorithm, nsamples=n_keep+1, seed=x0)
+                              pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
+                              log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
+                              pdf_target_copula=self.pdf_target_copula,
+                              pdf_target_copula_params=self.pdf_target_copula_params,
+                              pdf_target_type=self.pdf_target_type,
+                              algorithm= self.algorithm, jump=self.jump, nsamples=n_keep+1, seed=x0,
+                              nburn=self.nburn, verbose=self.verbose)
 
                 x_temp = x_mcmc.samples[n_keep].reshape((1, self.dimension))
-                g_model = RunModel(samples=x_temp, model_script=self.model_script, ntasks=self.ntasks,
-                                   model_object_name=self.model_object_name)
+                g_model = RunModel(samples=x_temp, model_script=self.model_script,
+                                   model_object_name=self.model_object_name,
+                                   input_template=self.input_template, var_names=self.var_names,
+                                   output_script=self.output_script,
+                                   output_object_name=self.output_object_name,
+                                   ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes,
+                                   resume=self.resume,
+                                   verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
 
                 g_temp = g_model.qoi_list
 
@@ -665,11 +625,11 @@ class SubsetSimulation:
         #
         #     return di
 
-
 ########################################################################################################################
 ########################################################################################################################
 #                                        First/Second order reliability method
 ########################################################################################################################
+
 
 class TaylorSeries:
 
@@ -781,7 +741,6 @@ class TaylorSeries:
 
             x[k, :] = u_x.samples
             jacobian = u_x.jacobian[0]
-
             # 1. evaluate Limit State Function at point
 
             g = RunModel(samples=x[k, :].reshape(1, -1), model_script=self.model_script,
@@ -800,7 +759,6 @@ class TaylorSeries:
                           output_object_name=self.output_object_name,
                           ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes, resume=self.resume,
                           verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster, order='second')
-
             try:
                 p = np.linalg.solve(jacobian, dg[0, :])
             except:
@@ -848,11 +806,11 @@ class TaylorSeries:
             alpha = p / norm_grad
             alpha = alpha.squeeze()
             # 3. calculate first order beta
-            beta[k] = -np.inner(u[k, :].T, alpha) + g.qoi_list[0] / norm_grad
+            beta[k + 1] = -np.inner(u[k, :].T, alpha) + g.qoi_list[0] / norm_grad
+            #-np.inner(u[k, :].T, alpha) + g.qoi_list[0] / norm_grad
             # 4. calculate u_{k+1}
-            u[k + 1, :] = -beta[k] * alpha
+            u[k + 1, :] = -beta[k + 1] * alpha
             # next iteration
-            print(x[k, :])
             if np.linalg.norm(u[k + 1, :] - u[k, :]) <= tol:
                 converge_ = True
                 # delete unnecessary data
@@ -897,7 +855,7 @@ class TaylorSeries:
 
                 elif self.method == 'FORM':
                     k = 3 * (k + 1)
-                    return u_star, x_star, beta, pf,  [], k
+                    return u_star, x_star[0], beta, pf,  [], k
             else:
                 continue
 
