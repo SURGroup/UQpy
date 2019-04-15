@@ -192,7 +192,7 @@ class SubsetSimulation:
         self.d12 = list()
         self.d22 = list()
         if seed is None:
-            self.seed = np.zeros(self.dimension)
+            self.seed = np.zeros(self.dimension).reshape((-1,self.dimension))
         else:
             self.seed = seed
         # Hard-wire the maximum number of conditional levels.
@@ -227,7 +227,7 @@ class SubsetSimulation:
         g_init = RunModel(samples=self.samples[step], model_script=self.model_script, ntasks=self.ntasks,
                           model_object_name=self.model_object_name)
 
-        self.g.append(np.asarray(g_init.qoi_list))
+        self.g.append(np.asarray(g_init.qoi_list).reshape((-1,)))
         g_ind = np.argsort(self.g[step])
         self.g_level.append(self.g[step][g_ind[n_keep]])
 
@@ -243,7 +243,7 @@ class SubsetSimulation:
             self.g.append(self.g[step - 1][g_ind[:n_keep]])
 
             for i in range(self.nsamples_ss-n_keep):
-                x0 = self.samples[step][i]
+                x0 = self.samples[step][i].reshape((-1, self.dimension))
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                               pdf_proposal_scale=self.pdf_proposal_scale,
@@ -298,7 +298,8 @@ class SubsetSimulation:
         g_init = RunModel(samples=self.samples[step], model_script=self.model_script, ntasks=self.ntasks,
                           model_object_name=self.model_object_name)
 
-        self.g.append(np.asarray(g_init.qoi_list))
+        self.g.append(np.asarray(g_init.qoi_list).reshape((-1,)))
+        # self.g.append(np.asarray(g_init.qoi_list))
         g_ind = np.argsort(self.g[step])
         self.g_level.append(self.g[step][g_ind[n_keep]])
 
@@ -310,7 +311,7 @@ class SubsetSimulation:
         while self.g_level[step] > 0:
 
             step = step + 1
-            self.samples.append(self.samples[step - 1][g_ind[0:n_keep]])
+            self.samples.append(self.samples[step - 1][g_ind[:n_keep]])
             self.g.append(self.g[step - 1][g_ind[:n_keep]])
 
             for i in range(self.nsamples_ss - n_keep):

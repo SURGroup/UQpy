@@ -1,7 +1,7 @@
 import numpy as np
 from UQpy.Distributions import Distribution
 
-p = Distribution(name=['normal', 'normal'], copula='gumbel')
+p = Distribution(dist_name=['normal', 'normal'], copula='gumbel')
 
 
 def pdf(x, params):
