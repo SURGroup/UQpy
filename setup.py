@@ -6,7 +6,7 @@ setup(
     name='UQpy',
     version="2.0.1",
     url='https://github.com/SURGroup/UQpy',
-    authors="UQpy.info@gmail.com",
+    authors="Michael D. Shields, Dimitris G. Giovanis",
     author_emails="UQpy.info@gmail.com",
     license='MIT',
     platforms=["OSX", "Windows", "Linux"],
