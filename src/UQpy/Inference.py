@@ -110,7 +110,7 @@ class Model:
             self.script = model_script
             self.model_object_name = model_object_name
             if self.name is None:
-                self.name = self.script+self.model_object_name
+                self.name = self.script[:-3]+'_'+self.model_object_name
             self.var_names = var_names
             if self.var_names is None:
                 self.var_names = ['theta_{}'.format(i) for i in range(self.n_params)]
@@ -256,10 +256,10 @@ class MLEstimation:
         elif model.type == 'pdf':
             # Use the fit method if it exists
             try:
-                if verbose:
-                    print('Evaluating max likelihood estimate for model ' + model.name + ' using its fit method.')
                 self.param = np.array(model.pdf.fit(self.data))
                 self.max_log_like = model.log_like(self.data, self.param)[0]
+                if verbose:
+                    print('Evaluating max likelihood estimate for model ' + model.name + ' using its fit method.')
             # Else use the optimization procedure
             except AttributeError:
                 if verbose:
@@ -278,21 +278,19 @@ class MLEstimation:
                 return -1 * self.model.log_like(self.data, param, error_cov=1.0)[0]
             return -1 * self.model.log_like(self.data, param)[0]
 
-        if self.verbose:
-            print('Evaluating max likelihood estimate for model ' + self.model.name + ' using optimization procedure.')
         list_param = []
         list_max_log_like = []
         if self.iter_optim > 1 or self.x0 is None:
             x0 = np.random.rand(self.iter_optim, self.model.n_params)
             if self.bounds is not None:
                 bounds = np.array(self.bounds)
-                x0 = bounds[:, 0].reshape((1, -1)) + (bounds[:,1]-bounds[:,0]).reshape((1, -1)) * x0
+                x0 = bounds[:,0].reshape((1,-1)) + (bounds[:,1]-bounds[:,0]).reshape((1,-1)) * x0
         else:
-            x0 = self.x0.reshape((1, -1))
+            x0 = self.x0.reshape((1,-1))
         # second case: use any other method that does not require a Jacobian
         # TODO: a maximization that uses a Jacobian which can be given analytically by user
         for i in range(self.iter_optim):
-            res = minimize(neg_log_like_data, x0[i, :], method=self.method_optim, bounds=self.bounds)
+            res = minimize(neg_log_like_data, x0[i,:], method=self.method_optim, bounds=self.bounds)
             list_param.append(res.x)
             list_max_log_like.append((-1)*res.fun)
         idx_max = int(np.argmax(list_max_log_like))
@@ -424,7 +422,7 @@ class InfoModelSelection:
 
 class BayesParameterEstimation:
 
-    def __init__(self, model=None, data=None, sampling_method=None,
+    def __init__(self, model=None, data=None, sampling_method='MCMC',
                  pdf_proposal_type=None, pdf_proposal_scale=None,
                  pdf_proposal=None, pdf_proposal_params=None,
                  algorithm=None, jump=None, nsamples=None, nburn=None, seed=None, verbose=False):
@@ -621,7 +619,7 @@ class BayesModelSelection:
         self.nburn = nburn
         self.seed = seed
         self.tmp_candidate_model = None
-        self.verbose = verbose
+        self.verbose=verbose
 
         if prior_probabilities is None:
             self.prior_probabilities = [1/len(self.candidate_models) for _ in self.candidate_models]

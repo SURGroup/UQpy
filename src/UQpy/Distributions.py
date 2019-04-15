@@ -172,7 +172,7 @@ class Distribution:
         elif isinstance(self.dist_name, list):
             if len(x.shape) == 1:
                 x = x.reshape((1,-1))
-            if (x.shape[1] != len(self.dist_name)):
+            if x.shape[1] != len(self.dist_name):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             if self.copula is None:
                 params_fit = []

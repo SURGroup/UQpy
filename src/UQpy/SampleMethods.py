@@ -1142,7 +1142,7 @@ class MCMC:
     """
 
     # Authors: Michael D. Shields, Mohit Chauhan, Dimitris G. Giovanis
-    # Updated: 4/26/18 by Michael D. Shields
+    # Updated: 04/08/2019 by Audrey Olivier
 
     def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None,
                  pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None,
@@ -1367,7 +1367,8 @@ class MCMC:
         if self.algorithm is not 'Stretch':
             if self.seed is None:
                 self.seed = np.zeros(self.dimension)
-            if self.seed.__len__() != self.dimension:
+            self.seed = np.array(self.seed)
+            if (len(self.seed.shape) == 1) and (self.seed.shape[0] != self.dimension):
                 raise NotImplementedError("Exit code: Incompatible dimensions in 'seed'.")
             self.seed = self.seed.reshape((1, -1))
         else:
@@ -1450,6 +1451,7 @@ class MCMC:
             if (self.pdf_target_params is not None) and (len(self.pdf_target) != len(self.pdf_target_params)):
                 raise ValueError('pdf_target_params should be given as a list of length equal to pdf_target')
 
+
         # Define a helper function
         def compute_log_pdf(x, pdf_func, params=None, copula_params=None):
             kwargs_ = {}
@@ -1497,6 +1499,7 @@ class MCMC:
                 if isinstance(self.pdf_target[0], str):
                     p_js = [Distribution(dist_name=pdf_target_j) for pdf_target_j in self.pdf_target]
                     try:
+                        [p_j.pdf(x=self.seed[0, j], **kwargs[j]) for (j, p_j) in enumerate(p_js)]
                         self.log_pdf_target = [partial(compute_log_pdf, pdf_func=p_j.pdf, **kwargs[j])
                                                for (j, p_j) in enumerate(p_js)]
                     except AttributeError:
@@ -1519,7 +1522,7 @@ class MCMC:
                                                             and isinstance(self.log_pdf_target[0], str)):
                     p = Distribution(dist_name=self.log_pdf_target, copula=self.pdf_target_copula)
                     try:
-                        p.log_pdf(x=self.seed, **kwargs)
+                        p.log_pdf(x=self.seed[0, :], **kwargs)
                         self.log_pdf_target = partial(p.log_pdf, **kwargs)
                     except AttributeError:
                         raise AttributeError('log_pdf_target given as a string must point to a Distribution '
@@ -1534,7 +1537,7 @@ class MCMC:
                                                         and isinstance(self.pdf_target[0], str)):
                     p = Distribution(dist_name=self.pdf_target, copula=self.pdf_target_copula)
                     try:
-                        p.pdf(x=self.seed, **kwargs)
+                        p.pdf(x=self.seed[0, :], **kwargs)
                         self.log_pdf_target = partial(compute_log_pdf, pdf_func=p.pdf, **kwargs)
                     except AttributeError:
                         raise AttributeError('pdf_target given as a string must point to a Distribution '
@@ -1599,7 +1602,7 @@ class IS:
     """
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 11/02/18 by Audrey Olivier
+    # Last Modified: 04/08/2019 by Audrey Olivier
 
     def __init__(self, nsamples=None,
                  pdf_proposal=None, pdf_proposal_params=None,
@@ -1639,12 +1642,7 @@ class IS:
         except AttributeError:
             log_qs = np.log(proposal_pdf_.pdf(x, params=self.pdf_proposal_params))
         # evaluate ps (log_pdf_target)
-        kwargs = {}
-        if self.pdf_target_params is not None:
-            kwargs['params'] = self.pdf_target_params
-        if self.pdf_target_copula_params is not None:
-            kwargs['copula_params'] = self.pdf_target_copula_params
-        log_ps = self.log_pdf_target(x, **kwargs)
+        log_ps = self.log_pdf_target(x)
 
         log_weights = log_ps-log_qs
         # this rescale is used to avoid having NaN of Inf when taking the exp
@@ -1666,33 +1664,38 @@ class IS:
             raise NotImplementedError('Exit code: Number of samples is not defined.')
 
         # helper function
-        def compute_log_pdf(x, params, copula_params, pdf_func):
-            kwargs = {}
+        def compute_log_pdf(x, pdf_func, params, copula_params):
+            kwargs_ = {}
             if params is not None:
-                kwargs['params'] = params
+                kwargs_['params'] = params
             if copula_params is not None:
-                kwargs['copula_params'] = copula_params
-            tmp = pdf_func(x, **kwargs)
+                kwargs_['copula_params'] = copula_params
+            tmp = pdf_func(x, **kwargs_)
             pdf_value = np.fmax(tmp, 10 ** (-320)*np.ones_like(tmp))
             return np.log(pdf_value)
         # Check log_pdf_target, pdf_target
         if (self.pdf_target is None) and (self.log_pdf_target is None):
             raise ValueError('UQpy error: a target pdf must be defined (pdf_target or log_pdf_target).')
         # The code first checks if log_pdf_target is defined, if yes, no need to check pdf_target
+        x_test = Distribution(dist_name=self.pdf_proposal).rvs(params=self.pdf_proposal_params, nsamples=1)
+        kwargs = {}
+        if self.pdf_target_params is not None:
+            kwargs['params'] = self.pdf_target_params
+        if self.pdf_target_copula_params is not None:
+            kwargs['copula_params'] = self.pdf_target_copula_params
         if self.log_pdf_target is not None:
             # log_pdf_target can be defined as a callable or string.
             if isinstance(self.log_pdf_target, str) or (isinstance(self.log_pdf_target, list) and
                                                         isinstance(self.log_pdf_target[0], str)):
                 p = Distribution(dist_name=self.log_pdf_target, copula=self.pdf_target_copula)
                 try:
-                    p.log_pdf(x=None, params=None, copula_params=None)
-                except TypeError:
-                    self.log_pdf_target = p.log_pdf
+                    p.log_pdf(x=x_test, **kwargs)
+                    self.log_pdf_target = partial(p.log_pdf, **kwargs)
                 except AttributeError:
                     raise AttributeError('log_pdf_target given as a string must point to a Distribution '
                                          'with an existing log_pdf method.')
             elif callable(self.log_pdf_target):
-                pass
+                self.log_pdf_target = partial(self.log_pdf_target, **kwargs)
             else:
                 raise ValueError('log_pdf_target should be a callable or a string/list of strings.')
         else:
@@ -1701,15 +1704,14 @@ class IS:
                                                     isinstance(self.pdf_target[0], str)):
                 p = Distribution(dist_name=self.pdf_target, copula=self.pdf_target_copula)
                 try:
-                    p.pdf(x=None, params=None, copula_params=None)
-                except TypeError:
-                    self.log_pdf_target = partial(compute_log_pdf, pdf_func=p.pdf)
+                    p.pdf(x=x_test, **kwargs)
+                    self.log_pdf_target = partial(compute_log_pdf, pdf_func=p.pdf, **kwargs)
                 except AttributeError:
                     raise AttributeError('pdf_target given as a string must point to a Distribution '
                                          'with an existing pdf method.')
             # otherwise it may be a function that computes the pdf, then just take the logarithm
             elif callable(self.pdf_target):
-                self.log_pdf_target = partial(compute_log_pdf, pdf_func=self.pdf_target)
+                self.log_pdf_target = partial(compute_log_pdf, pdf_func=self.pdf_target, **kwargs)
             else:
                 raise ValueError('pdf_target should be a callable or a string/list of strings.')
 

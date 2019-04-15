@@ -302,63 +302,51 @@ class SROM:
 
 class Krig:
     """
-
             Description:
-
                 Krig generates an surrogate model to approxiamtely predict the function value at unknown locations. This
                 class returns a functions, i.e. Krig.interpolate. This functions estimates the approximate functional
                 value and mean square error at unknown/new samples.
-
                 References:
                 S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, "DACE -- A MATLAB Kriging Toolbox",
                     Informatics and Mathematical Modelling, Version 2.0, 2002.
             Input:
                 :param samples: An array of samples corresponding to each random variables
-
                 :param values: An array of function evaluated at sample points
                 :type values: ndarray
-
                 :param reg_model: Regression model contains the basis function, which defines the trend of the model.
                                   Options: Constant, Linear, Quadratic.
                 :type reg_model: string or function
-
                 :param corr_model: Correlation model contains the correlation function, which uses sample distance
                                    to define similarity between samples.
                                    Options: Exponential, Gaussian, Linear, Spherical, Cubic, Spline.
                 :type corr_model: string or function
-
                 :param corr_model_params: Initial values corresponding to hyperparameters/scale parameters.
                 :type corr_model_params: ndarray
-
                 :param bounds: Bounds for hyperparameters used to solve optimization problem to estimate maximum
                                likelihood estimator. This should be a closed bound.
                                Default: [0.001, 10**7] for each hyperparamter.
                 :type bounds: list
-
-                :param op: Indicator to solve MLE problem or not. If 'Yes' corr_model_params will be used as initial
+                :param op: Indicator to solve MLE problem or not. If 'True' corr_model_params will be used as initial
                            solution for optimization problem. Otherwise, corr_model_params will be directly use as
-                           hyperparamter. Default: 'Yes'.
-                :type op: str
-
+                           hyperparamter. Default: 'True'.
+                :type op: boolean
                 :param n_opt: Number of times optimization problem is to be solved with different starting point.
                               Default: 1
                 :type n_opt: int
-
             Output:
                 :return: Krig.interpolate: This function predicts the function value and uncertainty associated with
                                            it at unknown samples.
                 :rtype: Krig.interpolate: function
-
         """
 
     # Authors: Mohit Chauhan, Matthew Lombardo
     # Last modified: 12/17/2018 by Mohit S. Chauhan
 
     def __init__(self, samples=None, values=None, reg_model=None, corr_model=None, corr_model_params=None, bounds=None,
-                 op='Yes', n_opt=1):
+                 op=True, n_opt=1):
 
-        self.samples = samples
-        self.values = values
+        self.samples = np.array(samples)
+        self.values = np.array(values)
         self.reg_model = reg_model
         self.corr_model = corr_model
         self.corr_model_params = corr_model_params
@@ -372,6 +360,9 @@ class Krig:
 
     def run_krig(self):
         print('UQpy: Performing Krig...')
+        from scipy import optimize
+        from scipy.linalg import cholesky, cho_solve
+
         # Normalizing the data
         self.mean_s, self.std_s = np.mean(self.samples, 0), np.std(self.samples, 0)
         self.mean_y, self.std_y = np.mean(self.values, 0), np.std(self.values, 0)
@@ -383,36 +374,34 @@ class Krig:
 
         f_, jf_ = self.reg_model(s_)
 
-        from scipy import optimize
-
         def log_likelihood(p0, s, m, n, f, y, re=0):
+            # Return the log-likelihood function and it's gradient. Gradient is calculate using Central Difference
             r__, dr_ = self.corr_model(x=s, s=s, params=p0, dt=True)
             try:
-                cc = np.linalg.cholesky(r__)
+                cc = cholesky(r__, lower=True)
             except np.linalg.LinAlgError:
                 if re == 0:
                     return np.inf, np.zeros(n)
                 else:
                     return np.inf
 
+            # Product of diagonal terms is negligible sometimes, even when cc exists.
             if np.prod(np.diagonal(cc)) == 0:
                 if re == 0:
                     return np.inf, np.zeros(n)
                 else:
                     return np.inf
 
-            c_in = np.linalg.inv(cc)
-            r_in = np.matmul(c_in.T, c_in)
+            # alpha = inv(R)*y
+            alpha = cho_solve((cc, True), y)
+            t4 = np.einsum("ik,ik->k", y, alpha)
 
-            tmp = y
-            alpha = np.matmul(r_in, tmp)
-            t4 = np.matmul(tmp.T, alpha)
-
-            ll = (np.log(np.prod(np.diagonal(cc))) + t4 + m * np.log(2 * np.pi))/2
+            # Objective function:= log(det(R)) + Y^T inv(R) Y + constant
+            ll = (np.log(np.prod(np.diagonal(cc))) + t4 + m * np.log(2 * np.pi)) / 2
             if re == 1:
                 return ll
 
-            grad = np.zeros(n)
+            grad1 = np.zeros(n)
             h = 0.005
             for dr in range(n):
                 temp = np.zeros(n)
@@ -422,22 +411,29 @@ class Krig:
                 f_hi = log_likelihood(hi, s, m, n, f, y, 1)
                 f_low = log_likelihood(low, s, m, n, f, y, 1)
                 if f_hi == np.inf or f_low == np.inf:
-                    grad[dr] = 0
+                    grad1[dr] = 0
                 else:
-                    grad[dr] = (f_hi-f_low)/h
+                    grad1[dr] = (f_hi - f_low) / h
 
-            return ll, grad
+            return ll, grad1
 
-        if self.op == 'Yes':
+        # Maximum Likelihood Estimation : Solving optimization problem to calculate hyperparameters
+        if self.op:
             sp = self.corr_model_params
             p = np.zeros([self.n_opt, n_])
             pf = np.zeros([self.n_opt, 1])
             for i__ in range(self.n_opt):
+                # print("----------------------------------", i__, "-------------------------------------")
                 p_ = optimize.fmin_l_bfgs_b(log_likelihood, sp, args=(s_, m_, n_, f_, y_), bounds=self.bounds)
                 p[i__, :] = p_[0]
                 pf[i__, 0] = p_[1]
+                # print(i__, p_[0], p_[1])
+                # Generating new starting points using log-uniform distribution
                 if i__ != self.n_opt - 1:
                     sp = stats.reciprocal.rvs([j[0] for j in self.bounds], [j[1] for j in self.bounds], 1)
+            if min(pf) == np.inf:
+                raise NotImplementedError("Maximum likelihood estimator failed: Choose different starting point or "
+                                          "increase n_opt")
             t = np.argmin(pf)
             self.corr_model_params = p[t, :]
 
@@ -469,21 +465,31 @@ class Krig:
         s_ = (self.samples - self.mean_s) / self.std_s
         fx, jf = self.reg_model(x)
         rx = self.corr_model(x=x, s=s_, params=self.corr_model_params)
-        y = np.einsum('ij,jk->ik', fx, self.beta) + np.einsum('ij,jk->ik', rx.T, self.gamma)
+        y = np.einsum('ij,jk->ik', fx, self.beta) + np.einsum('ij,jk->ik', rx, self.gamma)
         y = self.mean_y + y * self.std_y
         if dy:
-            r_dash = np.einsum('ij,jk->ik', self.C_inv, rx)
+            r_dash = np.einsum('ij,jk->ik', self.C_inv, rx.T)
             u = np.einsum('ij,jk->ik', self.F_dash.T, r_dash)-fx.T
             norm1 = np.sum(r_dash**2, 0)**0.5
             norm2 = np.sum(np.linalg.solve(self.G, u)**2, 0)**0.5
-            mse = (self.sig ** 2) * (1 + norm2**2 - norm1**2)
+            mse = (self.std_y**2)*(self.sig ** 2) * (1 + norm2**2 - norm1**2)
             return y, mse.reshape(y.shape)
         else:
             return y
 
+    def jacobian(self, x):
+        x = (x - self.mean_s) / self.std_s
+        s_ = (self.samples - self.mean_s) / self.std_s
+        fx, jf = self.reg_model(x)
+        rx, drdx = self.corr_model(x=x, s=s_, params=self.corr_model_params, dx=True)
+        a = np.einsum('ikj,jm->ik', jf, self.beta)
+        b = np.einsum('ijk,jm->ki', drdx.T, self.gamma)
+        y_grad = (a + b)*self.std_y/self.std_s
+        return y_grad
+
     def init_krig(self):
         if self.reg_model is None:
-            raise NotImplementedError("Exit code: Correlation model is not defined.")
+            raise NotImplementedError("Exit code: Regression model is not defined.")
 
         if self.corr_model is None:
             raise NotImplementedError("Exit code: Correlation model is not defined.")
@@ -543,20 +549,24 @@ class Krig:
         # Defining Correlation model (Gaussian Process)
         def corr(model):
             def c(x, s, params, dt=False, dx=False):
-                rx, drdt, drdx = 0, 0, 0
+                rx, drdt, drdx = [0.], [0.], [0.]
                 x = np.atleast_2d(x)
                 # Create stack matrix, where each block is x_i with all s
                 stack = - np.tile(np.swapaxes(np.atleast_3d(x), 1, 2), (1, np.size(s, 0), 1)) + np.tile(s, (
                     np.size(x, 0),
                     1, 1))
                 if model == 'Exponential':
-                    rx = np.exp(np.sum(-params * abs(stack), axis=2)).T
-                    drdt = -abs(stack) * np.tile(rx, (np.size(x, 1), 1, 1)).T
-                    drdx = params * np.sign(stack) * np.tile(rx, (np.size(x, 1), 1, 1)).T
+                    rx = np.exp(np.sum(-params * abs(stack), axis=2))
+                    if dt:
+                        drdt = -abs(stack) * np.tile(rx, (np.size(x, 1), 1, 1)).T
+                    if dx:
+                        drdx = params * np.sign(stack) * np.tile(rx.T, (np.size(x, 1), 1, 1)).T
                 elif model == 'Gaussian':
-                    rx = np.exp(np.sum(-params * (stack ** 2), axis=2)).T
-                    drdt = -(stack ** 2) * np.tile(rx, (np.size(x, 1), 1, 1)).T
-                    drdx = 2 * params * stack * np.tile(rx, (np.size(x, 1), 1, 1)).T
+                    rx = np.exp(np.sum(-params * (stack ** 2), axis=2))
+                    if dt:
+                        drdt = -(stack ** 2) * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
+                    if dx:
+                        drdx = 2 * params * stack * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
                 elif model == 'Linear':
                     # Taking stack and turning each d value into 1-theta*dij
                     after_parameters = 1 - params * abs(stack)
