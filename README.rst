@@ -66,9 +66,6 @@ Clone your fork of the UQpy repo from your GitHub account to your local disk (to
 Help and Support
 ===========
 
-Documentation:
-           https://uqpy.readthedocs.io/en/latest/
-
 Website:
            www.ce.jhu.edu/surg
 
