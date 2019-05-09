@@ -33,8 +33,11 @@ warnings.filterwarnings("ignore")
 
 class Model:
     def __init__(self, model_type=None, model_script=None, model_name=None,
-                 n_params=None, error_covariance=1.0,
-                 prior_name=None, prior_params=None, prior_copula=None,
+                 n_params=None, fixed_params=None,
+                 error_adapt=False, error_covariance=1.0,
+                 prior_name=None, prior_params=None, prior_copula=None, prior_copula_params=None,
+                 prior_error_name=None, prior_error_params=None, prior_error_copula=None,
+                 prior_error_copula_params=None,
                  model_object_name=None, input_template=None, var_names=None, output_script=None,
                  output_object_name=None, ntasks=1, cores_per_task=1, nodes=1, resume=False,
                  model_dir=None, cluster=False, verbose=False,
@@ -56,11 +59,12 @@ class Model:
             :param n_params: number of parameters to be estimated, required
             :type n_params: int
 
+            :param error_adapt: if set to True, the algorithm learns the covariance term,
+                   can only be used when model is defined as a python script
+            :type error_adapt: boolean
+
             :param error_covariance: covariance of the Gaussian error for model defined by a python script
             :type error_covariance: ndarray (full covariance matrix) or float (diagonal values)
-
-            :param cpu_runModel: number of cpus used when using runModel, used only when model_type='python'
-            :type cpu_runModel: int
 
             :param prior_name: distribution name of the prior pdf
             :type prior_name: str or list of str
@@ -70,6 +74,9 @@ class Model:
 
             :param prior_copula: copula of the prior, if necessary
             :param prior_copula: str
+
+            :param prior_copula_params: parameters of the copula of the prior, if necessary
+            :param prior_copula_params: str
 
             :param model_object_name, input_template, var_names, output_script, output_object_name, ntasks,
                    cores_per_task, nodes, resume, verbose, model_dir, cluster: parameters of the python model, see
@@ -89,9 +96,12 @@ class Model:
         self.type = model_type
         self.name = model_name
         if n_params is None:
-            raise ValueError('A number of parameters must be defined.')
+            raise TypeError('A number of parameters must be defined.')
         self.n_params = n_params
         self.verbose = verbose
+        if (fixed_params is not None) and (not isinstance(fixed_params, list)):
+            raise TypeError('Fixed_params should be provided as a list')
+        self.fixed_params = fixed_params
 
         if self.type == 'python':
             # Check that the script is a python file
@@ -100,22 +110,27 @@ class Model:
             self.script = model_script
             self.model_object_name = model_object_name
             if self.name is None:
-                self.name = self.script+self.model_object_name
+                self.name = self.script[:-3]+'_'+self.model_object_name
             self.var_names = var_names
             if self.var_names is None:
                 self.var_names = ['theta_{}'.format(i) for i in range(self.n_params)]
-            self.error_covariance = error_covariance
-            self.output_object_name = output_object_name
-            self.input_template = input_template
-            self.output_script = output_script
-            self.ntasks = ntasks
-            self.cores_per_task = cores_per_task
-            self.nodes = nodes
-            self.resume = resume
-            self.model_dir = model_dir
-            self.cluster = cluster
+            self.error_adapt = error_adapt
+            if error_adapt:
+                self.error_covariance = None
+            else:
+                self.error_covariance = error_covariance
+            self.runModel_props = {'output_object_name': output_object_name,
+                                   'input_template': input_template,
+                                   'output_script': output_script,
+                                   'ntasks': ntasks,
+                                   'cores_per_task': cores_per_task,
+                                   'nodes': nodes,
+                                   'resume': resume,
+                                   'cluster': cluster,
+                                   'model_dir': model_dir}
 
         elif self.type == 'pdf':
+            self.error_adapt = False
             self.pdf = Distribution(dist_name=self.name)
 
         else:
@@ -123,13 +138,21 @@ class Model:
 
         # Define prior if it is given
         if prior_name is not None:
-            self.prior = Distribution(dist_name= prior_name, copula = prior_copula)
+            self.prior = Distribution(dist_name=prior_name, copula=prior_copula)
             self.prior_params = prior_params
+            self.prior_copula_params = prior_copula_params
         else:
             self.prior = None
-            self.prior_params = None
 
-    def log_like(self, data, params):
+        # Define prior for the error covariance if it is given
+        if prior_error_name is not None:
+            self.prior_error = Distribution(dist_name=prior_error_name, copula=prior_error_copula)
+            self.prior_error_params = prior_error_params
+            self.prior_error_copula_params = prior_error_copula_params
+        else:
+            self.prior_error = None
+
+    def log_like(self, data, params, error_cov=None):
         """ Computes the log-likelihood of model
             inputs: data, ndarray of dimension (ndata, )
                     params, ndarray of dimension (nsamples, n_params) or (n_params,)
@@ -140,20 +163,32 @@ class Model:
         if params.shape[1] != self.n_params:
             raise ValueError('the nb of columns in params should be equal to model.n_params')
         results = np.empty((params.shape[0],), dtype=float)
+
+        if self.fixed_params is not None:
+            fixed = np.array(self.fixed_params).reshape((1, -1)) * np.ones((params.shape[0],
+                                                                            len(self.fixed_params)))
+            samples_with_fixed = np.concatenate((params, fixed), axis=1)
+        else:
+            samples_with_fixed = params
         if self.type == 'python':
-            z = RunModel(samples=params, model_script=self.script, model_object_name=self.model_object_name,
-                         input_template=self.input_template, var_names=self.var_names,
-                         output_script=self.output_script, output_object_name=self.output_object_name,
-                         ntasks=self.ntasks, cores_per_task=self.cores_per_task, nodes=self.nodes,
-                         resume=self.resume, verbose=self.verbose, model_dir=self.model_dir,
-                         cluster=self.cluster)
-            for i in range(params.shape[0]):
+            z = RunModel(samples=samples_with_fixed,
+                         model_script=self.script, model_object_name=self.model_object_name,
+                         var_names=self.var_names, verbose=self.verbose,
+                         **self.runModel_props)
+            if self.error_adapt:
+                error_cov_value = error_cov
+            else:
+                error_cov_value = self.error_covariance
+            for i in range(samples_with_fixed.shape[0]):
                 mean = np.array(z.qoi_list[i]).reshape((-1,))
-                results[i] = multivariate_normal.logpdf(data, mean=mean, cov=self.error_covariance)
+                results[i] = multivariate_normal.logpdf(data, mean=mean, cov=error_cov_value)
         elif self.type == 'pdf':
-            for i in range(params.shape[0]):
-                param_i = params[i, :].reshape((self.n_params,))
-                results[i] = np.sum(self.pdf.log_pdf(data, param_i))
+            for i in range(samples_with_fixed.shape[0]):
+                param_i = samples_with_fixed[i, :].reshape((-1,))
+                try:
+                    results[i] = np.sum(self.pdf.log_pdf(data, param_i))
+                except AttributeError:
+                    results[i] = np.sum(np.log(self.pdf.pdf(data, param_i)))
         return results
 
 
@@ -212,22 +247,24 @@ class MLEstimation:
         if model.type == 'python':
             if verbose:
                 print('Evaluating max likelihood estimate for model ' + model.name + ' using optimization.')
-            param, max_log_like = self.max_by_optimization()
+            param, max_log_like, error_cov_estimate = self.max_by_optimization()
             self.param = param
             self.max_log_like = max_log_like
+            if model.error_adapt:
+                self.error_cov_estimate = error_cov_estimate
 
         elif model.type == 'pdf':
             # Use the fit method if it exists
             try:
-                if verbose:
-                    print('Evaluating max likelihood estimate for model ' + model.name + ' using its fit method.')
                 self.param = np.array(model.pdf.fit(self.data))
                 self.max_log_like = model.log_like(self.data, self.param)[0]
+                if verbose:
+                    print('Evaluating max likelihood estimate for model ' + model.name + ' using its fit method.')
             # Else use the optimization procedure
             except AttributeError:
                 if verbose:
                     print('Evaluating max likelihood estimate for model ' + model.name + ' using optimization.')
-                param, max_log_like = self.max_by_optimization()
+                param, max_log_like, _ = self.max_by_optimization()
                 self.param = param
                 self.max_log_like = max_log_like
 
@@ -237,10 +274,10 @@ class MLEstimation:
     def max_by_optimization(self):
 
         def neg_log_like_data(param):
+            if self.model.error_adapt:
+                return -1 * self.model.log_like(self.data, param, error_cov=1.0)[0]
             return -1 * self.model.log_like(self.data, param)[0]
 
-        if self.verbose:
-            print('Evaluating max likelihood estimate for model ' + self.model.name + ' using optimization procedure.')
         list_param = []
         list_max_log_like = []
         if self.iter_optim > 1 or self.x0 is None:
@@ -259,7 +296,22 @@ class MLEstimation:
         idx_max = int(np.argmax(list_max_log_like))
         param = np.array(list_param[idx_max])
         max_log_like = list_max_log_like[idx_max]
-        return param, max_log_like
+        if self.model.error_adapt:
+            if self.model.fixed_params is not None:
+                samples_with_fixed = np.concatenate((param.reshape((1, -1)),
+                                                     np.array(self.model.fixed_params).reshape((1, -1))),
+                                                    axis=1)
+            else:
+                samples_with_fixed = param.reshape((1, -1))
+            z = RunModel(samples=samples_with_fixed,
+                         model_script=self.model.script, model_object_name=self.model.model_object_name,
+                         var_names=self.model.var_names, verbose=self.verbose,
+                         **self.model.runModel_props)
+            output_val = np.array(z.qoi_list[0]).reshape((-1,))
+            error_cov_estimate = 1/(output_val.shape[0]-self.model.n_params) * \
+                                 np.sum((np.array(self.data).reshape((-1,))-output_val)**2)
+            return param, max_log_like, error_cov_estimate
+        return param, max_log_like, None
 
 
 ########################################################################################################################
@@ -352,20 +404,15 @@ class InfoModelSelection:
         # return outputs in sorted order, from most probable model to least probable model
         if sorted_outputs:
             sort_idx = list(np.argsort(np.array(criteria)))
-            self.sorted_models = [candidate_models[i] for i in sort_idx]
-            self.sorted_model_names = [model.name for model in self.sorted_models]
-            self.sorted_fitted_params = [fitted_params[i] for i in sort_idx]
-            self.sorted_criteria = [criteria[i] for i in sort_idx]
-            self.sorted_penalty_terms = [penalty_terms[i] for i in sort_idx]
-            self.sorted_probabilities = [probabilities[i] for i in sort_idx]
-        # or return the outputs in the order they were given
+        # or in initial order
         else:
-            self.models = candidate_models
-            self.model_names = [model.name for model in self.models]
-            self.fitted_params = fitted_params
-            self.criteria = criteria
-            self.penalty_terms = penalty_terms
-            self.probabilities = list(probabilities)
+            sort_idx = list(range(len(candidate_models)))
+        self.models = [candidate_models[i] for i in sort_idx]
+        self.model_names = [model.name for model in self.models]
+        self.fitted_params = [fitted_params[i] for i in sort_idx]
+        self.criteria = [criteria[i] for i in sort_idx]
+        self.penalty_terms = [penalty_terms[i] for i in sort_idx]
+        self.probabilities = [probabilities[i] for i in sort_idx]
 
 
 ########################################################################################################################
@@ -375,8 +422,9 @@ class InfoModelSelection:
 
 class BayesParameterEstimation:
 
-    def __init__(self, model=None, data=None, sampling_method=None,
-                 pdf_proposal=None, pdf_proposal_scale=None, pdf_proposal_params=None,
+    def __init__(self, model=None, data=None, sampling_method='MCMC',
+                 pdf_proposal_type=None, pdf_proposal_scale=None,
+                 pdf_proposal=None, pdf_proposal_params=None,
                  algorithm=None, jump=None, nsamples=None, nburn=None, seed=None, verbose=False):
 
         """
@@ -393,9 +441,9 @@ class BayesParameterEstimation:
             :param sampling_method: Method to be used
             :type sampling_method: str, 'MCMC' or 'IS'
 
-            :param pdf_proposal, pdf_proposal_scale, pdf_proposal_params, algorithm, jump, nsamples, nburn,
+            :param pdf_proposal_type, pdf_proposal_scale, pdf_proposal, pdf_proposal_params, algorithm, jump, nsamples, nburn,
              seed: inputs to the sampling method, see MCMC and IS
-            :type pdf_proposal, pdf_proposal_scale, pdf_proposal_params, algorithm, jump, nsamples, nburn,
+            :type pdf_proposal_type, pdf_proposal_scale, pdf_proposal, pdf_proposal_params, algorithm, jump, nsamples, nburn,
              seed: see MCMC and IS
 
             Outputs:
@@ -425,12 +473,17 @@ class BayesParameterEstimation:
             self.seed = seed
             if self.seed is None:
                 mle = MLEstimation(model=self.model, data=self.data, verbose=verbose)
-                self.seed = mle.param
-
-            z = MCMC(dimension=self.model.n_params, pdf_proposal_type=pdf_proposal,
+                if self.model.error_adapt:
+                    self.seed = np.append(mle.param, mle.error_cov_estimate)
+                else:
+                    self.seed = mle.param
+            dimension = self.model.n_params
+            if self.model.error_adapt:
+                dimension = self.model.n_params + 1
+            z = MCMC(dimension=dimension, pdf_proposal_type=pdf_proposal_type,
                      pdf_proposal_scale=pdf_proposal_scale,
                      algorithm=algorithm, jump=jump, seed=self.seed, nburn=nburn,
-                     nsamples=self.nsamples, pdf_target=self.posterior, log_pdf_target=self.log_posterior)
+                     nsamples=self.nsamples, log_pdf_target=self.log_posterior)
 
             if verbose:
                 print('UQpy: Parameter estimation analysis completed!')
@@ -444,7 +497,9 @@ class BayesParameterEstimation:
             if pdf_proposal is None:
                 if self.model.prior is None:
                     raise ValueError('a proposal density or a prior should be given')
-                pdf_proposal = self.model.prior.name
+                if self.model.prior.copula is not None:
+                    raise ValueError('when the prior is the proposal density, it cannot have a copula')
+                pdf_proposal = self.model.prior.dist_name
                 pdf_proposal_params = self.model.prior_params
 
             if verbose:
@@ -464,31 +519,36 @@ class BayesParameterEstimation:
 
         del self.model
 
-    def posterior(self, theta, params=None, copula_params=None):
+    def log_posterior(self, theta):
         if type(theta) is not np.ndarray:
             theta = np.array(theta)
         if len(theta.shape) == 1:
-            theta = theta.reshape((1,np.size(theta)))
-        # non-informative prior, p(theta)=1 everywhere
-        if self.model.prior is None:
-            return np.exp(self.model.log_like(data=self.data, params=theta))
-        # prior is given
+            theta = theta.reshape((1, np.size(theta)))
+        # if you are learning the error covariance, separate the parameters
+        if self.model.error_adapt:
+            params = theta[0, :self.model.n_params].reshape((1, -1))
+            error_cov = theta[0, self.model.n_params:][0]
         else:
-            return np.exp(self.model.log_like(data=self.data, params=theta) +
-                          self.model.prior.log_pdf(x=theta, params=self.model.prior_params))
+            params = theta
+            error_cov = None
+        # non-informative priors, p(theta)=1 everywhere, otherwise use the defined priors
+        if self.model.prior is None:
+            log_pdf_prior_params = 0
+        else:
+            try:
+                log_pdf_prior_params = self.model.prior.log_pdf(x=params, params=self.model.prior_params,
+                                                                copula_params=self.model.prior_copula_params)
+            except AttributeError:
+                log_pdf_prior_params = np.log(self.model.prior.pdf(x=params, params=self.model.prior_params,
+                                                                   copula_params=self.model.prior_copula_params))
+        if (self.model.prior_error is None) or (not self.model.error_adapt):
+            log_pdf_prior_error = 0
+        else:
+            log_pdf_prior_error = self.model.prior_error.log_pdf(x=error_cov, params=self.model.prior_error_params,
+                                                                 copula_params=self.model.prior_error_copula_params)
 
-    def log_posterior(self, theta, params=None, copula_params=None):
-        if type(theta) is not np.ndarray:
-            theta = np.array(theta)
-        if len(theta.shape) == 1:
-            theta = theta.reshape((1,np.size(theta)))
-        # non-informative prior, p(theta)=1 everywhere
-        if self.model.prior is None:
-            return self.model.log_like(data=self.data, params=theta)
-        # prior is given
-        else:
-            return self.model.log_like(data=self.data, params=theta) + \
-                   self.model.prior.log_pdf(x=theta, params=self.model.prior_params)
+        return self.model.log_like(data=self.data, params=params, error_cov=error_cov) + \
+               log_pdf_prior_params + log_pdf_prior_error
 
 ########################################################################################################################
 ########################################################################################################################
@@ -500,7 +560,7 @@ class BayesModelSelection:
 
     def __init__(self, candidate_models=None, data=None, prior_probabilities=None,
                  pdf_proposal_type=None, pdf_proposal_scale=None, algorithm=None, jump=None, nsamples=None,
-                 nburn=None, method=None, seed=None, sorted_outputs = True, verbose=False):
+                 nburn=None, seed=None, sorted_outputs=True, verbose=False):
 
         """
             Perform model selection using Bayesian criteria.
@@ -571,17 +631,13 @@ class BayesModelSelection:
         # sort the models
         if sorted_outputs:
             sort_idx = list(np.argsort(np.array(model_probabilities)))[::-1]
-            self.sorted_models = [candidate_models[i] for i in sort_idx]
-            self.sorted_model_names = [model.name for model in self.sorted_models]
-            self.sorted_mcmc_outputs = [parameter_estimation[i] for i in sort_idx]
-            self.sorted_probabilities = [model_probabilities[i] for i in sort_idx]
-            self.sorted_evidences = [evidence[i] for i in sort_idx]
         else:
-            self.models = candidate_models
-            self.model_names = [model.name for model in self.models]
-            self.mcmc_outputs = parameter_estimation
-            self.probabilities = model_probabilities
-            self.evidences = evidence
+            sort_idx = list(range(len(candidate_models)))
+        self.models = [candidate_models[i] for i in sort_idx]
+        self.model_names = [model.name for model in self.models]
+        self.mcmc_outputs = [parameter_estimation[i] for i in sort_idx]
+        self.probabilities = [model_probabilities[i] for i in sort_idx]
+        self.evidences = [evidence[i] for i in sort_idx]
 
     def run_multi_bayes_ms(self):
 
@@ -597,10 +653,11 @@ class BayesModelSelection:
             if self.verbose:
                 print('UQpy: Running MCMC for model '+self.tmp_candidate_model.name)
 
-            pe_i = BayesParameterEstimation(data=self.data, model=self.tmp_candidate_model, verbose=self.verbose,
-                                            sampling_method = 'MCMC',
-                                            pdf_proposal = (None if self.pdf_proposal_type is None
-                                                            else self.pdf_proposal_type[i]),
+            pe_i = BayesParameterEstimation(data=self.data, model=self.tmp_candidate_model,
+                                            verbose=self.verbose,
+                                            sampling_method='MCMC',
+                                            pdf_proposal_type=(None if self.pdf_proposal_type is None
+                                                               else self.pdf_proposal_type[i]),
                                             pdf_proposal_scale=(None if self.pdf_proposal_scale is None
                                                                 else self.pdf_proposal_scale[i]),
                                             algorithm=(None if self.algorithm is None else self.algorithm[i]),
