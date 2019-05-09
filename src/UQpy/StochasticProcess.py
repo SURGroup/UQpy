@@ -79,6 +79,7 @@ class SRM:
         samples = np.real(np.fft.fftn(F, s=[self.nt for _ in range(self.n)], axes=tuple(np.arange(1, 1+self.n))))
         return samples
 
+
 class BSRM:
     """
     A class to simulate Stochastic Processes from a given power spectrum and bispectrum density based on the BiSpectral
