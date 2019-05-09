@@ -171,17 +171,18 @@ class LHS:
     # Created by: Lohit Vandanapu
     # Last modified: 6/20/2018 by Dimitris G. Giovanis
 
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, lhs_criterion='random', lhs_metric='euclidean',
-                 lhs_iter=100, nsamples=None):
+    def __init__(self, dist_name=None, dist_params=None, lhs_criterion='random', lhs_metric='euclidean',
+                 lhs_iter=100, var_names = None, nsamples=None, verbose=False):
 
-        self.dimension = dimension
         self.nsamples = nsamples
         self.dist_name = dist_name
         self.dist_params = dist_params
+        self.dimension = len(self.dist_name)
         self.lhs_criterion = lhs_criterion
         self.lhs_metric = lhs_metric
         self.lhs_iter = lhs_iter
         self.init_lhs()
+        self.var_names = var_names
 
         self.distribution = [None] * self.dimension
         for i in range(self.dimension):
