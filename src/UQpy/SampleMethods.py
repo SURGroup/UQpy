@@ -155,6 +155,9 @@ class LHS:
                              Default: 100
             :type lhs_iter: int
 
+            :param var_names: names of variables
+            :type var_names: list of strings
+
             :param nsamples: Number of samples to generate.
                              No Default Value: nsamples must be prescribed.
             :type nsamples: int
@@ -172,7 +175,7 @@ class LHS:
     # Last modified: 6/20/2018 by Dimitris G. Giovanis
 
     def __init__(self, dimension=None, dist_name=None, dist_params=None, lhs_criterion='random', lhs_metric='euclidean',
-                 lhs_iter=100, nsamples=None):
+                 lhs_iter=100, var_names=None, nsamples=None):
 
         self.dimension = dimension
         self.nsamples = nsamples
@@ -181,6 +184,7 @@ class LHS:
         self.lhs_criterion = lhs_criterion
         self.lhs_metric = lhs_metric
         self.lhs_iter = lhs_iter
+        self.var_names = var_names
         self.init_lhs()
 
         self.distribution = [None] * self.dimension
