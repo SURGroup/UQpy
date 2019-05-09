@@ -162,6 +162,9 @@ class LHS:
                              No Default Value: nsamples must be prescribed.
             :type nsamples: int
 
+            :param verbose: A boolean declaring whether to write text to the terminal.
+            :type verbose: bool
+
         Output:
             :return: LHS.samples: Set of LHS samples
             :rtype: LHS.samples: ndarray
@@ -175,7 +178,7 @@ class LHS:
     # Last modified: 6/20/2018 by Dimitris G. Giovanis
 
     def __init__(self, dimension=None, dist_name=None, dist_params=None, lhs_criterion='random', lhs_metric='euclidean',
-                 lhs_iter=100, var_names=None, nsamples=None):
+                 lhs_iter=100, var_names=None, nsamples=None, verbose=False):
 
         self.dimension = dimension
         self.nsamples = nsamples
