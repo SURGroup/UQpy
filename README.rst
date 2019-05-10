@@ -53,8 +53,14 @@ In order to uninstall it
             * ::
 
                         $pip uninstall UQpy
+                        
+Alternatively, if you are using conda, you can install from conda-forge channel with:
 
-Clone your fork of the UQpy repo from your GitHub account to your local disk (to get the latest version): 
+            * ::
+
+                        $conda install -c conda-forge uqpy 
+
+You can also install directly from GitHub. Clone your fork of the UQpy repo from your GitHub account to your local disk (to get the latest version) and install UQpy with `setup.py` as below: 
 
             * ::
 
