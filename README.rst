@@ -76,4 +76,4 @@ Website:
     
     
 .. image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/SURGroup/UQpy/Master
+ :target: https://mybinder.org/v2/gh/SURGroup/UQpy/master
