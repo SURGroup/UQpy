@@ -6,7 +6,7 @@ setup(
     name='UQpy',
     version="2.0.1",
     url='https://github.com/SURGroup/UQpy',
-    summary="UQpy is a general purpose toolbox for Uncertainty Quantification",
+    description="UQpy is a general purpose toolbox for Uncertainty Quantification",
     author="Michael D. Shields, Dimitris G. Giovanis",
     author_email="UQpy.info@gmail.com",
     license='MIT',
