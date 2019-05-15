@@ -22,7 +22,7 @@ import os
 import numpy as np
 
 # Authors: Dimitris G.Giovanis, Michael D. Shields
-# Last Modified: 12/10/2018 by Audrey Olivier
+# Last Modified: 12/10/2018 by Audrey Olivier, 3/12/2019 by Aakash.
 
 ########################################################################################################################
 #        Define the probability distribution of the random parameters
@@ -34,10 +34,10 @@ class Distribution:
         Description:
 
             Main distribution class available to the user. The user can define a probability distribution by providing:
-            - a name that points to a univariate/multivariate distribution (see supported distributions in SubDistribution
-            class or custom distribution)
-            - a list of names that points to a list of univariate distributions. In that case, a multivariate distribution
-            is built for which all dimensions are independent and given by Distribution(name)
+            - a name that points to a univariate/multivariate distribution (see supported distributions in
+            SubDistribution class or custom distribution)
+            - a list of names that points to a list of univariate distributions. In that case, a multivariate
+            distribution is built for which all dimensions are independent and given by Distribution(name)
             - a list of names and a copula, in that case a multivariate distribution is built using Distribution(name)
             for the marginal pdfs, while the dependence structure is given by the copula.
 
@@ -52,8 +52,8 @@ class Distribution:
                 7. moments: Calculate the first four moments of the distribution (mean, variance, skewness, kurtosis)
 
         Input:
-            :param name: Name of distribution.
-            :type: name: string or list of strings
+            :param dist_name: Name of distribution.
+            :type: dist_name: string or list of strings
 
             :param copula: copula to create dependence within dimensions, used only if name is a list
             :type: copula: str or None (default None)
@@ -62,33 +62,35 @@ class Distribution:
             A handler pointing to a distribution and its associated methods.
     """
 
-    def __init__(self, name=None, copula=None):
+    def __init__(self, dist_name=None, copula=None):
 
-        if name is None:
+        if dist_name is None:
             raise ValueError('UQpy error: A Distribution name must be provided!')
-        if not isinstance(name, str) and not (isinstance(name, list) and isinstance(name[0], str)):
+        if not isinstance(dist_name, str) and not (isinstance(dist_name, list) and isinstance(dist_name[0], str)):
             raise ValueError('UQpy error: name must be a string or a list of strings.')
-        self.name = name
+        self.dist_name = dist_name
 
         if copula is not None:
             if not isinstance(copula, str):
                 raise ValueError('UQpy error: when provided, copula should be a string.')
-            if isinstance(name, str):
+            if isinstance(dist_name, str):
                 raise ValueError('UQpy error: it does not make sense to define a copula when name is a single string.')
-            self.copula = Copula(copula_name=copula, dist_name=self.name)
+            self.copula = Copula(copula_name=copula, dist_name=self.dist_name)
         else:
             self.copula = None
 
     def pdf(self, x, params, copula_params=None):
 
-        if isinstance(self.name, str):
-            return SubDistribution(name=self.name).pdf(x, params)
-        elif isinstance(self.name, list):
-            if (x.shape[1] != len(self.name)) or (len(params) != len(self.name)):
+        if isinstance(self.dist_name, str):
+            return SubDistribution(dist_name=self.dist_name).pdf(x, params)
+        elif isinstance(self.dist_name, list):
+            if len(x.shape) == 1:
+                x = x.reshape((1, -1))
+            if (x.shape[1] != len(self.dist_name)) or (len(params) != len(self.dist_name)):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             prod_pdf = 1
-            for i in range(len(self.name)):
-                prod_pdf = prod_pdf * SubDistribution(self.name[i]).pdf(x[:, i], params[i])
+            for i in range(len(self.dist_name)):
+                prod_pdf = prod_pdf * SubDistribution(self.dist_name[i]).pdf(x[:, i], params[i])
             if self.copula is None:
                 return prod_pdf
             else:
@@ -97,14 +99,16 @@ class Distribution:
 
     def log_pdf(self, x, params, copula_params=None):
 
-        if isinstance(self.name, str):
-            return SubDistribution(name=self.name).log_pdf(x, params)
-        elif isinstance(self.name, list):
-            if (x.shape[1] != len(self.name)) or (len(params) != len(self.name)):
+        if isinstance(self.dist_name, str):
+            return SubDistribution(dist_name=self.dist_name).log_pdf(x, params)
+        elif isinstance(self.dist_name, list):
+            if len(x.shape) == 1:
+                x = x.reshape((1, -1))
+            if (x.shape[1] != len(self.dist_name)) or (len(params) != len(self.dist_name)):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             sum_log_pdf = 0
-            for i in range(len(self.name)):
-                sum_log_pdf = sum_log_pdf + SubDistribution(self.name[i]).log_pdf(x[:, i], params[i])
+            for i in range(len(self.dist_name)):
+                sum_log_pdf = sum_log_pdf + SubDistribution(self.dist_name[i]).log_pdf(x[:, i], params[i])
             if self.copula is None:
                 return sum_log_pdf
             else:
@@ -113,15 +117,17 @@ class Distribution:
 
     def cdf(self, x, params, copula_params=None):
 
-        if isinstance(self.name, str):
-            return SubDistribution(name=self.name).cdf(x, params)
-        elif isinstance(self.name, list):
-            if (len(params) != len(self.name)) or (x.shape[1] != len(self.name)):
+        if isinstance(self.dist_name, str):
+            return SubDistribution(dist_name=self.dist_name).cdf(x, params)
+        elif isinstance(self.dist_name, list):
+            if len(x.shape) == 1:
+                x = x.reshape((1, -1))
+            if (x.shape[1] != len(self.dist_name)) or (len(params) != len(self.dist_name)):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             if self.copula is None:
                 cdfs = np.zeros_like(x)
-                for i in range(len(self.name)):
-                    cdfs[:,i] = SubDistribution(self.name[i]).cdf(x[:, i], params[i])
+                for i in range(len(self.dist_name)):
+                    cdfs[:, i] = SubDistribution(self.dist_name[i]).cdf(x[:, i], params[i])
                 return np.prod(cdfs, axis=1)
             else:
                 c, _ = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
@@ -129,60 +135,65 @@ class Distribution:
 
     def icdf(self, x, params):
 
-        if isinstance(self.name, str):
-            return SubDistribution(name=self.name).icdf(x, params)
-        elif isinstance(self.name, list):
-            if (len(params) != len(self.name)) or (x.shape[1] != len(self.name)):
+        if isinstance(self.dist_name, str):
+            return SubDistribution(dist_name=self.dist_name).icdf(x, params)
+        elif isinstance(self.dist_name, list):
+            if len(x.shape) == 1:
+                x = x.reshape((1, -1))
+            if (x.shape[1] != len(self.dist_name)) or (len(params) != len(self.dist_name)):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             if self.copula is None:
                 icdfs = []
-                for i in range(len(self.name)):
-                    icdfs.append(SubDistribution(self.name[i]).icdf(x[:, i], params[i]))
+                for i in range(len(self.dist_name)):
+                    icdfs.append(SubDistribution(self.dist_name[i]).icdf(x[:, i], params[i]))
                 return icdfs
             else:
                 raise AttributeError('Method icdf not defined for distributions with copula.')
 
     def rvs(self, params, nsamples=1):
 
-        if isinstance(self.name, str):
-            return SubDistribution(name=self.name).rvs(params, nsamples)
-        elif isinstance(self.name, list):
-            if len(params) != len(self.name):
+        if isinstance(self.dist_name, str):
+            return SubDistribution(dist_name=self.dist_name).rvs(params, nsamples)
+        elif isinstance(self.dist_name, list):
+            if len(params) != len(self.dist_name):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             if self.copula is None:
-                rvs = np.zeros((nsamples, len(self.name)))
-                for i in range(len(self.name)):
-                    rvs[:, i] = SubDistribution(self.name[i]).rvs(params[i], nsamples)
+                rvs = np.zeros((nsamples, len(self.dist_name)))
+                for i in range(len(self.dist_name)):
+                    rvs[:, i] = SubDistribution(self.dist_name[i]).rvs(params[i], nsamples)
                 return rvs
             else:
                 raise AttributeError('Method rvs not defined for distributions with copula.')
 
     def fit(self, x):
 
-        if isinstance(self.name, str):
-            return SubDistribution(name=self.name).fit(x)
-        elif isinstance(self.name, list):
-            if x.shape[1] != len(self.name):
+        if isinstance(self.dist_name, str):
+            return SubDistribution(dist_name=self.dist_name).fit(x)
+        elif isinstance(self.dist_name, list):
+            if len(x.shape) == 1:
+                x = x.reshape((1,-1))
+            if x.shape[1] != len(self.dist_name):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             if self.copula is None:
                 params_fit = []
-                for i in range(len(self.name)):
-                    params_fit.append(SubDistribution(self.name[i]).fit(x[:, i]))
+                for i in range(len(self.dist_name)):
+                    params_fit.append(SubDistribution(self.dist_name[i]).fit(x[:, i]))
                 return params_fit
             else:
                 raise AttributeError('Method fit not defined for distributions with copula.')
 
     def moments(self, params):
 
-        if isinstance(self.name, str):
-            return SubDistribution(name=self.name).moments(params)
-        elif isinstance(self.name, list):
-            if len(params) != len(self.name):
+        if isinstance(self.dist_name, str):
+            return SubDistribution(dist_name=self.dist_name).moments(params)
+        elif isinstance(self.dist_name, list):
+            if len(params) != len(self.dist_name):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             if self.copula is None:
-                mean, var, skew, kurt = [0]*len(self.name), [0]*len(self.name), [0]*len(self.name), [0]*len(self.name),
-                for i in range(len(self.name)):
-                    mean[i], var[i], skew[i], kurt[i] = SubDistribution(self.name[i]).moments(params[i])
+                mean, var, skew, kurt = [0]*len(self.dist_name), [0]*len(self.dist_name), [0]*len(self.dist_name), \
+                                        [0]*len(self.dist_name),
+                for i in range(len(self.dist_name)):
+                    mean[i], var[i], skew[i], kurt[i] = SubDistribution(self.dist_name[i]).moments(params[i])
                 return mean, var, skew, kurt
             else:
                 raise AttributeError('Method moments not defined for distributions with copula.')
@@ -238,9 +249,9 @@ class Copula:
                             (1/copula_params[0]))
 
                 c_ = c * 1/u*1/v*((-np.log(u)) ** copula_params[0]+(-np.log(v)) ** copula_params[0]) ** \
-                     (-2 + 2/copula_params[0]) * (np.log(u) * np.log(v)) ** (copula_params[0]-1) *\
-                     (1 + (copula_params[0] - 1) * ((-np.log(u)) ** copula_params[0] +
-                                                    (-np.log(v)) ** copula_params[0]) ** (-1/copula_params[0]))
+                    (-2 + 2/copula_params[0]) * (np.log(u) * np.log(v)) ** (copula_params[0]-1) *\
+                    (1 + (copula_params[0] - 1) * ((-np.log(u)) ** copula_params[0] +
+                                                   (-np.log(v)) ** copula_params[0]) ** (-1/copula_params[0]))
                 return c, c_
         else:
             raise ValueError('Copula type not supported!')
@@ -255,7 +266,7 @@ class SubDistribution:
 
             The supported univariate distributions are:
             [normal, uniform, binomial, beta, genextreme, chisquare, lognormal, gamma, exponential, cauchy, levy,
-            logistic, laplace, maxwell, inverse gauss, pareto, rayleigh].
+            logistic, laplace, maxwell, inverse gauss, pareto, rayleigh, truncated normal.].
 
             The supported multivariate distributions are:
             [mvnormal].
@@ -274,386 +285,401 @@ class SubDistribution:
                 7. moments: Calculate the first four moments of the distribution (mean, variance, skewness, kyrtosis)
 
         Input:
-            :param name: Name of distribution.
-            :type: name: string
+            :param dist_name: Name of distribution.
+            :type: dist_name: string
 
         Output:
             A handler pointing to the aforementioned distribution functions.
     """
 
-    def __init__(self, name=None):
+    def __init__(self, dist_name=None):
 
-        self.name = name
+        self.dist_name = dist_name
 
-        if self.name is None:
+        if self.dist_name is None:
             raise ValueError('Error: A Distribution name must be provided!')
 
     def pdf(self, x, params):
-        if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
+        if self.dist_name.lower() == 'normal' or self.dist_name.lower() == 'gaussian':
             return stats.norm.pdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'uniform':
+        elif self.dist_name.lower() == 'uniform':
             return stats.uniform.pdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'binomial':
+        elif self.dist_name.lower() == 'binomial':
             return stats.binom.pdf(x, n=params[0], p=params[1])
-        elif self.name.lower() == 'beta':
+        elif self.dist_name.lower() == 'beta':
             return stats.beta.pdf(x, a=params[0], b=params[1])
-        elif self.name.lower() == 'gumbel_r':
+        elif self.dist_name.lower() == 'gumbel_r':
             return stats.genextreme.pdf(x, c=0, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'chisquare':
+        elif self.dist_name.lower() == 'chisquare':
             return stats.chi2.pdf(x, df=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'lognormal':
+        elif self.dist_name.lower() == 'lognormal':
             return stats.lognorm.pdf(x, s=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'gamma':
+        elif self.dist_name.lower() == 'gamma':
             return stats.gamma.pdf(x, a=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'exponential':
+        elif self.dist_name.lower() == 'exponential':
             return stats.expon.pdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'cauchy':
+        elif self.dist_name.lower() == 'cauchy':
             return stats.cauchy.pdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'inv_gauss':
+        elif self.dist_name.lower() == 'inv_gauss':
             return stats.invgauss.pdf(x, mu=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'logistic':
+        elif self.dist_name.lower() == 'logistic':
             return stats.logistic.pdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'pareto':
+        elif self.dist_name.lower() == 'pareto':
             return stats.pareto.pdf(x, b=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'rayleigh':
+        elif self.dist_name.lower() == 'rayleigh':
             return stats.rayleigh.pdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'levy':
+        elif self.dist_name.lower() == 'levy':
             return stats.levy.pdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'laplace':
+        elif self.dist_name.lower() == 'laplace':
             return stats.laplace.pdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'maxwell':
+        elif self.dist_name.lower() == 'maxwell':
             return stats.maxwell.pdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'mvnormal':
+        elif self.dist_name.lower() == 'truncnorm':
+            return stats.truncnorm.pdf(x, a=params[0], b=params[1], loc=params[2], scale=params[3])
+        elif self.dist_name.lower() == 'mvnormal':
             return stats.multivariate_normal.pdf(x, mean=params[0], cov=params[1])
         else:
-            file_name = os.path.join(self.name + '.py')
+            file_name = os.path.join(self.dist_name + '.py')
             if os.path.isfile(file_name):
                 import importlib
-                custom_dist = importlib.import_module(self.name)
+                custom_dist = importlib.import_module(self.dist_name)
             else:
                 raise FileExistsError()
 
             tmp = getattr(custom_dist, 'pdf', None)
             if tmp is None:
-                raise AttributeError('Method pdf not defined for distribution '+self.name+'.')
+                raise AttributeError('Method pdf not defined for distribution '+self.dist_name+'.')
             else:
                 return tmp(x, params)
 
     def rvs(self, params, nsamples):
-        if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
+        if self.dist_name.lower() == 'normal' or self.dist_name.lower() == 'gaussian':
             return stats.norm.rvs(loc=params[0], scale=params[1], size=nsamples)
-        elif self.name.lower() == 'uniform':
+        elif self.dist_name.lower() == 'uniform':
             return stats.uniform.rvs(loc=params[0], scale=params[1], size=nsamples)
-        elif self.name.lower() == 'binomial':
+        elif self.dist_name.lower() == 'binomial':
             return stats.binom.rvs(n=params[0], p=params[1], size=nsamples)
-        elif self.name.lower() == 'beta':
+        elif self.dist_name.lower() == 'beta':
             return stats.beta.rvs(a=params[0], b=params[1], size=nsamples)
-        elif self.name.lower() == 'gumbel_r':
+        elif self.dist_name.lower() == 'gumbel_r':
             return stats.genextreme.rvs(c=0, loc=params[0], scale=params[1], size=nsamples)
-        elif self.name.lower() == 'chisquare':
+        elif self.dist_name.lower() == 'chisquare':
             return stats.chi2.rvs(df=params[0], loc=params[1], scale=params[2], size=nsamples)
-        elif self.name.lower() == 'lognormal':
+        elif self.dist_name.lower() == 'lognormal':
             return stats.lognorm.rvs(s=params[0], loc=params[1], scale=params[2], size=nsamples)
-        elif self.name.lower() == 'gamma':
+        elif self.dist_name.lower() == 'gamma':
             return stats.gamma.rvs(a=params[0], loc=params[1], scale=params[2], size=nsamples)
-        elif self.name.lower() == 'exponential':
+        elif self.dist_name.lower() == 'exponential':
             return stats.expon.rvs(loc=params[0], scale=params[1], size=nsamples)
-        elif self.name.lower() == 'cauchy':
+        elif self.dist_name.lower() == 'cauchy':
             return stats.cauchy.rvs(loc=params[0], scale=params[1], size=nsamples)
-        elif self.name.lower() == 'inv_gauss':
+        elif self.dist_name.lower() == 'inv_gauss':
             return stats.invgauss.rvs(mu=params[0], loc=params[1], scale=params[2], size=nsamples)
-        elif self.name.lower() == 'logistic':
+        elif self.dist_name.lower() == 'logistic':
             return stats.logistic.rvs(loc=params[0], scale=params[1], size=nsamples)
-        elif self.name.lower() == 'pareto':
+        elif self.dist_name.lower() == 'pareto':
             return stats.pareto.rvs(b=params[0], loc=params[1], scale=params[2], size=nsamples)
-        elif self.name.lower() == 'rayleigh':
+        elif self.dist_name.lower() == 'rayleigh':
             return stats.rayleigh.rvs(loc=params[0], scale=params[1], size=nsamples)
-        elif self.name.lower() == 'levy':
+        elif self.dist_name.lower() == 'levy':
             return stats.levy.rvs(loc=params[0], scale=params[1], size=nsamples)
-        elif self.name.lower() == 'laplace':
+        elif self.dist_name.lower() == 'laplace':
             return stats.laplace.rvs(loc=params[0], scale=params[1], size=nsamples)
-        elif self.name.lower() == 'maxwell':
+        elif self.dist_name.lower() == 'maxwell':
             return stats.maxwell.rvs(loc=params[0], scale=params[1], size=nsamples)
-        elif self.name.lower() == 'mvnormal':
+        elif self.dist_name.lower() == 'truncnorm':
+            return stats.truncnorm.rvs(a=params[0], b=params[1], loc=params[2], scale=params[3], size=nsamples)
+        elif self.dist_name.lower() == 'mvnormal':
             return stats.multivariate_normal.rvs(mean=params[0], cov=params[1], size=nsamples)
         else:
-            file_name = os.path.join(self.name + '.py')
+            file_name = os.path.join(self.dist_name + '.py')
             if os.path.isfile(file_name):
                 import importlib
-                custom_dist = importlib.import_module(self.name)
+                custom_dist = importlib.import_module(self.dist_name)
             else:
                 raise FileExistsError()
 
             tmp = getattr(custom_dist, 'rvs', None)
             if tmp is None:
-                raise AttributeError('Method rvs not defined for distribution '+self.name+'.')
+                raise AttributeError('Method rvs not defined for distribution '+self.dist_name+'.')
             else:
                 return tmp(params, nsamples)
 
     def cdf(self, x, params):
-        if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
+        if self.dist_name.lower() == 'normal' or self.dist_name.lower() == 'gaussian':
             return stats.norm.cdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'uniform':
+        elif self.dist_name.lower() == 'uniform':
             return stats.uniform.cdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'binomial':
+        elif self.dist_name.lower() == 'binomial':
             return stats.binom.cdf(x, n=params[0], p=params[1])
-        elif self.name.lower() == 'beta':
+        elif self.dist_name.lower() == 'beta':
             return stats.beta.cdf(x, a=params[0], b=params[1])
-        elif self.name.lower() == 'gumbel_r':
+        elif self.dist_name.lower() == 'gumbel_r':
             return stats.genextreme.cdf(x, c=0, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'chisquare':
+        elif self.dist_name.lower() == 'chisquare':
             return stats.chi2.cdf(x, df=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'lognormal':
+        elif self.dist_name.lower() == 'lognormal':
             return stats.lognorm.cdf(x, s=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'gamma':
+        elif self.dist_name.lower() == 'gamma':
             return stats.gamma.cdf(x, a=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'exponential':
+        elif self.dist_name.lower() == 'exponential':
             return stats.expon.cdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'cauchy':
+        elif self.dist_name.lower() == 'cauchy':
             return stats.cauchy.cdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'inv_gauss':
+        elif self.dist_name.lower() == 'inv_gauss':
             return stats.invgauss.cdf(x, mu=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'logistic':
+        elif self.dist_name.lower() == 'logistic':
             return stats.logistic.cdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'pareto':
+        elif self.dist_name.lower() == 'pareto':
             return stats.pareto.cdf(x, b=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'rayleigh':
+        elif self.dist_name.lower() == 'rayleigh':
             return stats.rayleigh.cdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'levy':
+        elif self.dist_name.lower() == 'levy':
             return stats.levy.cdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'laplace':
+        elif self.dist_name.lower() == 'laplace':
             return stats.laplace.cdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'maxwell':
+        elif self.dist_name.lower() == 'maxwell':
             return stats.maxwell.cdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'mvnormal':
+        elif self.dist_name.lower() == 'truncnorm':
+            return stats.truncnorm.cdf(x, a=params[0], b=params[1], loc=params[2], scale=params[3])
+        elif self.dist_name.lower() == 'mvnormal':
             return stats.multivariate_normal.cdf(x, mean=params[0], cov=params[1])
         else:
-            file_name = os.path.join(self.name + '.py')
+            file_name = os.path.join(self.dist_name + '.py')
             if os.path.isfile(file_name):
                 import importlib
-                custom_dist = importlib.import_module(self.name)
+                custom_dist = importlib.import_module(self.dist_name)
             else:
                 raise FileExistsError()
 
             tmp = getattr(custom_dist, 'cdf', None)
             if tmp is None:
-                raise AttributeError('Method cdf not defined for distribution '+self.name+'.')
+                raise AttributeError('Method cdf not defined for distribution '+self.dist_name+'.')
             else:
                 return tmp(x, params)
 
     def icdf(self, x, params):
-        if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
+        if self.dist_name.lower() == 'normal' or self.dist_name.lower() == 'gaussian':
             return stats.norm.ppf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'uniform':
+        elif self.dist_name.lower() == 'uniform':
             return stats.uniform.ppf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'binomial':
+        elif self.dist_name.lower() == 'binomial':
             return stats.binom.ppf(x, n=params[0], p=params[1])
-        elif self.name.lower() == 'beta':
+        elif self.dist_name.lower() == 'beta':
             return stats.beta.ppf(x, a=params[0], b=params[1])
-        elif self.name.lower() == 'gumbel_r':
+        elif self.dist_name.lower() == 'gumbel_r':
             return stats.genextreme.ppf(x, c=0, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'chisquare':
+        elif self.dist_name.lower() == 'chisquare':
             return stats.chi2.ppf(x, df=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'lognormal':
+        elif self.dist_name.lower() == 'lognormal':
             return stats.lognorm.ppf(x, s=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'gamma':
+        elif self.dist_name.lower() == 'gamma':
             return stats.gamma.ppf(x, a=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'exponential':
+        elif self.dist_name.lower() == 'exponential':
             return stats.expon.ppf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'cauchy':
+        elif self.dist_name.lower() == 'cauchy':
             return stats.cauchy.ppf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'inv_gauss':
+        elif self.dist_name.lower() == 'inv_gauss':
             return stats.invgauss.ppf(x, mu=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'logistic':
+        elif self.dist_name.lower() == 'logistic':
             return stats.logistic.ppf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'pareto':
+        elif self.dist_name.lower() == 'pareto':
             return stats.pareto.ppf(x, b=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'rayleigh':
+        elif self.dist_name.lower() == 'rayleigh':
             return stats.rayleigh.ppf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'levy':
+        elif self.dist_name.lower() == 'levy':
             return stats.levy.ppf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'laplace':
+        elif self.dist_name.lower() == 'laplace':
             return stats.laplace.ppf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'maxwell':
+        elif self.dist_name.lower() == 'maxwell':
             return stats.maxwell.ppf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'mvnormal':
+        elif self.dist_name.lower() == 'truncnorm':
+            return stats.truncnorm.ppf(x, a=params[0], b=params[1], loc=params[2], scale=params[3])
+        elif self.dist_name.lower() == 'mvnormal':
             raise ValueError('Method icdf not defined for mvnormal distribution.')
         else:
-            file_name = os.path.join(self.name + '.py')
+            file_name = os.path.join(self.dist_name + '.py')
             if os.path.isfile(file_name):
                 import importlib
-                custom_dist = importlib.import_module(self.name)
+                custom_dist = importlib.import_module(self.dist_name)
             else:
                 raise FileExistsError()
 
             tmp = getattr(custom_dist, 'icdf', None)
             if tmp is None:
-                raise AttributeError('Method icdf not defined for distribution '+self.name+'.')
+                raise AttributeError('Method icdf not defined for distribution '+self.dist_name+'.')
             else:
                 return tmp(x, params)
 
     def log_pdf(self, x, params):
-        if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
+        if self.dist_name.lower() == 'normal' or self.dist_name.lower() == 'gaussian':
             return stats.norm.logpdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'uniform':
+        elif self.dist_name.lower() == 'uniform':
             return stats.uniform.logpdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'binomial':
+        elif self.dist_name.lower() == 'binomial':
             return stats.binom.log_pdf(x, n=params[0], p=params[1])
-        elif self.name.lower() == 'beta':
+        elif self.dist_name.lower() == 'beta':
             return stats.beta.logpdf(x, a=params[0], b=params[1])
-        elif self.name.lower() == 'gumbel_r':
+        elif self.dist_name.lower() == 'gumbel_r':
             return stats.genextreme.logpdf(x, c=0, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'chisquare':
+        elif self.dist_name.lower() == 'chisquare':
             return stats.chi2.logpdf(x, df=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'lognormal':
+        elif self.dist_name.lower() == 'lognormal':
             return stats.lognorm.logpdf(x, s=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'gamma':
+        elif self.dist_name.lower() == 'gamma':
             return stats.gamma.logpdf(x, a=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'exponential':
+        elif self.dist_name.lower() == 'exponential':
             return stats.expon.logpdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'cauchy':
+        elif self.dist_name.lower() == 'cauchy':
             return stats.cauchy.logpdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'inv_gauss':
+        elif self.dist_name.lower() == 'inv_gauss':
             return stats.invgauss.logpdf(x, mu=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'logistic':
+        elif self.dist_name.lower() == 'logistic':
             return stats.logistic.logpdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'pareto':
+        elif self.dist_name.lower() == 'pareto':
             return stats.pareto.logpdf(x, b=params[0], loc=params[1], scale=params[2])
-        elif self.name.lower() == 'rayleigh':
+        elif self.dist_name.lower() == 'rayleigh':
             return stats.rayleigh.logpdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'levy':
+        elif self.dist_name.lower() == 'levy':
             return stats.levy.logpdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'laplace':
+        elif self.dist_name.lower() == 'laplace':
             return stats.laplace.logpdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'maxwell':
+        elif self.dist_name.lower() == 'maxwell':
             return stats.maxwell.logpdf(x, loc=params[0], scale=params[1])
-        elif self.name.lower() == 'mvnormal':
+        elif self.dist_name.lower() == 'truncnorm':
+            return stats.truncnorm.logpdf(x, a=params[0], b=params[1], loc=params[2], scale=params[3])
+        elif self.dist_name.lower() == 'mvnormal':
             return stats.multivariate_normal.logpdf(x, mean=params[0], cov=params[1])
         else:
-            file_name = os.path.join(self.name + '.py')
+            file_name = os.path.join(self.dist_name + '.py')
             if os.path.isfile(file_name):
                 import importlib
-                custom_dist = importlib.import_module(self.name)
+                custom_dist = importlib.import_module(self.dist_name)
             else:
                 raise FileExistsError()
 
             tmp = getattr(custom_dist, 'log_pdf', None)
             if tmp is None:
-                raise AttributeError('Method log_pdf not defined for distribution '+self.name+'.')
+                raise AttributeError('Method log_pdf not defined for distribution '+self.dist_name+'.')
             else:
                 return tmp(x, params)
 
     def fit(self, x):
-        if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
+        if self.dist_name.lower() == 'normal' or self.dist_name.lower() == 'gaussian':
             return stats.norm.fit(x)
-        elif self.name.lower() == 'uniform':
+        elif self.dist_name.lower() == 'uniform':
             return stats.uniform.fit(x)
-        elif self.name.lower() == 'binomial':
+        elif self.dist_name.lower() == 'binomial':
             return stats.binom.fit(x)
-        elif self.name.lower() == 'beta':
+        elif self.dist_name.lower() == 'beta':
             return stats.beta.fit(x)
-        elif self.name.lower() == 'gumbel_r':
+        elif self.dist_name.lower() == 'gumbel_r':
             return stats.genextreme.fit(x)
-        elif self.name.lower() == 'chisquare':
+        elif self.dist_name.lower() == 'chisquare':
             return stats.chi2.fit(x)
-        elif self.name.lower() == 'lognormal':
+        elif self.dist_name.lower() == 'lognormal':
             return stats.lognorm.fit(x)
-        elif self.name.lower() == 'gamma':
+        elif self.dist_name.lower() == 'gamma':
             return stats.gamma.fit(x)
-        elif self.name.lower() == 'exponential':
+        elif self.dist_name.lower() == 'exponential':
             return stats.expon.fit(x)
-        elif self.name.lower() == 'cauchy':
+        elif self.dist_name.lower() == 'cauchy':
             return stats.cauchy.fit(x)
-        elif self.name.lower() == 'inv_gauss':
+        elif self.dist_name.lower() == 'inv_gauss':
             return stats.invgauss.fit(x)
-        elif self.name.lower() == 'logistic':
+        elif self.dist_name.lower() == 'logistic':
             return stats.logistic.fit(x)
-        elif self.name.lower() == 'pareto':
+        elif self.dist_name.lower() == 'pareto':
             return stats.pareto.fit(x)
-        elif self.name.lower() == 'rayleigh':
+        elif self.dist_name.lower() == 'rayleigh':
             return stats.rayleigh.fit(x)
-        elif self.name.lower() == 'levy':
+        elif self.dist_name.lower() == 'levy':
             return stats.levy.fit(x)
-        elif self.name.lower() == 'laplace':
+        elif self.dist_name.lower() == 'laplace':
             return stats.laplace.fit(x)
-        elif self.name.lower() == 'maxwell':
+        elif self.dist_name.lower() == 'maxwell':
             return stats.maxwell.fit(x)
-        elif self.name.lower() == 'mvnormal':
+        elif self.dist_name.lower() == 'truncnorm':
+            return stats.truncnorm.fit(x)
+        elif self.dist_name.lower() == 'mvnormal':
             raise AttributeError('Method fit not defined for mvnormal distribution.')
         else:
-            file_name = os.path.join(self.name + '.py')
+            file_name = os.path.join(self.dist_name + '.py')
             if os.path.isfile(file_name):
                 import importlib
-                custom_dist = importlib.import_module(self.name)
+                custom_dist = importlib.import_module(self.dist_name)
             else:
                 raise FileExistsError()
 
             tmp = getattr(custom_dist, 'fit', None)
             if tmp is None:
-                raise AttributeError('Method fit not defined for distribution '+self.name+'.')
+                raise AttributeError('Method fit not defined for distribution '+self.dist_name+'.')
             else:
                 return tmp(x)
 
     def moments(self, params):
         y = [np.nan, np.nan, np.nan, np.nan]
-        if self.name.lower() == 'normal' or self.name.lower() == 'gaussian':
+        if self.dist_name.lower() == 'normal' or self.dist_name.lower() == 'gaussian':
             mean, var, skew, kurt = stats.norm.stats(scale=params[1],
                                                      loc=params[0], moments='mvsk')
-        elif self.name.lower() == 'uniform':
+        elif self.dist_name.lower() == 'uniform':
             mean, var, skew, kurt = stats.uniform.stats(scale=params[1],
                                                         loc=params[0], moments='mvsk')
-        elif self.name.lower() == 'binomial':
+        elif self.dist_name.lower() == 'binomial':
             mean, var, skew, kurt = stats.binom.stats(n=params[0],
                                                       p=params[1], moments='mvsk')
-        elif self.name.lower() == 'beta':
+        elif self.dist_name.lower() == 'beta':
             mean, var, skew, kurt = stats.beta.stats(a=params[0],
                                                      b=params[1], moments='mvsk')
-        elif self.name.lower() == 'gumbel_r':
+        elif self.dist_name.lower() == 'gumbel_r':
             mean, var, skew, kurt = stats.genextreme.stats(c=0, scale=params[1],
                                                            loc=params[0], moments='mvsk')
-        elif self.name.lower() == 'chisquare':
+        elif self.dist_name.lower() == 'chisquare':
             mean, var, skew, kurt = stats.chi2.stats(df=params[0], loc=params[1], scale=params[2],
                                                      moments='mvsk')
-        elif self.name.lower() == 'lognormal':
+        elif self.dist_name.lower() == 'lognormal':
             mean, var, skew, kurt = stats.lognorm.stats(s=params[0], loc=params[1], scale=params[2],
                                                         moments='mvsk')
-        elif self.name.lower() == 'gamma':
+        elif self.dist_name.lower() == 'gamma':
             mean, var, skew, kurt = stats.gamma.stats(a=params[0], loc=params[1], scale=params[2],
                                                       moments='mvsk')
-        elif self.name.lower() == 'exponential':
+        elif self.dist_name.lower() == 'exponential':
             mean, var, skew, kurt = stats.expon.stats(loc=params[0], scale=params[1],
                                                       moments='mvsk')
-        elif self.name.lower() == 'cauchy':
+        elif self.dist_name.lower() == 'cauchy':
             mean, var, skew, kurt = stats.cauchy.stats(loc=params[0], scale=params[1], moments='mvsk')
-        elif self.name.lower() == 'inv_gauss':
+        elif self.dist_name.lower() == 'inv_gauss':
             mean, var, skew, kurt = stats.invgauss.stats(mu=params[0], loc=params[1], scale=params[2],
                                                          moments='mvsk')
-        elif self.name.lower() == 'logistic':
+        elif self.dist_name.lower() == 'logistic':
             mean, var, skew, kurt = stats.logistic.stats(loc=params[0], scale=params[1], moments='mvsk')
-        elif self.name.lower() == 'pareto':
+        elif self.dist_name.lower() == 'pareto':
             mean, var, skew, kurt = stats.pareto.stats(b=params[0], loc=params[1], scale=params[2],
                                                        moments='mvsk')
-        elif self.name.lower() == 'rayleigh':
+        elif self.dist_name.lower() == 'rayleigh':
             mean, var, skew, kurt = stats.rayleigh.stats(loc=params[0], scale=params[1], moments='mvsk')
-        elif self.name.lower() == 'levy':
+        elif self.dist_name.lower() == 'levy':
             mean, var, skew, kurt = stats.levy.stats(loc=params[0], scale=params[1], moments='mvsk')
-        elif self.name.lower() == 'laplace':
+        elif self.dist_name.lower() == 'laplace':
             mean, var, skew, kurt = stats.laplace.stats(loc=params[0], scale=params[1], moments='mvsk')
-        elif self.name.lower() == 'maxwell':
+        elif self.dist_name.lower() == 'maxwell':
             mean, var, skew, kurt = stats.maxwell.stats(loc=params[0], scale=params[1], moments='mvsk')
-        elif self.name.lower() == 'mvnormal':
+        elif self.dist_name.lower() == 'truncnorm':
+            mean, var, skew, kurt = stats.truncnorm.stats(a=params[0], b=params[1], loc=params[2], scale=params[3],
+                                                          moments='mvsk')
+        elif self.dist_name.lower() == 'mvnormal':
             raise AttributeError('Method moments not defined for mvnormal distribution.')
         else:
-            file_name = os.path.join(self.name + '.py')
+            file_name = os.path.join(self.dist_name + '.py')
             if os.path.isfile(file_name):
                 import importlib
-                custom_dist = importlib.import_module(self.name)
+                custom_dist = importlib.import_module(self.dist_name)
             else:
                 raise FileExistsError()
 
             tmp = getattr(custom_dist, 'moments', None)
             if tmp is None:
-                raise AttributeError('Method moments not defined for distribution '+self.name+'.')
+                raise AttributeError('Method moments not defined for distribution '+self.dist_name+'.')
             else:
                 return tmp(params)
 

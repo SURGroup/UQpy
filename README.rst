@@ -8,9 +8,9 @@ Uncertainty Quantification with python (UQpy)
 ====
 
 :Authors: Michael D. Shields, Dimitris G. Giovanis
-:Contributors: Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu, Jiaxin Zhang
-:Contact: michael.shields@jhu.edu, dgiovan1@jhu.edu
-:Version: 1.1.0
+:Contributors: Aakash Bangalore Satish, Mohit Singh Chauhan, Audrey Olivier, Lohit Vandanapu, Jiaxin Zhang
+:Contact: UQpy.info@gmail.com
+:Version: 2.0.1
 
 
 Description
@@ -66,9 +66,6 @@ Clone your fork of the UQpy repo from your GitHub account to your local disk (to
 Help and Support
 ===========
 
-Documentation:
-           https://uqpy.readthedocs.io/en/latest/
-
 Website:
            www.ce.jhu.edu/surg
 
@@ -76,3 +73,7 @@ Website:
 
 .. |logo| image:: logo.jpg
     :target: https://gihub.com/SURGroup/UQpy
+    
+    
+.. image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/SURGroup/UQpy/master
