@@ -79,6 +79,7 @@ class SRM:
         samples = np.real(np.fft.fftn(F, s=[self.nt for _ in range(self.n)], axes=tuple(np.arange(1, 1+self.n))))
         return samples
 
+
 class BSRM:
     """
     A class to simulate Stochastic Processes from a given power spectrum and bispectrum density based on the BiSpectral
@@ -271,41 +272,41 @@ class Translation:
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:02/12/2019 Lohit Vandanapu
+    # Last Modified:05/14/2019 Lohit Vandanapu
 
     def __init__(self, samples_g, marginal, params, dt, dw, nt, nw, S_g=None, R_g=None):
         self.samples_g = samples_g
-        if R_g or S_g is None:
-            print('Either the Power Spectrum or the Autocorrelation function should be specified')
-        else:
-            if R_g is None:
-                self.S_g = S_g
-                self.R_g = r_to_s(S_g, np.arange(0, nw)*dw, np.arange(0, nt)*dt)
-            elif S_g is None:
-                self.R_g = R_g
-                self.S_g = s_to_r(R_g, np.arange(0, nw)*dw, np.arange(0, nt)*dt)
+        if R_g is None:
+            self.S_g = S_g
+            self.R_g = S_to_R(S_g, np.arange(0, nw)*dw, np.arange(0, nt)*dt)
+        elif S_g is None:
+            self.R_g = R_g
+            self.S_g = R_to_S(R_g, np.arange(0, nw)*dw, np.arange(0, nt)*dt)
         self.num = self.R_g.shape[0]
         self.dim = len(self.R_g.shape)
         self.marginal = marginal
         self.params = params
         self.samples_ng = self.translate_g_samples()
-        self.R_ng = self.autocorrealtion_distortion()
-        self.S_ng = r_to_s(self.R_ng, np.arange(0, nw)*dw, np.arange(0, nt)*dt)
+        self.r_ng, self.R_ng = self.autocorrealtion_distortion()
+        self.S_ng = R_to_S(self.R_ng, np.arange(0, nw)*dw, np.arange(0, nt)*dt)
 
     def translate_g_samples(self):
         std = np.sqrt(np.var(self.samples_g))
         samples_cdf = norm.cdf(self.samples_g, scale=std)
         # samples_ng = inv_cdf(self.marginal)[0](samples_cdf, self.params[0])
-        samples_ng = Distribution(self.marginal, self.params).icdf(samples_cdf, self.params)
+        samples_ng = Distribution(dist_name=self.marginal).icdf(samples_cdf, self.params)
         return samples_ng
 
     def autocorrealtion_distortion(self):
-        # r_g = R_to_r(self.R_g)
+        r_g = R_to_r(self.R_g)
         r_g = np.clip(r_g, -0.999, 0.999)
-        R_ng = np.zeros_like(r_g)
-        for i in itertools.product(*[range(self.num) for _ in range(self.dim)]):
-            R_ng[(*i, *[])] = self.solve_integral(r_g[(*i, *[])])
-        return R_ng
+        r_ng = np.zeros_like(r_g)
+        # for i in itertools.product(*[range(self.num) for _ in range(self.dim)]):
+        #     R_ng[(*i, *[])] = self.solve_integral(r_g[(*i, *[])])
+        for i in range(self.num):
+            r_ng[i] = self.solve_integral(r_g[i])
+        R_ng = r_ng * Distribution(self.marginal).moments(self.params)[1]
+        return r_ng, R_ng
 
     def solve_integral(self, rho):
         if rho == 1.0:
@@ -329,12 +330,12 @@ class Translation:
         w2d = weights2d.flatten()
         # tmp_f_xi = inv_cdf(self.marginal)[0](stats.norm.cdf(xi), self.params[0])
         # tmp_f_eta = inv_cdf(self.marginal)[0](stats.norm.cdf(eta), self.params[0])
-        tmp_f_xi = Distribution(self.marginal, self.params).icdf(stats.norm.cdf(xi), self.params)
-        tmp_f_eta = Distribution(self.marginal, self.params).icdf(stats.norm.cdf(eta), self.params)
+        tmp_f_xi = Distribution(self.marginal).icdf(stats.norm.cdf(xi), self.params)
+        tmp_f_eta = Distribution(self.marginal).icdf(stats.norm.cdf(eta), self.params)
         coef = tmp_f_xi * tmp_f_eta * w2d
         rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
-        rho_non = (rho_non - (Distribution(self.marginal, self.params).moments(self.params)[0]) ** 2) / \
-                  Distribution(self.marginal, self.params).moments(self.params)[1]
+        rho_non = (rho_non - (Distribution(self.marginal).moments(self.params)[0]) ** 2) / \
+                  Distribution(self.marginal).moments(self.params)[1]
         return rho_non
 
 
@@ -370,28 +371,28 @@ class InverseTranslation:
         self.samples_ng = samples_ng
         self.w = np.arange(0, nw)*dw
         self.t = np.arange(0, nt)*dt
-        if R_ng or S_ng is None:
-            print('Either the Power Spectrum or the Autocorrelation function should be specified')
-        else:
-            if R_ng is None:
-                self.S_ng = S_ng
-                self.R_ng = s_to_r(S_ng, self.w, self.t)
-            elif S_ng is None:
-                self.R_ng = R_ng
-                self.S_ng = r_to_s(R_ng, self.w, self.t)
+        # if R_ng and S_ng is None:
+        #     print('Either the Power Spectrum or the Autocorrelation function should be specified')
+        if R_ng is None:
+            self.S_ng = S_ng
+            self.R_ng = S_to_R(S_ng, self.w, self.t)
+        elif S_ng is None:
+            self.R_ng = R_ng
+            self.S_ng = R_to_S(R_ng, self.w, self.t)
         self.num = self.R_ng.shape[0]
         self.dim = len(self.R_ng.shape)
         self.marginal = marginal
         self.params = params
         self.samples_g = self.inverse_translate_ng_samples()
         self.S_g = self.itam()
-        self.R_r = s_to_r(self.S_g, self.w, self.t)
+        self.R_g = S_to_R(self.S_g, self.w, self.t)
+        self.r_g = self.R_g/self.R_g[0]
 
     def inverse_translate_ng_samples(self):
         # samples_cdf = cdf(self.marginal)[0](self.samples_ng, self.params[0])
         # samples_g = inv_cdf(['Normal'])[0](samples_cdf, [0, 1])
-        samples_cdf = Distribution(self.marginal, self.params).cdf(self.samples_ng, self.params)
-        samples_g = Distribution('Normal', [0, 1]).icdf(samples_cdf, [0, 1])
+        samples_cdf = Distribution(self.marginal).cdf(self.samples_ng, self.params)
+        samples_g = Distribution('Normal').icdf(samples_cdf, [0, 1])
         return samples_g
 
     def itam(self):
@@ -400,25 +401,26 @@ class InverseTranslation:
         # Iteration Conditions
         i_converge = 0
         error0 = 100
-        max_iter = 1
-        target_r = s_to_r(target_s, self.w, self.t)
+        max_iter = 10
+        target_r = S_to_R(target_s, self.w, self.t)
         r_g_iterate = target_r
         s_g_iterate = target_s
         r_ng_iterate = np.zeros_like(target_r)
         s_ng_iterate = np.zeros_like(target_s)
 
         for ii in range(max_iter):
+            r_g_iterate = S_to_R(s_g_iterate, self.w, self.t)
             # for i in itertools.product(*[range(self.num) for _ in range(self.dim)]):
             for i in range(len(target_r)):
-                r_ng_iterate[i] = self.solve_integral(r_g_iterate)
-            s_ng_iterate = s_to_r(r_ng_iterate, self.w, self.t)
+                r_ng_iterate[i] = self.solve_integral(r_g_iterate[i]/r_g_iterate[0])
+            s_ng_iterate = R_to_S(r_ng_iterate, self.w, self.t)
 
             # compute the relative difference between the computed NGACF & the target R(Normalized)
             err1 = np.sum((target_s - s_ng_iterate) ** 2)
             err2 = np.sum(target_s ** 2)
             error1 = 100 * np.sqrt(err1 / err2)
 
-            if abs(error0 - error1) / error1 < 0.001 or ii == max_iter or 100 * np.sqrt(err1 / err2) < 0.0005:
+            if ii == max_iter or 100 * np.sqrt(err1 / err2) < 0.0005:
                 i_converge = 1
 
             s_g_next_iterate = (target_s / s_ng_iterate) * s_g_iterate
@@ -430,7 +432,7 @@ class InverseTranslation:
                 s_g_iterate = s_g_next_iterate
                 error0 = error1
 
-        return s_g_iterate
+        return s_g_iterate/Distribution(self.marginal).moments(self.params)[1]
 
     def solve_integral(self, rho):
         if rho == 1.0:
@@ -452,12 +454,11 @@ class InverseTranslation:
 
         weights2d = first * second
         w2d = weights2d.flatten()
-        tmp_f_xi = Distribution(self.marginal, self.params).icdf(stats.norm.cdf(xi), self.params)
-        tmp_f_eta = Distribution(self.marginal, self.params).icdf(stats.norm.cdf(eta), self.params)
+        tmp_f_xi = Distribution(self.marginal).icdf(stats.norm.cdf(xi), self.params)
+        tmp_f_eta = Distribution(self.marginal).icdf(stats.norm.cdf(eta), self.params)
         # tmp_f_xi = inv_cdf(self.marginal)[0](stats.norm.cdf(xi), self.params[0])
         # tmp_f_eta = inv_cdf(self.marginal)[0](stats.norm.cdf(eta), self.params[0])
         coef = tmp_f_xi * tmp_f_eta * w2d
         rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
-        rho_non = (rho_non - (Distribution(self.marginal, self.params).moments(self.params)[0]) ** 2) / \
-                  Distribution(self.marginal, self.params).moments(self.params)[1]
+        rho_non = (rho_non - (Distribution(self.marginal).moments(self.params)[0]) ** 2)
         return rho_non
