@@ -135,6 +135,13 @@ class RunModel:
     cluster is not used for the Python model workflow.
     :type cluster: Boolean
 
+    :param fmt: If the input file requires variables to be written in specific format, this format can be specified
+    here.
+    The default is fmt = None
+    Existing formats include:
+    fmt = 'ls-dyna': This format is used for ls-dyna .k files where each card is required to be exactly 10 characters
+    :type fmt: String
+
     Output:
     :return: RunModel.qoi_list: A list containing the output quantities of interest extracted from the model output
     files by output_script. This is a list of length equal to the number of simulations. Each item of this list contains
@@ -145,7 +152,7 @@ class RunModel:
     def __init__(self, samples=None, model_script=None, model_object_name=None,
                  input_template=None, var_names=None, output_script=None, output_object_name=None,
                  ntasks=1, cores_per_task=1, nodes=1, resume=False, verbose=False, model_dir=None,
-                 cluster=False):
+                 cluster=False, fmt=None):
 
         # Check the platform and build appropriate call to Python
         if platform.system() in ['Windows']:
@@ -166,6 +173,9 @@ class RunModel:
 
         # Verbose option
         self.verbose = verbose
+
+        # Format option
+        self.fmt = fmt
 
         # Input related
         self.input_template = input_template
@@ -595,8 +605,16 @@ class RunModel:
             string_regex = re.compile(r"<" + var_names[j] + r".*?>")
             count = 0
             for string in string_regex.findall(template_text):
-                temp = string.replace(var_names[j], "samples[" + str(j) + "]")
-                temp = eval(temp[1:-1])
+                # If the input file has specific formatting standards, this is where they can be added.
+                if self.fmt == 'ls-dyna':
+                    v_temp  = samples[j]
+                    str_temp = "{:>10.4f}".format(v_temp)
+                    temp = string.replace(var_names[j],str_temp)
+                    temp = temp[1:11]
+                else:
+                    temp = string.replace(var_names[j], "samples[" + str(j) + "]")
+                    temp = eval(temp[1:-1])
+                print(temp)
                 if isinstance(temp, collections.Iterable):
                     temp = np.array(temp).flatten()
                     to_add = ''
