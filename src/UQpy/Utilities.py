@@ -26,6 +26,20 @@ from scipy.special import gamma
 from scipy.stats import chi2, norm
 
 
+# This function is for parallel execution of a Python model
+
+def _run_parallel_python(model_script, model_object_name, sample):
+    """
+    Execute the python model in parallel
+    :param sample: One sample point where the model has to be evaluated
+    :return:
+    """
+    exec('from ' + model_script[:-3] + ' import ' + model_object_name)
+    par_res = eval(model_object_name + '(sample)')
+
+    return par_res
+
+
 def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
 
     """
