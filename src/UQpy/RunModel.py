@@ -601,7 +601,8 @@ class RunModel:
         new_text = template_text
         for j in range(len(var_names)):
             # string_regex = re.compile(r"<" + var_names[j] + r".*?>")
-            string_regex = re.compile(r"<" + var_names[j] + r"[([{]*?>")
+            string_regex = re.compile(
+                r"<" + var_names[j] + r"[([{]*?>")  # This regex looks for ([{ immediately after variable name
             # string_regex = re.compile(r"<" + var_names[j] + r"[[]*?>")
             count = 0
             for string in string_regex.findall(template_text):
