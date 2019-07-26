@@ -384,7 +384,8 @@ class RunModel:
             os.chdir(os.path.join(current_dir, work_dir))
 
             # Run output processing function
-            self._output_parallel(i)
+            if self.output_script is not None:
+                self._output_parallel(i)
 
             # Remove the copied files and folders
             for file_name in self.model_files:
