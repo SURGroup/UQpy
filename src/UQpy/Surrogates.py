@@ -347,6 +347,7 @@ class Krig:
 
         self.samples = np.array(samples)
         self.values = np.array(values)
+               
         self.reg_model = reg_model
         self.corr_model = corr_model
         self.corr_model_params = corr_model_params
@@ -393,6 +394,9 @@ class Krig:
                     return np.inf
 
             # alpha = inv(R)*y
+            if any(np.isnan(y)):
+                print('What happened?')
+
             alpha = cho_solve((cc, True), y)
             t4 = np.einsum("ik,ik->k", y, alpha)
 

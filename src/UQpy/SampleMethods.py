@@ -86,6 +86,10 @@ class MCS:
         if verbose:
             print('UQpy: Running Monte Carlo Sampling...')
         self.samples = Distribution(dist_name=self.dist_name).rvs(params=self.dist_params, nsamples=nsamples)
+        self.samplesU01 = np.zeros_like(self.samples)
+        for i in range(self.samples.shape[1]):
+            self.samplesU01[:,i] = Distribution(dist_name=self.dist_name[i]).cdf(x=self.samples[:,i],
+                                                                            params=self.dist_params[i])
 
         if verbose:
             print('UQpy: Monte Carlo Sampling Complete.')
@@ -390,40 +394,110 @@ class STS:
     # Last modified: 6/7/2018 by Dimitris Giovanis & Michael Shields
 
     def __init__(self, dimension=None, dist_name=None, dist_params=None, sts_design=None, input_file=None,
-                 sts_criterion="random"):
+                 sts_criterion="random", stype='Rectangular', nsamples=None, n_iters=20):
 
-        self.dimension = dimension
+        if dimension is None:
+            self.dimension = len(dist_name)
+        else:
+            self.dimension = dimension
+        self.stype = stype
         self.sts_design = sts_design
         self.input_file = input_file
         self.dist_name = dist_name
         self.dist_params = dist_params
         self.strata = None
         self.sts_criterion = sts_criterion
-        self.init_sts()
+        self.nsamples = nsamples
+
+        if self.stype == 'Voronoi':
+            self.n_iters = n_iters
+
 
         self.distribution = [None] * self.dimension
         for i in range(self.dimension):
             self.distribution[i] = Distribution(self.dist_name[i])
-        self.samplesU01, self.samples = self.run_sts()
-        del self.dist_name
+
+        self.init_sts()
+        if self.stype == 'Voronoi':
+            self.run_sts()
+        elif self.stype == 'Rectangular':
+            self.samplesU01, self.samples = self.run_sts()
 
     def run_sts(self):
-        samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
-        samples_u_to_x = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
-        for j in range(0, self.strata.origins.shape[1]):
-            i_cdf = self.distribution[j].icdf
-            if self.sts_criterion == "random":
-                for i in range(0, self.strata.origins.shape[0]):
-                    samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
-                                                      + self.strata.widths[i, j])
-            elif self.sts_criterion == "centered":
-                for i in range(0, self.strata.origins.shape[0]):
-                    samples[i, j] = self.strata.origins[i, j] + self.strata.widths[i, j] / 2.
 
-            samples_u_to_x[:, j] = i_cdf(samples[:, j], self.dist_params[j])
+        if self.stype == 'Rectangular':
+            samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
+            samples_u_to_x = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
+            for j in range(0, self.strata.origins.shape[1]):
+                i_cdf = self.distribution[j].icdf
+                if self.sts_criterion == "random":
+                    for i in range(0, self.strata.origins.shape[0]):
+                        samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
+                                                          + self.strata.widths[i, j])
+                elif self.sts_criterion == "centered":
+                    for i in range(0, self.strata.origins.shape[0]):
+                        samples[i, j] = self.strata.origins[i, j] + self.strata.widths[i, j] / 2.
 
-        print('UQpy: Successful execution of STS design..')
-        return samples, samples_u_to_x
+                samples_u_to_x[:, j] = i_cdf(samples[:, j], self.dist_params[j])
+
+            print('UQpy: Successful execution of STS design..')
+            return samples, samples_u_to_x
+
+        elif self.stype == 'Voronoi':
+            from scipy.spatial import Voronoi
+            from UQpy.Utilities import compute_Voronoi_centroid_volume, voronoi_unit_hypercube
+
+            samples_init = np.random.rand(self.nsamples, self.dimension)
+
+            for i in range(self.n_iters):
+                x = self.in_hypercube(samples_init)
+
+                self.strata = voronoi_unit_hypercube(samples_init)
+
+                self.strata.centroids = []
+                self.strata.weights = []
+                for region in self.strata.bounded_regions:
+                    vertices = self.strata.vertices[region + [region[0]], :]
+                    centroid, volume = compute_Voronoi_centroid_volume(vertices)
+                    self.strata.centroids.append(centroid[0, :])
+                    self.strata.weights.append(volume)
+
+                samples_init = np.asarray(self.strata.centroids)
+
+            self.samplesU01 = self.strata.bounded_points
+
+            self.samples = np.zeros(np.shape(self.samplesU01))
+            for i in range(self.dimension):
+                self.samples[:, i] = self.distribution[i].icdf(self.samplesU01[:, i], self.dist_params[i]).T
+
+    def in_hypercube(self, samples):
+        str_temp = 'np.logical_and('
+
+        in_cube = True * self.nsamples
+        for i in range(self.dimension):
+            in_cube = np.logical_and(in_cube, np.logical_and(0 <= samples[:, i], samples[:, i] <= 1))
+
+        return(in_cube)
+
+
+
+
+    # def voronoi_centroid_volume(self, vertices):
+    #
+    #     from scipy.spatial import Delaunay, ConvexHull
+    #
+    #     T = Delaunay(vertices)
+    #
+    #     w = np.zeros((T.nsimplex, 1))
+    #     cent = np.zeros((T.nsimplex, self.dimension))
+    #     for i in range(T.nsimplex):
+    #         ch = ConvexHull(T.points[T.simplices[i]])
+    #         w[i] = ch.volume
+    #         cent[i, :] = np.mean(T.points[T.simplices[i]], axis=0)
+    #     V = np.sum(w)
+    #     C = np.matmul(np.divide(w, V).T, cent)
+    #
+    #     return C, V
 
     def init_sts(self):
 
@@ -456,16 +530,17 @@ class STS:
         if self.dist_params is None:
             raise NotImplementedError("Exit code: Distribution parameters not defined.")
 
-        if self.sts_design is None:
-            if self.input_file is None:
-                raise NotImplementedError("Exit code: Stratum design is not defined.")
+        if self.stype == 'Rectangular':
+            if self.sts_design is None:
+                if self.input_file is None:
+                    raise NotImplementedError("Exit code: Stratum design is not defined.")
+                else:
+                    self.strata = Strata(input_file=self.input_file)
             else:
-                self.strata = Strata(input_file=self.input_file)
-        else:
-            if len(self.sts_design) != self.dimension:
-                raise NotImplementedError("Exit code: Incompatible dimensions in 'sts_design'.")
-            else:
-                self.strata = Strata(n_strata=self.sts_design)
+                if len(self.sts_design) != self.dimension:
+                    raise NotImplementedError("Exit code: Incompatible dimensions in 'sts_design'.")
+                else:
+                    self.strata = Strata(n_strata=self.sts_design)
 
         # Check sampling criterion
         if self.sts_criterion not in ['random', 'centered']:
@@ -649,9 +724,9 @@ class RSS:
             :param nsamples: Final size of the samples.
             :type nsamples: int
 
-            :param min_train_size: Minimum size of training data around new sample used to update surrogate.
+            :param max_train_size: Minimum size of training data around new sample used to update surrogate.
                                    Default: nsamples
-            :type min_train_size: int
+            :type max_train_size: int
 
             :param step_size: Step size to calculate the gradient using central difference. Only required if Delaunay is
                               used as surrogate approximation.
@@ -685,303 +760,712 @@ class RSS:
     # Authors: Mohit S. Chauhan
     # Last modified: 12/03/2018 by Mohit S. Chauhan
 
-    def __init__(self, x=None, model=None, meta='Delaunay', cell='Rectangular', nsamples=None,
-                 min_train_size=None, step_size=0.005, corr_model='Gaussian', reg_model='Quadratic',
-                 corr_model_params=None, n_opt=None):
+    def __init__(self, sample_object=None, run_model_object=None, meta='Kriging', cell='Rectangular', nsamples=None,
+                 max_train_size=None, step_size=0.005, corr_model='Gaussian', reg_model='Quadratic',
+                 corr_model_params=None, n_opt=10, option=None, qoi_name=None, verbose=False, local=False,
+                 visualize=False, **kwargs):
 
-        self.x = x
-        self.model = model
-        self.option = 'Refined'
-        self.meta = meta
+        from UQpy.RunModel import RunModel
+
+        # Initialize attributes that are common to all approaches
+        self.sample_object = sample_object
+        self.run_model_object = run_model_object
+        self.verbose = verbose
+        self.option = option
+        self.dimension = np.shape(self.sample_object.samples)[1]
         self.cell = cell
         self.nsamples = nsamples
-        self.points = 0
-        self.min_train_size = min_train_size
-        self.step_size = step_size
-        self.corr_model = corr_model
-        self.corr_model_params = corr_model_params
-        self.reg_model = reg_model
-        self.n_opt = n_opt
+        self.visualize = visualize
+
+        # Run Initial Error Checks
         self.init_rss()
-        self.samples = x.samples
-        self.samplesU01 = x.samplesU01
-        self.distribution = x.distribution
-        self.dist_params = x.dist_params
-        self.strata = x.strata
-        self.values = self.run_rss()
-
-    def run_rss(self):
-        from UQpy.RunModel import RunModel
-        from UQpy.Surrogates import Krig
-        from sklearn.gaussian_process import GaussianProcessRegressor
-        from scipy.interpolate import LinearNDInterpolator
-        from scipy.spatial import Delaunay
-        import numpy.matlib as matlib
-        import itertools
-        import math
-
-        print('UQpy: Performing RSS design...')
-
-        def cent_diff(f, x, h):
-            dydx = np.zeros((np.size(x, 0), np.size(x, 1)))
-            for dirr in range(np.size(x, 1)):
-                temp = np.zeros((np.size(x, 0), np.size(x, 1)))
-                temp[:, dirr] = np.ones(np.size(x, 0))
-                low = x - h / 2 * temp
-                hi = x + h / 2 * temp
-                dydx[:, dirr] = ((f.__call__(hi) - f.__call__(low)) / h)[:, 0]
-            return dydx
-
-        def surrogate(x, y, corr_m_p, reg_m, corr_m, xt, n):
-            if self.meta == 'Delaunay':
-                tck = LinearNDInterpolator(x, y, fill_value=0)
-                gr = cent_diff(tck, xt, self.step_size)
-            elif self.meta == 'Kriging':
-                with suppress_stdout():  # disable printing output comments
-                    tck = Krig(samples=x, values=y, reg_model=reg_m, corr_model=corr_m, corr_model_params=corr_m_p,
-                               n_opt=n)
-                corr_m_p = tck.corr_model_params
-                gr = cent_diff(tck.interpolate, xt, self.step_size)
-                # gr = tck.jacobian(xt)
-            elif self.meta == 'Kriging_Sklearn':
-                gp = GaussianProcessRegressor(kernel=corr_m, n_restarts_optimizer=0)
-                gp.fit(x, y)
-                gr = cent_diff(gp.predict, xt, self.step_size)
-            else:
-                raise NotImplementedError("Exit code: Does not identify 'meta'.")
-            return gr, corr_m_p
-
-        def local(pt, x, mts, max_dim):
-            # Identify the indices of 'mts' number of points in array 'x', which are closest to point 'pt'.
-            ff = 0.2
-            train = []
-            while len(train) < mts:
-                a = x > matlib.repmat(pt - ff * max_dim, x.shape[0], 1)
-                b = x < matlib.repmat(pt + ff * max_dim, x.shape[0], 1)
-                x_ind = a & b
-                train = []
-                for k_ in range(x.shape[0]):
-                    if np.array_equal(x_ind[k_, :], np.ones(x.shape[1])):
-                        train.append(k_)
-                ff = ff + 0.1
-            return train
-
-        values, dydx1, tri = 0, 0, 0
-        dimension = self.samples.shape[1]
-
-        if self.cell == 'Voronoi':
-            lst = np.array(list(itertools.product([0, 1], repeat=dimension)))
-            self.points = np.vstack([lst, self.samplesU01])
-            tri = Delaunay(self.points)
-        else:
-            if self.meta == 'Delaunay':
-                lst = np.array(list(itertools.product([0, 1], repeat=dimension)))
-                self.points = np.vstack([lst, self.samplesU01])
-            else:
-                self.points = self.samplesU01
 
         if self.option == 'Gradient':
-            with suppress_stdout():  # disable printing output comments
-                values = np.array(RunModel(self.points, model_script=self.model).qoi_list)
-            if self.cell == 'Rectangular':
-                dydx1, self.corr_model_params = surrogate(self.points, values, self.corr_model_params,
-                                                          self.reg_model, self.corr_model,
-                                                          self.strata.origins + 0.5 * self.strata.widths, self.n_opt)
+            self.local = local
+            self.max_train_size = max_train_size
+            self.meta = meta
+            self.corr_model = corr_model
+            self.corr_model_params = corr_model_params
+            self.reg_model = reg_model
+            self.n_opt = n_opt
+            self.qoi_name = qoi_name
+            self.step_size = step_size
+            if not kwargs:
+                self.run_gerss()
             else:
-                simplex = getattr(tri, 'simplices')
-                dydx1, self.corr_model_params = surrogate(self.points, values, self.corr_model_params, self.reg_model,
-                                                          self.corr_model, np.mean(tri.points[simplex], 1),
-                                                          self.n_opt)
+                self.run_gerss(kwargs)
+        else:
+            self.run_rss()
 
-        initial_s = np.size(self.samplesU01, 0)
-        for i in range(initial_s, self.nsamples):
-            if self.cell == 'Rectangular':
+
+    ###################################################
+    # Run Gradient-Enhanced Refined Stratified Sampling
+    ###################################################
+    def run_gerss(self, *args):
+
+        # Check if the initial sample design already has model evalutions with it.
+        # If it does not, run the initial calculations.
+        if self.run_model_object is None:
+            raise NotImplementedError('UQpy Error: Gradient Enhanced RSS requires a predefined RunModel object.')
+        elif not self.run_model_object.samples:
+            if self.verbose:
+                print('UQpy: GE-RSS - Running the initial sample set.')
+            if not args:
+                self.run_model_object.run(samples=self.sample_object.samples)
+            else:
+                self.run_model_object.run(args[0], samples=self.sample_object.samples)
+
+        self.nexist = len(self.run_model_object.samples)
+
+        if self.nsamples <= self.nexist:
+            raise NotImplementedError('UQpy Error: The number of requested samples must be larger than the existing '
+                                      'sample set.')
+
+        # --------------------------
+        # RECTANGULAR STRATIFICATION
+        # --------------------------
+
+        if self.cell == 'Rectangular':
+
+            if self.verbose:
+                print('UQpy: Performing GE-RSS with rectangular stratification...')
+
+            # Initialize the training points for the surrogate model
+            self.training_points = self.sample_object.samplesU01
+
+            # Initialize the vector of gradients at each training point
+            dydx = np.zeros((self.nsamples, np.size(self.training_points[1])))
+
+            # Primary loop for adding samples and performing refinement.
+            for i in range(self.nexist, self.nsamples):
+
+                # TODO: Add visualize option to plot the points and their strata in 2D.
+
+                # If the quantity of interest is a dictionary, convert it to a list
+                qoi = [None] * len(self.run_model_object.qoi_list)
+                if type(self.run_model_object.qoi_list[0]) is dict:
+                    for j in range(len(self.run_model_object.qoi_list)):
+                        qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
+                else:
+                    qoi = self.run_model_object.qoi_list
+
+                # ---------------------------------------------------
+                # Compute the gradients at the existing sample points
+                # ---------------------------------------------------
+
+                # Use the entire sample set to train the surrogate model (more expensive option)
+                if self.max_train_size is None or len(self.training_points) <= self.max_train_size or i == self.nexist:
+                    dydx[:i], self.corr_model_params = self.estimate_gradient(np.atleast_2d(self.training_points),
+                                                                              np.atleast_2d(np.array(qoi)),
+                                                                              self.corr_model_params, self.reg_model,
+                                                                              self.corr_model,
+                                                                              self.sample_object.strata.origins + \
+                                                                              0.5 * self.sample_object.strata.widths,
+                                                                              self.n_opt)
+
+                # Use only max_train_size points to train the surrogate model (more economical option)
+                else:
+                    # Find the nearest neighbors to the most recently added point
+                    from sklearn.neighbors import NearestNeighbors
+                    knn = NearestNeighbors(n_neighbors=self.max_train_size)
+                    knn.fit(np.atleast_2d(self.training_points))
+                    neighbors = knn.kneighbors(np.atleast_2d(self.training_points[-1]), return_distance=False)
+
+                    # Recompute the gradient only at the nearest neighbor points.
+                    dydx[neighbors], self.corr_model_params = \
+                        self.estimate_gradient(np.squeeze(self.training_points[neighbors]),
+                                               np.atleast_2d(np.array(qoi)[neighbors]),
+                                               self.corr_model_params, self.reg_model,
+                                               self.corr_model,
+                                               np.squeeze(self.sample_object.strata.origins[neighbors] + \
+                                                          0.5 * self.sample_object.strata.widths[neighbors]),
+                                               self.n_opt)
+
+                # Define the gradient vector for application of the Delta Method
+                dydx1 = dydx[:i]
+
+                # ------------------------------
                 # Determine the stratum to break
-                if self.option == 'Gradient':
-                    # Estimate the variance within each stratum by assuming a uniform distribution over the stratum.
-                    # All input variables are independent
-                    var = (1 / 12) * self.strata.widths ** 2
-                    # Estimate the variance over the stratum by Delta Method
-                    s = np.zeros([i, 1])
-                    for j in range(i):
-                        s[j, 0] = np.sum(dydx1[j, :] * var[j, :] * dydx1[j, :] * (self.strata.weights[j] ** 2))
-                    bin2break = np.argmax(s)
-                else:
-                    w = np.argwhere(self.strata.weights == np.amax(self.strata.weights))
-                    bin2break = w[np.random.randint(len(w))]
+                # ------------------------------
 
-                # Determine the largest dimension of the stratum and define this as the cut direction
-                if self.option == 'Refined':
-                    # Cut the stratum in a random direction
-                    cut_dir_temp = self.strata.widths[bin2break, :]
-                    t = np.argwhere(cut_dir_temp[0] == np.amax(cut_dir_temp[0]))
-                    dir2break = t[np.random.randint(len(t))]
-                else:
-                    # Cut the stratum in the direction of maximum gradient
-                    cut_dir_temp = self.strata.widths[bin2break, :]
-                    t = np.argwhere(cut_dir_temp == np.amax(cut_dir_temp))
-                    dir2break = t[np.argmax(abs(dydx1[bin2break, t]))]
+                # Estimate the variance within each stratum by assuming a uniform distribution over the stratum.
+                # All input variables are independent
+                var = (1 / 12) * self.sample_object.strata.widths ** 2
+
+                # Estimate the variance over the stratum by Delta Method
+                s = np.zeros([i, 1])
+                for j in range(i):
+                    s[j, 0] = np.sum(dydx1[j, :] * var[j, :] * dydx1[j, :] * \
+                                     (self.sample_object.strata.weights[j] ** 2))
+
+                # TODO: Break n strata with the highest gradients and sample in each. Allow this to use multiple cores.
+
+                # Break the stratum with the maximum variance
+                bin2break = np.argmax(s)
+
+                # Cut the stratum in the direction of maximum gradient
+                cut_dir_temp = self.sample_object.strata.widths[bin2break, :]
+                t = np.argwhere(cut_dir_temp == np.amax(cut_dir_temp))
+                dir2break = t[np.argmax(abs(dydx1[bin2break, t]))]
 
                 # Divide the stratum bin2break in the direction dir2break
-                self.strata.widths[bin2break, dir2break] = self.strata.widths[bin2break, dir2break] / 2
-                self.strata.widths = np.vstack([self.strata.widths, self.strata.widths[bin2break, :]])
-
-                self.strata.origins = np.vstack([self.strata.origins, self.strata.origins[bin2break, :]])
-                if self.samplesU01[bin2break, dir2break] < self.strata.origins[-1, dir2break] + \
-                        self.strata.widths[bin2break, dir2break]:
-                    self.strata.origins[-1, dir2break] = self.strata.origins[-1, dir2break] + self.strata.widths[
-                        bin2break, dir2break]
+                self.sample_object.strata.widths[bin2break, dir2break] = \
+                    self.sample_object.strata.widths[bin2break, dir2break] / 2
+                self.sample_object.strata.widths = np.vstack([self.sample_object.strata.widths,
+                                                              self.sample_object.strata.widths[bin2break, :]])
+                self.sample_object.strata.origins = np.vstack([self.sample_object.strata.origins,
+                                                               self.sample_object.strata.origins[bin2break, :]])
+                if self.sample_object.samplesU01[bin2break, dir2break] < \
+                        self.sample_object.strata.origins[-1, dir2break] + \
+                        self.sample_object.strata.widths[bin2break, dir2break]:
+                    self.sample_object.strata.origins[-1, dir2break] = \
+                        self.sample_object.strata.origins[-1, dir2break] + \
+                        self.sample_object.strata.widths[bin2break, dir2break]
                 else:
-                    self.strata.origins[bin2break, dir2break] = self.strata.origins[bin2break, dir2break] + \
-                                                                self.strata.widths[bin2break, dir2break]
+                    self.sample_object.strata.origins[bin2break, dir2break] = \
+                        self.sample_object.strata.origins[bin2break, dir2break] + \
+                        self.sample_object.strata.widths[bin2break, dir2break]
 
-                self.strata.weights[bin2break] = self.strata.weights[bin2break] / 2
-                self.strata.weights = np.append(self.strata.weights, self.strata.weights[bin2break])
+                self.sample_object.strata.weights[bin2break] = self.sample_object.strata.weights[bin2break] / 2
+                self.sample_object.strata.weights = np.append(self.sample_object.strata.weights,
+                                                              self.sample_object.strata.weights[bin2break])
 
-                # Add an uniform random sample inside new stratum
-                new = np.random.uniform(self.strata.origins[i, :], self.strata.origins[i, :] + self.strata.widths[i, :])
-                # Adding new sample to points, samplesU01 and samples attributes
-                self.points = np.vstack([self.points, new])
-                self.samplesU01 = np.vstack([self.samplesU01, new])
-                for j in range(0, dimension):
-                    icdf = self.distribution[j].icdf
-                    new[j] = icdf(new[j], self.dist_params[j])
-                self.samples = np.vstack([self.samples, new])
+                # Add a uniform random sample inside the new stratum
+                new_point = np.random.uniform(self.sample_object.strata.origins[i, :],
+                                        self.sample_object.strata.origins[i, :] + \
+                                        self.sample_object.strata.widths[i, :])
 
-            elif self.cell == 'Voronoi':
-                simplex = getattr(tri, 'simplices')
-                # Estimate the variance over the stratum by Delta Method
-                weights = np.zeros(((np.size(simplex, 0)), 1))
-                var = np.zeros((np.size(simplex, 0), dimension))
-                s = np.zeros(((np.size(simplex, 0)), 1))
-                for j in range((np.size(simplex, 0))):
-                    # Define Simplex
-                    sim = self.points[simplex[j, :]]
-                    # Estimate the volume of simplex
-                    v1 = np.concatenate((np.ones([np.size(sim, 0), 1]), sim), 1)
-                    weights[j] = (1 / math.factorial(np.size(simplex[j, :]) - 1)) * np.linalg.det(v1)
-                    if self.option == 'Gradient':
-                        for k in range(dimension):
-                            # Estimate standard deviation of points
-                            from statistics import stdev
-                            std = stdev(sim[:, k].tolist())
-                            var[j, k] = (weights[j] * math.factorial(dimension) / math.factorial(dimension + 2)) * (
-                                    dimension * std ** 2)
-                        s[j, 0] = np.sum(dydx1[j, :] * var[j, :] * dydx1[j, :] * (weights[j] ** 2))
+                # Adding new sample to training points, samplesU01 and samples attributes
+                self.training_points = np.vstack([self.training_points, new_point])
+                self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
+                for j in range(0, self.dimension):
+                    icdf = self.sample_object.distribution[j].icdf
+                    new_point[j] = icdf(new_point[j], self.sample_object.dist_params[j])
+                self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
-                if self.option == 'Refined':
-                    w = np.argwhere(weights[:, 0] == np.amax(weights[:, 0]))
-                    bin2add = w[0, np.random.randint(len(w))]
+                # Run the model at the new sample point
+                self.run_model_object.ntasks = 1
+                if not args:
+                    self.run_model_object.run(samples=np.atleast_2d(new_point))
                 else:
-                    bin2add = np.argmax(s)
+                    self.run_model_object.run(args[0], samples=np.atleast_2d(new_point))
 
-                # Creating sub-simplex
-                tmp = self.points[simplex[bin2add, :]]
-                col_one = np.array(list(itertools.combinations(np.arange(dimension + 1), dimension)))
-                node = np.zeros_like(tmp)    # node: an array containing mid-point of edges
-                for m in range(dimension + 1):
-                    node[m, :] = np.sum(tmp[col_one[m] - 1, :], 0) / dimension
+                if self.verbose:
+                    print("Iteration:", i)
 
-                # Using Simplex class to generate new sample
-                new = Simplex(nodes=node, nsamples=1).samples
-                # Adding new sample to points, samplesU01 and samples attributes
-                self.points = np.vstack([self.points, new])
-                self.samplesU01 = np.vstack([self.samplesU01, new])
-                for j in range(0, dimension):
-                    icdf = self.distribution[j].icdf
-                    new[0, j] = icdf(new[0, j], self.dist_params[j])
-                self.samples = np.vstack([self.samples, new])
-                # Creating Delaunay triangulation from the new points
-                tri = Delaunay(self.points)
-            else:
-                raise NotImplementedError("Exit code: Does not identify 'cell'.")
 
-            if self.option == 'Gradient':
+        # ----------------------
+        # VORONOI STRATIFICATION
+        # ----------------------
 
-                with suppress_stdout():  # disable printing output comments
-                    y_new = RunModel(np.atleast_2d(self.samples[i, :]), model_script=self.model).qoi_list
-                values = np.vstack([values, y_new])
+        elif self.cell == 'Voronoi':
 
-                if np.size(self.samples, 0) < self.min_train_size:
-                    # Global surrogate updating: Update the surrogate model using all the points
-                    if self.cell == 'Rectangular':
-                        in_train = np.arange(self.points.shape[0])
-                        in_update = np.arange(i)
-                    else:
-                        simplex = getattr(tri, 'simplices')
-                        in_train = np.arange(self.points.shape[0])
-                        in_update = np.arange(simplex.shape[0])
+            from UQpy.Utilities import compute_Delaunay_centroid_volume, voronoi_unit_hypercube
+            from scipy.spatial import Delaunay
+            import math
+            import itertools
+
+            self.training_points = self.sample_object.samplesU01
+
+            # Extract the boundary vertices and use them in the Delaunay triangulation / mesh generation
+            self.mesh_vertices = self.training_points
+            self.points_to_samplesU01 = np.arange(0,self.training_points.shape[0])
+            for i in range(np.shape(self.sample_object.strata.vertices)[0]):
+                if any(np.logical_and(self.sample_object.strata.vertices[i, :] >= -1e-10,
+                                       self.sample_object.strata.vertices[i, :] <= 1e-10)) or \
+                    any(np.logical_and(self.sample_object.strata.vertices[i, :] >= 1-1e-10,
+                                       self.sample_object.strata.vertices[i, :] <= 1+1e-10)):
+                    self.mesh_vertices = np.vstack([self.mesh_vertices, self.sample_object.strata.vertices[i,:]])
+                    self.points_to_samplesU01 = np.hstack([self.points_to_samplesU01, np.array([np.nan])])
+
+            # Define the simplex mesh to be used for gradient estimation and sampling
+            self.mesh = Delaunay(self.mesh_vertices, incremental=True)
+
+            # Primary loop for adding samples and performing refinement.
+            for i in range(self.nexist, self.nsamples):
+
+                # Compute the centroids and the volumes of each simplex cell in the mesh
+                self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
+                self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
+                for j in range(self.mesh.nsimplex):
+                    self.mesh.centroids[j, :], self.mesh.volumes[j] = \
+                        compute_Delaunay_centroid_volume(self.mesh.points[self.mesh.vertices[j]])
+
+                # If the quantity of interest is a dictionary, convert it to a list
+                qoi = [None] * len(self.run_model_object.qoi_list)
+                if type(self.run_model_object.qoi_list[0]) is dict:
+                    for j in range(len(self.run_model_object.qoi_list)):
+                        qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
                 else:
-                    # Local surrogate updating: Update the surrogate model using min_train_size
-                    if self.cell == 'Rectangular':
-                        if self.meta == 'Delaunay':
-                            in_train = local(self.samplesU01[i, :], self.points, self.min_train_size,
-                                             np.amax(self.strata.widths))
+                    qoi = self.run_model_object.qoi_list
+
+                # ---------------------------------------------------
+                # Compute the gradients at the existing sample points
+                # ---------------------------------------------------
+
+                # Use the entire sample set to train the surrogate model (more expensive option)
+                if self.max_train_size is None or len(self.training_points) <= self.max_train_size or \
+                        i == self.nexist:
+                    dydx, self.corr_model_params = self.estimate_gradient(np.atleast_2d(self.training_points),
+                                                                              np.atleast_2d(np.array(qoi)),
+                                                                              self.corr_model_params,
+                                                                              self.reg_model,
+                                                                              self.corr_model,
+                                                                              self.mesh.centroids,
+                                                                              self.n_opt)
+
+                # Use only max_train_size points to train the surrogate model (more economical option)
+                else:
+
+                    # Build a mapping from the new vertex indices to the old vertex indices.
+                    self.mesh.new_vertices = []
+                    self.mesh.new_indices = []
+                    self.mesh.new_to_old = np.zeros([self.mesh.vertices.shape[0], ]) * np.nan
+                    j = 0
+                    k = 0
+                    while j < self.mesh.vertices.shape[0] and k < self.mesh.old_vertices.shape[0]:
+
+                        if np.all(self.mesh.vertices[j, :] == self.mesh.old_vertices[k, :]):
+                            self.mesh.new_to_old[j] = int(k)
+                            j += 1
+                            k = 0
                         else:
-                            in_train = local(self.samplesU01[i, :], self.samplesU01, self.min_train_size,
-                                             np.amax(self.strata.widths))
-                        in_update = local(self.samplesU01[i, :], self.strata.origins + .5 * self.strata.widths,
-                                          self.min_train_size / 2, np.amax(self.strata.widths))
+                            k += 1
+                            if k == self.mesh.old_vertices.shape[0]:
+                                self.mesh.new_vertices.append(self.mesh.vertices[j])
+                                self.mesh.new_indices.append(j)
+                                j += 1
+                                k = 0
+
+                    # Find the nearest neighbors to the most recently added point
+                    from sklearn.neighbors import NearestNeighbors
+                    knn = NearestNeighbors(n_neighbors=self.max_train_size)
+                    knn.fit(np.atleast_2d(self.sample_object.samplesU01))
+                    neighbors = knn.kneighbors(np.atleast_2d(self.sample_object.samplesU01[-1]),
+                                               return_distance=False)
+
+                    # For every simplex, check if at least dimension-1 vertices are in the neighbor set.
+                    # Only update the gradient in simplices that meet this criterion.
+                    update_list = []
+                    for j in range(self.mesh.vertices.shape[0]):
+                        self.vertices_in_U01 = self.points_to_samplesU01[self.mesh.vertices[j]]
+                        self.vertices_in_U01[np.isnan(self.vertices_in_U01)] = 10 ** 18
+                        v_set = set(self.vertices_in_U01)
+                        v_list = list(self.vertices_in_U01)
+                        if len(v_set) != len(v_list):
+                            continue
+                        else:
+                            if all(np.isin(self.vertices_in_U01, np.hstack([neighbors, np.atleast_2d(10**18)]))):
+                                update_list.append(j)
+
+                    update_array = np.asarray(update_list)
+
+                    # Initialize the gradient vector
+                    dydx = np.zeros((self.mesh.new_to_old.shape[0], self.dimension))
+
+                    # For those simplices that will not be updated, use the previous gradient
+                    for j in range(dydx.shape[0]):
+                        if np.isnan(self.mesh.new_to_old[j]):
+                            continue
+                        else:
+                            dydx[j, :] = dydx_old[int(self.mesh.new_to_old[j]), :]
+
+                    # For those simplices that will be updated, compute the new gradient
+                    dydx[update_array, :], self.corr_model_params = \
+                        self.estimate_gradient(np.squeeze(self.sample_object.samplesU01[neighbors]),
+                                               np.atleast_2d(np.array(qoi)[neighbors]),
+                                               self.corr_model_params, self.reg_model,
+                                               self.corr_model,
+                                               self.mesh.centroids[update_array],
+                                               self.n_opt)
+
+                # ----------------------------------------------------
+                # Determine the simplex to break and draw a new sample
+                # ----------------------------------------------------
+
+                # Estimate the variance over each simplex by Delta Method. Moments of the simplices are computed using
+                # Eq. (19) from the following reference:
+                # Good, I.J. and Gaskins, R.A. (1971). The Centroid Method of Numerical Integration. Numerische
+                #       Mathematik. 16: 343--359.
+                var = np.zeros((self.mesh.nsimplex, self.dimension))
+                s = np.zeros((self.mesh.nsimplex))
+                for j in range(self.mesh.nsimplex):
+                    for k in range(self.dimension):
+                        std = np.std(self.mesh.points[self.mesh.vertices[j]][:, k])
+                        var[j, k] = (self.mesh.volumes[j] * math.factorial(self.dimension) /
+                                     math.factorial(self.dimension + 2)) * (self.dimension * std ** 2)
+                    s[j] = np.sum(dydx[j, :] * var[j, :] * dydx[j, :] * (self.mesh.volumes ** 2))
+                dydx_old = dydx
+
+                # TODO: Update this to sample n points with the highest variance. Allow it to run on multiple cores.
+
+                # Identify the stratum with the maximum variance
+                bin2add = np.argmax(s)
+
+                # Create a sub-simplex within the simplex with maximum variance.
+                tmp_verts = self.mesh.points[self.mesh.simplices[bin2add, :]]
+                col_one = np.array(list(itertools.combinations(np.arange(self.dimension + 1), self.dimension)))
+                self.mesh.subsimplex = np.zeros_like(tmp_verts)  # node: an array containing mid-point of edges
+                for m in range(self.dimension + 1):
+                    self.mesh.subsimplex[m, :] = np.sum(tmp_verts[col_one[m] - 1, :], 0) / self.dimension
+
+                # Using the Simplex class to generate a new sample in the subsimplex
+                new_point = Simplex(nodes=self.mesh.subsimplex, nsamples=1).samples
+
+                # If the visualize option is selected, plot the simplex evolution
+                if self.visualize:
+                    if self.dimension != 2:
+                        raise NotImplementedError(
+                            'UQpy Error: Voronoi visualization is only permitted for 2D problems.')
+
+                    # Check if the directory exists for placing the generated images.
+                    if not os.path.exists('./figures_voronoi'):
+                        os.makedirs('./figures_voronoi')
+
+                    # Plot the points, simplices, and their centroids with the centroids colored by variance
+                    if i == self.nexist:
+                        fig = plt.figure(1)
+                        ax = plt.axes()
+                        ax.plot(self.training_points[:, 0], self.training_points[:, 1], 'xk')
+                        ax.scatter(self.mesh.centroids[:, 0], self.mesh.centroids[:, 1], c=s, vmin=0, vmax=0.00001)
+                        ax.triplot(self.mesh.points[:, 0], self.mesh.points[:, 1], self.mesh.simplices, color='blue')
+                        plt.savefig('./figures_voronoi/p1_' + str(i) + '.png')
+                        plt.close(fig)
+
                     else:
-                        simplex = getattr(tri, 'simplices')
-                        # in_train: Indices of samples used to update surrogate approximation
-                        in_train = local(self.samplesU01[i, :], self.samplesU01, self.min_train_size,
-                                         np.amax(np.sqrt(self.strata.weights)))
-                        # in_update: Indices of centroid of simplex, where gradient is updated
-                        in_update = local(self.samplesU01[i, :], np.mean(tri.points[simplex], 1),
-                                          self.min_train_size / 2, np.amax(np.sqrt(self.strata.weights)))
+                        fig = plt.figure(1)
+                        ax = plt.axes()
+                        ax.plot(self.training_points[:, 0], self.training_points[:, 1], 'xk')
+                        ax.scatter(self.mesh.centroids[:, 0], self.mesh.centroids[:, 1], c=s, vmin=0, vmax=0.00001)
+                        ax.triplot(self.mesh.points[:, 0], self.mesh.points[:, 1], self.mesh.simplices, color='blue')
+                        if i > self.max_train_size:
+                            ax.triplot(self.mesh.points[:, 0], self.mesh.points[:, 1],
+                                       self.mesh.simplices[update_array], color='purple')
+                        plt.savefig('./figures_voronoi/p1_' + str(i) + '.png')
+                        plt.close(fig)
 
-                # Update the surrogate model & the store the updated gradients
-                if self.cell == 'Rectangular':
-                    dydx1 = np.vstack([dydx1, np.zeros(dimension)])
-                    dydx1[in_update, :], self.corr_model_params = surrogate(self.points[in_train, :],
-                                                                            values[in_train, :],
-                                                                            self.corr_model_params, self.reg_model,
-                                                                            self.corr_model,
-                                                                            self.strata.origins[in_update, :] +
-                                                                            .5 * self.strata.widths[in_update, :], 1)
+                        # Plot the points, simplices, and their centroids along with the subsimplex to be sampled.
+                        fig = plt.figure(1)
+                        ax = plt.axes()
+                        ax.plot(self.training_points[:, 0], self.training_points[:, 1], 'xk')
+                        ax.scatter(self.mesh.centroids[:, 0], self.mesh.centroids[:, 1], c=s, vmin=0, vmax=0.00001)
+                        ax.triplot(self.mesh.points[:, 0], self.mesh.points[:, 1], self.mesh.simplices, color='blue')
+                        if i > self.max_train_size:
+                            ax.triplot(self.mesh.points[:, 0], self.mesh.points[:, 1],
+                                       self.mesh.simplices[update_array], color='purple')
+                        t1 = plt.Polygon(np.vstack([self.mesh.subsimplex[:, 0], self.mesh.subsimplex[:, 1]]).T,
+                                         color='red')
+                        plt.gca().add_patch(t1)
+                        plt.savefig('./figures_voronoi/p2_' + str(i) + '.png')
+                        plt.close(fig)
+
+                        # Plot the points, simplices, their centroids, the subsimplex to be sampled, and the new sample
+                        # point.
+                        fig = plt.figure(1)
+                        ax = plt.axes()
+                        ax.plot(self.training_points[:, 0], self.training_points[:, 1], 'x')
+                        ax.scatter(self.mesh.centroids[:, 0], self.mesh.centroids[:, 1], c=s, vmin=0, vmax=0.00001)
+                        ax.triplot(self.mesh.points[:, 0], self.mesh.points[:, 1], self.mesh.simplices, color='blue')
+                        if i > self.max_train_size:
+                            ax.triplot(self.mesh.points[:, 0], self.mesh.points[:, 1],
+                                       self.mesh.simplices[update_array], color='purple')
+                        t1 = plt.Polygon(np.vstack([self.mesh.subsimplex[:, 0], self.mesh.subsimplex[:, 1]]).T,
+                                         color='red')
+                        plt.gca().add_patch(t1)
+                        ax.plot(new_point[:, 0], new_point[:,1], 'xk')
+                        plt.savefig('./figures_voronoi/p3_' + str(i) + '.png')
+                        plt.close(fig)
+
+
+                # Update the matrices to have recognize the new point
+                self.points_to_samplesU01 = np.hstack([self.points_to_samplesU01, np.array([i])])
+                self.mesh.old_vertices = self.mesh.vertices
+
+                # Update the Delaunay triangulation mesh to include the new point.
+                self.mesh.add_points(new_point)
+
+                # Update the sample arrays to include the new point
+                self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
+                self.training_points = np.vstack([self.training_points, new_point])
+
+                # Identify the new point in the parameter space and update the sample array to include the new point.
+                for j in range(self.dimension):
+                    new_point[0, j] = self.sample_object.distribution[j].icdf(new_point[0, j],
+                                                                        self.sample_object.dist_params[j])
+                self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
+
+                # Run the mode at the new point.
+                if not args:
+                    self.run_model_object.run(samples=np.atleast_2d(new_point))
                 else:
-                    simplex = getattr(tri, 'simplices')
-                    dydx1 = np.vstack([dydx1, np.zeros([simplex.shape[0] - dydx1.shape[0], dimension])])
-                    dydx1[in_update, :], self.corr_model_params = surrogate(self.points[in_train, :],
-                                                                            values[in_train, :],
-                                                                            self.corr_model_params,
-                                                                            self.reg_model, self.corr_model,
-                                                                            np.mean(tri.points[
-                                                                                        simplex[in_update, :]],
-                                                                                    1), 1)
-        print('Done!')
-        if self.option == 'Gradient':
-            if self.cell == 'Rectangular':
-                if self.meta != 'Delaunay':
-                    return values
-            else:
-                return values[2 ** dimension:, :]
+                    self.run_model_object.run(args[0], samples=np.atleast_2d(new_point))
 
+                # Compute the strata weights.
+                self.sample_object.strata = voronoi_unit_hypercube(self.sample_object.samplesU01)
+
+                self.sample_object.strata.centroids = []
+                self.sample_object.strata.weights = []
+                for region in self.sample_object.strata.bounded_regions:
+                    vertices = self.sample_object.strata.vertices[region + [region[0]], :]
+                    centroid, volume = compute_Voronoi_centroid_volume(vertices)
+                    self.sample_object.strata.centroids.append(centroid[0, :])
+                    self.sample_object.strata.weights.append(volume)
+
+                if self.visualize:
+                    if self.dimension != 2:
+                        raise NotImplementedError(
+                            'UQpy Error: Voronoi visualization is only permitted for 2D problems.')
+                    from scipy.spatial import voronoi_plot_2d
+                    fig = voronoi_plot_2d(self.sample_object.strata)
+                    axes = plt.gca()
+                    axes.set_xlim([0, 1])
+                    axes.set_ylim([0, 1])
+                    plt.savefig('./figures_voronoi/p4_' + str(i) + '.png')
+                    plt.close(fig)
+
+                if self.verbose:
+                    print("Iteration:", i)
+
+        #################################
+        # Run Refined Stratified Sampling
+        #################################
+
+        # TODO: Rebuild run_rss(). Some code bits to start are below.
+
+        # for i in range(self.nexist, self.nsamples):
+        #     if self.cell == 'Rectangular':
+        #         # Determine the stratum to break
+        #         if self.option == 'Gradient':
+        #             # Estimate the variance within each stratum by assuming a uniform distribution over the stratum.
+        #             # All input variables are independent
+        #             var = (1 / 12) * self.strata.widths ** 2
+        #             # Estimate the variance over the stratum by Delta Method
+        #             s = np.zeros([i, 1])
+        #             for j in range(i):
+        #                 s[j, 0] = np.sum(dydx1[j, :] * var[j, :] * dydx1[j, :] * (self.strata.weights[j] ** 2))
+        #             bin2break = np.argmax(s)
+        #         else:
+        #             w = np.argwhere(self.strata.weights == np.amax(self.strata.weights))
+        #             bin2break = w[np.random.randint(len(w))]
+        #
+        #         # Determine the largest dimension of the stratum and define this as the cut direction
+        #         if self.option == 'Refined':
+        #             # Cut the stratum in a random direction
+        #             cut_dir_temp = self.strata.widths[bin2break, :]
+        #             t = np.argwhere(cut_dir_temp[0] == np.amax(cut_dir_temp[0]))
+        #             dir2break = t[np.random.randint(len(t))]
+        #         else:
+        #             # Cut the stratum in the direction of maximum gradient
+        #             cut_dir_temp = self.strata.widths[bin2break, :]
+        #             t = np.argwhere(cut_dir_temp == np.amax(cut_dir_temp))
+        #             dir2break = t[np.argmax(abs(dydx1[bin2break, t]))]
+        #
+        #         # Divide the stratum bin2break in the direction dir2break
+        #         self.strata.widths[bin2break, dir2break] = self.strata.widths[bin2break, dir2break] / 2
+        #         self.strata.widths = np.vstack([self.strata.widths, self.strata.widths[bin2break, :]])
+        #
+        #         self.strata.origins = np.vstack([self.strata.origins, self.strata.origins[bin2break, :]])
+        #         if self.samplesU01[bin2break, dir2break] < self.strata.origins[-1, dir2break] + \
+        #                 self.strata.widths[bin2break, dir2break]:
+        #             self.strata.origins[-1, dir2break] = self.strata.origins[-1, dir2break] + self.strata.widths[
+        #                 bin2break, dir2break]
+        #         else:
+        #             self.strata.origins[bin2break, dir2break] = self.strata.origins[bin2break, dir2break] + \
+        #                                                         self.strata.widths[bin2break, dir2break]
+        #
+        #         self.strata.weights[bin2break] = self.strata.weights[bin2break] / 2
+        #         self.strata.weights = np.append(self.strata.weights, self.strata.weights[bin2break])
+        #
+        #         # Add an uniform random sample inside new stratum
+        #         new = np.random.uniform(self.strata.origins[i, :], self.strata.origins[i, :] + self.strata.widths[i, :])
+        #         # Adding new sample to points, samplesU01 and samples attributes
+        #         self.points = np.vstack([self.points, new])
+        #         self.samplesU01 = np.vstack([self.samplesU01, new])
+        #         for j in range(0, dimension):
+        #             icdf = self.distribution[j].icdf
+        #             new[j] = icdf(new[j], self.dist_params[j])
+        #         self.samples = np.vstack([self.samples, new])
+        #
+        #     elif self.cell == 'Voronoi':
+        #         simplex = getattr(tri, 'simplices')
+        #         # Estimate the variance over the stratum by Delta Method
+        #         weights = np.zeros(((np.size(simplex, 0)), 1))
+        #         var = np.zeros((np.size(simplex, 0), dimension))
+        #         s = np.zeros(((np.size(simplex, 0)), 1))
+        #         for j in range((np.size(simplex, 0))):
+        #             # Define Simplex
+        #             sim = self.points[simplex[j, :]]
+        #             # Estimate the volume of simplex
+        #             v1 = np.concatenate((np.ones([np.size(sim, 0), 1]), sim), 1)
+        #             weights[j] = (1 / math.factorial(np.size(simplex[j, :]) - 1)) * np.linalg.det(v1)
+        #             if self.option == 'Gradient':
+        #                 for k in range(dimension):
+        #                     # Estimate standard deviation of points
+        #                     from statistics import stdev
+        #                     std = stdev(sim[:, k].tolist())
+        #                     var[j, k] = (weights[j] * math.factorial(dimension) / math.factorial(dimension + 2)) * (
+        #                             dimension * std ** 2)
+        #                 s[j, 0] = np.sum(dydx1[j, :] * var[j, :] * dydx1[j, :] * (weights[j] ** 2))
+        #
+        #         if self.option == 'Refined':
+        #             w = np.argwhere(weights[:, 0] == np.amax(weights[:, 0]))
+        #             bin2add = w[0, np.random.randint(len(w))]
+        #         else:
+        #             bin2add = np.argmax(s)
+        #
+        #         # Creating sub-simplex
+        #         tmp = self.points[simplex[bin2add, :]]
+        #         col_one = np.array(list(itertools.combinations(np.arange(dimension + 1), dimension)))
+        #         node = np.zeros_like(tmp)  # node: an array containing mid-point of edges
+        #         for m in range(dimension + 1):
+        #             node[m, :] = np.sum(tmp[col_one[m] - 1, :], 0) / dimension
+        #
+        #         # Using Simplex class to generate new sample
+        #         new = Simplex(nodes=node, nsamples=1).samples
+        #         # Adding new sample to points, samplesU01 and samples attributes
+        #         self.points = np.vstack([self.points, new])
+        #         self.samplesU01 = np.vstack([self.samplesU01, new])
+        #         for j in range(0, dimension):
+        #             icdf = self.distribution[j].icdf
+        #             new[0, j] = icdf(new[0, j], self.dist_params[j])
+        #         self.samples = np.vstack([self.samples, new])
+        #         # Creating Delaunay triangulation from the new points
+        #         tri = Delaunay(self.points)
+        #     else:
+        #         raise NotImplementedError("Exit code: Does not identify 'cell'.")
+        #
+        #     if self.option == 'Gradient':
+        #
+        #         with suppress_stdout():  # disable printing output comments
+        #             y_new = RunModel(np.atleast_2d(self.samples[i, :]), model_script=self.model_script,
+        #                              model_object_name=self.model_object_name).qoi_list
+        #         values = np.vstack([values, y_new])
+        #
+        #         if np.size(self.samples, 0) < self.max_train_size:
+        #             # Global surrogate updating: Update the surrogate model using all the points
+        #             if self.cell == 'Rectangular':
+        #                 in_train = np.arange(self.points.shape[0])
+        #                 in_update = np.arange(i)
+        #             else:
+        #                 simplex = getattr(tri, 'simplices')
+        #                 in_train = np.arange(self.points.shape[0])
+        #                 in_update = np.arange(simplex.shape[0])
+        #         else:
+        #             # Local surrogate updating: Update the surrogate model using max_train_size
+        #             if self.cell == 'Rectangular':
+        #                 if self.meta == 'Delaunay':
+        #                     in_train = local(self.samplesU01[i, :], self.points, self.max_train_size,
+        #                                      np.amax(self.strata.widths))
+        #                 else:
+        #                     in_train = local(self.samplesU01[i, :], self.samplesU01, self.max_train_size,
+        #                                      np.amax(self.strata.widths))
+        #                 in_update = local(self.samplesU01[i, :], self.strata.origins + .5 * self.strata.widths,
+        #                                   self.max_train_size / 2, np.amax(self.strata.widths))
+        #             else:
+        #                 simplex = getattr(tri, 'simplices')
+        #                 # in_train: Indices of samples used to update surrogate approximation
+        #                 in_train = local(self.samplesU01[i, :], self.samplesU01, self.max_train_size,
+        #                                  np.amax(np.sqrt(self.strata.weights)))
+        #                 # in_update: Indices of centroid of simplex, where gradient is updated
+        #                 in_update = local(self.samplesU01[i, :], np.mean(tri.points[simplex], 1),
+        #                                   self.max_train_size / 2, np.amax(np.sqrt(self.strata.weights)))
+        #
+        #         # Update the surrogate model & the store the updated gradients
+        #         if self.cell == 'Rectangular':
+        #             dydx1 = np.vstack([dydx1, np.zeros(dimension)])
+        #             dydx1[in_update, :], self.corr_model_params = surrogate(self.points[in_train, :],
+        #                                                                     values[in_train, :],
+        #                                                                     self.corr_model_params, self.reg_model,
+        #                                                                     self.corr_model,
+        #                                                                     self.strata.origins[in_update, :] +
+        #                                                                     .5 * self.strata.widths[in_update, :], 1)
+        #         else:
+        #             simplex = getattr(tri, 'simplices')
+        #             dydx1 = np.vstack([dydx1, np.zeros([simplex.shape[0] - dydx1.shape[0], dimension])])
+        #             dydx1[in_update, :], self.corr_model_params = surrogate(self.points[in_train, :],
+        #                                                                     values[in_train, :],
+        #                                                                     self.corr_model_params,
+        #                                                                     self.reg_model, self.corr_model,
+        #                                                                     np.mean(tri.points[
+        #                                                                                 simplex[in_update, :]],
+        #                                                                             1), 1)
+        # print('Done!')
+        # if self.option == 'Gradient':
+        #     if self.cell == 'Rectangular':
+        #         if self.meta != 'Delaunay':
+        #             return values
+        #     else:
+        #         return values[2 ** dimension:, :]
+
+
+    # Support functions for RSS and GE-RSS
+
+    # Code for estimating gradients with a metamodel (surrogate)
+    # TODO: We may want to consider moving this to Utilities.
+    def estimate_gradient(self, x, y, corr_m_p, reg_m, corr_m, xt, n):
+        # meta = 'Delaunay' is not currently functional.
+        if self.meta == 'Delaunay':
+
+            # TODO: Here we need to add a reflection of the sample points over each face of the hypercube and build the
+            # linear interpolator from the reflected points.
+
+            from scipy.interpolate import LinearNDInterpolator
+
+            tck = LinearNDInterpolator(x, y.T, fill_value=0)
+            gr = self.cent_diff(tck, xt, self.step_size)
+        elif self.meta == 'Kriging':
+            from UQpy.Surrogates import Krig
+            with suppress_stdout():  # disable printing output comments
+                tck = Krig(samples=x, values=y.T, reg_model=reg_m, corr_model=corr_m, corr_model_params=corr_m_p,
+                           n_opt=n)
+            corr_m_p = tck.corr_model_params
+            gr = self.cent_diff(tck.interpolate, xt, self.step_size)
+
+        elif self.meta == 'Kriging_Sklearn':
+            gp = GaussianProcessRegressor(kernel=corr_m, n_restarts_optimizer=0)
+            gp.fit(x, y)
+            gr = self.cent_diff(gp.predict, xt, self.step_size)
+        else:
+            raise NotImplementedError("UQpy Error: 'meta' must be specified in order to calculate gradients.")
+        return gr, corr_m_p
+
+    # Implementation of the central difference method for calculating gradients.
+    # TODO: This should probably be moved to Utilities.
+    def cent_diff(self, f, x, h):
+        dydx = np.zeros((np.size(x, 0), np.size(x, 1)))
+        for dirr in range(np.size(x, 1)):
+            temp = np.zeros((np.size(x, 0), np.size(x, 1)))
+            temp[:, dirr] = np.ones(np.size(x, 0))
+            low = x - h / 2 * temp
+            hi = x + h / 2 * temp
+            dydx[:, dirr] = ((f.__call__(hi) - f.__call__(low)) / h)[:].reshape((len(hi),))
+        return dydx
+
+    # This code is not currently used.
+    # def local(pt, x, mts, max_dim):
+    #     # Identify the indices of 'mts' number of points in array 'x', which are closest to point 'pt'.
+    #     ff = 0.2
+    #     train = []
+    #     while len(train) < mts:
+    #         a = x > matlib.repmat(pt - ff * max_dim, x.shape[0], 1)
+    #         b = x < matlib.repmat(pt + ff * max_dim, x.shape[0], 1)
+    #         x_ind = a & b
+    #         train = []
+    #         for k_ in range(x.shape[0]):
+    #             if np.array_equal(x_ind[k_, :], np.ones(x.shape[1])):
+    #                 train.append(k_)
+    #         ff = ff + 0.1
+    #     return train
+
+    # Initialization and preliminary error checks.
     def init_rss(self):
-        if type(self.x).__name__ not in ['STS', 'RSS']:
-            raise NotImplementedError("Exit code: x should be a class object from STS or RSS class.")
-
-        if self.model is not None:
+        if type(self.sample_object).__name__ not in ['STS', 'RSS']:
+            raise NotImplementedError("UQpy Error: sample_object must be an object of the STS or RSS class.")
+        if self.run_model_object is not None:
             self.option = 'Gradient'
+            if type(self.run_model_object).__name__ not in ['RunModel']:
+                raise NotImplementedError("UQpy Error: run_model_object must be an object of the RunModel class.")
 
-        if self.meta is None:
-            self.meta = 'Delaunay'
-        elif self.meta not in ['Delaunay', 'Kriging', 'Kriging_Sklearn']:
-            raise NotImplementedError("Exit code: Input 'meta' is not specified correctly.")
-
-        if self.cell is None:
-            self.cell = 'Rectangular'
-        elif self.cell not in ['Rectangular', 'Voronoi']:
-            raise NotImplementedError("Exit code: Input 'cell' is not specified correctly.")
-
-        if type(self.nsamples).__name__ != 'int':
-            raise NotImplementedError("Exit code: nsamples should be integer.")
-        if self.nsamples <= self.x.samples.shape[0]:
-            raise NotImplementedError("Exit code: Already have desired number of samples.")
-
-        if self.min_train_size is None:
-            self.min_train_size = self.nsamples
 
 
 ########################################################################################################################
@@ -1151,157 +1635,252 @@ class AKMCS:
     # Authors: Mohit S. Chauhan
     # Last modified: 08/04/2019 by Mohit S. Chauhan
 
-    def __init__(self, model=None, dist_name=None, dist_params=None, nsamples=None, doe=None, population=None,
-                 n_doe=None, lf=None, n_add=1, min_cov=None, n_stop=None, max_p=None, corr_model='Gaussian',
-                 reg_model='Linear', corr_model_params=None, n_opt=10):
+    def __init__(self, run_model_object=None, sample_object=None, nlearn=10000, nstart=None, population=None,
+                 dist_name=None, dist_params=None, nsamples=None, corr_model='Gaussian', reg_model='Linear',
+                 corr_model_params=None, n_add=1, qoi_name=None, n_opt=10, lf=None, min_cov=None, max_p=None,
+                 verbose = False, kriging='UQpy', visualize=False, **kwargs):
 
-        self.model = model
+        # TODO: Modify Kriging so it can be passed in as an object. This will change some of the code below.
+
+        # Initialize the internal variables of the class.
+        self.run_model_object = run_model_object
+        self.sample_object = sample_object
+        self.nlearn = nlearn
+        self.nstart = nstart
+        self.verbose = verbose
+        self.qoi_name = qoi_name
+        self.n_opt = n_opt
+
+        # TODO: Make self.lf a function itself. That way, it can be passed in or it can be assigned to one of the
+        #  internal functions based on the keyword lf.
+        self.lf = lf
+        self.min_cov = min_cov
+        self.max_p = max_p
         self.dist_name = dist_name
         self.dist_params = dist_params
         self.nsamples = nsamples
-        self.DoE = doe
-        self.n_DoE = n_doe
-        self.lf = lf
         self.corr_model = corr_model
         self.corr_model_params = corr_model_params
         self.reg_model = reg_model
         self.n_opt = n_opt
+
+        # TODO: Allow the code to add more than one point in a give iteration.
         self.n_add = n_add
-        self.n_stop = n_stop
-        self.min_cov = min_cov
-        self.max_p = max_p
         self.population = population
-        self.kriging = 'UQpy'
-        self.analysis = None
-        self.strata = None
+        self.kriging = kriging
+        self.visualize = visualize
+
+        # Initialize and run preliminary error checks.
         self.init_akmcs()
-        if self.analysis == 'Reliability':
-            self.values, self.pf, self.cov_pf, self.pr = self.run_akmcs()
-        else:
-            self.values, self.pr = self.run_akmcs()
 
-    def run_akmcs(self):
+        # Run AKMCS
+        self.run_akmcs(kwargs)
+
+
+    def run_akmcs(self, *args):
         from UQpy.RunModel import RunModel
-        from UQpy.Surrogates import Krig
-        from sklearn.gaussian_process import GaussianProcessRegressor
+        if self.kriging == 'UQpy':
+            from UQpy.Surrogates import Krig
+        else:
+            from sklearn.gaussian_process import GaussianProcessRegressor
 
-        print('UQpy: Performing AK-MCS design...')
+        # Check if the initial sample design already exists and has model evalutions with it.
+        # If it does not, run the initial calculations.
+        if self.run_model_object is None:
+            raise NotImplementedError('UQpy: AKMCS requires a predefined RunModel object.')
+        elif self.sample_object.samples is not None:
+            self.dimension = np.shape(self.sample_object.samples)[1]
+            self.training_points = self.sample_object.samplesU01
+            if self.verbose:
+                print('UQpy: AKMCS - Running the initial sample set.')
+            if not args:
+                self.run_model_object.run(samples=self.sample_object.samples)
+            else:
+                self.run_model_object.run(args[0], samples=self.sample_object.samples)
+        else:
+            if self.verbose:
+                print('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
+            self.sample_object = LHS(dist_name=self.dist_name, dist_params=self.dist_params, nsamples=nstart)
+            self.training_points = self.sample_object.samplesU01
+            self.dimension = np.shape(self.sample_object.samples)[1]
+            if self.verbose:
+                print('UQpy: AKMCS - Running the initial sample set.')
+            if not args:
+                self.run_model_object.run(samples=self.sample_object.samples)
+            else:
+                self.run_model_object.run(args[0], samples=self.sample_object.samples)
+
+
+        if self.verbose:
+            print('UQpy: Performing AK-MCS design...')
+
+        # Initialize the population of samples at which to evaluate the learning function and from which to draw in the
+        # sampling.
         if self.population is None:
-            m = MCS(dist_name=self.dist_name, dist_params=self.dist_params, nsamples=self.nsamples)
-            self.population = m.samples
-        if self.DoE is None:
-            self.DoE = np.random.permutation(self.population)[:self.n_DoE]
-        values = np.array(RunModel(self.DoE, model_script=self.model).qoi_list)
+            self.population = MCS(dist_name=self.sample_object.dist_name, dist_params=self.sample_object.dist_params,
+                                  nsamples=self.nlearn)
 
-        if self.analysis == 'Reliability':
-            pf, cov_pf = 1, 1
-            p = Distribution(dist_name=self.dist_name)
+        # If the quantity of interest is a dictionary, convert it to a list
+        qoi = [None] * len(self.run_model_object.qoi_list)
+        if type(self.run_model_object.qoi_list[0]) is dict:
+            for j in range(len(self.run_model_object.qoi_list)):
+                qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
+        else:
+            qoi = self.run_model_object.qoi_list
 
-            while cov_pf > self.min_cov:
-                n_ = self.population.shape[0]
-                n = self.DoE.shape[0]
+        # Train the initial Kriging model.
+        if self.kriging == 'UQpy':
+            with suppress_stdout():  # disable printing output comments
+                k = Krig(samples=np.atleast_2d(self.training_points), values=np.atleast_2d(np.array(qoi)).T,
+                         corr_model=self.corr_model, reg_model=self.reg_model,
+                         corr_model_params=self.corr_model_params, n_opt=self.n_opt)
+            self.corr_model_params = k.corr_model_params
+            self.krig_model = k.interpolate
+        else:
+            gp = GaussianProcessRegressor(kernel=self.corr_model_params, n_restarts_optimizer=0)
+            gp.fit(self.DoE, values)
+            self.krig_model = gp.predict
 
-                if self.kriging == 'UQpy':
-                    with suppress_stdout():  # disable printing output comments
-                        k = Krig(samples=self.DoE, values=values, corr_model=self.corr_model, reg_model=self.reg_model,
-                                 corr_model_params=self.corr_model_params, n_opt=self.n_opt)
-                    self.corr_model_params = k.corr_model_params
-                    interpolate = k.interpolate
-                else:
-                    gp = GaussianProcessRegressor(kernel=self.corr_model_params, n_restarts_optimizer=0)
-                    gp.fit(self.DoE, values)
-                    interpolate = gp.predict
 
-                for i in range(n, n_, self.n_add):
-                    if i == self.n_stop:
-                        break
-                    rest_pop = np.array([x for x in self.population.tolist() if x not in self.DoE.tolist()])
-                    if self.lf == 'U':
-                        new, ind, g = self.u(interpolate, rest_pop)
-                    if self.lf == 'Weighted-U':
-                        new, ind, g = self.weighted_u(interpolate, rest_pop, p)
-                    if self.lf == 'EFF':
-                        new, ind, g = self.eff(interpolate, rest_pop)
-                    self.DoE = np.vstack([self.DoE, new])
+        # ---------------------------------------------
+        # Primary loop for learning and adding samples.
+        # ---------------------------------------------
 
-                    v_new = np.array(RunModel(np.atleast_2d(new), model_script=self.model).qoi_list)
-                    print(i)
-                    values = np.vstack([values, v_new])
+        for i in range(self.training_points.shape[0], self.nsamples):
 
-                    if ind:
-                        break
+            # Find all of the points in the population that have not already been integrated into the training set
+            rest_pop = np.array([x for x in self.population.samplesU01.tolist() if x not in self.training_points.tolist()])
 
-                    if self.kriging == 'UQpy':
-                        with suppress_stdout():  # disable printing output comments
-                            k = Krig(samples=self.DoE, values=values, corr_model=self.corr_model,
-                                     reg_model=self.reg_model, corr_model_params=self.corr_model_params)
-                        self.corr_model_params = k.corr_model_params
-                        interpolate = k.interpolate
-                    else:
-                        gp = GaussianProcessRegressor(kernel=self.corr_model_params, n_restarts_optimizer=0)
-                        gp.fit(self.DoE, values)
-                        interpolate = gp.predict
+            # Apply the learning function to identify the new point to run the model.
+            # TODO: Rewrite this section so that each learning function is called directly as a function through self.lf
+            # TODO: Add the other learning fuctions.
+            if self.lf == 'EIGF':
+                new_ind = self.eigf(self.krig_model, rest_pop, qoi, i)
+                new_point = np.atleast_2d(rest_pop[new_ind])
 
-                pf = np.sum(g < 0) / n_
-                cov_pf = np.sqrt((1 - pf) / (pf * n_))
+            # Add the new points to the training set and to the sample set.
+            self.training_points = np.vstack([self.training_points, new_point])
+            self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
+            for j in range(self.dimension):
+                new_point[0, j] = self.sample_object.distribution[j].icdf(new_point[0, j],
+                                                                          self.sample_object.dist_params[j])
+            self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
-                if i == self.n_stop:
-                    print('Done!')
-                    return values, pf, cov_pf, interpolate
-                if cov_pf > self.min_cov:
-                    print("Covariance of pf = ", cov_pf, "   Notice: Increasing total population by 20%")
-                    m = MCS(dist_name=self.dist_name, dist_params=self.dist_params, nsamples=int(0.2*m.nsamples))
-                    self.population = np.vstack([self.population, m.samples])
+            # Run the model at the new points
+            if not args:
+                self.run_model_object.run(samples=np.atleast_2d(new_point))
+            else:
+                self.run_model_object.run(args[0], samples=np.atleast_2d(new_point))
 
-            print('Done!')
-            return values, pf, cov_pf, interpolate
+            # If the quantity of interest is a dictionary, convert it to a list
+            qoi = [None] * len(self.run_model_object.qoi_list)
+            if type(self.run_model_object.qoi_list[0]) is dict:
+                for j in range(len(self.run_model_object.qoi_list)):
+                    qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
+            else:
+                qoi = self.run_model_object.qoi_list
 
-        elif self.analysis == 'Sensitivity':
-            n_ = self.population.shape[0]
-            n = self.DoE.shape[0]
+            # Retrain the Kriging surrogate model
             if self.kriging == 'UQpy':
-                with suppress_stdout():  # disable printing output comments
-                    k = Krig(samples=self.DoE, values=values, corr_model=self.corr_model, reg_model=self.reg_model,
+                with suppress_stdout():
+                    # disable printing output comments
+                    k = Krig(samples=np.atleast_2d(self.training_points), values=np.atleast_2d(np.array(qoi)).T,
+                             corr_model=self.corr_model, reg_model=self.reg_model,
                              corr_model_params=self.corr_model_params, n_opt=self.n_opt)
                 self.corr_model_params = k.corr_model_params
-                interpolate = k.interpolate
+                self.krig_model = k.interpolate
             else:
                 gp = GaussianProcessRegressor(kernel=self.corr_model_params, n_restarts_optimizer=0)
                 gp.fit(self.DoE, values)
-                interpolate = gp.predict
+                self.krig_model = gp.predict
 
-            for i in range(n, n_, self.n_add):
-                if i == self.n_stop:
-                    break
+            if self.verbose:
+                print("Iteration:", i)
 
-                rest_pop = np.array([x for x in self.population.tolist() if x not in self.DoE.tolist()])
-                if self.lf == 'EIF':
-                    new = self.eif(interpolate, rest_pop, min(values))
-                if self.lf == 'EGIF':
-                    new = self.lf(interpolate, rest_pop)
-                self.DoE = np.vstack([self.DoE, new])
+        if self.verbose:
+            print('UQpy: AKMCS complete')
 
-                v_new = np.array(RunModel(np.atleast_2d(new), model_script=self.model).qoi_list)
-                print(i)
-                values = np.vstack([values, v_new])
+    # ------------------
+    # LEARNING FUNCTIONS
+    # ------------------
 
-                if self.kriging == 'UQpy':
-                    with suppress_stdout():  # disable printing output comments
-                        k = Krig(samples=self.DoE, values=values, corr_model=self.corr_model, reg_model=self.reg_model,
-                                 corr_model_params=self.corr_model_params, n_opt=1)
-                    self.corr_model_params = k.corr_model_params
-                    interpolate = k.interpolate
-                else:
-                    gp = GaussianProcessRegressor(kernel=self.corr_model_params, n_restarts_optimizer=0)
-                    gp.fit(self.DoE, values)
-                    interpolate = gp.predict
-
-            print('Done!')
-            return values, interpolate
-
+    def eigf(self, surr, pop, qoi, i):
+        # Expected Improvement for Global Fit (EIGF)
+        # Refrence: J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
+        # Link: https://arxiv.org/pdf/1905.05345.pdf
+        if self.kriging == 'UQpy':
+            g, sig = surr(pop, dy=True)
+            sig = np.sqrt(sig)
         else:
-            raise NotImplementedError("Exit code: 'analysis' should be 'Reliability' or 'Sensitivity'.")
+            g, sig = surr(pop, return_std=True)
+            sig = sig.reshape(sig.size, 1)
+        sig[sig == 0.] = 0.00001
 
+        if self.visualize:
+            if self.dimension != 2:
+                raise NotImplementedError('UQpy: AKMCS - Visualize option is only available when dimension = 2.')
+
+            # Check if the directory exists for placing the generated images.
+            if not os.path.exists('./figures_akmcs'):
+                os.makedirs('./figures_akmcs')
+
+            # Plot the Kriging model at the population points.
+            fig = plt.figure()
+            ax = plt.axes()
+            im = ax.scatter(list(pop[:, 0]), list(pop[:, 1]), c=list(np.squeeze(g)), s=10, vmin=0, vmax=6,
+                            cmap=plt.cm.jet)
+            ax.plot(self.training_points[:, 0], self.training_points[:, 1], 'xk')
+            fig.colorbar(im, ax=ax)
+            plt.savefig('./figures_akmcs/p1_' + str(i) + '.png')
+            plt.close(fig)
+
+            # Plot the standard deviation of the Kriging model at the population points.
+            fig = plt.figure()
+            ax = plt.axes()
+            im = ax.scatter(list(pop[:, 0]), list(pop[:, 1]), c=list(np.squeeze(sig)), s=10, vmin=0, vmax=0.6,
+                            cmap=plt.cm.jet)
+            fig.colorbar(im, ax=ax)
+            plt.savefig('./figures_akmcs/p2_' + str(i) + '.png')
+            plt.close(fig)
+
+        # Evaluation of the learning function
+        # First, find the nearest neighbor in the training set for each point in the population.
+        from sklearn.neighbors import NearestNeighbors
+        knn = NearestNeighbors(n_neighbors=1)
+        knn.fit(np.atleast_2d(self.training_points))
+        neighbors = knn.kneighbors(np.atleast_2d(pop), return_distance=False)
+
+        qoi_array = np.array([qoi[x] for x in np.squeeze(neighbors)])
+
+        # Compute the learning function at every point in the population.
+        u = np.square(np.squeeze(g) - qoi_array) + np.square(np.squeeze(sig))
+
+        if self.visualize:
+            # Plot the first term of the EIGF learning function at each of the points in the population.
+            fig = plt.figure()
+            ax = plt.axes()
+            im = ax.scatter(list(pop[:, 0]), list(pop[:, 1]), c=list(np.square(np.squeeze(g) - qoi_array)), s=10,
+                            vmin=0, vmax=2, cmap=plt.cm.jet)
+            fig.colorbar(im, ax=ax)
+            plt.savefig('./figures_akmcs/p3_' + str(i) + '.png')
+            plt.close(fig)
+
+        rows = np.argmax(u)
+
+        if self.visualize:
+            # Plot the learning function at each of the points in the population.
+            fig = plt.figure()
+            ax = plt.axes()
+            im = ax.scatter(list(pop[:, 0]), list(pop[:, 1]), c=list(np.squeeze(u)), s=10, vmin=0, vmax=2,
+                            cmap=plt.cm.jet)
+            plt.plot(pop[rows, 0], pop[rows, 1], 'ok')
+            fig.colorbar(im, ax=ax)
+            plt.savefig('./figures_akmcs/p4_' + str(i) + '.png')
+            plt.close(fig)
+
+        return rows
+
+    # This learning function has not yet been tested.
     def u(self, surr, pop):
         # U-function
         # References: B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining
@@ -1324,6 +1903,7 @@ class AKMCS:
         # print(g[rows])
         return pop[rows, :], indicator, g
 
+    # This learning function has not yet been tested.
     def weighted_u(self, surr, pop, a, p_, mp):
         # Probability Weighted U-function
         # References: V.S. Sundar and M.S. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH
@@ -1348,6 +1928,7 @@ class AKMCS:
         # print(g[rows])
         return pop[rows, :], indicator, g
 
+    # This learning function has not yet been tested.
     def eff(self, surr, pop):
         # Expected Feasibilty Function (EFF)
         # References: B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, "Efficient Global Reliability
@@ -1375,6 +1956,7 @@ class AKMCS:
 
         return pop[rows, :], indicator, g
 
+    # This learning function has not yet been tested.
     def eif(self, surr, pop, fm):
         # Expected Improvement Function (EIF)
         # References: D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box
@@ -1391,54 +1973,19 @@ class AKMCS:
 
         return rows
 
-    def eigf(self, surr, pop):
-        # Expected Improvement for Global Fit (EIGF)
-        # Refrence: J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
-        # Link: https://arxiv.org/pdf/1905.05345.pdf
-        if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
-            sig = np.sqrt(sig)
-        else:
-            g, sig = surr(pop, return_std=True)
-            sig = sig.reshape(sig.size, 1)
-        sig[sig == 0.] = 0.00001
 
-        t1 = np.tile(g, (self.DoE.shape[0], 1, 1))
-        t2 = np.swapaxes(np.tile(self.DoE, (g.shape[0], 1, 1)), 1, 0)
-
-        dis = np.linalg.norm(t1-t2, axis=2)
-        closest_point = np.argmin(dis, axis=0)
-        index = np.vstack([np.arange(g.shape[0]), closest_point]).T
-
-        m = np.tile(self.DoE, (g.shape[0], 1, 1))
-
-        u = (g - m[index[:, 0], index[:, 1], :])**2 + sig**2
-        rows = u[:, 0].argsort()[(np.size(g) - self.n_add):]
-
-        return rows
-
+    # Initial check for errors
     def init_akmcs(self):
-
-        if self.model is None:
-            raise NotImplementedError("Exit code: Model should be defined.")
-
-        if self.DoE is None and self.n_DoE is None:
-            raise NotImplementedError("Exit code: Define either 'doe' or 'n_doe'.")
 
         if type(self.lf).__name__ == 'function':
             self.lf = self.lf
-        elif self.lf in ['EFF', 'U', 'Weighted-U', 'EIF', 'EGIF']:
-            if self.lf in ['EFF', 'U', 'Weighted-U']:
-                self.analysis = 'Reliability'
-            else:
-                self.analysis = 'Sensitivity'
-
-            # self.lf = self.learning()
-        else:
-            raise NotImplementedError("Exit code: Doesn't recognize the active learning function.")
+        elif self.lf not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
+            raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
 
         if type(self.corr_model).__name__ != 'str':
             self.kriging = 'Sklearn'
+
+
 
 
 ########################################################################################################################

@@ -26,18 +26,126 @@ from scipy.special import gamma
 from scipy.stats import chi2, norm
 
 
-# This function is for parallel execution of a Python model
-
-def _run_parallel_python(model_script, model_object_name, sample):
+def _run_parallel_python(model_script, model_object_name, sample, *args):
     """
     Execute the python model in parallel
     :param sample: One sample point where the model has to be evaluated
     :return:
     """
+
     exec('from ' + model_script[:-3] + ' import ' + model_object_name)
-    par_res = eval(model_object_name + '(sample)')
+    # if kwargs is not None:
+    #     par_res = eval(model_object_name + '(sample, kwargs)')
+    # else:
+    if not args:
+        par_res = eval(model_object_name + '(sample)')
+    else:
+        par_res = eval(model_object_name + '(sample, args[0])')
+    # par_res = parallel_output
+    # if self.model_is_class:
+    #     par_res = parallel_output.qoi
+    # else:
+    #     par_res = parallel_output
 
     return par_res
+
+
+# def compute_Voronoi_volume(vertices):
+#
+#     from scipy.spatial import Delaunay
+#
+#     d = Delaunay(vertices)
+#     d_vol = np.zeros(np.size(vertices, 0))
+#     for i in range(d.nsimplex):
+#         d_verts = vertices[d.simplices[i]]
+#         d_vol[i] = compute_Delaunay_volume(d_verts)
+#
+#     volume = np.sum(d_vol)
+#     return volume
+
+
+def voronoi_unit_hypercube(samples):
+
+    from scipy.spatial import Voronoi, voronoi_plot_2d
+
+    # Mirror the samples in both low and high directions for each dimension
+    samples_center = samples
+    dimension = samples.shape[1]
+    for i in range(dimension):
+        samples_del = np.delete(samples_center, i, 1)
+        if i == 0:
+            points_temp1 = np.hstack([np.atleast_2d(-samples_center[:,i]).T, samples_del])
+            points_temp2 = np.hstack([np.atleast_2d(2-samples_center[:,i]).T, samples_del])
+        elif i == dimension-1:
+            points_temp1 = np.hstack([samples_del, np.atleast_2d(-samples_center[:, i]).T])
+            points_temp2 = np.hstack([samples_del, np.atleast_2d(2 - samples_center[:, i]).T])
+        else:
+            points_temp1 = np.hstack([samples_del[:,:i], np.atleast_2d(-samples_center[:, i]).T, samples_del[:,i:]])
+            points_temp2 = np.hstack([samples_del[:,:i], np.atleast_2d(2 - samples_center[:, i]).T, samples_del[:,i:]])
+        samples = np.append(samples, points_temp1, axis=0)
+        samples = np.append(samples, points_temp2, axis=0)
+
+    vor = Voronoi(samples, incremental=True)
+
+    eps = sys.float_info.epsilon
+    regions = [None]*samples_center.shape[0]
+
+    for i in range(samples_center.shape[0]):
+        regions[i] = vor.regions[vor.point_region[i]]
+
+    # for region in vor.regions:
+    #     flag = True
+    #     for index in region:
+    #         if index == -1:
+    #             flag = False
+    #             break
+    #         else:
+    #             for i in range(dimension):
+    #                 x = vor.vertices[index, i]
+    #                 if not (-eps <= x and x <= 1 + eps):
+    #                     flag = False
+    #                     break
+    #     if region != [] and flag:
+    #         regions.append(region)
+
+    vor.bounded_points = samples_center
+    vor.bounded_regions = regions
+
+    return vor
+
+
+
+def compute_Voronoi_centroid_volume(vertices):
+
+    from scipy.spatial import Delaunay, ConvexHull
+
+    T = Delaunay(vertices)
+    dimension = np.shape(vertices)[1]
+
+    w = np.zeros((T.nsimplex, 1))
+    cent = np.zeros((T.nsimplex, dimension))
+    for i in range(T.nsimplex):
+        ch = ConvexHull(T.points[T.simplices[i]])
+        w[i] = ch.volume
+        cent[i, :] = np.mean(T.points[T.simplices[i]], axis=0)
+    V = np.sum(w)
+    C = np.matmul(np.divide(w, V).T, cent)
+
+    return C, V
+
+def compute_Delaunay_centroid_volume(vertices):
+
+    from scipy.spatial import ConvexHull
+    import math
+
+    ch = ConvexHull(vertices)
+    volume = ch.volume
+    centroid = np.mean(vertices, axis=0)
+
+    # v1 = np.concatenate((np.ones([np.size(vertices, 0), 1]), vertices), 1)
+    # volume = (1 / math.factorial(np.size(vertices, 0) - 1)) * np.linalg.det(v1.T)
+
+    return centroid, volume
 
 
 def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
