@@ -162,6 +162,9 @@ class RunModel:
         else:
             self.python_command = "python3"
 
+        # Verbose option
+        self.verbose = verbose
+
         # Check if samples are provided
         if samples is None:
             raise ValueError('Samples must be provided as input to RunModel.')
@@ -171,8 +174,11 @@ class RunModel:
         else:
             raise ValueError("Samples must be passed as a list or numpy ndarray")
 
-        # Verbose option
-        self.verbose = verbose
+        # # Check if fixed params are passed in
+        # self.fixed_params = fixed_params
+        # if self.verbose:
+        #     if self.fixed_params is not None:
+        #         print('Fixed params passed in')
 
         # Format option
         self.fmt = fmt
@@ -412,6 +418,8 @@ class RunModel:
             exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
             if isinstance(self.samples, list):
                 sample_to_send = self.samples[i]
+                # if self.fixed_params is not None:
+                #     sample_to_send = sample_to_send.append(self.fixed_params)
             elif isinstance(self.samples, np.ndarray):
                 sample_to_send = self.samples[None, i]
             # self.model_output = eval(self.model_object_name + '(self.samples[i])')
@@ -540,6 +548,7 @@ class RunModel:
         # self.model_command = shlex.split(self.model_command_string)
         # subprocess.run(self.model_command)
 
+        print(self.model_command_string)
         subprocess.run(self.model_command_string, shell=True)
 
     def _output_parallel(self, index):
@@ -565,7 +574,10 @@ class RunModel:
         # TODO: deal with cases which have both var1 and var11
         new_text = template_text
         for j in range(len(var_names)):
-            string_regex = re.compile(r"<" + var_names[j] + r".*?>")
+            # string_regex = re.compile(r"<" + var_names[j] + r".*?>")
+            string_regex = re.compile(
+                r"<" + var_names[j] + r"[([{]*?>")  # This regex looks for ([{ immediately after variable name
+            # string_regex = re.compile(r"<" + var_names[j] + r"[[]*?>")
             count = 0
             for string in string_regex.findall(template_text):
                 # If the input file has specific formatting standards, this is where they can be added.
