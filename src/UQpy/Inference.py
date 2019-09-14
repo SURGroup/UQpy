@@ -40,7 +40,7 @@ class Model:
                  prior_error_copula_params=None,
                  model_object_name=None, input_template=None, var_names=None, output_script=None,
                  output_object_name=None, ntasks=1, cores_per_task=1, nodes=1, resume=False,
-                 model_dir=None, cluster=False, verbose=False,
+                 model_dir=None, cluster=False, verbose=False, log_likelihood=None, **kwargs
                  ):
 
         """
@@ -77,6 +77,14 @@ class Model:
 
             :param prior_copula_params: parameters of the copula of the prior, if necessary
             :param prior_copula_params: str
+
+            :param log_likelihood: name of log-likelihood function. Default is None. The log-likelihood function takes
+            the data, model prediction, and the corresponding model parameters as input. Any additional arguments can be
+            passed through the dictionary kwargs.
+            :type log_likelihood: function or None
+
+            :param kwargs: all additional keyword arguments for the log-likelihood function, if necessary
+            :type kwargs: dictionary
 
             :param model_object_name, input_template, var_names, output_script, output_object_name, ntasks,
                    cores_per_task, nodes, resume, verbose, model_dir, cluster: parameters of the python model, see
@@ -152,6 +160,11 @@ class Model:
         else:
             self.prior_error = None
 
+        # Define log likelihood
+        self.log_likelihood_function = log_likelihood
+        if self.log_likelihood_function is not None:
+            self.kwargs = kwargs
+
     def log_like(self, data, params, error_cov=None):
         """ Computes the log-likelihood of model
             inputs: data, ndarray of dimension (ndata, )
@@ -170,6 +183,7 @@ class Model:
             samples_with_fixed = np.concatenate((params, fixed), axis=1)
         else:
             samples_with_fixed = params
+
         if self.type == 'python':
             z = RunModel(samples=samples_with_fixed,
                          model_script=self.script, model_object_name=self.model_object_name,
@@ -181,7 +195,12 @@ class Model:
                 error_cov_value = self.error_covariance
             for i in range(samples_with_fixed.shape[0]):
                 mean = np.array(z.qoi_list[i]).reshape((-1,))
-                results[i] = multivariate_normal.logpdf(data, mean=mean, cov=error_cov_value)
+                if self.log_likelihood_function is None:
+                    results[i] = multivariate_normal.logpdf(data, mean=mean, cov=error_cov_value)
+                else:
+                    results[i] = self.log_likelihood_function(data=data, mean=mean, samples=params[i],
+                                                              **self.kwargs)
+
         elif self.type == 'pdf':
             for i in range(samples_with_fixed.shape[0]):
                 param_i = samples_with_fixed[i, :].reshape((-1,))
@@ -546,7 +565,6 @@ class BayesParameterEstimation:
         else:
             log_pdf_prior_error = self.model.prior_error.log_pdf(x=error_cov, params=self.model.prior_error_params,
                                                                  copula_params=self.model.prior_error_copula_params)
-
         return self.model.log_like(data=self.data, params=params, error_cov=error_cov) + \
                log_pdf_prior_params + log_pdf_prior_error
 
