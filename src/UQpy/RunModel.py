@@ -540,6 +540,7 @@ class RunModel:
         # self.model_command = shlex.split(self.model_command_string)
         # subprocess.run(self.model_command)
 
+        print(self.model_command_string)
         subprocess.run(self.model_command_string, shell=True)
 
     def _output_parallel(self, index):
