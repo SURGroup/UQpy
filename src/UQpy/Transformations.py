@@ -304,12 +304,16 @@ class InvNataf:
                 self.corr = self.corr_norm
             elif corr_norm is not None:
                 self.corr_norm = corr_norm
-                self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
+                if np.linalg.norm(self.corr_norm - np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
+                    self.corr = self.corr_norm.copy()
+                else:
+                    self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
 
             self.samples = np.zeros_like(self.samplesN01)
 
             self.samples, self.jacobian = transform_g_to_ng(self.corr_norm, self.distribution, self.dist_params,
                                                             self.samplesN01)
+            print()
 
         elif input_samples is None:
             if corr_norm is not None:
