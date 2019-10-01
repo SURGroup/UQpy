@@ -436,7 +436,7 @@ class InfoModelSelection:
 
 ########################################################################################################################
 ########################################################################################################################
-#                                  Bayesian Parameter estimation
+#                                  Inference Parameter estimation
 ########################################################################################################################
 
 class BayesParameterEstimation:
@@ -570,7 +570,7 @@ class BayesParameterEstimation:
 
 ########################################################################################################################
 ########################################################################################################################
-#                                  Bayesian Model Selection
+#                                  Inference Model Selection
 ########################################################################################################################
 
 
@@ -581,7 +581,7 @@ class BayesModelSelection:
                  nburn=None, seed=None, sorted_outputs=True, verbose=False):
 
         """
-            Perform model selection using Bayesian criteria.
+            Perform model selection using Inference criteria.
 
             Inputs:
 
@@ -660,7 +660,7 @@ class BayesModelSelection:
     def run_multi_bayes_ms(self):
 
         if self.verbose:
-            print('UQpy: Running Bayesian MS...')
+            print('UQpy: Running Inference MS...')
         # Initialize the evidence or marginal likelihood
         evi_value = np.zeros((len(self.candidate_models),))
         scaled_evi = np.zeros_like(evi_value)
@@ -691,7 +691,7 @@ class BayesModelSelection:
         sum_evi_value = np.sum(scaled_evi)
         model_prob = scaled_evi / sum_evi_value
         if self.verbose:
-            print('UQpy: Bayesian MS analysis completed!')
+            print('UQpy: Inference MS analysis completed!')
 
         return model_prob, evi_value, pe
 
