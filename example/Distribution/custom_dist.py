@@ -11,6 +11,6 @@ def icdf(x, params):
     return params[0]*(-np.log(1-x))**(1/params[1])
 
 def log_pdf(x, params):
-    return np.log(pdf(x,params))
+    return np.log(pdf(x, params))
 
 

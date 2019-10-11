@@ -84,53 +84,71 @@ class Distribution:
         if isinstance(self.dist_name, str):
             return SubDistribution(dist_name=self.dist_name).pdf(x, params)
         elif isinstance(self.dist_name, list):
+            if isinstance(x, list):
+                x = np.array(x)
+            flag_one_output = False
             if len(x.shape) == 1:
+                flag_one_output = True
                 x = x.reshape((1, -1))
             if (x.shape[1] != len(self.dist_name)) or (len(params) != len(self.dist_name)):
-                raise ValueError('UQpy error: Inconsistent dimensions')
+                raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
             prod_pdf = 1
             for i in range(len(self.dist_name)):
                 prod_pdf = prod_pdf * SubDistribution(self.dist_name[i]).pdf(x[:, i], params[i])
-            if self.copula is None:
-                return prod_pdf
-            else:
+            if self.copula is not None:
                 _, c = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
-                return prod_pdf * c
+                prod_pdf *= c
+            if flag_one_output:
+                return prod_pdf[0]
+            return prod_pdf
 
     def log_pdf(self, x, params, copula_params=None):
 
         if isinstance(self.dist_name, str):
             return SubDistribution(dist_name=self.dist_name).log_pdf(x, params)
         elif isinstance(self.dist_name, list):
+            if isinstance(x, list):
+                x = np.array(x)
+            flag_one_output = False
             if len(x.shape) == 1:
+                flag_one_output = True
                 x = x.reshape((1, -1))
             if (x.shape[1] != len(self.dist_name)) or (len(params) != len(self.dist_name)):
-                raise ValueError('UQpy error: Inconsistent dimensions')
+                raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
             sum_log_pdf = 0
             for i in range(len(self.dist_name)):
                 sum_log_pdf = sum_log_pdf + SubDistribution(self.dist_name[i]).log_pdf(x[:, i], params[i])
-            if self.copula is None:
-                return sum_log_pdf
-            else:
+            if self.copula is not None:
                 _, c = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
-                return sum_log_pdf + np.log(c)
+                sum_log_pdf += np.log(c)
+            if flag_one_output:
+                return sum_log_pdf[0]
+            return sum_log_pdf
 
     def cdf(self, x, params, copula_params=None):
 
         if isinstance(self.dist_name, str):
             return SubDistribution(dist_name=self.dist_name).cdf(x, params)
         elif isinstance(self.dist_name, list):
+            if isinstance(x, list):
+                x = np.array(x)
+            flag_one_output = False
             if len(x.shape) == 1:
+                flag_one_output = True
                 x = x.reshape((1, -1))
             if (x.shape[1] != len(self.dist_name)) or (len(params) != len(self.dist_name)):
-                raise ValueError('UQpy error: Inconsistent dimensions')
+                raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
             if self.copula is None:
                 cdfs = np.zeros_like(x)
                 for i in range(len(self.dist_name)):
                     cdfs[:, i] = SubDistribution(self.dist_name[i]).cdf(x[:, i], params[i])
+                if flag_one_output:
+                    return np.prod(cdfs, axis=1)[0]
                 return np.prod(cdfs, axis=1)
             else:
                 c, _ = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
+                if flag_one_output:
+                    return c[0]
                 return c
 
     def icdf(self, x, params):
@@ -138,15 +156,21 @@ class Distribution:
         if isinstance(self.dist_name, str):
             return SubDistribution(dist_name=self.dist_name).icdf(x, params)
         elif isinstance(self.dist_name, list):
+            if isinstance(x, list):
+                x = np.array(x)
+            flag_one_output = False
             if len(x.shape) == 1:
+                flag_one_output = True
                 x = x.reshape((1, -1))
             if (x.shape[1] != len(self.dist_name)) or (len(params) != len(self.dist_name)):
-                raise ValueError('UQpy error: Inconsistent dimensions')
+                raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
             if self.copula is None:
                 icdfs = []
                 for i in range(len(self.dist_name)):
                     icdfs.append(SubDistribution(self.dist_name[i]).icdf(x[:, i], params[i]))
-                return icdfs
+                if flag_one_output :
+                    return np.array(icdfs).T[0]
+                return np.array(icdfs).T
             else:
                 raise AttributeError('Method icdf not defined for distributions with copula.')
 
@@ -170,10 +194,12 @@ class Distribution:
         if isinstance(self.dist_name, str):
             return SubDistribution(dist_name=self.dist_name).fit(x)
         elif isinstance(self.dist_name, list):
+            if isinstance(x, list):
+                x = np.array(x)
             if len(x.shape) == 1:
-                x = x.reshape((1,-1))
+                x = x.reshape((1, -1))
             if x.shape[1] != len(self.dist_name):
-                raise ValueError('UQpy error: Inconsistent dimensions')
+                raise ValueError('Inconsistent dimensions in inputs dist_name and x.')
             if self.copula is None:
                 params_fit = []
                 for i in range(len(self.dist_name)):
