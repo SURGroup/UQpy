@@ -23,6 +23,7 @@ from scipy.stats import multivariate_normal
 from UQpy.RunModel import RunModel
 from scipy.optimize import minimize
 import warnings
+from .Utilities import check_input_dims
 warnings.filterwarnings("ignore")
 
 
@@ -34,28 +35,22 @@ warnings.filterwarnings("ignore")
 class InferenceModel:
     def __init__(self, n_params, run_model_object=None, log_likelihood=None, name='', error_covariance=1.0,
                  prior_name=None, prior_params=None, prior_copula=None, prior_copula_params=None,
-                 verbose=False, likelihood_compute_multiple=True, kwargs_likelihood={}, kwargs_run_model={}
+                 verbose=False, **kwargs_likelihood
                  ):
 
         """
         Define the model, either as a python script, or a probability model
 
         Inputs:
-            :param model_type: model type (python script or probability model)
-            :type model_type: str, 'python' or 'pdf'
-
-            :param model_name: name of the model, required only if model_type = 'pdf' (name of the distribution)
-            :type model_name: str
-
-            :param model_script: python script that encodes the model, required only if model_type = 'python'
-            :type model_script: str, format '< >.py'
-
             :param n_params: number of parameters to be estimated, required
             :type n_params: int
 
-            :param error_adapt: if set to True, the algorithm learns the covariance term,
-                   can only be used when model is defined as a python script
-            :type error_adapt: boolean
+            :param run_model_object: RunModel class object that defines the forward model h(param)
+            :type run_model_object: object of class RunModel or None
+
+            :param log_likelihood: name of log-likelihood function. Default is None. This function defines the
+            log-likelihood model, possibly in conjunction with the run_model_object.
+            :type log_likelihood: function or string or None
 
             :param error_covariance: covariance of the Gaussian error for model defined by a python script
             :type error_covariance: ndarray (full covariance matrix) or float (diagonal values)
@@ -72,27 +67,24 @@ class InferenceModel:
             :param prior_copula_params: parameters of the copula of the prior, if necessary
             :param prior_copula_params: str
 
-            :param log_likelihood: name of log-likelihood function. Default is None. The log-likelihood function takes
-            the data, model prediction, and the corresponding model parameters as input. Any additional arguments can be
-            passed through the dictionary kwargs.
-            :type log_likelihood: function or None
-
             :param kwargs: all additional keyword arguments for the log-likelihood function, if necessary
             :type kwargs: dictionary
 
-            :param model_object_name, input_template, var_names, output_script, output_object_name, ntasks,
-                   cores_per_task, nodes, resume, verbose, model_dir, cluster: parameters of the python model, see
-                   RunModel.py for explanations, required only if model_type == 'python'
-            :param model_object_name, input_template, var_names, output_script, output_object_name, ntasks,
-                   cores_per_task, nodes, resume, verbose, model_dir, cluster: see RunModel
-
         Output:
 
-            :return Model.log_like: function that computes the log likelihood, given some data and a parameter value
-            :rtype Model.log_like: method
+            :return Model.evaluate_log_likelihood: function that computes the log likelihood at various parameter
+            values, given some data
+            :rtype Model.evaluate_log_likelihood: callable
+
+            :return Model.evaluate_log_posterior: function that computes the scaled log posterior (log likelihood +
+            log prior) at various parameter values, given some data
+            :rtype Model.evaluate_log_posterior: callable
 
             :return Model.prior: probability distribution of the prior
             :rtype Model.prior: instance from Distribution class
+
+            :return Model.kwargs_prior: arguments necessary to call the log_pdf, pdf or rvs method of the prior
+            :rtype Model.kwargs_prior: dictionary
 
         """
         self.n_params = n_params
@@ -105,52 +97,16 @@ class InferenceModel:
 
         # The log-likelihood function will be defined via RunModel and / or the log_likelihood function - The following
         # lines define a function self.log_likelihood(data, model_output, params, **kwargs) for all cases.
-
-        # Case 1: RunModel object exists
-        if run_model_object is not None:
-            if not isinstance(run_model_object, RunModel):   # must be of class RunModel
-                raise TypeError('Input run_model_object should be an object of instance RunModel.')
-            self.run_model_object = run_model_object
-            self.kwargs_run_model = kwargs_run_model
-
-            # Case 1.a: Gaussian error inference model
-            if log_likelihood is None:
-                if not isinstance(error_covariance, (float, int, np.ndarray)):
-                    raise TypeError('Input error_covariance must be a float or 1D array or 2D array.')
-                self.tmp_log_likelihood = lambda data, model_output, params, **kwargs: multivariate_normal.logpdf(
-                    data, mean=np.array(model_output).reshape((-1, )), cov=error_covariance)
-                self.kwargs_likelihood = {}
-                self.likelihood_compute_multiple = False
-
-            # Case 1.b: likelihood model is provided by the user
-            else:
-                self.tmp_log_likelihood = log_likelihood
-                self.kwargs_likelihood = kwargs_likelihood
-                self.likelihood_compute_multiple = likelihood_compute_multiple
-
-        # Case 2: no RunModel object, the log_likelihood function will be fully defined by input log_likelihood
-        else:
-            self.run_model_object = None
-            self.kwargs_run_model = None
-            if log_likelihood is None:
-                raise ValueError('A run_model_object or a log_likelihood input must be provided by the user.')
-
-            # Case 2.a: self.log_likelihood is a string, defines a Distribution and use its log_pdf or pdf method
-            if isinstance(log_likelihood, str):
-                # Use either the log_pdf (preferred) or pdf method of Distribution()
-                self.tmp_log_likelihood = None
-                self.dist_log_likelihood = Distribution(log_likelihood)
-                self.kwargs_likelihood = kwargs_likelihood
-                self.likelihood_compute_multiple = False
-
-            # Case 2.b: self.log_likelihood is a callable, just use it as is
-            elif callable(log_likelihood):
-                self.tmp_log_likelihood = log_likelihood
-                self.kwargs_likelihood = kwargs_likelihood
-                self.likelihood_compute_multiple = likelihood_compute_multiple
-
-            else:
-                raise TypeError('Input log_likelihood (without RunModel object) must be a callable or a string.')
+        if (run_model_object is None) and (log_likelihood is None):
+            raise ValueError('A run_model_object or a log_likelihood input must be provided by the user.')
+        if (run_model_object is not None) and (not isinstance(run_model_object, RunModel)):
+            raise TypeError('Input run_model_object should be an object of instance RunModel.')
+        if (log_likelihood is not None) and (not isinstance(log_likelihood, str)) and (not callable(log_likelihood)):
+            raise TypeError('Input log_likelihood should be a string pointing to a Distribution or a callable.')
+        self.run_model_object = run_model_object
+        self.log_likelihood = log_likelihood
+        self.kwargs_likelihood = kwargs_likelihood
+        self.error_covariance = error_covariance
 
         # Define prior if it is given
         if prior_name is not None:
@@ -165,53 +121,49 @@ class InferenceModel:
                     params, ndarray of dimension (nsamples, n_params) or (n_params,)
             output: ndarray of size (nsamples, ), contains log likelihood of p(data | params[i,:])
         """
-        if isinstance(params, list):
-            params = np.array(params)
-        if not isinstance(params, np.ndarray):
-            raise TypeError('Input params should be an ndarray (preferred) or a list.')
-        flag_one_input = False
-        if len(params.shape) == 1:
-            flag_one_input = True
-            params = params.reshape((1, self.n_params))
+        params = check_input_dims(params)
         if params.shape[1] != self.n_params:
             raise ValueError('Wrong dimensions in params.')
 
-        # Case 1.
+        # Case 1 - Forward model is given by RunModel
         if self.run_model_object is not None:
-            self.run_model_object.run(samples=params, **self.kwargs_run_model)
+            self.run_model_object.run(samples=params)
             # TODO: review this when modification to RunModel is performed
             model_outputs = self.run_model_object.qoi_list[-params.shape[0]:]
-            if self.likelihood_compute_multiple:
-                results = self.tmp_log_likelihood(data=data, model_output=model_outputs, params=params,
-                                                  **self.kwargs_likelihood)
+            # Case 1.a: Gaussian error model
+            if self.log_likelihood is None:
+                results = np.array([multivariate_normal.logpdf(data, mean=np.array(outpt).reshape((-1,)),
+                                                               cov=self.error_covariance) for outpt in model_outputs])
+            # Case 1.b: likelihood is user-defined
             else:
-                results = np.array([self.tmp_log_likelihood(data=data, model_output=model_output_, params=params_,
-                                                            **self.kwargs_likelihood)
-                                    for (model_output_, params_) in zip(model_outputs, params)])
-        # Case 2.a
-        elif hasattr(self, 'dist_log_likelihood'):
+                results = self.log_likelihood(data=data, model_outputs=model_outputs, params=params,
+                                              **self.kwargs_likelihood)
+                if not isinstance(results, np.ndarray):
+                    results = np.array(results)
+                if results.shape != (params.shape[0],):
+                    raise ValueError('Likelihood function should output a (nsamples, ) nd array of likelihood values.')
+
+        # Case 2.a - Learn parameters of a probability distribution pi. Data consists in iid sampled from pi.
+        elif isinstance(self.log_likelihood, str):
+            pi_dist = Distribution(dist_name=self.log_likelihood)
             try:
-                results = [np.sum(self.dist_log_likelihood.log_pdf(x=data, params=params_, **self.kwargs_likelihood))
-                           for params_ in params]
+                results = np.array([np.sum(pi_dist.log_pdf(x=data, params=params_, **self.kwargs_likelihood))
+                                    for params_ in params])
             except AttributeError:
                 try:
-                    results = [
-                        np.sum(np.log(self.dist_log_likelihood.pdf(x=data, params=params_, **self.kwargs_likelihood)))
-                        for params_ in params]
+                    results = np.array([
+                        np.sum(np.log(pi_dist.pdf(x=data, params=params_, **self.kwargs_likelihood)))
+                        for params_ in params])
                 except AttributeError:
                     raise AttributeError('Input log_likelihood of InferenceModel provided as a string must point to a '
                                          'Distribution with an existing log_pdf or pdf method.')
-            results = np.array(results)
-
-        # Case 2.b
+        # Case 2.b - Log-likelihood fully user defined
         else:
-            if self.likelihood_compute_multiple:
-                results = self.tmp_log_likelihood(data=data, params=params, **self.kwargs_likelihood)
-            else:
-                results = np.array([self.tmp_log_likelihood(data=data, params=params_, **self.kwargs_likelihood)
-                                    for params_ in params])
-        if flag_one_input:
-            return results[0]
+            results = self.log_likelihood(data=data, params=params, **self.kwargs_likelihood)
+            if not isinstance(results, np.ndarray):
+                results = np.array(results)
+            if results.shape != (params.shape[0], ):
+                raise ValueError('Likelihood function should output a (nsamples, ) nd array of likelihood values.')
         return results
 
     def evaluate_log_posterior(self, data, params):
@@ -221,14 +173,7 @@ class InferenceModel:
             output: ndarray of size (nsamples, ), contains log likelihood of p(data | params[i,:])
         Note: if the Inference model does not possess a prior, an uninformatic prior p(params)=1 is assumed
         """
-        if isinstance(params, list):
-            params = np.array(params)
-        if not isinstance(params, np.ndarray):
-            raise TypeError('Input params should be an ndarray (preferred) or a list.')
-        flag_one_input = False
-        if len(params.shape) == 1:
-            flag_one_input = True
-            params = params.reshape((1, self.n_params))
+        params = check_input_dims(params)
         if params.shape[1] != self.n_params:
             raise ValueError('Wrong dimensions in params.')
 
@@ -245,8 +190,6 @@ class InferenceModel:
             except AttributeError:
                 raise AttributeError('The prior of InferenceModel must have a log_pdf or pdf method.')
         log_likelihood_eval = self.evaluate_log_likelihood(data=data, params=params)
-        if flag_one_input:
-            return (log_likelihood_eval + log_prior_eval)[0]
         return log_likelihood_eval + log_prior_eval
 
 
@@ -264,25 +207,23 @@ class MLEstimation:
         likelihood p(y|theta).
 
         Inputs:
-            :param model: the model
-            :type model: instance of class Model
+            :param model: the inference model
+            :type model: instance of class InferenceModel
 
             :param data: Available data
-            :type data: ndarray of size (ndata, )
+            :type data: ndarray of size (ndata, ) for case 1a or (ndata, dimension) for case 2a, or consistent with
+            definition of log_likelihood in the inference_model
 
             :param iter_optim: number of iterations for the maximization procedure
                 (each iteration starts at a random point)
             :type iter_optim: an integer >= 1, default 1
 
-            :param method_optim: method for optimization, see scipy.optimize.minimize
-            :type method_optim: str
-
-            :param bounds: bounds in each dimension
-            :type bounds: list (of length n_params) of lists (each of dimension 2)
+            :param kwargs: input arguments to scipy.optimize.minimize
+            :type kwargs: dictionary
 
         Output:
-            :return: MLEstimation.param: value of parameter vector that maximizes the likelihood
-            :rtype: MLEstimation.param: ndarray
+            :return: MLEstimation.mle: value of parameter vector that maximizes the likelihood
+            :rtype: MLEstimation.mle: ndarray (nparams, )
 
             :return: MLEstimation.max_log_like: value of the maximum likelihood
             :rtype: MLEstimation.max_log_like: float
@@ -298,11 +239,13 @@ class MLEstimation:
         self.kwargs_optim = kwargs
         self.verbose = verbose
 
-        # Case 2a
-        if hasattr(self.inference_model, 'dist_log_likelihood'):
+        # Case 2a: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization.
+        if isinstance(self.inference_model.log_likelihood, str):
+            pi_dist = Distribution(self.inference_model.log_likelihood)
             try:
-                param = np.array(self.inference_model.dist_log_likelihood.fit(self.data))
-                max_log_like = self.inference_model.evaluate_log_likelihood(data=self.data, params=param)
+                param = np.array(pi_dist.fit(self.data))
+                max_log_like = self.inference_model.evaluate_log_likelihood(
+                    data=self.data, params=param[np.newaxis, :])[0]
                 if verbose:
                     print('Evaluating maximum likelihood estimate for inference model ' + inference_model.name +
                           ', using fit method.')
@@ -315,7 +258,7 @@ class MLEstimation:
                 print('Evaluating maximum likelihood estimate for inference model ' + inference_model.name)
             param, max_log_like = self.run_optimization()
 
-        self.param = param
+        self.mle = param
         self.max_log_like = max_log_like
         if verbose:
             print('Max likelihood estimation completed.')
@@ -343,7 +286,7 @@ class MLEstimation:
         return param, max_log_like
 
     def evaluate_neg_log_likelihood_data(self, one_param):
-        return -1 * self.inference_model.evaluate_log_likelihood(data=self.data, params=one_param)
+        return -1 * self.inference_model.evaluate_log_likelihood(data=self.data, params=one_param.reshape((1, -1)))[0]
 
 
 ########################################################################################################################
@@ -361,17 +304,17 @@ class InfoModelSelection:
 
             Inputs:
 
-            :param candidate_models: Candidate models, must be a list of instances of class Model
+            :param candidate_models: Candidate models, must be a list of instances of class InferenceModel
             :type candidate_models: list
 
             :param data: Available data
             :type data: ndarray
 
-            :param criterion: Method to be used
+            :param criterion: Criterion to be used (AIC, BIC, AICc)
             :type criterion: str
 
-            :param method_optim, x0, iter_optim, bounds: inputs to the maximum likelihood estimator, for each model
-            :type method_optim, x0, iter_optim, bounds: lists of length len(candidate_models), see MLEstimation
+            :param kwargs: inputs to the maximum likelihood estimator, for each model
+            :type kwargs: dictionary, each value should be a list of length len(candidate_models)
 
             :param sorted_outputs: indicates if results are returned in sorted order, according to model
              probabilities
@@ -394,7 +337,6 @@ class InfoModelSelection:
 
         if not all(isinstance(value, (list, tuple)) for (key, value) in kwargs.items()) or not all(
             len(value) == len(candidate_models) for (key, value) in kwargs.items()):
-            print([(key, value) for (key, value) in kwargs.items()])
             raise TypeError('Extra inputs to model selection must be lists of length len(candidate_models)')
 
         # First evaluate ML estimate for all models
@@ -406,7 +348,7 @@ class InfoModelSelection:
             ml_estimator = MLEstimation(inference_model=inference_model, data=self.data, verbose=verbose,
                                         **kwargs_i,
                                         )
-            fitted_params.append(ml_estimator.param)
+            fitted_params.append(ml_estimator.mle)
             max_log_like = ml_estimator.max_log_like
 
             k = inference_model.n_params
@@ -435,7 +377,7 @@ class InfoModelSelection:
             sort_idx = list(range(len(candidate_models)))
         self.candidate_models = [candidate_models[i] for i in sort_idx]
         self.model_names = [model.name for model in self.candidate_models]
-        self.fitted_params = [fitted_params[i] for i in sort_idx]
+        self.mles = [fitted_params[i] for i in sort_idx]
         self.criterion_values = [criteria[i] for i in sort_idx]
         self.penalty_terms = [penalty_terms[i] for i in sort_idx]
         self.probabilities = [probabilities[i] for i in sort_idx]
@@ -455,7 +397,7 @@ class BayesParameterEstimation:
 
             Inputs:
 
-            :param inference_model: model, must be an instance of class Model
+            :param inference_model: model, must be an instance of class InferenceModel
             :type inference_model: list
 
             :param data: Available data
@@ -464,10 +406,8 @@ class BayesParameterEstimation:
             :param sampling_method: Method to be used
             :type sampling_method: str, 'MCMC' or 'IS'
 
-            :param pdf_proposal_type, pdf_proposal_scale, pdf_proposal, pdf_proposal_params, algorithm, jump, nsamples, nburn,
-             seed: inputs to the sampling method, see MCMC and IS
-            :type pdf_proposal_type, pdf_proposal_scale, pdf_proposal, pdf_proposal_params, algorithm, jump, nsamples, nburn,
-             seed: see MCMC and IS
+            :param kwargs: inputs to the sampling method, see MCMC and IS
+            :type kwargs: dictionary
 
             Outputs:
 
@@ -549,7 +489,7 @@ class BayesModelSelection:
 
             Inputs:
 
-                :param candidate_models: candidate models, must be a list of instances of class Model
+                :param candidate_models: candidate models, must be a list of instances of class InferenceModel
                 :type candidate_models: list
 
                 :param data: available data
@@ -558,10 +498,8 @@ class BayesModelSelection:
                 :param prior_probabilities: prior probabilities of each model
                 :type prior_probabilities: list of floats
 
-                :param pdf_proposal_type, pdf_proposal_scale, algorithm, jump, nsamples, nburn, seed:
-                inputs to the sampling method, see MCMC
-                :type pdf_proposal_type, pdf_proposal_scale, algorithm, jump, nsamples, nburn, seed:
-                see MCMC - must be lists of values, of len = len(candidate_models)
+                :param kwargs: inputs to the maximum likelihood estimator, for each model
+            :type kwargs: dictionary, each value should be a list of length len(candidate_models)
 
                 :param sorted_outputs: indicates if results are returned in sorted order, according to model
                  probabilities
