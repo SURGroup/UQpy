@@ -1093,3 +1093,15 @@ def suppress_stdout():
             yield
         finally:
             sys.stdout = old_stdout
+
+
+def check_input_dims(input):
+    if not isinstance(input, np.ndarray):
+        try:
+            input = np.array(input)
+        except:
+            raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
+    if len(input.shape) != 2:
+        raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
+    return input
+
