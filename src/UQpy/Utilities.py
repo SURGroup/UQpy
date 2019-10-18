@@ -1105,3 +1105,16 @@ def check_input_dims(input):
         raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
     return input
 
+
+def recursive_update_mean_covariance(n_new, new_sample, previous_mean, previous_covariance=None):
+    """ Iterative formula to compute a new mean, covariance based on previous ones and new sample. """
+    new_mean = (n_new - 1) / n_new * previous_mean + 1 / n_new * new_sample
+    if previous_covariance is None:
+        return new_mean
+    dim = new_sample.size
+    if n_new == 1:
+        new_covariance = np.zeros((dim, dim))
+    else:
+        delta_n = (new_sample - previous_mean).reshape((dim, 1))
+        new_covariance = (n_new - 2) / (n_new - 1) * previous_covariance + 1 / n_new * np.matmul(delta_n, delta_n.T)
+    return new_mean, new_covariance
