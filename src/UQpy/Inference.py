@@ -274,7 +274,7 @@ class MLEstimation:
                 x0 = bounds[:, 0].reshape((1, -1)) + (bounds[:, 1]-bounds[:, 0]).reshape((1,-1)) * x0
             self.kwargs_optim['x0'] = x0
         else:
-            self.kwargs_optim['x0'] = self.kwargs_optim['x0'].reshape((1,-1))
+            self.kwargs_optim['x0'] = self.kwargs_optim['x0'].reshape((1, -1))
 
         for i in range(self.iter_optim):
             res = minimize(self.evaluate_neg_log_likelihood_data, **self.kwargs_optim)
