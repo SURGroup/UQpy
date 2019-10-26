@@ -1095,15 +1095,15 @@ def suppress_stdout():
             sys.stdout = old_stdout
 
 
-def check_input_dims(input):
-    if not isinstance(input, np.ndarray):
+def check_input_dims(x):
+    if not isinstance(x, np.ndarray):
         try:
-            input = np.array(input)
+            x = np.array(x)
         except:
             raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
-    if len(input.shape) != 2:
+    if len(x.shape) != 2:
         raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
-    return input
+    return x
 
 
 def recursive_update_mean_covariance(n_new, new_sample, previous_mean, previous_covariance=None):

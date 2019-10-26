@@ -2729,7 +2729,9 @@ class MCMC_v2:
             # Compute evaluate_log_target: it will be a list
             log_target_marginals = []
             for j in range(self.dimension):
-                kwargs_j = dict([(key, value[j]) for (key, value) in self.pdf_target_kwargs.items()])
+                print(self.pdf_target_kwargs)
+                kwargs_j = dict([(key, value[j]) if value is not None else (key, None)
+                                 for (key, value) in self.pdf_target_kwargs.items()])
                 log_target_j = self.preprocess_target(x_tryout=self.seed[:, j, np.newaxis], **kwargs_j)
                 log_target_marginals.append(log_target_j)
             evaluate_log_target = log_target_marginals
@@ -2748,8 +2750,9 @@ class MCMC_v2:
 
         for j in range(self.dimension):   # for each dimension, create a dictionary that contains the type and scale
             # this dimension's proposal, will be easily accessed later on when sampling a new candidate
-            kwargs_j = dict([(key, value[j]) for (key, value) in self.algorithm_inputs.items()])
-            tmp_type, tmp_scale = self.preprocess_proposal(dim=1, **kwargs_j)
+            tmp_type, tmp_scale = self.preprocess_proposal(
+                dim=1, proposal_type=self.algorithm_inputs['proposal_type'][j],
+                proposal_scale=self.algorithm_inputs['proposal_scale'][j])
             self.algorithm_inputs['proposal_{}'.format(j)] = {'proposal_type': tmp_type, 'proposal_scale': tmp_scale}
 
         return evaluate_log_target
@@ -2758,7 +2761,8 @@ class MCMC_v2:
         # Loop over the samples
         if self.algorithm_inputs['pdf_target_type'] == 'marginal_pdf':
             # Evaluate the current log_pdf
-            current_log_p_marginals = [self.evaluate_log_target[j](current_state[:, j]) for j in range(self.dimension)]
+            current_log_p_marginals = [self.evaluate_log_target[j](current_state[:, j, np.newaxis])
+                                       for j in range(self.dimension)]
             for iter_nb in range(self.nsamples * self.jump - 1 + self.nburn):
                 # Sample candidate (independently in each dimension)
                 tmp_accept = 0.
@@ -2773,9 +2777,10 @@ class MCMC_v2:
                     for nc, (cand, log_p_cand, log_p_curr) in enumerate(zip(candidate_j, log_p_candidate_j,
                                                                             current_log_p_marginals[j])):
                         accept = np.log(np.random.random()) < log_p_cand - log_p_curr
+                        print(accept)
                         if accept:
                             current_state[nc, j] = cand
-                            current_log_p_marginals[j] = log_p_cand
+                            current_log_p_marginals[j][nc] = log_p_cand
                             tmp_accept += 1. / self.dimension
 
                 # Save the current state if needed
@@ -2793,7 +2798,7 @@ class MCMC_v2:
                 for j in range(self.dimension):
                     candidate_j = self.sample_candidate_from_proposal(
                         current_state[:, j, np.newaxis], **self.algorithm_inputs['proposal_{}'.format(j)])
-                    candidate[:, j] = candidate_j
+                    candidate[:, j] = candidate_j[:, 0]
 
                     # Compute log_pdf_target of candidate sample
                     log_p_candidate = self.evaluate_log_target(candidate)
@@ -2804,7 +2809,7 @@ class MCMC_v2:
                         accept = np.log(np.random.random()) < log_p_cand - log_p_curr
                         if accept:
                             current_state[nc, j] = cand
-                            current_log_pdf[nc] = log_p_candidate
+                            current_log_pdf[nc] = log_p_cand
                             tmp_accept += 1. / self.dimension
                         else:
                             candidate[:, j] = current_state[:, j]
