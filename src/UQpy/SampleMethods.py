@@ -2587,18 +2587,17 @@ class MCMC_v2:
         self.concat_chains_ = concat_chains_
         self.verbose = verbose
 
-        # Do algorithm dependent initialization: this function should output the number of chains and a function that
-        # allows evaluation of the log target. It also updates self.algorithm_inputs if needed (set defaults...)
+        # Do algorithm dependent initialization
         if algorithm.lower() == 'mh':
             self.evaluate_log_target = self.init_mh()
         elif algorithm.lower() == 'mmh':
             self.evaluate_log_target = self.init_mmh()
         elif algorithm.lower() == 'stretch':
             self.evaluate_log_target = self.init_stretch()
-        elif algorithm.lower() == 'demc':
-            self.evaluate_log_target = self.init_demc()
         elif algorithm.lower() == 'dram':
             self.evaluate_log_target = self.init_dram()
+        elif algorithm.lower() == 'dream':
+            self.evaluate_log_target = self.init_dream()
         else:
             raise NotImplementedError('MCMC algorithms currently supported in UQpy are: MH, MMH, Stretch, DEMC, DRAM.')
 
@@ -2639,8 +2638,8 @@ class MCMC_v2:
             self.run_stretch(current_state)
         elif self.algorithm.lower() == 'dram':
             self.run_dram(current_state)
-        elif self.algorithm.lower() == 'demc':
-            self.run_demc(current_state)
+        elif self.algorithm.lower() == 'dream':
+            self.run_dream(current_state)
         else:
             warnings.warn('This algorithm is not (yet!) supported.')
 
@@ -2657,7 +2656,7 @@ class MCMC_v2:
     def init_mh(self):
         """ Perform some checks and initialize the MH algorithm """
 
-        # Initialize the target pdf: evaluate_log_target is a function that evaluates log_pdf_target(x) for a given x
+        # Initialize the log_pdf_target: it is now a function that evaluates log_pdf_target(x) for a given x
         evaluate_log_target = self.preprocess_target(x_tryout=self.seed, **self.pdf_target_kwargs)
 
         # Check MH algorithm inputs: proposal_type and proposal_scale
@@ -2729,7 +2728,6 @@ class MCMC_v2:
             # Compute evaluate_log_target: it will be a list
             log_target_marginals = []
             for j in range(self.dimension):
-                print(self.pdf_target_kwargs)
                 kwargs_j = dict([(key, value[j]) if value is not None else (key, None)
                                  for (key, value) in self.pdf_target_kwargs.items()])
                 log_target_j = self.preprocess_target(x_tryout=self.seed[:, j, np.newaxis], **kwargs_j)
@@ -2754,7 +2752,6 @@ class MCMC_v2:
                 dim=1, proposal_type=self.algorithm_inputs['proposal_type'][j],
                 proposal_scale=self.algorithm_inputs['proposal_scale'][j])
             self.algorithm_inputs['proposal_{}'.format(j)] = {'proposal_type': tmp_type, 'proposal_scale': tmp_scale}
-
         return evaluate_log_target
 
     def run_mmh(self, current_state):
@@ -2777,7 +2774,6 @@ class MCMC_v2:
                     for nc, (cand, log_p_cand, log_p_curr) in enumerate(zip(candidate_j, log_p_candidate_j,
                                                                             current_log_p_marginals[j])):
                         accept = np.log(np.random.random()) < log_p_cand - log_p_curr
-                        print(accept)
                         if accept:
                             current_state[nc, j] = cand
                             current_log_p_marginals[j][nc] = log_p_cand
@@ -2881,65 +2877,6 @@ class MCMC_v2:
         return None
 
     ####################################################################################################################
-    # Functions for DE-MC algorithm
-    def init_demc(self):
-        """ Perform some checks and initialize the DE-MC algorithm """
-
-        # Check nb of chains
-        if self.nchains < 2:
-            raise ValueError('For the DE-MC algorithm, a seed must be provided with at least two samples.')
-        if self.nchains < self.dimension:
-            warnings.warn('It is not advisable to run DE-MC with less than d chains.')
-
-        # Initialize the log_pdf_target: it is now a function that evaluates log_pdf_target(x) for a given x
-        evaluate_log_target = self.preprocess_target(x_tryout=self.seed, **self.pdf_target_kwargs)
-
-        # For DE-MC, algorithms_inputs is only gamma parameter
-        for key in self.algorithm_inputs.keys():
-            if key not in ['gamma']:
-                warnings.warn('Input ' + key + ' not used in DE-MC algorithm (used inputs are "gamma").')
-        if 'gamma' not in self.algorithm_inputs.keys():
-            self.algorithm_inputs['gamma'] = 2.38 / np.sqrt(2 * self.dimension)
-        elif not isinstance(self.algorithm_inputs['gamma'], (float, int)):
-            raise TypeError('DEMC algo parameter gamma should be a float or integer.')
-        return evaluate_log_target
-
-    def run_demc(self, current_state):
-        # Initialize some variables
-        gamma_rwm = self.algorithm_inputs['gamma']
-        R = np.array([np.setdiff1d(np.arange(self.nchains), j) for j in range(self.nchains)])
-
-        # Evaluate the current log_pdf and initialize acceptance ratio
-        current_log_pdf = self.evaluate_log_target(current_state)
-
-        # dynamic part: evolution of chains
-        for iter_nb in range(self.nsamples * self.jump - 1 + self.nburn):
-
-            # Sample candidates: allow jumping from one chain to another
-            draw = np.argsort(np.random.rand(self.nchains - 1, self.nchains), axis=0)
-            g = np.random.choice([gamma_rwm, 1.], size=1, replace=True, p=[0.9, 0.1])
-            as_ = [R[j, draw[0, j]] for j in range(self.nchains)]
-            bs_ = [R[j, draw[1, j]] for j in range(self.nchains)]
-
-            candidates = current_state + g * (current_state[as_, :] - current_state[bs_, :]) + \
-                         1e-6 * np.random.normal(size=(self.nchains, self.dimension))
-
-            # Evaluate log likelihood of candidates
-            logp_candidates = self.evaluate_log_target(candidates)
-
-            # Accept or reject
-            for nc, (lpc, candidate, log_p_curr) in enumerate(zip(logp_candidates, candidates, current_log_pdf)):
-                accept = np.log(np.random.random()) < lpc - log_p_curr
-                if accept:
-                    current_state[nc, :] = candidate
-                    current_log_pdf[nc] = lpc
-                self.update_accept_ratio(iter_nb, nc, float(accept))
-
-            # Save the current state if needed
-            self.update_samples(iter_nb, current_state, current_log_pdf)
-        return None
-
-    ####################################################################################################################
     # Functions from DRAM algorithm
     def init_dram(self):
         """ Perform some checks and initialize the DRAM algorithm """
@@ -3029,6 +2966,101 @@ class MCMC_v2:
         return None
 
     ####################################################################################################################
+    # Functions for DREAM algorithm
+    def init_dream(self):
+        """ Perform some checks and initialize the DREAM algorithm """
+
+        # Check nb of chains
+        if self.nchains < 2:
+            raise ValueError('For the DREAM algorithm, a seed must be provided with at least two samples.')
+
+        # Initialize the log_pdf_target: it is now a function that evaluates log_pdf_target(x) for a given x
+        evaluate_log_target = self.preprocess_target(x_tryout=self.seed, **self.pdf_target_kwargs)
+
+        # The algorithm inputs are: jump rate gamma - default is 3, c and c_star are parameters involved in the
+        # differential evolution part of the algorithm - c_star should be small compared to the width of the target,
+        # n_CR is the number of crossover probabilities - default 3, and p_g: prob(gamma=1) - default is 0.2
+        names = ['delta', 'c', 'c_star', 'n_CR', 'p_g']
+        defaults = [3, 0.1, 1e-6, 3, 0.2]
+        types = [int, (float, int), (float, int), int, float]
+        for key in self.algorithm_inputs.keys():
+            if key not in names:
+                warnings.warn(
+                    'Input ' + key + ' not used in DE-MC algorithm (used inputs are "delta", "c", "c_star", '
+                                     '"n_CR", "p_g").')
+        for key, default_value, typ in zip(names, defaults, types):
+            if key not in self.algorithm_inputs.keys():
+                self.algorithm_inputs[key] = default_value
+            if not isinstance(self.algorithm_inputs[key], typ):
+                raise TypeError('Wrong type for input ' + key)
+        if self.algorithm_inputs['n_CR'] > self.dimension:
+            self.algorithm_inputs['n_CR'] = self.dimension
+        return evaluate_log_target
+
+    def run_dream(self, current_state):
+        # Initialize some variables
+        delta, c, c_star, n_CR, p_g = self.algorithm_inputs['delta'], self.algorithm_inputs['c'], \
+                                      self.algorithm_inputs['c_star'], self.algorithm_inputs['n_CR'], \
+                                      self.algorithm_inputs['p_g']
+        J, n_id = np.zeros((n_CR,)), np.zeros((n_CR,))
+        R = np.array([np.setdiff1d(np.arange(self.nchains), j) for j in range(self.nchains)])
+        CR = np.arange(1, n_CR + 1) / n_CR
+        pCR = np.ones((n_CR,)) / n_CR
+
+        # Evaluate the current log_pdf and initialize acceptance ratio
+        current_log_pdf = self.evaluate_log_target(current_state)
+
+        # dynamic part: evolution of chains
+        for iter_nb in range(self.nsamples * self.jump - 1 + self.nburn):
+
+            draw = np.argsort(np.random.rand(self.nchains - 1, self.nchains), axis=0)
+            dX = np.zeros_like(current_state)
+            lmda = np.random.uniform(low=-c, high=c, size=(self.nchains,))
+            std_x_tmp = np.std(current_state, axis=0)
+
+            D = np.random.choice(delta, size=(self.nchains,), replace=True)
+            as_ = [R[j, draw[slice(D[j]), j]] for j in range(self.nchains)]
+            bs_ = [R[j, draw[slice(D[j], 2 * D[j], 1), j]] for j in range(self.nchains)]
+            id = np.random.choice(n_CR, size=(self.nchains, ), replace=True, p=pCR)
+            z = np.random.rand(self.nchains, self.dimension)
+            A = [np.where(z_j < CR[id_j])[0] for (z_j, id_j) in zip(z, id)]  # subset A of selected dimensions
+            d_star = np.array([len(A_j) for A_j in A])
+            for j in range(self.nchains):
+                if d_star[j] == 0:
+                    A[j] = np.array([np.argmin(z[j])])
+                    d_star[j] = 1
+            gamma_d = 2.38 / np.sqrt(2 * (D + 1) * d_star)
+            g = [np.random.choice([gamma_d[j], 1], size=1, replace=True, p=[1 - p_g, p_g]) for j in range(self.nchains)]
+            for j in range(self.nchains):
+                for i in A[j]:
+                    dX[j, i] = c_star * np.random.randn() + \
+                               (1 + lmda[j]) * g[j] * np.sum(current_state[as_[j], i] - current_state[bs_[j], i])
+            candidates = current_state + dX
+
+            # Evaluate log likelihood of candidates
+            logp_candidates = self.evaluate_log_target(candidates)
+
+            # Accept or reject
+            for nc, (lpc, candidate, log_p_curr) in enumerate(zip(logp_candidates, candidates, current_log_pdf)):
+                accept = np.log(np.random.random()) < lpc - log_p_curr
+                if accept:
+                    current_state[nc, :] = candidate
+                    current_log_pdf[nc] = lpc
+                else:
+                    dX[nc, :] = 0
+                J[id[nc]] = J[id[nc]] + np.sum((dX[nc, :] / std_x_tmp) ** 2)
+                n_id[id[nc]] += 1
+                self.update_accept_ratio(iter_nb, nc, float(accept))
+
+            if iter_nb < self.nburn:  # update selection cross prob during burn-in
+                pCR = J / n_id
+                pCR /= sum(pCR)
+
+            # Save the current state if needed
+            self.update_samples(iter_nb, current_state, current_log_pdf)
+        return None
+
+    ####################################################################################################################
     # Helper functions that can be used by all algorithms
     # Methods update_samples, update_accept_ratio and sample_candidate_from_proposal can be called in the run stage.
     # Methods preprocess_target, preprocess_proposal, check_seed and check_integers can be called in the init stage.
@@ -3086,11 +3118,13 @@ class MCMC_v2:
     def preprocess_target(x_tryout, log_pdf, pdf, copula, params, copula_params):
         """ This function transforms the log_pdf, pdf, copula, params and copula_params inputs into a function that
         evaluates log_pdf_target(x) for a given x. preprocess target should be used in the init stage. """
+        dim = x_tryout.shape[-1]
         kwargs = dict([(key, val) for (key, val) in zip(['params', 'copula_params'], [params, copula_params])
                        if val is not None])   # this contains params and copula_params if they exist
+        # log_pdf is provided
         if log_pdf is not None:
-            if isinstance(log_pdf, str) or (isinstance(log_pdf, list) and all(isinstance(log_pdf_, str)
-                                                                              for log_pdf_ in log_pdf)):
+            if isinstance(log_pdf, str) or (isinstance(log_pdf, list) and
+                                            all(isinstance(log_pdf_, str) for log_pdf_ in log_pdf)):
                 p = Distribution(dist_name=log_pdf, copula=copula)
                 try:
                     p.log_pdf(x=x_tryout, **kwargs)
@@ -3101,11 +3135,16 @@ class MCMC_v2:
                     evaluate_log_pdf = (lambda x: p.log_pdf(x, **kwargs))
             elif callable(log_pdf):
                 evaluate_log_pdf = (lambda x: log_pdf(x, **kwargs))
+            elif isinstance(log_pdf, list) and all(callable(log_pdf_) for log_pdf_ in log_pdf):
+                kwargs_marg = [{'params': params_j} if params is not None else {} for params_j in params]
+                evaluate_log_pdf = (lambda x: np.sum([log_pdf[j](x[:, j, np.newaxis], **kwargs_marg[j])
+                                                      for j in range(dim)]))
             else:
-                raise ValueError('log_pdf_target should be a callable or string.')
-        else:
+                raise ValueError('log_pdf_target should be a (list of) callable(s) or string(s).')
+        # pdf is provided
+        elif pdf is not None:
             if isinstance(pdf, str) or (isinstance(pdf, list) and all(isinstance(pdf_, str) for pdf_ in pdf)):
-                p = Distribution(dist_name=pdf, copula=copula)
+                p = Distribution(dist_name=pdf, copula=copula)     # provided as a (list of) string(s)
                 try:
                     p.pdf(x=x_tryout, **kwargs)
                 except AttributeError:
@@ -3113,11 +3152,19 @@ class MCMC_v2:
                 else:
                     evaluate_log_pdf = (lambda x: np.log(np.maximum(p.pdf(x, **kwargs),
                                                                     10 ** (-320) * np.ones((x_tryout.shape[0], )))))
-            elif callable(pdf):
+            elif callable(pdf):    # provided as a callable
                 evaluate_log_pdf = (lambda x: np.log(np.maximum(pdf(x, **kwargs),
                                                                 10 ** (-320) * np.ones((x_tryout.shape[0], )))))
+            elif isinstance(pdf, list) and all(callable(pdf_) for pdf_ in pdf):
+                # This is a case only allowed for certain algorithms such as MMH
+                kwargs_marg = [{'params': params_j} if params is not None else {} for params_j in params]
+                evaluate_log_pdf = (lambda x: np.sum([np.log(np.maximum(pdf[j](x[:, j, np.newaxis], **kwargs_marg[j]),
+                                                                        10 ** (-320) * np.ones((x_tryout.shape[0], ))))
+                                                      for j in range(dim)]))
             else:
-                raise ValueError('pdf_target should be a callable or string.')
+                raise ValueError('pdf_target should be a (list of) callable(s) or string(s).')
+        else:
+            raise ValueError('log_pdf_target or pdf_target should be provided.')
         return evaluate_log_pdf
 
     @staticmethod
@@ -3238,119 +3285,132 @@ class IS:
     # Authors: Audrey Olivier, Dimitris G.Giovanis
     # Last Modified: 10/2019 by Audrey Olivier
 
-    def __init__(self, nsamples, pdf_proposal=None, pdf_proposal_params=None, pdf_target=None, log_pdf_target=None,
-                 pdf_target_params=None, pdf_target_copula=None, pdf_target_copula_params=None
+    def __init__(self, nsamples=None, pdf_target=None, log_pdf_target=None, pdf_target_params=None,
+                 pdf_target_copula=None, pdf_target_copula_params=None, pdf_proposal_name=None, pdf_proposal_params=None
                  ):
 
-        self.nsamples = nsamples
-        self.pdf_proposal = pdf_proposal
+        # Initialize proposal and target: create sample_from_proposal, evaluate_log_proposal and evaluate_log_target
+        self.pdf_proposal = pdf_proposal_name
         self.pdf_proposal_params = pdf_proposal_params
-        self.pdf_target = pdf_target
-        self.log_pdf_target = log_pdf_target
-        self.pdf_target_params = pdf_target_params
-        self.pdf_target_copula = pdf_target_copula
-        self.pdf_target_copula_params = pdf_target_copula_params
+        self.dimension, self.sample_from_proposal, self.evaluate_log_proposal = self.preprocess_proposal(
+            pdf_name=pdf_proposal_name, params=pdf_proposal_params)
+        self.evaluate_log_target = self.preprocess_target(
+            self.dimension, log_pdf=log_pdf_target, pdf=pdf_target, copula=pdf_target_copula, params=pdf_target_params,
+            copula_params=pdf_target_copula_params)
 
-        self.init_is()
+        # Initialize the samples and weights
+        self.samples = None
+        self.unnormalized_log_weights = None
+        self.weights = None
 
-        # Step 1: sample from proposal
-        self.samples = self.sampling_step()
-        # Step 2: weight samples
-        self.unnormalized_log_weights, self.weights = self.weighting_step()
+        # Run IS if nsamples is provided
+        self.nsamples = nsamples
+        if nsamples is not None and nsamples != 0:
+            self.run(nsamples)
 
-    def sampling_step(self):
+    def run(self, nsamples):
+        """ Perform IS """
 
-        proposal_pdf_ = Distribution(dist_name=self.pdf_proposal)
-        samples = proposal_pdf_.rvs(params=self.pdf_proposal_params, nsamples=self.nsamples)
-        return samples
+        # Sample from proposal
+        new_samples = self.sample_from_proposal(nsamples)
+        # Compute un-scaled weights of new samples
+        new_log_weights = self.evaluate_log_target(new_samples) - self.evaluate_log_proposal(new_samples)
 
-    def weighting_step(self):
+        # Save samples and weights (append to existing if necessary)
+        if self.samples is None:
+            self.samples = new_samples
+            self.unnormalized_log_weights = new_log_weights
+        else:
+            self.samples = np.concatenate([self.samples, new_samples], axis=0)
+            self.unnormalized_log_weights = np.concatenate([self.unnormalized_log_weights, new_log_weights], axis=0)
 
-        x = self.samples
-        # evaluate qs (log_pdf_proposal)
-        proposal_pdf_ = Distribution(dist_name=self.pdf_proposal)
-        try:
-            log_qs = proposal_pdf_.log_pdf(x, params=self.pdf_proposal_params)
-        except AttributeError:
-            log_qs = np.log(proposal_pdf_.pdf(x, params=self.pdf_proposal_params))
-        # evaluate ps (log_pdf_target)
-        log_ps = self.log_pdf_target(x)
-
-        log_weights = log_ps-log_qs
-        # this rescale is used to avoid having NaN of Inf when taking the exp
-        weights = np.exp(log_weights - max(log_weights))
+        # Take the exponential and normalize the weights
+        weights = np.exp(self.unnormalized_log_weights - max(self.unnormalized_log_weights))
+        # note: scaling with max avoids having NaN of Inf when taking the exp
         sum_w = np.sum(weights, axis=0)
-        return log_weights, weights/sum_w
+        self.weights = weights / sum_w
 
     def resample(self, method='multinomial', size=None):
+        """ Resample: create a set of un-weighted samples from a set of weighted samples """
         from .Utilities import resample
         return resample(self.samples, self.weights, method=method, size=size)
 
-    ################################################################################################################
-    # Initialize Importance Sampling.
-
-    def init_is(self):
-
-        # Check nsamples
-        if self.nsamples is None:
-            raise NotImplementedError('Exit code: Number of samples is not defined.')
-
-        # helper function
-        def compute_log_pdf(x, pdf_func, params, copula_params):
-            kwargs_ = {}
-            if params is not None:
-                kwargs_['params'] = params
-            if copula_params is not None:
-                kwargs_['copula_params'] = copula_params
-            tmp = pdf_func(x, **kwargs_)
-            pdf_value = np.fmax(tmp, 10 ** (-320)*np.ones_like(tmp))
-            return np.log(pdf_value)
-        # Check log_pdf_target, pdf_target
-        if (self.pdf_target is None) and (self.log_pdf_target is None):
-            raise ValueError('UQpy error: a target pdf must be defined (pdf_target or log_pdf_target).')
-        # The code first checks if log_pdf_target is defined, if yes, no need to check pdf_target
-        x_test = Distribution(dist_name=self.pdf_proposal).rvs(params=self.pdf_proposal_params, nsamples=1)
-        kwargs = {}
-        if self.pdf_target_params is not None:
-            kwargs['params'] = self.pdf_target_params
-        if self.pdf_target_copula_params is not None:
-            kwargs['copula_params'] = self.pdf_target_copula_params
-        if self.log_pdf_target is not None:
-            # log_pdf_target can be defined as a callable or string.
-            if isinstance(self.log_pdf_target, str) or (isinstance(self.log_pdf_target, list) and
-                                                        isinstance(self.log_pdf_target[0], str)):
-                p = Distribution(dist_name=self.log_pdf_target, copula=self.pdf_target_copula)
+    @staticmethod
+    def preprocess_target(dim, log_pdf, pdf, copula, params, copula_params):
+        """ This function transforms the log_pdf, pdf, copula, params and copula_params inputs into a function that
+        evaluates log_pdf_target(x) for a given x. preprocess target should be used in the init stage. """
+        x_tryout = np.zeros((2, dim))
+        kwargs = dict([(key, val) for (key, val) in zip(['params', 'copula_params'], [params, copula_params])
+                       if val is not None])  # this contains params and copula_params if they exist
+        # log_pdf is provided
+        if log_pdf is not None:
+            if isinstance(log_pdf, str) or (isinstance(log_pdf, list) and
+                                            all(isinstance(log_pdf_, str) for log_pdf_ in log_pdf)):
+                p = Distribution(dist_name=log_pdf, copula=copula)
                 try:
-                    p.log_pdf(x=x_test, **kwargs)
-                    self.log_pdf_target = partial(p.log_pdf, **kwargs)
+                    p.log_pdf(x=x_tryout, **kwargs)
                 except AttributeError:
-                    raise AttributeError('log_pdf_target given as a string must point to a Distribution '
-                                         'with an existing log_pdf method.')
-            elif callable(self.log_pdf_target):
-                self.log_pdf_target = partial(self.log_pdf_target, **kwargs)
+                    raise AttributeError('log_pdf_target should point to a Distribution with an existing log_pdf '
+                                         'method.')
+                else:
+                    evaluate_log_pdf = (lambda x: p.log_pdf(x, **kwargs))
+            elif callable(log_pdf):
+                evaluate_log_pdf = (lambda x: log_pdf(x, **kwargs))
             else:
-                raise ValueError('log_pdf_target should be a callable or a string/list of strings.')
+                raise ValueError('log_pdf_target should be a callable or a (list of) string(s).')
+        # pdf is provided
+        elif pdf is not None:
+            if isinstance(pdf, list):  # if provided as a list, check the dimensions
+                if len(pdf) != dim:
+                    raise ValueError('pdf as a list should be of length dimension')
+                if params is not None and (not isinstance(params, list) or len(params) != dim):
+                    raise ValueError('For pdf given as a list, params should be a list of length dimension')
+            if isinstance(pdf, str) or (isinstance(pdf, list) and all(isinstance(pdf_, str) for pdf_ in pdf)):
+                p = Distribution(dist_name=pdf, copula=copula)  # provided as a (list of) string(s)
+                try:
+                    p.pdf(x=x_tryout, **kwargs)
+                except AttributeError:
+                    raise AttributeError('pdf_target should point to a Distribution with an existing pdf method.')
+                else:
+                    evaluate_log_pdf = (lambda x: np.log(np.maximum(p.pdf(x, **kwargs),
+                                                                    10 ** (-320) * np.ones((x.shape[0],)))))
+            elif callable(pdf):  # provided as a callable
+                evaluate_log_pdf = (lambda x: np.log(np.maximum(pdf(x, **kwargs),
+                                                                10 ** (-320) * np.ones((x.shape[0],)))))
+            else:
+                raise ValueError('pdf_target should be a callable or a (list of) string(s).')
         else:
-            # pdf_target can be a str of list of strings, then compute the log_pdf
-            if isinstance(self.pdf_target, str) or (isinstance(self.pdf_target, list) and
-                                                    isinstance(self.pdf_target[0], str)):
-                p = Distribution(dist_name=self.pdf_target, copula=self.pdf_target_copula)
-                try:
-                    p.pdf(x=x_test, **kwargs)
-                    self.log_pdf_target = partial(compute_log_pdf, pdf_func=p.pdf, **kwargs)
-                except AttributeError:
-                    raise AttributeError('pdf_target given as a string must point to a Distribution '
-                                         'with an existing pdf method.')
-            # otherwise it may be a function that computes the pdf, then just take the logarithm
-            elif callable(self.pdf_target):
-                self.log_pdf_target = partial(compute_log_pdf, pdf_func=self.pdf_target, **kwargs)
-            else:
-                raise ValueError('pdf_target should be a callable or a string/list of strings.')
+            raise ValueError('log_pdf_target or pdf_target should be provided.')
+        return evaluate_log_pdf
 
-        # Check pdf_proposal_name
-        if self.pdf_proposal is None:
-            raise ValueError('Exit code: A proposal distribution is required.')
-        # can be given as a name or a list of names, transform it to a distribution class
-        if not isinstance(self.pdf_proposal, str) and not (isinstance(self.pdf_proposal, list)
-           and isinstance(self.pdf_proposal[0], str)):
-            raise ValueError('UQpy error: proposal pdf must be given as a str or a list of str')
+    @staticmethod
+    def preprocess_proposal(pdf_name, params):
+        """ This function transforms the log_pdf, pdf, copula, params and copula_params inputs into a function that
+        evaluates log_pdf_target(x) for a given x. preprocess target should be used in the init stage. """
+        kwargs = {}
+        if params is not None:
+            kwargs = {'params': params}
+        p = Distribution(dist_name=pdf_name)  # provided as a (list of) string(s)
+        # Check the rvs method
+        try:
+            p.rvs(**kwargs, nsamples=1)
+        except AttributeError:
+            raise ValueError('The proposal Distribution should have an rvs method.')
+        else:
+            x_tryout = p.rvs(**kwargs, nsamples=2)
+            dim = x_tryout.shape[-1]
+            sample_from_proposal = (lambda n: p.rvs(nsamples=n, **kwargs))
+        # Check log_pdf or pdf method
+        try:
+            p.log_pdf(x=x_tryout, **kwargs)
+        except AttributeError:
+            try:
+                p.pdf(x=x_tryout, **kwargs)
+            except AttributeError:
+                raise AttributeError('The proposal Distribution should have a log_pdf or pdf method.')
+            else:
+                evaluate_log_pdf = (lambda x: np.log(np.maximum(p.pdf(x, **kwargs),
+                                                                10 ** (-320) * np.ones((x.shape[0], )))))
+        else:
+            evaluate_log_pdf = (lambda x: p.log_pdf(x, **kwargs))
+        return dim, sample_from_proposal, evaluate_log_pdf
