@@ -1995,7 +1995,7 @@ class AKMCS:
 ########################################################################################################################
 
 
-class MCMC:
+class MCMC_old:
     """
         Description:
             Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
@@ -2490,7 +2490,7 @@ class MCMC:
                                      'a str or list of str')
 
 
-class MCMC_v2:
+class MCMC:
     """
         Description:
             Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
