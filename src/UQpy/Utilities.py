@@ -26,7 +26,7 @@ from scipy.special import gamma
 from scipy.stats import chi2, norm
 
 
-def _run_parallel_python(model_script, model_object_name, sample, *args):
+def _run_parallel_python(model_script, model_object_name, sample, dict_kwargs):
     """
     Execute the python model in parallel
     :param sample: One sample point where the model has to be evaluated
@@ -37,10 +37,10 @@ def _run_parallel_python(model_script, model_object_name, sample, *args):
     # if kwargs is not None:
     #     par_res = eval(model_object_name + '(sample, kwargs)')
     # else:
-    if not args:
+    if len(dict_kwargs) == 0:
         par_res = eval(model_object_name + '(sample)')
     else:
-        par_res = eval(model_object_name + '(sample, args[0])')
+        par_res = eval(model_object_name + '(sample, **dict_kwargs)')
     # par_res = parallel_output
     # if self.model_is_class:
     #     par_res = parallel_output.qoi
@@ -114,7 +114,6 @@ def voronoi_unit_hypercube(samples):
     return vor
 
 
-
 def compute_Voronoi_centroid_volume(vertices):
 
     from scipy.spatial import Delaunay, ConvexHull
@@ -132,6 +131,7 @@ def compute_Voronoi_centroid_volume(vertices):
     C = np.matmul(np.divide(w, V).T, cent)
 
     return C, V
+
 
 def compute_Delaunay_centroid_volume(vertices):
 
@@ -258,66 +258,6 @@ def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
             jacobian[i] = np.linalg.solve(a_, temp_)
 
         return samples_ng, jacobian
-
-
-def run_corr(samples, corr):
-
-    """
-        Description:
-
-            A function which performs the Cholesky decomposition of the correlation matrix and correlates standard
-            normal samples.
-
-        Input:
-            :param corr: Correlation matrix
-            :type corr: ndarray
-
-            :param samples: Standard normal samples.
-            :type samples: ndarray
-
-
-        Output:
-            :return: samples_corr: Correlated standard normal samples
-            :rtype: samples_corr: ndarray
-
-    """
-
-    from scipy.linalg import cholesky
-    c = cholesky(corr, lower=True)
-    samples_corr = np.dot(c, samples.T)
-
-    return samples_corr.T
-
-
-def run_decorr(samples, corr):
-
-    """
-        Description:
-
-            A function which performs the Cholesky decomposition of the correlation matrix and de-correlates standard
-            normal samples.
-
-        Input:
-            :param corr: Correlation matrix
-            :type corr: ndarray
-
-            :param samples: standard normal samples.
-            :type samples: ndarray
-
-
-        Output:
-            :return: samples_uncorr: Uncorrelated standard normal samples
-            :rtype: samples_uncorr: ndarray
-
-    """
-
-    from scipy.linalg import cholesky
-
-    c = cholesky(corr, lower=True)
-    inv_corr = np.linalg.inv(c)
-    samples_uncorr = np.dot(inv_corr, samples.T)
-
-    return samples_uncorr.T
 
 
 def correlation_distortion(marginal, params, rho_norm):
@@ -1093,3 +1033,28 @@ def suppress_stdout():
             yield
         finally:
             sys.stdout = old_stdout
+
+
+def check_input_dims(x):
+    if not isinstance(x, np.ndarray):
+        try:
+            x = np.array(x)
+        except:
+            raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
+    if len(x.shape) != 2:
+        raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
+    return x
+
+
+def recursive_update_mean_covariance(n_new, new_sample, previous_mean, previous_covariance=None):
+    """ Iterative formula to compute a new mean, covariance based on previous ones and new sample. """
+    new_mean = (n_new - 1) / n_new * previous_mean + 1 / n_new * new_sample
+    if previous_covariance is None:
+        return new_mean
+    dim = new_sample.size
+    if n_new == 1:
+        new_covariance = np.zeros((dim, dim))
+    else:
+        delta_n = (new_sample - previous_mean).reshape((dim, 1))
+        new_covariance = (n_new - 2) / (n_new - 1) * previous_covariance + 1 / n_new * np.matmul(delta_n, delta_n.T)
+    return new_mean, new_covariance
