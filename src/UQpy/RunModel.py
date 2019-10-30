@@ -135,6 +135,16 @@ class RunModel:
     cluster is not used for the Python model workflow.
     :type cluster: Boolean
 
+    :param fmt: If the input file requires variables to be written in specific format, this format can be specified
+    here.
+    The default is fmt = None
+    Existing formats include:
+    fmt = 'ls-dyna': This format is used for ls-dyna .k files where each card is required to be exactly 10 characters
+    :type fmt: String
+
+    :param kwargs: Additional inputs to the python function (model_object_name)
+    :type kwargs: dictionary
+
     Output:
     :return: RunModel.qoi_list: A list containing the output quantities of interest extracted from the model output
     files by output_script. This is a list of length equal to the number of simulations. Each item of this list contains
@@ -157,6 +167,21 @@ class RunModel:
 
         # Verbose option
         self.verbose = verbose
+
+        # Format option
+        self.fmt = fmt
+        if self.fmt is None:
+            pass
+        elif isinstance(self.fmt, str):
+            if self.fmt == 'ls-dyna':
+                self.fmt = "{:>10.4f}"
+            if self.fmt[0] != "{" or self.fmt[-1] != "}":
+                raise ValueError('fmt should be in ["ls-dyna"], or a string in brackets indicating a format.')
+        else:
+            raise TypeError('fmt should be a str.')
+
+        # kwargs options, used only for python runs
+        self.python_kwargs = kwargs
 
         # Input related
         self.input_template = input_template
@@ -223,7 +248,6 @@ class RunModel:
         self.output_object_name = output_object_name
         # Initialize a list of nsim None values. The ith position in the list will hold the qoi of the ith simulation.
 
-
         # Number of tasks
         self.ntasks = ntasks
         # Number of cores_per_task
@@ -235,13 +259,12 @@ class RunModel:
         self.cluster = cluster
 
         # Check if samples are provided
+        self.samples = []
         if samples is None:
             if self.verbose:
                 print("No samples. Creating the object alone.")
-            self.samples = []
             self.nsim = 0
         elif isinstance(samples, (list, np.ndarray)):
-            self.samples = []
             self.run(samples)
             # self.samples = samples
             # self.nsim = len(self.samples)  # This assumes that the number of rows is the number of simulations.
@@ -253,21 +276,31 @@ class RunModel:
         # if self.samples is not None:
         #     self.run()
 
-    def run(self, *args, samples=None):
+        # Return to current directory
+        if self.model_dir is not None:
+            os.chdir(current_dir)
 
+    def run(self, samples=None, append_samples=True):
+
+        # Nb of simulations to be performed
         self.nsim = len(samples)
 
-        if self.samples==[]:
-            self.nexist=0
+        # If append_samples is False, a new set of samples is created, the previous ones are deleted !!!!!
+        if not append_samples:
+            self.samples = []
+
+        # Check if samples already exist, if yes append new samples to old ones
+        if self.samples == []:    # There are currently no samples
+            self.nexist = 0
             self.qoi_list = [None] * self.nsim
-            if type(samples)==list:
+            if type(samples) == list:
                 self.samples = samples
             else:
                 self.samples = list(samples)
-        else:
+        else:     # Samples already exist in the RunModel object, append new ones
             self.nexist=len(self.samples)
             self.qoi_list.extend([None] * self.nsim)
-            if type(samples)==list:
+            if type(samples) == list:
                 self.samples.extend(samples)
             else:
                 sample_list = list(samples)
@@ -302,19 +335,11 @@ class RunModel:
 
             # Run the serial execution or parallel execution depending on ntasks
             if self.ntasks == 1:
-                if not args:
-                    self._serial_python_execution()
-                else:
-                    self._serial_python_execution(args[0])
+                self._serial_python_execution()
             else:
-                if not args:
-                    self._parallel_python_execution()
-                else:
-                    self._parallel_python_execution(args[0])
+                self._parallel_python_execution()
 
-        # Return to current directory
-        if self.model_dir is not None:
-            os.chdir(current_dir)
+        return None
 
     ####################################################################################################################
 
@@ -429,7 +454,7 @@ class RunModel:
             os.chdir(os.path.join(work_dir, current_dir))
 
     ####################################################################################################################
-    def _serial_python_execution(self, *args):
+    def _serial_python_execution(self):
         """
         Execute the python model in serial when there is no template input file
         :return:
@@ -445,17 +470,17 @@ class RunModel:
             elif isinstance(self.samples, np.ndarray):
                 sample_to_send = self.samples[i+self.nexist]
                 # self.model_output = eval(self.model_object_name + '(self.samples[i])')
-            if not args:
+            if len(self.python_kwargs) == 0:
                 self.model_output = eval(self.model_object_name + '(sample_to_send)')
             else:
-                self.model_output = eval(self.model_object_name + '(sample_to_send, args[0])')
+                self.model_output = eval(self.model_object_name + '(sample_to_send, **self.python_kwargs)')
             if self.model_is_class:
                 self.qoi_list[i+self.nexist] = self.model_output.qoi
             else:
                 self.qoi_list[i+self.nexist] = self.model_output
 
     ####################################################################################################################
-    def _parallel_python_execution(self, *args):
+    def _parallel_python_execution(self):
         """
         Execute the python model in parallel when there is no template input file
         :return:
@@ -476,10 +501,11 @@ class RunModel:
         sample = []
         pool = multiprocessing.Pool(processes=self.ntasks)
         for i in range(self.nsim):
-            if not args:
-                sample.append([self.model_script, self.model_object_name, self.samples[i+self.nexist]])
+            if len(self.python_kwargs) == 0:
+                sample.append([self.model_script, self.model_object_name, self.samples[i + self.nexist]])
             else:
-                sample.append([self.model_script, self.model_object_name, self.samples[i + self.nexist], args[0]])
+                sample.append([self.model_script, self.model_object_name, self.samples[i + self.nexist],
+                               self.python_kwargs])
 
         results = pool.starmap(Utilities._run_parallel_python, sample)
 
@@ -664,8 +690,12 @@ class RunModel:
             string_regex = re.compile(r"<" + var_names[j] + r".*?>")
             count = 0
             for string in string_regex.findall(template_text):
-                temp = string.replace(var_names[j], "samples[" + str(j) + "]")
-                temp = eval(temp[1:-1])
+                if self.fmt is None:
+                    temp = string.replace(var_names[j], "samples[" + str(j) + "]")
+                    temp = eval(temp[1:-1])
+                else:
+                    temp = string.replace(var_names[j], self.fmt.format(samples[j]))
+                    temp = temp[1:-1]
                 if isinstance(temp, collections.Iterable):
                     temp = np.array(temp).flatten()
                     to_add = ''
