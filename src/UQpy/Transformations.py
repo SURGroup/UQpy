@@ -215,39 +215,41 @@ class Nataf:
         for j in range(len(self.dist_name)):
             self.distribution[j] = Distribution(self.dist_name[j])
 
-    def inverse(self):
-        samples_n01 = self.input_samples.copy()
-        if self.corr_norm is None:
-            self.corr_norm = np.eye(self.dimension)
-        self.samples, self.jacobian = transform_g_to_ng(self.corr_norm, self.distribution, self.dist_params,
-                                                        samples_n01)
-
     def transform(self):
-        samples_ng = self.input_samples.copy()
+        samplesNG = self.input_samples.copy()
         if self.corr is None:
             self.corr = np.eye(self.dimension)
         self.samples, self.jacobian = transform_ng_to_g(self.corr, self.distribution, self.dist_params,
-                                                        samples_ng)
+                                                        samplesNG)
 
-    def correlation_distortion_inv(self):
-        if self.corr_norm is not None:
-            ident_ = np.linalg.norm(self.corr_norm - np.identity(n=self.dimension)) > 10 ** (-8)
-            if ident_:
-                self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
-            else:
-                self.corr = self.corr_norm.copy()
-        else:
-            raise RuntimeError("In order to calculate the correlation distortion"
-                               "a correlation matrix is required.")
-
-    def correlation_distortion(self):
+    def corr_distortion(self):
+        # For estimating the correlation in the normal space given the correlation in the no-Gaussian space
         if self.corr is not None:
-            i_check_ = np.linalg.norm(self.corr - np.identity(n=self.dimension)) > 10 ** (-8)
-            if i_check_:
+            ident_ = np.linalg.norm(self.corr - np.identity(n=self.dimension)) > 10 ** (-8)
+            if ident_:
                 self.corr_norm = itam(self.distribution, self.dist_params, self.corr, self.beta, self.itam_error1,
                                       self.itam_error2)
             else:
                 self.corr_norm = self.corr.copy()
+        else:
+            raise RuntimeError("In order to calculate the correlation distortion"
+                               "a correlation matrix is required.")
+
+    def inverse(self):
+        samplesN01 = self.input_samples.copy()
+        if self.corr_norm is None:
+            self.corr_norm = np.eye(self.dimension)
+        self.samples, self.jacobian = transform_g_to_ng(self.corr_norm, self.distribution, self.dist_params,
+                                                        samplesN01)
+
+    def corr_distortion_inv(self):
+        # For estimating the correlation in the non-Gaussian space given the correlation in the normal space
+        if self.corr_norm is not None:
+            ident_ = np.linalg.norm(self.corr_norm - np.identity(n=self.dimension)) > 10 ** (-5)
+            if ident_:
+                self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
+            else:
+                self.corr = self.corr_norm.copy()
         else:
             raise RuntimeError("In order to calculate the correlation distortion"
                                "a correlation matrix is required.")
