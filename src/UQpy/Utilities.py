@@ -114,7 +114,6 @@ def voronoi_unit_hypercube(samples):
     return vor
 
 
-
 def compute_Voronoi_centroid_volume(vertices):
 
     from scipy.spatial import Delaunay, ConvexHull
@@ -132,6 +131,7 @@ def compute_Voronoi_centroid_volume(vertices):
     C = np.matmul(np.divide(w, V).T, cent)
 
     return C, V
+
 
 def compute_Delaunay_centroid_volume(vertices):
 
@@ -258,66 +258,6 @@ def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
             jacobian[i] = np.linalg.solve(a_, temp_)
 
         return samples_ng, jacobian
-
-
-def run_corr(samples, corr):
-
-    """
-        Description:
-
-            A function which performs the Cholesky decomposition of the correlation matrix and correlates standard
-            normal samples.
-
-        Input:
-            :param corr: Correlation matrix
-            :type corr: ndarray
-
-            :param samples: Standard normal samples.
-            :type samples: ndarray
-
-
-        Output:
-            :return: samples_corr: Correlated standard normal samples
-            :rtype: samples_corr: ndarray
-
-    """
-
-    from scipy.linalg import cholesky
-    c = cholesky(corr, lower=True)
-    samples_corr = np.dot(c, samples.T)
-
-    return samples_corr.T
-
-
-def run_decorr(samples, corr):
-
-    """
-        Description:
-
-            A function which performs the Cholesky decomposition of the correlation matrix and de-correlates standard
-            normal samples.
-
-        Input:
-            :param corr: Correlation matrix
-            :type corr: ndarray
-
-            :param samples: standard normal samples.
-            :type samples: ndarray
-
-
-        Output:
-            :return: samples_uncorr: Uncorrelated standard normal samples
-            :rtype: samples_uncorr: ndarray
-
-    """
-
-    from scipy.linalg import cholesky
-
-    c = cholesky(corr, lower=True)
-    inv_corr = np.linalg.inv(c)
-    samples_uncorr = np.dot(inv_corr, samples.T)
-
-    return samples_uncorr.T
 
 
 def correlation_distortion(marginal, params, rho_norm):
