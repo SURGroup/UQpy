@@ -169,13 +169,14 @@ class RunModel:
         self.verbose = verbose
 
         # Format option
+        available_formats = {'ls-dyna': "{:>10.4f}"}
         self.fmt = fmt
         if self.fmt is None:
             pass
+        elif self.fmt in available_formats.keys():
+                self.fmt = available_formats[self.fmt]
         elif isinstance(self.fmt, str):
-            if self.fmt == 'ls-dyna':
-                self.fmt = "{:>10.4f}"
-            if self.fmt[0] != "{" or self.fmt[-1] != "}":
+            if (self.fmt[0] != "{") or (self.fmt[-1] != "}") or (":" not in self.fmt):
                 raise ValueError('fmt should be in ["ls-dyna"], or a string in brackets indicating a format.')
         else:
             raise TypeError('fmt should be a str.')
