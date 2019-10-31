@@ -68,7 +68,7 @@ class Distribution:
                 nsamples: an integer providing the desired number of iid samples to be drawn
     """
 
-    def __init__(self, dist_name=None, copula=None):
+    def __init__(self, dist_name=None, copula=None, params=None, copula_params=None):
 
         if dist_name is None:
             raise ValueError('UQpy error: A Distribution name must be provided!')
@@ -85,41 +85,49 @@ class Distribution:
         else:
             self.copula = None
 
-    def pdf(self, x, params, copula_params=None):
+        # Save the parameters as attributes of the class if they are provided
+        self.params, self.copula_params = None, None
+        self.update_params(params, copula_params)
+
+    def pdf(self, x, params=None, copula_params=None):
         """ Computes the probability density function at inputs points x """
         x = check_input_dims(x)
+        self.update_params(params, copula_params)
         if isinstance(self.dist_name, str):
-            return SubDistribution(dist_name=self.dist_name).pdf(x, params)
+            return SubDistribution(dist_name=self.dist_name).pdf(x, params=self.params)
         elif isinstance(self.dist_name, list):
-            if (x.shape[1] != len(self.dist_name)) or (len(params) != len(self.dist_name)):
+            if (x.shape[1] != len(self.dist_name)) or (len(self.params) != len(self.dist_name)):
                 raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
             prod_pdf = 1
             for i in range(len(self.dist_name)):
-                prod_pdf = prod_pdf * SubDistribution(self.dist_name[i]).pdf(x[:, i, np.newaxis], params[i])
+                prod_pdf = prod_pdf * SubDistribution(self.dist_name[i]).pdf(x[:, i, np.newaxis], self.params[i])
             if self.copula is not None:
-                _, c_ = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
+                _, c_ = self.copula.evaluate_copula(x=x, dist_params=self.params, copula_params=self.copula_params)
                 prod_pdf *= c_
             return prod_pdf
 
-    def log_pdf(self, x, params, copula_params=None):
+    def log_pdf(self, x, params=None, copula_params=None):
         """ Computes the log probability density function at inputs points x """
         x = check_input_dims(x)
+        self.update_params(params, copula_params)
         if isinstance(self.dist_name, str):
-            return SubDistribution(dist_name=self.dist_name).log_pdf(x, params)
+            return SubDistribution(dist_name=self.dist_name).log_pdf(x, self.params)
         elif isinstance(self.dist_name, list):
-            if (x.shape[1] != len(self.dist_name)) or (len(params) != len(self.dist_name)):
+            if (x.shape[1] != len(self.dist_name)) or (len(self.params) != len(self.dist_name)):
                 raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
             sum_log_pdf = 0
             for i in range(len(self.dist_name)):
-                sum_log_pdf = sum_log_pdf + SubDistribution(self.dist_name[i]).log_pdf(x[:, i, np.newaxis], params[i])
+                sum_log_pdf = sum_log_pdf + SubDistribution(self.dist_name[i]).log_pdf(x[:, i, np.newaxis],
+                                                                                       self.params[i])
             if self.copula is not None:
-                _, c_ = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
+                _, c_ = self.copula.evaluate_copula(x=x, dist_params=self.params, copula_params=self.copula_params)
                 sum_log_pdf += np.log(c_)
             return sum_log_pdf
 
-    def cdf(self, x, params, copula_params=None):
+    def cdf(self, x, params=None, copula_params=None):
         """ Computes the cumulative distribution function at inputs points x """
         x = check_input_dims(x)
+        self.update_params(params, copula_params)
         if isinstance(self.dist_name, str):
             return SubDistribution(dist_name=self.dist_name).cdf(x, params)
         elif isinstance(self.dist_name, list):
@@ -134,12 +142,13 @@ class Distribution:
                 c, _ = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
                 return c
 
-    def icdf(self, x, params):
+    def icdf(self, x, params=None):
         """ Computes the inverse cumulative probability function at inputs points x -
         only for univariate distributions """
         x = check_input_dims(x)
+        self.update_params(params, copula_params=None)
         if isinstance(self.dist_name, str):
-            return SubDistribution(dist_name=self.dist_name).icdf(x, params)
+            return SubDistribution(dist_name=self.dist_name).icdf(x, self.params)
         elif isinstance(self.dist_name, list):
             raise AttributeError('Method icdf not defined for multivariate distributions.')
             #if (x.shape[1] != len(self.dist_name)) or (len(params) != len(self.dist_name)):
@@ -152,20 +161,21 @@ class Distribution:
             #else:
             #    raise AttributeError('Method icdf not defined for distributions with copula.')
 
-    def rvs(self, params, nsamples=1):
+    def rvs(self, params=None, nsamples=1):
         """ Sample iid realizations from the distribution - does not support distributions with copula """
+        self.update_params(params, copula_params=None)
         if isinstance(self.dist_name, str):
-            rvs = SubDistribution(dist_name=self.dist_name).rvs(params, nsamples)
+            rvs = SubDistribution(dist_name=self.dist_name).rvs(self.params, nsamples)
             if len(rvs.shape) == 1:   # case where dimension is 1: modify the samples to return a 2D array
                 return rvs[:, np.newaxis]
             return rvs
         elif isinstance(self.dist_name, list):
-            if len(params) != len(self.dist_name):
+            if len(self.params) != len(self.dist_name):
                 raise ValueError('UQpy error: Inconsistent dimensions')
             if self.copula is None:
                 rvs = np.zeros((nsamples, len(self.dist_name)))
                 for i in range(len(self.dist_name)):
-                    rvs[:, i] = SubDistribution(self.dist_name[i]).rvs(params[i], nsamples)
+                    rvs[:, i] = SubDistribution(self.dist_name[i]).rvs(self.params[i], nsamples)
                 return rvs
             else:
                 raise AttributeError('Method rvs not defined for distributions with copula.')
@@ -186,11 +196,12 @@ class Distribution:
             else:
                 raise AttributeError('Method fit not defined for distributions with copula.')
 
-    def moments(self, params):
+    def moments(self, params=None):
         """ Compute marginal moments (mean, variance, skewness, kurtosis)
         - does not support distributions with copula """
+        self.update_params(params, copula_params=None)
         if isinstance(self.dist_name, str):
-            return SubDistribution(dist_name=self.dist_name).moments(params)
+            return SubDistribution(dist_name=self.dist_name).moments(self.params)
         elif isinstance(self.dist_name, list):
             if len(params) != len(self.dist_name):
                 raise ValueError('UQpy error: Inconsistent dimensions')
@@ -198,10 +209,16 @@ class Distribution:
                 mean, var, skew, kurt = [0]*len(self.dist_name), [0]*len(self.dist_name), [0]*len(self.dist_name), \
                                         [0]*len(self.dist_name),
                 for i in range(len(self.dist_name)):
-                    mean[i], var[i], skew[i], kurt[i] = SubDistribution(self.dist_name[i]).moments(params[i])
+                    mean[i], var[i], skew[i], kurt[i] = SubDistribution(self.dist_name[i]).moments(self.params[i])
                 return mean, var, skew, kurt
             else:
                 raise AttributeError('Method moments not defined for distributions with copula.')
+
+    def update_params(self, params=None, copula_params=None):
+        if params is not None:
+            self.params = params
+        if copula_params is not None:
+            self.copula_params = copula_params
 
 
 class Copula:
