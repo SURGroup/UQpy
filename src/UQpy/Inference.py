@@ -200,7 +200,7 @@ class InferenceModel:
 
 class MLEstimation:
 
-    def __init__(self, inference_model, data, verbose=False, iter_optim=1, **kwargs):
+    def __init__(self, inference_model, data, verbose=False, iter_optim=1, x0=None, **kwargs):
 
         """
         Perform maximum likelihood estimation, i.e., given some data y, compute the parameter vector that maximizes the
@@ -218,6 +218,9 @@ class MLEstimation:
                 (each iteration starts at a random point)
             :type iter_optim: an integer >= 1, default 1
 
+            :param x0: starting points for optimization
+            :type x0: 1D array (dimension, ) or 2D array (n_starts, dimension)
+
             :param kwargs: input arguments to scipy.optimize.minimize
             :type kwargs: dictionary
 
@@ -233,57 +236,65 @@ class MLEstimation:
         if not isinstance(inference_model, InferenceModel):
             raise TypeError('Input inference_model should be of type InferenceModel')
         self.data = data
-        self.iter_optim = iter_optim
-        if not isinstance(self.iter_optim, int) or self.iter_optim < 1:
-            raise TypeError('Input iter_optim should be an integer greater than 1.')
         self.kwargs_optim = kwargs
         self.verbose = verbose
+        if iter_optim >= 1 or x0 is not None:    # Run the optimization
+            self.run_estimation(iter_optim=iter_optim, x0=x0)
 
+    def run_estimation(self, iter_optim=1, x0=None):
+        """ Run optimization, possibly starting at various points. """
+        if not isinstance(iter_optim, int) or iter_optim < 1:
+            raise TypeError('Input iter_optim should be a positive integer greater than 1.')
+        list_param = []
+        list_max_log_like = []
         # Case 2a: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization.
+        use_fit_method = False
         if isinstance(self.inference_model.log_likelihood, str):
             pi_dist = Distribution(self.inference_model.log_likelihood)
             try:
-                param = np.array(pi_dist.fit(self.data))
-                max_log_like = self.inference_model.evaluate_log_likelihood(
-                    data=self.data, params=param[np.newaxis, :])[0]
-                if verbose:
-                    print('Evaluating maximum likelihood estimate for inference model ' + inference_model.name +
+                for i in range(iter_optim):
+                    list_param.append(pi_dist.fit(self.data))
+                    list_max_log_like.append(self.inference_model.evaluate_log_likelihood(
+                        data=self.data, params=self.mle[np.newaxis, :])[0])
+                use_fit_method = True
+                if self.verbose:
+                    print('Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name +
                           ', using fit method.')
             except AttributeError:
-                if verbose:
-                    print('Evaluating maximum likelihood estimate for inference model ' + inference_model.name)
-                param, max_log_like = self.run_optimization()
-        else:
-            if verbose:
-                print('Evaluating maximum likelihood estimate for inference model ' + inference_model.name)
-            param, max_log_like = self.run_optimization()
-
-        self.mle = param
-        self.max_log_like = max_log_like
-        if verbose:
-            print('Max likelihood estimation completed.')
-
-    def run_optimization(self):
-
-        list_param = []
-        list_max_log_like = []
-        if self.iter_optim > 1 or 'x0' not in self.kwargs_optim.keys():
-            x0 = np.random.rand(self.iter_optim, self.inference_model.n_params)
-            if 'bounds' in self.kwargs_optim.keys():
-                bounds = np.array(self.kwargs_optim['bounds'])
-                x0 = bounds[:, 0].reshape((1, -1)) + (bounds[:, 1]-bounds[:, 0]).reshape((1,-1)) * x0
-            self.kwargs_optim['x0'] = x0
-        else:
-            self.kwargs_optim['x0'] = self.kwargs_optim['x0'].reshape((1, -1))
-
-        for i in range(self.iter_optim):
-            res = minimize(self.evaluate_neg_log_likelihood_data, **self.kwargs_optim)
-            list_param.append(res.x)
-            list_max_log_like.append((-1)*res.fun)
+                pass
+        # Other cases: just run optimization: use x0 if provided, otherwise sample from [0, 1] or bounds
+        if not use_fit_method:
+            if self.verbose:
+                print('Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name +
+                      ', via optimization.')
+            if x0 is None:
+                x0 = np.random.rand(iter_optim, self.inference_model.n_params)
+                if 'bounds' in self.kwargs_optim.keys():
+                    bounds = np.array(self.kwargs_optim['bounds'])
+                    x0 = bounds[:, 0].reshape((1, -1)) + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) * x0
+            else:
+                x0 = x0.reshape((-1, self.inference_model.n_params))
+                iter_optim = x0.shape[1]
+            for i in range(iter_optim):
+                res = minimize(self.evaluate_neg_log_likelihood_data, x0, **self.kwargs_optim)
+                list_param.append(res.x)
+                list_max_log_like.append((-1) * res.fun)
+        # Get the maximum log likelihood and corresponding parameter from all the runs
         idx_max = int(np.argmax(list_max_log_like))
         param = np.array(list_param[idx_max])
         max_log_like = list_max_log_like[idx_max]
-        return param, max_log_like
+        if self.mle is None:
+            self.mle = param
+            self.max_log_like = max_log_like
+        else:
+            if max_log_like > self.max_log_like:
+                self.mle = param
+                self.max_log_like = max_log_like
+        if self.verbose:
+            print('Max likelihood estimation completed.')
+        return None
+
+
 
     def evaluate_neg_log_likelihood_data(self, one_param):
         return -1 * self.inference_model.evaluate_log_likelihood(data=self.data, params=one_param.reshape((1, -1)))[0]

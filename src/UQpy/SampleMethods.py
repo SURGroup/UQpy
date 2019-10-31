@@ -2571,16 +2571,16 @@ class MCMC:
     # Authors: Audrey Olivier, Michael D. Shields, Mohit Chauhan, Dimitris G. Giovanis
     # Updated: 04/08/2019 by Audrey Olivier
 
-    def __init__(self, dimension=1, pdf_target=None, log_pdf_target=None, pdf_target_copula=None,
-                 pdf_target_params=None, pdf_target_copula_params=None, seed=None, nsamples=None, nburn=0, jump=1,
-                 algorithm='MH', save_log_pdf=False, verbose=False, concat_chains_=True, **algorithm_inputs):
+    def __init__(self, dimension=1, pdf_target=None, log_pdf_target=None, pdf_target_args=(),
+                 algorithm='MH', seed=None, nsamples=None, nburn=0, jump=1,
+                 save_log_pdf=False, verbose=False, concat_chains_=True, **algorithm_inputs):
 
         self.dimension, self.nsamples, self.nburn, self.jump = dimension, nsamples, nburn, jump
         self.check_integers()    # check that nsamples, dimension, nburn, jump  are integers >= 0
         self.seed = self.preprocess_seed(seed)    # check type and assign default [0., ... 0.] if not provided
         self.nchains = self.seed.shape[0]
-        self.pdf_target_kwargs = {'pdf': pdf_target, 'log_pdf': log_pdf_target, 'copula': pdf_target_copula,
-                                  'params': pdf_target_params, 'copula_params': pdf_target_copula_params}
+        # Check target pdf
+        self.evaluate_log_target, self.target_type = self.check_target(pdf_target, log_pdf_target, pdf_target_args)
         self.algorithm = algorithm
         self.algorithm_inputs = algorithm_inputs
         self.save_log_pdf = save_log_pdf
@@ -2589,7 +2589,7 @@ class MCMC:
 
         # Do algorithm dependent initialization
         if algorithm.lower() == 'mh':
-            self.evaluate_log_target = self.init_mh()
+            self.init_mh()
         elif algorithm.lower() == 'mmh':
             self.evaluate_log_target = self.init_mmh()
         elif algorithm.lower() == 'stretch':
