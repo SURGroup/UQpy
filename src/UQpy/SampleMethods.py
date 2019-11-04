@@ -89,8 +89,8 @@ class MCS:
         self.samples = Distribution(dist_name=self.dist_name).rvs(params=self.dist_params, nsamples=nsamples)
         self.samplesU01 = np.zeros_like(self.samples)
         for i in range(self.samples.shape[1]):
-            self.samplesU01[:,i] = Distribution(dist_name=self.dist_name[i]).cdf(x=self.samples[:,i],
-                                                                            params=self.dist_params[i])
+            self.samplesU01[:, i] = Distribution(dist_name=self.dist_name[i]).cdf(x=self.samples[:, i][:, np.newaxis],
+                                                                                  params=self.dist_params[i])
 
         if verbose:
             print('UQpy: Monte Carlo Sampling Complete.')

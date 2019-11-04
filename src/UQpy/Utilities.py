@@ -152,25 +152,18 @@ def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
 
     """
         Description:
-
             A function that performs transformation of a non-Gaussian random variable to a Gaussian one.
-
         Input:
             :param corr_norm: Correlation matrix in the standard normal space
             :type corr_norm: ndarray
-
             :param dist: marginal distributions
             :type dist: list
-
             :param dist_params: marginal distribution parameters
             :type dist_params: list
-
             :param samples_ng: non-Gaussian samples
             :type samples_ng: ndarray
-
             :param jacobian: The Jacobian of the transformation
             :type jacobian: ndarray
-
         Output:
             :return: samples_g: Gaussian samples
             :rtype: samples_g: ndarray
@@ -187,7 +180,7 @@ def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
     m, n = np.shape(samples_ng)
     for j in range(n):
         cdf = dist[j].cdf
-        samples_g[:, j] = stats.norm.ppf(cdf(samples_ng[:, j], dist_params[j]))
+        samples_g[:, j] = stats.norm.ppf(cdf(samples_ng[:, j][:, np.newaxis], dist_params[j]))
 
     if not jacobian:
         print("UQpy: Done.")
@@ -198,7 +191,9 @@ def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
         for i in range(m):
             for j in range(n):
                 pdf = dist[j].pdf
-                temp_[j, j] = stats.norm.pdf(samples_g[i, j]) / pdf(samples_ng[i, j], dist_params[j])
+                x0 = np.array([samples_ng[i, j]])
+                x = np.array([samples_g[i, j]])
+                temp_[j, j] = stats.norm.pdf(x[i, j][:, np.newaxis]) / pdf(x0[:, np.newaxis], dist_params[j])
             jacobian[i] = np.linalg.solve(temp_, a_)
 
         return samples_g, jacobian
@@ -208,25 +203,18 @@ def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
 
     """
         Description:
-
             A function that performs transformation of a Gaussian random variable to a non-Gaussian one.
-
         Input:
             :param corr_norm: Correlation matrix in the standard normal space
             :type corr_norm: ndarray
-
             :param dist: marginal distributions
             :type dist: list
-
             :param dist_params: marginal distribution parameters
             :type dist_params: list
-
             :param samples_g: Gaussian samples
             :type samples_g: ndarray
-
             :param jacobian: The Jacobian of the transformation
             :type jacobian: ndarray
-
         Output:
             :return: samples_ng: Gaussian samples
             :rtype: samples_ng: ndarray
@@ -242,7 +230,7 @@ def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
     m, n = np.shape(samples_g)
     for j in range(n):
         i_cdf = dist[j].icdf
-        samples_ng[:, j] = i_cdf(stats.norm.cdf(samples_g[:, j]), dist_params[j])
+        samples_ng[:, j] = i_cdf(stats.norm.cdf(samples_g[:, j][:, np.newaxis]), dist_params[j])
 
     if not jacobian:
         print("UQpy: Done.")
@@ -254,7 +242,9 @@ def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
         for i in range(m):
             for j in range(n):
                 pdf = dist[j].pdf
-                temp_[j, j] = pdf(samples_ng[i, j], dist_params[j]) / stats.norm.pdf(samples_g[i, j])
+                x = np.array([samples_ng[i, j]])
+                x0 = np.array([samples_g[i, j]])
+                temp_[j, j] = pdf(x[:, np.newaxis], dist_params[j]) / stats.norm.pdf(x0[:, np.newaxis])
             jacobian[i] = np.linalg.solve(a_, temp_)
 
         return samples_ng, jacobian
@@ -268,19 +258,13 @@ def correlation_distortion(marginal, params, rho_norm):
             A function to solve the double integral equation in order to evaluate the modified correlation
             matrix in the standard normal space given the correlation matrix in the original space. This is achieved
             by a quadratic two-dimensional Gauss-Legendre integration.
-            This function is a part of the ERADIST code that can be found in:
-            https://www.era.bgu.tum.de/en/software/
-
         Input:
             :param marginal: marginal distributions
             :type marginal: list
-
             :param params: marginal distribution parameters.
             :type params: list
-
             :param rho_norm: Correlation at standard normal space.
             :type rho_norm: ndarray
-
         Output:
             :return rho: Distorted correlation
             :rtype rho: ndarray
@@ -321,8 +305,8 @@ def correlation_distortion(marginal, params, rho_norm):
             if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
                 raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
 
-            tmp_f_xi = ((i_cdf_j(stats.norm.cdf(xi), params[j]) - mj[0]) / np.sqrt(mj[1]))
-            tmp_f_eta = ((i_cdf_i(stats.norm.cdf(eta), params[i]) - mi[0]) / np.sqrt(mi[1]))
+            tmp_f_xi = ((i_cdf_j(stats.norm.cdf(xi[:, np.newaxis]), params[j]) - mj[0]) / np.sqrt(mj[1]))
+            tmp_f_eta = ((i_cdf_i(stats.norm.cdf(eta[:, np.newaxis]), params[i]) - mi[0]) / np.sqrt(mi[1]))
             coef = tmp_f_xi * tmp_f_eta * w2d
 
             rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
