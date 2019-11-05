@@ -70,30 +70,53 @@ class MCS:
             :return: MCS.samples: Set of generated samples
             :rtype: MCS.samples: ndarray of dimension (nsamples, ndim)
 
+            :return: MCS.samplesU01: If the Distribution object has a .cdf method, MCS also returns the samples in the
+            Uniform(0,1) hypercube.
+            :rtype: MCS.samplesU01: ndarray of dimension(nsamples, ndim)
+
     """
 
     # Authors: Dimitris G.Giovanis
-    # Last Modified: 11/12/2018 by Audrey Olivier
+    # Last Modified: 11/25/2019 by Michael D. Shields
 
     def __init__(self, dist_name=None, dist_params=None, nsamples=None, var_names=None, verbose=False):
 
-        if nsamples is None:
-            raise ValueError('UQpy error: nsamples must be defined.')
         # No need to do other checks as they will be done within Distributions.py
         self.dist_name = dist_name
         self.dist_params = dist_params
-        self.nsamples = nsamples
         self.var_names = var_names
-        if verbose:
+        self.verbose = verbose
+        self.nsamples = nsamples
+        if self.verbose:
+            print('UQpy: MCS object created.')
+
+        self.samples = None
+        self.samplesU01 = None
+
+        if nsamples is not None:
+            self.sample(nsamples)
+
+    def sample(self, nsamples):
+        self.nsamples = nsamples
+        if nsamples is None:
+            raise ValueError('UQpy error: nsamples must be defined.')
+        if not isinstance(nsamples, int):
+            raise ValueError('UQpy error: nsamples must be integer valued.')
+
+        if self.verbose:
             print('UQpy: Running Monte Carlo Sampling...')
+
         self.samples = Distribution(dist_name=self.dist_name).rvs(params=self.dist_params, nsamples=nsamples)
-        if hasattr(Distribution(dist_name=self.dist_name[i]), 'cdf'):
+
+        att = (hasattr(Distribution(dist_name=self.dist_name[i]), 'cdf') for i in range(self.samples.shape[1]))
+        if all(att):
             self.samplesU01 = np.zeros_like(self.samples)
             for i in range(self.samples.shape[1]):
-                self.samplesU01[:, i] = Distribution(dist_name=self.dist_name[i]).cdf(x=np.atleast2d(self.samples[:,i]),
-                                                                                      params=self.dist_params[i])
+                self.samplesU01[:, i] = Distribution(dist_name=
+                                                     self.dist_name[i]).cdf(x=np.atleast_2d(self.samples[:, i]),
+                                                     params=self.dist_params[i])
 
-        if verbose:
+        if self.verbose:
             print('UQpy: Monte Carlo Sampling Complete.')
 
         # Shape the array as (1,n) if nsamples=1, and (n,1) if nsamples=n
