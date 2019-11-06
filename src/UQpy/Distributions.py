@@ -137,13 +137,13 @@ def define_pdf(self, x, params=None, copula_params=None):
     x = check_input_dims(x)
     self.update_params(params, copula_params)
     if isinstance(self.dist_name, str):
-        return subdistribution_pdf(name=self.dist_name, x=x, params=self.params)
+        return subdistribution_pdf(dist_name=self.dist_name, x=x, params=self.params)
     elif isinstance(self.dist_name, list):
         if (x.shape[1] != len(self.dist_name)) or (len(self.params) != len(self.dist_name)):
             raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
         prod_pdf = np.ones((x.shape[0], ))
         for i in range(len(self.dist_name)):
-            prod_pdf = prod_pdf * subdistribution_pdf(name=self.dist_name[i], x=x[:, i, np.newaxis],
+            prod_pdf = prod_pdf * subdistribution_pdf(dist_name=self.dist_name[i], x=x[:, i, np.newaxis],
                                                       params=self.params[i])
         if hasattr(self, 'copula'):
             _, c_ = self.copula.evaluate_copula(x=x, dist_params=self.params, copula_params=self.copula_params)
@@ -157,13 +157,13 @@ def define_log_pdf(self, x, params=None, copula_params=None):
     x = check_input_dims(x)
     self.update_params(params, copula_params)
     if isinstance(self.dist_name, str):
-        return subdistribution_pdf(name=self.dist_name, x=x, params=self.params)
+        return subdistribution_pdf(dist_name=self.dist_name, x=x, params=self.params)
     elif isinstance(self.dist_name, list):
         if (x.shape[1] != len(self.dist_name)) or (len(self.params) != len(self.dist_name)):
             raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
         sum_log_pdf = np.zeros((x.shape[0], ))
         for i in range(len(self.dist_name)):
-            sum_log_pdf = sum_log_pdf + subdistribution_log_pdf(name=self.dist_name[i], x=x[:, i, np.newaxis],
+            sum_log_pdf = sum_log_pdf + subdistribution_log_pdf(dist_name=self.dist_name[i], x=x[:, i, np.newaxis],
                                                                 params=self.params[i])
         if hasattr(self, 'copula'):
             _, c_ = self.copula.evaluate_copula(x=x, dist_params=self.params, copula_params=self.copula_params)
@@ -177,14 +177,14 @@ def define_cdf(self, x, params=None, copula_params=None):
     x = check_input_dims(x)
     self.update_params(params, copula_params)
     if isinstance(self.dist_name, str):
-        return subdistribution_cdf(name=self.dist_name, x=x, params=self.params)
+        return subdistribution_cdf(dist_name=self.dist_name, x=x, params=self.params)
     elif isinstance(self.dist_name, list):
         if (x.shape[1] != len(self.dist_name)) or (len(params) != len(self.dist_name)):
             raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
         if not hasattr(self, 'copula'):
             cdfs = np.zeros_like(x)
             for i in range(len(self.dist_name)):
-                cdfs[:, i] = subdistribution_cdf(name=self.dist_name[i], x=x[:, i, np.newaxis], params=self.params[i])
+                cdfs[:, i] = subdistribution_cdf(dist_name=self.dist_name[i], x=x[:, i, np.newaxis], params=self.params[i])
             return np.prod(cdfs, axis=1)
         else:
             c, _ = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
@@ -198,24 +198,24 @@ def define_icdf(self, x, params=None):
     x = check_input_dims(x)
     self.update_params(params, copula_params=None)
     if isinstance(self.dist_name, str):
-        return subdistribution_icdf(name=self.dist_name, x=x, params=self.params)
+        return subdistribution_icdf(dist_name=self.dist_name, x=x, params=self.params)
     elif isinstance(self.dist_name, list):
         raise AttributeError('Method icdf not defined for multivariate distributions.')
 
 
 # Method that generates RVs
-def define_rvs(self, params=None, nsamples=1):
+def define_rvs(self, nsamples=1, params=None):
     """ Sample iid realizations from the distribution - does not support distributions with copula """
     self.update_params(params, copula_params=None)
     if isinstance(self.dist_name, str):
-        return subdistribution_rvs(name=self.dist_name, params=self.params, nsamples=nsamples)
+        return subdistribution_rvs(dist_name=self.dist_name, nsamples=nsamples, params=self.params)
     elif isinstance(self.dist_name, list):
         if len(self.params) != len(self.dist_name):
             raise ValueError('UQpy error: Inconsistent dimensions')
         if not hasattr(self, 'copula'):
             rvs = np.zeros((nsamples, len(self.dist_name)))
             for i in range(len(self.dist_name)):
-                rvs[:, i] = subdistribution_rvs(name=self.dist_name[i], params=self.params[i], nsamples=nsamples)[:, 0]
+                rvs[:, i] = subdistribution_rvs(dist_name=self.dist_name[i], nsamples=nsamples, params=self.params[i])[:, 0]
             return rvs
         else:
             raise AttributeError('Method rvs not defined for distributions with copula.')
@@ -225,14 +225,14 @@ def define_fit(self, x):
     """ Compute MLE parameters of a distribution from data x - does not support distributions with copula """
     x = check_input_dims(x)
     if isinstance(self.dist_name, str):
-        return subdistribution_fit(name=self.dist_name, x=x)
+        return subdistribution_fit(dist_name=self.dist_name, x=x)
     elif isinstance(self.dist_name, list):
         if x.shape[1] != len(self.dist_name):
             raise ValueError('Inconsistent dimensions in inputs dist_name and x.')
         if not hasattr(self, 'copula'):
             params_fit = []
             for i in range(len(self.dist_name)):
-                params_fit.append(subdistribution_fit(name=self.dist_name[i], x=x[:, i, np.newaxis]))
+                params_fit.append(subdistribution_fit(dist_name=self.dist_name[i], x=x[:, i, np.newaxis]))
             return params_fit
         else:
             raise AttributeError('Method fit not defined for distributions with copula.')
@@ -244,7 +244,7 @@ def define_moments(self, params=None):
     - does not support distributions with copula """
     self.update_params(params, copula_params=None)
     if isinstance(self.dist_name, str):
-        return subdistribution_moments(name=self.dist_name, params=self.params)
+        return subdistribution_moments(dist_name=self.dist_name, params=self.params)
     elif isinstance(self.dist_name, list):
         if len(params) != len(self.dist_name):
             raise ValueError('UQpy error: Inconsistent dimensions')
@@ -252,7 +252,7 @@ def define_moments(self, params=None):
             mean, var, skew, kurt = [0]*len(self.dist_name), [0]*len(self.dist_name), [0]*len(self.dist_name), \
                                     [0]*len(self.dist_name),
             for i in range(len(self.dist_name)):
-                mean[i], var[i], skew[i], kurt[i] = subdistribution_moments(name=self.dist_name[i],
+                mean[i], var[i], skew[i], kurt[i] = subdistribution_moments(dist_name=self.dist_name[i],
                                                                             params=self.params[i])
             return mean, var, skew, kurt
         else:
@@ -299,7 +299,7 @@ class Copula:
 
             uu = np.zeros_like(x)
             for i in range(uu.shape[1]):
-                uu[:, i] = subdistribution_cdf(name=self.dist_name[i], x=x[:, i, np.newaxis], params=dist_params[i])
+                uu[:, i] = subdistribution_cdf(dist_name=self.dist_name[i], x=x[:, i, np.newaxis], params=dist_params[i])
             if copula_params[0] == 1:
                 return np.prod(uu, axis=1), np.ones(x.shape[0])
             else:
@@ -322,87 +322,87 @@ def exist_method(method, dist_name, has_copula):
     """ This function returns True if this method should exist for that particular Distribution, it depends on the
     method itself, dist_name and the existence of a copula"""
     if isinstance(dist_name, str):    # all scipy supported distributions have a pdf method
-        return subdistribution_exist_method(name=dist_name, method=method)
+        return subdistribution_exist_method(dist_name=dist_name, method=method)
     elif isinstance(dist_name, (list, tuple)):    # Check that all non-scipy
         if method == 'icdf':
             return False
         if has_copula and (method in ['moments', 'fit', 'rvs']):
             return False
-        if all([subdistribution_exist_method(name=n, method=method) for n in dist_name]):
+        if all([subdistribution_exist_method(dist_name=n, method=method) for n in dist_name]):
             return True
     return False
 
 
 # Helper functions for subdistributions, i.e., distributions where dist_name is only a string
-def subdistribution_exist_method(name, method):
+def subdistribution_exist_method(dist_name, method):
     # Univariate scipy distributions have all methods
-    if name in list_univariates:
+    if dist_name in list_univariates:
         return True
     # Multivariate scipy distributions have pdf, logpdf, cdf and rvs
-    elif name in list_multivariates:
+    elif dist_name in list_multivariates:
         if method in ['pdf', 'log_pdf', 'cdf', 'rvs']:
             return True
         else:
             return False
     # User defined distributions: check !
     else:
-        custom_dist = importlib.import_module(name)
+        custom_dist = importlib.import_module(dist_name)
         return hasattr(custom_dist, method)
 
 
-def subdistribution_pdf(name, x, params):
+def subdistribution_pdf(dist_name, x, params):
     # If it is a supported scipy distribution:
-    if name in list_univariates:
-        d, kwargs = scipy_distributions(name=name, params=params)
+    if dist_name in list_univariates:
+        d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         return d.pdf(x[:, 0], **kwargs)
-    elif name in list_multivariates:
-        d, kwargs = scipy_distributions(name=name, params=params)
+    elif dist_name in list_multivariates:
+        d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         return d.pdf(x, **kwargs)
     # Otherwise it must be a file
     else:
-        custom_dist = importlib.import_module(name)
+        custom_dist = importlib.import_module(dist_name)
         tmp = getattr(custom_dist, 'pdf', None)
         return tmp(x, params=params)
 
 
-def subdistribution_log_pdf(name, x, params):
+def subdistribution_log_pdf(dist_name, x, params):
     # If it is a supported scipy distribution:
-    if name in list_univariates:
-        d, kwargs = scipy_distributions(name=name, params=params)
+    if dist_name in list_univariates:
+        d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         return d.logpdf(x[:, 0], **kwargs)
-    elif name in list_multivariates:
-        d, kwargs = scipy_distributions(name=name, params=params)
+    elif dist_name in list_multivariates:
+        d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         return d.logpdf(x, **kwargs)
     # Otherwise it must be a file
     else:
-        custom_dist = importlib.import_module(name)
+        custom_dist = importlib.import_module(dist_name)
         tmp = getattr(custom_dist, 'log_pdf')
         return tmp(x, params)
 
 
-def subdistribution_cdf(name, x, params):
+def subdistribution_cdf(dist_name, x, params):
     # If it is a supported scipy distribution:
-    if name in list_univariates:
-        d, kwargs = scipy_distributions(name=name, params=params)
+    if dist_name in list_univariates:
+        d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         return d.cdf(x=x[:, 0], **kwargs)
-    elif name in list_multivariates:
-        d, kwargs = scipy_distributions(name=name, params=params)
+    elif dist_name in list_multivariates:
+        d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         return d.cdf(x=x, **kwargs)
     # Otherwise it must be a file
     else:
-        custom_dist = importlib.import_module(name)
+        custom_dist = importlib.import_module(dist_name)
         tmp = getattr(custom_dist, 'cdf')
         return tmp(x, params)
 
 
-def subdistribution_rvs(name, params, nsamples):
+def subdistribution_rvs(dist_name, nsamples, params):
     # If it is a supported scipy distribution:
-    if name in (list_univariates + list_multivariates):
-        d, kwargs = scipy_distributions(name=name, params=params)
+    if dist_name in (list_univariates + list_multivariates):
+        d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         rvs = d.rvs(size=nsamples, **kwargs)
     # Otherwise it must be a file
     else:
-        custom_dist = importlib.import_module(name)
+        custom_dist = importlib.import_module(dist_name)
         tmp = getattr(custom_dist, 'rvs')
         rvs = tmp(nsamples=nsamples, params=params)
     if isinstance(rvs, (float, int)):
@@ -415,127 +415,127 @@ def subdistribution_rvs(name, params, nsamples):
     return rvs
 
 
-def subdistribution_fit(name, x):
+def subdistribution_fit(dist_name, x):
     # If it is a supported scipy distribution:
-    if name in list_univariates:
-        d, kwargs = scipy_distributions(name=name)
+    if dist_name in list_univariates:
+        d, kwargs = scipy_distributions(dist_name=dist_name)
         return d.fit(x[:, 0])
-    elif name in list_multivariates:
-        d, kwargs = scipy_distributions(name=name)
+    elif dist_name in list_multivariates:
+        d, kwargs = scipy_distributions(dist_name=dist_name)
         return d.fit(x)
     # Otherwise it must be a file
     else:
-        custom_dist = importlib.import_module(name)
+        custom_dist = importlib.import_module(dist_name)
         tmp = getattr(custom_dist, 'fit')
-        return tmp(x=x)
+        return tmp(x)
 
 
-def subdistribution_moments(name, params):
+def subdistribution_moments(dist_name, params):
     # If it is a supported scipy distribution:
-    if name in list_univariates:
-        d, kwargs = scipy_distributions(name=name, params=params)
+    if dist_name in list_univariates:
+        d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         return d.stats(moments='mvsk', **kwargs)
     # Otherwise it must be a file
     else:
-        custom_dist = importlib.import_module(name)
+        custom_dist = importlib.import_module(dist_name)
         tmp = getattr(custom_dist, 'moments')
         return tmp(params=params)
 
 
-def subdistribution_icdf(name, x, params):
+def subdistribution_icdf(dist_name, x, params):
     # If it is a supported scipy distribution:
-    if name in list_univariates:
-        d, kwargs = scipy_distributions(name=name, params=params)
+    if dist_name in list_univariates:
+        d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         return d.ppf(x[:, 0], **kwargs)
-    if name in list_multivariates:
-        d, kwargs = scipy_distributions(name=name, params=params)
+    if dist_name in list_multivariates:
+        d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         return d.ppf(x, **kwargs)
     # Otherwise it must be a file
     else:
-        custom_dist = importlib.import_module(name)
+        custom_dist = importlib.import_module(dist_name)
         tmp = getattr(custom_dist, 'icdf')
         return tmp(x, params)
 
 
-def scipy_distributions(name, params=None):
+def scipy_distributions(dist_name, params=None):
     """ This function returns the scipy distribution, frozen with parameters in place if they are provided """
     kwargs = {}
     if params is not None:
         kwargs = {'loc': params[0], 'scale': params[1]}
 
-    if name.lower() == 'normal' or name.lower() == 'gaussian':
+    if dist_name.lower() == 'normal' or dist_name.lower() == 'gaussian':
         return stats.norm, kwargs
 
-    elif name.lower() == 'uniform':
+    elif dist_name.lower() == 'uniform':
         return stats.uniform, kwargs
 
-    elif name.lower() == 'binomial':
+    elif dist_name.lower() == 'binomial':
         if params is not None:
             kwargs = {'n': params[0], 'p': params[1]}
         return stats.binom, kwargs
 
-    elif name.lower() == 'beta':
+    elif dist_name.lower() == 'beta':
         if params is not None:
             kwargs = {'a': params[0], 'b': params[1]}
         return stats.beta, kwargs
 
-    elif name.lower() == 'gumbel_r':
+    elif dist_name.lower() == 'gumbel_r':
         if params is not None:
             kwargs = {'c': 0, 'loc': params[0], 'scale': params[1]}
         return stats.genextreme, kwargs
 
-    elif name.lower() == 'chisquare':
+    elif dist_name.lower() == 'chisquare':
         if params is not None:
             kwargs = {'df': params[0], 'loc': params[1], 'scale': params[2]}
         return stats.chi2, kwargs
 
-    elif name.lower() == 'lognormal':
+    elif dist_name.lower() == 'lognormal':
         if params is not None:
             kwargs = {'s': params[0], 'loc': params[1], 'scale': params[2]}
         return stats.lognorm, kwargs
 
-    elif name.lower() == 'gamma':
+    elif dist_name.lower() == 'gamma':
         if params is not None:
             kwargs = {'a': params[0], 'loc': params[1], 'scale': params[2]}
         return stats.gamma, kwargs
 
-    elif name.lower() == 'exponential':
+    elif dist_name.lower() == 'exponential':
         return stats.expon, kwargs
 
-    elif name.lower() == 'cauchy':
+    elif dist_name.lower() == 'cauchy':
         return stats.cauchy, kwargs
 
-    elif name.lower() == 'inv_gauss':
+    elif dist_name.lower() == 'inv_gauss':
         if params is not None:
             kwargs = {'mu': params[0], 'loc': params[1], 'scale': params[2]}
         return stats.invgauss, kwargs
 
-    elif name.lower() == 'logistic':
+    elif dist_name.lower() == 'logistic':
         return stats.logistic, kwargs
 
-    elif name.lower() == 'pareto':
+    elif dist_name.lower() == 'pareto':
         if params is not None:
             kwargs = {'b': params[0], 'loc': params[1], 'scale': params[2]}
         return stats.pareto, kwargs
 
-    elif name.lower() == 'rayleigh':
+    elif dist_name.lower() == 'rayleigh':
         return stats.rayleigh, kwargs
 
-    elif name.lower() == 'levy':
+    elif dist_name.lower() == 'levy':
         return stats.levy, kwargs
 
-    elif name.lower() == 'laplace':
+    elif dist_name.lower() == 'laplace':
         return stats.laplace, kwargs
 
-    elif name.lower() == 'maxwell':
+    elif dist_name.lower() == 'maxwell':
         return stats.maxwell, kwargs
 
-    elif name.lower() == 'truncnorm':
+    elif dist_name.lower() == 'truncnorm':
         if params is not None:
             kwargs = {'a': params[0], 'b': params[1], 'loc': params[2], 'scale': params[3]}
         return stats.truncnorm, kwargs
 
-    elif name.lower() == 'mvnormal':
+    elif dist_name.lower() == 'mvnormal':
         if params is not None:
             kwargs = {'mean': params[0], 'cov': params[1]}
         return stats.multivariate_normal, kwargs
