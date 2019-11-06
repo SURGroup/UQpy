@@ -412,7 +412,6 @@ class STS:
         if self.stype == 'Voronoi':
             self.n_iters = n_iters
 
-
         self.distribution = [None] * self.dimension
         for i in range(self.dimension):
             self.distribution[i] = Distribution(self.dist_name[i])
@@ -438,6 +437,7 @@ class STS:
                     for i in range(0, self.strata.origins.shape[0]):
                         samples[i, j] = self.strata.origins[i, j] + self.strata.widths[i, j] / 2.
 
+                import scipy.stats as stats
                 samples_u_to_x[:, j] = i_cdf(samples[:, j], self.dist_params[j])
 
             print('UQpy: Successful execution of STS design..')
@@ -761,9 +761,8 @@ class RSS:
     # Last modified: 12/03/2018 by Mohit S. Chauhan
 
     def __init__(self, sample_object=None, run_model_object=None, meta='Kriging', cell='Rectangular', nsamples=None,
-                 max_train_size=None, step_size=0.005, corr_model='Gaussian', reg_model='Quadratic',
-                 corr_model_params=None, n_opt=10, option=None, qoi_name=None, verbose=False, local=False,
-                 visualize=False, **kwargs):
+                 max_train_size=None, step_size=0.005, krig_object=None, option=None, qoi_name=None, verbose=False,
+                 local=False, visualize=False, **kwargs):
 
         from UQpy.RunModel import RunModel
 
@@ -784,10 +783,7 @@ class RSS:
             self.local = local
             self.max_train_size = max_train_size
             self.meta = meta
-            self.corr_model = corr_model
-            self.corr_model_params = corr_model_params
-            self.reg_model = reg_model
-            self.n_opt = n_opt
+            self.krig_object = krig_object
             self.qoi_name = qoi_name
             self.step_size = step_size
             if not kwargs:
@@ -855,13 +851,9 @@ class RSS:
 
                 # Use the entire sample set to train the surrogate model (more expensive option)
                 if self.max_train_size is None or len(self.training_points) <= self.max_train_size or i == self.nexist:
-                    dydx[:i], self.corr_model_params = self.estimate_gradient(np.atleast_2d(self.training_points),
-                                                                              np.atleast_2d(np.array(qoi)),
-                                                                              self.corr_model_params, self.reg_model,
-                                                                              self.corr_model,
-                                                                              self.sample_object.strata.origins + \
-                                                                              0.5 * self.sample_object.strata.widths,
-                                                                              self.n_opt)
+                    dydx[:i] = self.estimate_gradient(np.atleast_2d(self.training_points), np.atleast_2d(np.array(qoi)),
+                                                      self.sample_object.strata.origins +
+                                                      0.5 * self.sample_object.strata.widths)
 
                 # Use only max_train_size points to train the surrogate model (more economical option)
                 else:
@@ -872,14 +864,10 @@ class RSS:
                     neighbors = knn.kneighbors(np.atleast_2d(self.training_points[-1]), return_distance=False)
 
                     # Recompute the gradient only at the nearest neighbor points.
-                    dydx[neighbors], self.corr_model_params = \
-                        self.estimate_gradient(np.squeeze(self.training_points[neighbors]),
-                                               np.atleast_2d(np.array(qoi)[neighbors]),
-                                               self.corr_model_params, self.reg_model,
-                                               self.corr_model,
-                                               np.squeeze(self.sample_object.strata.origins[neighbors] + \
-                                                          0.5 * self.sample_object.strata.widths[neighbors]),
-                                               self.n_opt)
+                    dydx[neighbors] = self.estimate_gradient(np.squeeze(self.training_points[neighbors]),
+                                                             np.atleast_2d(np.array(qoi)[neighbors]),
+                                                             np.squeeze(self.sample_object.strata.origins[neighbors] +
+                                                                        0.5 * self.sample_object.strata.widths[neighbors]))
 
                 # Define the gradient vector for application of the Delta Method
                 dydx1 = dydx[:i]
@@ -1006,13 +994,8 @@ class RSS:
                 # Use the entire sample set to train the surrogate model (more expensive option)
                 if self.max_train_size is None or len(self.training_points) <= self.max_train_size or \
                         i == self.nexist:
-                    dydx, self.corr_model_params = self.estimate_gradient(np.atleast_2d(self.training_points),
-                                                                              np.atleast_2d(np.array(qoi)),
-                                                                              self.corr_model_params,
-                                                                              self.reg_model,
-                                                                              self.corr_model,
-                                                                              self.mesh.centroids,
-                                                                              self.n_opt)
+                    dydx = self.estimate_gradient(np.atleast_2d(self.training_points), np.atleast_2d(np.array(qoi)),
+                                                  self.mesh.centroids)
 
                 # Use only max_train_size points to train the surrogate model (more economical option)
                 else:
@@ -1071,13 +1054,9 @@ class RSS:
                             dydx[j, :] = dydx_old[int(self.mesh.new_to_old[j]), :]
 
                     # For those simplices that will be updated, compute the new gradient
-                    dydx[update_array, :], self.corr_model_params = \
-                        self.estimate_gradient(np.squeeze(self.sample_object.samplesU01[neighbors]),
-                                               np.atleast_2d(np.array(qoi)[neighbors]),
-                                               self.corr_model_params, self.reg_model,
-                                               self.corr_model,
-                                               self.mesh.centroids[update_array],
-                                               self.n_opt)
+                    dydx[update_array, :] = self.estimate_gradient(np.squeeze(self.sample_object.samplesU01[neighbors]),
+                                                                   np.atleast_2d(np.array(qoi)[neighbors]),
+                                                                   self.mesh.centroids[update_array])
 
                 # ----------------------------------------------------
                 # Determine the simplex to break and draw a new sample
@@ -1402,7 +1381,7 @@ class RSS:
 
     # Code for estimating gradients with a metamodel (surrogate)
     # TODO: We may want to consider moving this to Utilities.
-    def estimate_gradient(self, x, y, corr_m_p, reg_m, corr_m, xt, n):
+    def estimate_gradient(self, x, y, xt):
         # meta = 'Delaunay' is not currently functional.
         if self.meta == 'Delaunay':
 
@@ -1416,10 +1395,9 @@ class RSS:
         elif self.meta == 'Kriging':
             from UQpy.Surrogates import Krig
             with suppress_stdout():  # disable printing output comments
-                tck = Krig(samples=x, values=y.T, reg_model=reg_m, corr_model=corr_m, corr_model_params=corr_m_p,
-                           n_opt=n)
-            corr_m_p = tck.corr_model_params
-            gr = self.cent_diff(tck.interpolate, xt, self.step_size)
+                self.krig_object.fit(samples=x, values=y.T)
+            # corr_m_p = self.krig_object.corr_model_params
+            gr = self.cent_diff(self.krig_object.interpolate, xt, self.step_size)
 
         elif self.meta == 'Kriging_Sklearn':
             gp = GaussianProcessRegressor(kernel=corr_m, n_restarts_optimizer=0)
@@ -1427,7 +1405,7 @@ class RSS:
             gr = self.cent_diff(gp.predict, xt, self.step_size)
         else:
             raise NotImplementedError("UQpy Error: 'meta' must be specified in order to calculate gradients.")
-        return gr, corr_m_p
+        return gr  # corr_m_p
 
     # Implementation of the central difference method for calculating gradients.
     # TODO: This should probably be moved to Utilities.
@@ -1635,23 +1613,22 @@ class AKMCS:
     # Authors: Mohit S. Chauhan
     # Last modified: 08/04/2019 by Mohit S. Chauhan
 
-    def __init__(self, run_model_object=None, sample_object=None, nlearn=10000, nstart=None, population=None,
-                 dist_name=None, dist_params=None, nsamples=None, corr_model='Gaussian', reg_model='Linear',
-                 corr_model_params=None, n_add=1, qoi_name=None, n_opt=10, lf=None, min_cov=None, max_p=None,
-                 verbose = False, kriging='UQpy', visualize=False, **kwargs):
+    def __init__(self, run_model_object=None, sample_object=None, krig_object=None, nlearn=10000, nstart=None,
+                 population=None, dist_name=None, dist_params=None, nsamples=None, n_add=1, qoi_name=None, lf=None,
+                 min_cov=None, max_p=None, verbose=False, kriging='UQpy', visualize=False, **kwargs):
 
-        # TODO: Modify Kriging so it can be passed in as an object. This will change some of the code below.
+        # TODO: Modify Kriging so it can be passed in as an object. This will change some of the code below. (Done)
 
         # Initialize the internal variables of the class.
         self.run_model_object = run_model_object
         self.sample_object = sample_object
+        self.krig_object = krig_object
         self.nlearn = nlearn
         self.nstart = nstart
         self.verbose = verbose
         self.qoi_name = qoi_name
-        self.n_opt = n_opt
 
-        # TODO: Make self.lf a function itself. That way, it can be passed in or it can be assigned to one of the
+        # TODO: Make self.lf a function itself. That way, it can be passed in or it can be assigned to one of the (Done)
         #  internal functions based on the keyword lf.
         self.lf = lf
         self.min_cov = min_cov
@@ -1659,13 +1636,13 @@ class AKMCS:
         self.dist_name = dist_name
         self.dist_params = dist_params
         self.nsamples = nsamples
-        self.corr_model = corr_model
-        self.corr_model_params = corr_model_params
-        self.reg_model = reg_model
-        self.n_opt = n_opt
 
         # TODO: Allow the code to add more than one point in a give iteration.
+        self.moments = None
         self.n_add = n_add
+        self.indicator = False
+        self.pf = 0
+        self.cov_pf = 0
         self.population = population
         self.kriging = kriging
         self.visualize = visualize
@@ -1674,22 +1651,20 @@ class AKMCS:
         self.init_akmcs()
 
         # Run AKMCS
-        self.run_akmcs(kwargs)
-
+        if not kwargs:
+            self.run_akmcs()
+        else:
+            self.run_akmcs(kwargs)
 
     def run_akmcs(self, *args):
-        from UQpy.RunModel import RunModel
-        if self.kriging == 'UQpy':
-            from UQpy.Surrogates import Krig
-        else:
+        import scipy.stats as stats
+        import sympy as sy
+        if self.kriging != 'UQpy':
             from sklearn.gaussian_process import GaussianProcessRegressor
 
         # Check if the initial sample design already exists and has model evalutions with it.
         # If it does not, run the initial calculations.
-        if self.run_model_object is None:
-            raise NotImplementedError('UQpy: AKMCS requires a predefined RunModel object.')
-        elif self.sample_object.samples is not None:
-            self.dimension = np.shape(self.sample_object.samples)[1]
+        if self.sample_object.samples is not None:
             self.training_points = self.sample_object.samplesU01
             if self.verbose:
                 print('UQpy: AKMCS - Running the initial sample set.')
@@ -1700,16 +1675,14 @@ class AKMCS:
         else:
             if self.verbose:
                 print('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
-            self.sample_object = LHS(dist_name=self.dist_name, dist_params=self.dist_params, nsamples=nstart)
+            self.sample_object = LHS(dist_name=self.dist_name, dist_params=self.dist_params, nsamples=self.nstart)
             self.training_points = self.sample_object.samplesU01
-            self.dimension = np.shape(self.sample_object.samples)[1]
             if self.verbose:
                 print('UQpy: AKMCS - Running the initial sample set.')
             if not args:
                 self.run_model_object.run(samples=self.sample_object.samples)
             else:
                 self.run_model_object.run(args[0], samples=self.sample_object.samples)
-
 
         if self.verbose:
             print('UQpy: Performing AK-MCS design...')
@@ -1731,14 +1704,11 @@ class AKMCS:
         # Train the initial Kriging model.
         if self.kriging == 'UQpy':
             with suppress_stdout():  # disable printing output comments
-                k = Krig(samples=np.atleast_2d(self.training_points), values=np.atleast_2d(np.array(qoi)).T,
-                         corr_model=self.corr_model, reg_model=self.reg_model,
-                         corr_model_params=self.corr_model_params, n_opt=self.n_opt)
-            self.corr_model_params = k.corr_model_params
-            self.krig_model = k.interpolate
+                self.krig_object.fit(samples=np.atleast_2d(self.training_points), values=np.atleast_2d(np.array(qoi)).T)
+            self.krig_model = self.krig_object.interpolate
         else:
-            gp = GaussianProcessRegressor(kernel=self.corr_model_params, n_restarts_optimizer=0)
-            gp.fit(self.DoE, values)
+            gp = GaussianProcessRegressor(kernel=self.krig_object, n_restarts_optimizer=0)
+            gp.fit(self.training_points, qoi)
             self.krig_model = gp.predict
 
 
@@ -1747,16 +1717,17 @@ class AKMCS:
         # ---------------------------------------------
 
         for i in range(self.training_points.shape[0], self.nsamples):
+            print(i)
 
             # Find all of the points in the population that have not already been integrated into the training set
             rest_pop = np.array([x for x in self.population.samplesU01.tolist() if x not in self.training_points.tolist()])
 
             # Apply the learning function to identify the new point to run the model.
-            # TODO: Rewrite this section so that each learning function is called directly as a function through self.lf
+            # TODO: Rewrite this section so that each learning function is called directly as a function through self.lf (Done)
             # TODO: Add the other learning fuctions.
-            if self.lf == 'EIGF':
-                new_ind = self.eigf(self.krig_model, rest_pop, qoi, i)
-                new_point = np.atleast_2d(rest_pop[new_ind])
+
+            new_ind = self.lf(self.krig_model, rest_pop, qoi, i)
+            new_point = np.atleast_2d(rest_pop[new_ind])
 
             # Add the new points to the training set and to the sample set.
             self.training_points = np.vstack([self.training_points, new_point])
@@ -1784,14 +1755,12 @@ class AKMCS:
             if self.kriging == 'UQpy':
                 with suppress_stdout():
                     # disable printing output comments
-                    k = Krig(samples=np.atleast_2d(self.training_points), values=np.atleast_2d(np.array(qoi)).T,
-                             corr_model=self.corr_model, reg_model=self.reg_model,
-                             corr_model_params=self.corr_model_params, n_opt=self.n_opt)
-                self.corr_model_params = k.corr_model_params
-                self.krig_model = k.interpolate
+                    self.krig_object.fit(samples=np.atleast_2d(self.training_points),
+                                         values=np.atleast_2d(np.array(qoi)).T)
+                self.krig_model = self.krig_object.interpolate
             else:
-                gp = GaussianProcessRegressor(kernel=self.corr_model_params, n_restarts_optimizer=0)
-                gp.fit(self.DoE, values)
+                gp = GaussianProcessRegressor(kernel=self.krig_object, n_restarts_optimizer=0)
+                gp.fit(self.training_points, qoi)
                 self.krig_model = gp.predict
 
             if self.verbose:
@@ -1803,7 +1772,6 @@ class AKMCS:
     # ------------------
     # LEARNING FUNCTIONS
     # ------------------
-
     def eigf(self, surr, pop, qoi, i):
         # Expected Improvement for Global Fit (EIGF)
         # Refrence: J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
@@ -1881,7 +1849,7 @@ class AKMCS:
         return rows
 
     # This learning function has not yet been tested.
-    def u(self, surr, pop):
+    def u(self, surr, pop, qoi, i):
         # U-function
         # References: B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining
         # Kriging and Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
@@ -1896,15 +1864,18 @@ class AKMCS:
         u = abs(g) / sig
         rows = u[:, 0].argsort()[:self.n_add]
 
-        indicator = False
         if min(u[:, 0]) >= 2:
-            indicator = True
+            self.indicator = True
 
-        # print(g[rows])
-        return pop[rows, :], indicator, g
+        if self.indicator or len(qoi) == self.nsamples-1:
+            n_ = g.shape[0]+len(qoi)
+            self.pf = (np.sum(g < 0) + sum(iin < 0 for iin in qoi)) / n_
+            self.cov_pf = np.sqrt((1 - self.pf) / (self.pf * n_))
+
+        return rows
 
     # This learning function has not yet been tested.
-    def weighted_u(self, surr, pop, a, p_, mp):
+    def weighted_u(self, surr, pop, qoi, i):
         # Probability Weighted U-function
         # References: V.S. Sundar and M.S. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH
         # MULTIMODEL INFERENCE".
@@ -1919,7 +1890,7 @@ class AKMCS:
         u = abs(g) / sig
         p1 = p_.pdf(pop, params=self.dist_params).reshape(u.size, 1)
         u_ = u * ((self.max_p - p1) / self.max_p)
-        rows = u_[:, 0].argsort()[:self.n_add]
+        rows = u_[:, 0].argsort()[-self.n_add:]
 
         indicator = False
         if min(u[:, 0]) >= 2:
@@ -1929,7 +1900,7 @@ class AKMCS:
         return pop[rows, :], indicator, g
 
     # This learning function has not yet been tested.
-    def eff(self, surr, pop):
+    def eff(self, surr, pop, qoi, i):
         # Expected Feasibilty Function (EFF)
         # References: B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, "Efficient Global Reliability
         # Analysis for Nonlinear Implicit Performance Functions", AIAA JOURNAL, Volume 46, 2008.
@@ -1938,6 +1909,7 @@ class AKMCS:
             sig = np.sqrt(sig)
         else:
             g, sig = surr(pop, return_std=True)
+            g = g.reshape(g.size, 1)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
         # Reliability threshold: a_ = 0
@@ -1946,18 +1918,23 @@ class AKMCS:
         t1 = (a_ - g) / sig
         t2 = (a_ - ep - g) / sig
         t3 = (a_ + ep - g) / sig
-        eff = (g - a_) * (2 * sp.norm.cdf(t1) - sp.norm.cdf(t2) - sp.norm.cdf(t3))
-        eff += -sig * (2 * sp.norm.pdf(t1) - sp.norm.pdf(t2) - sp.norm.pdf(t3))
-        eff += ep*(sp.norm.cdf(t3) - sp.norm.cdf(t2))
-        rows = eff[:, 0].argsort()[:self.n_add]
-        indicator = False
-        if max(eff) <= 0.001:
-            indicator = True
+        eff = (g - a_) * (2 * stats.norm.cdf(t1) - stats.norm.cdf(t2) - stats.norm.cdf(t3))
+        eff += -sig * (2 * stats.norm.pdf(t1) - stats.norm.pdf(t2) - stats.norm.pdf(t3))
+        eff += ep*(stats.norm.cdf(t3) - stats.norm.cdf(t2))
+        rows = eff[:, 0].argsort()[-self.n_add:]
 
-        return pop[rows, :], indicator, g
+        if max(eff[:, 0]) <= 0.001:
+            self.indicator = True
+
+        if self.indicator or len(qoi) == self.nsamples - 1:
+            n_ = g.shape[0] + len(qoi)
+            self.pf = (np.sum(g < 0) + sum(iin < 0 for iin in qoi)) / n_
+            self.cov_pf = np.sqrt((1 - self.pf) / (self.pf * n_))
+
+        return rows
 
     # This learning function has not yet been tested.
-    def eif(self, surr, pop, fm):
+    def eif(self, surr, pop, qoi, i):
         # Expected Improvement Function (EIF)
         # References: D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box
         # Functions", Journal of Global Optimization, Pages 455–492, 1998.
@@ -1973,20 +1950,76 @@ class AKMCS:
 
         return rows
 
+    # This learning function has not yet been tested.
+    def usi(self, surr, pop, qoi, i):
+        # Calculations of Sobol indices for the Gaussian process metamodel
+
+        # Marginal expectation of correaltion term in predictor w.r.t each input variable
+        mar_ex = np.ones([self.sample_object.samples.shape[0], self.dimension])
+        for ii in range(self.dimension):
+            for ij in range(self.sample_object.samples.shape[0]):
+                x = sy.Symbol('x')
+                fun1 = np.exp(-(x - self.sample_object.samples[ij, ii])**2/self.krig_object.corr_model_params)
+                fun2 = Distribution(dist_name=self.dist_name[ii]).pdf(params=self.dist_params[ii])
+                mar_ex[ij, ii] = sy.integrate(fun1*fun2, (x, -oo, oo))
+
+        sobol = np.zeros([self.dimension, 1])
+        for ii in range(self.dimension):
+            x_corr = pop[:, ii]
+            sobol[ii, 1] = np.std(e_y_given_x(x_corr, self.moments, mar_ex, ii))
+
+        sobol1 = sobol/self.krig_object.sig
+        sobol2 = sobol/np.sum(sobol)
+        print(np.sum(sobol), self.krig_object.sig)
+
+
+    def e_y_given_x(self, xi, mom, exp_mom, id):
+        E1 = mom[:, 0]*np.ones([xi.shape[0], mom.shape[0]])
+        E1[:, id] = xi
+        fx, jf = self.krig_object.regress(model='Linear')(E1)
+        # fx = np.concatenate((np.ones([np.size(E1, 0), 1]), E1), 1)
+        rx = self.krig_object.corr(model='Gaussian')(np.atleast_2d(xi).T,
+                                                     np.atleast_2d(self.sample_object.samples[:, id]).T,
+                                                     self.krig_object.corr_model_params[id])
+        exp_mom = np.delete(exp_mom, id, axis=1)
+        r = rx*np.prod(zz, axis=1)
+        y = np.einsum('ij,jk->ik', fx, self.krig_object.beta) + np.einsum('ij,jk->ik', r, self.krig_object.gamma)
+        return y
+
+
 
     # Initial check for errors
     def init_akmcs(self):
+        if self.run_model_object is None:
+            raise NotImplementedError('UQpy: AKMCS requires a predefined RunModel object.')
+
+        if self.sample_object.samples is not None:
+            self.dimension = np.shape(self.sample_object.samples)[1]
+        else:
+            self.dimension = np.shape(self.dist_name)[0]
 
         if type(self.lf).__name__ == 'function':
             self.lf = self.lf
-        elif self.lf not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
+        elif self.lf not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF', 'USI']:
             raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
+        elif self.lf == 'EIGF':
+            self.lf = self.eigf
+        elif self.lf == 'EIF':
+            self.lf = self.eif
+        elif self.lf == 'U':
+            self.lf = self.u
+        elif self.lf == 'Weighted-U':
+            self.lf = self.weighted_u
+        elif self.lf == 'USI':
+            self.moments = np.zeros([self.dimension, 4])
+            if self.krig_object.rmodel != 'Linear':
+                raise NotImplementedError("UQpy Error: This learning function only works with Linear regression model.")
 
-        if type(self.corr_model).__name__ != 'str':
-            self.kriging = 'Sklearn'
-
-
-
+            for i in range(self.dimension):
+                self.moments[i, :] = Distribution(dist_name=self.dist_name[i]).moments(params=self.dist_params[i])
+            self.lf = self.usi
+        else:
+            self.lf = self.eff
 
 ########################################################################################################################
 ########################################################################################################################
