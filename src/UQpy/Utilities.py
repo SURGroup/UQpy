@@ -1080,15 +1080,16 @@ def check_input_dims(x):
     return x
 
 
-def recursive_update_mean_covariance(n_new, new_sample, previous_mean, previous_covariance=None):
-    """ Iterative formula to compute a new mean, covariance based on previous ones and new sample. """
-    new_mean = (n_new - 1) / n_new * previous_mean + 1 / n_new * new_sample
+def recursive_update_mean_covariance(n, new_sample, previous_mean, previous_covariance=None):
+    """ Iterative formula to compute a new mean, covariance based on previous ones and new sample.
+     n is the number of samples used to compute the current mean """
+    new_mean = (n - 1) / n * previous_mean + 1 / n * new_sample
     if previous_covariance is None:
         return new_mean
     dim = new_sample.size
-    if n_new == 1:
+    if n == 1:
         new_covariance = np.zeros((dim, dim))
     else:
         delta_n = (new_sample - previous_mean).reshape((dim, 1))
-        new_covariance = (n_new - 2) / (n_new - 1) * previous_covariance + 1 / n_new * np.matmul(delta_n, delta_n.T)
+        new_covariance = (n - 2) / (n - 1) * previous_covariance + 1 / n * np.matmul(delta_n, delta_n.T)
     return new_mean, new_covariance

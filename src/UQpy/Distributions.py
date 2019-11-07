@@ -157,7 +157,7 @@ def define_log_pdf(self, x, params=None, copula_params=None):
     x = check_input_dims(x)
     self.update_params(params, copula_params)
     if isinstance(self.dist_name, str):
-        return subdistribution_pdf(dist_name=self.dist_name, x=x, params=self.params)
+        return subdistribution_log_pdf(dist_name=self.dist_name, x=x, params=self.params)
     elif isinstance(self.dist_name, list):
         if (x.shape[1] != len(self.dist_name)) or (len(self.params) != len(self.dist_name)):
             raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
@@ -354,45 +354,54 @@ def subdistribution_pdf(dist_name, x, params):
     # If it is a supported scipy distribution:
     if dist_name in list_univariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
-        return d.pdf(x[:, 0], **kwargs)
+        val = d.pdf(x[:, 0], **kwargs)
     elif dist_name in list_multivariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
-        return d.pdf(x, **kwargs)
+        val = d.pdf(x, **kwargs)
     # Otherwise it must be a file
     else:
         custom_dist = importlib.import_module(dist_name)
         tmp = getattr(custom_dist, 'pdf', None)
-        return tmp(x, params=params)
+        val = tmp(x, params=params)
+    if isinstance(val, (float, int)):
+        val = np.array([val])
+    return val
 
 
 def subdistribution_log_pdf(dist_name, x, params):
     # If it is a supported scipy distribution:
     if dist_name in list_univariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
-        return d.logpdf(x[:, 0], **kwargs)
+        val = d.logpdf(x[:, 0], **kwargs)
     elif dist_name in list_multivariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
-        return d.logpdf(x, **kwargs)
+        val = d.logpdf(x, **kwargs)
     # Otherwise it must be a file
     else:
         custom_dist = importlib.import_module(dist_name)
         tmp = getattr(custom_dist, 'log_pdf')
-        return tmp(x, params)
+        val = tmp(x, params)
+    if isinstance(val, (float, int)):
+        val = np.array([val])
+    return val
 
 
 def subdistribution_cdf(dist_name, x, params):
     # If it is a supported scipy distribution:
     if dist_name in list_univariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
-        return d.cdf(x=x[:, 0], **kwargs)
+        val = d.cdf(x=x[:, 0], **kwargs)
     elif dist_name in list_multivariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
-        return d.cdf(x=x, **kwargs)
+        val = d.cdf(x=x, **kwargs)
     # Otherwise it must be a file
     else:
         custom_dist = importlib.import_module(dist_name)
         tmp = getattr(custom_dist, 'cdf')
-        return tmp(x, params)
+        val = tmp(x, params)
+    if isinstance(val, (float, int)):
+        val = np.array([val])
+    return val
 
 
 def subdistribution_rvs(dist_name, nsamples, params):
@@ -446,15 +455,18 @@ def subdistribution_icdf(dist_name, x, params):
     # If it is a supported scipy distribution:
     if dist_name in list_univariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
-        return d.ppf(x[:, 0], **kwargs)
+        val = d.ppf(x[:, 0], **kwargs)
     if dist_name in list_multivariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
-        return d.ppf(x, **kwargs)
+        val = d.ppf(x, **kwargs)
     # Otherwise it must be a file
     else:
         custom_dist = importlib.import_module(dist_name)
         tmp = getattr(custom_dist, 'icdf')
-        return tmp(x, params)
+        val = tmp(x, params)
+    if isinstance(val, (float, int)):
+        val = np.array([val])
+    return val
 
 
 def scipy_distributions(dist_name, params=None):
