@@ -3276,6 +3276,8 @@ class MCMC:
 
 class IS:
     """
+    Test Comment
+
         Description:
 
             Perform Importance Sampling (IS) of independent random variables given a target and a
@@ -3318,8 +3320,9 @@ class IS:
     # Last Modified: 10/2019 by Audrey Olivier
 
     def __init__(self, nsamples=None, pdf_target=None, log_pdf_target=None, args_target=None,
-                 proposal=None, proposal_params=None):
+                 proposal=None, proposal_params=None, verbose=False):
 
+        self.verbose = verbose
         # Initialize proposal: it should have an rvs and log pdf or pdf method
         if not isinstance(proposal, Distribution):
             raise TypeError('The proposal should be of type Distribution.')
@@ -3347,6 +3350,8 @@ class IS:
     def run(self, nsamples):
         """ Perform IS """
 
+        if self.verbose:
+            print('Running Importance Sampling')
         # Sample from proposal
         new_samples = self.proposal.rvs(nsamples=nsamples)
         # Compute un-scaled weights of new samples
@@ -3365,6 +3370,8 @@ class IS:
         # note: scaling with max avoids having NaN of Inf when taking the exp
         sum_w = np.sum(weights, axis=0)
         self.weights = weights / sum_w
+        if self.verbose:
+            print('Importance Sampling performed successfully')
 
     def resample(self, method='multinomial', size=None):
         """ Resample: create a set of un-weighted samples from a set of weighted samples """
