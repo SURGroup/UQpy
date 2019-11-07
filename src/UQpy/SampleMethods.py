@@ -108,14 +108,6 @@ class MCS:
 
         samples_new = Distribution(dist_name=self.dist_name).rvs(params=self.dist_params, nsamples=nsamples)
 
-        att = (hasattr(Distribution(dist_name=self.dist_name[i]), 'cdf') for i in range(samples_new.shape[1]))
-        if all(att):
-            samplesU01_new = np.zeros_like(samples_new)
-            for i in range(samples_new.shape[1]):
-                samplesU01_new[:, i] = Distribution(dist_name=
-                                                    self.dist_name[i]).cdf(x=np.atleast_2d(samples_new[:, i]),
-                                                    params=self.dist_params[i])
-
         # Shape the arrays as (1,n) if nsamples=1, and (n,1) if nsamples=n
         if len(samples_new.shape) == 1:
             if self.nsamples == 1:
@@ -123,23 +115,31 @@ class MCS:
             else:
                 samples_new = samples_new.reshape((-1, 1))
 
-        if len(samplesU01_new.shape) == 1:
-            if self.nsamples == 1:
-                samplesU01_new = samplesU01_new.reshape((1, -1))
-            else:
-                samplesU01_new = samplesU01_new.reshape((-1, 1))
-
-        # If self.samples/self.samplesU01 already has existing samples/samplesU01,
+        # If self.samples already has existing samples,
         # append the new samples to the existing attribute.
         if self.samples is None:
             self.samples = samples_new
         else:
             self.samples = np.concatenate([self.samples, samples_new], axis=0)
 
-        if self.samplesU01 is None:
-            self.samplesU01 = samplesU01_new
-        else:
-            self.samplesU01 = np.concatenate([self.samplesU01, samplesU01_new], axis=0)
+        att = (hasattr(Distribution(dist_name=self.dist_name[i]), 'cdf') for i in range(samples_new.shape[1]))
+        if all(att):
+            samples_u01_new = np.zeros_like(samples_new)
+            for i in range(samples_new.shape[1]):
+                samples_u01_new[:, i] = Distribution(dist_name=self.dist_name[i]).cdf(
+                    x=np.atleast_2d(samples_new[:, i]), params=self.dist_params[i])
+            if len(samples_u01_new.shape) == 1:
+                if self.nsamples == 1:
+                    samples_u01_new = samples_u01_new.reshape((1, -1))
+                else:
+                    samples_u01_new = samples_u01_new.reshape((-1, 1))
+
+            # If self.samplesU01 already has existing samplesU01,
+            # append the new samples to the existing attribute.
+            if self.samplesU01 is None:
+                self.samplesU01 = samples_u01_new
+            else:
+                self.samplesU01 = np.concatenate([self.samplesU01, samples_u01_new], axis=0)
 
         if self.verbose:
             print('UQpy: Monte Carlo Sampling Complete.')
