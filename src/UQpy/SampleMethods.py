@@ -89,8 +89,8 @@ class MCS:
         self.samples = Distribution(dist_name=self.dist_name).rvs(params=self.dist_params, nsamples=nsamples)
         self.samplesU01 = np.zeros_like(self.samples)
         for i in range(self.samples.shape[1]):
-            self.samplesU01[:,i] = Distribution(dist_name=self.dist_name[i]).cdf(x=self.samples[:,i,],
-                                                                            params=self.dist_params[i])
+            self.samplesU01[:, i] = Distribution(dist_name=self.dist_name[i]).cdf(x=np.atleast_2d(self.samples[:, i]).T,
+                                                                                  params=self.dist_params[i])
 
         if verbose:
             print('UQpy: Monte Carlo Sampling Complete.')
@@ -413,11 +413,11 @@ class STS:
         if self.stype == 'Voronoi':
             self.n_iters = n_iters
 
+        self.init_sts()
         self.distribution = [None] * self.dimension
         for i in range(self.dimension):
             self.distribution[i] = Distribution(self.dist_name[i])
 
-        self.init_sts()
         if self.stype == 'Voronoi':
             self.run_sts()
         elif self.stype == 'Rectangular':
@@ -439,7 +439,7 @@ class STS:
                         samples[i, j] = self.strata.origins[i, j] + self.strata.widths[i, j] / 2.
 
                 import scipy.stats as stats
-                samples_u_to_x[:, j] = i_cdf(samples[:, j], self.dist_params[j])
+                samples_u_to_x[:, j] = i_cdf(np.atleast_2d(samples[:, j]).T, self.dist_params[j])
 
             print('UQpy: Successful execution of STS design..')
             return samples, samples_u_to_x
@@ -469,7 +469,8 @@ class STS:
 
             self.samples = np.zeros(np.shape(self.samplesU01))
             for i in range(self.dimension):
-                self.samples[:, i] = self.distribution[i].icdf(self.samplesU01[:, i], self.dist_params[i]).T
+                self.samples[:, i] = self.distribution[i].icdf(np.atleast_2d(self.samplesU01[:, i]).T,
+                                                               self.dist_params[i]).T
 
     def in_hypercube(self, samples):
         str_temp = 'np.logical_and('
@@ -929,7 +930,7 @@ class RSS:
                 self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
                 for j in range(0, self.dimension):
                     icdf = self.sample_object.distribution[j].icdf
-                    new_point[j] = icdf(new_point[j], self.sample_object.dist_params[j])
+                    new_point[j] = icdf(np.atleast_2d(new_point[j]), self.sample_object.dist_params[j])
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 # Run the model at the new sample point
@@ -1734,7 +1735,7 @@ class AKMCS:
             self.training_points = np.vstack([self.training_points, new_point])
             self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
             for j in range(self.dimension):
-                new_point[0, j] = self.sample_object.distribution[j].icdf(new_point[0, j],
+                new_point[0, j] = self.sample_object.distribution[j].icdf(np.atleast_2d(new_point[0, j]).T,
                                                                           self.sample_object.dist_params[j])
             self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
