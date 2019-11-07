@@ -3276,7 +3276,6 @@ class MCMC:
 
 class IS:
     """
-    Test Comment
 
         Description:
 
