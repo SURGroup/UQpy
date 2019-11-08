@@ -264,7 +264,7 @@ class MLEstimation:
             if self.verbose:
                 print('Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name +
                       ', using fit method.')
-            mle_tmp = self.inference_model.distribution_object.fit(self.data)
+            mle_tmp = np.array(self.inference_model.distribution_object.fit(self.data))
             max_log_like_tmp = self.inference_model.evaluate_log_likelihood(
                 data=self.data, params=mle_tmp[np.newaxis, :])[0]
 
@@ -470,8 +470,6 @@ class BayesParameterEstimation:
             raise TypeError('Input inference_model should be of type InferenceModel')
         self.data = data
         self.sampling_method = sampling_method
-        if not 'nsamples' in kwargs.keys():
-            raise ValueError('Input nsamples must be provided.')
         self.verbose = verbose
 
         if self.sampling_method == 'MCMC':

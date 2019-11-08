@@ -2682,7 +2682,7 @@ class MCMC:
                 proposal_params = self.algorithm_inputs['proposal_params']
             proposal = self.check_methods_proposal(proposal, proposal_params)
             self.algorithm_inputs['proposal'] = proposal
-            del self.algorithm_inputs['proposal_params']
+            #del self.algorithm_inputs['proposal_params']
 
         # check the symmetry of proposal, assign False as default
         if 'proposal_is_symmetric' not in self.algorithm_inputs.keys():

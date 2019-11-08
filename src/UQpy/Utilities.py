@@ -1003,16 +1003,20 @@ def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ES
         #print('Multivariate ESS = {}, minimum ESS recommended = {}'.format(joint_ESS, min_joint_ESS))
 
         # Computation of the autocorrelation time in each dimension
-        def auto_window(taus, c):    # Automated windowing procedure following Sokal (1989)
-            m = np.arange(len(taus)) < c * taus
-            if np.any(m):
-                return np.argmin(m)
-            return len(taus) - 1
-        autocorrelation_time = []
-        for j in range(samples.shape[1]):
-            taus, f = plt.acorr(samples[:, j] - np.mean(samples[:, j]), maxlags=None, normed=True)
-            window = auto_window(taus, c=5.)
-            autocorrelation_time.append(taus[window])
+        #def auto_window(taus, c):    # Automated windowing procedure following Sokal (1989)
+        #    m = np.arange(len(taus)) < c * taus
+        #    if np.any(m):
+        #        return np.argmin(m)
+        #    return len(taus) - 1
+        #autocorrelation_time = []
+        #for j in range(samples.shape[1]):
+        #    x = samples[:, j] - np.mean(samples[:, j])
+        #    f = np.correlate(x, x, mode="full") / np.dot(x, x)
+        #    maxlags = len(x) - 1
+        #    taus = np.arange(-maxlags, maxlags + 1)
+        #    f = f[len(x) - 1 - maxlags:len(x) + maxlags]
+        #    window = auto_window(taus, c=5.)
+        #    autocorrelation_time.append(taus[window])
         #print('Autocorrelation time in each dimension (for nsamples = ):')
         #for j in range(dim):
         #    print('Dimension {}: autocorrelation time = {}'.format(j+1, autocorrelation_time[j]))
