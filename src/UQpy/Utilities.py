@@ -26,7 +26,7 @@ from scipy.special import gamma
 from scipy.stats import chi2, norm
 
 
-def _run_parallel_python(model_script, model_object_name, sample, dict_kwargs):
+def _run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
     """
     Execute the python model in parallel
     :param sample: One sample point where the model has to be evaluated
@@ -37,7 +37,7 @@ def _run_parallel_python(model_script, model_object_name, sample, dict_kwargs):
     # if kwargs is not None:
     #     par_res = eval(model_object_name + '(sample, kwargs)')
     # else:
-    if len(dict_kwargs) == 0:
+    if dict_kwargs is None:
         par_res = eval(model_object_name + '(sample)')
     else:
         par_res = eval(model_object_name + '(sample, **dict_kwargs)')
