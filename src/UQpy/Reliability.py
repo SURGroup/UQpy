@@ -631,7 +631,7 @@ class SubsetSimulation:
 ########################################################################################################################
 
 
-class TaylorSeries:
+class TaylorSeries_old:
 
     # Authors: Dimitris G.Giovanis
     # Last Modified: 11/19/18 by Dimitris G. Giovanis
@@ -878,3 +878,177 @@ class TaylorSeries:
                 pf_srom = np.inf
 
                 return u_star, x_star, beta, pf, pf_srom, k
+
+class TaylorSeries:
+
+    # Authors: Dimitris G.Giovanis
+    # Last Modified: 11/11/2019 by Dimitris G. Giovanis
+
+    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=1000, corr=None, seed=None, model=None):
+        """
+            Description: A class that performs reliability analysis of a model using the First Order Reliability Method
+                         (FORM) and Second Order Reliability Method (SORM) that belong to the family of Taylor series
+                         expansion methods.
+
+            Input:
+                :param dimension: Number of random variables
+                :type dimension: int
+                :param dist_name: Probability distribution model for each random variable (see Distributions class).
+                :type dist_name: list/string
+                :param dist_params: Probability distribution model parameters for each random variable.
+                                   (see Distributions class).
+                :type dist_params: list
+                :param n_iter: Maximum number of iterations for the Hasofer-Lind algorithm
+                :type n_iter: int
+                :param seed: Initial seed
+                :type seed: np.array
+                :param corr: Correlation structure of the random vector (See Transformation class).
+                :type corr: ndarray
+                :param method: Method used for the reliability problem -- available methods: 'FORM', 'SORM'
+                :type method: str
+        """
+
+        self.dimension = dimension
+        self.dist_name = dist_name
+        self.dist_params = dist_params
+        self.n_iter = n_iter
+        self.corr = corr
+        self.model = model
+
+        if self.model is None:
+            raise RuntimeError("In order to use class TaylorSeries a model of type RunModel is required.")
+
+
+        #if self.algorithm == 'HL':
+            #[self.DesignPoint_U, self.DesignPoint_X, self.HL_beta, self.Prob_FORM,
+             #self.Prob_SORM, self.iterations] = self.form_hl()
+
+    def form(self, seed=None):
+
+        print('Running FORM...')
+
+        # initialization
+        max_iter = self.n_iter
+        tol = 1e-5
+        u = np.zeros([max_iter + 1, self.dimension])
+        x = np.zeros_like(u)
+        beta = np.zeros(max_iter)
+
+        # If we provide an initial seed transform the initial point in the standard normal space:  X to U
+        # using the Nataf transformation
+        if seed is not None:
+            self.seed = seed
+            natafObj = Nataf(input_samples=self.seed.reshape(1, -1), corr=self.corr, dist_name=self.dist_name,
+                        dist_params = self.dist_params)
+
+            nataObj.transform()
+            u[0, :] = natafObj.samples
+
+        for k in range(max_iter):
+            # transform the initial point in the original space:  U to X
+            invNatafObject = Nataf(input_samples=u[k, :].reshape(1, -1), corr=self.corr , dist_name =self.dist_name,
+                                   dist_params=self.dist_params)
+
+            invNatafObject.inverse()
+            x[k, :] = invNatafObject.samples
+            jacobian = invNatafObject.jacobian[0]
+
+            # 1. evaluate Limit State Function at the point
+            self.model.run(x[k, :].reshape(1, -1))
+            qoi = self.model.qoi_list[-1]
+
+            # 2. evaluate Limit State Function gradient at point u_k and direction cosines
+            dg = gradient(sample=x[k, :].reshape(1, -1), dimension=self.dimension, eps=0.1, model=self.model,
+                          order='second')
+
+            try:
+                p = np.linalg.solve(jacobian, dg[0, :])
+            except:
+                print('Bad transformation.')
+            try:
+                np.isnan(p)
+            except:
+                print('Bad transformation.')
+
+            norm_grad = np.linalg.norm(p)
+            alpha = p / norm_grad
+            alpha = alpha.squeeze()
+            # 3. calculate first order beta
+            beta[k + 1] = -np.inner(u[k, :].T, alpha) + qoi / norm_grad
+            #-np.inner(u[k, :].T, alpha) + g.qoi_list[0] / norm_grad
+            # 4. calculate u_{k+1}
+            u[k + 1, :] = -beta[k + 1] * alpha
+            # next iteration
+            if np.linalg.norm(u[k + 1, :] - u[k, :]) <= tol:
+                # delete unnecessary data
+                u = u[:k + 1, :]
+                # compute design point, reliability index and Pf
+                u_star = u[-1, :]
+                # transform the initial point in the original space:  U to X
+                invNatafObject = Nataf(input_samples=u_star.reshape(1, -1), corr=self.corr, dist_name=self.dist_name,
+                                       dist_params=self.dist_params)
+                invNatafObject.inverse()
+                x_star = invNatafObject.samples
+                jacobian_star = invNatafObject.jacobian[0]
+                beta_star = beta[k]
+                pf = stats.norm.cdf(-beta_star)
+
+                self.DesignPoint_U = u_star
+                self.DesignPoint_X = x_star
+                self.HL_beta = beta_star
+                self.Prob_FORM = pf
+                self.iterations = k
+                self.jacobian = jacobian_star
+
+                break
+
+            else:
+                continue
+
+        if not hasattr(self, Prob_FORM): # Form didn't converge
+            print('FORM failed to converge. Output attribute values will be set to np.inf.')
+
+            self.DesignPoint_U = np.inf
+            self.DesignPoint_X = np.inf
+            self.HL_beta = np.inf
+            self.Prob_FORM = np.inf
+            self.iterations = np.inf
+            self.jacobian = np.inf
+
+
+    
+    def sorm(self, seed=None):
+
+        if not hasattr(self, 'Prob_FORM'):
+            self.form(seed)
+
+        if not np.isinf(self.Prob_FORM):
+            print('Calculating SORM correction...')
+
+            self.iterations = 3 * (self.iterations + 1) + 5
+            # Evaluate Limit State Function gradient at point u_star and direction cosines
+            dg = gradient(sample=self.DesignPoint_X.reshape(1, -1), dimension=self.dimension, eps=0.1, model=self.model,
+                          order='second')
+            mixed_dg = gradient(sample=self.DesignPoint_X.reshape(1, -1), eps=0.1, dimension=self.dimension,
+                                 model=self.model, order='mixed')
+
+            p = np.linalg.solve(self.jacobian, dg[0, :])
+            norm_grad = np.linalg.norm(p)
+            hessian = eval_hessian(self.dimension, mixed_dg, dg[1, :])
+            q = np.eye(self.dimension)
+            q[:, 0] = self.DesignPoint_U.T
+            q_, r_ = np.linalg.qr(q)
+            q0 = np.fliplr(q_)
+            a = np.dot(np.dot(q0.T, hessian), q0)
+            if self.dimension > 1:
+                jay = np.eye(self.dimension - 1) + self.HL_beta * a[:self.dimension - 1,
+                                                          :self.dimension - 1] / norm_grad
+            elif self.dimension == 1:
+                jay = np.eye(self.dimension) + self.HL_beta * a[:self.dimension, :self.dimension] / norm_grad
+            correction = 1 / np.sqrt(np.linalg.det(jay))
+            self.Prob_SORM = self.Prob_FORM * correction
+
+        else:
+            raise RuntimeError('Cannot run SORM. FORM has failed to converge.')
+        
+        

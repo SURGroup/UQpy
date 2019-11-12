@@ -677,7 +677,7 @@ def R_to_r(R):
     return r
 
 
-def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_object_name=None, input_template=None,
+def gradient_old(sample=None, dimension=None, eps=None,  model_script=None, model_object_name=None, input_template=None,
              var_names=None,
              output_script=None, output_object_name=None, ntasks=None, cores_per_task=None, nodes=None, resume=None,
              verbose=None, model_dir=None, cluster=None, order=None):
@@ -850,6 +850,108 @@ def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_ob
                           verbose=verbose, model_dir=model_dir, cluster=cluster)
 
             d2u_dij.append((g0.qoi_list[0] - g1.qoi_list[0] - g2.qoi_list[0] + g3.qoi_list[0])
+                           / (4 * eps[i[0]]*eps[i[1]]))
+
+        return np.array(d2u_dij)
+
+
+
+def gradient(sample=None, model=None, dimension=None, eps=None, order=None):
+    """
+         Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
+
+         Input:
+             :param sample: The sample values at which the gradient of the model will be evaluated. Samples can be
+             passed directly as  an array or can be passed through the text file 'UQpy_Samples.txt'.
+             If passing samples via text file, set samples = None or do not set the samples input.
+             :type sample: ndarray
+
+             :param order: The type of derivatives to calculate (1st order, second order, mixed).
+             :type order: str
+
+             :param dimension: Number of random variables.
+             :type dimension: int
+
+             :param eps: step for the finite difference.
+             :type eps: float
+
+             :param model: An object of type RunModel
+             :type model: RunModel object
+
+         Output:
+             :return du_dj: vector of first-order gradients
+             :rtype: ndarray
+             :return d2u_dj: vector of second-order gradients
+             :rtype: ndarray
+             :return d2u_dij: vector of mixed gradients
+             :rtype: ndarray
+     """
+
+    if order is None:
+        raise RunTimeError('Exit code: Provide type of derivatives: first, second or mixed.')
+    if dimension is None:
+     raise ValueError('Error: Dimension must be defined')
+
+    if eps is None:
+        eps = [0.1]*dimension
+    elif isinstance(eps, float):
+        eps = [eps] * dimension
+    elif isinstance(eps, list):
+        if len(eps) != 1 and len(eps) != dimension:
+            raise ValueError('Exit code: Inconsistent dimensions.')
+        if len(eps) == 1:
+            eps = [eps[0]] * dimension
+
+    if model is None:
+        raise RuntimeError('A model must be provided.')
+
+    if order == 'first' or order == 'second':
+        du_dj = np.zeros(dimension)
+        d2u_dj = np.zeros(dimension)
+        for i in range(dimension):
+            x_i1_j = np.array(sample)
+            x_i1_j[0, i] += eps[i]
+            x_1i_j = np.array(sample)
+            x_1i_j[0, i] -= eps[i]
+
+            model.run(x_i1_j)
+            model.run(x_1i_j)
+            du_dj[i] = (model.qoi_list[-2] - model.qoi_list[-1])/(2*eps[i])
+
+            if order == 'second':
+                model.run(sample)
+                d2u_dj[i] = (model.qoi_list[-3] - 2 * model.qoi_list[-1] + model.qoi_list[-2]) / (eps[i]**2)
+
+        return np.vstack([du_dj, d2u_dj])
+
+    elif order == 'mixed':
+        import itertools
+        range_ = list(range(dimension))
+        d2u_dij = list()
+        for i in itertools.combinations(range_, 2):
+            x_i1_j1 = np.array(sample)
+            x_i1_1j = np.array(sample)
+            x_1i_j1 = np.array(sample)
+            x_1i_1j = np.array(sample)
+
+            x_i1_j1[0, i[0]] += eps[i[0]]
+            x_i1_j1[0, i[1]] += eps[i[1]]
+
+            x_i1_1j[0, i[0]] += eps[i[0]]
+            x_i1_1j[0, i[1]] -= eps[i[1]]
+
+            x_1i_j1[0, i[0]] -= eps[i[0]]
+            x_1i_j1[0, i[1]] += eps[i[1]]
+
+            x_1i_1j[0, i[0]] -= eps[i[0]]
+            x_1i_1j[0, i[1]] -= eps[i[1]]
+
+            model.run(x_i1_j1)
+            model.run(x_i1_1j)
+            model.run(x_1i_j1)
+            model.run(x_1i_1j)
+
+            d2u_dij.append((model.qoi_list[-4] - model.qoi_list[-3] - model.qoi_list[-2] + model.qoi_list[-1])
                            / (4 * eps[i[0]]*eps[i[1]]))
 
         return np.array(d2u_dij)
