@@ -855,7 +855,6 @@ def gradient_old(sample=None, dimension=None, eps=None,  model_script=None, mode
         return np.array(d2u_dij)
 
 
-
 def gradient(sample=None, model=None, dimension=None, eps=None, order=None):
     """
          Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
@@ -904,7 +903,6 @@ def gradient(sample=None, model=None, dimension=None, eps=None, order=None):
 
     if model is None:
         raise RuntimeError('A model must be provided.')
-
     if order == 'first' or order == 'second':
         du_dj = np.zeros(dimension)
         d2u_dj = np.zeros(dimension)
@@ -917,11 +915,9 @@ def gradient(sample=None, model=None, dimension=None, eps=None, order=None):
             model.run(x_i1_j)
             model.run(x_1i_j)
             du_dj[i] = (model.qoi_list[-2] - model.qoi_list[-1])/(2*eps[i])
-
+            print(model.qoi_list)
             if order == 'second':
-                model.run(sample)
-                d2u_dj[i] = (model.qoi_list[-3] - 2 * model.qoi_list[-1] + model.qoi_list[-2]) / (eps[i]**2)
-
+                    d2u_dj[i] = (model.qoi_list[-2] - 2 * model.qoi_list[-3] + model.qoi_list[-1]) / (eps[i]**2)
         return np.vstack([du_dj, d2u_dj])
 
     elif order == 'mixed':
