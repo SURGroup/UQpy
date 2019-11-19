@@ -163,7 +163,6 @@ class InferenceModel:
                                         for params_ in params])
                 except AttributeError:
                     raise AttributeError('Input distribution object should possess a log pdf or a pdf method.')
-
         return results
 
     def evaluate_log_posterior(self, data, params):
@@ -199,7 +198,7 @@ class InferenceModel:
 
 class MLEstimation:
 
-    def __init__(self, inference_model, data, verbose=False, iter_optim=1, x0=None, **kwargs):
+    def __init__(self, inference_model, data, verbose=False, iter_optim=1, x0=None, optimizer=None, **kwargs):
 
         """
         Perform maximum likelihood estimation, i.e., given some data y, compute the parameter vector that maximizes the
@@ -237,26 +236,26 @@ class MLEstimation:
         self.data = data
         self.kwargs_optim = kwargs
         self.verbose = verbose
-
+        if optimizer is None:
+            self.optimizer = minimize
+        elif callable(optimizer):
+            self.optimizer = optimizer
+        else:
+            raise TypeError('Input optimizer should be None or a callable.')
         self.mle = None
         self.max_log_like = None
 
-        # Run the optimization
-        if x0 is not None:
-            x0 = np.atleast_2d(x0)
-            if x0.shape[1] != self.inference_model.nparams:
-                raise ValueError('Wrong dimensions in x0')
-            iter_optim = x0.shape[0]
-        else:
-            if not isinstance(iter_optim, int) or iter_optim < 0:
-                raise TypeError('Input iter_optim should be a positive integer.')
-            x0 = [None] * iter_optim
-        if iter_optim >= 1:
-            for i in range(iter_optim):
-                self.run_estimation(x0=x0[i])
+        # Run the optimization procedure
+        if (iter_optim is not None) or (x0 is not None):
+            self.run_estimation(iter_optim=iter_optim, x0=x0)
 
-    def run_estimation(self, x0=None):
+    def run_estimation(self, iter_optim=1, x0=None):
         """ Run optimization, starting at point x0 (or at a random value if x0 is None). """
+
+        if iter_optim is None:
+            iter_optim = 1
+        if not (isinstance(iter_optim, int) and iter_optim >= 1):
+            raise ValueError('iter_optim should be an integer >= 1 or None')
 
         # Case 2: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization.
         if (self.inference_model.distribution_object is not None) and \
@@ -264,9 +263,18 @@ class MLEstimation:
             if self.verbose:
                 print('Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name +
                       ', using fit method.')
-            mle_tmp = np.array(self.inference_model.distribution_object.fit(self.data))
-            max_log_like_tmp = self.inference_model.evaluate_log_likelihood(
-                data=self.data, params=mle_tmp[np.newaxis, :])[0]
+            for _ in range(iter_optim):
+                mle_tmp = np.array(self.inference_model.distribution_object.fit(self.data))
+                max_log_like_tmp = self.inference_model.evaluate_log_likelihood(
+                    data=self.data, params=mle_tmp[np.newaxis, :])[0]
+                # Save result
+                if self.mle is None:
+                    self.mle = mle_tmp
+                    self.max_log_like = max_log_like_tmp
+                else:
+                    if max_log_like_tmp > self.max_log_like:
+                        self.mle = mle_tmp
+                        self.max_log_like = max_log_like_tmp
 
         # Other cases: just run optimization: use x0 if provided, otherwise sample from [0, 1] or bounds
         else:
@@ -274,27 +282,28 @@ class MLEstimation:
                 print('Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name +
                       ', via optimization.')
             if x0 is None:
-                x0 = np.random.rand(1, self.inference_model.nparams)
+                x0 = np.random.rand(iter_optim, self.inference_model.nparams)
                 if 'bounds' in self.kwargs_optim.keys():
                     bounds = np.array(self.kwargs_optim['bounds'])
                     x0 = bounds[:, 0].reshape((1, -1)) + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) * x0
             else:
-                x0 = x0.reshape((1, self.inference_model.nparams))
-            res = minimize(self.evaluate_neg_log_likelihood_data, x0, **self.kwargs_optim)
-            mle_tmp = res.x
-            max_log_like_tmp = (-1) * res.fun
-
-        # Save result
-        if self.mle is None:
-            self.mle = mle_tmp
-            self.max_log_like = max_log_like_tmp
-        else:
-            if max_log_like_tmp > self.max_log_like:
-                self.mle = mle_tmp
-                self.max_log_like = max_log_like_tmp
+                x0 = np.atleast_2d(x0)
+                if x0.shape[1] != self.inference_model.nparams:
+                    raise ValueError('Wrong dimensions in x0')
+            for x0_ in x0:
+                res = self.optimizer(self.evaluate_neg_log_likelihood_data, x0_, **self.kwargs_optim)
+                mle_tmp = res.x
+                max_log_like_tmp = (-1) * res.fun
+                # Save result
+                if self.mle is None:
+                    self.mle = mle_tmp
+                    self.max_log_like = max_log_like_tmp
+                else:
+                    if max_log_like_tmp > self.max_log_like:
+                        self.mle = mle_tmp
+                        self.max_log_like = max_log_like_tmp
         if self.verbose:
             print('Optimization completed.')
-        return None
 
     def evaluate_neg_log_likelihood_data(self, one_param):
         return -1 * self.inference_model.evaluate_log_likelihood(data=self.data, params=one_param.reshape((1, -1)))[0]
@@ -369,27 +378,20 @@ class InfoModelSelection:
         self.probabilities = [0.] * self.nmodels
 
         # Run the model selection procedure
-        if iter_optim >= 1 or x0 is not None:
+        if (isinstance(iter_optim, int) and iter_optim >= 1) or x0 is not None:
             self.run_estimation(iter_optim=iter_optim, x0=x0)
 
     def run_estimation(self, iter_optim=1, x0=None):
         # check x0, iter_optim
-        if x0 is not None:
-            if not (isinstance(x0, list) and len(x0) == self.nmodels):
-                raise ValueError('x0 should be a list of length nmodels')
-            x0 = [np.atleast_2d(x0_) for x0_ in x0]
-            if any(x0_.shape[1] != m.nparams for (x0_, m) in zip(x0, self.candidate_models)):
-                raise ValueError('Wrong dimensions in x0')
-        else:
-            if not isinstance(iter_optim, int):
-                raise ValueError('iter_optim should be an integer')
-            x0 = [[None] * iter_optim] * self.nmodels
+        if x0 is None:
+            x0 = [None] * self.nmodels
+        if not (isinstance(x0, list) and len(x0) == self.nmodels):
+            raise ValueError('x0 should be a list of length nmodels')
 
         # Loop over all the models
         for i, (inference_model, ml_estimator) in enumerate(zip(self.candidate_models, self.ml_estimators)):
             # First evaluate ML estimate for all models, do several iterations if demanded
-            for x0_ in x0[i]:
-                ml_estimator.run_estimation(x0=x0_)
+            ml_estimator.run_estimation(iter_optim=iter_optim, x0=x0[i])
 
             # Then minimize the criterion
             self.criterion_values[i], self.penalty_terms[i] = self.compute_criterion(
