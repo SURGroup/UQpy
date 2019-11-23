@@ -39,11 +39,15 @@ class InferenceModel:
                  ):
 
         """
-        Define the model, either as a python script, or a probability model
+        Define the inference_model. This class possesses two method that, given some data and parameter values,
+         evaluate the log likelihood and scaled log posterior (log_likelihood + log_prior)
 
         Inputs:
             :param nparams: number of parameters to be estimated, required
             :type nparams: int
+
+            :param name: name of model
+            :type name: string
 
             :param run_model_object: RunModel class object that defines the forward model h(param)
             :type run_model_object: object of class RunModel or None
@@ -67,24 +71,8 @@ class InferenceModel:
             :param prior_copula_params: parameters of the copula of the prior, if necessary
             :param prior_copula_params: str
 
-            :param kwargs: all additional keyword arguments for the log-likelihood function, if necessary
-            :type kwargs: dictionary
-
-        Output:
-
-            :return Model.evaluate_log_likelihood: function that computes the log likelihood at various parameter
-            values, given some data
-            :rtype Model.evaluate_log_likelihood: callable
-
-            :return Model.evaluate_log_posterior: function that computes the scaled log posterior (log likelihood +
-            log prior) at various parameter values, given some data
-            :rtype Model.evaluate_log_posterior: callable
-
-            :return Model.prior: probability distribution of the prior
-            :rtype Model.prior: instance from Distribution class
-
-            :return Model.kwargs_prior: arguments necessary to call the log_pdf, pdf or rvs method of the prior
-            :rtype Model.kwargs_prior: dictionary
+            :param kwargs_likelihood: all additional keyword arguments for the log-likelihood function, if necessary
+            :type kwargs_likelihood: dictionary
 
         """
         self.nparams = nparams
@@ -95,31 +83,42 @@ class InferenceModel:
             raise TypeError('Input name must be a string.')
         self.verbose = verbose
 
+        # Perform checks on inputs run_model_object, log_likelihood, distribution_object
         if (run_model_object is None) and (log_likelihood is None) and (distribution_object is None):
             raise ValueError('One of run_model_object, log_likelihood or distribution_object inputs must be provided.')
-        if (run_model_object is not None) and (not isinstance(run_model_object, RunModel)):
+        if run_model_object is not None and (not isinstance(run_model_object, RunModel)):
             raise TypeError('Input run_model_object should be an object of class RunModel.')
         if (log_likelihood is not None) and (not callable(log_likelihood)):
             raise TypeError('Input log_likelihood should be a callable.')
-        if (distribution_object is not None) and (not isinstance(distribution_object, Distribution)):
-            raise TypeError('Input distribution_object should be an object of class Distribution.')
-        if (distribution_object is not None) and ((run_model_object is not None) or (log_likelihood is not None)):
-            raise ValueError('Input distribution_object cannot be provided concurrently with log_likelihood or '
-                             'run_model_object.')
+        if distribution_object is not None:
+            if (run_model_object is not None) or (log_likelihood is not None):
+                raise ValueError('Input distribution_object cannot be provided concurrently with log_likelihood or '
+                                 'run_model_object.')
+            if not isinstance(distribution_object, Distribution):
+                raise TypeError('Input distribution_object should be an object of class Distribution.')
+            if not hasattr(distribution_object, 'log_pdf'):
+                if not hasattr(distribution_object, 'pdf'):
+                    raise AttributeError('distribution_object should have a log_pdf or pdf method')
+                distribution_object.log_pdf = lambda x: np.log(distribution_object.pdf(x))
+
         self.run_model_object = run_model_object
-        self.log_likelihood = log_likelihood
-        self.distribution_object = distribution_object
-        self.kwargs_likelihood = kwargs_likelihood
         self.error_covariance = error_covariance
+        self.log_likelihood = log_likelihood
+        self.kwargs_likelihood = kwargs_likelihood
+        self.distribution_object = distribution_object
 
         # Define prior if it is given, and set its parameters if provided
+        if prior is not None:
+            prior.update_params(params=prior_params, copula_params=prior_copula_params)
+            if not hasattr(prior, 'log_pdf'):
+                if not hasattr(prior, 'pdf'):
+                    raise AttributeError('prior should have a log_pdf or pdf method')
+                prior.log_pdf = lambda x: np.log(prior.pdf(x))
         self.prior = prior
-        if self.prior is not None:
-            self.prior.update_params(params=prior_params, copula_params=prior_copula_params)
 
     def evaluate_log_likelihood(self, data, params):
         """ Computes the log-likelihood of model
-            inputs: data, ndarray of dimension (ndata, )
+            inputs: data
                     params, ndarray of dimension (nsamples, nparams) or (nparams,)
             output: ndarray of size (nsamples, ), contains log likelihood of p(data | params[i,:])
         """
@@ -130,11 +129,13 @@ class InferenceModel:
         # Case 1 - Forward model is given by RunModel
         if self.run_model_object is not None:
             self.run_model_object.run(samples=params, append_samples=False)
-            model_outputs = self.run_model_object.qoi_list[-params.shape[0]:]
+            model_outputs = self.run_model_object.qoi_list    # [-params.shape[0]:]
+
             # Case 1.a: Gaussian error model
             if self.log_likelihood is None:
                 results = np.array([multivariate_normal.logpdf(data, mean=np.array(outpt).reshape((-1,)),
                                                                cov=self.error_covariance) for outpt in model_outputs])
+
             # Case 1.b: likelihood is user-defined
             else:
                 results = self.log_likelihood(data=data, model_outputs=model_outputs, params=params,
@@ -154,22 +155,13 @@ class InferenceModel:
 
         # Case 3 - Learn parameters of a probability distribution pi. Data consists in iid sampled from pi.
         else:
-            try:
-                results = np.array([np.sum(self.distribution_object.log_pdf(x=data, params=params_))
-                                    for params_ in params])
-            except AttributeError:
-                try:
-                    results = np.array([np.sum(np.log(self.distribution_object.pdf(x=data, params=params_)))
-                                        for params_ in params])
-                except AttributeError:
-                    raise AttributeError('Input distribution object should possess a log pdf or a pdf method.')
+            results = np.array([np.sum(self.distribution_object.log_pdf(x=data, params=params_))
+                                for params_ in params])
+
         return results
 
     def evaluate_log_posterior(self, data, params):
         """ Computes the log posterior (scaled): log[p(data|params) * p(params)]
-            inputs: data, ndarray
-                    params, ndarray of dimension (nsamples, nparams) or (nparams,)
-            output: ndarray of size (nsamples, ), contains log likelihood of p(data | params[i,:])
         Note: if the Inference model does not possess a prior, an uninformatic prior p(params)=1 is assumed
         """
 
@@ -181,13 +173,8 @@ class InferenceModel:
             return log_likelihood_eval
 
         # Otherwise, use prior provided in the InferenceModel setup
-        try:
-            log_prior_eval = self.prior.log_pdf(x=params)
-        except AttributeError:
-            try:
-                log_prior_eval = np.log(self.prior.pdf(x=params))
-            except AttributeError:
-                raise AttributeError('The prior of InferenceModel must have a log_pdf or pdf method.')
+        log_prior_eval = self.prior.log_pdf(x=params)
+
         return log_likelihood_eval + log_prior_eval
 
 
@@ -244,6 +231,8 @@ class MLEstimation:
             raise TypeError('Input optimizer should be None or a callable.')
         self.mle = None
         self.max_log_like = None
+        if self.verbose:
+            print('Initialization of MLEstimation object completed.')
 
         # Run the optimization procedure
         if (iter_optim is not None) or (x0 is not None):
@@ -252,12 +241,7 @@ class MLEstimation:
     def run_estimation(self, iter_optim=1, x0=None):
         """ Run optimization, starting at point x0 (or at a random value if x0 is None). """
 
-        if iter_optim is None:
-            iter_optim = 1
-        if not (isinstance(iter_optim, int) and iter_optim >= 1):
-            raise ValueError('iter_optim should be an integer >= 1 or None')
-
-        # Case 2: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization.
+        # Case 3: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization.
         if (self.inference_model.distribution_object is not None) and \
                 hasattr(self.inference_model.distribution_object, 'fit'):
             if self.verbose:
@@ -282,6 +266,8 @@ class MLEstimation:
                 print('Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name +
                       ', via optimization.')
             if x0 is None:
+                if not (isinstance(iter_optim, int) and iter_optim >= 1):
+                    raise ValueError('iter_optim should be an integer >= 1')
                 x0 = np.random.rand(iter_optim, self.inference_model.nparams)
                 if 'bounds' in self.kwargs_optim.keys():
                     bounds = np.array(self.kwargs_optim['bounds'])
@@ -303,7 +289,7 @@ class MLEstimation:
                         self.mle = mle_tmp
                         self.max_log_like = max_log_like_tmp
         if self.verbose:
-            print('Optimization completed.')
+            print('ML estimation completed.')
 
     def evaluate_neg_log_likelihood_data(self, one_param):
         return -1 * self.inference_model.evaluate_log_likelihood(data=self.data, params=one_param.reshape((1, -1)))[0]
@@ -383,6 +369,10 @@ class InfoModelSelection:
 
     def run_estimation(self, iter_optim=1, x0=None):
         # check x0, iter_optim
+        if isinstance(iter_optim, int) or iter_optim is None:
+            iter_optim = [iter_optim] * self.nmodels
+        if not (isinstance(iter_optim, list) and len(iter_optim) == self.nmodels):
+            raise ValueError('iter_optim should be an int or list of length nmodels')
         if x0 is None:
             x0 = [None] * self.nmodels
         if not (isinstance(x0, list) and len(x0) == self.nmodels):
@@ -391,7 +381,7 @@ class InfoModelSelection:
         # Loop over all the models
         for i, (inference_model, ml_estimator) in enumerate(zip(self.candidate_models, self.ml_estimators)):
             # First evaluate ML estimate for all models, do several iterations if demanded
-            ml_estimator.run_estimation(iter_optim=iter_optim, x0=x0[i])
+            ml_estimator.run_estimation(iter_optim=iter_optim[i], x0=x0[i])
 
             # Then minimize the criterion
             self.criterion_values[i], self.penalty_terms[i] = self.compute_criterion(
