@@ -1636,6 +1636,7 @@ class AKMCS:
             self.run_akmcs(kwargs)
 
     def run_akmcs(self, *args):
+
         # Check if the initial sample design already exists and has model evalutions with it.
         # If it does not, run the initial calculations.
         if self.sample_object.samples is None:
@@ -1676,8 +1677,7 @@ class AKMCS:
             :param args: Arguments required for run_model_object.
 
         """
-        import scipy.stats as stats
-        import sympy as sy
+
         if self.kriging != 'UQpy':
             from sklearn.gaussian_process import GaussianProcessRegressor
 
@@ -1892,7 +1892,6 @@ class AKMCS:
         if min(u[:, 0]) >= 2:
             self.indicator = True
 
-        #if self.indicator or len(qoi) == self.nsamples-1:
         n_ = g.shape[0]+len(qoi)
         pf = (np.sum(g < 0) + sum(iin < 0 for iin in qoi)) / n_
         self.pf.append(pf)
@@ -1929,10 +1928,10 @@ class AKMCS:
         if min(u[:, 0]) >= 2:
             self.indicator = True
 
-        if self.indicator or len(qoi) == self.nsamples-1:
-            n_ = g.shape[0]+len(qoi)
-            self.pf = (np.sum(g < 0) + sum(iin < 0 for iin in qoi)) / n_
-            self.cov_pf = np.sqrt((1 - self.pf) / (self.pf * n_))
+        n_ = g.shape[0]+len(qoi)
+        pf = (np.sum(g < 0) + sum(iin < 0 for iin in qoi)) / n_
+        self.pf.append(pf)
+        self.cov_pf.append(np.sqrt((1 - pf) / (pf * n_)))
 
         return rows
 
@@ -1963,10 +1962,10 @@ class AKMCS:
         if max(eff[:, 0]) <= 0.001:
             self.indicator = True
 
-        if self.indicator or len(qoi) == self.nsamples - 1:
-            n_ = g.shape[0] + len(qoi)
-            self.pf = (np.sum(g < 0) + sum(iin < 0 for iin in qoi)) / n_
-            self.cov_pf = np.sqrt((1 - self.pf) / (self.pf * n_))
+        n_ = g.shape[0] + len(qoi)
+        pf = (np.sum(g < 0) + sum(iin < 0 for iin in qoi)) / n_
+        self.pf.append(pf)
+        self.cov_pf.append(np.sqrt((1 - pf) / (pf * n_)))
 
         return rows
 
@@ -1975,6 +1974,8 @@ class AKMCS:
         # Expected Improvement Function (EIF)
         # References: D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box
         # Functions", Journal of Global Optimization, Pages 455–492, 1998.
+        import scipy.stats as stats
+
         if self.kriging == 'UQpy':
             g, sig = surr(pop, dy=True)
             sig = np.sqrt(sig)
@@ -1982,14 +1983,29 @@ class AKMCS:
             g, sig = surr(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
+        fm = min(qoi)
         u = (fm - g) * sp.norm.cdf((fm - g) / sig) + sig * sp.norm.pdf((fm - g) / sig)
         rows = u[:, 0].argsort()[(np.size(g) - self.n_add):]
 
         return rows
 
+    def e_y_given_x(self, xi, mom, exp_mom, id):
+        E1 = mom[:, 0] * np.ones([xi.shape[0], mom.shape[0]])
+        E1[:, id] = xi
+        fx, jf = self.krig_object.regress(model='Linear')(E1)
+        # fx = np.concatenate((np.ones([np.size(E1, 0), 1]), E1), 1)
+        rx = self.krig_object.corr(model='Gaussian')(np.atleast_2d(xi).T,
+                                                     np.atleast_2d(self.sample_object.samples[:, id]).T,
+                                                     self.krig_object.corr_model_params[id])
+        exp_mom = np.delete(exp_mom, id, axis=1)
+        r = rx * np.prod(zz, axis=1)
+        y = np.einsum('ij,jk->ik', fx, self.krig_object.beta) + np.einsum('ij,jk->ik', r, self.krig_object.gamma)
+        return y
+
     # This learning function has not yet been tested.
     def usi(self, surr, pop, qoi, i):
         # Calculations of Sobol indices for the Gaussian process metamodel
+        import sympy as sy
 
         # Marginal expectation of correaltion term in predictor w.r.t each input variable
         mar_ex = np.ones([self.sample_object.samples.shape[0], self.dimension])
@@ -1998,29 +2014,16 @@ class AKMCS:
                 x = sy.Symbol('x')
                 fun1 = np.exp(-(x - self.sample_object.samples[ij, ii])**2/self.krig_object.corr_model_params)
                 fun2 = Distribution(dist_name=self.dist_name[ii]).pdf(params=self.dist_params[ii])
-                mar_ex[ij, ii] = sy.integrate(fun1*fun2, (x, -oo, oo))
+                mar_ex[ij, ii] = sy.integrate(fun1*fun2, (x, -np.inf, np.inf))
 
         sobol = np.zeros([self.dimension, 1])
         for ii in range(self.dimension):
             x_corr = pop[:, ii]
-            sobol[ii, 1] = np.std(e_y_given_x(x_corr, self.moments, mar_ex, ii))
+            sobol[ii, 1] = np.std(self.e_y_given_x(x_corr, self.moments, mar_ex, ii))
 
         sobol1 = sobol/self.krig_object.sig
         sobol2 = sobol/np.sum(sobol)
         print(np.sum(sobol), self.krig_object.sig)
-
-    def e_y_given_x(self, xi, mom, exp_mom, id):
-        E1 = mom[:, 0]*np.ones([xi.shape[0], mom.shape[0]])
-        E1[:, id] = xi
-        fx, jf = self.krig_object.regress(model='Linear')(E1)
-        # fx = np.concatenate((np.ones([np.size(E1, 0), 1]), E1), 1)
-        rx = self.krig_object.corr(model='Gaussian')(np.atleast_2d(xi).T,
-                                                     np.atleast_2d(self.sample_object.samples[:, id]).T,
-                                                     self.krig_object.corr_model_params[id])
-        exp_mom = np.delete(exp_mom, id, axis=1)
-        r = rx*np.prod(zz, axis=1)
-        y = np.einsum('ij,jk->ik', fx, self.krig_object.beta) + np.einsum('ij,jk->ik', r, self.krig_object.gamma)
-        return y
 
     def learning(self):
         if type(self.lf).__name__ == 'function':
