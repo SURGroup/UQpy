@@ -127,7 +127,7 @@ class MCS:
             samples_u01_new = np.zeros_like(samples_new)
             for i in range(samples_new.shape[1]):
                 samples_u01_new[:, i] = Distribution(dist_name=self.dist_name[i]).cdf(
-                    x=np.atleast_2d(samples_new[:, i]), params=self.dist_params[i])
+                    x=np.atleast_2d(samples_new[:, i]).T, params=self.dist_params[i])
             if len(samples_u01_new.shape) == 1:
                 if self.nsamples == 1:
                     samples_u01_new = samples_u01_new.reshape((1, -1))
