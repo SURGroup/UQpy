@@ -345,22 +345,23 @@ class Krig:
     def __init__(self, reg_model=None, corr_model=None, corr_model_params=None, bounds=None, op=True, n_opt=1,
                  dimension=None):
 
-        self.samples = None
-        self.values = None
-        self.mean_s, self.std_s = None, None
-        self.mean_y, self.std_y = None, None
-               
         self.reg_model = reg_model
         self.corr_model = corr_model
-        self.rmodel, self.cmodel = None, None
         self.corr_model_params = corr_model_params
         self.dim = dimension
         self.bounds = bounds
         self.n_opt = n_opt
         self.op = op
 
+        # Initialize and run preliminary error checks.
         self.init_krig()
 
+        # Variables are used outside the __init__
+        self.samples = None
+        self.values = None
+        self.mean_s, self.std_s = None, None
+        self.mean_y, self.std_y = None, None
+        self.rmodel, self.cmodel = None, None
         self.beta, self.gamma, self.sig = None, None, None
         self.F_dash, self.C_inv, self.G = None, None, None
 
