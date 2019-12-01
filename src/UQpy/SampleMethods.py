@@ -1662,7 +1662,7 @@ class AKMCS:
 
     def __init__(self, run_model_object=None, sample_object=None, krig_object=None, nlearn=10000, nstart=None,
                  population=None, dist_name=None, dist_params=None, qoi_name=None, lf=None, n_add=None,
-                 min_cov=None, max_p=None, verbose=False, kriging='UQpy', visualize=False, **kwargs):
+                 min_cov=None, max_p=None, verbose=False, kriging='UQpy', visualize=False):
 
         # Initialize the internal variables of the class.
         self.run_model_object = run_model_object
@@ -1694,12 +1694,9 @@ class AKMCS:
         self.init_akmcs()
 
         # Run AKMCS
-        if not kwargs:
-            self.run_akmcs()
-        else:
-            self.run_akmcs(kwargs)
+        self.run_akmcs()
 
-    def run_akmcs(self, *args):
+    def run_akmcs(self):
 
         # Check if the initial sample design already exists and has model evalutions with it.
         # If it does not, run the initial calculations.
@@ -1710,10 +1707,8 @@ class AKMCS:
 
         if self.verbose:
             print('UQpy: AKMCS - Running the initial sample set using RunModel.')
-        if not args:
-            self.run_model_object.run(samples=self.sample_object.samples)
-        else:
-            self.run_model_object.run(args[0], samples=self.sample_object.samples)
+
+        self.run_model_object.run(samples=self.sample_object.samples)
 
     def run(self, samples=None, n_add=None, append_samples=True, nsamples=0, lf=None, *args):
         """
@@ -1768,10 +1763,8 @@ class AKMCS:
 
             if self.verbose:
                 print('UQpy: AKMCS - Running the provided sample set using RunModel.')
-            if not args:
-                self.run_model_object.run(samples=samples, append_samples=append_samples)
-            else:
-                self.run_model_object.run(args[0], samples=samples, append_samples=append_samples)
+
+            self.run_model_object.run(samples=samples, append_samples=append_samples)
         self.training_points = self.sample_object.samplesU01
 
         if self.verbose:
@@ -1827,10 +1820,7 @@ class AKMCS:
             self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
             # Run the model at the new points
-            if not args:
-                self.run_model_object.run(samples=np.atleast_2d(new_point))
-            else:
-                self.run_model_object.run(args[0], samples=np.atleast_2d(new_point))
+            self.run_model_object.run(samples=np.atleast_2d(new_point))
 
             # If the quantity of interest is a dictionary, convert it to a list
             qoi = [None] * len(self.run_model_object.qoi_list)
