@@ -71,15 +71,24 @@ class SubsetSimulation:
     # Authors: Dimitris G.Giovanis, Michael D. Shields
     # Last Modified: 4/7/19 by Dimitris G. Giovanis
 
-    def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None,
+    def __init__(self, dimension=None,
+
+
+                 pdf_proposal_type=None, pdf_proposal_scale=None,
                  pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None,
                  pdf_target_copula_params=None, pdf_target_type='joint_pdf', seed=None,
                  algorithm='MH', jump=1, nsamples_ss=None, nburn=0, samples_init=None, p_cond=None,
-                 verbose=False,  model_script=None, model_object_name=None, input_template=None, var_names=None,
-                 output_script=None, output_object_name=None, n_tasks=1, cores_per_task=1, nodes=1, resume=False,
-                 model_dir=None, cluster=False):
+                 verbose=False, model_object=None):
+
+
+                 # model_script=None, model_object_name=None, input_template=None, var_names=None,
+                 # output_script=None, output_object_name=None, n_tasks=1, cores_per_task=1, nodes=1, resume=False,
+                 # model_dir=None, cluster=False):
 
         self.dimension = dimension
+        self.pdf_proposal_type = pdf_proposal_type
+        self.pdf_proposal_scale = pdf_proposal_scale
+
         self.log_pdf_target = log_pdf_target
         self.pdf_target_copula = pdf_target_copula
         self.samples_init = samples_init
@@ -90,8 +99,8 @@ class SubsetSimulation:
         self.pdf_target_type = pdf_target_type
         self.pdf_target = pdf_target
         self.pdf_target_params = pdf_target_params
-        self.pdf_proposal_type = pdf_proposal_type
-        self.pdf_proposal_scale = pdf_proposal_scale
+
+
         self.nsamples_ss = nsamples_ss
         self.algorithm = algorithm
 
