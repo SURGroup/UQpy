@@ -357,7 +357,7 @@ class RunModel:
 
         # Loop over the number of simulations, executing the model once per loop
         ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%p")
-        for i in range(self.nexist, self.nsim):
+        for i in range(self.nexist, self.nexist+self.nsim):
             # Create a directory for each model run
             work_dir = os.path.join(os.getcwd(), "run_" + str(i) + '_' + ts)
             os.makedirs(work_dir)
@@ -408,7 +408,7 @@ class RunModel:
 
         ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%p")
 
-        for i in range(self.nexist, self.nsim):
+        for i in range(self.nexist, self.nexist+self.nsim):
             # Create a directory for each model run
             work_dir = os.path.join(os.getcwd(), "run_" + str(i) + '_' + ts)
             os.makedirs(work_dir)
