@@ -750,11 +750,14 @@ class RSS:
             M. D. Shields, "Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems",
                 Reliability Engineering & System Safety, ISSN: 0951-8320, Vol: 175, Page: 207-224, 2018.
         Input:
-            :param x: A class object, it should be generated using STS or RSS class.
-            :type x: class
+            :param run_model_object: A RunModel object, which is used to evaluate the function value
+            :type run_model_object: class
 
-            :param model: Python model which is used to evaluate the function value
-            :type model: str
+            :param sample_object: A SampleMethods class object, which contains information about existing samples
+            :type sample_object: class
+
+            :param krig_object: A kriging class object, only  required if meta is 'Kriging'.
+            :type krig_object: class
 
             :param meta: A string specifying the method used to estimate the gradient.
                          Options: Delaunay, Kriging
@@ -764,8 +767,8 @@ class RSS:
                          Options: Rectangular and Voronoi
             :type cell: str
 
-            :param nsamples: Final size of the samples.
-            :type nsamples: int
+            :param local: Indicator to update surrogate locally.
+            :type local: boolean
 
             :param max_train_size: Minimum size of training data around new sample used to update surrogate.
                                    Default: nsamples
@@ -775,37 +778,21 @@ class RSS:
                               used as surrogate approximation.
             :type step_size: float
 
-            :param reg_model: Regression model used to estimate gradient by using kriging surrogate. Only required
-                               if kriging is used as surrogate approximation.
-            :type reg_model: str
-
-            :param corr_model: Correlation model used to estimate gradient by using kriging surrogate. Only required
-                               if kriging is used as surrogate approximation.
-            :type corr_model: str
-
-            :param corr_model_params: Correlation model parameters used to estimate hyperparamters for kriging
-                                      surrogate.
-            :type corr_model_params: ndarray
-
-            :param n_opt: Number of times optimization problem is to be solved with different starting point.
-                          Default: 1
-            :type n_opt: int
+            :param option: A string specifying the criteria used to generate new sample
+            :type option: str
 
         Output:
-            :return: RSS.samples: Final/expanded samples.
-            :rtype: RSS.samples: ndarray
-
-            :return: RSS.values: Function value evaluated at the expanded samples.
-            :rtype: RSS.values: ndarray
+            :return: RSS.sample_object.samples: Final/expanded samples.
+            :rtype: RSS.sample_object.samples: ndarray
 
     """
 
     # Authors: Mohit S. Chauhan
-    # Last modified: 12/03/2018 by Mohit S. Chauhan
+    # Last modified: 12/01/2019 by Mohit S. Chauhan
 
-    def __init__(self, sample_object=None, run_model_object=None, meta='Kriging', cell='Rectangular', nsamples=None,
+    def __init__(self, sample_object=None, run_model_object=None, meta='Kriging', cell='Rectangular',
                  max_train_size=None, step_size=0.005, krig_object=None, option=None, qoi_name=None, verbose=False,
-                 local=False, visualize=False, **kwargs):
+                 local=False, visualize=False):
 
         from UQpy.RunModel import RunModel
 
@@ -816,7 +803,7 @@ class RSS:
         self.option = option
         self.dimension = np.shape(self.sample_object.samples)[1]
         self.cell = cell
-        self.nsamples = nsamples
+        self.nsamples = 0
         self.visualize = visualize
 
         # Run Initial Error Checks
@@ -829,10 +816,8 @@ class RSS:
             self.krig_object = krig_object
             self.qoi_name = qoi_name
             self.step_size = step_size
-            if not kwargs:
-                self.run_gerss()
-            else:
-                self.run_gerss(kwargs)
+            self.nexist = 0
+            self.run_gerss()
         else:
             self.run_rss()
 
@@ -840,7 +825,7 @@ class RSS:
     ###################################################
     # Run Gradient-Enhanced Refined Stratified Sampling
     ###################################################
-    def run_gerss(self, *args):
+    def run_gerss(self):
 
         # Check if the initial sample design already has model evalutions with it.
         # If it does not, run the initial calculations.
@@ -849,13 +834,17 @@ class RSS:
         elif not self.run_model_object.samples:
             if self.verbose:
                 print('UQpy: GE-RSS - Running the initial sample set.')
-            if not args:
-                self.run_model_object.run(samples=self.sample_object.samples)
-            else:
-                self.run_model_object.run(args[0], samples=self.sample_object.samples)
+            self.run_model_object.run(samples=self.sample_object.samples)
 
         self.nexist = len(self.run_model_object.samples)
 
+    def sample(self, nsamples=0):
+        """
+        Inputs:
+            :param nsamples: Final size of the samples.
+            :type nsamples: int
+        """
+        self.nsamples = nsamples
         if self.nsamples <= self.nexist:
             raise NotImplementedError('UQpy Error: The number of requested samples must be larger than the existing '
                                       'sample set.')
@@ -976,10 +965,7 @@ class RSS:
 
                 # Run the model at the new sample point
                 self.run_model_object.ntasks = 1
-                if not args:
-                    self.run_model_object.run(samples=np.atleast_2d(new_point))
-                else:
-                    self.run_model_object.run(args[0], samples=np.atleast_2d(new_point))
+                self.run_model_object.run(samples=np.atleast_2d(new_point))
 
                 if self.verbose:
                     print("Iteration:", i)
@@ -1216,10 +1202,7 @@ class RSS:
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 # Run the mode at the new point.
-                if not args:
-                    self.run_model_object.run(samples=np.atleast_2d(new_point))
-                else:
-                    self.run_model_object.run(args[0], samples=np.atleast_2d(new_point))
+                self.run_model_object.run(samples=np.atleast_2d(new_point))
 
                 # Compute the strata weights.
                 self.sample_object.strata = voronoi_unit_hypercube(self.sample_object.samplesU01)
@@ -1572,7 +1555,7 @@ class AKMCS:
             :param run_model_object: A RunModel object, which is used to evaluate the function value
             :type run_model_object: class
 
-            :param samle_object: A SampleMethods class object, which contains information about existing samples
+            :param sample_object: A SampleMethods class object, which contains information about existing samples
             :type sample_object: class
 
             :param krig_object: A kriging class object
@@ -1635,7 +1618,7 @@ class AKMCS:
     """
 
     # Authors: Mohit S. Chauhan
-    # Last modified: 08/04/2019 by Mohit S. Chauhan
+    # Last modified: 12/01/2019 by Mohit S. Chauhan
 
     def __init__(self, run_model_object=None, sample_object=None, krig_object=None, nlearn=10000, nstart=None,
                  population=None, dist_name=None, dist_params=None, qoi_name=None, lf=None, n_add=None,
