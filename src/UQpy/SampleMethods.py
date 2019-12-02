@@ -960,7 +960,7 @@ class RSS:
                 self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
                 for j in range(0, self.dimension):
                     icdf = self.sample_object.distribution[j].icdf
-                    new_point[j] = icdf(np.atleast_2d(new_point[j]), self.sample_object.dist_params[j])
+                    new_point[j] = icdf(np.atleast_2d(new_point[j]).T, self.sample_object.dist_params[j])
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 # Run the model at the new sample point
@@ -1197,8 +1197,8 @@ class RSS:
 
                 # Identify the new point in the parameter space and update the sample array to include the new point.
                 for j in range(self.dimension):
-                    new_point[0, j] = self.sample_object.distribution[j].icdf(new_point[0, j],
-                                                                        self.sample_object.dist_params[j])
+                    new_point[0, j] = self.sample_object.distribution[j].icdf(np.atleast_2d(new_point[0, j]).T,
+                                                                              self.sample_object.dist_params[j])
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 # Run the mode at the new point.
