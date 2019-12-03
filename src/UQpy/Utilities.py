@@ -855,7 +855,9 @@ def gradient_old(sample=None, dimension=None, eps=None,  model_script=None, mode
         return np.array(d2u_dij)
 
 
-def gradient(sample=None, model=None, dimension=None, eps=None, order=None):
+def gradient(sample=None, dist_name=None, dist_params=None, model=None, dimension=None, eps=None, order=None,
+             corr=None):
+
     """
          Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
 
@@ -865,6 +867,13 @@ def gradient(sample=None, model=None, dimension=None, eps=None, order=None):
              If passing samples via text file, set samples = None or do not set the samples input.
              :type sample: ndarray
 
+             :param dist_name: Probability distribution model for each random variable (see Distributions class).
+             :type dist_name: list/string
+             :param dist_params: Probability distribution model parameters for each random variable.
+                                   (see Distributions class).
+             :type dist_params: list
+             :param corr: Correlation of the samples
+             :type corr: ndarray
              :param order: The type of derivatives to calculate (1st order, second order, mixed).
              :type order: str
 
@@ -885,9 +894,10 @@ def gradient(sample=None, model=None, dimension=None, eps=None, order=None):
              :return d2u_dij: vector of mixed gradients
              :rtype: ndarray
      """
-
+    from UQpy.Transformations import Nataf
     if order is None:
-        raise RunTimeError('Exit code: Provide type of derivatives: first, second or mixed.')
+        raise ValueError('Exit code: Provide type of derivatives: first, second or mixed.')
+
     if dimension is None:
      raise ValueError('Error: Dimension must be defined')
 
@@ -912,10 +922,29 @@ def gradient(sample=None, model=None, dimension=None, eps=None, order=None):
             x_1i_j = np.array(sample)
             x_1i_j[0, i] -= eps[i]
 
-            model.run(x_i1_j)
-            model.run(x_1i_j)
+            if dist_name is not None:
+                obj_xi1_j = Nataf(input_samples=x_i1_j, corr=corr, dist_name=dist_name,
+                                  dist_params=dist_params)
+
+                obj_xi1_j.inverse()
+                u_i1_j = obj_xi1_j.samples
+
+                ##########################################
+
+                x_1i_j = Nataf(input_samples=x_1i_j, corr=corr, dist_name=dist_name,
+                               dist_params=dist_params)
+
+                x_1i_j.inverse()
+                u_1i_j = x_1i_j.samples
+
+            else:
+                u_i1_j = x_i1_j
+                u_1i_j = x_1i_j
+
+            model.run(u_i1_j)
+            model.run(u_1i_j)
             du_dj[i] = (model.qoi_list[-2] - model.qoi_list[-1])/(2*eps[i])
-            print(model.qoi_list)
+
             if order == 'second':
                     d2u_dj[i] = (model.qoi_list[-2] - 2 * model.qoi_list[-3] + model.qoi_list[-1]) / (eps[i]**2)
         return np.vstack([du_dj, d2u_dj])
@@ -942,15 +971,54 @@ def gradient(sample=None, model=None, dimension=None, eps=None, order=None):
             x_1i_1j[0, i[0]] -= eps[i[0]]
             x_1i_1j[0, i[1]] -= eps[i[1]]
 
-            model.run(x_i1_j1)
-            model.run(x_i1_1j)
-            model.run(x_1i_j1)
-            model.run(x_1i_1j)
+            if dist_name is not None:
+                obj_x_i1_j1 = Nataf(input_samples=x_i1_j1, corr=corr, dist_name=dist_name,
+                                    dist_params=dist_params)
+
+                obj_x_i1_j1.inverse()
+                u_i1_j1 = obj_x_i1_j1.samples
+
+                ##########################################
+
+                obj_x_i1_1j = Nataf(input_samples=x_i1_1j, corr=corr, dist_name=dist_name,
+                                    dist_params=dist_params)
+
+                obj_x_i1_1j.inverse()
+                u_i1_1j = obj_x_i1_1j.samples
+
+                ##########################################
+
+                obj_x_1i_j1 = Nataf(input_samples=x_1i_j1, corr=corr, dist_name=dist_name,
+                                    dist_params=dist_params)
+
+                obj_x_1i_j1.inverse()
+                u_1i_j1 = obj_x_1i_j1.samples
+
+                ##########################################
+
+                obj_x_1i_1j = Nataf(input_samples=x_1i_1j, corr=corr, dist_name=dist_name,
+                                    dist_params=dist_params)
+
+                obj_x_1i_1j.inverse()
+                u_1i_1j = obj_x_1i_1j.samples
+
+            else:
+                u_i1_j1 = x_i1_j1
+                u_i1_1j = x_i1_1j
+                u_1i_j1 = x_1i_j1
+                u_1i_1j = x_1i_1j
+
+            model.run(u_i1_j1)
+            model.run(u_i1_1j)
+            model.run(u_1i_j1)
+            model.run(u_1i_1j)
 
             d2u_dij.append((model.qoi_list[-4] - model.qoi_list[-3] - model.qoi_list[-2] + model.qoi_list[-1])
                            / (4 * eps[i[0]]*eps[i[1]]))
 
         return np.array(d2u_dij)
+
+
 
 
 def eval_hessian(dimension, mixed_der, der):

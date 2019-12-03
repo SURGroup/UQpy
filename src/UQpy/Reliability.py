@@ -635,7 +635,7 @@ class TaylorSeries:
     # Authors: Dimitris G.Giovanis
     # Last Modified: 11/11/2019 by Dimitris G. Giovanis
 
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=1000, corr=None, model=None):
+    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=1000, eps=None, corr=None, model=None):
         """
             Description: A class that performs reliability analysis of a model using the First Order Reliability Method
                          (FORM) and Second Order Reliability Method (SORM) that belong to the family of Taylor series
@@ -651,6 +651,8 @@ class TaylorSeries:
                 :type dist_params: list
                 :param n_iter: Maximum number of iterations for the Hasofer-Lind algorithm
                 :type n_iter: int
+                :param eps: Step for estimating the gradient of a function
+                :type n_iter: float/list of floats
                 :param corr: Correlation structure of the random vector (See Transformation class).
                 :type corr: ndarray
                 :param method: Method used for the reliability problem -- available methods: 'FORM', 'SORM'
@@ -663,14 +665,14 @@ class TaylorSeries:
         self.n_iter = n_iter
         self.corr = corr
         self.model = model
+        self.eps = eps
 
         if self.model is None:
             raise RuntimeError("In order to use class TaylorSeries a model of type RunModel is required.")
 
-
-        #if self.algorithm == 'HL':
-            #[self.DesignPoint_U, self.DesignPoint_X, self.HL_beta, self.Prob_FORM,
-             #self.Prob_SORM, self.iterations] = self.form_hl()
+        # if self.algorithm == 'HL':
+        # [self.DesignPoint_U, self.DesignPoint_X, self.HL_beta, self.Prob_FORM,
+        # self.Prob_SORM, self.iterations] = self.form_hl()
 
     def form(self, seed=None):
 
@@ -687,15 +689,16 @@ class TaylorSeries:
         # using the Nataf transformation
         if seed is not None:
             self.seed = seed
-            natafObj = Nataf(input_samples=self.seed.reshape(1, -1), corr=self.corr, dist_name=self.dist_name,
-                        dist_params = self.dist_params)
 
-            nataObj.transform()
+            natafObj = Nataf(input_samples=self.seed.reshape(1, -1), corr=self.corr, dist_name=self.dist_name,
+                             dist_params=self.dist_params)
+
+            natafObj.transform()
             u[0, :] = natafObj.samples
 
         for k in range(max_iter):
             # transform the initial point in the original space:  U to X
-            invNatafObject = Nataf(input_samples=u[k, :].reshape(1, -1), corr=self.corr , dist_name =self.dist_name,
+            invNatafObject = Nataf(input_samples=u[k, :].reshape(1, -1), corr=self.corr, dist_name=self.dist_name,
                                    dist_params=self.dist_params)
 
             invNatafObject.inverse()
@@ -707,8 +710,8 @@ class TaylorSeries:
             qoi = self.model.qoi_list[-1]
 
             # 2. evaluate Limit State Function gradient at point u_k and direction cosines
-            dg = gradient(sample=x[k, :].reshape(1, -1), dimension=self.dimension, eps=0.1, model=self.model,
-                          order='second')
+            dg = gradient(sample=u[k, :].reshape(1, -1), dimension=self.dimension, eps=self.eps, model=self.model,
+                          order='second', dist_name=self.dist_name, dist_params=self.dist_params, corr=self.corr)
 
             try:
                 p = np.linalg.solve(jacobian, dg[0, :])
@@ -724,7 +727,7 @@ class TaylorSeries:
             alpha = alpha.squeeze()
             # 3. calculate first order beta
             beta[k + 1] = -np.inner(u[k, :].T, alpha) + qoi / norm_grad
-            #-np.inner(u[k, :].T, alpha) + g.qoi_list[0] / norm_grad
+            # -np.inner(u[k, :].T, alpha) + g.qoi_list[0] / norm_grad
             # 4. calculate u_{k+1}
             u[k + 1, :] = -beta[k + 1] * alpha
             # next iteration
@@ -754,7 +757,7 @@ class TaylorSeries:
             else:
                 continue
 
-        if not hasattr(self, 'Prob_FORM'): # Form didn't converge
+        if not hasattr(self, 'Prob_FORM'):  # Form didn't converge
             print('FORM failed to converge. Output attribute values will be set to np.inf.')
 
             self.DesignPoint_U = np.inf
@@ -764,8 +767,6 @@ class TaylorSeries:
             self.iterations = np.inf
             self.jacobian = np.inf
 
-
-    
     def sorm(self, seed=None):
 
         if not hasattr(self, 'Prob_FORM'):
@@ -779,7 +780,7 @@ class TaylorSeries:
             dg = gradient(sample=self.DesignPoint_X.reshape(1, -1), dimension=self.dimension, eps=0.1, model=self.model,
                           order='second')
             mixed_dg = gradient(sample=self.DesignPoint_X.reshape(1, -1), eps=0.1, dimension=self.dimension,
-                                 model=self.model, order='mixed')
+                                model=self.model, order='mixed')
 
             p = np.linalg.solve(self.jacobian, dg[0, :])
             norm_grad = np.linalg.norm(p)
@@ -791,7 +792,7 @@ class TaylorSeries:
             a = np.dot(np.dot(q0.T, hessian), q0)
             if self.dimension > 1:
                 jay = np.eye(self.dimension - 1) + self.HL_beta * a[:self.dimension - 1,
-                                                          :self.dimension - 1] / norm_grad
+                                                                  :self.dimension - 1] / norm_grad
             elif self.dimension == 1:
                 jay = np.eye(self.dimension) + self.HL_beta * a[:self.dimension, :self.dimension] / norm_grad
             correction = 1 / np.sqrt(np.linalg.det(jay))
@@ -799,5 +800,3 @@ class TaylorSeries:
 
         else:
             raise RuntimeError('Cannot run SORM. FORM has failed to converge.')
-        
-        
