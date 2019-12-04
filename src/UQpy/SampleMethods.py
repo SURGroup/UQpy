@@ -1814,7 +1814,7 @@ class AKMCS:
                     g = self.krig_model(rest_pop, return_std=False)
 
                 n_ = g.shape[0] + len(qoi)
-                pf = (sum(g < 0) + sum(qoi[i] < 0 for i in qoi)) / n_
+                pf = (sum(g < 0) + sum([i < 0 for i in qoi])) / n_
                 self.pf.append(pf)
                 self.cov_pf.append(np.sqrt((1 - pf) / (pf * n_)))
 
