@@ -1622,7 +1622,7 @@ class AKMCS:
 
     def __init__(self, run_model_object=None, sample_object=None, krig_object=None, nlearn=10000, nstart=None,
                  population=None, dist_name=None, dist_params=None, qoi_name=None, lf=None, n_add=None,
-                 min_cov=None, max_p=None, verbose=False, kriging='UQpy', visualize=False, **kwargs):
+                 min_cov=None, max_p=None, verbose=False, kriging='UQpy', visualize=False, save_pf=None, **kwargs):
 
         # Initialize the internal variables of the class.
         self.run_model_object = run_model_object
@@ -1648,7 +1648,9 @@ class AKMCS:
         self.cov_pf = []
         self.population = population
         self.kriging = kriging
+        self.save_pf = save_pf
         self.visualize = visualize
+        self.dimension = 0
 
         # Initialize and run preliminary error checks.
         self.init_akmcs()
@@ -1805,6 +1807,17 @@ class AKMCS:
             if self.verbose:
                 print("Iteration:", i)
 
+            if self.save_pf:
+                if self.kriging == 'UQpy':
+                    g = self.krig_model(rest_pop)
+                else:
+                    g = self.krig_model(rest_pop, return_std=False)
+
+                n_ = g.shape[0] + len(qoi)
+                pf = (sum(g < 0) + sum(qoi[i] < 0 for i in qoi)) / n_
+                self.pf.append(pf)
+                self.cov_pf.append(np.sqrt((1 - pf) / (pf * n_)))
+
         if self.verbose:
             print('UQpy: AKMCS complete')
 
@@ -1906,11 +1919,6 @@ class AKMCS:
         if min(u[:, 0]) >= 2:
             self.indicator = True
 
-        n_ = g.shape[0]+len(qoi)
-        pf = (np.sum(g < 0) + sum(iin < 0 for iin in qoi)) / n_
-        self.pf.append(pf)
-        self.cov_pf.append(np.sqrt((1 - pf) / (pf * n_)))
-
         return rows
 
     # This learning function has not yet been tested.
@@ -1941,11 +1949,6 @@ class AKMCS:
 
         if min(u[:, 0]) >= 2:
             self.indicator = True
-
-        n_ = g.shape[0]+len(qoi)
-        pf = (np.sum(g < 0) + sum(iin < 0 for iin in qoi)) / n_
-        self.pf.append(pf)
-        self.cov_pf.append(np.sqrt((1 - pf) / (pf * n_)))
 
         return rows
 
@@ -2072,6 +2075,12 @@ class AKMCS:
             self.dimension = np.shape(self.sample_object.samples)[1]
         else:
             self.dimension = np.shape(self.dist_name)[0]
+
+        if self.save_pf is None:
+            if self.lf not in ['EFF', 'U', 'Weighted-U']:
+                self.save_pf = False
+            else:
+                self.save_pf = True
 
         self.learning()
 
