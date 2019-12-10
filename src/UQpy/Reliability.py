@@ -165,6 +165,7 @@ class SubsetSimulation:
         if self.verbose:
             print('UQpy: Subset Simulation Complete!')
 
+    # ------------------------------------------------------------------------------------------------------------------
     # Run Subset Simulation using Modified Metropolis Hastings
     def run_subsim_mmh(self):
         step = 0
@@ -424,21 +425,21 @@ class SubsetSimulation:
             n_s = int(1 / self.p_cond)
             indicator = np.reshape(self.g[step] < self.g_level[step], (n_s, n_c))
             gamma = self.corr_factor_gamma(indicator, n_s, n_c)
-            # beta_hat, r_jn0 = self.corr_factor_beta(indicator, n_s, n_c, self.p_cond)  # Eq. 24
+            beta_hat, r_jn0 = self.corr_factor_beta(indicator, n_s, n_c, self.p_cond)  # Eq. 24
             g_temp = np.reshape(self.g[step], (n_s, n_c))
             # beta_hat, r_jn0 = self.corr_factor_beta(g_temp, n_s, n_c, self.p_cond)
             beta_hat, r_jn0 = self.corr_factor_beta(indicator, g_temp, n_s, n_c, self.p_cond)
             # beta_i = (n_c - 1) * r_jn0 + beta_hat
             beta_i = r_jn0 + beta_hat
 
-            d1 = np.sqrt(((1 - self.p_cond) / (self.p_cond * n)) * (1 + gamma))
-            d2 = np.sqrt(((1 - self.p_cond) / (self.p_cond * n)) * (1 + gamma + beta_i))
+            d1 = np.sqrt(((1 - self.p_cond) / (self.p_cond * self.nsamples_ss)) * (1 + gamma))
+            d2 = np.sqrt(((1 - self.p_cond) / (self.p_cond * self.nsamples_ss)) * (1 + gamma + beta_i))
 
             return d1, d2
 
     def corr_factor_gamma(self, indicator, n_s, n_c):
 
-        gamma = np.zeros(n_s - 1)
+        gam = np.zeros(n_s - 1)
         r = np.zeros(n_s)
 
         ii = indicator * 1
@@ -450,32 +451,10 @@ class SubsetSimulation:
         r = r / r0
 
         for i in range(n_s - 1):
-            gamma[i] = (1 - ((i + 1) / n_s)) * r[i+1]
-        gamma = 2 * np.sum(gamma)
+            gam[i] = (1 - ((i + 1) / n_s)) * r[i+1]
+        gam = 2 * np.sum(gam)
 
-        # gamma = np.zeros(n_s - 1)
-        # r = np.zeros(n_s - 1)
-        # n = n_c * n_s
-        #
-        # sums = 0
-        # for k in range(n_c):
-        #     for ip in range(n_s):
-        #         sums = sums + (indicator[ip, k] * indicator[ip, k])  # sums inside (Ref. 1 Eq. 22)
-        #
-        # r_0 = (1 / n) * sums - self.p_cond ** 2
-        #
-        # for i in range(n_s - 1):
-        #     z = 0
-        #     for k in range(n_c):
-        #         for ip in range(n_s - i - 1):
-        #             z = z + (indicator[ip, k] * indicator[ip + i + 1, k])
-        #
-        #     r[i] = (1 / (n - (i + 1) * n_c)) * z - self.p_cond ** 2
-        #     gamma[i] = (1 - ((i + 1) / n_s)) * (r[i] / r_0)
-        #
-        # gamma = 2 * np.sum(gamma)
-
-        return gamma
+        return gam
 
     # def corr_factor_beta(self, indicator, n_s, n_c, p_cond):
     #
