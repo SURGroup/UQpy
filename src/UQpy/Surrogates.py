@@ -342,27 +342,36 @@ class Krig:
     # Authors: Mohit Chauhan, Matthew Lombardo
     # Last modified: 12/17/2018 by Mohit S. Chauhan
 
-    def __init__(self, samples=None, values=None, reg_model=None, corr_model=None, corr_model_params=None, bounds=None,
-                 op=True, n_opt=1):
+    def __init__(self, reg_model=None, corr_model=None, corr_model_params=None, bounds=None, op=True, n_opt=1,
+                 dimension=None):
 
-        self.samples = np.array(samples)
-        self.values = np.array(values)
-               
         self.reg_model = reg_model
         self.corr_model = corr_model
         self.corr_model_params = corr_model_params
+        self.dim = dimension
         self.bounds = bounds
         self.n_opt = n_opt
         self.op = op
-        self.mean_s, self.std_s = np.zeros(samples.shape[1]), np.zeros(samples.shape[1])
-        self.mean_y, self.std_y = np.zeros(values.shape[1]), np.zeros(values.shape[1])
-        self.init_krig()
-        self.beta, self.gamma, self.sig, self.F_dash, self.C_inv, self.G = self.run_krig()
 
-    def run_krig(self):
+        # Initialize and run preliminary error checks.
+        self.init_krig()
+
+        # Variables are used outside the __init__
+        self.samples = None
+        self.values = None
+        self.mean_s, self.std_s = None, None
+        self.mean_y, self.std_y = None, None
+        self.rmodel, self.cmodel = None, None
+        self.beta, self.gamma, self.sig = None, None, None
+        self.F_dash, self.C_inv, self.G = None, None, None
+
+    def fit(self, samples, values):
         print('UQpy: Performing Krig...')
         from scipy import optimize
         from scipy.linalg import cholesky, cho_solve
+
+        self.samples = np.array(samples)
+        self.values = np.array(values)
 
         # Normalizing the data
         self.mean_s, self.std_s = np.mean(self.samples, 0), np.std(self.samples, 0)
@@ -394,8 +403,8 @@ class Krig:
                     return np.inf
 
             # alpha = inv(R)*y
-            if any(np.isnan(y)):
-                print('What happened?')
+            # if any(np.isnan(y)):
+            #     print('What happened?')
 
             alpha = cho_solve((cc, True), y)
             t4 = np.einsum("ik,ik->k", y, alpha)
@@ -441,6 +450,8 @@ class Krig:
             t = np.argmin(pf)
             self.corr_model_params = p[t, :]
 
+        self.n_opt = 1
+
         r_ = self.corr_model(x=s_, s=s_, params=self.corr_model_params)
         c = np.linalg.cholesky(r_)                   # Eq: 3.8, DACE
         c_inv = np.linalg.inv(c)
@@ -461,8 +472,9 @@ class Krig:
         for l in range(q):
             sigma[l] = (1 / m_) * (np.linalg.norm(y_dash[:, l] - np.matmul(f_dash, beta[:, l])) ** 2)
 
+        self.beta, self.gamma, self.sig = beta, gamma, sigma
+        self.F_dash, self.C_inv, self.G = f_dash, c_inv, g_
         print('Done!')
-        return beta, gamma, sigma, f_dash, c_inv, g_
 
     def interpolate(self, x, dy=False):
         x = (x - self.mean_s)/self.std_s
@@ -472,6 +484,8 @@ class Krig:
         y = np.einsum('ij,jk->ik', fx, self.beta) + np.einsum('ij,jk->ik', rx, self.gamma)
         y = self.mean_y + y * self.std_y
         if dy:
+            # print(self.C_inv.shape)
+            # print(rx.shape)
             r_dash = np.einsum('ij,jk->ik', self.C_inv, rx.T)
             u = np.einsum('ij,jk->ik', self.F_dash.T, r_dash)-fx.T
             norm1 = np.sum(r_dash**2, 0)**0.5
@@ -498,11 +512,17 @@ class Krig:
         if self.corr_model is None:
             raise NotImplementedError("Exit code: Correlation model is not defined.")
 
+        if self.corr_model_params is None and self.dim is None:
+            raise NotImplementedError("Exit code: Either define corr_model_params or dimension.")
+
         if self.corr_model_params is None:
-            self.corr_model_params = np.ones(np.size(self.samples, 1))
+            self.corr_model_params = np.ones(self.dim)
 
         if self.bounds is None:
-            self.bounds = [[0.001, 10**7]]*self.samples.shape[1]
+            if self.dim is None:
+                self.bounds = [[0.001, 10**7]]*self.corr_model_params.shape[0]
+            else:
+                self.bounds = [[0.001, 10 ** 7]] * self.dim
 
         # Defining Regression model (Linear)
         def regress(model=None):
@@ -546,6 +566,7 @@ class Krig:
         if type(self.reg_model).__name__ == 'function':
             self.reg_model = self.reg_model
         elif self.reg_model in ['Constant', 'Linear', 'Quadratic']:
+            self.rmodel = self.reg_model
             self.reg_model = regress(model=self.reg_model)
         else:
             raise NotImplementedError("Exit code: Doesn't recognize the Regression model.")
@@ -711,6 +732,7 @@ class Krig:
         if type(self.corr_model).__name__ == 'function':
             self.corr_model = self.corr_model
         elif self.corr_model in ['Exponential', 'Gaussian', 'Linear', 'Spherical', 'Cubic', 'Spline', 'Other']:
+            self.cmodel = self.corr_model
             self.corr_model = corr(model=self.corr_model)
         else:
             raise NotImplementedError("Exit code: Doesn't recognize the Correlation model.")
