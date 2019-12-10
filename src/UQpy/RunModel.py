@@ -467,9 +467,9 @@ class RunModel:
         exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
         for i in range(self.nsim):
             if isinstance(self.samples, list):
-                sample_to_send = self.samples[i+self.nexist]
+                sample_to_send = np.atleast_2d(self.samples[i+self.nexist])
             elif isinstance(self.samples, np.ndarray):
-                sample_to_send = self.samples[i+self.nexist]
+                sample_to_send = np.atleast_2d(self.samples[i+self.nexist])
                 # self.model_output = eval(self.model_object_name + '(self.samples[i])')
             if len(self.python_kwargs) == 0:
                 self.model_output = eval(self.model_object_name + '(sample_to_send)')
@@ -502,11 +502,15 @@ class RunModel:
         sample = []
         pool = multiprocessing.Pool(processes=self.ntasks)
         for i in range(self.nsim):
-            if len(self.python_kwargs) == 0:
-                sample.append([self.model_script, self.model_object_name, self.samples[i + self.nexist]])
-            else:
-                sample.append([self.model_script, self.model_object_name, self.samples[i + self.nexist],
-                               self.python_kwargs])
+            if isinstance(self.samples, list):
+                sample_to_send = np.atleast_2d(self.samples[i+self.nexist])
+            elif isinstance(self.samples, np.ndarray):
+                sample_to_send = np.atleast_2d(self.samples[i+self.nexist])
+            # if len(self.python_kwargs) == 0:
+            #     sample.append([self.model_script, self.model_object_name, self.samples[i + self.nexist]])
+            # else:
+            sample.append([self.model_script, self.model_object_name, sample_to_send,
+                           self.python_kwargs])
 
         results = pool.starmap(Utilities._run_parallel_python, sample)
 

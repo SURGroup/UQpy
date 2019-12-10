@@ -3190,7 +3190,8 @@ class MCMC:
             self.samples = np.zeros((nsamples_per_chain, self.nchains, self.dimension))
             if self.save_log_pdf:
                 self.log_pdf_values = np.zeros((nsamples_per_chain, self.nchains))
-            current_state = self.seed
+            current_state = np.zeros_like(self.seed)
+            np.copyto(current_state, self.seed)
             self.current_sample_index = 0
             nsims = self.nburn + self.jump * nsamples_per_chain
 
