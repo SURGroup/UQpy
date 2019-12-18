@@ -21,6 +21,7 @@ from UQpy.RunModel import RunModel
 from UQpy.SampleMethods import MCMC
 from UQpy.Transformations import *
 
+
 ########################################################################################################################
 ########################################################################################################################
 #                                        Subset Simulation
@@ -75,7 +76,7 @@ class SubsetSimulation:
                  pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None,
                  pdf_target_copula_params=None, pdf_target_type='joint_pdf', seed=None,
                  algorithm='MH', jump=1, nsamples_ss=None, nburn=0, samples_init=None, p_cond=None,
-                 verbose=False,  model_script=None, model_object_name=None, input_template=None, var_names=None,
+                 verbose=False, model_script=None, model_object_name=None, input_template=None, var_names=None,
                  output_script=None, output_object_name=None, n_tasks=1, cores_per_task=1, nodes=1, resume=False,
                  model_dir=None, cluster=False):
 
@@ -159,7 +160,7 @@ class SubsetSimulation:
                           ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes, resume=self.resume,
                           verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
 
-        self.g.append(np.asarray(g_init.qoi_list).reshape(-1,))
+        self.g.append(np.asarray(g_init.qoi_list).reshape(-1, ))
         g_ind = np.argsort(self.g[step])
         self.g_level.append(self.g[step][g_ind[n_keep]])
 
@@ -174,7 +175,7 @@ class SubsetSimulation:
             self.samples.append(self.samples[step - 1][g_ind[0:n_keep], :])
             self.g.append(self.g[step - 1][g_ind[:n_keep]])
 
-            for i in range(self.nsamples_ss-n_keep):
+            for i in range(self.nsamples_ss - n_keep):
                 x0 = self.samples[step][i]
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
@@ -183,7 +184,7 @@ class SubsetSimulation:
                               pdf_target_copula=self.pdf_target_copula,
                               pdf_target_copula_params=self.pdf_target_copula_params,
                               pdf_target_type=self.pdf_target_type,
-                              algorithm= self.algorithm, jump=self.jump, nsamples=2, seed=x0,
+                              algorithm=self.algorithm, jump=self.jump, nsamples=2, seed=x0,
                               nburn=self.nburn, verbose=self.verbose)
 
                 x_temp = x_mcmc.samples[1].reshape((1, self.dimension))
@@ -216,7 +217,7 @@ class SubsetSimulation:
 
         n_fail = len([value for value in self.g[step] if value < 0])
 
-        pf = self.p_cond**step*n_fail/self.nsamples_ss
+        pf = self.p_cond ** step * n_fail / self.nsamples_ss
         cov1 = np.sqrt(np.sum(self.d12))
         cov2 = np.sqrt(np.sum(self.d22))
 
@@ -266,7 +267,7 @@ class SubsetSimulation:
 
             for i in range(self.nsamples_ss - n_keep):
 
-                x0 = self.samples[step][i:i+n_keep]
+                x0 = self.samples[step][i:i + n_keep]
 
                 x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
                               pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
@@ -274,7 +275,7 @@ class SubsetSimulation:
                               pdf_target_copula=self.pdf_target_copula,
                               pdf_target_copula_params=self.pdf_target_copula_params,
                               pdf_target_type=self.pdf_target_type,
-                              algorithm= self.algorithm, jump=self.jump, nsamples=n_keep+1, seed=x0,
+                              algorithm=self.algorithm, jump=self.jump, nsamples=n_keep + 1, seed=x0,
                               nburn=self.nburn, verbose=self.verbose)
 
                 x_temp = x_mcmc.samples[n_keep].reshape((1, self.dimension))
@@ -376,7 +377,7 @@ class SubsetSimulation:
         r = r / r0
 
         for i in range(n_s - 1):
-            gamma[i] = (1 - ((i + 1) / n_s)) * r[i+1]
+            gamma[i] = (1 - ((i + 1) / n_s)) * r[i + 1]
         gamma = 2 * np.sum(gamma)
 
         # gamma = np.zeros(n_s - 1)
@@ -431,7 +432,7 @@ class SubsetSimulation:
         u = np.unique(g[0, :])
         for i in range(u.size):
             ii = indicator[:, g[0, :] == u[i]]
-            r_jn = r_jn + ii.shape[1]*(ii.shape[1]-1)/2
+            r_jn = r_jn + ii.shape[1] * (ii.shape[1] - 1) / 2
 
         beta = 0
 
@@ -476,8 +477,6 @@ class SubsetSimulation:
 
         return beta, r_jn
 
-
-
     # def corr_factor_beta(self, g, n_s, n_c, p_cond):
     #
     #     beta = np.zeros(n_s - 1)
@@ -499,7 +498,6 @@ class SubsetSimulation:
     #     beta = 2 * (n_c - 1) * np.sum(beta)
     #
     #     return beta, r_jn[0]
-
 
     # Version where cross-correlations are computed from g
     # def corr_factor_beta(self, g, n_s, n_c, p_cond):
@@ -548,7 +546,7 @@ class SubsetSimulation:
     #
     #     return beta, r_jn[0]
 
-        # Version where cross-correlations are computed just from indicator
+    # Version where cross-correlations are computed just from indicator
     # def corr_factor_beta(self, indicator, n_s, n_c, p_cond):
     #
     #         beta = np.zeros(n_s - 1)
@@ -594,36 +592,37 @@ class SubsetSimulation:
     #         # r_jn[0] = 0.
     #         return beta, r_jn[0]
 
-        # def cov_sus(self, step):
-        #     n = self.g[step].size
-        #     if step == 0:
-        #         di = np.sqrt((1 - self.p_cond) / (self.p_cond * n))
-        #     else:
-        #         nc = int(self.p_cond * n)
-        #         r_zero = self.p_cond * (1 - self.p_cond)
-        #         index = np.zeros(n)
-        #         index[np.where(self.g[step] < self.g_level[step])] = 1
-        #         indices = np.zeros(shape=(int(n / nc), nc)).astype(int)
-        #         for i in range(int(n / nc)):
-        #             for j in range(nc):
-        #                 if i == 0:
-        #                     indices[i, j] = j
-        #                 else:
-        #                     indices[i, j] = indices[i - 1, j] + nc
-        #         gamma = 0
-        #         rho = np.zeros(int(n / nc) - 1)
-        #         for k in range(int(n / nc) - 1):
-        #             z = 0
-        #             for j in range(int(nc)):
-        #                 for l in range(int(n / nc) - k):
-        #                     z = z + index[indices[l, j]] * index[indices[l + k, j]]
-        #
-        #             rho[k] = (1 / (n - k * nc) * z - self.p_cond ** 2) / r_zero
-        #             gamma = gamma + 2 * (1 - k * nc / n) * rho[k]
-        #
-        #         di = np.sqrt((1 - self.p_cond) / (self.p_cond * n) * (1 + gamma))
-        #
-        #     return di
+    # def cov_sus(self, step):
+    #     n = self.g[step].size
+    #     if step == 0:
+    #         di = np.sqrt((1 - self.p_cond) / (self.p_cond * n))
+    #     else:
+    #         nc = int(self.p_cond * n)
+    #         r_zero = self.p_cond * (1 - self.p_cond)
+    #         index = np.zeros(n)
+    #         index[np.where(self.g[step] < self.g_level[step])] = 1
+    #         indices = np.zeros(shape=(int(n / nc), nc)).astype(int)
+    #         for i in range(int(n / nc)):
+    #             for j in range(nc):
+    #                 if i == 0:
+    #                     indices[i, j] = j
+    #                 else:
+    #                     indices[i, j] = indices[i - 1, j] + nc
+    #         gamma = 0
+    #         rho = np.zeros(int(n / nc) - 1)
+    #         for k in range(int(n / nc) - 1):
+    #             z = 0
+    #             for j in range(int(nc)):
+    #                 for l in range(int(n / nc) - k):
+    #                     z = z + index[indices[l, j]] * index[indices[l + k, j]]
+    #
+    #             rho[k] = (1 / (n - k * nc) * z - self.p_cond ** 2) / r_zero
+    #             gamma = gamma + 2 * (1 - k * nc / n) * rho[k]
+    #
+    #         di = np.sqrt((1 - self.p_cond) / (self.p_cond * n) * (1 + gamma))
+    #
+    #     return di
+
 
 ########################################################################################################################
 ########################################################################################################################
@@ -632,10 +631,10 @@ class SubsetSimulation:
 
 class TaylorSeries:
 
-    # Authors: Dimitris G.Giovanis
+    # Authors: Dimitris G. Giovanis
     # Last Modified: 11/11/2019 by Dimitris G. Giovanis
 
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=1000, eps=None, corr=None, model=None):
+    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=100, eps=None, corr=None, model=None):
         """
             Description: A class that performs reliability analysis of a model using the First Order Reliability Method
                          (FORM) and Second Order Reliability Method (SORM) that belong to the family of Taylor series
@@ -655,8 +654,6 @@ class TaylorSeries:
                 :type n_iter: float/list of floats
                 :param corr: Correlation structure of the random vector (See Transformation class).
                 :type corr: ndarray
-                :param method: Method used for the reliability problem -- available methods: 'FORM', 'SORM'
-                :type method: str
         """
 
         self.dimension = dimension
@@ -666,13 +663,20 @@ class TaylorSeries:
         self.corr = corr
         self.model = model
         self.eps = eps
+        self.distribution = [None] * self.dimension
+        for j in range(dimension):
+            self.distribution[j] = Distribution(self.dist_name[j])
+
+        # Set initial values to np.inf
+        self.DesignPoint_U = np.inf
+        self.DesignPoint_X = np.inf
+        self.HL_beta = np.inf
+        self.Prob_FORM = np.inf
+        self.iterations = np.inf
+        self.jacobian = np.inf
 
         if self.model is None:
             raise RuntimeError("In order to use class TaylorSeries a model of type RunModel is required.")
-
-        # if self.algorithm == 'HL':
-        # [self.DesignPoint_U, self.DesignPoint_X, self.HL_beta, self.Prob_FORM,
-        # self.Prob_SORM, self.iterations] = self.form_hl()
 
     def form(self, seed=None):
 
@@ -680,111 +684,105 @@ class TaylorSeries:
 
         # initialization
         max_iter = self.n_iter
-        tol = 1e-5
+        tol = 1e-3
         u = np.zeros([max_iter + 1, self.dimension])
         x = np.zeros_like(u)
-        beta = np.zeros(max_iter)
+        conv_flag = 0
 
         # If we provide an initial seed transform the initial point in the standard normal space:  X to U
         # using the Nataf transformation
+        if self.corr is not None:
+            self.corr_z = Nataf.distortion_z(self.distribution, self.dist_params, self.corr, None, None, None)
+        elif self.corr is None:
+            self.corr_z = np.eye(self.dimension)
+        elif np.linalg.norm(self.corr - np.identity(n=self.dimension)) <= 10 ** (-8):
+            self.corr_z = self.corr
+
         if seed is not None:
-            self.seed = seed
-
-            natafObj = Nataf(input_samples=self.seed.reshape(1, -1), corr=self.corr, dist_name=self.dist_name,
-                             dist_params=self.dist_params)
-
-            natafObj.transform()
-            u[0, :] = natafObj.samples
-
+            # transform the initial point from the original space x to standard normal space u
+            u[0, :] = Nataf.transform_x_to_u(seed.reshape(1, -1), self.corr_z, self.distribution, self.dist_params,
+                                             jacobian=False)
+        check_1 = np.zeros(max_iter)
+        check_2 = np.zeros(max_iter)
+        grad_qoi = list()
         for k in range(max_iter):
             # transform the initial point in the original space:  U to X
-            invNatafObject = Nataf(input_samples=u[k, :].reshape(1, -1), corr=self.corr, dist_name=self.dist_name,
-                                   dist_params=self.dist_params)
-
-            invNatafObject.inverse()
-            x[k, :] = invNatafObject.samples
-            jacobian = invNatafObject.jacobian[0]
+            x[k, :], jacobian_u_to_x = Nataf.transform_u_to_x(u[k, :].reshape(1, -1), self.corr_z, self.distribution,
+                                                              self.dist_params, jacobian=True)
+            jacobian_x_to_u = np.linalg.inv(jacobian_u_to_x)
+            print('iteration: {0}, location: {1}'.format(k, x[k, :]))
 
             # 1. evaluate Limit State Function at the point
-            self.model.run(x[k, :].reshape(1, -1))
-            qoi = self.model.qoi_list[-1]
-
+            self.model.run(x[k, :].reshape(1, -1), append_samples=False)
+            qoi = self.model.qoi_list[0]
             # 2. evaluate Limit State Function gradient at point u_k and direction cosines
-            dg = gradient(sample=u[k, :].reshape(1, -1), dimension=self.dimension, eps=self.eps, model=self.model,
-                          order='second', dist_name=self.dist_name, dist_params=self.dist_params, corr=self.corr)
+            dg = self.gradient(method='forward', order='first', sample=x[k, :].reshape(1, -1), dimension=self.dimension,
+                               eps=self.eps, model=self.model, dist_params=self.dist_params, dist_name=self.dist_name)
+            grad_qoi.append(np.dot(dg[0, :], jacobian_x_to_u))
 
-            try:
-                p = np.linalg.solve(jacobian, dg[0, :])
-            except:
-                print('Bad transformation.')
-            try:
-                np.isnan(p)
-            except:
-                print('Bad transformation.')
+            norm_grad = np.linalg.norm(grad_qoi[k])
+            alpha = - grad_qoi[k] / norm_grad
 
-            norm_grad = np.linalg.norm(p)
-            alpha = p / norm_grad
-            alpha = alpha.squeeze()
-            # 3. calculate first order beta
-            beta[k + 1] = -np.inner(u[k, :].T, alpha) + qoi / norm_grad
-            # -np.inner(u[k, :].T, alpha) + g.qoi_list[0] / norm_grad
-            # 4. calculate u_{k+1}
-            u[k + 1, :] = -beta[k + 1] * alpha
-            # next iteration
-            if np.linalg.norm(u[k + 1, :] - u[k, :]) <= tol:
-                # delete unnecessary data
-                u = u[:k + 1, :]
-                # compute design point, reliability index and Pf
-                u_star = u[-1, :]
-                # transform the initial point in the original space:  U to X
-                invNatafObject = Nataf(input_samples=u_star.reshape(1, -1), corr=self.corr, dist_name=self.dist_name,
-                                       dist_params=self.dist_params)
-                invNatafObject.inverse()
-                x_star = invNatafObject.samples
-                jacobian_star = invNatafObject.jacobian[0]
-                beta_star = beta[k]
-                pf = stats.norm.cdf(-beta_star)
+            if k == 0:
+                if qoi == 0:
+                    g0 = 1
+                else:
+                    g0 = qoi
 
-                self.DesignPoint_U = u_star
-                self.DesignPoint_X = x_star
-                self.HL_beta = beta_star
-                self.Prob_FORM = pf
+            check_1[k] = np.linalg.norm(u[k, :].reshape(-1, 1) - np.dot(alpha.reshape(1, -1), u[k, :].reshape(-1, 1)) *
+                                        alpha.reshape(-1, 1))
+            check_2[k] = abs(qoi/g0)
+            if check_1[k] <= tol and check_2[k] <= tol:
+                print('FORM has converged!')
+                conv_flag = 1
+                self.DesignPoint_U = u[k, :]
+                self.DesignPoint_X = x[k, :]
+                self.HL_beta = np.dot(self.DesignPoint_U.reshape(1, -1), alpha.T)
+                self.Prob_FORM = stats.norm.cdf(-self.HL_beta)
                 self.iterations = k
-                self.jacobian = jacobian_star
-
+                self.jacobian = jacobian_x_to_u
+                self.grad = grad_qoi
+                self.u = u[:k + 1, :]
+                self.x = x[:k + 1, :]
+                self.check_1 = check_1
+                self.check_2 = check_2
+                self.gradient_list = grad_qoi
                 break
 
-            else:
-                continue
+            if conv_flag == 0:
+
+                direction = (qoi / norm_grad + np.dot(alpha.reshape(1, -1), u[k, :].reshape(-1, 1))) * \
+                            alpha.reshape(-1, 1) - u[k, :].reshape(-1, 1)
+
+                u[k + 1, :] = (u[k, :].reshape(-1, 1) + direction).T
 
         if not hasattr(self, 'Prob_FORM'):  # Form didn't converge
             print('FORM failed to converge. Output attribute values will be set to np.inf.')
-
-            self.DesignPoint_U = np.inf
-            self.DesignPoint_X = np.inf
-            self.HL_beta = np.inf
-            self.Prob_FORM = np.inf
-            self.iterations = np.inf
-            self.jacobian = np.inf
+        print('Done!')
 
     def sorm(self, seed=None):
+
+        self.pf_sorm = np.inf
 
         if not hasattr(self, 'Prob_FORM'):
             self.form(seed)
 
-        if not np.isinf(self.Prob_FORM):
+        if np.isinf(self.Prob_FORM):
+            print('Cannot calculate SORM correction. PF_FORM is not available.')
+
+        else:
             print('Calculating SORM correction...')
 
             self.iterations = 3 * (self.iterations + 1) + 5
             # Evaluate Limit State Function gradient at point u_star and direction cosines
-            dg = gradient(sample=self.DesignPoint_X.reshape(1, -1), dimension=self.dimension, eps=0.1, model=self.model,
-                          order='second')
-            mixed_dg = gradient(sample=self.DesignPoint_X.reshape(1, -1), eps=0.1, dimension=self.dimension,
-                                model=self.model, order='mixed')
+            dg = self.gradient(sample=self.DesignPoint_X.reshape(1, -1), dimension=self.dimension, eps=0.1, model=self.model,
+                               order='second')
+            mixed_dg = self.gradient(sample=self.DesignPoint_X.reshape(1, -1), eps=0.1, dimension=self.dimension,
+                                     model=self.model, order='mixed', dist_params=self.dist_params)
 
             p = np.linalg.solve(self.jacobian, dg[0, :])
             norm_grad = np.linalg.norm(p)
-            hessian = eval_hessian(self.dimension, mixed_dg, dg[1, :])
+            hessian = self.hessian(self.dimension, mixed_dg, dg[1, :])
             q = np.eye(self.dimension)
             q[:, 0] = self.DesignPoint_U.T
             q_, r_ = np.linalg.qr(q)
@@ -792,11 +790,159 @@ class TaylorSeries:
             a = np.dot(np.dot(q0.T, hessian), q0)
             if self.dimension > 1:
                 jay = np.eye(self.dimension - 1) + self.HL_beta * a[:self.dimension - 1,
-                                                                  :self.dimension - 1] / norm_grad
-            elif self.dimension == 1:
+                                                               :self.dimension - 1] / norm_grad
+            if self.dimension == 1:
                 jay = np.eye(self.dimension) + self.HL_beta * a[:self.dimension, :self.dimension] / norm_grad
             correction = 1 / np.sqrt(np.linalg.det(jay))
             self.Prob_SORM = self.Prob_FORM * correction
 
-        else:
-            raise RuntimeError('Cannot run SORM. FORM has failed to converge.')
+    @staticmethod
+    def gradient(sample=None, dist_params=None, dist_name=None, model=None, dimension=None, eps=None, order=None,
+                 method=None):
+
+        """
+             Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
+
+             Input:
+                 :param sample: The sample values at which the gradient of the model will be evaluated. Samples can be
+                 passed directly as  an array or can be passed through the text file 'UQpy_Samples.txt'.
+                 If passing samples via text file, set samples = None or do not set the samples input.
+                 :type sample: ndarray
+
+                 :param dist_params: Probability distribution model parameters for each random variable.
+                                       (see Distributions class).
+                 :type dist_params: list
+                 :param dist_name: Probability distribution name (see Distributions class).
+                 :type dist_params: list of strings
+                 :param order: The type of derivatives to calculate (1st order, second order, mixed).
+                 :type order: str
+
+                 :param dimension: Number of random variables.
+                 :type dimension: int
+
+                 :param method: Finite difference method (Options: Central, backwards, forward).
+                 :type dimension: int
+
+                 :param eps: step for the finite difference.
+                 :type eps: float
+
+                 :param model: An object of type RunModel
+                 :type model: RunModel object
+
+             Output:
+                 :return du_dj: vector of first-order gradients
+                 :rtype: ndarray
+                 :return d2u_dj: vector of second-order gradients
+                 :rtype: ndarray
+                 :return d2u_dij: vector of mixed gradients
+                 :rtype: ndarray
+         """
+        from UQpy.Transformations import Nataf
+        if order is None:
+            raise ValueError('Exit code: Provide type of derivatives: first, second or mixed.')
+
+        if dimension is None:
+            raise ValueError('Error: Dimension must be defined')
+
+        if eps is None:
+            eps = [0.1] * dimension
+        elif isinstance(eps, float):
+            eps = [eps] * dimension
+        elif isinstance(eps, list):
+            if len(eps) != 1 and len(eps) != dimension:
+                raise ValueError('Exit code: Inconsistent dimensions.')
+            if len(eps) == 1:
+                eps = [eps[0]] * dimension
+
+        if model is None:
+            raise RuntimeError('A model must be provided.')
+
+        scale = np.zeros(len(dist_name))
+        for j in range(len(dist_name)):
+            dist = Distribution(dist_name[j])
+            mean, var, skew, kurt = dist.moments(dist_params[j])
+            scale[j] = np.sqrt(var)
+
+        if order == 'first' or order == 'second':
+            du_dj = np.zeros(dimension)
+            d2u_dj = np.zeros(dimension)
+            for ii in range(dimension):
+                eps_i = eps[ii] * scale[ii]
+                x_i1_j = np.array(sample)
+                x_i1_j[0, ii] = x_i1_j[0, ii] + eps_i
+                x_1i_j = np.array(sample)
+                x_1i_j[0, ii] = x_1i_j[0, ii] - eps_i
+
+                qoi = model.qoi_list[0]
+                if method.lower() == 'Forward':
+                    model.run(x_i1_j, append_samples=False)
+                    qoi_plus = model.qoi_list[0]
+                    du_dj[ii] = (qoi_plus - qoi) / eps_i
+                elif method.lower() == 'Backwards':
+                    model.run(x_1i_j, append_samples=False)
+                    qoi_minus = model.qoi_list[0]
+                    du_dj[ii] = (qoi - qoi_minus) / eps_i
+                else:
+                    model.run(x_i1_j, append_samples=False)
+                    qoi_plus = model.qoi_list[0]
+                    model.run(x_1i_j, append_samples=False)
+                    qoi_minus = model.qoi_list[0]
+                    du_dj[ii] = (qoi_plus - qoi_minus) / (2 * eps_i)
+                    if order == 'second':
+                        d2u_dj[ii] = (qoi_plus - 2 * qoi + qoi_minus) / (eps_i ** 2)
+
+            return np.vstack([du_dj, d2u_dj])
+
+        elif order == 'mixed':
+            import itertools
+            range_ = list(range(dimension))
+            d2u_dij = list()
+            for i in itertools.combinations(range_, 2):
+                x_i1_j1 = np.array(sample)
+                x_i1_1j = np.array(sample)
+                x_1i_j1 = np.array(sample)
+                x_1i_1j = np.array(sample)
+
+                eps_i1_0 = eps[i[0]] * scale[i[0]]
+                eps_i1_1 = eps[i[1]] * scale[i[1]]
+
+                x_i1_j1[0, i[0]] += eps_i1_0
+                x_i1_j1[0, i[1]] += eps_i1_1
+
+                x_i1_1j[0, i[0]] += eps_i1_0
+                x_i1_1j[0, i[1]] -= eps_i1_1
+
+                x_1i_j1[0, i[0]] -= eps_i1_0
+                x_1i_j1[0, i[1]] += eps_i1_1
+
+                x_1i_1j[0, i[0]] -= eps_i1_0
+                x_1i_1j[0, i[1]] -= eps_i1_1
+
+                qoi_0 = model.run(x_i1_j1, append_samples=False)
+                qoi_1 = model.run(x_i1_1j, append_samples=False)
+                qoi_2 = model.run(x_1i_j1, append_samples=False)
+                qoi_3 = model.run(x_1i_1j, append_samples=False)
+
+                d2u_dij.append((qoi_0 - qoi_1 - qoi_2 + qoi_3)
+                               / (4 * eps_i1_0 * eps_i1_1))
+
+            return np.array(d2u_dij)
+
+    @staticmethod
+    def hessian(dimension=None, mixed_der=None, der=None):
+
+        """
+        Calculate the hessian matrix with finite differences
+        Parameters:
+
+        """
+        hessian = np.diag(der)
+        import itertools
+        range_ = list(range(dimension))
+        add_ = 0
+        for i in itertools.combinations(range_, 2):
+            hessian[i[0], i[1]] = mixed_der[add_]
+            hessian[i[1], i[0]] = hessian[i[0], i[1]]
+            add_ += 1
+
+        return hessian

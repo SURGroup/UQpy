@@ -148,108 +148,6 @@ def compute_Delaunay_centroid_volume(vertices):
     return centroid, volume
 
 
-def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
-
-    """
-        Description:
-            A function that performs transformation of a non-Gaussian random variable to a Gaussian one.
-        Input:
-            :param corr_norm: Correlation matrix in the standard normal space
-            :type corr_norm: ndarray
-            :param dist: marginal distributions
-            :type dist: list
-            :param dist_params: marginal distribution parameters
-            :type dist_params: list
-            :param samples_ng: non-Gaussian samples
-            :type samples_ng: ndarray
-            :param jacobian: The Jacobian of the transformation
-            :type jacobian: ndarray
-        Output:
-            :return: samples_g: Gaussian samples
-            :rtype: samples_g: ndarray
-
-            :return: jacobian: The jacobian
-            :rtype: jacobian: ndarray
-
-    """
-
-    from scipy.linalg import cholesky
-
-    a_ = cholesky(corr_norm, lower=True)
-    samples_g = np.zeros_like(samples_ng)
-    m, n = np.shape(samples_ng)
-    for j in range(n):
-        cdf = dist[j].cdf
-        samples_g[:, j] = stats.norm.ppf(cdf(samples_ng[:, j][:, np.newaxis], dist_params[j]))
-
-    if not jacobian:
-        print("UQpy: Done.")
-        return samples_g, None
-    else:
-        temp_ = np.zeros([n, n])
-        jacobian = [None] * m
-        for i in range(m):
-            for j in range(n):
-                pdf = dist[j].pdf
-                x0 = np.array([samples_ng[i, j]])
-                x = np.array([samples_g[i, j]])
-                temp_[j, j] = stats.norm.pdf(x[i, j][:, np.newaxis]) / pdf(x0[:, np.newaxis], dist_params[j])
-            jacobian[i] = np.linalg.solve(temp_, a_)
-
-        return samples_g, jacobian
-
-
-def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
-
-    """
-        Description:
-            A function that performs transformation of a Gaussian random variable to a non-Gaussian one.
-        Input:
-            :param corr_norm: Correlation matrix in the standard normal space
-            :type corr_norm: ndarray
-            :param dist: marginal distributions
-            :type dist: list
-            :param dist_params: marginal distribution parameters
-            :type dist_params: list
-            :param samples_g: Gaussian samples
-            :type samples_g: ndarray
-            :param jacobian: The Jacobian of the transformation
-            :type jacobian: ndarray
-        Output:
-            :return: samples_ng: Gaussian samples
-            :rtype: samples_ng: ndarray
-
-            :return: jacobian: The jacobian
-            :rtype: jacobian: ndarray
-
-    """
-
-    from scipy.linalg import cholesky
-
-    samples_ng = np.zeros_like(samples_g)
-    m, n = np.shape(samples_g)
-    for j in range(n):
-        i_cdf = dist[j].icdf
-        samples_ng[:, j] = i_cdf(stats.norm.cdf(samples_g[:, j][:, np.newaxis]), dist_params[j])
-
-    if not jacobian:
-        print("UQpy: Done.")
-        return samples_ng, None
-    else:
-        a_ = cholesky(corr_norm, lower=True)
-        temp_ = np.zeros([n, n])
-        jacobian = [None] * m
-        for i in range(m):
-            for j in range(n):
-                pdf = dist[j].pdf
-                x = np.array([samples_ng[i, j]])
-                x0 = np.array([samples_g[i, j]])
-                temp_[j, j] = pdf(x[:, np.newaxis], dist_params[j]) / stats.norm.pdf(x0[:, np.newaxis])
-            jacobian[i] = np.linalg.solve(a_, temp_)
-
-        return samples_ng, jacobian
-
-
 def correlation_distortion(marginal, params, rho_norm):
 
     """
@@ -676,7 +574,7 @@ def R_to_r(R):
     r = R/R[0]
     return r
 
-
+'''
 def gradient_old(sample=None, dimension=None, eps=None,  model_script=None, model_object_name=None, input_template=None,
              var_names=None,
              output_script=None, output_object_name=None, ntasks=None, cores_per_task=None, nodes=None, resume=None,
@@ -853,10 +751,11 @@ def gradient_old(sample=None, dimension=None, eps=None,  model_script=None, mode
                            / (4 * eps[i[0]]*eps[i[1]]))
 
         return np.array(d2u_dij)
+'''
 
-
+'''
 def gradient(sample=None, dist_name=None, dist_params=None, model=None, dimension=None, eps=None, order=None,
-             corr=None):
+             corr=None, method=None):
 
     """
          Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
@@ -878,6 +777,9 @@ def gradient(sample=None, dist_name=None, dist_params=None, model=None, dimensio
              :type order: str
 
              :param dimension: Number of random variables.
+             :type dimension: int
+
+             :param method: Finite difference method (Options: Central, backwards, forward).
              :type dimension: int
 
              :param eps: step for the finite difference.
@@ -913,40 +815,35 @@ def gradient(sample=None, dist_name=None, dist_params=None, model=None, dimensio
 
     if model is None:
         raise RuntimeError('A model must be provided.')
+
     if order == 'first' or order == 'second':
         du_dj = np.zeros(dimension)
         d2u_dj = np.zeros(dimension)
-        for i in range(dimension):
+        for ii in range(dimension):
+            eps_i = eps[ii] * dist_params[ii][1]
             x_i1_j = np.array(sample)
-            x_i1_j[0, i] += eps[i]
+            x_i1_j[0, ii] = x_i1_j[0, ii] + eps_i
             x_1i_j = np.array(sample)
-            x_1i_j[0, i] -= eps[i]
+            x_1i_j[0, ii] = x_1i_j[0, ii] - eps_i
 
-            if dist_name is not None:
-                obj_xi1_j = Nataf(input_samples=x_i1_j, corr=corr, dist_name=dist_name,
-                                  dist_params=dist_params)
-
-                obj_xi1_j.inverse()
-                u_i1_j = obj_xi1_j.samples
-
-                ##########################################
-
-                x_1i_j = Nataf(input_samples=x_1i_j, corr=corr, dist_name=dist_name,
-                               dist_params=dist_params)
-
-                x_1i_j.inverse()
-                u_1i_j = x_1i_j.samples
-
+            qoi = model.qoi_list[0]
+            if method.lower() == 'Forward':
+                model.run(x_i1_j, append_samples=False)
+                qoi_plus = model.qoi_list[0]
+                du_dj[ii] = (qoi_plus - qoi) / eps_i
+            elif method.lower() == 'Backwards':
+                model.run(x_1i_j, append_samples=False)
+                qoi_minus = model.qoi_list[0]
+                du_dj[ii] = (qoi - qoi_minus) / eps_i
             else:
-                u_i1_j = x_i1_j
-                u_1i_j = x_1i_j
+                model.run(x_i1_j, append_samples=False)
+                qoi_plus = model.qoi_list[0]
+                model.run(x_1i_j, append_samples=False)
+                qoi_minus = model.qoi_list[0]
+                du_dj[ii] = (qoi_plus - qoi_minus) / (2 * eps_i)
+                if order == 'second':
+                    d2u_dj[ii] = (qoi_plus - 2 * qoi + qoi_minus) / (eps_i ** 2)
 
-            model.run(u_i1_j)
-            model.run(u_1i_j)
-            du_dj[i] = (model.qoi_list[-2] - model.qoi_list[-1])/(2*eps[i])
-
-            if order == 'second':
-                    d2u_dj[i] = (model.qoi_list[-2] - 2 * model.qoi_list[-3] + model.qoi_list[-1]) / (eps[i]**2)
         return np.vstack([du_dj, d2u_dj])
 
     elif order == 'mixed':
@@ -959,67 +856,28 @@ def gradient(sample=None, dist_name=None, dist_params=None, model=None, dimensio
             x_1i_j1 = np.array(sample)
             x_1i_1j = np.array(sample)
 
-            x_i1_j1[0, i[0]] += eps[i[0]]
-            x_i1_j1[0, i[1]] += eps[i[1]]
+            x_i1_j1[0, i[0]] += eps[i[0]] * dist_params[i[0]][1]
+            x_i1_j1[0, i[1]] += eps[i[1]] * dist_params[i[0]][1]
 
-            x_i1_1j[0, i[0]] += eps[i[0]]
-            x_i1_1j[0, i[1]] -= eps[i[1]]
+            x_i1_1j[0, i[0]] += eps[i[0]] * dist_params[i[0]][1]
+            x_i1_1j[0, i[1]] -= eps[i[1]] * dist_params[i[0]][1]
 
-            x_1i_j1[0, i[0]] -= eps[i[0]]
-            x_1i_j1[0, i[1]] += eps[i[1]]
+            x_1i_j1[0, i[0]] -= eps[i[0]] * dist_params[i[0]][1]
+            x_1i_j1[0, i[1]] += eps[i[1]] * dist_params[i[0]][1]
 
-            x_1i_1j[0, i[0]] -= eps[i[0]]
-            x_1i_1j[0, i[1]] -= eps[i[1]]
+            x_1i_1j[0, i[0]] -= eps[i[0]] * dist_params[i[0]][1]
+            x_1i_1j[0, i[1]] -= eps[i[1]] * dist_params[i[0]][1]
 
-            if dist_name is not None:
-                obj_x_i1_j1 = Nataf(input_samples=x_i1_j1, corr=corr, dist_name=dist_name,
-                                    dist_params=dist_params)
-
-                obj_x_i1_j1.inverse()
-                u_i1_j1 = obj_x_i1_j1.samples
-
-                ##########################################
-
-                obj_x_i1_1j = Nataf(input_samples=x_i1_1j, corr=corr, dist_name=dist_name,
-                                    dist_params=dist_params)
-
-                obj_x_i1_1j.inverse()
-                u_i1_1j = obj_x_i1_1j.samples
-
-                ##########################################
-
-                obj_x_1i_j1 = Nataf(input_samples=x_1i_j1, corr=corr, dist_name=dist_name,
-                                    dist_params=dist_params)
-
-                obj_x_1i_j1.inverse()
-                u_1i_j1 = obj_x_1i_j1.samples
-
-                ##########################################
-
-                obj_x_1i_1j = Nataf(input_samples=x_1i_1j, corr=corr, dist_name=dist_name,
-                                    dist_params=dist_params)
-
-                obj_x_1i_1j.inverse()
-                u_1i_1j = obj_x_1i_1j.samples
-
-            else:
-                u_i1_j1 = x_i1_j1
-                u_i1_1j = x_i1_1j
-                u_1i_j1 = x_1i_j1
-                u_1i_1j = x_1i_1j
-
-            model.run(u_i1_j1)
-            model.run(u_i1_1j)
-            model.run(u_1i_j1)
-            model.run(u_1i_1j)
+            model.run(x_i1_j1)
+            model.run(x_i1_1j)
+            model.run(x_1i_j1)
+            model.run(x_1i_1j)
 
             d2u_dij.append((model.qoi_list[-4] - model.qoi_list[-3] - model.qoi_list[-2] + model.qoi_list[-1])
                            / (4 * eps[i[0]]*eps[i[1]]))
 
         return np.array(d2u_dij)
-
-
-
+'''
 
 def eval_hessian(dimension, mixed_der, der):
 
