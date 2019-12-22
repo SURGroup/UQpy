@@ -634,7 +634,8 @@ class TaylorSeries:
     # Authors: Dimitris G. Giovanis
     # Last Modified: 11/11/2019 by Dimitris G. Giovanis
 
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=100, eps=None, corr=None, model=None):
+    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=100, eps=None, corr=None, model=None,
+                 df_method=None):
         """
             Description: A class that performs reliability analysis of a model using the First Order Reliability Method
                          (FORM) and Second Order Reliability Method (SORM) that belong to the family of Taylor series
@@ -650,6 +651,8 @@ class TaylorSeries:
                 :type dist_params: list
                 :param n_iter: Maximum number of iterations for the Hasofer-Lind algorithm
                 :type n_iter: int
+                :param df_method: Method for finite difference used for the estimation of the gradient
+                :type n_iter: str
                 :param eps: Step for estimating the gradient of a function
                 :type n_iter: float/list of floats
                 :param corr: Correlation structure of the random vector (See Transformation class).
@@ -661,6 +664,9 @@ class TaylorSeries:
         self.dist_params = dist_params
         self.n_iter = n_iter
         self.corr = corr
+        self.df_method = df_method
+        if self.df_method is None:
+            self.df_method = 'Central'
         self.model = model
         self.eps = eps
         self.distribution = [None] * self.dimension
@@ -673,7 +679,7 @@ class TaylorSeries:
         self.HL_beta = np.inf
         self.Prob_FORM = np.inf
         self.iterations = np.inf
-        self.jacobian = np.inf
+        self.jacobi = np.inf
 
         if self.model is None:
             raise RuntimeError("In order to use class TaylorSeries a model of type RunModel is required.")
@@ -692,7 +698,7 @@ class TaylorSeries:
         # If we provide an initial seed transform the initial point in the standard normal space:  X to U
         # using the Nataf transformation
         if self.corr is not None:
-            self.corr_z = Nataf.distortion_z(self.distribution, self.dist_params, self.corr, None, None, None)
+            self.corr_z = Nataf.distortion_x_to_z(self.distribution, self.dist_params, self.corr, None, None, None)
         elif self.corr is None:
             self.corr_z = np.eye(self.dimension)
         elif np.linalg.norm(self.corr - np.identity(n=self.dimension)) <= 10 ** (-8):
@@ -707,18 +713,19 @@ class TaylorSeries:
         grad_qoi = list()
         for k in range(max_iter):
             # transform the initial point in the original space:  U to X
-            x[k, :], jacobian_u_to_x = Nataf.transform_u_to_x(u[k, :].reshape(1, -1), self.corr_z, self.distribution,
-                                                              self.dist_params, jacobian=True)
-            jacobian_x_to_u = np.linalg.inv(jacobian_u_to_x)
+            x[k, :], jacobi_u_to_x = Nataf.transform_u_to_x(u[k, :].reshape(1, -1), self.corr_z, self.distribution,
+                                                            self.dist_params, jacobian=True)
+            jacobi_x_to_u = np.linalg.inv(jacobi_u_to_x)
             print('iteration: {0}, location: {1}'.format(k, x[k, :]))
 
             # 1. evaluate Limit State Function at the point
             self.model.run(x[k, :].reshape(1, -1), append_samples=False)
             qoi = self.model.qoi_list[0]
             # 2. evaluate Limit State Function gradient at point u_k and direction cosines
-            dg = self.gradient(method='forward', order='first', sample=x[k, :].reshape(1, -1), dimension=self.dimension,
-                               eps=self.eps, model=self.model, dist_params=self.dist_params, dist_name=self.dist_name)
-            grad_qoi.append(np.dot(dg[0, :], jacobian_x_to_u))
+            dg = self.gradient(method=self.df_method, order='first', sample=x[k, :].reshape(1, -1),
+                               dimension=self.dimension, eps=self.eps, model=self.model, dist_params=self.dist_params,
+                               dist_name=self.dist_name)
+            grad_qoi.append(np.dot(dg[0, :], jacobi_x_to_u))
 
             norm_grad = np.linalg.norm(grad_qoi[k])
             alpha = - grad_qoi[k] / norm_grad
@@ -740,7 +747,7 @@ class TaylorSeries:
                 self.HL_beta = np.dot(self.DesignPoint_U.reshape(1, -1), alpha.T)
                 self.Prob_FORM = stats.norm.cdf(-self.HL_beta)
                 self.iterations = k
-                self.jacobian = jacobian_x_to_u
+                self.jacobian = jacobi_x_to_u
                 self.grad = grad_qoi
                 self.u = u[:k + 1, :]
                 self.x = x[:k + 1, :]
