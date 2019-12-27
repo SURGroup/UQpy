@@ -184,7 +184,7 @@ class SubsetSimulation:
         self.RunModel_object.run(samples=np.atleast_2d(self.samples[step]))
         self.g.append(np.asarray(self.RunModel_object.qoi_list))
         g_ind = np.argsort(self.g[step][:, 0])
-        self.g_level.append(self.g[step][g_ind[n_keep]])
+        self.g_level.append(self.g[step][g_ind[n_keep-1]])
 
         # Estimate coefficient of variation of conditional probability of first level
         d1, d2 = self.cov_sus(step)
@@ -207,47 +207,48 @@ class SubsetSimulation:
             for i in range(int(self.nsamples_ss/n_keep)-1):
 
                 ind = np.arange(0, n_keep)
-                while np.size(ind) != 0:
-                    x_mcmc = np.empty([np.size(ind), self.samples[step].shape[1]])
-                    x_run = []
+                # while np.size(ind) != 0:
+                x_mcmc = np.zeros([np.size(ind), self.samples[step].shape[1]])
+                x_run = []
 
+                k = 0
+                for j in ind:
+
+                    # Generate new candidate states
                     self.MCMC_object.samples = None
+                    self.MCMC_object.seed = np.atleast_2d(self.samples[step][i*n_keep+j, :])
+                    self.MCMC_object.run(nsamples=1)
+                    x_mcmc[k] = self.MCMC_object.samples[0, :]
 
-                    k = 0
-                    for j in ind:
+                    # Decide whether a new simulation is needed for the proposed state
+                    if np.array_equal(np.atleast_2d(x_mcmc[k]), self.MCMC_object.seed) is False:
+                        x_run.append(x_mcmc[k])
+                    else:
+                        self.samples[step][(i+1)*n_keep+j] = x_mcmc[k]
+                        self.g[step][(i+1)*n_keep+j] = self.g[step][i*n_keep+j]
 
-                        # Generate new candidate states
-                        self.MCMC_object.samples = None
-                        self.MCMC_object.seed = np.atleast_2d(self.samples[step][j, :])
-                        self.MCMC_object.run(nsamples=1)
-                        x_mcmc[k] = self.MCMC_object.samples[0, :]
+                    k += 1
 
-                        # Decide whether a new simulation is needed for the proposed state
-                        if np.array_equal(np.atleast_2d(x_mcmc[k]), self.MCMC_object.seed) is False:
-                            x_run.append(x_mcmc[k])
-                        else:
-                            self.samples[step][(i+1)*n_keep+j] = x_mcmc[k]
-                            self.g[step][(i+1)*n_keep+j] = self.g[step-1][g_ind[j]]
+                ind = np.where(self.g[step][(i+1)*n_keep:(i+2)*n_keep, 0] == 0)[0]
+                if np.size(ind) == 0:
+                    break
 
-                        k += 1
+                # Run the model for the new states.
+                self.RunModel_object.run(samples=x_run)
 
-                    ind = np.where(self.g[step][(i+1)*n_keep:(i+2)*n_keep, 0] == 0)[0]
-                    if np.size(ind) == 0:
-                        break
+                # Temporarily save the latest model runs
+                g_temp = np.asarray(self.RunModel_object.qoi_list[-len(x_run):])
 
-                    # Run the model for the new states.
-                    self.RunModel_object.run(samples=x_run)
+                # Accept the states with g < g_level
+                ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
+                for ii in ind_accept:
+                    self.samples[step][(i+1)*n_keep+ind[ii]] = x_mcmc[ind[ii]]
+                    self.g[step][(i+1)*n_keep+ind[ii]] = g_temp[ii]
 
-                    # Temporarily save the latest model runs
-                    g_temp = np.asarray(self.RunModel_object.qoi_list[-len(x_run):])
-
-                    # Accept the states with g < g_level
-                    ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
-                    for ii in ind_accept:
-                        self.samples[step][(i+1)*n_keep+ind[ii]] = x_mcmc[ii]
-                        self.g[step][(i+1)*n_keep+ind[ii]] = g_temp[ii]
-
-                    ind = np.where(self.g[step][(i+1)*n_keep:(i+2)*n_keep, 0] == 0)[0]
+                ind_reject = np.where(g_temp[:, 0] > self.g_level[step - 1])[0]
+                for ii in ind_reject:
+                    self.samples[step][(i+1)*n_keep+ind[ii]] = self.samples[step][i*n_keep+ind[ii]]
+                    self.g[step][(i+1)*n_keep+ind[ii]] = self.g[step][i*n_keep+ind[ii]]
 
             if self.verbose:
                 print('UQpy: Subset Simulation, conditional level ' + step + 'complete.')
@@ -265,12 +266,6 @@ class SubsetSimulation:
         pf = self.p_cond ** step * n_fail / self.nsamples_ss
         cov1 = np.sqrt(np.sum(self.d12))
         cov2 = np.sqrt(np.sum(self.d22))
-
-        print(pf)
-
-        print(time.time()-t)
-        print('pause')
-        wait = input("PRESS ENTER TO CONTINUE.")
 
         return pf, cov1, cov2
 
@@ -410,7 +405,6 @@ class SubsetSimulation:
 
 # -------------------
 
-
     def cov_sus(self, step):
 
         # Here, we assume that the initial samples are drawn to be uncorrelated such that the correction factors do not
@@ -425,9 +419,7 @@ class SubsetSimulation:
             n_s = int(1 / self.p_cond)
             indicator = np.reshape(self.g[step] < self.g_level[step], (n_s, n_c))
             gamma = self.corr_factor_gamma(indicator, n_s, n_c)
-            beta_hat, r_jn0 = self.corr_factor_beta(indicator, n_s, n_c, self.p_cond)  # Eq. 24
             g_temp = np.reshape(self.g[step], (n_s, n_c))
-            # beta_hat, r_jn0 = self.corr_factor_beta(g_temp, n_s, n_c, self.p_cond)
             beta_hat, r_jn0 = self.corr_factor_beta(indicator, g_temp, n_s, n_c, self.p_cond)
             # beta_i = (n_c - 1) * r_jn0 + beta_hat
             beta_i = r_jn0 + beta_hat
