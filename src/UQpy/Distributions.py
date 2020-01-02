@@ -455,7 +455,7 @@ def subdistribution_icdf(dist_name, x, params):
     # If it is a supported scipy distribution:
     if dist_name in list_univariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
-        val = d.ppf(x[:, 0], **kwargs)
+        val = d.ppf(x, **kwargs)
     elif dist_name in list_multivariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.ppf(x, **kwargs)

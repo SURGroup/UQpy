@@ -689,7 +689,7 @@ def R_to_r(R):
             :rtype: ndarray
 
     """
-    r = R/R[0]
+    r = R/np.max(R)
     return r
 
 
