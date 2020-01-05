@@ -185,7 +185,7 @@ class InferenceModel:
 
 class MLEstimation:
 
-    def __init__(self, inference_model, data, verbose=False, iter_optim=1, x0=None, optimizer=None, **kwargs):
+    def __init__(self, inference_model, data, verbose=False, iter_optim=None, x0=None, optimizer=None, **kwargs):
 
         """
         Perform maximum likelihood estimation, i.e., given some data y, compute the parameter vector that maximizes the
@@ -302,8 +302,8 @@ class MLEstimation:
 
 class InfoModelSelection:
 
-    def __init__(self, candidate_models, data, criterion='AIC', verbose=False, sorted_outputs=True,
-                 iter_optim=1, x0=None, **kwargs):
+    def __init__(self, candidate_models, data, criterion='AIC', verbose=False, sorted_outputs=False,
+                 iter_optim=None, x0=None, **kwargs):
 
         """
             Perform model selection using information theoretic criteria. Supported criteria are BIC, AIC (default), AICc.
@@ -355,7 +355,7 @@ class InfoModelSelection:
         for i, inference_model in enumerate(self.candidate_models):
             kwargs_i = dict([(key, value[i]) for (key, value) in kwargs.items()])
             ml_estimator = MLEstimation(inference_model=inference_model, data=self.data, verbose=self.verbose,
-                                        x0=None, iter_optim=0, **kwargs_i, )
+                                        x0=None, iter_optim=None, **kwargs_i, )
             self.ml_estimators.append(ml_estimator)
 
         # Initialize the outputs
@@ -364,7 +364,7 @@ class InfoModelSelection:
         self.probabilities = [0.] * self.nmodels
 
         # Run the model selection procedure
-        if (isinstance(iter_optim, int) and iter_optim >= 1) or x0 is not None:
+        if iter_optim is not None or x0 is not None:
             self.run_estimation(iter_optim=iter_optim, x0=x0)
 
     def run_estimation(self, iter_optim=1, x0=None):
@@ -520,7 +520,7 @@ class BayesParameterEstimation:
 
 class BayesModelSelection:
 
-    def __init__(self, candidate_models, data, prior_probabilities=None, sorted_outputs=True,
+    def __init__(self, candidate_models, data, prior_probabilities=None, sorted_outputs=False,
                  method_evidence_computation='harmonic_mean', verbose=False, nsamples=None, nsamples_per_chain=None,
                  **kwargs):
 
