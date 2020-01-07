@@ -1620,13 +1620,13 @@ class AKMCS:
     # Authors: Mohit S. Chauhan
     # Last modified: 12/01/2019 by Mohit S. Chauhan
 
-    def __init__(self, run_model_object=None, sample_object=None, krig_object=None, nlearn=10000, nstart=None,
+    def __init__(self, run_model_object=None, samples=None, krig_object=None, nlearn=10000, nstart=None,
                  population=None, dist_name=None, dist_params=None, qoi_name=None, lf=None, n_add=None,
                  min_cov=None, max_p=None, verbose=False, kriging='UQpy', visualize=False, save_pf=None, **kwargs):
 
         # Initialize the internal variables of the class.
         self.run_model_object = run_model_object
-        self.sample_object = sample_object
+        self.samples = samples
         self.krig_object = krig_object
         self.nlearn = nlearn
         self.nstart = nstart
@@ -1662,15 +1662,15 @@ class AKMCS:
 
         # Check if the initial sample design already exists and has model evalutions with it.
         # If it does not, run the initial calculations.
-        if self.sample_object.samples is None:
+        if self.samples is None:
             if self.verbose:
                 print('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
-            self.sample_object = LHS(dist_name=self.dist_name, dist_params=self.dist_params, nsamples=self.nstart)
+            self.samples = LHS(dist_name=self.dist_name, dist_params=self.dist_params, nsamples=self.nstart).samples
 
         if self.verbose:
             print('UQpy: AKMCS - Running the initial sample set using RunModel.')
 
-        self.run_model_object.run(samples=self.sample_object.samples)
+        self.run_model_object.run(samples=self.samples)
 
     def sample(self, samples=None, n_add=None, append_samples=True, nsamples=0, lf=None, *args):
         """
@@ -1710,24 +1710,23 @@ class AKMCS:
             self.learning()
 
         if samples is not None:
-            samplesu01 = check_input_dims(samples)
-            for j in range(self.dimension):
-                samplesu01[0, j] = self.sample_object.distribution[j].cdf(np.atleast_2d(samples[0, j]).T,
-                                                                          self.sample_object.dist_params[j])
+            #samplesu01 = check_input_dims(samples)
+            # for j in range(self.dimension):
+            #     samplesu01[0, j] = self..distribution[j].cdf(np.atleast_2d(samples[0, j]).T, self.dist_params[j])
             # New samples are appended to existing samples, if append_samples is TRUE
             if append_samples:
-                self.sample_object.samples = np.vstack([self.sample_object.samples, samples])
-                self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, samplesu01])
+                self.samples = np.vstack([self.samples, samples])
+                # self.samplesU01 = np.vstack([self.samplesU01, samplesu01])
             else:
-                self.sample_object.samples = samples
-                self.sample_object.samplesU01 = samplesu01
+                self.samples = samples
+                # self.samplesU01 = samplesu01
                 self.run_model_object.qoi_list = []
 
             if self.verbose:
                 print('UQpy: AKMCS - Running the provided sample set using RunModel.')
 
             self.run_model_object.run(samples=samples, append_samples=append_samples)
-        self.training_points = self.sample_object.samplesU01
+        # self.training_points = self.samplesU01
 
         if self.verbose:
             print('UQpy: Performing AK-MCS design...')
@@ -1735,7 +1734,7 @@ class AKMCS:
         # Initialize the population of samples at which to evaluate the learning function and from which to draw in the
         # sampling.
         if self.population is None:
-            self.population = MCS(dist_name=self.sample_object.dist_name, dist_params=self.sample_object.dist_params,
+            self.population = MCS(dist_name=self.dist_name, dist_params=self.dist_params,
                                   nsamples=self.nlearn)
 
         # If the quantity of interest is a dictionary, convert it to a list
@@ -1774,12 +1773,12 @@ class AKMCS:
             new_point = np.atleast_2d(rest_pop[new_ind])
 
             # Add the new points to the training set and to the sample set.
-            self.training_points = np.vstack([self.training_points, new_point])
-            self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
-            for j in range(self.dimension):
-                new_point[0, j] = self.sample_object.distribution[j].icdf(np.atleast_2d(new_point[0, j]).T,
-                                                                          self.sample_object.dist_params[j])
-            self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
+            # self.training_points = np.vstack([self.training_points, new_point])
+            # self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
+            # for j in range(self.dimension):
+            #     new_point[0, j] = self.sample_object.distribution[j].icdf(np.atleast_2d(new_point[0, j]).T,
+            #                                                               self.sample_object.dist_params[j])
+            self.samples = np.vstack([self.samples, new_point])
 
             # Run the model at the new points
             self.run_model_object.run(samples=np.atleast_2d(new_point))
@@ -1937,10 +1936,8 @@ class AKMCS:
         u = abs(g) / sig
         p1, p2 = np.ones([pop.shape[0],pop.shape[1]]), np.ones([pop.shape[0],pop.shape[1]])
         for j in range(self.dimension):
-            p2[:, j] = self.sample_object.distribution[j].icdf(np.atleast_2d(pop[:, j]).T,
-                                                               self.sample_object.dist_params[j])
-            p1[:, j] = self.sample_object.distribution[j].pdf(np.atleast_2d(p2[:, j]).T,
-                                                              self.sample_object.dist_params[j])
+            p2[:, j] = self.population.distribution[j].icdf(np.atleast_2d(pop[:, j]).T, self.dist_params[j])
+            p1[:, j] = self.population.distribution[j].pdf(np.atleast_2d(p2[:, j]).T, self.dist_params[j])
 
         p1 = p1.prod(1).reshape(u.size, 1)
         u_ = u * ((self.max_p - p1) / self.max_p)
@@ -2012,7 +2009,7 @@ class AKMCS:
         fx, jf = self.krig_object.regress(model='Linear')(E1)
         # fx = np.concatenate((np.ones([np.size(E1, 0), 1]), E1), 1)
         rx = self.krig_object.corr(model='Gaussian')(np.atleast_2d(xi).T,
-                                                     np.atleast_2d(self.sample_object.samples[:, id]).T,
+                                                     np.atleast_2d(self.samples[:, id]).T,
                                                      self.krig_object.corr_model_params[id])
         exp_mom = np.delete(exp_mom, id, axis=1)
         r = rx * np.prod(zz, axis=1)
@@ -2025,11 +2022,11 @@ class AKMCS:
         import sympy as sy
 
         # Marginal expectation of correaltion term in predictor w.r.t each input variable
-        mar_ex = np.ones([self.sample_object.samples.shape[0], self.dimension])
+        mar_ex = np.ones([self.samples.shape[0], self.dimension])
         for ii in range(self.dimension):
-            for ij in range(self.sample_object.samples.shape[0]):
+            for ij in range(self.samples.shape[0]):
                 x = sy.Symbol('x')
-                fun1 = np.exp(-(x - self.sample_object.samples[ij, ii])**2/self.krig_object.corr_model_params)
+                fun1 = np.exp(-(x - self.samples[ij, ii])**2/self.krig_object.corr_model_params)
                 fun2 = Distribution(dist_name=self.dist_name[ii]).pdf(params=self.dist_params[ii])
                 mar_ex[ij, ii] = sy.integrate(fun1*fun2, (x, -np.inf, np.inf))
 
@@ -2071,8 +2068,8 @@ class AKMCS:
         if self.run_model_object is None:
             raise NotImplementedError('UQpy: AKMCS requires a predefined RunModel object.')
 
-        if self.sample_object.samples is not None:
-            self.dimension = np.shape(self.sample_object.samples)[1]
+        if self.samples is not None:
+            self.dimension = np.shape(self.samples)[1]
         else:
             self.dimension = np.shape(self.dist_name)[0]
 
