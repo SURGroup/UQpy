@@ -1748,7 +1748,7 @@ class AKMCS:
         # Train the initial Kriging model.
         if self.kriging == 'UQpy':
             with suppress_stdout():  # disable printing output comments
-                self.krig_object.fit(samples=np.atleast_2d(self.training_points), values=np.atleast_2d(np.array(qoi)).T)
+                self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(qoi)).T)
             self.krig_model = self.krig_object.interpolate
         else:
             gp = GaussianProcessRegressor(kernel=self.krig_object, n_restarts_optimizer=0)
@@ -1760,11 +1760,11 @@ class AKMCS:
         # Primary loop for learning and adding samples.
         # ---------------------------------------------
 
-        for i in range(self.training_points.shape[0], self.nsamples):
+        for i in range(self.samples.shape[0], self.nsamples):
             print(i)
 
             # Find all of the points in the population that have not already been integrated into the training set
-            rest_pop = np.array([x for x in self.population.samplesU01.tolist() if x not in self.training_points.tolist()])
+            rest_pop = np.array([x for x in self.population.samples.tolist() if x not in self.samples.tolist()])
 
             # Apply the learning function to identify the new point to run the model.
             # TODO: Add the other learning fuctions.
@@ -1795,8 +1795,7 @@ class AKMCS:
             if self.kriging == 'UQpy':
                 with suppress_stdout():
                     # disable printing output comments
-                    self.krig_object.fit(samples=np.atleast_2d(self.training_points),
-                                         values=np.atleast_2d(np.array(qoi)).T)
+                    self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(qoi)).T)
                 self.krig_model = self.krig_object.interpolate
             else:
                 gp = GaussianProcessRegressor(kernel=self.krig_object, n_restarts_optimizer=0)
