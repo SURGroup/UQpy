@@ -388,7 +388,7 @@ class Krig:
             # Return the log-likelihood function and it's gradient. Gradient is calculate using Central Difference
             r__, dr_ = self.corr_model(x=s, s=s, params=p0, dt=True)
             try:
-                cc = cholesky(r__, lower=True)
+                cc = cholesky(r__+ 2**(-52) * np.eye(m), lower=True)
             except np.linalg.LinAlgError:
                 if re == 0:
                     return np.inf, np.zeros(n)
@@ -409,8 +409,25 @@ class Krig:
             alpha = cho_solve((cc, True), y)
             t4 = np.einsum("ik,ik->k", y, alpha)
 
+            f_dash = cho_solve((cc, True), f)
+            y_dash = cho_solve((cc, True), y)
+            q_, g_ = np.linalg.qr(f_dash)  # Eq: 3.11, DACE
+
+            # Check if F is a full rank matrix
+            if np.linalg.matrix_rank(g_) != min(np.size(f_, 0), np.size(f_, 1)):
+                raise NotImplementedError("Chosen regression functions are not sufficiently linearly independent")
+
+            # Design parameters
+            beta = np.linalg.solve(g_, np.matmul(np.transpose(q_), y_dash))
+
+            # Computing the process variance (Eq: 3.13, DACE)
+            sigma = np.zeros(q)
+            for l in range(q):
+                sigma[l] = (1 / m) * (np.linalg.norm(y_dash[:, l] - np.matmul(f_dash, beta[:, l])) ** 2)
+
             # Objective function:= log(det(R)) + Y^T inv(R) Y + constant
-            ll = (np.log(np.prod(np.diagonal(cc))) + t4 + m * np.log(2 * np.pi)) / 2
+            ll = (np.log(np.prod(np.diagonal(cc))) + m * (np.log(2 * np.pi * np.prod(sigma))) + 1)/2
+
             if re == 1:
                 return ll
 
@@ -429,6 +446,52 @@ class Krig:
                     grad1[dr] = (f_hi - f_low) / h
 
             return ll, grad1
+
+        # def log_likelihood(p0, s, m, n, f, y, re=0):
+        #     # Return the log-likelihood function and it's gradient. Gradient is calculate using Central Difference
+        #     r__, dr_ = self.corr_model(x=s, s=s, params=p0, dt=True)
+        #     try:
+        #         cc = cholesky(r__, lower=True)
+        #     except np.linalg.LinAlgError:
+        #         if re == 0:
+        #             return np.inf, np.zeros(n)
+        #         else:
+        #             return np.inf
+        #
+        #     # Product of diagonal terms is negligible sometimes, even when cc exists.
+        #     if np.prod(np.diagonal(cc)) == 0:
+        #         if re == 0:
+        #             return np.inf, np.zeros(n)
+        #         else:
+        #             return np.inf
+        #
+        #     # alpha = inv(R)*y
+        #     # if any(np.isnan(y)):
+        #     #     print('What happened?')
+        #
+        #     alpha = cho_solve((cc, True), y)
+        #     t4 = np.einsum("ik,ik->k", y, alpha)
+        #
+        #     # Objective function:= log(det(R)) + Y^T inv(R) Y + constant
+        #     ll = (np.log(np.prod(np.diagonal(cc))) + t4 + m * np.log(2 * np.pi)) / 2
+        #     if re == 1:
+        #         return ll
+        #
+        #     grad1 = np.zeros(n)
+        #     h = 0.005
+        #     for dr in range(n):
+        #         temp = np.zeros(n)
+        #         temp[dr] = 1
+        #         low = p0 - h / 2 * temp
+        #         hi = p0 + h / 2 * temp
+        #         f_hi = log_likelihood(hi, s, m, n, f, y, 1)
+        #         f_low = log_likelihood(low, s, m, n, f, y, 1)
+        #         if f_hi == np.inf or f_low == np.inf:
+        #             grad1[dr] = 0
+        #         else:
+        #             grad1[dr] = (f_hi - f_low) / h
+        #
+        #     return ll, grad1
 
         # Maximum Likelihood Estimation : Solving optimization problem to calculate hyperparameters
         if self.op:
