@@ -1585,13 +1585,17 @@ class AKMCS:
             :param n_add: Number of samples to be selected per iteration.
             :type n_add: int
 
-            :param min_cov: Minimum Covariance used as the stopping criteria of AKMCS method in case of relaibilty
+            :param min_cov: Minimum Covariance used as the stopping criteria of AKMCS method in case of reliability
                             analysis.
             :type min_cov: float
 
-            :param max_p: Maximum possible value of probabilty density function of samples. Only required with
+            :param max_p: Maximum possible value of probability density function of samples. Only required with
                           'Weighted-U' learning function.
             :type max_p: float
+
+            :param save_pf: Indicator to estimate probability of failure after each iteration. Only required if
+                            user-defined learning function is used.
+            :type save_pf: boolean
 
         Output:
             :return: AKMCS.sample_object.samples: Final/expanded samples.
@@ -1613,12 +1617,12 @@ class AKMCS:
     # Last modified: 12/01/2019 by Mohit S. Chauhan
 
     def __init__(self, run_model_object=None, samples=None, krig_object=None, nlearn=10000, nstart=None,
-                 population=None, dist_name=None, dist_params=None, qoi_name=None, lf=None, n_add=None,
-                 min_cov=None, max_p=None, verbose=False, kriging='UQpy', visualize=False, save_pf=None, **kwargs):
+                 population=None, dist_name=None, dist_params=None, qoi_name=None, lf=None, n_add=1,
+                 min_cov=0.05, max_p=None, verbose=False, kriging='UQpy', visualize=False, save_pf=None, **kwargs):
 
         # Initialize the internal variables of the class.
         self.run_model_object = run_model_object
-        self.samples = samples
+        self.samples = np.array(samples)
         self.krig_object = krig_object
         self.nlearn = nlearn
         self.nstart = nstart
@@ -1702,23 +1706,17 @@ class AKMCS:
             self.learning()
 
         if samples is not None:
-            #samplesu01 = check_input_dims(samples)
-            # for j in range(self.dimension):
-            #     samplesu01[0, j] = self..distribution[j].cdf(np.atleast_2d(samples[0, j]).T, self.dist_params[j])
             # New samples are appended to existing samples, if append_samples is TRUE
             if append_samples:
                 self.samples = np.vstack([self.samples, samples])
-                # self.samplesU01 = np.vstack([self.samplesU01, samplesu01])
             else:
                 self.samples = samples
-                # self.samplesU01 = samplesu01
                 self.run_model_object.qoi_list = []
 
             if self.verbose:
                 print('UQpy: AKMCS - Running the provided sample set using RunModel.')
 
             self.run_model_object.run(samples=samples, append_samples=append_samples)
-        # self.training_points = self.samplesU01
 
         if self.verbose:
             print('UQpy: Performing AK-MCS design...')
@@ -1763,11 +1761,6 @@ class AKMCS:
             new_point = np.atleast_2d(rest_pop[new_ind])
 
             # Add the new points to the training set and to the sample set.
-            # self.training_points = np.vstack([self.training_points, new_point])
-            # self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
-            # for j in range(self.dimension):
-            #     new_point[0, j] = self.sample_object.distribution[j].icdf(np.atleast_2d(new_point[0, j]).T,
-            #                                                               self.sample_object.dist_params[j])
             self.samples = np.vstack([self.samples, new_point])
 
             # Run the model at the new points
