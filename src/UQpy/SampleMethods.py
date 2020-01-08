@@ -1761,8 +1761,6 @@ class AKMCS:
         # ---------------------------------------------
 
         for i in range(self.samples.shape[0], self.nsamples):
-            print(i)
-
             # Find all of the points in the population that have not already been integrated into the training set
             rest_pop = np.array([x for x in self.population.samples.tolist() if x not in self.samples.tolist()])
 
