@@ -759,14 +759,6 @@ class RSS:
             :param krig_object: A kriging class object, only  required if meta is 'Kriging'.
             :type krig_object: class
 
-            :param meta: A string specifying the method used to estimate the gradient.
-                         Options: Delaunay, Kriging
-            :type meta: str
-
-            :param cell: A string specifying the stratification of sample domain.
-                         Options: Rectangular and Voronoi
-            :type cell: str
-
             :param local: Indicator to update surrogate locally.
             :type local: boolean
 
@@ -778,9 +770,6 @@ class RSS:
                               used as surrogate approximation.
             :type step_size: float
 
-            :param option: A string specifying the criteria used to generate new sample
-            :type option: str
-
         Output:
             :return: RSS.sample_object.samples: Final/expanded samples.
             :rtype: RSS.sample_object.samples: ndarray
@@ -790,29 +779,32 @@ class RSS:
     # Authors: Mohit S. Chauhan
     # Last modified: 12/01/2019 by Mohit S. Chauhan
 
-    def __init__(self, sample_object=None, run_model_object=None, meta='Kriging', cell='Rectangular',
-                 max_train_size=None, step_size=0.005, krig_object=None, option=None, qoi_name=None, verbose=False,
-                 local=False, visualize=False):
+    def __init__(self, sample_object=None, run_model_object=None, krig_object=None, local=False, max_train_size=None,
+                 step_size=0.005, qoi_name=None, verbose=False, visualize=False):
 
-        from UQpy.RunModel import RunModel
 
         # Initialize attributes that are common to all approaches
         self.sample_object = sample_object
         self.run_model_object = run_model_object
         self.verbose = verbose
-        self.option = option
-        self.dimension = np.shape(self.sample_object.samples)[1]
-        self.cell = cell
         self.nsamples = 0
         self.visualize = visualize
 
         # Run Initial Error Checks
         self.init_rss()
 
+        self.cell = self.sample_object.stype
+        self.dimension = np.shape(self.sample_object.samples)[1]
+        if run_model_object is not None:
+            self.option = 'Gradient'
+
         if self.option == 'Gradient':
+            if krig_object is None:
+                self.meta = 'Delaunay'
+            else:
+                self.meta = 'Kriging'
             self.local = local
             self.max_train_size = max_train_size
-            self.meta = meta
             self.krig_object = krig_object
             self.qoi_name = qoi_name
             self.step_size = step_size
