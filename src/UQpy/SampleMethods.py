@@ -1279,7 +1279,7 @@ class RSS:
             self.option = 'Gradient'
             if type(self.run_model_object).__name__ not in ['RunModel']:
                 raise NotImplementedError("UQpy Error: run_model_object must be an object of the RunModel class.")
-            
+
 
 ########################################################################################################################
 ########################################################################################################################
