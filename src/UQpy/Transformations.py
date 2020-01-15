@@ -19,7 +19,9 @@
 
 from UQpy.Utilities import *
 from UQpy.Distributions import *
-from scipy.linalg import cholesky
+
+# Authors: Dimitris G.Giovanis
+# Last Modified: 1/2/2020 by D G. Giovanis.
 
 
 class Nataf:
@@ -43,13 +45,13 @@ class Nataf:
         self.corr = corr
         self.dimension = dimension
         self.dist_params = dist_params
-        self.distribution = [None] * self.dimension
+        self.distribution = list()
         for j in range(len(self.dist_name)):
-            self.distribution[j] = Distribution(self.dist_name[j])
+            self.distribution.append(Distribution(self.dist_name[j]))
 
     def transform(self, samples):
-        self.corr_z = self.distortion_x_to_z(self.distribution, self.dist_params, self.corr, self.beta, self.itam_error1,
-                                             self.itam_error2)
+        self.corr_z = self.distortion_x_to_z(self.distribution, self.dist_params, self.corr, self.beta, self.itam_error1
+                                             , self.itam_error2)
         self.u, self.jacobian_x_to_u = self.transform_x_to_u(samples, self.corr_z, self.distribution,
                                                              self.dist_params, jacobian=True)
 

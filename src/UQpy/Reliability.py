@@ -632,9 +632,10 @@ class SubsetSimulation:
 class TaylorSeries:
 
     # Authors: Dimitris G. Giovanis
-    # Last Modified: 11/11/2019 by Dimitris G. Giovanis
+    # Last Modified: 1/2/2020 by Dimitris G. Giovanis
 
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=100, eps=None, corr=None, model=None):
+    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=100, eps=None, corr=None, model=None,
+                 df_method=None):
         """
             Description: A class that performs reliability analysis of a model using the First Order Reliability Method
                          (FORM) and Second Order Reliability Method (SORM) that belong to the family of Taylor series
@@ -650,6 +651,8 @@ class TaylorSeries:
                 :type dist_params: list
                 :param n_iter: Maximum number of iterations for the Hasofer-Lind algorithm
                 :type n_iter: int
+                :param df_method: Method for finite difference used for the estimation of the gradient
+                :type n_iter: str
                 :param eps: Step for estimating the gradient of a function
                 :type n_iter: float/list of floats
                 :param corr: Correlation structure of the random vector (See Transformation class).
@@ -661,6 +664,9 @@ class TaylorSeries:
         self.dist_params = dist_params
         self.n_iter = n_iter
         self.corr = corr
+        self.df_method = df_method
+        if self.df_method is None:
+            self.df_method = 'Central'
         self.model = model
         self.eps = eps
         self.distribution = [None] * self.dimension
@@ -668,12 +674,19 @@ class TaylorSeries:
             self.distribution[j] = Distribution(self.dist_name[j])
 
         # Set initial values to np.inf
+        self.HL_beta = np.inf
         self.DesignPoint_U = np.inf
         self.DesignPoint_X = np.inf
-        self.HL_beta = np.inf
+        self.alpha = np.inf
         self.Prob_FORM = np.inf
         self.iterations = np.inf
-        self.jacobian = np.inf
+        self.u_record = np.inf
+        self.x_record = np.inf
+        self.dg_record = np.inf
+        self.alpha_record = np.inf
+        self.u_check = np.inf
+        self.g_check = np.inf
+        self.g_record = np.inf
 
         if self.model is None:
             raise RuntimeError("In order to use class TaylorSeries a model of type RunModel is required.")
@@ -685,14 +698,20 @@ class TaylorSeries:
         # initialization
         max_iter = self.n_iter
         tol = 1e-3
-        u = np.zeros([max_iter + 1, self.dimension])
-        x = np.zeros_like(u)
+        u_record = list()
+        x_record = list()
+        g_record = list()
+        dg_record = list()
+        alpha_record = list()
+        g_check = list()
+        u_check = list()
+
         conv_flag = 0
 
         # If we provide an initial seed transform the initial point in the standard normal space:  X to U
         # using the Nataf transformation
         if self.corr is not None:
-            self.corr_z = Nataf.distortion_z(self.distribution, self.dist_params, self.corr, None, None, None)
+            self.corr_z = Nataf.distortion_x_to_z(self.distribution, self.dist_params, self.corr, None, None, None)
         elif self.corr is None:
             self.corr_z = np.eye(self.dimension)
         elif np.linalg.norm(self.corr - np.identity(n=self.dimension)) <= 10 ** (-8):
@@ -700,28 +719,30 @@ class TaylorSeries:
 
         if seed is not None:
             # transform the initial point from the original space x to standard normal space u
-            u[0, :] = Nataf.transform_x_to_u(seed.reshape(1, -1), self.corr_z, self.distribution, self.dist_params,
-                                             jacobian=False)
-        check_1 = np.zeros(max_iter)
-        check_2 = np.zeros(max_iter)
-        grad_qoi = list()
-        for k in range(max_iter):
+            u = Nataf.transform_x_to_u(seed.reshape(1, -1), self.corr_z, self.distribution, self.dist_params,
+                                       jacobian=False)
+        else:
+            u = np.zeros(self.dimension)
+
+        k = 0
+        while conv_flag == 0:
             # transform the initial point in the original space:  U to X
-            x[k, :], jacobian_u_to_x = Nataf.transform_u_to_x(u[k, :].reshape(1, -1), self.corr_z, self.distribution,
-                                                              self.dist_params, jacobian=True)
-            jacobian_x_to_u = np.linalg.inv(jacobian_u_to_x)
-            print('iteration: {0}, location: {1}'.format(k, x[k, :]))
+            x, jacobi_u_to_x = Nataf.transform_u_to_x(u.reshape(1, -1), self.corr_z, self.distribution,
+                                                      self.dist_params, jacobian=True)
+            jacobi_x_to_u = np.linalg.inv(jacobi_u_to_x)
 
             # 1. evaluate Limit State Function at the point
-            self.model.run(x[k, :].reshape(1, -1), append_samples=False)
+            self.model.run(x.reshape(1, -1), append_samples=False)
             qoi = self.model.qoi_list[0]
+            g_record.append(qoi)
             # 2. evaluate Limit State Function gradient at point u_k and direction cosines
-            dg = self.gradient(method='forward', order='first', sample=x[k, :].reshape(1, -1), dimension=self.dimension,
-                               eps=self.eps, model=self.model, dist_params=self.dist_params, dist_name=self.dist_name)
-            grad_qoi.append(np.dot(dg[0, :], jacobian_x_to_u))
-
-            norm_grad = np.linalg.norm(grad_qoi[k])
-            alpha = - grad_qoi[k] / norm_grad
+            dg = self.gradient(method=self.df_method, order='first', sample=x.reshape(1, -1),
+                               dimension=self.dimension, eps=self.eps, model=self.model, dist_params=self.dist_params,
+                               dist_name=self.dist_name)
+            dg_record.append(np.dot(dg[0, :], jacobi_x_to_u))
+            norm_grad = np.linalg.norm(dg_record[k])
+            alpha = - dg_record[k] / norm_grad
+            alpha_record.append(alpha)
 
             if k == 0:
                 if qoi == 0:
@@ -729,72 +750,40 @@ class TaylorSeries:
                 else:
                     g0 = qoi
 
-            check_1[k] = np.linalg.norm(u[k, :].reshape(-1, 1) - np.dot(alpha.reshape(1, -1), u[k, :].reshape(-1, 1)) *
-                                        alpha.reshape(-1, 1))
-            check_2[k] = abs(qoi/g0)
-            if check_1[k] <= tol and check_2[k] <= tol:
-                print('FORM has converged!')
+            u_check.append(np.linalg.norm(u.reshape(-1, 1) - np.dot(alpha.reshape(1, -1), u.reshape(-1, 1))
+                                          * alpha.reshape(-1, 1)))
+            g_check.append(abs(qoi / g0))
+
+            if u_check[k] <= tol and g_check[k] <= tol:
                 conv_flag = 1
-                self.DesignPoint_U = u[k, :]
-                self.DesignPoint_X = x[k, :]
-                self.HL_beta = np.dot(self.DesignPoint_U.reshape(1, -1), alpha.T)
-                self.Prob_FORM = stats.norm.cdf(-self.HL_beta)
-                self.iterations = k
-                self.jacobian = jacobian_x_to_u
-                self.grad = grad_qoi
-                self.u = u[:k + 1, :]
-                self.x = x[:k + 1, :]
-                self.check_1 = check_1
-                self.check_2 = check_2
-                self.gradient_list = grad_qoi
-                break
+            if k == max_iter:
+                conv_flag = 1
 
+            u_record.append(u)
+            x_record.append(x)
             if conv_flag == 0:
+                direction = (qoi / norm_grad + np.dot(alpha.reshape(1, -1), u.reshape(-1, 1))) * \
+                            alpha.reshape(-1, 1) - u.reshape(-1, 1)
+                u_new = (u.reshape(-1, 1) + direction).T
+                u = u_new
+                k = k + 1
 
-                direction = (qoi / norm_grad + np.dot(alpha.reshape(1, -1), u[k, :].reshape(-1, 1))) * \
-                            alpha.reshape(-1, 1) - u[k, :].reshape(-1, 1)
-
-                u[k + 1, :] = (u[k, :].reshape(-1, 1) + direction).T
-
-        if not hasattr(self, 'Prob_FORM'):  # Form didn't converge
-            print('FORM failed to converge. Output attribute values will be set to np.inf.')
-        print('Done!')
-
-    def sorm(self, seed=None):
-
-        self.pf_sorm = np.inf
-
-        if not hasattr(self, 'Prob_FORM'):
-            self.form(seed)
-
-        if np.isinf(self.Prob_FORM):
-            print('Cannot calculate SORM correction. PF_FORM is not available.')
-
+        if k == max_iter:
+            print('Maximum number of iterations was reached before convergence.')
         else:
-            print('Calculating SORM correction...')
-
-            self.iterations = 3 * (self.iterations + 1) + 5
-            # Evaluate Limit State Function gradient at point u_star and direction cosines
-            dg = self.gradient(sample=self.DesignPoint_X.reshape(1, -1), dimension=self.dimension, eps=0.1, model=self.model,
-                               order='second')
-            mixed_dg = self.gradient(sample=self.DesignPoint_X.reshape(1, -1), eps=0.1, dimension=self.dimension,
-                                     model=self.model, order='mixed', dist_params=self.dist_params)
-
-            p = np.linalg.solve(self.jacobian, dg[0, :])
-            norm_grad = np.linalg.norm(p)
-            hessian = self.hessian(self.dimension, mixed_dg, dg[1, :])
-            q = np.eye(self.dimension)
-            q[:, 0] = self.DesignPoint_U.T
-            q_, r_ = np.linalg.qr(q)
-            q0 = np.fliplr(q_)
-            a = np.dot(np.dot(q0.T, hessian), q0)
-            if self.dimension > 1:
-                jay = np.eye(self.dimension - 1) + self.HL_beta * a[:self.dimension - 1,
-                                                               :self.dimension - 1] / norm_grad
-            if self.dimension == 1:
-                jay = np.eye(self.dimension) + self.HL_beta * a[:self.dimension, :self.dimension] / norm_grad
-            correction = 1 / np.sqrt(np.linalg.det(jay))
-            self.Prob_SORM = self.Prob_FORM * correction
+            self.HL_beta = np.dot(u, alpha.T)
+            self.DesignPoint_U = u
+            self.DesignPoint_X = x
+            self.alpha = alpha
+            self.Prob_FORM = stats.norm.cdf(-self.HL_beta)
+            self.iterations = k
+            self.g_record = g_record
+            self.u_record = u_record
+            self.x_record = x_record
+            self.dg_record = dg_record
+            self.alpha_record = alpha_record
+            self.u_check = u_check
+            self.g_check = g_check
 
     @staticmethod
     def gradient(sample=None, dist_params=None, dist_name=None, model=None, dimension=None, eps=None, order=None,
@@ -946,3 +935,4 @@ class TaylorSeries:
             add_ += 1
 
         return hessian
+
