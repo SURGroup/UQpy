@@ -637,8 +637,8 @@ class SubDistribution:
             mean, var, skew, kurt = stats.beta.stats(a=params[0],
                                                      b=params[1], moments='mvsk')
         elif self.dist_name.lower() == 'genextreme':
-            mean, var, skew, kurt = stats.genextreme.stats(c=params[0], scale=params[2],
-                                                           loc=params[1], moments='mvsk')
+            mean, var, skew, kurt = stats.genextreme.stats(c=params[0], loc=params[1],
+                                                           scale=params[2], moments='mvsk')
         elif self.dist_name.lower() == 'chisquare':
             mean, var, skew, kurt = stats.chi2.stats(df=params[0], loc=params[1], scale=params[2],
                                                      moments='mvsk')
