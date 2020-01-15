@@ -310,11 +310,11 @@ class SubDistribution:
         elif self.dist_name.lower() == 'uniform':
             return stats.uniform.pdf(x[:, 0], loc=params[0], scale=params[1])
         elif self.dist_name.lower() == 'binomial':
-            return stats.binom.pdf(x[:, 0], n=params[0], p=params[1])
+            return stats.binom.pdf(x[:, 0], n=params[0], p=params[1], loc=params[2])
         elif self.dist_name.lower() == 'beta':
-            return stats.beta.pdf(x[:, 0], a=params[0], b=params[1])
-        elif self.dist_name.lower() == 'gumbel_r':
-            return stats.genextreme.pdf(x[:, 0], c=0, loc=params[0], scale=params[1])
+            return stats.beta.pdf(x[:, 0], a=params[0], b=params[1], loc=params[2], scale=params[3])
+        elif self.dist_name.lower() == 'genextreme':
+            return stats.genextreme.pdf(x[:, 0], c=params[0], loc=params[1], scale=params[2])
         elif self.dist_name.lower() == 'chisquare':
             return stats.chi2.pdf(x[:, 0], df=params[0], loc=params[1], scale=params[2])
         elif self.dist_name.lower() == 'lognormal':
@@ -366,8 +366,8 @@ class SubDistribution:
             return stats.binom.rvs(n=params[0], p=params[1], size=nsamples)
         elif self.dist_name.lower() == 'beta':
             return stats.beta.rvs(a=params[0], b=params[1], size=nsamples)
-        elif self.dist_name.lower() == 'gumbel_r':
-            return stats.genextreme.rvs(c=0, loc=params[0], scale=params[1], size=nsamples)
+        elif self.dist_name.lower() == 'genextreme':
+            return stats.genextreme.rvs(c=params[0], loc=params[1], scale=params[2], size=nsamples)
         elif self.dist_name.lower() == 'chisquare':
             return stats.chi2.rvs(df=params[0], loc=params[1], scale=params[2], size=nsamples)
         elif self.dist_name.lower() == 'lognormal':
@@ -419,8 +419,8 @@ class SubDistribution:
             return stats.binom.cdf(x[:, 0], n=params[0], p=params[1])
         elif self.dist_name.lower() == 'beta':
             return stats.beta.cdf(x[:, 0], a=params[0], b=params[1])
-        elif self.dist_name.lower() == 'gumbel_r':
-            return stats.genextreme.cdf(x[:, 0], c=0, loc=params[0], scale=params[1])
+        elif self.dist_name.lower() == 'genextreme':
+            return stats.genextreme.cdf(x[:, 0], c=params[0], loc=params[1], scale=params[2])
         elif self.dist_name.lower() == 'chisquare':
             return stats.chi2.cdf(x[:, 0], df=params[0], loc=params[1], scale=params[2])
         elif self.dist_name.lower() == 'lognormal':
@@ -472,8 +472,8 @@ class SubDistribution:
             return stats.binom.ppf(x[:, 0], n=params[0], p=params[1])
         elif self.dist_name.lower() == 'beta':
             return stats.beta.ppf(x[:, 0], a=params[0], b=params[1])
-        elif self.dist_name.lower() == 'gumbel_r':
-            return stats.genextreme.ppf(x[:, 0], c=0, loc=params[0], scale=params[1])
+        elif self.dist_name.lower() == 'genextreme':
+            return stats.genextreme.ppf(x[:, 0], c=params[0], loc=params[1], scale=params[2])
         elif self.dist_name.lower() == 'chisquare':
             return stats.chi2.ppf(x[:, 0], df=params[0], loc=params[1], scale=params[2])
         elif self.dist_name.lower() == 'lognormal':
@@ -525,8 +525,8 @@ class SubDistribution:
             return stats.binom.log_pdf(x[:, 0], n=params[0], p=params[1])
         elif self.dist_name.lower() == 'beta':
             return stats.beta.logpdf(x[:, 0], a=params[0], b=params[1])
-        elif self.dist_name.lower() == 'gumbel_r':
-            return stats.genextreme.logpdf(x[:, 0], c=0, loc=params[0], scale=params[1])
+        elif self.dist_name.lower() == 'genextreme':
+            return stats.genextreme.logpdf(x[:, 0], c=params[0], loc=params[1], scale=params[2])
         elif self.dist_name.lower() == 'chisquare':
             return stats.chi2.logpdf(x[:, 0], df=params[0], loc=params[1], scale=params[2])
         elif self.dist_name.lower() == 'lognormal':
@@ -578,7 +578,7 @@ class SubDistribution:
             return stats.binom.fit(x[:, 0])
         elif self.dist_name.lower() == 'beta':
             return stats.beta.fit(x[:, 0])
-        elif self.dist_name.lower() == 'gumbel_r':
+        elif self.dist_name.lower() == 'genextreme':
             return stats.genextreme.fit(x[:, 0])
         elif self.dist_name.lower() == 'chisquare':
             return stats.chi2.fit(x[:, 0])
@@ -636,9 +636,9 @@ class SubDistribution:
         elif self.dist_name.lower() == 'beta':
             mean, var, skew, kurt = stats.beta.stats(a=params[0],
                                                      b=params[1], moments='mvsk')
-        elif self.dist_name.lower() == 'gumbel_r':
-            mean, var, skew, kurt = stats.genextreme.stats(c=0, scale=params[1],
-                                                           loc=params[0], moments='mvsk')
+        elif self.dist_name.lower() == 'genextreme':
+            mean, var, skew, kurt = stats.genextreme.stats(c=params[0], loc=params[1],
+                                                           scale=params[2], moments='mvsk')
         elif self.dist_name.lower() == 'chisquare':
             mean, var, skew, kurt = stats.chi2.stats(df=params[0], loc=params[1], scale=params[2],
                                                      moments='mvsk')

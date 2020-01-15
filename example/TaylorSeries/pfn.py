@@ -15,5 +15,5 @@ def example2(samples):
 
 
 def example3(samples):
-    u = samples[0]**4 + 2*samples[1]**4 -20
+    u = 6.2*samples[0] - samples[1]*samples[2]**2
     return u
