@@ -634,8 +634,8 @@ class TaylorSeries:
     # Authors: Dimitris G. Giovanis
     # Last Modified: 1/2/2020 by Dimitris G. Giovanis
 
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=100, eps=None, corr=None, model=None,
-                 df_method=None):
+    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=100, df_step=None, corr=None, model=None,
+                 df_method=None, tol=None):
         """
             Description: A class that performs reliability analysis of a model using the First Order Reliability Method
                          (FORM) and Second Order Reliability Method (SORM) that belong to the family of Taylor series
@@ -652,9 +652,11 @@ class TaylorSeries:
                 :param n_iter: Maximum number of iterations for the Hasofer-Lind algorithm
                 :type n_iter: int
                 :param df_method: Method for finite difference used for the estimation of the gradient
-                :type n_iter: str
-                :param eps: Step for estimating the gradient of a function
-                :type n_iter: float/list of floats
+                :type df_method: str
+                :param df_step: Step for estimating the gradient of a function
+                :type df_step: float/list of floats
+                :param tol: Convergence threshold for FORM
+                :type tol: float
                 :param corr: Correlation structure of the random vector (See Transformation class).
                 :type corr: ndarray
         """
@@ -665,10 +667,15 @@ class TaylorSeries:
         self.n_iter = n_iter
         self.corr = corr
         self.df_method = df_method
+        self.df_step = df_step
         if self.df_method is None:
             self.df_method = 'Central'
+        if self.df_step is None:
+            self.df_method = 0.1
         self.model = model
-        self.eps = eps
+        self.tol = tol
+        if self.tol is None:
+            self.tol = 1e-3
         self.distribution = [None] * self.dimension
         for j in range(dimension):
             self.distribution[j] = Distribution(self.dist_name[j])
@@ -697,7 +704,7 @@ class TaylorSeries:
 
         # initialization
         max_iter = self.n_iter
-        tol = 1e-3
+        tol = self.tol
         u_record = list()
         x_record = list()
         g_record = list()
@@ -774,16 +781,16 @@ class TaylorSeries:
             self.HL_beta = np.dot(u, alpha.T)
             self.DesignPoint_U = u
             self.DesignPoint_X = x
-            self.alpha = alpha
             self.Prob_FORM = stats.norm.cdf(-self.HL_beta)
             self.iterations = k
-            self.g_record = g_record
-            self.u_record = u_record
-            self.x_record = x_record
-            self.dg_record = dg_record
-            self.alpha_record = alpha_record
-            self.u_check = u_check
-            self.g_check = g_check
+            # self.alpha = alpha
+            # self.g_record = g_record
+            # self.u_record = u_record
+            # self.x_record = x_record
+            # self.dg_record = dg_record
+            # self.alpha_record = alpha_record
+            # self.u_check = u_check
+            # self.g_check = g_check
 
     @staticmethod
     def gradient(sample=None, dist_params=None, dist_name=None, model=None, dimension=None, eps=None, order=None,
