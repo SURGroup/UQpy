@@ -744,7 +744,7 @@ class TaylorSeries:
             g_record.append(qoi)
             # 2. evaluate Limit State Function gradient at point u_k and direction cosines
             dg = self.gradient(method=self.df_method, order='first', sample=x.reshape(1, -1),
-                               dimension=self.dimension, eps=self.eps, model=self.model, dist_params=self.dist_params,
+                               dimension=self.dimension, df_step=self.df_step, model=self.model, dist_params=self.dist_params,
                                dist_name=self.dist_name)
             dg_record.append(np.dot(dg[0, :], jacobi_x_to_u))
             norm_grad = np.linalg.norm(dg_record[k])
@@ -793,7 +793,7 @@ class TaylorSeries:
             # self.g_check = g_check
 
     @staticmethod
-    def gradient(sample=None, dist_params=None, dist_name=None, model=None, dimension=None, eps=None, order=None,
+    def gradient(sample=None, dist_params=None, dist_name=None, model=None, dimension=None, df_step=None, order=None,
                  method=None):
 
         """
@@ -819,8 +819,8 @@ class TaylorSeries:
                  :param method: Finite difference method (Options: Central, backwards, forward).
                  :type dimension: int
 
-                 :param eps: step for the finite difference.
-                 :type eps: float
+                 :param df_step: step for the finite difference.
+                 :type df_step: float
 
                  :param model: An object of type RunModel
                  :type model: RunModel object
@@ -840,15 +840,15 @@ class TaylorSeries:
         if dimension is None:
             raise ValueError('Error: Dimension must be defined')
 
-        if eps is None:
-            eps = [0.1] * dimension
-        elif isinstance(eps, float):
-            eps = [eps] * dimension
-        elif isinstance(eps, list):
-            if len(eps) != 1 and len(eps) != dimension:
+        if df_step is None:
+            df_step = [0.1] * dimension
+        elif isinstance(df_step, float):
+            df_step = [df_step] * dimension
+        elif isinstance(df_step, list):
+            if len(df_step) != 1 and len(df_step) != dimension:
                 raise ValueError('Exit code: Inconsistent dimensions.')
-            if len(eps) == 1:
-                eps = [eps[0]] * dimension
+            if len(df_step) == 1:
+                eps = [df_step[0]] * dimension
 
         if model is None:
             raise RuntimeError('A model must be provided.')
@@ -863,7 +863,7 @@ class TaylorSeries:
             du_dj = np.zeros(dimension)
             d2u_dj = np.zeros(dimension)
             for ii in range(dimension):
-                eps_i = eps[ii] * scale[ii]
+                eps_i = df_step[ii] * scale[ii]
                 x_i1_j = np.array(sample)
                 x_i1_j[0, ii] = x_i1_j[0, ii] + eps_i
                 x_1i_j = np.array(sample)
@@ -899,8 +899,8 @@ class TaylorSeries:
                 x_1i_j1 = np.array(sample)
                 x_1i_1j = np.array(sample)
 
-                eps_i1_0 = eps[i[0]] * scale[i[0]]
-                eps_i1_1 = eps[i[1]] * scale[i[1]]
+                eps_i1_0 = df_step[i[0]] * scale[i[0]]
+                eps_i1_1 = df_step[i[1]] * scale[i[1]]
 
                 x_i1_j1[0, i[0]] += eps_i1_0
                 x_i1_j1[0, i[1]] += eps_i1_1
