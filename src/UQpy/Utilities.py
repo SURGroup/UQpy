@@ -534,8 +534,6 @@ def R_to_S(R, w, t):
 
     """
         Description: A function to transform the autocorrelation function to a power spectrum
-
-
         Input:
             :param r: Autocorrelation function of the signal
             :param w: Array of frequency discretizations
@@ -546,6 +544,7 @@ def R_to_S(R, w, t):
             :rtype: ndarray
 
     """
+
     dt = t[1] - t[0]
     fac = np.ones(len(t))
     fac[1: len(t) - 1: 2] = 4
