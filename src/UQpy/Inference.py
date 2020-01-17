@@ -116,7 +116,7 @@ class InferenceModel:
                 prior.log_pdf = lambda x: np.log(prior.pdf(x))
         self.prior = prior
 
-    def evaluate_log_likelihood(self, data, params):
+    def evaluate_log_likelihood(self, params, data):
         """ Computes the log-likelihood of model
             inputs: data
                     params, ndarray of dimension (nsamples, nparams) or (nparams,)
@@ -160,13 +160,13 @@ class InferenceModel:
 
         return results
 
-    def evaluate_log_posterior(self, data, params):
+    def evaluate_log_posterior(self, params, data):
         """ Computes the log posterior (scaled): log[p(data|params) * p(params)]
         Note: if the Inference model does not possess a prior, an uninformatic prior p(params)=1 is assumed
         """
 
         # Compute log likelihood
-        log_likelihood_eval = self.evaluate_log_likelihood(data=data, params=params)
+        log_likelihood_eval = self.evaluate_log_likelihood(params=params, data=data)
 
         # If the prior is not provided it is set to an non-informative prior p(theta)=1, log_posterior = log_likelihood
         if self.prior is None:
@@ -252,7 +252,7 @@ class MLEstimation:
             for _ in range(iter_optim):
                 mle_tmp = np.array(self.inference_model.distribution_object.fit(self.data))
                 max_log_like_tmp = self.inference_model.evaluate_log_likelihood(
-                    data=self.data, params=mle_tmp[np.newaxis, :])[0]
+                    params=mle_tmp[np.newaxis, :], data=self.data)[0]
                 # Save result
                 if self.mle is None:
                     self.mle = mle_tmp
@@ -294,7 +294,7 @@ class MLEstimation:
             print('ML estimation completed.')
 
     def evaluate_neg_log_likelihood_data(self, one_param):
-        return -1 * self.inference_model.evaluate_log_likelihood(data=self.data, params=one_param.reshape((1, -1)))[0]
+        return -1 * self.inference_model.evaluate_log_likelihood(params=one_param.reshape((1, -1)), data=self.data)[0]
 
 
 ########################################################################################################################
@@ -474,7 +474,7 @@ class BayesParameterEstimation:
                 else:
                     kwargs['seed'] = self.inference_model.prior.rvs(nsamples=nchains)
             self.sampler = MCMC(dimension=self.inference_model.nparams, verbose=self.verbose,
-                                log_pdf_target=self.evaluate_log_posterior_data,
+                                log_pdf_target=self.inference_model.evaluate_log_posterior, args_target=(self.data, ),
                                 **kwargs)
             #self.samples = None
 
@@ -485,7 +485,7 @@ class BayesParameterEstimation:
                     raise NotImplementedError('A proposal density or a prior must be provided.')
                 kwargs['proposal'] = self.inference_model.prior
 
-            self.sampler = IS(log_pdf_target=self.evaluate_log_posterior_data,
+            self.sampler = IS(log_pdf_target=self.inference_model.evaluate_log_posterior, args_target=(self.data, ),
                               verbose=self.verbose, **kwargs)
             #self.samples = None
             #self.weights = None
@@ -514,8 +514,8 @@ class BayesParameterEstimation:
         if self.verbose:
             print('Running parameter estimation with ' + self.sampling_method + ' completed successfully!')
 
-    def evaluate_log_posterior_data(self, params):
-        return self.inference_model.evaluate_log_posterior(data=self.data, params=params)
+    #def evaluate_log_posterior_data(self, params):
+    #    return self.inference_model.evaluate_log_posterior(params=params, data=self.data)
 
 ########################################################################################################################
 ########################################################################################################################
