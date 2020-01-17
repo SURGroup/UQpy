@@ -21,9 +21,6 @@ import copy
 from scipy.spatial.distance import pdist
 from scipy.stats import multivariate_normal
 import random
-
-from sklearn.gaussian_process import GaussianProcessRegressor
-
 from UQpy.Distributions import *
 from UQpy.Utilities import *
 from os import sys
@@ -1800,6 +1797,7 @@ class AKMCS:
 #                                         Class Markov Chain Monte Carlo
 ########################################################################################################################
 
+
 class MCMC_old:
     """
         Description:
@@ -2487,7 +2485,7 @@ class MCMC:
                 proposal_params = self.algorithm_inputs['proposal_params']
             proposal = self.check_methods_proposal(proposal, proposal_params)
             self.algorithm_inputs['proposal'] = proposal
-            del self.algorithm_inputs['proposal_params']
+            #del self.algorithm_inputs['proposal_params']
 
         # check the symmetry of proposal, assign False as default
         if 'proposal_is_symmetric' not in self.algorithm_inputs.keys():
@@ -2845,9 +2843,11 @@ class MCMC:
         # The algorithm inputs are: jump rate gamma - default is 3, c and c_star are parameters involved in the
         # differential evolution part of the algorithm - c_star should be small compared to the width of the target,
         # n_CR is the number of crossover probabilities - default 3, and p_g: prob(gamma=1) - default is 0.2
-        names = ['delta', 'c', 'c_star', 'n_CR', 'p_g']
-        defaults = [3, 0.1, 1e-6, 3, 0.2]
-        types = [int, (float, int), (float, int), int, float]
+        # adapt_CR = (iter_max, rate) governs the adapation of crossover probabilities (default: no adaptation)
+        # check_chains = (iter_max, rate) governs the discrading of outlier chains (default: no check on outlier chains)
+        names = ['delta', 'c', 'c_star', 'n_CR', 'p_g', 'adapt_CR', 'check_chains']
+        defaults = [3, 0.1, 1e-6, 3, 0.2, (-1, 1), (-1, 1)]
+        types = [int, (float, int), (float, int), int, float, tuple, tuple]
         for key in self.algorithm_inputs.keys():
             if key not in names:
                 print('!!! Warning !!! Input ' + key + ' not used in DREAM algorithm - used inputs are ' +
@@ -2859,12 +2859,19 @@ class MCMC:
                 raise TypeError('Wrong type for input ' + key)
         if self.algorithm_inputs['n_CR'] > self.dimension:
             self.algorithm_inputs['n_CR'] = self.dimension
+        for key in ['adapt_CR', 'check_chains']:
+            if len(self.algorithm_inputs[key])!=2 or (not all(isinstance(i, (int, float))
+                                                              for i in self.algorithm_inputs[key])):
+                raise TypeError('Inputs adapt_CR and check_chains should be tuples of 2 integers.')
+
 
     def run_dream(self, nsims, current_state):
         # Initialize some variables
         delta, c, c_star, n_CR, p_g = self.algorithm_inputs['delta'], self.algorithm_inputs['c'], \
                                       self.algorithm_inputs['c_star'], self.algorithm_inputs['n_CR'], \
                                       self.algorithm_inputs['p_g']
+        adapt_CR = self.algorithm_inputs['adapt_CR']
+        check_chains = self.algorithm_inputs['check_chains']
         J, n_id = np.zeros((n_CR,)), np.zeros((n_CR,))
         R = np.array([np.setdiff1d(np.arange(self.nchains), j) for j in range(self.nchains)])
         CR = np.arange(1, n_CR + 1) / n_CR
@@ -2916,17 +2923,45 @@ class MCMC:
                 J[id[nc]] = J[id[nc]] + np.sum((dX[nc, :] / std_x_tmp) ** 2)
                 n_id[id[nc]] += 1
 
-            if iter_nb < self.nburn:  # update selection cross prob during burn-in
-                pCR = J / n_id
-                pCR /= sum(pCR)
-
             # Save the current state if needed, update acceptance rate
             self.update_samples(current_state, current_log_pdf)
             # Update the acceptance rate
             self.update_acceptance_rate(accept_vec)
             # update the total number of iterations
             self.total_iterations += 1
+
+            # update selection cross prob
+            if self.total_iterations < adapt_CR[0] and self.total_iterations % adapt_CR[1] == 0:
+                pCR = J / n_id
+                pCR /= sum(pCR)
+            # check outlier chains (only if you have saved at least 100 values already)
+            if (self.current_sample_index * self.nchains >= 100) and \
+                    (self.total_iterations < check_chains[0]) and (self.total_iterations % check_chains[1] == 0):
+                self.check_outlier_chains(replace_with_best=True)
         return None
+
+    def check_outlier_chains(self, replace_with_best=False):
+        if not self.save_log_pdf:
+            return ValueError('attribute save_log_pdf must be True in order to check outlier chains')
+        start_ = self.current_sample_index // 2
+        avgs_logpdf = np.mean(self.log_pdf_values[start_:], axis=0)
+        best_ = np.argmax(avgs_logpdf)
+        avg_sorted = np.sort(avgs_logpdf)
+        ind1, ind3 = 1 + round(0.25 * self.nchains), 1 + round(0.75 * self.nchains)
+        q1, q3 = avg_sorted[ind1], avg_sorted[ind3]
+        qr = q3 - q1
+
+        outlier_num = 0
+        for j in range(self.nchains):
+            if avgs_logpdf[j] < q1 - 2.0 * qr:
+                outlier_num += 1
+                if replace_with_best:
+                    self.samples[start_:, j, :] = self.samples[start_:, best_, :]
+                    self.log_pdf_values[start_:, j] = self.log_pdf_values[start_:, best_]
+                else:
+                    print('Chain {} is an outlier chain'.format(j))
+        if self.verbose and outlier_num > 0:
+            print('Detected {} outlier chains'.format(outlier_num))
 
     ####################################################################################################################
     # Helper functions that can be used by all algorithms
@@ -2954,7 +2989,8 @@ class MCMC:
             self.samples = np.zeros((nsamples_per_chain, self.nchains, self.dimension))
             if self.save_log_pdf:
                 self.log_pdf_values = np.zeros((nsamples_per_chain, self.nchains))
-            current_state = self.seed
+            current_state = np.zeros_like(self.seed)
+            np.copyto(current_state, self.seed)
             self.current_sample_index = 0
             nsims = self.nburn + self.jump * nsamples_per_chain
 
@@ -3081,7 +3117,6 @@ class MCMC:
 
 class IS:
     """
-    Test Comment
 
         Description:
 

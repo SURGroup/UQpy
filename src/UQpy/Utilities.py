@@ -592,28 +592,16 @@ def eval_hessian(dimension, mixed_der, der):
     return hessian
 
 
-def diagnostics(sampling_method, sampling_outputs=None, samples=None, weights=None,
-                figsize=None, eps_ESS=0.05, alpha_ESS=0.05):
+def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ESS=0.05,
+                     graphics=False, figsize=None):
 
     """
-         Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
-
-
          Input:
-             :param sampling_method: sampling method used to generate samples
-             :type sampling_method: str, 'MCMC' or 'IS'
-
              :param sampling_outputs: output object of a sampling method
              :type sampling_outputs: object of class MCMC or IS
 
              :param samples: output samples of a sampling method (alternative to giving sampling_outputs for MCMC)
              :type samples: ndarray
-
-             :param weights: output weights of IS (alternative to giving sampling_outputs for IS)
-             :type weights: ndarray
-
-             :param figsize: size of the figure for output plots
-             :type figsize: tuple (width, height)
 
              :param eps_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
              :type eps_ESS: float in [0,1]
@@ -621,94 +609,104 @@ def diagnostics(sampling_method, sampling_outputs=None, samples=None, weights=No
              :param alpha_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
              :type alpha_ESS: float in [0,1]
 
+             :param graphics: indicates whether or not to do a plot
+             :type graphics: boolean, default False
+
+             :param figsize: size of the figure for output plots
+             :type figsize: tuple (width, height)
+
          Output:
-             returns various diagnostics values/plots to evaluate importance sampling and MCMC sampling outputs
+             returns various diagnostics values/plots to evaluate MCMC sampling outputs
      """
 
     if (eps_ESS < 0) or (eps_ESS > 1):
-        raise ValueError('UQpy error: eps_ESS should be a float between 0 and 1.')
+        raise ValueError('eps_ESS should be a float between 0 and 1.')
     if (alpha_ESS < 0) or (alpha_ESS > 1):
-        raise ValueError('UQpy error: alpha_ESS should be a float between 0 and 1.')
+        raise ValueError('alpha_ESS should be a float between 0 and 1.')
 
-    if sampling_method == 'IS':
-        if (sampling_outputs is None) and (weights is None):
-            raise ValueError('UQpy error: sampling_outputs or weights should be provided')
+    if (sampling_outputs is None) and (samples is None):
+        raise ValueError('sampling_outputs or samples should be provided')
+    if samples is None and sampling_outputs is not None:
+        samples = sampling_outputs.samples
+
+    if len(samples.shape) == 2:
+        print('Diagnostics for a single chain of MCMC \n')
+        print('!!! Warning !!! These diagnostics are purely qualitative and should be used with caution \n')
+        nsamples, dim = samples.shape
+
+        # Acceptance rate
         if sampling_outputs is not None:
-            weights = sampling_outputs.weights
-        print('Diagnostics for Importance Sampling \n')
-        effective_sample_size = 1/np.sum(weights**2, axis=0)
-        print('Effective sample size is ne={}, out of a total number of samples={} \n'.
-              format(effective_sample_size,np.size(weights)))
-        print('max_weight = {}, min_weight = {} \n'.format(max(weights), min(weights)))
-
-        # Output plots
-        if figsize is None:
-            figsize = (8, 3)
-        fig, ax = plt.subplots(figsize=figsize)
-        ax.scatter(weights, np.zeros((np.size(weights), )), s=weights*300, marker='o')
-        ax.set_xlabel('weights')
-        ax.set_title('Normalized weights out of importance sampling')
-        plt.show(fig)
-
-    elif sampling_method == 'MCMC':
-        if (sampling_outputs is None) and (samples is None):
-            raise ValueError('UQpy error: sampling_outputs or samples should be provided')
-        if sampling_outputs is not None:
-            samples = sampling_outputs.samples
-        print('Diagnostics for MCMC \n')
-        nsamples, nparams = samples.shape
-
-        # Acceptance ratio
-        if sampling_outputs is not None:
-            print('Acceptance ratio of the chain = {}. \n'.format(sampling_outputs.accept_ratio))
+            print('Acceptance ratio of the chain(s) = {}. \n'.format(sampling_outputs.acceptance_rate[0]))
 
         # Computation of ESS and min ESS
-        eps = eps_ESS
-        alpha = alpha_ESS
-
-        bn = np.ceil(nsamples**(1/2)) # nb of samples per bin
-        an = int(np.ceil(nsamples/bn)) # nb of bins, for computation of
+        bn = np.ceil(nsamples**(1/2))    # nb of samples per bin
+        an = int(np.ceil(nsamples/bn))    # nb of bins
         idx = np.array_split(np.arange(nsamples), an)
 
         means_subdivisions = np.empty((an, samples.shape[1]))
         for i, idx_i in enumerate(idx):
             x_sub = samples[idx_i, :]
-            means_subdivisions[i,:] = np.mean(x_sub, axis=0)
+            means_subdivisions[i, :] = np.mean(x_sub, axis=0)
         Omega = np.cov(samples.T)
         Sigma = np.cov(means_subdivisions.T)
-        joint_ESS = nsamples*np.linalg.det(Omega)**(1/nparams)/np.linalg.det(Sigma)**(1/nparams)
-        chi2_value = chi2.ppf(1 - alpha, df=nparams)
-        min_joint_ESS = 2 ** (2 / nparams) * np.pi / (nparams * gamma(nparams / 2)) ** (
-                    2 / nparams) * chi2_value / eps ** 2
-        marginal_ESS = np.empty((nparams, ))
-        min_marginal_ESS = np.empty((nparams,))
-        for j in range(nparams):
-            marginal_ESS[j] = nsamples * Omega[j,j]/Sigma[j,j]
-            min_marginal_ESS[j] = 4 * norm.ppf(alpha/2)**2 / eps**2
+        joint_ESS = nsamples*np.linalg.det(Omega)**(1/dim)/np.linalg.det(Sigma)**(1/dim)
+        chi2_value = chi2.ppf(1 - alpha_ESS, df=dim)
+        min_joint_ESS = 2 ** (2 / dim) * np.pi / (dim * gamma(dim / 2)) ** (
+                    2 / dim) * chi2_value / eps_ESS ** 2
+        marginal_ESS = np.empty((dim, ))
+        min_marginal_ESS = np.empty((dim,))
+        for j in range(dim):
+            marginal_ESS[j] = nsamples * Omega[j,j] / Sigma[j,j]
+            min_marginal_ESS[j] = 4 * norm.ppf(alpha_ESS/2)**2 / eps_ESS**2
 
         print('Univariate Effective Sample Size in each dimension:')
-        for j in range(nparams):
-            print('Parameter # {}: ESS = {}, minimum ESS recommended = {}'.
+        for j in range(dim):
+            print('Dimension {}: ESS = {}, minimum ESS recommended = {}'.
                   format(j+1, marginal_ESS[j], min_marginal_ESS[j]))
-        print('\nMultivariate Effective Sample Size:')
-        print('Multivariate ESS = {}, minimum ESS recommended = {}'.format(joint_ESS, min_joint_ESS))
+        #print('\nMultivariate Effective Sample Size:')
+        #print('Multivariate ESS = {}, minimum ESS recommended = {}'.format(joint_ESS, min_joint_ESS))
+
+        # Computation of the autocorrelation time in each dimension
+        #def auto_window(taus, c):    # Automated windowing procedure following Sokal (1989)
+        #    m = np.arange(len(taus)) < c * taus
+        #    if np.any(m):
+        #        return np.argmin(m)
+        #    return len(taus) - 1
+        #autocorrelation_time = []
+        #for j in range(samples.shape[1]):
+        #    x = samples[:, j] - np.mean(samples[:, j])
+        #    f = np.correlate(x, x, mode="full") / np.dot(x, x)
+        #    maxlags = len(x) - 1
+        #    taus = np.arange(-maxlags, maxlags + 1)
+        #    f = f[len(x) - 1 - maxlags:len(x) + maxlags]
+        #    window = auto_window(taus, c=5.)
+        #    autocorrelation_time.append(taus[window])
+        #print('Autocorrelation time in each dimension (for nsamples = ):')
+        #for j in range(dim):
+        #    print('Dimension {}: autocorrelation time = {}'.format(j+1, autocorrelation_time[j]))
 
         # Output plots
-        if figsize is None:
-            figsize = (20,4*nparams)
-        fig, ax = plt.subplots(nrows=nparams, ncols=3, figsize=figsize)
-        for j in range(samples.shape[1]):
-            ax[j, 0].plot(np.arange(nsamples), samples[:,j])
-            ax[j, 0].set_title('chain - parameter # {}'.format(j+1))
-            ax[j, 1].plot(np.arange(nsamples), np.cumsum(samples[:,j])/np.arange(nsamples))
-            ax[j, 1].set_title('parameter convergence')
-            ax[j, 2].acorr(samples[:,j]-np.mean(samples[:,j]), maxlags = 50, normed=True)
-            ax[j, 2].set_title('correlation between samples')
-        plt.show(fig)
+        if graphics:
+            if dim >= 5:
+                print('No graphics when dim >= 5')
+            else:
+                if figsize is None:
+                    figsize = (20, 4 * dim)
+                fig, ax = plt.subplots(nrows=dim, ncols=3, figsize=figsize)
+                for j in range(samples.shape[1]):
+                    ax[j, 0].plot(np.arange(nsamples), samples[:, j])
+                    ax[j, 0].set_title('chain - parameter # {}'.format(j+1))
+                    ax[j, 1].plot(np.arange(nsamples), np.cumsum(samples[:, j])/np.arange(nsamples))
+                    ax[j, 1].set_title('parameter convergence')
+                    ax[j, 2].acorr(samples[:, j] - np.mean(samples[:, j]), maxlags=40, normed=True)
+                    ax[j, 2].set_title('correlation between samples')
+                plt.show(fig)
+
+    elif len(samples.chain) == 3:
+        print('No diagnostics for various chains of MCMC are currently supported. \n')
 
     else:
-        raise ValueError('Supported sampling methods for diagnostics are "MCMC", "IS".')
-    return fig, ax
+        return ValueError('Wrong dimensions in samples.')
 
 
 def resample(samples, weights, method='multinomial', size=None):
