@@ -246,7 +246,7 @@ def define_moments(self, params=None):
     if isinstance(self.dist_name, str):
         return subdistribution_moments(dist_name=self.dist_name, params=self.params)
     elif isinstance(self.dist_name, list):
-        if len(params) != len(self.dist_name):
+        if len(self.params) != len(self.dist_name):
             raise ValueError('UQpy error: Inconsistent dimensions')
         if not hasattr(self, 'copula'):
             mean, var, skew, kurt = [0]*len(self.dist_name), [0]*len(self.dist_name), [0]*len(self.dist_name), \
@@ -442,8 +442,14 @@ def subdistribution_fit(dist_name, x):
 def subdistribution_moments(dist_name, params):
     # If it is a supported scipy distribution:
     if dist_name in list_univariates:
+        y = [np.nan, np.nan, np.nan, np.nan]
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
-        return d.stats(moments='mvsk', **kwargs)
+        mean, var, skew, kurt = d.stats(moments='mvsk', **kwargs)
+        y[0] = mean
+        y[1] = var
+        y[2] = skew
+        y[3] = kurt
+        return np.array(y)
     # Otherwise it must be a file
     else:
         custom_dist = importlib.import_module(dist_name)
