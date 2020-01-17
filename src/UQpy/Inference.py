@@ -201,10 +201,10 @@ class MLEstimation:
 
             :param iter_optim: number of iterations for the maximization procedure
                 (each iteration starts at a random point)
-            :type iter_optim: an integer, default 1
+            :type iter_optim: an integer, default None
 
             :param x0: starting points for optimization
-            :type x0: 1D array (dimension, ) or 2D array (n_starts, dimension)
+            :type x0: 1D array (dimension, ) or 2D array (n_starts, dimension), default None
 
             :param kwargs: input arguments to scipy.optimize.minimize
             :type kwargs: dictionary
@@ -244,6 +244,8 @@ class MLEstimation:
         # Case 3: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization.
         if (self.inference_model.distribution_object is not None) and \
                 hasattr(self.inference_model.distribution_object, 'fit'):
+            if not (isinstance(iter_optim, int) and iter_optim >= 1):
+                raise ValueError('iter_optim should be an integer >= 1.')
             if self.verbose:
                 print('Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name +
                       ', using fit method.')
@@ -267,7 +269,7 @@ class MLEstimation:
                       ', via optimization.')
             if x0 is None:
                 if not (isinstance(iter_optim, int) and iter_optim >= 1):
-                    raise ValueError('iter_optim should be an integer >= 1')
+                    raise ValueError('iter_optim should be an integer >= 1.')
                 x0 = np.random.rand(iter_optim, self.inference_model.nparams)
                 if 'bounds' in self.kwargs_optim.keys():
                     bounds = np.array(self.kwargs_optim['bounds'])
@@ -302,7 +304,7 @@ class MLEstimation:
 
 class InfoModelSelection:
 
-    def __init__(self, candidate_models, data, criterion='AIC', verbose=False, sorted_outputs=False,
+    def __init__(self, candidate_models, data, criterion='AIC', verbose=False, sorted_outputs=True,
                  iter_optim=None, x0=None, **kwargs):
 
         """
@@ -359,12 +361,12 @@ class InfoModelSelection:
             self.ml_estimators.append(ml_estimator)
 
         # Initialize the outputs
-        self.criterion_values = [0.] * self.nmodels
-        self.penalty_terms = [0.] * self.nmodels
-        self.probabilities = [0.] * self.nmodels
+        self.criterion_values = [None] * self.nmodels
+        self.penalty_terms = [None] * self.nmodels
+        self.probabilities = [None] * self.nmodels
 
         # Run the model selection procedure
-        if iter_optim is not None or x0 is not None:
+        if (iter_optim is not None) or (x0 is not None):
             self.run_estimation(iter_optim=iter_optim, x0=x0)
 
     def run_estimation(self, iter_optim=1, x0=None):
@@ -376,7 +378,7 @@ class InfoModelSelection:
         if x0 is None:
             x0 = [None] * self.nmodels
         if not (isinstance(x0, list) and len(x0) == self.nmodels):
-            raise ValueError('x0 should be a list of length nmodels')
+            raise ValueError('x0 should be a list of length nmodels (or None).')
 
         # Loop over all the models
         for i, (inference_model, ml_estimator) in enumerate(zip(self.candidate_models, self.ml_estimators)):
@@ -472,8 +474,9 @@ class BayesParameterEstimation:
                 else:
                     kwargs['seed'] = self.inference_model.prior.rvs(nsamples=nchains)
             self.sampler = MCMC(dimension=self.inference_model.nparams, verbose=self.verbose,
-                                log_pdf_target=self.evaluate_log_posterior_data, **kwargs)
-            self.samples = None
+                                log_pdf_target=self.evaluate_log_posterior_data,
+                                **kwargs)
+            #self.samples = None
 
         elif self.sampling_method == 'IS':
             # importance distribution is either given by the user, or it is set as the prior of the model
@@ -482,9 +485,10 @@ class BayesParameterEstimation:
                     raise NotImplementedError('A proposal density or a prior must be provided.')
                 kwargs['proposal'] = self.inference_model.prior
 
-            self.sampler = IS(log_pdf_target=self.evaluate_log_posterior_data, verbose=self.verbose, **kwargs)
-            self.samples = None
-            self.weights = None
+            self.sampler = IS(log_pdf_target=self.evaluate_log_posterior_data,
+                              verbose=self.verbose, **kwargs)
+            #self.samples = None
+            #self.weights = None
 
         else:
             raise ValueError('Sampling_method should be either "MCMC" or "IS"')
@@ -497,17 +501,18 @@ class BayesParameterEstimation:
             self.run_estimation(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
     def run_estimation(self, nsamples=None, nsamples_per_chain=None):
-        if self.verbose:
-            print('Running parameter estimation with ' + self.sampling_method + ' completed successfully!')
 
         if self.sampling_method == 'MCMC':
             self.sampler.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
-            self.samples = self.sampler.samples
+            #self.samples = self.sampler.samples
         elif self.sampling_method == 'IS':
             if nsamples_per_chain is not None:
                 raise ValueError('nsamples_per_chain is not an appropriate input for IS.')
             self.sampler.run(nsamples=nsamples)
-            self.samples, self.weights = self.sampler.samples, self.sampler.weights
+            #self.samples, self.weights = self.sampler.samples, self.sampler.weights
+
+        if self.verbose:
+            print('Running parameter estimation with ' + self.sampling_method + ' completed successfully!')
 
     def evaluate_log_posterior_data(self, params):
         return self.inference_model.evaluate_log_posterior(data=self.data, params=params)
@@ -520,7 +525,7 @@ class BayesParameterEstimation:
 
 class BayesModelSelection:
 
-    def __init__(self, candidate_models, data, prior_probabilities=None, sorted_outputs=False,
+    def __init__(self, candidate_models, data, prior_probabilities=None, sorted_outputs=True,
                  method_evidence_computation='harmonic_mean', verbose=False, nsamples=None, nsamples_per_chain=None,
                  **kwargs):
 
@@ -608,7 +613,12 @@ class BayesModelSelection:
         for i, (inference_model, bayes_estimator) in enumerate(zip(self.candidate_models, self.bayes_estimators)):
             if self.verbose:
                 print('UQpy: Running MCMC for model '+inference_model.name)
-            bayes_estimator.run_estimation(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
+            if nsamples is not None:
+                bayes_estimator.run_estimation(nsamples=nsamples[i])
+            elif nsamples_per_chain is not None:
+                bayes_estimator.run_estimation(nsamples_per_chain=nsamples_per_chain[i])
+            else:
+                raise ValueError('Either nsamples or nsamples_per_chain should be non None')
             self.evidences[i] = self.estimate_evidence(
                 inference_model=inference_model, posterior_samples=bayes_estimator.sampler.samples,
                 log_posterior_values=bayes_estimator.sampler.log_pdf_values)
