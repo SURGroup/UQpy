@@ -2416,7 +2416,6 @@ class MCMC:
         # Initialize a few more variables
         self.samples = None
         self.log_pdf_values = None
-        self.total_iterations = 0    # total nb of iterations, grows if you call run several times
         self.acceptance_rate = [0.] * self.nchains
 
         if self.verbose:
@@ -2434,7 +2433,7 @@ class MCMC:
         nsamples, nsamples_per_chain = self.preprocess_nsamples(nchains=self.nchains, nsamples=nsamples,
                                                                 nsamples_per_chain=nsamples_per_chain)
         # Initialize the runs: allocate space for the new samples and log pdf values
-        nsims, current_state = self.initialize_samples(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
+        nsims, current_state = self.initialize_samples(nsamples_per_chain=nsamples_per_chain)
 
         if self.verbose:
             print('Running MCMC...')
@@ -2982,7 +2981,7 @@ class MCMC:
             self.log_pdf_values = self.log_pdf_values.reshape((-1, self.nchains), order='C')
         return None
 
-    def initialize_samples(self, nsamples, nsamples_per_chain):
+    def initialize_samples(self, nsamples_per_chain):
         """ Allocate space for samples and log likelihood values, initialize sample_index, acceptance ratio
         If some samples already exist, allocate space to append new samples to the old ones """
         if self.samples is None:    # very first call of run, set current_state as the seed and initialize self.samples
@@ -2991,8 +2990,17 @@ class MCMC:
                 self.log_pdf_values = np.zeros((nsamples_per_chain, self.nchains))
             current_state = np.zeros_like(self.seed)
             np.copyto(current_state, self.seed)
-            self.current_sample_index = 0
-            nsims = self.nburn + self.jump * nsamples_per_chain
+            if self.nburn == 0:    # save the seed
+                self.samples[0, :, :] = current_state
+                if self.save_log_pdf:
+                    self.log_pdf_values[0, :] = self.evaluate_log_target(current_state)
+                self.current_sample_index = 1
+                self.total_iterations = 1  # total nb of iterations, grows if you call run several times
+                nsims = self.jump * nsamples_per_chain - 1
+            else:
+                self.current_sample_index = 0
+                self.total_iterations = 0  # total nb of iterations, grows if you call run several times
+                nsims = self.nburn + self.jump * nsamples_per_chain
 
         else:    # fetch previous samples to start the new run, current state is last saved sample
             if len(self.samples.shape) == 2:   # the chains were previously concatenated
@@ -3038,7 +3046,8 @@ class MCMC:
                     raise ValueError('When log_pdf_target is a list, args should be a list (of tuples) of same length.')
                 evaluate_log_pdf_marginals = list(map(lambda i: lambda x: log_pdf[i](x, *args[i]), range(len(log_pdf))))
                 #evaluate_log_pdf_marginals = [partial(log_pdf_, *args_) for (log_pdf_, args_) in zip(log_pdf, args)]
-                evaluate_log_pdf = None
+                evaluate_log_pdf = (lambda x: np.sum(
+                    [log_pdf[i](x[:, i, np.newaxis], *args[i]) for i in range(len(log_pdf))]))
             else:
                 raise TypeError('log_pdf_target must be a callable or list of callables')
         # pdf is provided
@@ -3058,7 +3067,10 @@ class MCMC:
                                                               10 ** (-320) * np.ones((x.shape[0],)))),
                         range(len(pdf))
                         ))
-                evaluate_log_pdf = None
+                evaluate_log_pdf = (lambda x: np.sum(
+                    [np.log(np.maximum(pdf[i](x[:, i, np.newaxis], *args[i]), 10**(-320)*np.ones((x.shape[0],))))
+                     for i in range(len(log_pdf))]))
+                #evaluate_log_pdf = None
             else:
                 raise TypeError('pdf_target must be a callable or list of callables')
         else:
@@ -3088,7 +3100,7 @@ class MCMC:
             seed = np.zeros((1, dim))
         else:
             try:
-                seed = np.array(seed).reshape((-1, dim))
+                seed = np.array(seed, dtype=float).reshape((-1, dim))
             except:
                 raise TypeError('Input seed should be a nd array of dimensions (?, dimension).')
         return seed
