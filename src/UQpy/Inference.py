@@ -100,6 +100,8 @@ class InferenceModel:
                 if not hasattr(distribution_object, 'pdf'):
                     raise AttributeError('distribution_object should have a log_pdf or pdf method')
                 distribution_object.log_pdf = lambda x: np.log(distribution_object.pdf(x))
+            if self.name == '':
+                self.name = distribution_object.dist_name
 
         self.run_model_object = run_model_object
         self.error_covariance = error_covariance
