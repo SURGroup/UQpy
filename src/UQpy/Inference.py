@@ -306,7 +306,7 @@ class MLEstimation:
 
 class InfoModelSelection:
 
-    def __init__(self, candidate_models, data, criterion='AIC', verbose=False, sorted_outputs=True,
+    def __init__(self, candidate_models, data, criterion='AIC', verbose=False, sorted_outputs=False,
                  iter_optim=None, x0=None, **kwargs):
 
         """
@@ -527,7 +527,7 @@ class BayesParameterEstimation:
 
 class BayesModelSelection:
 
-    def __init__(self, candidate_models, data, prior_probabilities=None, sorted_outputs=True,
+    def __init__(self, candidate_models, data, prior_probabilities=None, sorted_outputs=False,
                  method_evidence_computation='harmonic_mean', verbose=False, nsamples=None, nsamples_per_chain=None,
                  **kwargs):
 
