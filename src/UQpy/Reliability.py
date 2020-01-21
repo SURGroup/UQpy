@@ -73,7 +73,7 @@ class SubsetSimulation:
     # Last Modified: 4/7/19 by Dimitris G. Giovanis
 
     def __init__(self, MCMC_object=None, RunModel_object=None, samples_init=None, p_cond=0.1, nsamples_ss=1000,
-                 max_level=20, verbose=False):
+                 max_level=10, verbose=False):
 
 # ------------
 # Incomplete code
@@ -95,9 +95,6 @@ class SubsetSimulation:
 
 # -----------------
 
-
-
-
         # Initialize internal attributes from information passed in
         self.MCMC_object = MCMC_object
         self.RunModel_object = RunModel_object
@@ -116,7 +113,6 @@ class SubsetSimulation:
         self.g_level = list()
         self.d12 = list()
         self.d22 = list()
-
 
 # ------------
 # Incomplete code
@@ -160,7 +156,7 @@ class SubsetSimulation:
         elif self.MCMC_object.algorithm == 'Stretch':
             if self.verbose:
                 print('UQpy: Running Subset Simulation with Stretch....')
-            [self.pf, self.cov1, self.cov2] = self.run_subsim_stretch()
+            [self.pf, self.cov1, self.cov2] = self.run()
         # **** Add calls to new methods here.****
         if self.verbose:
             print('UQpy: Subset Simulation Complete!')
@@ -175,6 +171,10 @@ class SubsetSimulation:
         if self.samples_init is None:
             self.MCMC_object.run(nsamples=self.nsamples_ss)
             self.samples.append(self.MCMC_object.samples)
+            if self.verbose:
+                print('UQpy: If the target distribution is other than standard normal, it is highly recommended that '
+                      'the user provide a set of nsamples_ss samples that follow the target distribution using the '
+                      'argument samples_init.')
         else:
             self.samples.append(self.samples_init)
 
@@ -269,100 +269,206 @@ class SubsetSimulation:
 
         return pf, cov1, cov2
 
+    # The run function executes the chosen subset simulation algorithm
+    def run(self):
 
+        # Run Subset Simulation using the Affine Invariant Ensemble Sampler
+        if self.MCMC_object.algorithm == 'Stretch':
+            step = 0
+            n_keep = int(self.p_cond * self.nsamples_ss)
 
+            # Generate the initial samples - Level 0
+            # Here we need to make sure that we have good initial samples from the target joint density.
+            if self.samples_init is None:
+                raise AttributeError('UQpy: Subset simulation with the Stretch algorithm requires that the user pass an'
+                                     'initial set of nsamples_ss samples into the class through the samples_init '
+                                     'argument. This is needed because the samples at conditional level 0 are critical '
+                                     'to the initialization of subset simulation using the Stretch algorithm for'
+                                     'non-Gaussian distributions. It is highly recommended that the user define these '
+                                     'samples using either a direct sampling method from the distribution of interest'
+                                     'or using an MCMC algorithm with sufficiently converged samples.')
+            else:
+                self.samples.append(self.samples_init)
 
+            # Run the model for the initial samples,
+            # sort them by their performance function, and
+            # identify the conditional level
+            self.RunModel_object.run(samples=np.atleast_2d(self.samples[step]))
+            self.g.append(np.asarray(self.RunModel_object.qoi_list))
+            g_ind = np.argsort(self.g[step][:, 0])
+            self.g_level.append(self.g[step][g_ind[n_keep - 1]])
 
-
-
-
-    # Run Subset Simulation using the Affine Invariant Ensemble Sampler
-    def run_subsim_stretch(self):
-        step = 0
-        n_keep = int(self.p_cond * self.nsamples_ss)
-
-        # Generate the initial samples - Level 0
-        if self.samples_init is None:
-            x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-                          pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
-                          log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
-                          pdf_target_copula=self.pdf_target_copula,
-                          pdf_target_copula_params=self.pdf_target_copula_params,
-                          pdf_target_type=self.pdf_target_type,
-                          algorithm='MMH', jump=self.jump, nsamples=self.nsamples_ss, seed=self.seed,
-                          nburn=self.nburn, verbose=self.verbose)
-            self.samples.append(x_init.samples)
-        else:
-            self.samples.append(self.samples_init)
-
-        g_init = RunModel(samples=self.samples[step], model_script=self.model_script,
-                          model_object_name=self.model_object_name,
-                          input_template=self.input_template, var_names=self.var_names,
-                          output_script=self.output_script,
-                          output_object_name=self.output_object_name,
-                          ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes, resume=self.resume,
-                          verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
-
-        self.g.append(np.asarray(g_init.qoi_list))
-        g_ind = np.argsort(self.g[step])
-        self.g_level.append(self.g[step][g_ind[n_keep]])
-
-        # Estimate coefficient of variation of conditional probability of first level
-        d1, d2 = self.cov_sus(step)
-        self.d12.append(d1 ** 2)
-        self.d22.append(d2 ** 2)
-
-        while self.g_level[step] > 0:
-
-            step = step + 1
-            self.samples.append(self.samples[step - 1][g_ind[0:n_keep]])
-            self.g.append(self.g[step - 1][g_ind[:n_keep]])
-
-            for i in range(self.nsamples_ss - n_keep):
-
-                x0 = self.samples[step][i:i+n_keep]
-
-                x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-                              pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
-                              log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
-                              pdf_target_copula=self.pdf_target_copula,
-                              pdf_target_copula_params=self.pdf_target_copula_params,
-                              pdf_target_type=self.pdf_target_type,
-                              algorithm= self.algorithm, jump=self.jump, nsamples=n_keep+1, seed=x0,
-                              nburn=self.nburn, verbose=self.verbose)
-
-                x_temp = x_mcmc.samples[n_keep].reshape((1, self.dimension))
-                g_model = RunModel(samples=x_temp, model_script=self.model_script,
-                                   model_object_name=self.model_object_name,
-                                   input_template=self.input_template, var_names=self.var_names,
-                                   output_script=self.output_script,
-                                   output_object_name=self.output_object_name,
-                                   ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes,
-                                   resume=self.resume,
-                                   verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
-
-                g_temp = g_model.qoi_list
-
-                # Accept or reject the sample
-                if g_temp < self.g_level[step - 1]:
-                    self.samples[step] = np.vstack((self.samples[step], x_temp))
-                    self.g[step] = np.hstack((self.g[step], g_temp[0]))
-                else:
-                    self.samples[step] = np.vstack((self.samples[step], self.samples[step][i]))
-                    self.g[step] = np.hstack((self.g[step], self.g[step][i]))
-
-            g_ind = np.argsort(self.g[step])
-            self.g_level.append(self.g[step][g_ind[n_keep]])
+            # Estimate coefficient of variation of conditional probability of first level
             d1, d2 = self.cov_sus(step)
             self.d12.append(d1 ** 2)
             self.d22.append(d2 ** 2)
 
-        n_fail = len([value for value in self.g[step] if value < 0])
-        pf = self.p_cond ** step * n_fail / self.nsamples_ss
-        cov1 = np.sqrt(np.sum(self.d12))
-        cov2 = np.sqrt(np.sum(self.d22))
+            t = time.time()
 
-        return pf, cov1, cov2
+            if self.verbose:
+                print('UQpy: Subset Simulation, conditional level 0 complete.')
+
+            while self.g_level[step] > 0 and step < self.max_level:
+
+                step = step + 1
+                self.samples.append(np.zeros_like(self.samples[step - 1]))
+                self.samples[step][:n_keep] = self.samples[step - 1][g_ind[0:n_keep], :]
+                self.g.append(np.zeros_like(self.g[step - 1]))
+                self.g[step][:n_keep] = self.g[step - 1][g_ind[:n_keep]]
+
+                for i in range(int(self.nsamples_ss / n_keep) - 1):
+
+                    ind = np.arange(0, n_keep)
+                    # while np.size(ind) != 0:
+                    x_mcmc = np.zeros([np.size(ind), self.samples[step].shape[1]])
+                    x_run = []
+
+                    k = 0
+                    for j in ind:
+
+                        # Generate new candidate states
+                        ######### Create a new MCMC object for each conditional level. ########
+
+                        self.MCMC_object.seed = np.atleast_2d(self.samples[step][:n_keep, :])
+                        # self.MCMC_object.samples = self.MCMC_object.seed
+                        self.MCMC_object.nchains = self.MCMC_object.seed.shape[0]
+                        self.MCMC_object.run(nsamples=2)
+                        x_mcmc[k] = self.MCMC_object.samples[0, :]
+
+                        # Decide whether a new simulation is needed for the proposed state
+                        if np.array_equal(np.atleast_2d(x_mcmc[k]), self.MCMC_object.seed) is False:
+                            x_run.append(x_mcmc[k])
+                        else:
+                            self.samples[step][(i + 1) * n_keep + j] = x_mcmc[k]
+                            self.g[step][(i + 1) * n_keep + j] = self.g[step][i * n_keep + j]
+
+                        k += 1
+
+                    ind = np.where(self.g[step][(i + 1) * n_keep:(i + 2) * n_keep, 0] == 0)[0]
+                    if np.size(ind) == 0:
+                        break
+
+                    # Run the model for the new states.
+                    self.RunModel_object.run(samples=x_run)
+
+                    # Temporarily save the latest model runs
+                    g_temp = np.asarray(self.RunModel_object.qoi_list[-len(x_run):])
+
+                    # Accept the states with g < g_level
+                    ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
+                    for ii in ind_accept:
+                        self.samples[step][(i + 1) * n_keep + ind[ii]] = x_mcmc[ind[ii]]
+                        self.g[step][(i + 1) * n_keep + ind[ii]] = g_temp[ii]
+
+                    ind_reject = np.where(g_temp[:, 0] > self.g_level[step - 1])[0]
+                    for ii in ind_reject:
+                        self.samples[step][(i + 1) * n_keep + ind[ii]] = self.samples[step][i * n_keep + ind[ii]]
+                        self.g[step][(i + 1) * n_keep + ind[ii]] = self.g[step][i * n_keep + ind[ii]]
+
+                if self.verbose:
+                    print('UQpy: Subset Simulation, conditional level ' + step + 'complete.')
+
+                g_ind = np.argsort(self.g[step][:, 0])
+                self.g_level.append(self.g[step][g_ind[n_keep]])
+
+                # Estimate coefficient of variation of conditional probability of first level
+                d1, d2 = self.cov_sus(step)
+                self.d12.append(d1 ** 2)
+                self.d22.append(d2 ** 2)
+
+            n_fail = len([value for value in self.g[step] if value < 0])
+
+            pf = self.p_cond ** step * n_fail / self.nsamples_ss
+            cov1 = np.sqrt(np.sum(self.d12))
+            cov2 = np.sqrt(np.sum(self.d22))
+
+            return pf, cov1, cov2
+
+    # def run_subsim_stretch(self):
+
+
+        # Generate the initial samples - Level 0
+        # if self.samples_init is None:
+        #     x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
+        #                   pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
+        #                   log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
+        #                   pdf_target_copula=self.pdf_target_copula,
+        #                   pdf_target_copula_params=self.pdf_target_copula_params,
+        #                   pdf_target_type=self.pdf_target_type,
+        #                   algorithm='MMH', jump=self.jump, nsamples=self.nsamples_ss, seed=self.seed,
+        #                   nburn=self.nburn, verbose=self.verbose)
+        #     self.samples.append(x_init.samples)
+        # else:
+        #     self.samples.append(self.samples_init)
+
+        # g_init = RunModel(samples=self.samples[step], model_script=self.model_script,
+        #                   model_object_name=self.model_object_name,
+        #                   input_template=self.input_template, var_names=self.var_names,
+        #                   output_script=self.output_script,
+        #                   output_object_name=self.output_object_name,
+        #                   ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes, resume=self.resume,
+        #                   verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
+
+        # self.g.append(np.asarray(g_init.qoi_list))
+        # g_ind = np.argsort(self.g[step])
+        # self.g_level.append(self.g[step][g_ind[n_keep]])
+
+        # Estimate coefficient of variation of conditional probability of first level
+        # d1, d2 = self.cov_sus(step)
+        # self.d12.append(d1 ** 2)
+        # self.d22.append(d2 ** 2)
+
+        # while self.g_level[step] > 0:
+        #
+        #     step = step + 1
+        #     self.samples.append(self.samples[step - 1][g_ind[0:n_keep]])
+        #     self.g.append(self.g[step - 1][g_ind[:n_keep]])
+        #
+        #     for i in range(self.nsamples_ss - n_keep):
+        #
+        #         x0 = self.samples[step][i:i+n_keep]
+        #
+        #         x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
+        #                       pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
+        #                       log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
+        #                       pdf_target_copula=self.pdf_target_copula,
+        #                       pdf_target_copula_params=self.pdf_target_copula_params,
+        #                       pdf_target_type=self.pdf_target_type,
+        #                       algorithm= self.algorithm, jump=self.jump, nsamples=n_keep+1, seed=x0,
+        #                       nburn=self.nburn, verbose=self.verbose)
+        #
+        #         x_temp = x_mcmc.samples[n_keep].reshape((1, self.dimension))
+        #         g_model = RunModel(samples=x_temp, model_script=self.model_script,
+        #                            model_object_name=self.model_object_name,
+        #                            input_template=self.input_template, var_names=self.var_names,
+        #                            output_script=self.output_script,
+        #                            output_object_name=self.output_object_name,
+        #                            ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes,
+        #                            resume=self.resume,
+        #                            verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
+        #
+        #         g_temp = g_model.qoi_list
+        #
+        #         # Accept or reject the sample
+        #         if g_temp < self.g_level[step - 1]:
+        #             self.samples[step] = np.vstack((self.samples[step], x_temp))
+        #             self.g[step] = np.hstack((self.g[step], g_temp[0]))
+        #         else:
+        #             self.samples[step] = np.vstack((self.samples[step], self.samples[step][i]))
+        #             self.g[step] = np.hstack((self.g[step], self.g[step][i]))
+        #
+        #     g_ind = np.argsort(self.g[step])
+        #     self.g_level.append(self.g[step][g_ind[n_keep]])
+        #     d1, d2 = self.cov_sus(step)
+        #     self.d12.append(d1 ** 2)
+        #     self.d22.append(d2 ** 2)
+        #
+        # n_fail = len([value for value in self.g[step] if value < 0])
+        # pf = self.p_cond ** step * n_fail / self.nsamples_ss
+        # cov1 = np.sqrt(np.sum(self.d12))
+        # cov2 = np.sqrt(np.sum(self.d22))
+        #
+        # return pf, cov1, cov2
 
     def init_sus(self):
 

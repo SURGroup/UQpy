@@ -2668,10 +2668,10 @@ class MCMC:
         if self.nchains < 2:
             raise ValueError('For the Stretch algorithm, a seed must be provided with at least two samples.')
 
-        # Check MH algorithm inputs: proposal_type and proposal_scale
+        # Check Stretch algorithm inputs: proposal_type and proposal_scale
         for key in self.algorithm_inputs.keys():
             if key not in ['scale']:  # remove inputs that are not being used
-                print('!!! Warning !!! Input ' + key + ' not used in MH algorithm - used input is scale')
+                print('!!! Warning !!! Input ' + key + ' not used in Stretch algorithm - used input is scale')
         if 'scale' not in self.algorithm_inputs.keys():
             self.algorithm_inputs['scale'] = 2.
         if not isinstance(self.algorithm_inputs['scale'], (float, int)):
