@@ -33,107 +33,111 @@ warnings.filterwarnings("ignore")
 ########################################################################################################################
 
 class InferenceModel:
-    def __init__(self, n_params, run_model_object=None, log_likelihood=None, name='', error_covariance=1.0,
-                 prior_name=None, prior_params=None, prior_copula=None, prior_copula_params=None,
+    def __init__(self, nparams, run_model_object=None, log_likelihood=None, distribution_object=None, name='',
+                 error_covariance=1.0, prior=None, prior_params=None, prior_copula_params=None,
                  verbose=False, **kwargs_likelihood
                  ):
 
         """
-        Define the model, either as a python script, or a probability model
+        Define the inference_model. This class possesses two method that, given some data and parameter values,
+         evaluate the log likelihood and scaled log posterior (log_likelihood + log_prior)
 
         Inputs:
-            :param n_params: number of parameters to be estimated, required
-            :type n_params: int
+            :param nparams: number of parameters to be estimated, required
+            :type nparams: int
+
+            :param name: name of model
+            :type name: string
 
             :param run_model_object: RunModel class object that defines the forward model h(param)
             :type run_model_object: object of class RunModel or None
 
-            :param log_likelihood: name of log-likelihood function. Default is None. This function defines the
+            :param log_likelihood: log-likelihood function. Default is None. This function defines the
             log-likelihood model, possibly in conjunction with the run_model_object.
-            :type log_likelihood: function or string or None
+            :type log_likelihood: callable or None
+
+            :param distribution_object: distribution pi for which to learn parameters from iid data
+            :type distribution_object: object of Distribution class
 
             :param error_covariance: covariance of the Gaussian error for model defined by a python script
             :type error_covariance: ndarray (full covariance matrix) or float (diagonal values)
 
-            :param prior_name: distribution name of the prior pdf
-            :type prior_name: str or list of str
+            :param prior: prior distribution
+            :type prior: object of Distribution class
 
             :param prior_params: parameters of the prior pdf
             :type prior_params: ndarray or list of ndarrays
 
-            :param prior_copula: copula of the prior, if necessary
-            :param prior_copula: str
-
             :param prior_copula_params: parameters of the copula of the prior, if necessary
             :param prior_copula_params: str
 
-            :param kwargs: all additional keyword arguments for the log-likelihood function, if necessary
-            :type kwargs: dictionary
-
-        Output:
-
-            :return Model.evaluate_log_likelihood: function that computes the log likelihood at various parameter
-            values, given some data
-            :rtype Model.evaluate_log_likelihood: callable
-
-            :return Model.evaluate_log_posterior: function that computes the scaled log posterior (log likelihood +
-            log prior) at various parameter values, given some data
-            :rtype Model.evaluate_log_posterior: callable
-
-            :return Model.prior: probability distribution of the prior
-            :rtype Model.prior: instance from Distribution class
-
-            :return Model.kwargs_prior: arguments necessary to call the log_pdf, pdf or rvs method of the prior
-            :rtype Model.kwargs_prior: dictionary
+            :param kwargs_likelihood: all additional keyword arguments for the log-likelihood function, if necessary
+            :type kwargs_likelihood: dictionary
 
         """
-        self.n_params = n_params
-        if not isinstance(self.n_params, int) or self.n_params <= 0:
-            raise TypeError('Input n_params must be an integer > 0.')
+        self.nparams = nparams
+        if not isinstance(self.nparams, int) or self.nparams <= 0:
+            raise TypeError('Input nparams must be an integer > 0.')
         self.name = name
         if not isinstance(self.name, str):
             raise TypeError('Input name must be a string.')
         self.verbose = verbose
 
-        # The log-likelihood function will be defined via RunModel and / or the log_likelihood function - The following
-        # lines define a function self.log_likelihood(data, model_output, params, **kwargs) for all cases.
-        if (run_model_object is None) and (log_likelihood is None):
-            raise ValueError('A run_model_object or a log_likelihood input must be provided by the user.')
-        if (run_model_object is not None) and (not isinstance(run_model_object, RunModel)):
-            raise TypeError('Input run_model_object should be an object of instance RunModel.')
-        if (log_likelihood is not None) and (not isinstance(log_likelihood, str)) and (not callable(log_likelihood)):
-            raise TypeError('Input log_likelihood should be a string pointing to a Distribution or a callable.')
+        # Perform checks on inputs run_model_object, log_likelihood, distribution_object
+        if (run_model_object is None) and (log_likelihood is None) and (distribution_object is None):
+            raise ValueError('One of run_model_object, log_likelihood or distribution_object inputs must be provided.')
+        if run_model_object is not None and (not isinstance(run_model_object, RunModel)):
+            raise TypeError('Input run_model_object should be an object of class RunModel.')
+        if (log_likelihood is not None) and (not callable(log_likelihood)):
+            raise TypeError('Input log_likelihood should be a callable.')
+        if distribution_object is not None:
+            if (run_model_object is not None) or (log_likelihood is not None):
+                raise ValueError('Input distribution_object cannot be provided concurrently with log_likelihood or '
+                                 'run_model_object.')
+            if not isinstance(distribution_object, Distribution):
+                raise TypeError('Input distribution_object should be an object of class Distribution.')
+            if not hasattr(distribution_object, 'log_pdf'):
+                if not hasattr(distribution_object, 'pdf'):
+                    raise AttributeError('distribution_object should have a log_pdf or pdf method')
+                distribution_object.log_pdf = lambda x: np.log(distribution_object.pdf(x))
+            if self.name == '':
+                self.name = distribution_object.dist_name
+
         self.run_model_object = run_model_object
+        self.error_covariance = error_covariance
         self.log_likelihood = log_likelihood
         self.kwargs_likelihood = kwargs_likelihood
-        self.error_covariance = error_covariance
+        self.distribution_object = distribution_object
 
-        # Define prior if it is given
-        if prior_name is not None:
-            self.prior = Distribution(dist_name=prior_name, copula=prior_copula)
-            self.kwargs_prior = {'params': prior_params, 'copula_params': prior_copula_params}
-        else:
-            self.prior = None
+        # Define prior if it is given, and set its parameters if provided
+        if prior is not None:
+            prior.update_params(params=prior_params, copula_params=prior_copula_params)
+            if not hasattr(prior, 'log_pdf'):
+                if not hasattr(prior, 'pdf'):
+                    raise AttributeError('prior should have a log_pdf or pdf method')
+                prior.log_pdf = lambda x: np.log(prior.pdf(x))
+        self.prior = prior
 
-    def evaluate_log_likelihood(self, data, params):
+    def evaluate_log_likelihood(self, params, data):
         """ Computes the log-likelihood of model
-            inputs: data, ndarray of dimension (ndata, )
-                    params, ndarray of dimension (nsamples, n_params) or (n_params,)
+            inputs: data
+                    params, ndarray of dimension (nsamples, nparams) or (nparams,)
             output: ndarray of size (nsamples, ), contains log likelihood of p(data | params[i,:])
         """
         params = check_input_dims(params)
-        if params.shape[1] != self.n_params:
+        if params.shape[1] != self.nparams:
             raise ValueError('Wrong dimensions in params.')
 
         # Case 1 - Forward model is given by RunModel
         if self.run_model_object is not None:
-            self.run_model_object.run(samples=params)
-            # TODO: review this when modification to RunModel is performed
-            model_outputs = self.run_model_object.qoi_list[-params.shape[0]:]
+            self.run_model_object.run(samples=params, append_samples=False)
+            model_outputs = self.run_model_object.qoi_list    # [-params.shape[0]:]
+
             # Case 1.a: Gaussian error model
             if self.log_likelihood is None:
                 results = np.array([multivariate_normal.logpdf(data, mean=np.array(outpt).reshape((-1,)),
                                                                cov=self.error_covariance) for outpt in model_outputs])
+
             # Case 1.b: likelihood is user-defined
             else:
                 results = self.log_likelihood(data=data, model_outputs=model_outputs, params=params,
@@ -143,53 +147,36 @@ class InferenceModel:
                 if results.shape != (params.shape[0],):
                     raise ValueError('Likelihood function should output a (nsamples, ) nd array of likelihood values.')
 
-        # Case 2.a - Learn parameters of a probability distribution pi. Data consists in iid sampled from pi.
-        elif isinstance(self.log_likelihood, str):
-            pi_dist = Distribution(dist_name=self.log_likelihood)
-            try:
-                results = np.array([np.sum(pi_dist.log_pdf(x=data, params=params_, **self.kwargs_likelihood))
-                                    for params_ in params])
-            except AttributeError:
-                try:
-                    results = np.array([
-                        np.sum(np.log(pi_dist.pdf(x=data, params=params_, **self.kwargs_likelihood)))
-                        for params_ in params])
-                except AttributeError:
-                    raise AttributeError('Input log_likelihood of InferenceModel provided as a string must point to a '
-                                         'Distribution with an existing log_pdf or pdf method.')
-        # Case 2.b - Log-likelihood fully user defined
-        else:
+        # Case 2 - Log likelihood is user defined
+        elif self.log_likelihood is not None:
             results = self.log_likelihood(data=data, params=params, **self.kwargs_likelihood)
             if not isinstance(results, np.ndarray):
                 results = np.array(results)
-            if results.shape != (params.shape[0], ):
+            if results.shape != (params.shape[0],):
                 raise ValueError('Likelihood function should output a (nsamples, ) nd array of likelihood values.')
+
+        # Case 3 - Learn parameters of a probability distribution pi. Data consists in iid sampled from pi.
+        else:
+            results = np.array([np.sum(self.distribution_object.log_pdf(x=data, params=params_))
+                                for params_ in params])
+
         return results
 
-    def evaluate_log_posterior(self, data, params):
+    def evaluate_log_posterior(self, params, data):
         """ Computes the log posterior (scaled): log[p(data|params) * p(params)]
-            inputs: data, ndarray
-                    params, ndarray of dimension (nsamples, n_params) or (n_params,)
-            output: ndarray of size (nsamples, ), contains log likelihood of p(data | params[i,:])
         Note: if the Inference model does not possess a prior, an uninformatic prior p(params)=1 is assumed
         """
-        params = check_input_dims(params)
-        if params.shape[1] != self.n_params:
-            raise ValueError('Wrong dimensions in params.')
+
+        # Compute log likelihood
+        log_likelihood_eval = self.evaluate_log_likelihood(params=params, data=data)
 
         # If the prior is not provided it is set to an non-informative prior p(theta)=1, log_posterior = log_likelihood
         if self.prior is None:
-            return self.evaluate_log_likelihood(data=data, params=params)
+            return log_likelihood_eval
 
         # Otherwise, use prior provided in the InferenceModel setup
-        try:
-            log_prior_eval = self.prior.log_pdf(x=params, **self.kwargs_prior)
-        except AttributeError:
-            try:
-                log_prior_eval = np.log(self.prior.pdf(x=params, **self.kwargs_prior))
-            except AttributeError:
-                raise AttributeError('The prior of InferenceModel must have a log_pdf or pdf method.')
-        log_likelihood_eval = self.evaluate_log_likelihood(data=data, params=params)
+        log_prior_eval = self.prior.log_pdf(x=params)
+
         return log_likelihood_eval + log_prior_eval
 
 
@@ -200,7 +187,7 @@ class InferenceModel:
 
 class MLEstimation:
 
-    def __init__(self, inference_model, data, verbose=False, iter_optim=1, x0=None, **kwargs):
+    def __init__(self, inference_model, data, verbose=False, iter_optim=None, x0=None, optimizer=None, **kwargs):
 
         """
         Perform maximum likelihood estimation, i.e., given some data y, compute the parameter vector that maximizes the
@@ -216,10 +203,10 @@ class MLEstimation:
 
             :param iter_optim: number of iterations for the maximization procedure
                 (each iteration starts at a random point)
-            :type iter_optim: an integer >= 1, default 1
+            :type iter_optim: an integer, default None
 
             :param x0: starting points for optimization
-            :type x0: 1D array (dimension, ) or 2D array (n_starts, dimension)
+            :type x0: 1D array (dimension, ) or 2D array (n_starts, dimension), default None
 
             :param kwargs: input arguments to scipy.optimize.minimize
             :type kwargs: dictionary
@@ -238,66 +225,78 @@ class MLEstimation:
         self.data = data
         self.kwargs_optim = kwargs
         self.verbose = verbose
-        if iter_optim >= 1 or x0 is not None:    # Run the optimization
+        if optimizer is None:
+            self.optimizer = minimize
+        elif callable(optimizer):
+            self.optimizer = optimizer
+        else:
+            raise TypeError('Input optimizer should be None or a callable.')
+        self.mle = None
+        self.max_log_like = None
+        if self.verbose:
+            print('Initialization of MLEstimation object completed.')
+
+        # Run the optimization procedure
+        if (iter_optim is not None) or (x0 is not None):
             self.run_estimation(iter_optim=iter_optim, x0=x0)
 
     def run_estimation(self, iter_optim=1, x0=None):
-        """ Run optimization, possibly starting at various points. """
-        if not isinstance(iter_optim, int) or iter_optim < 1:
-            raise TypeError('Input iter_optim should be a positive integer greater than 1.')
-        list_param = []
-        list_max_log_like = []
-        # Case 2a: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization.
-        use_fit_method = False
-        if isinstance(self.inference_model.log_likelihood, str):
-            pi_dist = Distribution(self.inference_model.log_likelihood)
-            try:
-                for i in range(iter_optim):
-                    list_param.append(pi_dist.fit(self.data))
-                    list_max_log_like.append(self.inference_model.evaluate_log_likelihood(
-                        data=self.data, params=self.mle[np.newaxis, :])[0])
-                use_fit_method = True
-                if self.verbose:
-                    print('Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name +
-                          ', using fit method.')
-            except AttributeError:
-                pass
+        """ Run optimization, starting at point x0 (or at a random value if x0 is None). """
+
+        # Case 3: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization.
+        if (self.inference_model.distribution_object is not None) and \
+                hasattr(self.inference_model.distribution_object, 'fit'):
+            if not (isinstance(iter_optim, int) and iter_optim >= 1):
+                raise ValueError('iter_optim should be an integer >= 1.')
+            if self.verbose:
+                print('Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name +
+                      ', using fit method.')
+            for _ in range(iter_optim):
+                mle_tmp = np.array(self.inference_model.distribution_object.fit(self.data))
+                max_log_like_tmp = self.inference_model.evaluate_log_likelihood(
+                    params=mle_tmp[np.newaxis, :], data=self.data)[0]
+                # Save result
+                if self.mle is None:
+                    self.mle = mle_tmp
+                    self.max_log_like = max_log_like_tmp
+                else:
+                    if max_log_like_tmp > self.max_log_like:
+                        self.mle = mle_tmp
+                        self.max_log_like = max_log_like_tmp
+
         # Other cases: just run optimization: use x0 if provided, otherwise sample from [0, 1] or bounds
-        if not use_fit_method:
+        else:
             if self.verbose:
                 print('Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name +
                       ', via optimization.')
             if x0 is None:
-                x0 = np.random.rand(iter_optim, self.inference_model.n_params)
+                if not (isinstance(iter_optim, int) and iter_optim >= 1):
+                    raise ValueError('iter_optim should be an integer >= 1.')
+                x0 = np.random.rand(iter_optim, self.inference_model.nparams)
                 if 'bounds' in self.kwargs_optim.keys():
                     bounds = np.array(self.kwargs_optim['bounds'])
                     x0 = bounds[:, 0].reshape((1, -1)) + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) * x0
             else:
-                x0 = x0.reshape((-1, self.inference_model.n_params))
-                iter_optim = x0.shape[1]
-            for i in range(iter_optim):
-                res = minimize(self.evaluate_neg_log_likelihood_data, x0, **self.kwargs_optim)
-                list_param.append(res.x)
-                list_max_log_like.append((-1) * res.fun)
-        # Get the maximum log likelihood and corresponding parameter from all the runs
-        idx_max = int(np.argmax(list_max_log_like))
-        param = np.array(list_param[idx_max])
-        max_log_like = list_max_log_like[idx_max]
-        if self.mle is None:
-            self.mle = param
-            self.max_log_like = max_log_like
-        else:
-            if max_log_like > self.max_log_like:
-                self.mle = param
-                self.max_log_like = max_log_like
+                x0 = np.atleast_2d(x0)
+                if x0.shape[1] != self.inference_model.nparams:
+                    raise ValueError('Wrong dimensions in x0')
+            for x0_ in x0:
+                res = self.optimizer(self.evaluate_neg_log_likelihood_data, x0_, **self.kwargs_optim)
+                mle_tmp = res.x
+                max_log_like_tmp = (-1) * res.fun
+                # Save result
+                if self.mle is None:
+                    self.mle = mle_tmp
+                    self.max_log_like = max_log_like_tmp
+                else:
+                    if max_log_like_tmp > self.max_log_like:
+                        self.mle = mle_tmp
+                        self.max_log_like = max_log_like_tmp
         if self.verbose:
-            print('Max likelihood estimation completed.')
-        return None
-
-
+            print('ML estimation completed.')
 
     def evaluate_neg_log_likelihood_data(self, one_param):
-        return -1 * self.inference_model.evaluate_log_likelihood(data=self.data, params=one_param.reshape((1, -1)))[0]
+        return -1 * self.inference_model.evaluate_log_likelihood(params=one_param.reshape((1, -1)), data=self.data)[0]
 
 
 ########################################################################################################################
@@ -307,8 +306,8 @@ class MLEstimation:
 
 class InfoModelSelection:
 
-    def __init__(self, candidate_models, data, criterion=None, verbose=False, sorted_outputs=True,
-                 **kwargs):
+    def __init__(self, candidate_models, data, criterion='AIC', verbose=False, sorted_outputs=False,
+                 iter_optim=None, x0=None, **kwargs):
 
         """
             Perform model selection using information theoretic criteria. Supported criteria are BIC, AIC (default), AICc.
@@ -343,55 +342,89 @@ class InfoModelSelection:
         if not isinstance(candidate_models, (list, tuple)) or not all(isinstance(model, InferenceModel)
                                                                       for model in candidate_models):
             raise TypeError('Input candidate_models must be a list of InferenceModel objects.')
+        self.nmodels = len(candidate_models)
+        self.candidate_models = candidate_models
         self.data = data
+        if criterion not in ['AIC', 'BIC', 'AICc']:
+            raise ValueError('Criterion should be AIC (default), BIC or AICc')
         self.criterion = criterion
+        self.verbose = verbose
+        self.sorted_outputs = sorted_outputs
 
+        # Instantiate the ML estimators
         if not all(isinstance(value, (list, tuple)) for (key, value) in kwargs.items()) or not all(
             len(value) == len(candidate_models) for (key, value) in kwargs.items()):
             raise TypeError('Extra inputs to model selection must be lists of length len(candidate_models)')
-
-        # First evaluate ML estimate for all models
-        fitted_params = []
-        criteria = []
-        penalty_terms = []
-        for i, inference_model in enumerate(candidate_models):
+        self.ml_estimators = []
+        for i, inference_model in enumerate(self.candidate_models):
             kwargs_i = dict([(key, value[i]) for (key, value) in kwargs.items()])
-            ml_estimator = MLEstimation(inference_model=inference_model, data=self.data, verbose=verbose,
-                                        **kwargs_i,
-                                        )
-            fitted_params.append(ml_estimator.mle)
-            max_log_like = ml_estimator.max_log_like
+            ml_estimator = MLEstimation(inference_model=inference_model, data=self.data, verbose=self.verbose,
+                                        x0=None, iter_optim=None, **kwargs_i, )
+            self.ml_estimators.append(ml_estimator)
 
-            k = inference_model.n_params
-            n = np.size(data)
-            if self.criterion == 'BIC':
-                criterion_value = -2 * max_log_like + np.log(n) * k
-                penalty_term = np.log(n) * k
-            elif self.criterion == 'AICc':
-                criterion_value = -2 * max_log_like + 2 * k + (2 * k ** 2 + 2 * k) / (n - k - 1)
-                penalty_term = 2 * k + (2 * k ** 2 + 2 * k) / (n - k - 1)
-            else: # default: do AIC
-                criterion_value = -2 * max_log_like + 2 * k
-                penalty_term = 2 * k
-            criteria.append(criterion_value)
-            penalty_terms.append(penalty_term)
+        # Initialize the outputs
+        self.criterion_values = [None] * self.nmodels
+        self.penalty_terms = [None] * self.nmodels
+        self.probabilities = [None] * self.nmodels
 
-        delta = np.array(criteria) - min(criteria)
-        prob = np.exp(-delta / 2)
-        probabilities = prob / np.sum(prob)
+        # Run the model selection procedure
+        if (iter_optim is not None) or (x0 is not None):
+            self.run_estimation(iter_optim=iter_optim, x0=x0)
 
-        # return outputs in sorted order, from most probable model to least probable model
-        if sorted_outputs:
-            sort_idx = list(np.argsort(np.array(criteria)))
-        # or in initial order
+    def run_estimation(self, iter_optim=1, x0=None):
+        # check x0, iter_optim
+        if isinstance(iter_optim, int) or iter_optim is None:
+            iter_optim = [iter_optim] * self.nmodels
+        if not (isinstance(iter_optim, list) and len(iter_optim) == self.nmodels):
+            raise ValueError('iter_optim should be an int or list of length nmodels')
+        if x0 is None:
+            x0 = [None] * self.nmodels
+        if not (isinstance(x0, list) and len(x0) == self.nmodels):
+            raise ValueError('x0 should be a list of length nmodels (or None).')
+
+        # Loop over all the models
+        for i, (inference_model, ml_estimator) in enumerate(zip(self.candidate_models, self.ml_estimators)):
+            # First evaluate ML estimate for all models, do several iterations if demanded
+            ml_estimator.run_estimation(iter_optim=iter_optim[i], x0=x0[i])
+
+            # Then minimize the criterion
+            self.criterion_values[i], self.penalty_terms[i] = self.compute_criterion(
+                inference_model=inference_model, max_log_like=ml_estimator.max_log_like, return_penalty=True)
+
+        # Compute probabilities from criterion values
+        self.probabilities = self.compute_probabilities(self.criterion_values)
+        # Return outputs in sorted order, from most probable model to least probable model
+        if self.sorted_outputs:
+            sort_idx = list(np.argsort(np.array(self.criterion_values)))
+
+            self.candidate_models = [self.candidate_models[i] for i in sort_idx]
+            self.ml_estimators = [self.ml_estimators[i] for i in sort_idx]
+            self.criterion_values = [self.criterion_values[i] for i in sort_idx]
+            self.penalty_terms = [self.penalty_terms[i] for i in sort_idx]
+            self.probabilities = [self.probabilities[i] for i in sort_idx]
+
+    def compute_criterion(self, inference_model, max_log_like, return_penalty=False):
+        """ Compute the criterion value, also returns the penalty term if asked for it """
+        n_params = inference_model.nparams
+        ndata = len(self.data)
+        if self.criterion == 'BIC':
+            penalty_term = np.log(ndata) * n_params
+        elif self.criterion == 'AICc':
+            penalty_term = 2 * n_params + (2 * n_params ** 2 + 2 * n_params) / (ndata - n_params - 1)
+        elif self.criterion == 'AIC':  # default
+            penalty_term = 2 * n_params
         else:
-            sort_idx = list(range(len(candidate_models)))
-        self.candidate_models = [candidate_models[i] for i in sort_idx]
-        self.model_names = [model.name for model in self.candidate_models]
-        self.mles = [fitted_params[i] for i in sort_idx]
-        self.criterion_values = [criteria[i] for i in sort_idx]
-        self.penalty_terms = [penalty_terms[i] for i in sort_idx]
-        self.probabilities = [probabilities[i] for i in sort_idx]
+            raise ValueError('Criterion should be AIC (default), BIC or AICc')
+        if return_penalty:
+            return -2 * max_log_like + penalty_term, penalty_term
+        return -2 * max_log_like
+
+    @staticmethod
+    def compute_probabilities(criterion_values):
+        """ Compute probability, proportional to exp(-criterion/2) """
+        delta = np.array(criterion_values) - min(criterion_values)
+        prob = np.exp(-delta / 2)
+        return prob / np.sum(prob)
 
 
 ########################################################################################################################
@@ -401,7 +434,8 @@ class InfoModelSelection:
 
 class BayesParameterEstimation:
 
-    def __init__(self, inference_model, data, sampling_method='MCMC', verbose=False, **kwargs):
+    def __init__(self, inference_model, data, sampling_method='MCMC', nsamples=None, nsamples_per_chain=None, nchains=1,
+                 verbose=False, **kwargs):
 
         """
             Generates samples from the posterior distribution, using MCMC or IS.
@@ -432,57 +466,58 @@ class BayesParameterEstimation:
             raise TypeError('Input inference_model should be of type InferenceModel')
         self.data = data
         self.sampling_method = sampling_method
-        if not 'nsamples' in kwargs.keys():
-            raise ValueError('Input nsamples must be provided.')
+        self.verbose = verbose
 
-        if self.sampling_method.lower() == 'mcmc':
-
-            if verbose:
-                print('Running Bayesian parameter estimation using MCMC for inference model '+self.inference_model.name)
-
+        if self.sampling_method == 'MCMC':
             # If the seed is not provided, sample one from the prior pdf of the parameters
             if 'seed' not in kwargs.keys() or kwargs['seed'] is None:
-                if self.inference_model.prior is None:
+                if self.inference_model.prior is None or not hasattr(self.inference_model.prior, 'rvs'):
                     raise NotImplementedError('A prior with a rvs method or a seed must be provided for MCMC.')
-                try:
-                    nchains = 1
-                    if 'nchains' in kwargs.keys() and kwargs['nchains'] is not None:
-                        nchains = kwargs['nchains']
+                else:
                     kwargs['seed'] = self.inference_model.prior.rvs(nsamples=nchains)
-                except AttributeError:
-                    raise NotImplementedError('A prior with a rvs method or a seed must be provided for MCMC.')
-
-            dimension = self.inference_model.n_params
-            z = MCMC(dimension=dimension, log_pdf_target=self.evaluate_log_posterior_data, **kwargs)
-
-            self.samples = z.samples
-            self.accept_ratio = z.accept_ratio
+            self.sampler = MCMC(dimension=self.inference_model.nparams, verbose=self.verbose,
+                                log_pdf_target=self.inference_model.evaluate_log_posterior, args_target=(self.data, ),
+                                **kwargs)
+            #self.samples = None
 
         elif self.sampling_method == 'IS':
-
-            if verbose:
-                print('Running Bayesian parameter estimation using IS for candidate model:', self.inference_model.name)
-
             # importance distribution is either given by the user, or it is set as the prior of the model
-            if 'pdf_proposal' not in kwargs or kwargs['pdf_proposal'] is None:
+            if 'proposal' not in kwargs or kwargs['proposal'] is None:
                 if self.inference_model.prior is None:
-                    raise NotImplementedError('A proposal density or a prior (with an rvs method) must be given.')
-                kwargs['pdf_proposal'] = self.inference_model.prior.dist_name
-                kwargs['pdf_proposal_params'] = self.inference_model.kwargs_prior['params']
+                    raise NotImplementedError('A proposal density or a prior must be provided.')
+                kwargs['proposal'] = self.inference_model.prior
 
-            z = IS(log_pdf_target=self.evaluate_log_posterior_data, **kwargs)
-
-            self.samples = z.samples
-            self.weights = z.weights
+            self.sampler = IS(log_pdf_target=self.inference_model.evaluate_log_posterior, args_target=(self.data, ),
+                              verbose=self.verbose, **kwargs)
+            #self.samples = None
+            #self.weights = None
 
         else:
             raise ValueError('Sampling_method should be either "MCMC" or "IS"')
 
-        if verbose:
-            print('Parameter estimation analysis completed!')
+        if self.verbose:
+            print('Initialization of sampling technique completed successfully!')
 
-    def evaluate_log_posterior_data(self, params):
-        return self.inference_model.evaluate_log_posterior(data=self.data, params=params)
+        # Run the analysis if a certain number of samples was provided
+        if (nsamples is not None) or (nsamples_per_chain is not None):
+            self.run_estimation(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
+
+    def run_estimation(self, nsamples=None, nsamples_per_chain=None):
+
+        if self.sampling_method == 'MCMC':
+            self.sampler.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
+            #self.samples = self.sampler.samples
+        elif self.sampling_method == 'IS':
+            if nsamples_per_chain is not None:
+                raise ValueError('nsamples_per_chain is not an appropriate input for IS.')
+            self.sampler.run(nsamples=nsamples)
+            #self.samples, self.weights = self.sampler.samples, self.sampler.weights
+
+        if self.verbose:
+            print('Running parameter estimation with ' + self.sampling_method + ' completed successfully!')
+
+    #def evaluate_log_posterior_data(self, params):
+    #    return self.inference_model.evaluate_log_posterior(params=params, data=self.data)
 
 ########################################################################################################################
 ########################################################################################################################
@@ -492,8 +527,9 @@ class BayesParameterEstimation:
 
 class BayesModelSelection:
 
-    def __init__(self, candidate_models, data, prior_probabilities=None, sorted_outputs=True,
-                 method_evidence_computation='harmonic_mean', verbose=False, **kwargs):
+    def __init__(self, candidate_models, data, prior_probabilities=None, sorted_outputs=False,
+                 method_evidence_computation='harmonic_mean', verbose=False, nsamples=None, nsamples_per_chain=None,
+                 **kwargs):
 
         """
             Perform model selection using Inference criteria.
@@ -532,65 +568,88 @@ class BayesModelSelection:
                                                                 for model in candidate_models)):
             raise TypeError('A list InferenceModel objects must be provided.')
         self.candidate_models = candidate_models
+        self.nmodels = len(candidate_models)
         self.data = data
-        if not all(isinstance(value, (list, tuple)) for (key, value) in kwargs.items()) or not all(
-            len(value) == len(candidate_models) for (key, value) in kwargs.items()):
-            print([(key, value) for (key, value) in kwargs.items()])
-            raise TypeError('Extra inputs to model selection must be lists of length len(candidate_models)')
-        self.kwargs = kwargs
         self.method_evidence_computation = method_evidence_computation
+        self.verbose = verbose
+        self.sorted_outputs = sorted_outputs
 
-        self.verbose=verbose
         if prior_probabilities is None:
-            self.prior_probabilities = [1/len(candidate_models) for _ in candidate_models]
+            self.prior_probabilities = [1. / len(candidate_models) for _ in candidate_models]
         else:
             self.prior_probabilities = prior_probabilities
 
-        model_probabilities, evidence, parameter_estimation = self.run_multi_bayes_ms()
+        # Instantiate the Bayesian parameter estimators (without running them)
+        self.bayes_estimators = []
+        if not all(isinstance(value, (list, tuple)) for (key, value) in kwargs.items()) or not all(
+                len(value) == len(candidate_models) for (key, value) in kwargs.items()):
+            raise TypeError('Extra inputs to model selection must be lists of length len(candidate_models)')
+        for i, inference_model in enumerate(self.candidate_models):
+            kwargs_i = dict([(key, value[i]) for (key, value) in kwargs.items()])
+            kwargs_i.update({'concat_chains_': True, 'save_log_pdf': True})
+            bayes_estimator = BayesParameterEstimation(
+                inference_model=inference_model, data=self.data, verbose=self.verbose, sampling_method='MCMC',
+                nsamples=None, nsamples_per_chain=None, **kwargs_i)
+            self.bayes_estimators.append(bayes_estimator)
 
-        # sort the models
-        if sorted_outputs:
-            sort_idx = list(np.argsort(np.array(model_probabilities)))[::-1]
-        else:
-            sort_idx = list(range(len(candidate_models)))
-        self.candidate_models = [candidate_models[i] for i in sort_idx]
-        self.model_names = [model.name for model in self.candidate_models]
-        self.mcmc_outputs = [parameter_estimation[i] for i in sort_idx]
-        self.probabilities = [model_probabilities[i] for i in sort_idx]
-        self.evidences = [evidence[i] for i in sort_idx]
+        # Initialize the outputs
+        self.evidences = [0.] * self.nmodels
+        self.probabilities = [0.] * self.nmodels
 
-    def run_multi_bayes_ms(self):
+        # Run the model selection procedure
+        if nsamples is not None or nsamples_per_chain is not None:
+            self.run_estimation(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
+    def run_estimation(self, nsamples=None, nsamples_per_chain=None):
+
+        if nsamples is not None and not (isinstance(nsamples, list) and len(nsamples) == self.nmodels
+                                         and all(isinstance(n, int) for n in nsamples)):
+            raise ValueError('nsamples should be a list of integers')
+        if nsamples_per_chain is not None and not (isinstance(nsamples_per_chain, list)
+                                                   and len(nsamples_per_chain) == self.nmodels
+                                                   and all(isinstance(n, int) for n in nsamples_per_chain)):
+            raise ValueError('nsamples_per_chain should be a list of integers')
         if self.verbose:
             print('Running Bayesian Model Selection.')
-        # Initialize the evidence or marginal likelihood
-        evi_value = np.zeros((len(self.candidate_models),))
-        scaled_evi = np.zeros_like(evi_value)
-        pe = []
         # Perform MCMC for all candidate models
-        for i, inference_model in enumerate(self.candidate_models):
-            kwargs_i = dict([(key, value[i]) for (key, value) in self.kwargs.items()])
+        for i, (inference_model, bayes_estimator) in enumerate(zip(self.candidate_models, self.bayes_estimators)):
             if self.verbose:
                 print('UQpy: Running MCMC for model '+inference_model.name)
-
-            pe_i = BayesParameterEstimation(data=self.data, inference_model=inference_model,
-                                            verbose=self.verbose, sampling_method='MCMC', **kwargs_i)
-            pe.append(pe_i)
-            if self.method_evidence_computation.lower() == 'harmonic_mean':
-                evi_value[i] = self.estimate_evidence_HM(pe_i.samples, inference_model)
+            if nsamples is not None:
+                bayes_estimator.run_estimation(nsamples=nsamples[i])
+            elif nsamples_per_chain is not None:
+                bayes_estimator.run_estimation(nsamples_per_chain=nsamples_per_chain[i])
             else:
-                raise ValueError('Currently, the only method supported for evidence computation in the Harmonic mean.')
-            scaled_evi[i] = evi_value[i] * self.prior_probabilities[i]
+                raise ValueError('Either nsamples or nsamples_per_chain should be non None')
+            self.evidences[i] = self.estimate_evidence(
+                inference_model=inference_model, posterior_samples=bayes_estimator.sampler.samples,
+                log_posterior_values=bayes_estimator.sampler.log_pdf_values)
 
-        model_prob = scaled_evi / np.sum(scaled_evi)
+        # Compute posterior probabilities
+        self.probabilities = self.compute_posterior_probabilities(evidence_values=self.evidences)
+
+        # sort the models
+        if self.sorted_outputs:
+            sort_idx = list(np.argsort(np.array(self.probabilities)))[::-1]
+
+            self.candidate_models = [self.candidate_models[i] for i in sort_idx]
+            self.probabilities = [self.probabilities[i] for i in sort_idx]
+            self.evidences = [self.evidences[i] for i in sort_idx]
+
         if self.verbose:
             print('Bayesian Model Selection analysis completed!')
 
-        return model_prob, evi_value, pe
-
-    def estimate_evidence_HM(self, samples, inference_model):
-        # The method used here is the harmonic mean
-        likelihood_given_sample = [inference_model.evaluate_log_likelihood(self.data, x)
-                                   for x in samples[int(0.5 * len(samples)):]]
-        temp = np.mean([1/np.exp(x) for x in likelihood_given_sample])
+    def estimate_evidence(self, inference_model, posterior_samples, log_posterior_values):
+        """ Estimate evidence from MCMC samples, for one model """
+        if self.method_evidence_computation.lower() == 'harmonic_mean':
+            #samples[int(0.5 * len(samples)):]
+            log_likelihood_values = log_posterior_values - inference_model.prior.log_pdf(x=posterior_samples)
+            temp = np.mean(1./np.exp(log_likelihood_values))
+        else:
+            raise ValueError('Only the harmonic mean method is currently supported')
         return 1/temp
+
+    def compute_posterior_probabilities(self, evidence_values):
+        """ Compute the posterior probabilities, knowing the values of the evidence """
+        scaled_evidences = [evi * prior_prob for (evi, prior_prob) in zip(evidence_values, self.prior_probabilities)]
+        return scaled_evidences / np.sum(scaled_evidences)

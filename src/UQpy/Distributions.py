@@ -246,7 +246,7 @@ def define_moments(self, params=None):
     if isinstance(self.dist_name, str):
         return subdistribution_moments(dist_name=self.dist_name, params=self.params)
     elif isinstance(self.dist_name, list):
-        if len(params) != len(self.dist_name):
+        if len(self.params) != len(self.dist_name):
             raise ValueError('UQpy error: Inconsistent dimensions')
         if not hasattr(self, 'copula'):
             mean, var, skew, kurt = [0]*len(self.dist_name), [0]*len(self.dist_name), [0]*len(self.dist_name), \
@@ -336,10 +336,10 @@ def exist_method(method, dist_name, has_copula):
 # Helper functions for subdistributions, i.e., distributions where dist_name is only a string
 def subdistribution_exist_method(dist_name, method):
     # Univariate scipy distributions have all methods
-    if dist_name in list_univariates:
+    if dist_name.lower() in list_univariates:
         return True
     # Multivariate scipy distributions have pdf, logpdf, cdf and rvs
-    elif dist_name in list_multivariates:
+    elif dist_name.lower() in list_multivariates:
         if method in ['pdf', 'log_pdf', 'cdf', 'rvs']:
             return True
         else:
@@ -352,10 +352,10 @@ def subdistribution_exist_method(dist_name, method):
 
 def subdistribution_pdf(dist_name, x, params):
     # If it is a supported scipy distribution:
-    if dist_name in list_univariates:
+    if dist_name.lower() in list_univariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.pdf(x[:, 0], **kwargs)
-    elif dist_name in list_multivariates:
+    elif dist_name.lower() in list_multivariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.pdf(x, **kwargs)
     # Otherwise it must be a file
@@ -370,10 +370,10 @@ def subdistribution_pdf(dist_name, x, params):
 
 def subdistribution_log_pdf(dist_name, x, params):
     # If it is a supported scipy distribution:
-    if dist_name in list_univariates:
+    if dist_name.lower() in list_univariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.logpdf(x[:, 0], **kwargs)
-    elif dist_name in list_multivariates:
+    elif dist_name.lower() in list_multivariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.logpdf(x, **kwargs)
     # Otherwise it must be a file
@@ -388,10 +388,10 @@ def subdistribution_log_pdf(dist_name, x, params):
 
 def subdistribution_cdf(dist_name, x, params):
     # If it is a supported scipy distribution:
-    if dist_name in list_univariates:
+    if dist_name.lower() in list_univariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.cdf(x=x[:, 0], **kwargs)
-    elif dist_name in list_multivariates:
+    elif dist_name.lower() in list_multivariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.cdf(x=x, **kwargs)
     # Otherwise it must be a file
@@ -406,7 +406,7 @@ def subdistribution_cdf(dist_name, x, params):
 
 def subdistribution_rvs(dist_name, nsamples, params):
     # If it is a supported scipy distribution:
-    if dist_name in (list_univariates + list_multivariates):
+    if dist_name.lower() in (list_univariates + list_multivariates):
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         rvs = d.rvs(size=nsamples, **kwargs)
     # Otherwise it must be a file
@@ -426,10 +426,10 @@ def subdistribution_rvs(dist_name, nsamples, params):
 
 def subdistribution_fit(dist_name, x):
     # If it is a supported scipy distribution:
-    if dist_name in list_univariates:
+    if dist_name.lower() in list_univariates:
         d, kwargs = scipy_distributions(dist_name=dist_name)
         return d.fit(x[:, 0])
-    elif dist_name in list_multivariates:
+    elif dist_name.lower() in list_multivariates:
         d, kwargs = scipy_distributions(dist_name=dist_name)
         return d.fit(x)
     # Otherwise it must be a file
@@ -441,9 +441,15 @@ def subdistribution_fit(dist_name, x):
 
 def subdistribution_moments(dist_name, params):
     # If it is a supported scipy distribution:
-    if dist_name in list_univariates:
+    if dist_name.lower() in list_univariates:
+        y = [np.nan, np.nan, np.nan, np.nan]
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
-        return d.stats(moments='mvsk', **kwargs)
+        mean, var, skew, kurt = d.stats(moments='mvsk', **kwargs)
+        y[0] = mean
+        y[1] = var
+        y[2] = skew
+        y[3] = kurt
+        return np.array(y)
     # Otherwise it must be a file
     else:
         custom_dist = importlib.import_module(dist_name)
@@ -453,10 +459,10 @@ def subdistribution_moments(dist_name, params):
 
 def subdistribution_icdf(dist_name, x, params):
     # If it is a supported scipy distribution:
-    if dist_name in list_univariates:
+    if dist_name.lower() in list_univariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.ppf(x[:, 0], **kwargs)
-    elif dist_name in list_multivariates:
+    elif dist_name.lower() in list_multivariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.ppf(x, **kwargs)
     # Otherwise it must be a file
@@ -491,9 +497,9 @@ def scipy_distributions(dist_name, params=None):
             kwargs = {'a': params[0], 'b': params[1]}
         return stats.beta, kwargs
 
-    elif dist_name.lower() == 'gumbel_r':
+    elif dist_name.lower() == 'genextreme':
         if params is not None:
-            kwargs = {'c': 0, 'loc': params[0], 'scale': params[1]}
+            kwargs = {'c': params[0], 'loc': params[0], 'scale': params[1]}
         return stats.genextreme, kwargs
 
     elif dist_name.lower() == 'chisquare':
@@ -517,7 +523,7 @@ def scipy_distributions(dist_name, params=None):
     elif dist_name.lower() == 'cauchy':
         return stats.cauchy, kwargs
 
-    elif dist_name.lower() == 'inv_gauss':
+    elif dist_name.lower() == 'inverse gauss':
         if params is not None:
             kwargs = {'mu': params[0], 'loc': params[1], 'scale': params[2]}
         return stats.invgauss, kwargs

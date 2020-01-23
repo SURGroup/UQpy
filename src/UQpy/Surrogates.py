@@ -520,7 +520,7 @@ class Krig:
 
         if self.bounds is None:
             if self.dim is None:
-                self.bounds = [[0.001, 10**7]]*self.corr_model_params.shape[0]
+                self.bounds = [[0.001, 10**7]]*self.samples.shape[1]
             else:
                 self.bounds = [[0.001, 10 ** 7]] * self.dim
 
