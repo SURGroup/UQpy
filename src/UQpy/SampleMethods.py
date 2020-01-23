@@ -2390,6 +2390,12 @@ class MCMC:
         self.dimension, self.nburn, self.jump = dimension, nburn, jump
         self.seed = self.preprocess_seed(seed, dim=self.dimension)    # check type and assign default [0., ... 0.]
         self.nchains = self.seed.shape[0]
+
+        ##### ADDED MDS 1/21/20
+        self.log_pdf_target = log_pdf_target
+        self.pdf_target = pdf_target
+        self.args_target = args_target
+
         # Check target pdf
         self.evaluate_log_target, self.evaluate_log_target_marginals = self.preprocess_target(
             pdf=pdf_target, log_pdf=log_pdf_target, args=args_target)
