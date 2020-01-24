@@ -199,23 +199,26 @@ class SubsetSimulation:
 
                 # Run the model at each of the new sample points
                 x_run = self.mcmc_objects[step].samples[[x+(i+1)*n_keep for x in ind_false], :]
-                self.runmodel_object.run(samples=x_run)
+                if x_run.size != 0:
+                    self.runmodel_object.run(samples=x_run)
 
-                # Temporarily save the latest model runs
-                g_temp = np.asarray(self.runmodel_object.qoi_list[-len(x_run):])
+                    # Temporarily save the latest model runs
+                    g_temp = np.asarray(self.runmodel_object.qoi_list[-len(x_run):])
 
-                # Accept the states with g <= g_level
-                ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
-                for ii in ind_accept:
-                    self.samples[step][(i + 1) * n_keep + ind_false[ii]] = x_run[ii]
-                    self.g[step][(i + 1) * n_keep + ind_false[ii]] = g_temp[ii]
+                    # Accept the states with g <= g_level
+                    ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
+                    if x_run.size == 0:
+                        print('hmmm')
+                    for ii in ind_accept:
+                        self.samples[step][(i + 1) * n_keep + ind_false[ii]] = x_run[ii]
+                        self.g[step][(i + 1) * n_keep + ind_false[ii]] = g_temp[ii]
 
-                # Reject the states with g > g_level
-                ind_reject = np.where(g_temp[:, 0] > self.g_level[step - 1])[0]
-                for ii in ind_reject:
-                    self.samples[step][(i + 1) * n_keep + ind_false[ii]] = \
-                        self.samples[step][i * n_keep + ind_false[ii]]
-                    self.g[step][(i + 1) * n_keep + ind_false[ii]] = self.g[step][i * n_keep + ind_false[ii]]
+                    # Reject the states with g > g_level
+                    ind_reject = np.where(g_temp[:, 0] > self.g_level[step - 1])[0]
+                    for ii in ind_reject:
+                        self.samples[step][(i + 1) * n_keep + ind_false[ii]] = \
+                            self.samples[step][i * n_keep + ind_false[ii]]
+                        self.g[step][(i + 1) * n_keep + ind_false[ii]] = self.g[step][i * n_keep + ind_false[ii]]
 
             g_ind = np.argsort(self.g[step][:, 0])
             self.g_level.append(self.g[step][g_ind[n_keep]])
