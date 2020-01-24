@@ -24,6 +24,9 @@ import sys
 import os
 from scipy.special import gamma
 from scipy.stats import chi2, norm
+from scipy.spatial import Delaunay
+from scipy.spatial import ConvexHull
+from fbpca import pca
 
 
 # This function is for parallel execution of a Python model
@@ -41,7 +44,6 @@ def _run_parallel_python(model_script, model_object_name, sample):
 
 
 def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
-
     """
         Description:
 
@@ -97,7 +99,6 @@ def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
 
 
 def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
-
     """
         Description:
 
@@ -153,7 +154,6 @@ def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
 
 
 def run_corr(samples, corr):
-
     """
         Description:
 
@@ -182,7 +182,6 @@ def run_corr(samples, corr):
 
 
 def run_decorr(samples, corr):
-
     """
         Description:
 
@@ -213,7 +212,6 @@ def run_decorr(samples, corr):
 
 
 def correlation_distortion(marginal, params, rho_norm):
-
     """
         Description:
 
@@ -285,7 +283,6 @@ def correlation_distortion(marginal, params, rho_norm):
 
 
 def itam(marginal, params, corr, beta, thresh1, thresh2):
-
     """
         Description:
 
@@ -337,14 +334,14 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
     iter_ = 0
 
     print("UQpy: Initializing Iterative Translation Approximation Method (ITAM)")
-    while iter_ < max_iter and error1 > thresh1 and abs(error1-error0)/error0 > thresh2:
+    while iter_ < max_iter and error1 > thresh1 and abs(error1 - error0) / error0 > thresh2:
         error0 = error1
         corr0 = correlation_distortion(marginal, params, corr_norm0)
         error1 = np.linalg.norm(corr - corr0)
 
         max_ratio = np.amax(np.ones((len(corr), len(corr))) / abs(corr_norm0))
 
-        corr_norm = np.nan_to_num((corr / corr0)**beta * corr_norm0)
+        corr_norm = np.nan_to_num((corr / corr0) ** beta * corr_norm0)
 
         # Do not allow off-diagonal correlations to equal or exceed one
         corr_norm[corr_norm < -1.0] = (max_ratio + 1) / 2 * corr_norm0[corr_norm < -1.0]
@@ -365,7 +362,6 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
 
 
 def bi_variate_normal_pdf(x1, x2, rho):
-
     """
 
         Description:
@@ -385,13 +381,12 @@ def bi_variate_normal_pdf(x1, x2, rho):
         Output:
 
     """
-    return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
-            np.exp(-1/(2*(1-rho**2)) *
-                   (x1**2 - 2 * rho * x1 * x2 + x2**2)))
+    return (1 / (2 * np.pi * np.sqrt(1 - rho ** 2)) *
+            np.exp(-1 / (2 * (1 - rho ** 2)) *
+                   (x1 ** 2 - 2 * rho * x1 * x2 + x2 ** 2)))
 
 
 def _get_a_plus(a):
-
     """
         Description:
 
@@ -413,7 +408,6 @@ def _get_a_plus(a):
 
 
 def _get_ps(a, w=None):
-
     """
         Description:
 
@@ -427,7 +421,6 @@ def _get_ps(a, w=None):
 
 
 def _get_pu(a, w=None):
-
     """
         Description:
 
@@ -441,7 +434,6 @@ def _get_pu(a, w=None):
 
 
 def nearest_psd(a, nit=10):
-
     """
         Description:
             A function to compute the nearest positive semi definite matrix of a given matrix
@@ -464,7 +456,6 @@ def nearest_psd(a, nit=10):
     delta_s = 0
     y_k = a.copy()
     for k in range(nit):
-
         r_k = y_k - delta_s
         x_k = _get_ps(r_k, w=w)
         delta_s = x_k - r_k
@@ -474,7 +465,6 @@ def nearest_psd(a, nit=10):
 
 
 def nearest_pd(a):
-
     """
         Description:
 
@@ -519,14 +509,13 @@ def nearest_pd(a):
     k = 1
     while not is_pd(a3):
         min_eig = np.min(np.real(np.linalg.eigvals(a3)))
-        a3 += np.eye(a.shape[0]) * (-min_eig * k**2 + spacing)
+        a3 += np.eye(a.shape[0]) * (-min_eig * k ** 2 + spacing)
         k += 1
 
     return a3
 
 
 def is_pd(b):
-
     """
         Description:
 
@@ -546,7 +535,6 @@ def is_pd(b):
 
 
 def estimate_psd(samples, nt, t):
-
     """
         Description: A function to estimate the Power Spectrum of a stochastic process given an ensemble of samples
 
@@ -573,7 +561,6 @@ def estimate_psd(samples, nt, t):
 
 
 def S_to_R(S, w, t):
-
     """
         Description:
 
@@ -601,7 +588,6 @@ def S_to_R(S, w, t):
 
 
 def R_to_S(R, w, t):
-
     """
         Description: A function to transform the autocorrelation function to a power spectrum
 
@@ -629,7 +615,6 @@ def R_to_S(R, w, t):
 
 
 def R_to_r(R):
-
     """
         Description: A function to scale down the autocorrelation function to a correlation function
 
@@ -641,11 +626,11 @@ def R_to_r(R):
             :rtype: ndarray
 
     """
-    r = R/R[0]
+    r = R / R[0]
     return r
 
 
-def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_object_name=None, input_template=None,
+def gradient(sample=None, dimension=None, eps=None, model_script=None, model_object_name=None, input_template=None,
              var_names=None,
              output_script=None, output_object_name=None, ntasks=None, cores_per_task=None, nodes=None, resume=None,
              verbose=None, model_dir=None, cluster=None, order=None):
@@ -718,10 +703,10 @@ def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_ob
         raise ValueError('Exit code: Provide type of derivatives: first, second or mixed.')
 
     if dimension is None:
-     raise ValueError('Error: Dimension must be defined')
+        raise ValueError('Error: Dimension must be defined')
 
     if eps is None:
-        eps = [0.1]*dimension
+        eps = [0.1] * dimension
     elif isinstance(eps, float):
         eps = [eps] * dimension
     elif isinstance(eps, list):
@@ -739,21 +724,21 @@ def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_ob
             x_1i_j = np.array(sample)
             x_1i_j[0, i] -= eps[i]
 
-            g0 = RunModel(samples=x_i1_j,  model_script=model_script,
+            g0 = RunModel(samples=x_i1_j, model_script=model_script,
                           model_object_name=model_object_name,
                           input_template=input_template, var_names=var_names, output_script=output_script,
                           output_object_name=output_object_name,
                           ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
                           verbose=verbose, model_dir=model_dir, cluster=cluster)
 
-            g1 = RunModel(samples=x_1i_j,  model_script=model_script,
+            g1 = RunModel(samples=x_1i_j, model_script=model_script,
                           model_object_name=model_object_name,
                           input_template=input_template, var_names=var_names, output_script=output_script,
                           output_object_name=output_object_name,
                           ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
                           verbose=verbose, model_dir=model_dir, cluster=cluster)
 
-            du_dj[i] = (g0.qoi_list[0] - g1.qoi_list[0])/(2*eps[i])
+            du_dj[i] = (g0.qoi_list[0] - g1.qoi_list[0]) / (2 * eps[i])
 
             if order == 'second':
                 g = RunModel(samples=sample, model_script=model_script,
@@ -763,7 +748,7 @@ def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_ob
                              ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
                              verbose=verbose, model_dir=model_dir, cluster=cluster)
 
-                d2u_dj[i] = (g0.qoi_list[0] - 2 * g.qoi_list[0] + g1.qoi_list[0]) / (eps[i]**2)
+                d2u_dj[i] = (g0.qoi_list[0] - 2 * g.qoi_list[0] + g1.qoi_list[0]) / (eps[i] ** 2)
 
         return np.vstack([du_dj, d2u_dj])
 
@@ -789,28 +774,28 @@ def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_ob
             x_1i_1j[0, i[0]] -= eps[i[0]]
             x_1i_1j[0, i[1]] -= eps[i[1]]
 
-            g0 = RunModel(samples=x_i1_j1,  model_script=model_script,
+            g0 = RunModel(samples=x_i1_j1, model_script=model_script,
                           model_object_name=model_object_name,
                           input_template=input_template, var_names=var_names, output_script=output_script,
                           output_object_name=output_object_name,
                           ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
                           verbose=verbose, model_dir=model_dir, cluster=cluster)
 
-            g1 = RunModel(samples=x_i1_1j,  model_script=model_script,
+            g1 = RunModel(samples=x_i1_1j, model_script=model_script,
                           model_object_name=model_object_name,
                           input_template=input_template, var_names=var_names, output_script=output_script,
                           output_object_name=output_object_name,
                           ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
                           verbose=verbose, model_dir=model_dir, cluster=cluster)
 
-            g2 = RunModel(samples=x_1i_j1,  model_script=model_script,
+            g2 = RunModel(samples=x_1i_j1, model_script=model_script,
                           model_object_name=model_object_name,
                           input_template=input_template, var_names=var_names, output_script=output_script,
                           output_object_name=output_object_name,
                           ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
                           verbose=verbose, model_dir=model_dir, cluster=cluster)
 
-            g3 = RunModel(samples=x_1i_1j,  model_script=model_script,
+            g3 = RunModel(samples=x_1i_1j, model_script=model_script,
                           model_object_name=model_object_name,
                           input_template=input_template, var_names=var_names, output_script=output_script,
                           output_object_name=output_object_name,
@@ -818,13 +803,12 @@ def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_ob
                           verbose=verbose, model_dir=model_dir, cluster=cluster)
 
             d2u_dij.append((g0.qoi_list[0] - g1.qoi_list[0] - g2.qoi_list[0] + g3.qoi_list[0])
-                           / (4 * eps[i[0]]*eps[i[1]]))
+                           / (4 * eps[i[0]] * eps[i[1]]))
 
         return np.array(d2u_dij)
 
 
 def eval_hessian(dimension, mixed_der, der):
-
     """
     Calculate the hessian matrix with finite differences
     Parameters:
@@ -840,9 +824,9 @@ def eval_hessian(dimension, mixed_der, der):
         add_ += 1
     return hessian
 
+
 def diagnostics(sampling_method, sampling_outputs=None, samples=None, weights=None,
                 figsize=None, eps_ESS=0.05, alpha_ESS=0.05):
-
     """
          Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
 
@@ -884,16 +868,16 @@ def diagnostics(sampling_method, sampling_outputs=None, samples=None, weights=No
         if sampling_outputs is not None:
             weights = sampling_outputs.weights
         print('Diagnostics for Importance Sampling \n')
-        effective_sample_size = 1/np.sum(weights**2, axis=0)
+        effective_sample_size = 1 / np.sum(weights ** 2, axis=0)
         print('Effective sample size is ne={}, out of a total number of samples={} \n'.
-              format(effective_sample_size,np.size(weights)))
+              format(effective_sample_size, np.size(weights)))
         print('max_weight = {}, min_weight = {} \n'.format(max(weights), min(weights)))
 
         # Output plots
         if figsize is None:
             figsize = (8, 3)
         fig, ax = plt.subplots(figsize=figsize)
-        ax.scatter(weights, np.zeros((np.size(weights), )), s=weights*300, marker='o')
+        ax.scatter(weights, np.zeros((np.size(weights),)), s=weights * 300, marker='o')
         ax.set_xlabel('weights')
         ax.set_title('Normalized weights out of importance sampling')
         plt.show(fig)
@@ -914,43 +898,43 @@ def diagnostics(sampling_method, sampling_outputs=None, samples=None, weights=No
         eps = eps_ESS
         alpha = alpha_ESS
 
-        bn = np.ceil(nsamples**(1/2)) # nb of samples per bin
-        an = int(np.ceil(nsamples/bn)) # nb of bins, for computation of
+        bn = np.ceil(nsamples ** (1 / 2))  # nb of samples per bin
+        an = int(np.ceil(nsamples / bn))  # nb of bins, for computation of
         idx = np.array_split(np.arange(nsamples), an)
 
         means_subdivisions = np.empty((an, samples.shape[1]))
         for i, idx_i in enumerate(idx):
             x_sub = samples[idx_i, :]
-            means_subdivisions[i,:] = np.mean(x_sub, axis=0)
+            means_subdivisions[i, :] = np.mean(x_sub, axis=0)
         Omega = np.cov(samples.T)
         Sigma = np.cov(means_subdivisions.T)
-        joint_ESS = nsamples*np.linalg.det(Omega)**(1/nparams)/np.linalg.det(Sigma)**(1/nparams)
+        joint_ESS = nsamples * np.linalg.det(Omega) ** (1 / nparams) / np.linalg.det(Sigma) ** (1 / nparams)
         chi2_value = chi2.ppf(1 - alpha, df=nparams)
         min_joint_ESS = 2 ** (2 / nparams) * np.pi / (nparams * gamma(nparams / 2)) ** (
-                    2 / nparams) * chi2_value / eps ** 2
-        marginal_ESS = np.empty((nparams, ))
+                2 / nparams) * chi2_value / eps ** 2
+        marginal_ESS = np.empty((nparams,))
         min_marginal_ESS = np.empty((nparams,))
         for j in range(nparams):
-            marginal_ESS[j] = nsamples * Omega[j,j]/Sigma[j,j]
-            min_marginal_ESS[j] = 4 * norm.ppf(alpha/2)**2 / eps**2
+            marginal_ESS[j] = nsamples * Omega[j, j] / Sigma[j, j]
+            min_marginal_ESS[j] = 4 * norm.ppf(alpha / 2) ** 2 / eps ** 2
 
         print('Univariate Effective Sample Size in each dimension:')
         for j in range(nparams):
             print('Parameter # {}: ESS = {}, minimum ESS recommended = {}'.
-                  format(j+1, marginal_ESS[j], min_marginal_ESS[j]))
+                  format(j + 1, marginal_ESS[j], min_marginal_ESS[j]))
         print('\nMultivariate Effective Sample Size:')
         print('Multivariate ESS = {}, minimum ESS recommended = {}'.format(joint_ESS, min_joint_ESS))
 
         # Output plots
         if figsize is None:
-            figsize = (20,4*nparams)
+            figsize = (20, 4 * nparams)
         fig, ax = plt.subplots(nrows=nparams, ncols=3, figsize=figsize)
         for j in range(samples.shape[1]):
-            ax[j, 0].plot(np.arange(nsamples), samples[:,j])
-            ax[j, 0].set_title('chain - parameter # {}'.format(j+1))
-            ax[j, 1].plot(np.arange(nsamples), np.cumsum(samples[:,j])/np.arange(nsamples))
+            ax[j, 0].plot(np.arange(nsamples), samples[:, j])
+            ax[j, 0].set_title('chain - parameter # {}'.format(j + 1))
+            ax[j, 1].plot(np.arange(nsamples), np.cumsum(samples[:, j]) / np.arange(nsamples))
             ax[j, 1].set_title('parameter convergence')
-            ax[j, 2].acorr(samples[:,j]-np.mean(samples[:,j]), maxlags = 50, normed=True)
+            ax[j, 2].acorr(samples[:, j] - np.mean(samples[:, j]), maxlags=50, normed=True)
             ax[j, 2].set_title('correlation between samples')
         plt.show(fig)
 
@@ -985,3 +969,246 @@ def suppress_stdout():
             yield
         finally:
             sys.stdout = old_stdout
+
+
+# =================== GRASSMANN MANIFOLD VARIATION =====================
+
+def MeshGen(samples):
+    tri = Delaunay(samples)
+    indices = tri.simplices
+    coordinates = samples[indices]
+    nelem = np.shape(samples[tri.simplices])[0]  # number of elements
+    num_nodes_elem = np.shape(samples[tri.simplices])[1]  # number of coordinates per element
+    ndim = np.shape(samples[tri.simplices])[2]  # dimension of each coordinate
+    elem_neighbors = tri.neighbors
+
+    # MeshProperties = [ndim, num_nodes_elem, nelem, indices, coordinates, elem_neighbors]
+
+    return ndim, num_nodes_elem, nelem, indices, coordinates, elem_neighbors
+
+
+def SampleSimplex(X):
+    # X is a list of coordinates
+    nd = np.shape(X)[0] - 1
+    num_nodes = np.shape(X)[0]
+    rnum = np.random.rand(nd)
+    accum = np.zeros(np.shape(X)[1])
+    for ii in range(1, num_nodes):
+        D = X[ii] - X[ii - 1]
+        prod = 1.0
+        for jj in range(1, ii + 1):
+            prod = prod * (rnum[nd - jj] ** (1 / (nd - jj + 1)))
+        accum += prod * D
+
+    accum = accum + X[0]
+    return accum
+
+
+# Grassmann: svd
+def svd(matrix, value):
+    ui, si, vi = np.linalg.svd(matrix, full_matrices=True)  # Compute the SVD of matrix
+    si = np.diag(si)  # Transform the array si into a diagonal matrix containing the singular values
+    vi = vi.T  # Transpose of vi
+
+    # Select the size of the matrices u, s, and v
+    # either based on the rank of (si) or on a user defined value
+    if value == 0:
+        rank = np.linalg.matrix_rank(si)  # increase the number of basis up to rank
+        u = ui[:, :rank]
+        s = si[:rank, :rank]
+        v = vi[:, :rank]
+
+    else:
+        u = ui[:, :value]
+        s = si[:value, :value]
+        v = vi[:, :value]
+
+    return u, s, v
+
+
+def check_arguments(argv, min_num_matrix, ortho):
+    # Check the minimum number of matrices involved in the operations
+    if type(min_num_matrix) != int:
+        raise ValueError('The minimum number of matrices MUST be an integer number!')
+    elif min_num_matrix < 1:
+        raise ValueError('Number of arguments MUST be larger than or equal to one!')
+
+    # Check if the variable controlling the orthogonalization is boolean
+    if type(ortho) != bool:
+        raise ValueError('The last argument MUST be a boolean!')
+
+    nargv = len(argv)
+
+    # If the number of provided inputs are zero exit the code
+    if nargv == 0:
+        raise ValueError('Missing input arguments!')
+
+    # Else if the number of arguments is equal to 1 
+    elif nargv == 1:
+
+        # Check if the number of expected matrices are higher than or equal to 2
+        args = argv[0]
+        nargs = len(args)
+      
+        if np.shape(args)[0] == 1 or len(np.shape(args)) == 2:
+            nargs = 1
+        # if it is lower than two exit the code, otherwise store them in a list
+        if nargs < min_num_matrix:
+            raise ValueError('The number of points must be higher than:', min_num_matrix)
+
+        else:
+            inputs = []
+            if nargs == 1:
+                CheckMatrix(args)
+                inputs = [args]
+            else:
+
+                # Loop over all elements
+                for i in range(nargs):
+                    # Check the input array for consistency.
+                    # CheckMatrix(args[i])
+                    
+                    # Verify the type of the input variables and store in a list
+                    inputs.append(TestType(args[i], ortho))
+
+    else:
+
+        nargs = nargv
+        # Each argument MUST be a matrix
+        inputs = []
+        for i in range(nargv):
+            # Check the input array for consistency.
+            CheckMatrix(argv[i])
+
+            # Verify the type of the input variables and store in a list
+            inputs.append(TestType(argv[i], ortho))
+
+    return inputs, nargs
+
+
+def TestType(X, ortho):
+    if not isinstance(X, (list, np.ndarray)):
+        raise TypeError('Elements of input arguments should be provided either as list or array')
+    elif type(X) == list:
+        Y = np.array(X)
+    else:
+        Y = X
+
+    if ortho:
+        Ytest = np.dot(Y.T, Y)
+        if not np.array_equal(Ytest, np.identity(np.shape(Ytest)[0])):
+            # print('Orthogonalizing an input matrix.')
+            Y, unused = np.linalg.qr(Y)
+
+    return Y
+
+
+def CheckMatrix(M):
+    Mshape = np.shape(M)
+    # if len(Mshape) != 2:
+        # raise TypeError('Exit code: A matrix is expected!')
+
+    # if Mshape[0] < 2 or Mshape[1] < 2:
+        # raise TypeError('Exit code: A matrix is expected!')
+
+
+def inelement(sample, nodes):
+    # Test if the sample lies within the element
+    if not isinstance(nodes, Delaunay):
+        nodes = Delaunay(nodes)
+
+    isinside = nodes.find_simplex(sample) >= 0
+    return isinside
+
+
+def estimate_volume(nodes):
+    """
+    estimate_volume: estimate the volume of the simplex and sub-simplexes.
+    nodes: list or ndarray with the coordinates of the nodes of the element.
+    """
+
+    node_0 = nodes[0]
+    num_dimensions = len(node_0)
+    Vsub = (nodes - node_0)[1:]
+    Dk = np.linalg.det(Vsub)
+    d_factorial = math.factorial(num_dimensions)
+    volume = abs(Dk) / d_factorial
+
+    return volume
+
+def nn_coord(x, k):
+    
+    if isinstance(x, list):
+        x = np.array(x)
+        
+    dim = np.shape(x)
+    
+    if len(dim) is not 1:
+        raise ValueError('k MUST be a vector.')
+    
+    if not isinstance(k, int):
+        raise TypeError('k MUST be integer.')
+
+    if k<1:
+        raise ValueError('k MUST be larger than or equal to 1.')
+    
+    #idx = x.argsort()[::-1][:k]
+    idx = x.argsort()[:len(x)-k]
+    #idx = idx[0:k]
+    #idx = idx[k+1:]
+    return idx
+    
+
+def Tlambda(X,lmda):
+
+    #[m,n]=size(X);
+    #Xm=sign(X(:)).*max(abs(X(:))-lambda,0);
+    #Y=reshape(Xm,[m n]);
+    m = np.shape(X)[0]
+    n = np.shape(X)[1]
+    
+    Xm = np.zeros(np.shape(X))
+    for i in range(m):
+        for j in range(n):
+            Xm[i,j] = np.sign(X[i,j])*max(abs(X[i,j])-lmda,0)
+            
+    return Xm        
+    
+def fista(M):
+    
+    m = M.shape[0]
+    n = M.shape[1]
+
+    lambdaL=0.001*np.linalg.norm(M,'fro');
+    lambdaS=0.001*np.linalg.norm(M,'fro')/np.sqrt(max(m,n));
+
+    L = np.zeros([m, n])
+    S = np.zeros([m, n])
+    Lhat = np.zeros([m, n])
+    Shat = np.zeros([m, n])
+    LLSM = np.zeros([m, n])
+    SLSM = np.zeros([m, n])
+
+    t = 0
+
+    err = []
+    #for k in tqdm(range(60)):
+    for k in range(60):
+
+        LLSM = Lhat - 0.5*(Lhat + Shat - M)
+        SLSM = Shat - 0.5*(Lhat + Shat - M)
+
+        U, Sv, V = np.linalg.svd(LLSM, full_matrices = False)
+        TSv = Tlambda(np.diag(Sv),lambdaL/2)
+        Lk=np.copy(L);
+        Sk=np.copy(S);
+        L=U.dot(TSv.dot(V)); 
+        S=Tlambda(SLSM,lambdaS/2)
+
+        tk = np.copy(t)
+        t = (1+np.sqrt(1+4*t**2))/2
+        Lhat = L + ((tk-1)/t)*(L-Lk);
+        Shat = S + ((tk-1)/t)*(S-Sk);
+        err.append(np.linalg.norm((L+S-M),'fro')/np.linalg.norm(M,'fro'))
+        
+    return L, S, err
