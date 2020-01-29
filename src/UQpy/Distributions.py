@@ -83,10 +83,10 @@ class Distribution:
 
         # Check dist_name
         if isinstance(dist_name, str):
-            if not (dist_name in list_all_scipy or os.path.isfile(os.path.join(dist_name + '.py'))):
+            if not (dist_name.lower() in list_all_scipy or os.path.isfile(os.path.join(dist_name + '.py'))):
                 raise ValueError('dist_name should be a supported density or name of an existing .py file')
         elif isinstance(dist_name, (list, tuple)) and all(isinstance(d_, str) for d_ in dist_name):
-            if not all([(d_ in list_all_scipy or os.path.isfile(os.path.join(dist_name + '.py'))) for d_ in dist_name]):
+            if not all([(d_.lower() in list_all_scipy or os.path.isfile(os.path.join(d_ + '.py'))) for d_ in dist_name]):
                 raise ValueError('dist_name should be a list of supported densities or names of an existing .py file')
         else:
             raise TypeError('dist_name should be a (list of) string(s)')
