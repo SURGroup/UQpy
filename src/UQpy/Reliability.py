@@ -207,8 +207,6 @@ class SubsetSimulation:
 
                     # Accept the states with g <= g_level
                     ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
-                    if x_run.size == 0:
-                        print('hmmm')
                     for ii in ind_accept:
                         self.samples[step][(i + 1) * n_keep + ind_false[ii]] = x_run[ii]
                         self.g[step][(i + 1) * n_keep + ind_false[ii]] = g_temp[ii]
