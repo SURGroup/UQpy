@@ -47,8 +47,8 @@ class Grassmann:
 
             DimensionReduction is a class containing the methods to compute distances on the Grassmann manifold,
             as well as to project points onto the Grassmann manifold and the tangent space. It also perform the
-            interpolation of points on the Grassmann manifold projecting then onto the tangent space to interpolate
-            using standard methods.
+            interpolation of points on the Grassmann manifold projecting then onto the tangent space and to interpolate
+            them employing standard methods.
 
             References:
             Jiayao Zhang, Guangxu Zhu, Robert W. Heath Jr., and Kaibin Huang, "Grassmannian Learning: Embedding Geometry
@@ -60,12 +60,12 @@ class Grassmann:
 
         Input:
 
-            :param distance_object: It specifies the name of the function or class with the distance metric.
-            :type distance_object: str
+            :param dist_object: It specifies the name of the function or class with the distance metric.
+            :type dist_object: str
 
-            :param distance_script: The filename (with extension) of the Python script containing the implementation
+            :param dist_script: The filename (with extension) of the Python script containing the implementation
                                 of dist_object (only for user defined metrics).
-            :type distance_script: str
+            :type dist_script: str
 
             :param interp_object: It specifies the name of the function or class with the employed interpolator.
             :type interp_object: str
@@ -76,24 +76,24 @@ class Grassmann:
 
         """
 
-    # Authors: Ketson R. M. dos Santos, Dimitris Giovanis
-    # Updated: 01/24/2020 by Ketson R. M. dos Santos
+    # Authors: Ketson R. M. dos Santos
+    # Updated: 10/30/19 by Ketson R. M. dos Santos
 
-    def __init__(self, distance_object=None, distance_script=None, kernel_object=None, kernel_script=None, interp_object=None,
+    def __init__(self, dist_object=None, dist_script=None, kernel_object=None, kernel_script=None, interp_object=None,
                  interp_script=None):
 
         # Distance
-        self.distance_script = distance_script
-        self.distance_object = distance_object
-        if distance_script is not None:
-            self.user_distance_check = path.exists(distance_script)
+        self.dist_script = dist_script
+        self.dist_object = dist_object
+        if dist_script is not None:
+            self.user_dist_check = path.exists(dist_script)
         else:
-            self.user_distance_check = False
+            self.user_dist_check = False
 
-        if self.user_distance_check:
+        if self.user_dist_check:
             try:
                 # import user_distance
-                self.module_distance = __import__(self.distance_script[:-3])
+                self.module_dist = __import__(self.dist_script[:-3])
             except ImportError:
                 raise ImportError('There is no module implementing a  metric on the Grassmann manifold.')
 
@@ -169,11 +169,11 @@ class Grassmann:
         indices = range(nargs)
         pairs = list(itertools.combinations(indices, 2))
 
-        if self.user_distance_check:
-            exec('from ' + self.distance_script[:-3] + ' import ' + self.distance_object)
-            dist_fun = eval(self.distance_object)
+        if self.user_dist_check:
+            exec('from ' + self.dist_script[:-3] + ' import ' + self.dist_object)
+            dist_fun = eval(self.dist_object)
         else:
-            dist_fun = eval("Grassmann." + self.distance_object)
+            dist_fun = eval("Grassmann." + self.dist_object)
 
         distances_list = []
         for id_pair in range(np.shape(pairs)[0]):
@@ -187,7 +187,7 @@ class Grassmann:
             #rank1 = min(x1.shape[1], x1.shape[1])
             rank0 = int(ranks[ii])
             rank1 = int(ranks[jj])
-
+            
             x0 = np.asarray(psi[ii])[:, :rank0]
             x1 = np.asarray(psi[jj])[:, :rank1]
             
@@ -445,11 +445,13 @@ class Grassmann:
                 _gamma.append(np.zeros(np.shape(ref)))
             else:
 
-                # M = ((I - psi0*psi0')*psi1)*(psi0'*psi1)
-                m1 = np.dot(u[i], np.dot(refT, u[i]))
-                m = m1 - np.dot(m0, m1)
-                # ui, si, vi = np.linalg.svd(m, full_matrices=False)              #svd(m, max_rank)
-                (ui, si, vi) = pca(m, rank[i], True)
+                # M = ((I - psi0*psi0')*psi1)*inv(psi0'*psi1)
+                # m1 = np.dot(u[i], np.dot(refT, u[i]))
+                # m = m1 - np.dot(m0, m1)
+                minv = np.linalg.inv(np.dot(refT,u[i]))
+                m = np.dot(u[i] - np.dot(m0, u[i]),minv)
+                ui, si, vi = np.linalg.svd(m, full_matrices=False)              #svd(m, max_rank)
+                #(ui, si, vi) = pca(m, rank[i], True)
                 _gamma.append(np.dot(np.dot(ui, np.diag(np.arctan(si))), vi))
 
         return _gamma
@@ -474,8 +476,8 @@ class Grassmann:
         x = list()
         for j in range(nr):
 
-            # ui, si, vi = np.linalg.svd(u[j], full_matrices=False)
-            (ui, si, vi) = pca(u[j], rank[j], True)
+            ui, si, vi = np.linalg.svd(u[j], full_matrices=False)
+            #(ui, si, vi) = pca(u[j], rank[j], True)
 
             # Exponential mapping
             x0 = np.dot(np.dot(np.dot(ref, vi.T), np.diag(np.cos(si))) + np.dot(ui, np.diag(np.sin(si))), vi)
@@ -514,7 +516,7 @@ class Grassmann:
         mean_element = matrix[index_0].tolist()
         # nrow = np.shape(mean_element)[0]
 
-        avg_gamma = np.zeros([np.shape(matrix[0])[0], max_rank])
+        avg_gamma = np.zeros([np.shape(matrix[0])[0], np.shape(matrix[0])[1]])
 
         itera = 0
 
@@ -532,6 +534,7 @@ class Grassmann:
 
             _gamma = Grassmann.log_mapping(matrix, ref=np.asarray(mean_element))
             avg_gamma.fill(0)
+
             for i in range(n_mat):
                 avg_gamma += _gamma[i] / n_mat
 
@@ -626,7 +629,7 @@ class Grassmann:
         accum = 0
         for i in range(n_mat):
             # D = Grassmann.distance(k_mean, matrix[i], metric=metric)
-            d = self.distance(k_mean, matrix[i])
+            d = self.distance([k_mean, matrix[i]])
             accum += d[0] * d[0]
 
         fmean = accum / n_mat
@@ -669,13 +672,13 @@ class Grassmann:
             nodes = np.array(nodes)
 
         # Test if the sample lies within the element
-        isinside = inelement(sample, nodes)
-        if isinside:
+        #isinside = inelement(sample, nodes)
+        #if isinside:
 
-            interp_matrix = interp_fun(nodes, matrix, sample, reg_model, corr_model, n_opt)
+        interp_matrix = interp_fun(nodes, matrix, sample, reg_model, corr_model, n_opt)
 
-        else:
-            raise TypeError('The sample MUST be within the element.')
+        #else:
+        #    raise TypeError('The sample MUST be within the element.')
 
         return interp_matrix
 
@@ -806,45 +809,13 @@ class Grassmann:
 
 # ========================= DIFFUSION MAPS ===========================================
 class DiffusionMaps:
-    """
-
-            Description:
-
-                DiffusionMaps is a class containing the methods to perform the diffusion maps either receiving the
-                data points for the standard procedure or the affinity matrix to perform the diffusion maps on a
-                manifold.
-
-                References:
-                Coifman, R. R. and Lafon, S. (2006). Diffusion maps, Applied and Computational Harmonic Analysis 21(1):
-                5-30.
-
-            Input:
-
-                No parameter is necessary to instanciate the class.
-
-            """
-
-    # Authors: Ketson R. M. dos Santos
-    # Updated: 01/24/2020 by Ketson R. M. dos Santos
 
     def __init__(self):
         pass
 
     @staticmethod
     def mapping(data=None, alpha=0.5, n_evecs=2, epsilon=None, kernel_mat=None, sparse=False, k_neighbors=1):
-        """
-        mapping: method to estimate the diffusion coordinates.
-        :param data: list or ndarray with the input data.
-        :param alpha: double corresponding to the diffusion coefficient (typically between 0 and 1).
-        :param n_evecs: integer number of eigenvectors to compute.
-        :param epsilon: double if no kernel matrix is provided the Gaussian kernel is employed with this epsilon value.
-        :param kernel_mat: list or ndarray with the kernel matrix.
-        :param sparse: boolean for the design of a sparse graph.
-        :param k_neighbors: integer if sparse define the number of neighbors data point for each single data point.
-        :return: dcoords, evals, evecs - Return the diffusion coordinates, the eigenvalues and eigenvectors
-        """
-
-        # Perform the initial checks
+        
         if data is None and kernel_mat is None:
             raise TypeError('data and kernel_mat both are None.')
          
@@ -861,20 +832,26 @@ class DiffusionMaps:
         else:
             N = np.shape(data)[0]
 
-        # Create the Kernel matrix: L
         k_matrix, epsilon = DiffusionMaps.create_kernel_matrix(data, epsilon, sparse=sparse, kernel_mat=kernel_mat, k_neighbors=k_neighbors)
 
-        # Find the matrices to compute the new diffusion matrix: D^(-alpha)
         b, b_inv = DiffusionMaps.b_matrix(k_matrix, alpha)
 
-        # Perform the graph Laplacian normalization: M
         Ps = DiffusionMaps.lr_normalize(k_matrix, b_inv, sparse)
+        
+        #Ps0 = sps.csr_matrix(Ps)
+        #u, s, v = spsl.svds(Ps0, k=n_evecs + 1)
+        #s=np.flip(s)
+        #u=np.fliplr(u)
 
-        # Eigendecomposition of M
+        #u, s, v = np.linalg.svd(Ps, full_matrices=False)
+        
         if sparse:
             evals, evecs = spsl.eigs(Ps, k=(n_evecs+1), which='LR')
         else:
             evals, evecs = np.linalg.eig(Ps)
+            
+        #Ps0 = sps.csr_matrix(Ps)
+        #evals, evecs = spsl.eigs(Ps0, k=(n_evecs+1), which='LR')
 
         ix = np.argsort(np.abs(evals))
         ix = ix[::-1]
@@ -885,29 +862,20 @@ class DiffusionMaps:
         Pfia = u[:, :n_evecs]
         b_inv_ = np.diag(b_inv)
         evecs = np.dot(b_inv_, Pfia)
+        # A = np.dot(np.dot(psa.T, b), psa)
         dcoords = np.zeros([N, n_evecs])
         for i in range(n_evecs):
             dcoords[:, i] = evals[i] * evecs[:, i]
 
-        # Return the diffusion coordinates, the eigenvalues and eigenvectors
         return dcoords, evals, evecs
     
     @staticmethod
     def create_kernel_matrix(data, epsilon, sparse=False, kernel_mat=None, k_neighbors=1):
-        """
-        create_kernel_matrix: method to compute the kernel matrix.
-        :param data: list or ndarray with the input data.
-        :param epsilon: double if no kernel matrix is provided the Gaussian kernel is employed with this epsilon value.
-        :param sparse: boolean for the design of a sparse graph.
-        :param kernel_mat: list or ndarray with the kernel matrix.
-        :param k_neighbors: integer if sparse define the number of neighbors data point for each single data point.
-        :return: kernel_mat, epsilon
-        """
-
+ 
         if kernel_mat is None and data is not None:
   
             if len(np.shape(data)) == 2:
-                distance_pairs = sd.pdist(data, 'euclidean')
+                dist_pairs = sd.pdist(data, 'euclidean')
             elif len(np.shape(data)) == 3:
 
                 # Check arguments: verify the consistency of input arguments
@@ -916,7 +884,7 @@ class DiffusionMaps:
                 indices = range(nargs)
                 pairs = list(itertools.combinations(indices, 2))
 
-                distance_pairs = []
+                dist_pairs = []
                 for id_pair in range(np.shape(pairs)[0]):
                     ii = pairs[id_pair][0]  # Point i
                     jj = pairs[id_pair][1]  # Point j
@@ -924,18 +892,17 @@ class DiffusionMaps:
                     x0 = datam[ii]
                     x1 = datam[jj]
 
-                    distances = np.linalg.norm(x0-x1, 'fro')
+                    dist = np.linalg.norm(x0-x1,'fro')
 
-                    distance_pairs.append(distances)
+                    dist_pairs.append(dist)
             else:
                 raise TypeError('The size of the input data is not adequate.')
-
-            # Find epsilon if epsilon is not provided
+            
             if epsilon is None:
-                epsilon = DiffusionMaps.find_epsilon(distance_pairs)
-
-            # Gaussian kernel
-            kernel_mat = np.exp(-sd.squareform(distance_pairs) ** 2 / (4 * epsilon))
+                epsilon = DiffusionMaps.find_epsilon(dist_pairs)
+            
+            #print(np.std(dist_pairs), np.mean(dist_pairs))
+            kernel_mat = np.exp(-sd.squareform(dist_pairs) ** 2 / (4 * epsilon))
             
         if sparse:
 
@@ -944,34 +911,27 @@ class DiffusionMaps:
             for i in range(nrows):
                 vec = kernel_mat[i,:]
                 idx = nn_coord(vec, k_neighbors)
-                kernel_mat[i,idx] = 0
+                kernel_mat[i,idx]=0
 
-            # sparse Kernel matrix
             kernel_mat = sps.csc_matrix(kernel_mat)
+        
+        #plt.figure()
+        #plt.matshow(kernel_mat)
+        #plt.show()
 
         return kernel_mat, epsilon
     
     @staticmethod
-    def find_epsilon(distance_pairs):
-        """
-        find epsilon if not provided by taking the median value of the squared distances
-        :param distance_pairs: pointwise distances
-        :return: epsilon
-        """
-        distance_pairs_sq = distance_pairs ** 2
-        epsilon = np.median(distance_pairs_sq)
+    def find_epsilon(dist_pairs):
+        
+        dist_pairs_sq = dist_pairs**2
+        epsilon = np.median(dist_pairs_sq)
         return epsilon
 
     @staticmethod
     def b_matrix(kernel_matrix, alpha):
-        """
-
-        :param kernel_matrix:
-        :param alpha:
-        :return: b, b_inv
-        """
         m = np.shape(kernel_matrix)[0]
-        kmat = kernel_matrix
+        kmat = kernel_matrix  # todo .toarray()
         b = np.array(kmat.sum(axis=1)).flatten()
 
         b_inv = np.power(b, -alpha)
@@ -979,14 +939,10 @@ class DiffusionMaps:
 
     @staticmethod
     def lr_normalize(kernel_matrix, b_inv, sparse=False):
-        """
-
-        :param kernel_matrix:
-        :param b_inv:
-        :param sparse:
-        :return: Graph Laplacian normalization
-        """
         m = b_inv.shape[0]
+        # Dalpha = sps.spdiags(b_inv, 0, m, m)
+        # kernel_matrix = kernel_matrix * Dalpha
+        # Ps = Dalpha * kernel_matrix
         
         if sparse:
             Dalpha = sps.spdiags(b_inv, 0, m, m)
@@ -994,5 +950,10 @@ class DiffusionMaps:
             Dalpha = np.diag(b_inv)
             
         Ps = Dalpha.dot(kernel_matrix.dot(Dalpha))
-
+        """
+        row_sum = kernel_matrix.sum(axis=1).transpose()
+        n = row_sum.shape[1]
+        Dalpha = sps.spdiags(np.power(row_sum, -1), 0, n, n)
+        P = Dalpha * kernel_matrix
+        """
         return Ps
