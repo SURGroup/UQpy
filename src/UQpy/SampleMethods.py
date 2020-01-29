@@ -149,6 +149,8 @@ class MCS:
 #                                         Latin hypercube sampling  (LHS)
 ########################################################################################################################
 
+#TODO: Make method based and make it compatible with updated distribution class
+
 class LHS:
     """
         Description:
@@ -1261,6 +1263,7 @@ class RSS:
 
     # Implementation of the central difference method for calculating gradients.
     # TODO: This should probably be moved to Utilities.
+    # TODO: All use the same finite difference.
     def cent_diff(self, f, x, h):
         dydx = np.zeros((np.size(x, 0), np.size(x, 1)))
         for dirr in range(np.size(x, 1)):
