@@ -886,7 +886,7 @@ class RSS:
 
                     # Recompute the gradient only at the nearest neighbor points.
                     dy_dx[neighbors] = self.estimate_gradient(np.squeeze(self.training_points[neighbors]),
-                                                              np.atleast_2d(np.array(qoi)[neighbors]),
+                                                              np.array(qoi)[neighbors][0],
                                                               np.squeeze(self.sample_object.strata.origins[neighbors] +
                                                                          0.5 * self.sample_object.strata.widths[
                                                                              neighbors]))
@@ -1411,11 +1411,11 @@ class RSS:
 
             from scipy.interpolate import LinearNDInterpolator
 
-            tck = LinearNDInterpolator(x, y.T, fill_value=0)
+            tck = LinearNDInterpolator(x, y, fill_value=0)
             gr = self.cent_diff(tck, xt, self.step_size)
         elif self.meta == 'kriging':
             with suppress_stdout():  # disable printing output comments
-                self.krig_object.fit(samples=x, values=y.T)
+                self.krig_object.fit(samples=x, values=y)
             gr = self.cent_diff(self.krig_object.interpolate, xt, self.step_size)
 
         elif self.meta == 'sklearn':
@@ -1747,7 +1747,7 @@ class AKMCS:
         # Train the initial Kriging model.
         if self.kriging == 'UQpy':
             with suppress_stdout():  # disable printing output comments
-                self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(qoi)).T)
+                self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(qoi)))
             self.krig_model = self.krig_object.interpolate
         else:
             gp = GaussianProcessRegressor(kernel=self.krig_object, n_restarts_optimizer=0)
@@ -1787,7 +1787,7 @@ class AKMCS:
             if self.kriging == 'UQpy':
                 with suppress_stdout():
                     # disable printing output comments
-                    self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(qoi)).T)
+                    self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(qoi)))
                 self.krig_model = self.krig_object.interpolate
             else:
                 gp = GaussianProcessRegressor(kernel=self.krig_object, n_restarts_optimizer=0)
