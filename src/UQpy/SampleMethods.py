@@ -2134,6 +2134,7 @@ class AKMCS:
 
 
 
+
 ########################################################################################################################
 ########################################################################################################################
 #                                         Class Markov Chain Monte Carlo
@@ -2732,6 +2733,12 @@ class MCMC:
         self.dimension, self.nburn, self.jump = dimension, nburn, jump
         self.seed = self.preprocess_seed(seed, dim=self.dimension)    # check type and assign default [0., ... 0.]
         self.nchains = self.seed.shape[0]
+
+        ##### ADDED MDS 1/21/20
+        self.log_pdf_target = log_pdf_target
+        self.pdf_target = pdf_target
+        self.args_target = args_target
+
         # Check target pdf
         self.evaluate_log_target, self.evaluate_log_target_marginals = self.preprocess_target(
             pdf=pdf_target, log_pdf=log_pdf_target, args=args_target)
@@ -2758,7 +2765,6 @@ class MCMC:
         # Initialize a few more variables
         self.samples = None
         self.log_pdf_values = None
-        self.total_iterations = 0    # total nb of iterations, grows if you call run several times
         self.acceptance_rate = [0.] * self.nchains
 
         if self.verbose:
@@ -2776,7 +2782,7 @@ class MCMC:
         nsamples, nsamples_per_chain = self.preprocess_nsamples(nchains=self.nchains, nsamples=nsamples,
                                                                 nsamples_per_chain=nsamples_per_chain)
         # Initialize the runs: allocate space for the new samples and log pdf values
-        nsims, current_state = self.initialize_samples(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
+        nsims, current_state = self.initialize_samples(nsamples_per_chain=nsamples_per_chain)
 
         if self.verbose:
             print('Running MCMC...')
@@ -2827,7 +2833,7 @@ class MCMC:
                 proposal_params = self.algorithm_inputs['proposal_params']
             proposal = self.check_methods_proposal(proposal, proposal_params)
             self.algorithm_inputs['proposal'] = proposal
-            del self.algorithm_inputs['proposal_params']
+            #del self.algorithm_inputs['proposal_params']
 
         # check the symmetry of proposal, assign False as default
         if 'proposal_is_symmetric' not in self.algorithm_inputs.keys():
@@ -3010,10 +3016,10 @@ class MCMC:
         if self.nchains < 2:
             raise ValueError('For the Stretch algorithm, a seed must be provided with at least two samples.')
 
-        # Check MH algorithm inputs: proposal_type and proposal_scale
+        # Check Stretch algorithm inputs: proposal_type and proposal_scale
         for key in self.algorithm_inputs.keys():
             if key not in ['scale']:  # remove inputs that are not being used
-                print('!!! Warning !!! Input ' + key + ' not used in MH algorithm - used input is scale')
+                print('!!! Warning !!! Input ' + key + ' not used in Stretch algorithm - used input is scale')
         if 'scale' not in self.algorithm_inputs.keys():
             self.algorithm_inputs['scale'] = 2.
         if not isinstance(self.algorithm_inputs['scale'], (float, int)):
@@ -3185,9 +3191,11 @@ class MCMC:
         # The algorithm inputs are: jump rate gamma - default is 3, c and c_star are parameters involved in the
         # differential evolution part of the algorithm - c_star should be small compared to the width of the target,
         # n_CR is the number of crossover probabilities - default 3, and p_g: prob(gamma=1) - default is 0.2
-        names = ['delta', 'c', 'c_star', 'n_CR', 'p_g']
-        defaults = [3, 0.1, 1e-6, 3, 0.2]
-        types = [int, (float, int), (float, int), int, float]
+        # adapt_CR = (iter_max, rate) governs the adapation of crossover probabilities (default: no adaptation)
+        # check_chains = (iter_max, rate) governs the discrading of outlier chains (default: no check on outlier chains)
+        names = ['delta', 'c', 'c_star', 'n_CR', 'p_g', 'adapt_CR', 'check_chains']
+        defaults = [3, 0.1, 1e-6, 3, 0.2, (-1, 1), (-1, 1)]
+        types = [int, (float, int), (float, int), int, float, tuple, tuple]
         for key in self.algorithm_inputs.keys():
             if key not in names:
                 print('!!! Warning !!! Input ' + key + ' not used in DREAM algorithm - used inputs are ' +
@@ -3199,12 +3207,19 @@ class MCMC:
                 raise TypeError('Wrong type for input ' + key)
         if self.algorithm_inputs['n_CR'] > self.dimension:
             self.algorithm_inputs['n_CR'] = self.dimension
+        for key in ['adapt_CR', 'check_chains']:
+            if len(self.algorithm_inputs[key])!=2 or (not all(isinstance(i, (int, float))
+                                                              for i in self.algorithm_inputs[key])):
+                raise TypeError('Inputs adapt_CR and check_chains should be tuples of 2 integers.')
+
 
     def run_dream(self, nsims, current_state):
         # Initialize some variables
         delta, c, c_star, n_CR, p_g = self.algorithm_inputs['delta'], self.algorithm_inputs['c'], \
                                       self.algorithm_inputs['c_star'], self.algorithm_inputs['n_CR'], \
                                       self.algorithm_inputs['p_g']
+        adapt_CR = self.algorithm_inputs['adapt_CR']
+        check_chains = self.algorithm_inputs['check_chains']
         J, n_id = np.zeros((n_CR,)), np.zeros((n_CR,))
         R = np.array([np.setdiff1d(np.arange(self.nchains), j) for j in range(self.nchains)])
         CR = np.arange(1, n_CR + 1) / n_CR
@@ -3256,17 +3271,45 @@ class MCMC:
                 J[id[nc]] = J[id[nc]] + np.sum((dX[nc, :] / std_x_tmp) ** 2)
                 n_id[id[nc]] += 1
 
-            if iter_nb < self.nburn:  # update selection cross prob during burn-in
-                pCR = J / n_id
-                pCR /= sum(pCR)
-
             # Save the current state if needed, update acceptance rate
             self.update_samples(current_state, current_log_pdf)
             # Update the acceptance rate
             self.update_acceptance_rate(accept_vec)
             # update the total number of iterations
             self.total_iterations += 1
+
+            # update selection cross prob
+            if self.total_iterations < adapt_CR[0] and self.total_iterations % adapt_CR[1] == 0:
+                pCR = J / n_id
+                pCR /= sum(pCR)
+            # check outlier chains (only if you have saved at least 100 values already)
+            if (self.current_sample_index * self.nchains >= 100) and \
+                    (self.total_iterations < check_chains[0]) and (self.total_iterations % check_chains[1] == 0):
+                self.check_outlier_chains(replace_with_best=True)
         return None
+
+    def check_outlier_chains(self, replace_with_best=False):
+        if not self.save_log_pdf:
+            return ValueError('attribute save_log_pdf must be True in order to check outlier chains')
+        start_ = self.current_sample_index // 2
+        avgs_logpdf = np.mean(self.log_pdf_values[start_:], axis=0)
+        best_ = np.argmax(avgs_logpdf)
+        avg_sorted = np.sort(avgs_logpdf)
+        ind1, ind3 = 1 + round(0.25 * self.nchains), 1 + round(0.75 * self.nchains)
+        q1, q3 = avg_sorted[ind1], avg_sorted[ind3]
+        qr = q3 - q1
+
+        outlier_num = 0
+        for j in range(self.nchains):
+            if avgs_logpdf[j] < q1 - 2.0 * qr:
+                outlier_num += 1
+                if replace_with_best:
+                    self.samples[start_:, j, :] = self.samples[start_:, best_, :]
+                    self.log_pdf_values[start_:, j] = self.log_pdf_values[start_:, best_]
+                else:
+                    print('Chain {} is an outlier chain'.format(j))
+        if self.verbose and outlier_num > 0:
+            print('Detected {} outlier chains'.format(outlier_num))
 
     ####################################################################################################################
     # Helper functions that can be used by all algorithms
@@ -3287,16 +3330,26 @@ class MCMC:
             self.log_pdf_values = self.log_pdf_values.reshape((-1, self.nchains), order='C')
         return None
 
-    def initialize_samples(self, nsamples, nsamples_per_chain):
+    def initialize_samples(self, nsamples_per_chain):
         """ Allocate space for samples and log likelihood values, initialize sample_index, acceptance ratio
         If some samples already exist, allocate space to append new samples to the old ones """
         if self.samples is None:    # very first call of run, set current_state as the seed and initialize self.samples
             self.samples = np.zeros((nsamples_per_chain, self.nchains, self.dimension))
             if self.save_log_pdf:
                 self.log_pdf_values = np.zeros((nsamples_per_chain, self.nchains))
-            current_state = self.seed
-            self.current_sample_index = 0
-            nsims = self.nburn + self.jump * nsamples_per_chain
+            current_state = np.zeros_like(self.seed)
+            np.copyto(current_state, self.seed)
+            if self.nburn == 0:    # save the seed
+                self.samples[0, :, :] = current_state
+                if self.save_log_pdf:
+                    self.log_pdf_values[0, :] = self.evaluate_log_target(current_state)
+                self.current_sample_index = 1
+                self.total_iterations = 1  # total nb of iterations, grows if you call run several times
+                nsims = self.jump * nsamples_per_chain - 1
+            else:
+                self.current_sample_index = 0
+                self.total_iterations = 0  # total nb of iterations, grows if you call run several times
+                nsims = self.nburn + self.jump * nsamples_per_chain
 
         else:    # fetch previous samples to start the new run, current state is last saved sample
             if len(self.samples.shape) == 2:   # the chains were previously concatenated
@@ -3342,7 +3395,8 @@ class MCMC:
                     raise ValueError('When log_pdf_target is a list, args should be a list (of tuples) of same length.')
                 evaluate_log_pdf_marginals = list(map(lambda i: lambda x: log_pdf[i](x, *args[i]), range(len(log_pdf))))
                 #evaluate_log_pdf_marginals = [partial(log_pdf_, *args_) for (log_pdf_, args_) in zip(log_pdf, args)]
-                evaluate_log_pdf = None
+                evaluate_log_pdf = (lambda x: np.sum(
+                    [log_pdf[i](x[:, i, np.newaxis], *args[i]) for i in range(len(log_pdf))]))
             else:
                 raise TypeError('log_pdf_target must be a callable or list of callables')
         # pdf is provided
@@ -3362,7 +3416,10 @@ class MCMC:
                                                               10 ** (-320) * np.ones((x.shape[0],)))),
                         range(len(pdf))
                         ))
-                evaluate_log_pdf = None
+                evaluate_log_pdf = (lambda x: np.sum(
+                    [np.log(np.maximum(pdf[i](x[:, i, np.newaxis], *args[i]), 10**(-320)*np.ones((x.shape[0],))))
+                     for i in range(len(log_pdf))]))
+                #evaluate_log_pdf = None
             else:
                 raise TypeError('pdf_target must be a callable or list of callables')
         else:
@@ -3392,7 +3449,7 @@ class MCMC:
             seed = np.zeros((1, dim))
         else:
             try:
-                seed = np.array(seed).reshape((-1, dim))
+                seed = np.array(seed, dtype=float).reshape((-1, dim))
             except:
                 raise TypeError('Input seed should be a nd array of dimensions (?, dimension).')
         return seed
@@ -3421,7 +3478,6 @@ class MCMC:
 
 class IS:
     """
-    Test Comment
 
         Description:
 
