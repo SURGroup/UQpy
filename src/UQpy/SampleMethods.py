@@ -19,7 +19,6 @@
 
 import copy
 from scipy.spatial.distance import pdist
-from scipy.stats import multivariate_normal
 import random
 from UQpy.Distributions import *
 from UQpy.Utilities import *
@@ -149,6 +148,7 @@ class MCS:
 #                                         Latin hypercube sampling  (LHS)
 ########################################################################################################################
 
+
 class LHS:
     """
         Description:
@@ -157,10 +157,6 @@ class LHS:
             parameter space are generated.
 
         Input:
-            :param dimension: A scalar value defining the dimension of the random variables.
-                              If dimension is not provided then dimension is equal to the length of the dist_name.
-            :type dimension: int
-
             :param dist_name: A list containing the names of the distributions of the random variables.
                               Distribution names must match those in the Distributions module.
                               If the distribution does not match one from the Distributions module, the user must
@@ -218,7 +214,7 @@ class LHS:
     # Last modified: 6/20/2018 by Dimitris G. Giovanis
 
     def __init__(self, dist_name=None, dist_params=None, lhs_criterion='random', lhs_metric='euclidean',
-                 lhs_iter=100, var_names = None, nsamples=None, verbose=False):
+                 lhs_iter=100, var_names=None, nsamples=None, verbose=False):
 
         self.nsamples = nsamples
         self.dist_name = dist_name
@@ -229,6 +225,7 @@ class LHS:
         self.lhs_iter = lhs_iter
         self.init_lhs()
         self.var_names = var_names
+        self.verbose = verbose
 
         self.distribution = [None] * self.dimension
         for i in range(self.dimension):
@@ -237,6 +234,9 @@ class LHS:
         self.samplesU01, self.samples = self.run_lhs()
 
     def run_lhs(self):
+
+        if self.verbose:
+            print('UQpy: Running Latin Hypercube Sampling...')
 
         cut = np.linspace(0, 1, self.nsamples + 1)
         a = cut[:self.nsamples]
@@ -249,7 +249,9 @@ class LHS:
             i_cdf = self.distribution[j].icdf
             samples_u_to_x[:, j] = i_cdf(samples[:, j], self.dist_params[j])
 
-        print('Successful execution of LHS design..')
+        if self.verbose:
+            print('Successful execution of LHS design..')
+
         return samples, samples_u_to_x
 
     def _samples(self, a, b):
@@ -297,7 +299,8 @@ class LHS:
                 max_min_dist = np.min(d)
                 samples = copy.deepcopy(samples_try)
 
-        print('Achieved max_min distance of ', max_min_dist)
+        if self.verbose:
+            print('Achieved max_min distance of ', max_min_dist)
 
         return samples
 
@@ -314,7 +317,8 @@ class LHS:
                 min_corr = np.max(np.abs(r1))
                 samples = copy.deepcopy(samples_try)
 
-        print('Achieved minimum correlation of ', min_corr)
+        if self.verbose:
+            print('Achieved minimum correlation of ', min_corr)
 
         return samples
 
@@ -483,7 +487,6 @@ class STS:
                     for i in range(0, self.strata.origins.shape[0]):
                         samples[i, j] = self.strata.origins[i, j] + self.strata.widths[i, j] / 2.
 
-                import scipy.stats as stats
                 samples_u_to_x[:, j] = i_cdf(np.atleast_2d(samples[:, j]).T, self.dist_params[j])
 
             if self.verbose:
@@ -499,8 +502,7 @@ class STS:
             samples_init = np.random.rand(self.nsamples, self.dimension)
 
             for i in range(self.n_iters):
-                x = self.in_hypercube(samples_init)
-
+                # x = self.in_hypercube(samples_init)
                 self.strata = voronoi_unit_hypercube(samples_init)
 
                 self.strata.centroids = []
@@ -521,7 +523,6 @@ class STS:
                                                                self.dist_params[i]).T
 
     def in_hypercube(self, samples):
-        str_temp = 'np.logical_and('
 
         in_cube = True * self.nsamples
         for i in range(self.dimension):
@@ -764,10 +765,10 @@ class RSS:
     """
 
     # Authors: Mohit S. Chauhan
-    # Last modified: 12/01/2019 by Mohit S. Chauhan
+    # Last modified: 01/07/2020 by Mohit S. Chauhan
 
     def __init__(self, sample_object=None, run_model_object=None, krig_object=None, local=False, max_train_size=None,
-                 step_size=0.005, qoi_name=None, verbose=False, visualize=False):
+                 step_size=0.005, qoi_name=None, verbose=False):
 
         # Initialize attributes that are common to all approaches
         self.sample_object = sample_object
@@ -775,6 +776,7 @@ class RSS:
         self.verbose = verbose
         self.nsamples = 0
         self.visualize = visualize
+
 
         self.cell = self.sample_object.stype
         self.dimension = np.shape(self.sample_object.samples)[1]
@@ -1622,7 +1624,7 @@ class AKMCS:
     """
 
     # Authors: Mohit S. Chauhan
-    # Last modified: 12/01/2019 by Mohit S. Chauhan
+    # Last modified: 01/07/2020 by Mohit S. Chauhan
 
     def __init__(self, run_model_object=None, samples=None, krig_object=None, nlearn=10000, nstart=None,
                  population=None, dist_name=None, dist_params=None, qoi_name=None, lf='U', n_add=1,
@@ -1913,7 +1915,7 @@ class AKMCS:
         t3 = (a_ + ep - g) / sig
         eff = (g - a_) * (2 * stats.norm.cdf(t1) - stats.norm.cdf(t2) - stats.norm.cdf(t3))
         eff += -sig * (2 * stats.norm.pdf(t1) - stats.norm.pdf(t2) - stats.norm.pdf(t3))
-        eff += ep*(stats.norm.cdf(t3) - stats.norm.cdf(t2))
+        eff += ep * (stats.norm.cdf(t3) - stats.norm.cdf(t2))
         rows = eff[:, 0].argsort()[-self.n_add:]
 
         if max(eff[:, 0]) <= 0.001:
@@ -2202,7 +2204,7 @@ class MCMC_old:
         self.samples, self.accept_ratio = self.run_mcmc()
 
     def run_mcmc(self):
-        n_accepts = 0
+        n_accepts, accept_ratio = 0, 0
 
         # Defining an array to store the generated samples
         samples = np.zeros([self.nsamples * self.jump + self.nburn, self.dimension])
@@ -2355,7 +2357,6 @@ class MCMC_old:
                     # list_log_p_current.append(list_log_p_current[i - self.ensemble_size + 1])
             accept_ratio = n_accepts / (self.nsamples * self.jump - self.ensemble_size)
 
-
         ################################################################################################################
         # Return the samples
 
@@ -2481,7 +2482,6 @@ class MCMC_old:
                 raise ValueError('pdf_target given as a list should have length equal to dimension')
             if (self.pdf_target_params is not None) and (len(self.pdf_target) != len(self.pdf_target_params)):
                 raise ValueError('pdf_target_params should be given as a list of length equal to pdf_target')
-
 
         # Define a helper function
         def compute_log_pdf(x, pdf_func, params=None, copula_params=None):
