@@ -766,7 +766,7 @@ def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_ob
         raise ValueError('Exit code: Provide type of derivatives: first, second or mixed.')
 
     if dimension is None:
-     raise ValueError('Error: Dimension must be defined')
+        raise ValueError('Error: Dimension must be defined')
 
     if eps is None:
         eps = [0.1]*dimension
