@@ -19,6 +19,7 @@
 
 from UQpy.RunModel import RunModel
 from UQpy.SampleMethods import MCMC
+from UQpy.Surrogates import Krig
 from UQpy.Transformations import *
 import warnings
 
@@ -1099,7 +1100,6 @@ class TaylorSeries:
                  :return d2u_dij: vector of mixed gradients
                  :rtype: ndarray
          """
-        from UQpy.Transformations import Nataf
         if order is None:
             raise ValueError('Exit code: Provide type of derivatives: first, second or mixed.')
 
@@ -1116,8 +1116,24 @@ class TaylorSeries:
             if len(df_step) == 1:
                 eps = [df_step[0]] * dimension
 
-        if model is None:
-            raise RuntimeError('A model must be provided.')
+        if isinstance(model, Krig):
+            qoi = model.interpolate(np.array(sample))
+        elif isinstance(model, RunModel):
+            qoi = model.qoi_list[0]
+        else:
+            raise RuntimeError('A Krig or RunModel object must be provided as model.')
+
+        def func(m):
+            def func_eval(x):
+                if isinstance(m, Krig):
+                    return m.interpolate(x=x)
+                else:
+                    m.run(samples=x, append_samples=False)
+                    return m.qoi_list[0]
+
+            return func_eval
+
+        f_eval = func(m=model)
 
         scale = np.zeros(len(dist_name))
         for j in range(len(dist_name)):
@@ -1135,20 +1151,15 @@ class TaylorSeries:
                 x_1i_j = np.array(sample)
                 x_1i_j[0, ii] = x_1i_j[0, ii] - eps_i
 
-                qoi = model.qoi_list[0]
                 if method.lower() == 'Forward':
-                    model.run(x_i1_j, append_samples=False)
-                    qoi_plus = model.qoi_list[0]
+                    qoi_plus = f_eval(x_i1_j)
                     du_dj[ii] = (qoi_plus - qoi) / eps_i
                 elif method.lower() == 'Backwards':
-                    model.run(x_1i_j, append_samples=False)
-                    qoi_minus = model.qoi_list[0]
+                    qoi_minus = f_eval(x_1i_j)
                     du_dj[ii] = (qoi - qoi_minus) / eps_i
                 else:
-                    model.run(x_i1_j, append_samples=False)
-                    qoi_plus = model.qoi_list[0]
-                    model.run(x_1i_j, append_samples=False)
-                    qoi_minus = model.qoi_list[0]
+                    qoi_plus = f_eval(x_i1_j)
+                    qoi_minus = f_eval(x_1i_j)
                     du_dj[ii] = (qoi_plus - qoi_minus) / (2 * eps_i)
                     if order == 'second':
                         d2u_dj[ii] = (qoi_plus - 2 * qoi + qoi_minus) / (eps_i ** 2)
@@ -1180,10 +1191,10 @@ class TaylorSeries:
                 x_1i_1j[0, i[0]] -= eps_i1_0
                 x_1i_1j[0, i[1]] -= eps_i1_1
 
-                qoi_0 = model.run(x_i1_j1, append_samples=False)
-                qoi_1 = model.run(x_i1_1j, append_samples=False)
-                qoi_2 = model.run(x_1i_j1, append_samples=False)
-                qoi_3 = model.run(x_1i_1j, append_samples=False)
+                qoi_0 = f_eval(x_i1_j1)
+                qoi_1 = f_eval(x_i1_1j)
+                qoi_2 = f_eval(x_1i_j1)
+                qoi_3 = f_eval(x_1i_1j)
 
                 d2u_dij.append((qoi_0 - qoi_1 - qoi_2 + qoi_3)
                                / (4 * eps_i1_0 * eps_i1_1))
