@@ -693,10 +693,7 @@ def R_to_r(R):
     return r
 
 
-def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_object_name=None, input_template=None,
-             var_names=None,
-             output_script=None, output_object_name=None, ntasks=None, cores_per_task=None, nodes=None, resume=None,
-             verbose=None, model_dir=None, cluster=None, order=None):
+def gradient(sample=None, dimension=None, eps=None,  model=None, method=None, order=None):
     """
          Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
 
@@ -716,40 +713,46 @@ def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_ob
              :param eps: step for the finite difference.
              :type eps: float
 
-             :param model_script: The filename of the Python script which contains commands to execute the model
+             :param model: Krig or RunModel method to execute the model
+             :type model: method
 
-             :param model_object_name: The name of the function or class which executes the model
+             :param method: Specify the class used to create method. Options: 'Krig' or 'RunModel'.
+             :type method: str
 
-             :param input_template: The name of the template input file which will be used to generate input files for
-              each run of the model. Refer documentation for more details.
-
-             :param var_names: A list containing the names of the variables which are present in the template input
-              files
-
-             :param output_script: The filename of the Python script which contains the commands to process the output
-
-             :param output_object_name: The name of the function or class which has the output values. If the object
-              is a class named cls, the output must be saved as cls.qoi. If it a function, it should return the output
-              quantity of interest
-
-             :param ntasks: Number of tasks to be run in parallel. RunModel uses GNU parallel to execute models which
-              require an input template
-
-             :param cores_per_task: Number of cores to be used by each task
-
-             :param nodes: On MARCC, each node has 24 cores_per_task. Specify the number of nodes if more than one
-              node is required.
-
-             :param resume: This option can be set to True if a parallel execution of a model with input template
-              failed to finish running all jobs. GNU parallel will then run only the jobs which failed to execute.
-
-             :param verbose: This option can be set to False if you do not want RunModel to print status messages to
-              the screen during execution. It is True by default.
-
-             :param model_dir: The directory  that contains the Python script which contains commands to execute the
-             model
-
-             :param cluster: This option defines if we run the code into a cluster
+             # :param model_script: The filename of the Python script which contains commands to execute the model
+             #
+             # :param model_object_name: The name of the function or class which executes the model
+             #
+             # :param input_template: The name of the template input file which will be used to generate input files for
+             #  each run of the model. Refer documentation for more details.
+             #
+             # :param var_names: A list containing the names of the variables which are present in the template input
+             #  files
+             #
+             # :param output_script: The filename of the Python script which contains the commands to process the output
+             #
+             # :param output_object_name: The name of the function or class which has the output values. If the object
+             #  is a class named cls, the output must be saved as cls.qoi. If it a function, it should return the output
+             #  quantity of interest
+             #
+             # :param ntasks: Number of tasks to be run in parallel. RunModel uses GNU parallel to execute models which
+             #  require an input template
+             #
+             # :param cores_per_task: Number of cores to be used by each task
+             #
+             # :param nodes: On MARCC, each node has 24 cores_per_task. Specify the number of nodes if more than one
+             #  node is required.
+             #
+             # :param resume: This option can be set to True if a parallel execution of a model with input template
+             #  failed to finish running all jobs. GNU parallel will then run only the jobs which failed to execute.
+             #
+             # :param verbose: This option can be set to False if you do not want RunModel to print status messages to
+             #  the screen during execution. It is True by default.
+             #
+             # :param model_dir: The directory  that contains the Python script which contains commands to execute the
+             # model
+             #
+             # :param cluster: This option defines if we run the code into a cluster
 
          Output:
              :return du_dj: vector of first-order gradients
@@ -760,13 +763,23 @@ def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_ob
              :rtype: ndarray
      """
 
-    from UQpy.RunModel import RunModel
-
     if order is None:
         raise ValueError('Exit code: Provide type of derivatives: first, second or mixed.')
 
     if dimension is None:
         raise ValueError('Error: Dimension must be defined')
+
+    def func(m, md):
+        def func_eval(x):
+            if md == 'Krig':
+                return m(x=x)
+            elif md == 'RunModel':
+                return m(samples=x, append_samples=False)
+            else:
+                raise ValueError('Error: Krig and RunModel methods are supported.')
+        return func_eval
+
+    f_eval = func(m=model, md=method)
 
     if eps is None:
         eps = [0.1]*dimension
@@ -787,29 +800,14 @@ def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_ob
             x_1i_j = np.array(sample)
             x_1i_j[0, i] -= eps[i]
 
-            g0 = RunModel(samples=x_i1_j,  model_script=model_script,
-                          model_object_name=model_object_name,
-                          input_template=input_template, var_names=var_names, output_script=output_script,
-                          output_object_name=output_object_name,
-                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
-                          verbose=verbose, model_dir=model_dir, cluster=cluster)
+            g0 = f_eval(x=x_i1_j)
 
-            g1 = RunModel(samples=x_1i_j,  model_script=model_script,
-                          model_object_name=model_object_name,
-                          input_template=input_template, var_names=var_names, output_script=output_script,
-                          output_object_name=output_object_name,
-                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
-                          verbose=verbose, model_dir=model_dir, cluster=cluster)
+            g1 = f_eval(x=x_1i_j)
 
             du_dj[i] = (g0.qoi_list[0] - g1.qoi_list[0])/(2*eps[i])
 
             if order == 'second':
-                g = RunModel(samples=sample, model_script=model_script,
-                             model_object_name=model_object_name,
-                             input_template=input_template, var_names=var_names, output_script=output_script,
-                             output_object_name=output_object_name,
-                             ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
-                             verbose=verbose, model_dir=model_dir, cluster=cluster)
+                g = f_eval(x=sample)
 
                 d2u_dj[i] = (g0.qoi_list[0] - 2 * g.qoi_list[0] + g1.qoi_list[0]) / (eps[i]**2)
 
@@ -837,33 +835,13 @@ def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_ob
             x_1i_1j[0, i[0]] -= eps[i[0]]
             x_1i_1j[0, i[1]] -= eps[i[1]]
 
-            g0 = RunModel(samples=x_i1_j1,  model_script=model_script,
-                          model_object_name=model_object_name,
-                          input_template=input_template, var_names=var_names, output_script=output_script,
-                          output_object_name=output_object_name,
-                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
-                          verbose=verbose, model_dir=model_dir, cluster=cluster)
+            g0 = f_eval(x=x_i1_j1)
 
-            g1 = RunModel(samples=x_i1_1j,  model_script=model_script,
-                          model_object_name=model_object_name,
-                          input_template=input_template, var_names=var_names, output_script=output_script,
-                          output_object_name=output_object_name,
-                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
-                          verbose=verbose, model_dir=model_dir, cluster=cluster)
+            g1 = f_eval(x=x_i1_1j)
 
-            g2 = RunModel(samples=x_1i_j1,  model_script=model_script,
-                          model_object_name=model_object_name,
-                          input_template=input_template, var_names=var_names, output_script=output_script,
-                          output_object_name=output_object_name,
-                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
-                          verbose=verbose, model_dir=model_dir, cluster=cluster)
+            g2 = f_eval(x=x_1i_j1)
 
-            g3 = RunModel(samples=x_1i_1j,  model_script=model_script,
-                          model_object_name=model_object_name,
-                          input_template=input_template, var_names=var_names, output_script=output_script,
-                          output_object_name=output_object_name,
-                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
-                          verbose=verbose, model_dir=model_dir, cluster=cluster)
+            g3 = f_eval(x=x_1i_1j)
 
             d2u_dij.append((g0.qoi_list[0] - g1.qoi_list[0] - g2.qoi_list[0] + g3.qoi_list[0])
                            / (4 * eps[i[0]]*eps[i[1]]))

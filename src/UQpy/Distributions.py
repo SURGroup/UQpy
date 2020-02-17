@@ -41,6 +41,7 @@ list_multivariates = ['mvnormal']
 # All scipy supported distributions
 list_all_scipy = list_univariates + list_multivariates
 
+
 class Distribution:
     """
         Description:
