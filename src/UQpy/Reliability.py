@@ -668,10 +668,6 @@ class TaylorSeries:
         self.corr = corr
         self.df_method = df_method
         self.df_step = df_step
-        if self.df_method is None:
-            self.df_method = 'Central'
-        if self.df_step is None:
-            self.df_method = 0.1
         self.model = model
         self.tol = tol
         if self.tol is None:
@@ -743,8 +739,9 @@ class TaylorSeries:
             qoi = self.model.qoi_list[0]
             g_record.append(qoi)
             # 2. evaluate Limit State Function gradient at point u_k and direction cosines
-            dg = self.gradient(method=self.df_method, order='first', sample=x.reshape(1, -1),
-                               dimension=self.dimension, df_step=self.df_step, model=self.model, dist_params=self.dist_params,
+            dg = self.gradient(df_method=self.df_method, order='first', sample=x.reshape(1, -1),
+                               dimension=self.dimension, df_step=self.df_step, model=self.model,
+                               dist_params=self.dist_params,
                                dist_name=self.dist_name)
             dg_record.append(np.dot(dg[0, :], jacobi_x_to_u))
             norm_grad = np.linalg.norm(dg_record[k])
@@ -794,7 +791,7 @@ class TaylorSeries:
 
     @staticmethod
     def gradient(sample=None, dist_params=None, dist_name=None, model=None, dimension=None, df_step=None, order=None,
-                 method=None):
+                 df_method=None):
 
         """
              Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
@@ -839,7 +836,8 @@ class TaylorSeries:
 
         if dimension is None:
             raise ValueError('Error: Dimension must be defined')
-
+        if df_method is None:
+            df_method = 'Central'
         if df_step is None:
             df_step = [0.1] * dimension
         elif isinstance(df_step, float):
@@ -848,7 +846,7 @@ class TaylorSeries:
             if len(df_step) != 1 and len(df_step) != dimension:
                 raise ValueError('Exit code: Inconsistent dimensions.')
             if len(df_step) == 1:
-                eps = [df_step[0]] * dimension
+                df_step = [df_step[0]] * dimension
 
         if model is None:
             raise RuntimeError('A model must be provided.')
@@ -870,11 +868,11 @@ class TaylorSeries:
                 x_1i_j[0, ii] = x_1i_j[0, ii] - eps_i
 
                 qoi = model.qoi_list[0]
-                if method.lower() == 'Forward':
+                if df_method.lower() == 'Forward':
                     model.run(x_i1_j, append_samples=False)
                     qoi_plus = model.qoi_list[0]
                     du_dj[ii] = (qoi_plus - qoi) / eps_i
-                elif method.lower() == 'Backwards':
+                elif df_method.lower() == 'Backwards':
                     model.run(x_1i_j, append_samples=False)
                     qoi_minus = model.qoi_list[0]
                     du_dj[ii] = (qoi - qoi_minus) / eps_i
