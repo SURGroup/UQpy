@@ -26,7 +26,7 @@ from scipy.special import gamma
 from scipy.stats import chi2, norm
 
 
-def _run_parallel_python(model_script, model_object_name, sample, dict_kwargs):
+def _run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
     """
     Execute the python model in parallel
     :param sample: One sample point where the model has to be evaluated
@@ -37,7 +37,7 @@ def _run_parallel_python(model_script, model_object_name, sample, dict_kwargs):
     # if kwargs is not None:
     #     par_res = eval(model_object_name + '(sample, kwargs)')
     # else:
-    if len(dict_kwargs) == 0:
+    if dict_kwargs is None:
         par_res = eval(model_object_name + '(sample)')
     else:
         par_res = eval(model_object_name + '(sample, **dict_kwargs)')
@@ -147,7 +147,6 @@ def compute_Delaunay_centroid_volume(vertices):
 
     return centroid, volume
 
-
 def correlation_distortion(marginal, params, rho_norm):
 
     """
@@ -156,13 +155,19 @@ def correlation_distortion(marginal, params, rho_norm):
             A function to solve the double integral equation in order to evaluate the modified correlation
             matrix in the standard normal space given the correlation matrix in the original space. This is achieved
             by a quadratic two-dimensional Gauss-Legendre integration.
+            This function is a part of the ERADIST code that can be found in:
+            https://www.era.bgu.tum.de/en/software/
+
         Input:
             :param marginal: marginal distributions
             :type marginal: list
+
             :param params: marginal distribution parameters.
             :type params: list
+
             :param rho_norm: Correlation at standard normal space.
             :type rho_norm: ndarray
+
         Output:
             :return rho: Distorted correlation
             :rtype rho: ndarray
@@ -203,8 +208,8 @@ def correlation_distortion(marginal, params, rho_norm):
             if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
                 raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
 
-            tmp_f_xi = ((i_cdf_j(stats.norm.cdf(xi[:, np.newaxis]), params[j]) - mj[0]) / np.sqrt(mj[1]))
-            tmp_f_eta = ((i_cdf_i(stats.norm.cdf(eta[:, np.newaxis]), params[i]) - mi[0]) / np.sqrt(mi[1]))
+            tmp_f_xi = ((i_cdf_j(stats.norm.cdf(xi), params[j]) - mj[0]) / np.sqrt(mj[1]))
+            tmp_f_eta = ((i_cdf_i(stats.norm.cdf(eta), params[i]) - mi[0]) / np.sqrt(mi[1]))
             coef = tmp_f_xi * tmp_f_eta * w2d
 
             rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
@@ -534,6 +539,8 @@ def R_to_S(R, w, t):
 
     """
         Description: A function to transform the autocorrelation function to a power spectrum
+
+
         Input:
             :param r: Autocorrelation function of the signal
             :param w: Array of frequency discretizations
@@ -544,7 +551,6 @@ def R_to_S(R, w, t):
             :rtype: ndarray
 
     """
-
     dt = t[1] - t[0]
     fac = np.ones(len(t))
     fac[1: len(t) - 1: 2] = 4
@@ -590,6 +596,45 @@ def eval_hessian(dimension, mixed_der, der):
         hessian[i[1], i[0]] = hessian[i[0], i[1]]
         add_ += 1
     return hessian
+
+
+def IS_diagnostics(sampling_outputs=None, weights=None, graphics=False, figsize=(8, 3), ):
+
+    """
+         Input:
+             :param sampling_outputs: output object of a sampling method
+             :type sampling_outputs: object of class MCMC or IS
+
+             :param weights: output weights of IS (alternative to giving sampling_outputs for IS)
+             :type weights: ndarray
+
+             :param graphics: indicates whether or not to do a plot
+             :type graphics: boolean, default False
+
+             :param figsize: size of the figure for output plots
+             :type figsize: tuple (width, height)
+
+         Output:
+             returns various diagnostics values/plots to evaluate importance sampling outputs
+     """
+
+    if (sampling_outputs is None) and (weights is None):
+        raise ValueError('UQpy error: sampling_outputs or weights should be provided')
+    if sampling_outputs is not None:
+        weights = sampling_outputs.weights
+    print('Diagnostics for Importance Sampling \n')
+    effective_sample_size = 1/np.sum(weights**2, axis=0)
+    print('Effective sample size is ne={}, out of a total number of samples={} \n'.
+          format(effective_sample_size,np.size(weights)))
+    print('max_weight = {}, min_weight = {} \n'.format(max(weights), min(weights)))
+
+    # Output plots
+    if graphics:
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.scatter(weights, np.zeros((np.size(weights), )), s=weights * 300, marker='o')
+        ax.set_xlabel('weights')
+        ax.set_title('Normalized weights out of importance sampling')
+        plt.show(fig)
 
 
 def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ESS=0.05,
@@ -748,15 +793,16 @@ def check_input_dims(x):
     return x
 
 
-def recursive_update_mean_covariance(n_new, new_sample, previous_mean, previous_covariance=None):
-    """ Iterative formula to compute a new mean, covariance based on previous ones and new sample. """
-    new_mean = (n_new - 1) / n_new * previous_mean + 1 / n_new * new_sample
+def recursive_update_mean_covariance(n, new_sample, previous_mean, previous_covariance=None):
+    """ Iterative formula to compute a new mean, covariance based on previous ones and new sample.
+     n is the number of samples used to compute the current mean """
+    new_mean = (n - 1) / n * previous_mean + 1 / n * new_sample
     if previous_covariance is None:
         return new_mean
     dim = new_sample.size
-    if n_new == 1:
+    if n == 1:
         new_covariance = np.zeros((dim, dim))
     else:
         delta_n = (new_sample - previous_mean).reshape((dim, 1))
-        new_covariance = (n_new - 2) / (n_new - 1) * previous_covariance + 1 / n_new * np.matmul(delta_n, delta_n.T)
+        new_covariance = (n - 2) / (n - 1) * previous_covariance + 1 / n * np.matmul(delta_n, delta_n.T)
     return new_mean, new_covariance

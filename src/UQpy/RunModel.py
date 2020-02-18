@@ -169,13 +169,14 @@ class RunModel:
         self.verbose = verbose
 
         # Format option
+        available_formats = {'ls-dyna': "{:>10.4f}"}
         self.fmt = fmt
         if self.fmt is None:
             pass
+        elif self.fmt in available_formats.keys():
+                self.fmt = available_formats[self.fmt]
         elif isinstance(self.fmt, str):
-            if self.fmt == 'ls-dyna':
-                self.fmt = "{:>10.4f}"
-            if self.fmt[0] != "{" or self.fmt[-1] != "}":
+            if (self.fmt[0] != "{") or (self.fmt[-1] != "}") or (":" not in self.fmt):
                 raise ValueError('fmt should be in ["ls-dyna"], or a string in brackets indicating a format.')
         else:
             raise TypeError('fmt should be a str.')
@@ -341,6 +342,7 @@ class RunModel:
 
         return None
 
+
     ####################################################################################################################
 
 
@@ -356,7 +358,7 @@ class RunModel:
 
         # Loop over the number of simulations, executing the model once per loop
         ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%p")
-        for i in range(self.nexist, self.nsim):
+        for i in range(self.nexist, self.nexist+self.nsim):
             # Create a directory for each model run
             work_dir = os.path.join(os.getcwd(), "run_" + str(i) + '_' + ts)
             os.makedirs(work_dir)
@@ -407,7 +409,7 @@ class RunModel:
 
         ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%p")
 
-        for i in range(self.nexist, self.nsim):
+        for i in range(self.nexist, self.nexist+self.nsim):
             # Create a directory for each model run
             work_dir = os.path.join(os.getcwd(), "run_" + str(i) + '_' + ts)
             os.makedirs(work_dir)
@@ -466,9 +468,9 @@ class RunModel:
         exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
         for i in range(self.nsim):
             if isinstance(self.samples, list):
-                sample_to_send = self.samples[i+self.nexist]
+                sample_to_send = np.atleast_2d(self.samples[i+self.nexist])
             elif isinstance(self.samples, np.ndarray):
-                sample_to_send = self.samples[i+self.nexist]
+                sample_to_send = np.atleast_2d(self.samples[i+self.nexist])
                 # self.model_output = eval(self.model_object_name + '(self.samples[i])')
             if len(self.python_kwargs) == 0:
                 self.model_output = eval(self.model_object_name + '(sample_to_send)')
@@ -501,11 +503,15 @@ class RunModel:
         sample = []
         pool = multiprocessing.Pool(processes=self.ntasks)
         for i in range(self.nsim):
-            if len(self.python_kwargs) == 0:
-                sample.append([self.model_script, self.model_object_name, self.samples[i + self.nexist]])
-            else:
-                sample.append([self.model_script, self.model_object_name, self.samples[i + self.nexist],
-                               self.python_kwargs])
+            if isinstance(self.samples, list):
+                sample_to_send = np.atleast_2d(self.samples[i+self.nexist])
+            elif isinstance(self.samples, np.ndarray):
+                sample_to_send = np.atleast_2d(self.samples[i+self.nexist])
+            # if len(self.python_kwargs) == 0:
+            #     sample.append([self.model_script, self.model_object_name, self.samples[i + self.nexist]])
+            # else:
+            sample.append([self.model_script, self.model_object_name, sample_to_send,
+                           self.python_kwargs])
 
         results = pool.starmap(Utilities._run_parallel_python, sample)
 

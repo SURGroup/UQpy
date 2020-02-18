@@ -19,7 +19,6 @@
 
 import copy
 from scipy.spatial.distance import pdist
-from scipy.stats import multivariate_normal
 import random
 from UQpy.Distributions import *
 from UQpy.Utilities import *
@@ -149,6 +148,7 @@ class MCS:
 #                                         Latin hypercube sampling  (LHS)
 ########################################################################################################################
 
+
 class LHS:
     """
         Description:
@@ -157,10 +157,6 @@ class LHS:
             parameter space are generated.
 
         Input:
-            :param dimension: A scalar value defining the dimension of the random variables.
-                              If dimension is not provided then dimension is equal to the length of the dist_name.
-            :type dimension: int
-
             :param dist_name: A list containing the names of the distributions of the random variables.
                               Distribution names must match those in the Distributions module.
                               If the distribution does not match one from the Distributions module, the user must
@@ -218,7 +214,7 @@ class LHS:
     # Last modified: 6/20/2018 by Dimitris G. Giovanis
 
     def __init__(self, dist_name=None, dist_params=None, lhs_criterion='random', lhs_metric='euclidean',
-                 lhs_iter=100, var_names = None, nsamples=None, verbose=False):
+                 lhs_iter=100, var_names=None, nsamples=None, verbose=False):
 
         self.nsamples = nsamples
         self.dist_name = dist_name
@@ -229,6 +225,7 @@ class LHS:
         self.lhs_iter = lhs_iter
         self.init_lhs()
         self.var_names = var_names
+        self.verbose = verbose
 
         self.distribution = [None] * self.dimension
         for i in range(self.dimension):
@@ -237,6 +234,9 @@ class LHS:
         self.samplesU01, self.samples = self.run_lhs()
 
     def run_lhs(self):
+
+        if self.verbose:
+            print('UQpy: Running Latin Hypercube Sampling...')
 
         cut = np.linspace(0, 1, self.nsamples + 1)
         a = cut[:self.nsamples]
@@ -249,7 +249,9 @@ class LHS:
             i_cdf = self.distribution[j].icdf
             samples_u_to_x[:, j] = i_cdf(samples[:, j], self.dist_params[j])
 
-        print('Successful execution of LHS design..')
+        if self.verbose:
+            print('Successful execution of LHS design..')
+
         return samples, samples_u_to_x
 
     def _samples(self, a, b):
@@ -297,7 +299,8 @@ class LHS:
                 max_min_dist = np.min(d)
                 samples = copy.deepcopy(samples_try)
 
-        print('Achieved max_min distance of ', max_min_dist)
+        if self.verbose:
+            print('Achieved max_min distance of ', max_min_dist)
 
         return samples
 
@@ -314,7 +317,8 @@ class LHS:
                 min_corr = np.max(np.abs(r1))
                 samples = copy.deepcopy(samples_try)
 
-        print('Achieved minimum correlation of ', min_corr)
+        if self.verbose:
+            print('Achieved minimum correlation of ', min_corr)
 
         return samples
 
@@ -479,21 +483,18 @@ class STS:
                     for i in range(0, self.strata.origins.shape[0]):
                         samples[i, j] = self.strata.origins[i, j] + self.strata.widths[i, j] / 2.
 
-                import scipy.stats as stats
                 samples_u_to_x[:, j] = i_cdf(np.atleast_2d(samples[:, j]).T, self.dist_params[j])
 
             print('UQpy: Successful execution of STS design..')
             return samples, samples_u_to_x
 
         elif self.stype == 'Voronoi':
-            from scipy.spatial import Voronoi
             from UQpy.Utilities import compute_Voronoi_centroid_volume, voronoi_unit_hypercube
 
             samples_init = np.random.rand(self.nsamples, self.dimension)
 
             for i in range(self.n_iters):
-                x = self.in_hypercube(samples_init)
-
+                # x = self.in_hypercube(samples_init)
                 self.strata = voronoi_unit_hypercube(samples_init)
 
                 self.strata.centroids = []
@@ -514,33 +515,12 @@ class STS:
                                                                self.dist_params[i]).T
 
     def in_hypercube(self, samples):
-        str_temp = 'np.logical_and('
 
         in_cube = True * self.nsamples
         for i in range(self.dimension):
             in_cube = np.logical_and(in_cube, np.logical_and(0 <= samples[:, i], samples[:, i] <= 1))
 
-        return(in_cube)
-
-
-
-
-    # def voronoi_centroid_volume(self, vertices):
-    #
-    #     from scipy.spatial import Delaunay, ConvexHull
-    #
-    #     T = Delaunay(vertices)
-    #
-    #     w = np.zeros((T.nsimplex, 1))
-    #     cent = np.zeros((T.nsimplex, self.dimension))
-    #     for i in range(T.nsimplex):
-    #         ch = ConvexHull(T.points[T.simplices[i]])
-    #         w[i] = ch.volume
-    #         cent[i, :] = np.mean(T.points[T.simplices[i]], axis=0)
-    #     V = np.sum(w)
-    #     C = np.matmul(np.divide(w, V).T, cent)
-    #
-    #     return C, V
+        return in_cube
 
     def init_sts(self):
 
@@ -777,49 +757,46 @@ class RSS:
     """
 
     # Authors: Mohit S. Chauhan
-    # Last modified: 01/07/2020 by Mohit S. Chauhan
+    # Last modified: 12/01/2019 by Mohit S. Chauhan
 
     def __init__(self, sample_object=None, run_model_object=None, krig_object=None, local=False, max_train_size=None,
-                 step_size=0.005, qoi_name=None, verbose=False, visualize=False):
-
+                 step_size=0.005, qoi_name=None, verbose=False):
 
         # Initialize attributes that are common to all approaches
         self.sample_object = sample_object
         self.run_model_object = run_model_object
         self.verbose = verbose
         self.nsamples = 0
-        self.visualize = visualize
-
-        # Run Initial Error Checks
-        self.init_rss()
 
         self.cell = self.sample_object.stype
         self.dimension = np.shape(self.sample_object.samples)[1]
         if run_model_object is not None:
             self.option = 'Gradient'
 
+        if self.cell == 'Voronoi':
+            self.mesh = []
+            self.mesh_vertices, self.vertices_in_U01 = [], []
+            self.points_to_samplesU01, self.training_points = [], []
+
         if self.option == 'Gradient':
-            if krig_object is None:
-                self.meta = 'Delaunay'
-            else:
-                self.meta = 'Kriging'
+            self.meta = ''
             self.local = local
             self.max_train_size = max_train_size
             self.krig_object = krig_object
             self.qoi_name = qoi_name
             self.step_size = step_size
             self.nexist = 0
-            self.run_gerss()
+
+        # Run Initial Error Checks
+        self.init_rss()
+
+        if self.option == 'Gradient':
+            self.initiate_gerss()
         else:
-            self.run_rss()
+            self.initiate_rss()
 
-
-    ###################################################
-    # Run Gradient-Enhanced Refined Stratified Sampling
-    ###################################################
-    def run_gerss(self):
-
-        # Check if the initial sample design already has model evalutions with it.
+    def initiate_gerss(self):
+        # Check if the initial sample design already has model evaluations with it.
         # If it does not, run the initial calculations.
         if self.run_model_object is None:
             raise NotImplementedError('UQpy Error: Gradient Enhanced RSS requires a predefined RunModel object.')
@@ -830,21 +807,32 @@ class RSS:
 
         self.nexist = len(self.run_model_object.samples)
 
+    def initiate_rss(self):
+        if self.verbose:
+            print('UQpy: RSS - A RSS class object has been initiated.')
+
     def sample(self, nsamples=0):
         """
-        Inputs:
-            :param nsamples: Final size of the samples.
-            :type nsamples: int
+                Inputs:
+                    :param nsamples: Final size of the samples.
+                    :type nsamples: int
         """
         self.nsamples = nsamples
         if self.nsamples <= self.nexist:
             raise NotImplementedError('UQpy Error: The number of requested samples must be larger than the existing '
                                       'sample set.')
+        if self.option == 'Gradient':
+            self.run_gerss()
+        else:
+            self.run_rss()
 
+    ###################################################
+    # Run Gradient-Enhanced Refined Stratified Sampling
+    ###################################################
+    def run_gerss(self):
         # --------------------------
         # RECTANGULAR STRATIFICATION
         # --------------------------
-
         if self.cell == 'Rectangular':
 
             if self.verbose:
@@ -854,7 +842,7 @@ class RSS:
             self.training_points = self.sample_object.samplesU01
 
             # Initialize the vector of gradients at each training point
-            dydx = np.zeros((self.nsamples, np.size(self.training_points[1])))
+            dy_dx = np.zeros((self.nsamples, np.size(self.training_points[1])))
 
             # Primary loop for adding samples and performing refinement.
             for i in range(self.nexist, self.nsamples):
@@ -875,9 +863,10 @@ class RSS:
 
                 # Use the entire sample set to train the surrogate model (more expensive option)
                 if self.max_train_size is None or len(self.training_points) <= self.max_train_size or i == self.nexist:
-                    dydx[:i] = self.estimate_gradient(np.atleast_2d(self.training_points), np.atleast_2d(np.array(qoi)),
-                                                      self.sample_object.strata.origins +
-                                                      0.5 * self.sample_object.strata.widths)
+                    dy_dx[:i] = self.estimate_gradient(np.atleast_2d(self.training_points),
+                                                       np.atleast_2d(np.array(qoi)),
+                                                       self.sample_object.strata.origins +
+                                                       0.5 * self.sample_object.strata.widths)
 
                 # Use only max_train_size points to train the surrogate model (more economical option)
                 else:
@@ -888,13 +877,14 @@ class RSS:
                     neighbors = knn.kneighbors(np.atleast_2d(self.training_points[-1]), return_distance=False)
 
                     # Recompute the gradient only at the nearest neighbor points.
-                    dydx[neighbors] = self.estimate_gradient(np.squeeze(self.training_points[neighbors]),
-                                                             np.atleast_2d(np.array(qoi)[neighbors]),
-                                                             np.squeeze(self.sample_object.strata.origins[neighbors] +
-                                                                        0.5 * self.sample_object.strata.widths[neighbors]))
+                    dy_dx[neighbors] = self.estimate_gradient(np.squeeze(self.training_points[neighbors]),
+                                                              np.array(qoi)[neighbors][0],
+                                                              np.squeeze(self.sample_object.strata.origins[neighbors] +
+                                                                         0.5 * self.sample_object.strata.widths[
+                                                                             neighbors]))
 
                 # Define the gradient vector for application of the Delta Method
-                dydx1 = dydx[:i]
+                dy_dx1 = dy_dx[:i]
 
                 # ------------------------------
                 # Determine the stratum to break
@@ -907,7 +897,7 @@ class RSS:
                 # Estimate the variance over the stratum by Delta Method
                 s = np.zeros([i, 1])
                 for j in range(i):
-                    s[j, 0] = np.sum(dydx1[j, :] * var[j, :] * dydx1[j, :] * \
+                    s[j, 0] = np.sum(dy_dx1[j, :] * var[j, :] * dy_dx1[j, :] *
                                      (self.sample_object.strata.weights[j] ** 2))
 
                 # TODO: Break n strata with the highest gradients and sample in each. Allow this to use multiple cores.
@@ -918,7 +908,7 @@ class RSS:
                 # Cut the stratum in the direction of maximum gradient
                 cut_dir_temp = self.sample_object.strata.widths[bin2break, :]
                 t = np.argwhere(cut_dir_temp == np.amax(cut_dir_temp))
-                dir2break = t[np.argmax(abs(dydx1[bin2break, t]))]
+                dir2break = t[np.argmax(abs(dy_dx1[bin2break, t]))]
 
                 # Divide the stratum bin2break in the direction dir2break
                 self.sample_object.strata.widths[bin2break, dir2break] = \
@@ -944,15 +934,15 @@ class RSS:
 
                 # Add a uniform random sample inside the new stratum
                 new_point = np.random.uniform(self.sample_object.strata.origins[i, :],
-                                        self.sample_object.strata.origins[i, :] + \
-                                        self.sample_object.strata.widths[i, :])
+                                              self.sample_object.strata.origins[i, :] +
+                                              self.sample_object.strata.widths[i, :])
 
                 # Adding new sample to training points, samplesU01 and samples attributes
                 self.training_points = np.vstack([self.training_points, new_point])
                 self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
                 for j in range(0, self.dimension):
-                    icdf = self.sample_object.distribution[j].icdf
-                    new_point[j] = icdf(np.atleast_2d(new_point[j]).T, self.sample_object.dist_params[j])
+                    i_cdf = self.sample_object.distribution[j].icdf
+                    new_point[j] = i_cdf(np.atleast_2d(new_point[j]).T, self.sample_object.dist_params[j])
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 # Run the model at the new sample point
@@ -962,15 +952,13 @@ class RSS:
                 if self.verbose:
                     print("Iteration:", i)
 
-
         # ----------------------
         # VORONOI STRATIFICATION
         # ----------------------
-
         elif self.cell == 'Voronoi':
 
             from UQpy.Utilities import compute_Delaunay_centroid_volume, voronoi_unit_hypercube
-            from scipy.spatial import Delaunay
+            from scipy.spatial.qhull import Delaunay
             import math
             import itertools
 
@@ -978,17 +966,25 @@ class RSS:
 
             # Extract the boundary vertices and use them in the Delaunay triangulation / mesh generation
             self.mesh_vertices = self.training_points
-            self.points_to_samplesU01 = np.arange(0,self.training_points.shape[0])
+            self.points_to_samplesU01 = np.arange(0, self.training_points.shape[0])
             for i in range(np.shape(self.sample_object.strata.vertices)[0]):
                 if any(np.logical_and(self.sample_object.strata.vertices[i, :] >= -1e-10,
-                                       self.sample_object.strata.vertices[i, :] <= 1e-10)) or \
+                                      self.sample_object.strata.vertices[i, :] <= 1e-10)) or \
                     any(np.logical_and(self.sample_object.strata.vertices[i, :] >= 1-1e-10,
                                        self.sample_object.strata.vertices[i, :] <= 1+1e-10)):
-                    self.mesh_vertices = np.vstack([self.mesh_vertices, self.sample_object.strata.vertices[i,:]])
+                    self.mesh_vertices = np.vstack([self.mesh_vertices, self.sample_object.strata.vertices[i, :]])
                     self.points_to_samplesU01 = np.hstack([self.points_to_samplesU01, np.array([np.nan])])
 
             # Define the simplex mesh to be used for gradient estimation and sampling
-            self.mesh = Delaunay(self.mesh_vertices, incremental=True)
+            self.mesh = Delaunay(self.mesh_vertices, furthest_site=False, incremental=True, qhull_options=None)
+
+            # Defining attributes of Delaunay, so that pycharm can check that it exists
+            self.mesh.nsimplex: int = self.mesh.nsimplex
+            self.mesh.vertices: np.ndarray = self.mesh.vertices
+            self.mesh.simplices: np.ndarray = self.mesh.simplices
+            self.mesh.add_points: classmethod = self.mesh.add_points
+            points = getattr(self.mesh, 'points')
+            dy_dx_old = 0
 
             # Primary loop for adding samples and performing refinement.
             for i in range(self.nexist, self.nsamples):
@@ -998,7 +994,7 @@ class RSS:
                 self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
                 for j in range(self.mesh.nsimplex):
                     self.mesh.centroids[j, :], self.mesh.volumes[j] = \
-                        compute_Delaunay_centroid_volume(self.mesh.points[self.mesh.vertices[j]])
+                        compute_Delaunay_centroid_volume(points[self.mesh.vertices[j]])
 
                 # If the quantity of interest is a dictionary, convert it to a list
                 qoi = [None] * len(self.run_model_object.qoi_list)
@@ -1015,18 +1011,16 @@ class RSS:
                 # Use the entire sample set to train the surrogate model (more expensive option)
                 if self.max_train_size is None or len(self.training_points) <= self.max_train_size or \
                         i == self.nexist:
-                    dydx = self.estimate_gradient(np.atleast_2d(self.training_points), np.atleast_2d(np.array(qoi)),
-                                                  self.mesh.centroids)
+                    dy_dx = self.estimate_gradient(np.atleast_2d(self.training_points), np.atleast_2d(np.array(qoi)),
+                                                   self.mesh.centroids)
 
                 # Use only max_train_size points to train the surrogate model (more economical option)
                 else:
 
                     # Build a mapping from the new vertex indices to the old vertex indices.
-                    self.mesh.new_vertices = []
-                    self.mesh.new_indices = []
+                    self.mesh.new_vertices, self.mesh.new_indices = [], []
                     self.mesh.new_to_old = np.zeros([self.mesh.vertices.shape[0], ]) * np.nan
-                    j = 0
-                    k = 0
+                    j, k = 0, 0
                     while j < self.mesh.vertices.shape[0] and k < self.mesh.old_vertices.shape[0]:
 
                         if np.all(self.mesh.vertices[j, :] == self.mesh.old_vertices[k, :]):
@@ -1065,19 +1059,20 @@ class RSS:
                     update_array = np.asarray(update_list)
 
                     # Initialize the gradient vector
-                    dydx = np.zeros((self.mesh.new_to_old.shape[0], self.dimension))
+                    dy_dx = np.zeros((self.mesh.new_to_old.shape[0], self.dimension))
 
                     # For those simplices that will not be updated, use the previous gradient
-                    for j in range(dydx.shape[0]):
+                    for j in range(dy_dx.shape[0]):
                         if np.isnan(self.mesh.new_to_old[j]):
                             continue
                         else:
-                            dydx[j, :] = dydx_old[int(self.mesh.new_to_old[j]), :]
+                            dy_dx[j, :] = dy_dx_old[int(self.mesh.new_to_old[j]), :]
 
                     # For those simplices that will be updated, compute the new gradient
-                    dydx[update_array, :] = self.estimate_gradient(np.squeeze(self.sample_object.samplesU01[neighbors]),
-                                                                   np.atleast_2d(np.array(qoi)[neighbors]),
-                                                                   self.mesh.centroids[update_array])
+                    dy_dx[update_array, :] = self.estimate_gradient(
+                        np.squeeze(self.sample_object.samplesU01[neighbors]),
+                        np.atleast_2d(np.array(qoi)[neighbors]),
+                        self.mesh.centroids[update_array])
 
                 # ----------------------------------------------------
                 # Determine the simplex to break and draw a new sample
@@ -1088,14 +1083,14 @@ class RSS:
                 # Good, I.J. and Gaskins, R.A. (1971). The Centroid Method of Numerical Integration. Numerische
                 #       Mathematik. 16: 343--359.
                 var = np.zeros((self.mesh.nsimplex, self.dimension))
-                s = np.zeros((self.mesh.nsimplex))
+                s = np.zeros(self.mesh.nsimplex)
                 for j in range(self.mesh.nsimplex):
                     for k in range(self.dimension):
-                        std = np.std(self.mesh.points[self.mesh.vertices[j]][:, k])
+                        std = np.std(points[self.mesh.vertices[j]][:, k])
                         var[j, k] = (self.mesh.volumes[j] * math.factorial(self.dimension) /
                                      math.factorial(self.dimension + 2)) * (self.dimension * std ** 2)
-                    s[j] = np.sum(dydx[j, :] * var[j, :] * dydx[j, :] * (self.mesh.volumes ** 2))
-                dydx_old = dydx
+                    s[j] = np.sum(dy_dx[j, :] * var[j, :] * dy_dx[j, :] * (self.mesh.volumes ** 2))
+                dy_dx_old = dy_dx
 
                 # TODO: Update this to sample n points with the highest variance. Allow it to run on multiple cores.
 
@@ -1103,78 +1098,14 @@ class RSS:
                 bin2add = np.argmax(s)
 
                 # Create a sub-simplex within the simplex with maximum variance.
-                tmp_verts = self.mesh.points[self.mesh.simplices[bin2add, :]]
+                tmp_vertices = points[self.mesh.simplices[bin2add, :]]
                 col_one = np.array(list(itertools.combinations(np.arange(self.dimension + 1), self.dimension)))
-                self.mesh.subsimplex = np.zeros_like(tmp_verts)  # node: an array containing mid-point of edges
+                self.mesh.sub_simplex = np.zeros_like(tmp_vertices)  # node: an array containing mid-point of edges
                 for m in range(self.dimension + 1):
-                    self.mesh.subsimplex[m, :] = np.sum(tmp_verts[col_one[m] - 1, :], 0) / self.dimension
+                    self.mesh.sub_simplex[m, :] = np.sum(tmp_vertices[col_one[m] - 1, :], 0) / self.dimension
 
-                # Using the Simplex class to generate a new sample in the subsimplex
-                new_point = Simplex(nodes=self.mesh.subsimplex, nsamples=1).samples
-
-                # If the visualize option is selected, plot the simplex evolution
-                if self.visualize:
-                    if self.dimension != 2:
-                        raise NotImplementedError(
-                            'UQpy Error: Voronoi visualization is only permitted for 2D problems.')
-
-                    # Check if the directory exists for placing the generated images.
-                    if not os.path.exists('./figures_voronoi'):
-                        os.makedirs('./figures_voronoi')
-
-                    # Plot the points, simplices, and their centroids with the centroids colored by variance
-                    if i == self.nexist:
-                        fig = plt.figure(1)
-                        ax = plt.axes()
-                        ax.plot(self.training_points[:, 0], self.training_points[:, 1], 'xk')
-                        ax.scatter(self.mesh.centroids[:, 0], self.mesh.centroids[:, 1], c=s, vmin=0, vmax=0.00001)
-                        ax.triplot(self.mesh.points[:, 0], self.mesh.points[:, 1], self.mesh.simplices, color='blue')
-                        plt.savefig('./figures_voronoi/p1_' + str(i) + '.png')
-                        plt.close(fig)
-
-                    else:
-                        fig = plt.figure(1)
-                        ax = plt.axes()
-                        ax.plot(self.training_points[:, 0], self.training_points[:, 1], 'xk')
-                        ax.scatter(self.mesh.centroids[:, 0], self.mesh.centroids[:, 1], c=s, vmin=0, vmax=0.00001)
-                        ax.triplot(self.mesh.points[:, 0], self.mesh.points[:, 1], self.mesh.simplices, color='blue')
-                        if i > self.max_train_size:
-                            ax.triplot(self.mesh.points[:, 0], self.mesh.points[:, 1],
-                                       self.mesh.simplices[update_array], color='purple')
-                        plt.savefig('./figures_voronoi/p1_' + str(i) + '.png')
-                        plt.close(fig)
-
-                        # Plot the points, simplices, and their centroids along with the subsimplex to be sampled.
-                        fig = plt.figure(1)
-                        ax = plt.axes()
-                        ax.plot(self.training_points[:, 0], self.training_points[:, 1], 'xk')
-                        ax.scatter(self.mesh.centroids[:, 0], self.mesh.centroids[:, 1], c=s, vmin=0, vmax=0.00001)
-                        ax.triplot(self.mesh.points[:, 0], self.mesh.points[:, 1], self.mesh.simplices, color='blue')
-                        if i > self.max_train_size:
-                            ax.triplot(self.mesh.points[:, 0], self.mesh.points[:, 1],
-                                       self.mesh.simplices[update_array], color='purple')
-                        t1 = plt.Polygon(np.vstack([self.mesh.subsimplex[:, 0], self.mesh.subsimplex[:, 1]]).T,
-                                         color='red')
-                        plt.gca().add_patch(t1)
-                        plt.savefig('./figures_voronoi/p2_' + str(i) + '.png')
-                        plt.close(fig)
-
-                        # Plot the points, simplices, their centroids, the subsimplex to be sampled, and the new sample
-                        # point.
-                        fig = plt.figure(1)
-                        ax = plt.axes()
-                        ax.plot(self.training_points[:, 0], self.training_points[:, 1], 'x')
-                        ax.scatter(self.mesh.centroids[:, 0], self.mesh.centroids[:, 1], c=s, vmin=0, vmax=0.00001)
-                        ax.triplot(self.mesh.points[:, 0], self.mesh.points[:, 1], self.mesh.simplices, color='blue')
-                        if i > self.max_train_size:
-                            ax.triplot(self.mesh.points[:, 0], self.mesh.points[:, 1],
-                                       self.mesh.simplices[update_array], color='purple')
-                        t1 = plt.Polygon(np.vstack([self.mesh.subsimplex[:, 0], self.mesh.subsimplex[:, 1]]).T,
-                                         color='red')
-                        plt.gca().add_patch(t1)
-                        ax.plot(new_point[:, 0], new_point[:,1], 'xk')
-                        plt.savefig('./figures_voronoi/p3_' + str(i) + '.png')
-                        plt.close(fig)
+                # Using the Simplex class to generate a new sample in the sub-simplex
+                new_point = Simplex(nodes=self.mesh.sub_simplex, nsamples=1).samples
 
                 # Update the matrices to have recognize the new point
                 self.points_to_samplesU01 = np.hstack([self.points_to_samplesU01, np.array([i])])
@@ -1182,6 +1113,7 @@ class RSS:
 
                 # Update the Delaunay triangulation mesh to include the new point.
                 self.mesh.add_points(new_point)
+                points = getattr(self.mesh, 'points')
 
                 # Update the sample arrays to include the new point
                 self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
@@ -1207,27 +1139,8 @@ class RSS:
                     self.sample_object.strata.centroids.append(centroid[0, :])
                     self.sample_object.strata.weights.append(volume)
 
-                if self.visualize:
-                    if self.dimension != 2:
-                        raise NotImplementedError(
-                            'UQpy Error: Voronoi visualization is only permitted for 2D problems.')
-                    from scipy.spatial import voronoi_plot_2d
-                    fig = voronoi_plot_2d(self.sample_object.strata)
-                    axes = plt.gca()
-                    axes.set_xlim([0, 1])
-                    axes.set_ylim([0, 1])
-                    plt.savefig('./figures_voronoi/p4_' + str(i) + '.png')
-                    plt.close(fig)
-
                 if self.verbose:
                     print("Iteration:", i)
-
-        #################################
-        # Run Refined Stratified Sampling
-        #################################
-
-        #TODO: Rebuild run_rss().
-
 
     # Support functions for RSS and GE-RSS
 
@@ -1235,56 +1148,64 @@ class RSS:
     # TODO: We may want to consider moving this to Utilities.
     def estimate_gradient(self, x, y, xt):
         # meta = 'Delaunay' is not currently functional.
-        if self.meta == 'Delaunay':
+        if self.meta == 'delaunay':
 
             # TODO: Here we need to add a reflection of the sample points over each face of the hypercube and build the
             # linear interpolator from the reflected points.
 
             from scipy.interpolate import LinearNDInterpolator
 
-            tck = LinearNDInterpolator(x, y.T, fill_value=0)
+            tck = LinearNDInterpolator(x, y, fill_value=0)
             gr = self.cent_diff(tck, xt, self.step_size)
-        elif self.meta == 'Kriging':
-            from UQpy.Surrogates import Krig
+        elif self.meta == 'kriging':
             with suppress_stdout():  # disable printing output comments
-                self.krig_object.fit(samples=x, values=y.T)
-            # corr_m_p = self.krig_object.corr_model_params
+                self.krig_object.fit(samples=x, values=y)
             gr = self.cent_diff(self.krig_object.interpolate, xt, self.step_size)
 
-        elif self.meta == 'Kriging_Sklearn':
-            gp = GaussianProcessRegressor(kernel=corr_m, n_restarts_optimizer=0)
-            gp.fit(x, y)
-            gr = self.cent_diff(gp.predict, xt, self.step_size)
+        elif self.meta == 'sklearn':
+            self.krig_object.fit(x, y)
+            gr = self.cent_diff(self.krig_object.predict, xt, self.step_size)
         else:
             raise NotImplementedError("UQpy Error: 'meta' must be specified in order to calculate gradients.")
-        return gr  # corr_m_p
+        return gr
 
     # Implementation of the central difference method for calculating gradients.
     # TODO: This should probably be moved to Utilities.
-    def cent_diff(self, f, x, h):
-        dydx = np.zeros((np.size(x, 0), np.size(x, 1)))
-        for dirr in range(np.size(x, 1)):
+    @staticmethod
+    def cent_diff(f, x, h):
+        dy_dx = np.zeros((np.size(x, 0), np.size(x, 1)))
+        for ir in range(np.size(x, 1)):
             temp = np.zeros((np.size(x, 0), np.size(x, 1)))
-            temp[:, dirr] = np.ones(np.size(x, 0))
+            temp[:, ir] = np.ones(np.size(x, 0))
             low = x - h / 2 * temp
             hi = x + h / 2 * temp
-            dydx[:, dirr] = ((f.__call__(hi) - f.__call__(low)) / h)[:].reshape((len(hi),))
-        return dydx
+            dy_dx[:, ir] = ((f.__call__(hi) - f.__call__(low)) / h)[:].reshape((len(hi),))
+        return dy_dx
 
     # Initialization and preliminary error checks.
     def init_rss(self):
         if type(self.sample_object).__name__ not in ['STS', 'RSS']:
             raise NotImplementedError("UQpy Error: sample_object must be an object of the STS or RSS class.")
+
         if self.run_model_object is not None:
             self.option = 'Gradient'
             if type(self.run_model_object).__name__ not in ['RunModel']:
                 raise NotImplementedError("UQpy Error: run_model_object must be an object of the RunModel class.")
 
+        if self.option == 'Gradient':
+            if self.krig_object is None:
+                self.meta = 'delaunay'
+            elif type(self.krig_object).__name__ == 'GaussianProcessRegressor':
+                self.meta = 'sklearn'
+            else:
+                self.meta = 'kriging'
 
 ########################################################################################################################
 ########################################################################################################################
 #                                        Generating random samples inside a Simplex
 ########################################################################################################################
+
+
 class Simplex:
     """
         Description:
@@ -1350,8 +1271,6 @@ class Simplex:
 ########################################################################################################################
 #                                  Adaptive Kriging-Monte Carlo Simulation (AK-MCS)
 ########################################################################################################################
-
-
 class AKMCS:
     """
 
@@ -1365,8 +1284,8 @@ class AKMCS:
             :param run_model_object: A RunModel object, which is used to evaluate the function value
             :type run_model_object: class
 
-            :param sample_object: A SampleMethods class object, which contains information about existing samples
-            :type sample_object: class
+            :param samples: A 2d-array of samples
+            :type samples: ndarray
 
             :param krig_object: A kriging class object
             :type krig_object: class
@@ -1432,11 +1351,11 @@ class AKMCS:
     """
 
     # Authors: Mohit S. Chauhan
-    # Last modified: 01/07/2020 by Mohit S. Chauhan
+    # Last modified: 12/01/2019 by Mohit S. Chauhan
 
     def __init__(self, run_model_object=None, samples=None, krig_object=None, nlearn=10000, nstart=None,
-                 population=None, dist_name=None, dist_params=None, qoi_name=None, lf=None, n_add=1,
-                 min_cov=0.05, max_p=None, verbose=False, kriging='UQpy', visualize=False, save_pf=None, **kwargs):
+                 population=None, dist_name=None, dist_params=None, qoi_name=None, lf='U', n_add=1,
+                 min_cov=0.05, max_p=None, verbose=False, kriging='UQpy', visualize=False, save_pf=None):
 
         # Initialize the internal variables of the class.
         self.run_model_object = run_model_object
@@ -1455,6 +1374,7 @@ class AKMCS:
         self.nsamples = []
 
         self.moments = None
+        self.distribution = None
         self.training_points = None
         self.n_add = n_add
         self.indicator = False
@@ -1465,6 +1385,8 @@ class AKMCS:
         self.save_pf = save_pf
         self.visualize = visualize
         self.dimension = 0
+        self.qoi = None
+        self.krig_model = None
 
         # Initialize and run preliminary error checks.
         self.init_akmcs()
@@ -1474,7 +1396,7 @@ class AKMCS:
 
     def run_akmcs(self):
 
-        # Check if the initial sample design already exists and has model evalutions with it.
+        # Check if the initial sample design already exists and has model evaluations with it.
         # If it does not, run the initial calculations.
         if self.samples is None:
             if self.verbose:
@@ -1486,12 +1408,12 @@ class AKMCS:
 
         self.run_model_object.run(samples=self.samples)
 
-    def sample(self, samples=None, n_add=None, append_samples=True, nsamples=0, lf=None, *args):
+    def sample(self, samples=None, n_add=None, append_samples=True, nsamples=0, lf=None):
         """
         Description:
 
         Inputs:
-            :param samples: An 2d-array of samples
+            :param samples: A 2d-array of samples
             :type samples: ndarray
 
             :param n_add: Number of samples to be selected per iteration.
@@ -1508,8 +1430,6 @@ class AKMCS:
                        samples are generated using multiple criterion
                        Options: U, Weighted-U, EFF, EIF and EGIF
             :type lf: str/function
-
-            :param args: Arguments required for run_model_object.
 
         """
 
@@ -1546,23 +1466,23 @@ class AKMCS:
                                   nsamples=self.nlearn)
 
         # If the quantity of interest is a dictionary, convert it to a list
-        qoi = [None] * len(self.run_model_object.qoi_list)
+        self.qoi = [None] * len(self.run_model_object.qoi_list)
         if type(self.run_model_object.qoi_list[0]) is dict:
             for j in range(len(self.run_model_object.qoi_list)):
-                qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
+                self.qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
         else:
-            qoi = self.run_model_object.qoi_list
+            self.qoi = self.run_model_object.qoi_list
 
         # Train the initial Kriging model.
         if self.kriging == 'UQpy':
             with suppress_stdout():  # disable printing output comments
-                self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(qoi)).T)
+                self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(self.qoi)))
             self.krig_model = self.krig_object.interpolate
         else:
+            from sklearn.gaussian_process import GaussianProcessRegressor
             gp = GaussianProcessRegressor(kernel=self.krig_object, n_restarts_optimizer=0)
-            gp.fit(self.training_points, qoi)
+            gp.fit(self.training_points, self.qoi)
             self.krig_model = gp.predict
-
 
         # ---------------------------------------------
         # Primary loop for learning and adding samples.
@@ -1573,9 +1493,8 @@ class AKMCS:
             rest_pop = np.array([x for x in self.population.samples.tolist() if x not in self.samples.tolist()])
 
             # Apply the learning function to identify the new point to run the model.
-            # TODO: Add the other learning fuctions.
 
-            new_ind = self.lf(self.krig_model, rest_pop, qoi, i)
+            new_ind = self.lf(self.krig_model, rest_pop)
             new_point = np.atleast_2d(rest_pop[new_ind])
 
             # Add the new points to the training set and to the sample set.
@@ -1585,22 +1504,23 @@ class AKMCS:
             self.run_model_object.run(samples=np.atleast_2d(new_point))
 
             # If the quantity of interest is a dictionary, convert it to a list
-            qoi = [None] * len(self.run_model_object.qoi_list)
+            self.qoi = [None] * len(self.run_model_object.qoi_list)
             if type(self.run_model_object.qoi_list[0]) is dict:
                 for j in range(len(self.run_model_object.qoi_list)):
-                    qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
+                    self.qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
             else:
-                qoi = self.run_model_object.qoi_list
+                self.qoi = self.run_model_object.qoi_list
 
             # Retrain the Kriging surrogate model
             if self.kriging == 'UQpy':
                 with suppress_stdout():
                     # disable printing output comments
-                    self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(qoi)).T)
+                    self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(self.qoi)))
                 self.krig_model = self.krig_object.interpolate
             else:
+                from sklearn.gaussian_process import GaussianProcessRegressor
                 gp = GaussianProcessRegressor(kernel=self.krig_object, n_restarts_optimizer=0)
-                gp.fit(self.training_points, qoi)
+                gp.fit(self.training_points, self.qoi)
                 self.krig_model = gp.predict
 
             if self.verbose:
@@ -1612,8 +1532,8 @@ class AKMCS:
                 else:
                     g = self.krig_model(rest_pop, return_std=False)
 
-                n_ = g.shape[0] + len(qoi)
-                pf = (sum(g < 0) + sum([i < 0 for i in qoi])) / n_
+                n_ = g.shape[0] + len(self.qoi)
+                pf = (sum(g < 0) + sum(np.array(self.qoi) < 0)) / n_
                 self.pf.append(pf)
                 self.cov_pf.append(np.sqrt((1 - pf) / (pf * n_)))
 
@@ -1623,9 +1543,9 @@ class AKMCS:
     # ------------------
     # LEARNING FUNCTIONS
     # ------------------
-    def eigf(self, surr, pop, qoi, i):
+    def eigf(self, surr, pop):
         # Expected Improvement for Global Fit (EIGF)
-        # Refrence: J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
+        # Reference: J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
         # Link: https://arxiv.org/pdf/1905.05345.pdf
         if self.kriging == 'UQpy':
             g, sig = surr(pop, dy=True)
@@ -1642,17 +1562,17 @@ class AKMCS:
         knn.fit(np.atleast_2d(self.training_points))
         neighbors = knn.kneighbors(np.atleast_2d(pop), return_distance=False)
 
-        qoi_array = np.array([qoi[x] for x in np.squeeze(neighbors)])
+        # noinspection PyTypeChecker
+        qoi_array = np.array([self.qoi[x] for x in np.squeeze(neighbors)])
 
         # Compute the learning function at every point in the population.
         u = np.square(np.squeeze(g) - qoi_array) + np.square(np.squeeze(sig))
 
         rows = np.argmax(u)
-
         return rows
 
     # This learning function has not yet been tested.
-    def u(self, surr, pop, qoi, i):
+    def u(self, surr, pop):
         # U-function
         # References: B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining
         # Kriging and Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
@@ -1662,7 +1582,7 @@ class AKMCS:
         else:
             g, sig = surr(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
-        # sig[sig == 0.] = 0.00001
+        sig[sig == 0.] = 0.00001
 
         u = abs(g) / sig
         rows = u[:, 0].argsort()[:self.n_add]
@@ -1673,7 +1593,7 @@ class AKMCS:
         return rows
 
     # This learning function has not yet been tested.
-    def weighted_u(self, surr, pop, qoi, i):
+    def weighted_u(self, surr, pop):
         # Probability Weighted U-function
         # References: V.S. Sundar and M.S. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH
         # MULTIMODEL INFERENCE".
@@ -1686,7 +1606,7 @@ class AKMCS:
         sig[sig == 0.] = 0.00001
 
         u = abs(g) / sig
-        p1, p2 = np.ones([pop.shape[0],pop.shape[1]]), np.ones([pop.shape[0],pop.shape[1]])
+        p1, p2 = np.ones([pop.shape[0], pop.shape[1]]), np.ones([pop.shape[0], pop.shape[1]])
         for j in range(self.dimension):
             p2[:, j] = self.population.distribution[j].icdf(np.atleast_2d(pop[:, j]).T, self.dist_params[j])
             p1[:, j] = self.population.distribution[j].pdf(np.atleast_2d(p2[:, j]).T, self.dist_params[j])
@@ -1702,7 +1622,7 @@ class AKMCS:
         return rows
 
     # This learning function has not yet been tested.
-    def eff(self, surr, pop, qoi, i):
+    def eff(self, surr, pop):
         # Expected Feasibilty Function (EFF)
         # References: B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, "Efficient Global Reliability
         # Analysis for Nonlinear Implicit Performance Functions", AIAA JOURNAL, Volume 46, 2008.
@@ -1722,25 +1642,24 @@ class AKMCS:
         t3 = (a_ + ep - g) / sig
         eff = (g - a_) * (2 * stats.norm.cdf(t1) - stats.norm.cdf(t2) - stats.norm.cdf(t3))
         eff += -sig * (2 * stats.norm.pdf(t1) - stats.norm.pdf(t2) - stats.norm.pdf(t3))
-        eff += ep*(stats.norm.cdf(t3) - stats.norm.cdf(t2))
+        eff += ep * (stats.norm.cdf(t3) - stats.norm.cdf(t2))
         rows = eff[:, 0].argsort()[-self.n_add:]
 
         if max(eff[:, 0]) <= 0.001:
             self.indicator = True
 
-        n_ = g.shape[0] + len(qoi)
-        pf = (np.sum(g < 0) + sum(iin < 0 for iin in qoi)) / n_
+        n_ = g.shape[0] + len(self.qoi)
+        pf = (np.sum(g < 0) + sum(iin < 0 for iin in self.qoi)) / n_
         self.pf.append(pf)
         self.cov_pf.append(np.sqrt((1 - pf) / (pf * n_)))
 
         return rows
 
     # This learning function has not yet been tested.
-    def eif(self, surr, pop, qoi, i):
+    def eif(self, surr, pop):
         # Expected Improvement Function (EIF)
         # References: D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box
         # Functions", Journal of Global Optimization, Pages 455–492, 1998.
-        import scipy.stats as stats
 
         if self.kriging == 'UQpy':
             g, sig = surr(pop, dy=True)
@@ -1749,8 +1668,8 @@ class AKMCS:
             g, sig = surr(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
-        fm = min(qoi)
-        u = (fm - g) * sp.norm.cdf((fm - g) / sig) + sig * sp.norm.pdf((fm - g) / sig)
+        fm = min(self.qoi)
+        u = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf((fm - g) / sig)
         rows = u[:, 0].argsort()[(np.size(g) - self.n_add):]
 
         return rows
@@ -1788,9 +1707,6 @@ class AKMCS:
                 self.save_pf = True
 
         self.learning()
-
-
-
 
 ########################################################################################################################
 ########################################################################################################################
@@ -1915,7 +1831,7 @@ class MCMC_old:
         self.samples, self.accept_ratio = self.run_mcmc()
 
     def run_mcmc(self):
-        n_accepts = 0
+        n_accepts, accept_ratio = 0, 0
 
         # Defining an array to store the generated samples
         samples = np.zeros([self.nsamples * self.jump + self.nburn, self.dimension])
@@ -2068,7 +1984,6 @@ class MCMC_old:
                     # list_log_p_current.append(list_log_p_current[i - self.ensemble_size + 1])
             accept_ratio = n_accepts / (self.nsamples * self.jump - self.ensemble_size)
 
-
         ################################################################################################################
         # Return the samples
 
@@ -2194,7 +2109,6 @@ class MCMC_old:
                 raise ValueError('pdf_target given as a list should have length equal to dimension')
             if (self.pdf_target_params is not None) and (len(self.pdf_target) != len(self.pdf_target_params)):
                 raise ValueError('pdf_target_params should be given as a list of length equal to pdf_target')
-
 
         # Define a helper function
         def compute_log_pdf(x, pdf_func, params=None, copula_params=None):
@@ -2390,6 +2304,12 @@ class MCMC:
         self.dimension, self.nburn, self.jump = dimension, nburn, jump
         self.seed = self.preprocess_seed(seed, dim=self.dimension)    # check type and assign default [0., ... 0.]
         self.nchains = self.seed.shape[0]
+
+        ##### ADDED MDS 1/21/20
+        self.log_pdf_target = log_pdf_target
+        self.pdf_target = pdf_target
+        self.args_target = args_target
+
         # Check target pdf
         self.evaluate_log_target, self.evaluate_log_target_marginals = self.preprocess_target(
             pdf=pdf_target, log_pdf=log_pdf_target, args=args_target)
@@ -2416,7 +2336,6 @@ class MCMC:
         # Initialize a few more variables
         self.samples = None
         self.log_pdf_values = None
-        self.total_iterations = 0    # total nb of iterations, grows if you call run several times
         self.acceptance_rate = [0.] * self.nchains
 
         if self.verbose:
@@ -2434,7 +2353,7 @@ class MCMC:
         nsamples, nsamples_per_chain = self.preprocess_nsamples(nchains=self.nchains, nsamples=nsamples,
                                                                 nsamples_per_chain=nsamples_per_chain)
         # Initialize the runs: allocate space for the new samples and log pdf values
-        nsims, current_state = self.initialize_samples(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
+        nsims, current_state = self.initialize_samples(nsamples_per_chain=nsamples_per_chain)
 
         if self.verbose:
             print('Running MCMC...')
@@ -2668,10 +2587,10 @@ class MCMC:
         if self.nchains < 2:
             raise ValueError('For the Stretch algorithm, a seed must be provided with at least two samples.')
 
-        # Check MH algorithm inputs: proposal_type and proposal_scale
+        # Check Stretch algorithm inputs: proposal_type and proposal_scale
         for key in self.algorithm_inputs.keys():
             if key not in ['scale']:  # remove inputs that are not being used
-                print('!!! Warning !!! Input ' + key + ' not used in MH algorithm - used input is scale')
+                print('!!! Warning !!! Input ' + key + ' not used in Stretch algorithm - used input is scale')
         if 'scale' not in self.algorithm_inputs.keys():
             self.algorithm_inputs['scale'] = 2.
         if not isinstance(self.algorithm_inputs['scale'], (float, int)):
@@ -2982,7 +2901,7 @@ class MCMC:
             self.log_pdf_values = self.log_pdf_values.reshape((-1, self.nchains), order='C')
         return None
 
-    def initialize_samples(self, nsamples, nsamples_per_chain):
+    def initialize_samples(self, nsamples_per_chain):
         """ Allocate space for samples and log likelihood values, initialize sample_index, acceptance ratio
         If some samples already exist, allocate space to append new samples to the old ones """
         if self.samples is None:    # very first call of run, set current_state as the seed and initialize self.samples
@@ -2991,8 +2910,17 @@ class MCMC:
                 self.log_pdf_values = np.zeros((nsamples_per_chain, self.nchains))
             current_state = np.zeros_like(self.seed)
             np.copyto(current_state, self.seed)
-            self.current_sample_index = 0
-            nsims = self.nburn + self.jump * nsamples_per_chain
+            if self.nburn == 0:    # save the seed
+                self.samples[0, :, :] = current_state
+                if self.save_log_pdf:
+                    self.log_pdf_values[0, :] = self.evaluate_log_target(current_state)
+                self.current_sample_index = 1
+                self.total_iterations = 1  # total nb of iterations, grows if you call run several times
+                nsims = self.jump * nsamples_per_chain - 1
+            else:
+                self.current_sample_index = 0
+                self.total_iterations = 0  # total nb of iterations, grows if you call run several times
+                nsims = self.nburn + self.jump * nsamples_per_chain
 
         else:    # fetch previous samples to start the new run, current state is last saved sample
             if len(self.samples.shape) == 2:   # the chains were previously concatenated
@@ -3038,7 +2966,8 @@ class MCMC:
                     raise ValueError('When log_pdf_target is a list, args should be a list (of tuples) of same length.')
                 evaluate_log_pdf_marginals = list(map(lambda i: lambda x: log_pdf[i](x, *args[i]), range(len(log_pdf))))
                 #evaluate_log_pdf_marginals = [partial(log_pdf_, *args_) for (log_pdf_, args_) in zip(log_pdf, args)]
-                evaluate_log_pdf = None
+                evaluate_log_pdf = (lambda x: np.sum(
+                    [log_pdf[i](x[:, i, np.newaxis], *args[i]) for i in range(len(log_pdf))]))
             else:
                 raise TypeError('log_pdf_target must be a callable or list of callables')
         # pdf is provided
@@ -3058,7 +2987,10 @@ class MCMC:
                                                               10 ** (-320) * np.ones((x.shape[0],)))),
                         range(len(pdf))
                         ))
-                evaluate_log_pdf = None
+                evaluate_log_pdf = (lambda x: np.sum(
+                    [np.log(np.maximum(pdf[i](x[:, i, np.newaxis], *args[i]), 10**(-320)*np.ones((x.shape[0],))))
+                     for i in range(len(log_pdf))]))
+                #evaluate_log_pdf = None
             else:
                 raise TypeError('pdf_target must be a callable or list of callables')
         else:
@@ -3088,7 +3020,7 @@ class MCMC:
             seed = np.zeros((1, dim))
         else:
             try:
-                seed = np.array(seed).reshape((-1, dim))
+                seed = np.array(seed, dtype=float).reshape((-1, dim))
             except:
                 raise TypeError('Input seed should be a nd array of dimensions (?, dimension).')
         return seed
