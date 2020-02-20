@@ -339,7 +339,7 @@ class Krig:
     # Last modified: 12/17/2018 by Mohit S. Chauhan
 
     def __init__(self, reg_model='Linear', corr_model='Exponential', corr_model_params=None, bounds=None, op=True,
-                 n_opt=1, dimension=None):
+                 n_opt=1, dimension=None, verbose=False):
 
         self.reg_model = reg_model
         self.corr_model = corr_model
@@ -348,6 +348,7 @@ class Krig:
         self.bounds = bounds
         self.n_opt = n_opt
         self.op = op
+        self.verbose = verbose
 
         # Initialize and run preliminary error checks.
         self.init_krig()
@@ -362,7 +363,8 @@ class Krig:
         self.F_dash, self.C_inv, self.G = None, None, None
 
     def fit(self, samples, values):
-        print('UQpy: Performing Krig...')
+        if self.verbose:
+            print('UQpy: Performing Krig...')
         from scipy import optimize
         from scipy.linalg import cholesky, cho_solve
 
@@ -530,7 +532,8 @@ class Krig:
 
         self.beta, self.gamma, self.sig = beta, gamma, sigma
         self.F_dash, self.C_inv, self.G = f_dash, c_inv, g_
-        print('Done!')
+        if self.verbose:
+            print('Done!')
 
     def interpolate(self, x, dy=False):
         x = (x - self.mean_s)/self.std_s
@@ -562,7 +565,8 @@ class Krig:
         return y_grad
 
     # Defining Regression model (Linear)
-    def regress(self, model=None):
+    @staticmethod
+    def regress(model=None):
         def r(s):
             s = np.atleast_2d(s)
             if model == 'Constant':
@@ -600,7 +604,8 @@ class Krig:
         return r
 
     # Defining Correlation model (Gaussian Process)
-    def corr(self, model):
+    @staticmethod
+    def corr(model):
         def c(x, s, params, dt=False, dx=False):
             rx, drdt, drdx = [0.], [0.], [0.]
             x = np.atleast_2d(x)
