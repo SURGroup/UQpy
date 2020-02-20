@@ -1124,7 +1124,7 @@ class TaylorSeries:
             qoi = model.interpolate(samples)
         elif isinstance(model, RunModel):
             qoi = model.qoi_list
-        elif type(model).__name__ == 'function':
+        elif isinstance(model, (types.FunctionType, types.MethodType)):
             qoi = model(samples)
         else:
             raise RuntimeError('A Krig or RunModel object must be provided as model.')

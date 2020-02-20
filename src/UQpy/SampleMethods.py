@@ -789,7 +789,6 @@ class RSS:
             self.points_to_samplesU01, self.training_points = [], []
 
         if self.option == 'Gradient':
-            self.meta = ''
             self.local = local
             self.max_train_size = max_train_size
             self.krig_object = krig_object
@@ -854,8 +853,6 @@ class RSS:
 
             # Primary loop for adding samples and performing refinement.
             for i in range(self.nexist, self.nsamples):
-
-                # TODO: Add visualize option to plot the points and their strata in 2D.
 
                 # If the quantity of interest is a dictionary, convert it to a list
                 qoi = [None] * len(self.run_model_object.qoi_list)
@@ -1165,9 +1162,6 @@ class RSS:
             # Initialize the training points for the surrogate model
             self.training_points = self.sample_object.samplesU01
 
-            # Initialize the vector of gradients at each training point
-            dy_dx = np.zeros((self.nsamples, np.size(self.training_points[1])))
-
             # Primary loop for adding samples and performing refinement.
             for i in range(self.nexist, self.nsamples):
                 # ------------------------------
@@ -1179,6 +1173,7 @@ class RSS:
                 for j in range(i):
                     s[j] = self.sample_object.strata.weights[j] ** 2
 
+                # TODO: Update this to sample n points with the highest weights.
                 # Break the stratum with the maximum weight
                 bin2break = np.random.choice(np.where(s == s.max())[0])
 
@@ -1275,6 +1270,7 @@ class RSS:
                 for j in range(self.mesh.nsimplex):
                     s[j] = self.mesh.volumes[j] ** 2
 
+                # TODO: Update this to sample n points with the highest weights.
                 # Identify the stratum with the maximum weight
                 bin2add = np.random.choice(np.where(s == s.max())[0])
 
@@ -1327,46 +1323,19 @@ class RSS:
     # TODO: We may want to consider moving this to Utilities.
     def estimate_gradient(self, x, y, xt):
         from UQpy.Reliability import TaylorSeries
-        # meta = 'Delaunay' is not currently functional.
-        if self.meta == 'delaunay':
-
-            # TODO: Here we need to add a reflection of the sample points over each face of the hypercube and build the
-            # linear interpolator from the reflected points.
-
-            from scipy.interpolate import LinearNDInterpolator
-
-            tck = LinearNDInterpolator(x, y, fill_value=0)
-            gr = self.cent_diff(tck, xt, self.step_size)
-
-        elif self.meta == 'kriging':
-
-            with suppress_stdout():  # disable printing output comments
-                self.krig_object.fit(samples=x, values=y)
-            # gr = self.cent_diff(self.krig_object.interpolate, xt, self.step_size)
-            gr = TaylorSeries.gradient(samples=xt, model=self.krig_object, dimension=self.dimension, order='first',
-                                       df_step=self.step_size, scale=False)
-
-        elif self.meta == 'sklearn':
+        if type(self.krig_object).__name__ == 'Krig':
+            self.krig_object.fit(samples=x, values=y)
+            tck = self.krig_object
+        elif type(self.krig_object).__name__ == 'GaussianProcessRegressor':
             self.krig_object.fit(x, y)
-            # gr = self.cent_diff(self.krig_object.predict, xt, self.step_size)
-            gr = TaylorSeries.gradient(samples=xt, model=self.krig_object, dimension=self.dimension, order='first',
-                                       df_step=self.step_size, scale=False)
+            tck = self.krig_object.predict
         else:
-            raise NotImplementedError("UQpy Error: 'meta' must be specified in order to calculate gradients.")
-        return gr
+            from scipy.interpolate import LinearNDInterpolator
+            tck = LinearNDInterpolator(x, y, fill_value=0).__call__
 
-    # Implementation of the central difference method for calculating gradients.
-    # TODO: This should probably be moved to Utilities.
-    @staticmethod
-    def cent_diff(f, x, h):
-        dy_dx = np.zeros((np.size(x, 0), np.size(x, 1)))
-        for ir in range(np.size(x, 1)):
-            temp = np.zeros((np.size(x, 0), np.size(x, 1)))
-            temp[:, ir] = np.ones(np.size(x, 0))
-            low = x - h / 2 * temp
-            hi = x + h / 2 * temp
-            dy_dx[:, ir] = ((f.__call__(hi) - f.__call__(low)) / h)[:].reshape((len(hi),))
-        return dy_dx
+        gr = TaylorSeries.gradient(samples=xt, model=tck, dimension=self.dimension, order='first',
+                                   df_step=self.step_size, scale=False)
+        return gr
 
     # Initialization and preliminary error checks.
     def init_rss(self):
@@ -1377,14 +1346,6 @@ class RSS:
             self.option = 'Gradient'
             if type(self.run_model_object).__name__ not in ['RunModel']:
                 raise NotImplementedError("UQpy Error: run_model_object must be an object of the RunModel class.")
-
-        if self.option == 'Gradient':
-            if self.krig_object is None:
-                self.meta = 'delaunay'
-            elif type(self.krig_object).__name__ == 'GaussianProcessRegressor':
-                self.meta = 'sklearn'
-            else:
-                self.meta = 'kriging'
 
 
 ########################################################################################################################
