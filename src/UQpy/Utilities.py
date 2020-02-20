@@ -208,8 +208,8 @@ def correlation_distortion(marginal, params, rho_norm):
             if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
                 raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
 
-            tmp_f_xi = ((i_cdf_j(stats.norm.cdf(xi), params[j]) - mj[0]) / np.sqrt(mj[1]))
-            tmp_f_eta = ((i_cdf_i(stats.norm.cdf(eta), params[i]) - mi[0]) / np.sqrt(mi[1]))
+            tmp_f_xi = ((i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T, params[j]) - mj[0]) / np.sqrt(mj[1]))
+            tmp_f_eta = ((i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T, params[i]) - mi[0]) / np.sqrt(mi[1]))
             coef = tmp_f_xi * tmp_f_eta * w2d
 
             rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
@@ -676,7 +676,7 @@ def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ES
 
     if len(samples.shape) == 2:
         print('Diagnostics for a single chain of MCMC \n')
-        print('!!! Warning !!! These diagnostics are purely qualitative and should be used with caution \n')
+        print('!!! Warning !!! These diagnostics are purely qualtive and should be used with caution \n')
         nsamples, dim = samples.shape
 
         # Acceptance rate
