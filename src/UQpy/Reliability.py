@@ -158,9 +158,11 @@ class SubsetSimulation:
             self.g[step][:n_keep] = self.g[step - 1][g_ind[:n_keep]]
 
             # Initialize a new MCMC object for each conditional level
-            new_mcmc_object = MCMC(dimension=self.mcmc_objects[0].dimension, algorithm=self.mcmc_objects[0].algorithm,
-                                   log_pdf_target=self.mcmc_objects[0].log_pdf_target,
-                                   seed=np.atleast_2d(self.samples[step][:n_keep, :]))
+            new_mcmc_object = MCMC(dimension=self.mcmc_objects[0].dimension,
+                                       algorithm=self.mcmc_objects[0].algorithm,
+                                       log_pdf_target=self.mcmc_objects[0].log_pdf_target,
+                                       seed=np.atleast_2d(self.samples[step][:n_keep, :]))
+            new_mcmc_object.algorithm_inputs = self.mcmc_objects[0].algorithm_inputs
             self.mcmc_objects.append(new_mcmc_object)
 
             # Set the number of samples to propagate each chain (n_prop) in the conditional level
@@ -199,23 +201,24 @@ class SubsetSimulation:
 
                 # Run the model at each of the new sample points
                 x_run = self.mcmc_objects[step].samples[[x+(i+1)*n_keep for x in ind_false], :]
-                self.runmodel_object.run(samples=x_run)
+                if x_run.size != 0:
+                    self.runmodel_object.run(samples=x_run)
 
-                # Temporarily save the latest model runs
-                g_temp = np.asarray(self.runmodel_object.qoi_list[-len(x_run):])
+                    # Temporarily save the latest model runs
+                    g_temp = np.asarray(self.runmodel_object.qoi_list[-len(x_run):])
 
-                # Accept the states with g <= g_level
-                ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
-                for ii in ind_accept:
-                    self.samples[step][(i + 1) * n_keep + ind_false[ii]] = x_run[ii]
-                    self.g[step][(i + 1) * n_keep + ind_false[ii]] = g_temp[ii]
+                    # Accept the states with g <= g_level
+                    ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
+                    for ii in ind_accept:
+                        self.samples[step][(i + 1) * n_keep + ind_false[ii]] = x_run[ii]
+                        self.g[step][(i + 1) * n_keep + ind_false[ii]] = g_temp[ii]
 
-                # Reject the states with g > g_level
-                ind_reject = np.where(g_temp[:, 0] > self.g_level[step - 1])[0]
-                for ii in ind_reject:
-                    self.samples[step][(i + 1) * n_keep + ind_false[ii]] = \
-                        self.samples[step][i * n_keep + ind_false[ii]]
-                    self.g[step][(i + 1) * n_keep + ind_false[ii]] = self.g[step][i * n_keep + ind_false[ii]]
+                    # Reject the states with g > g_level
+                    ind_reject = np.where(g_temp[:, 0] > self.g_level[step - 1])[0]
+                    for ii in ind_reject:
+                        self.samples[step][(i + 1) * n_keep + ind_false[ii]] = \
+                            self.samples[step][i * n_keep + ind_false[ii]]
+                        self.g[step][(i + 1) * n_keep + ind_false[ii]] = self.g[step][i * n_keep + ind_false[ii]]
 
             g_ind = np.argsort(self.g[step][:, 0])
             self.g_level.append(self.g[step][g_ind[n_keep]])
@@ -226,7 +229,7 @@ class SubsetSimulation:
             self.d22.append(d2 ** 2)
 
             if self.verbose:
-                print('UQpy: Subset Simulation, conditional level ' + step + 'complete.')
+                print('UQpy: Subset Simulation, conditional level ' + str(step) + ' complete.')
 
         n_fail = len([value for value in self.g[step] if value < 0])
 
