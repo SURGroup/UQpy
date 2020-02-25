@@ -158,9 +158,11 @@ class SubsetSimulation:
             self.g[step][:n_keep] = self.g[step - 1][g_ind[:n_keep]]
 
             # Initialize a new MCMC object for each conditional level
-            new_mcmc_object = MCMC(dimension=self.mcmc_objects[0].dimension, algorithm=self.mcmc_objects[0].algorithm,
-                                   log_pdf_target=self.mcmc_objects[0].log_pdf_target,
-                                   seed=np.atleast_2d(self.samples[step][:n_keep, :]))
+            new_mcmc_object = MCMC(dimension=self.mcmc_objects[0].dimension,
+                                       algorithm=self.mcmc_objects[0].algorithm,
+                                       log_pdf_target=self.mcmc_objects[0].log_pdf_target,
+                                       seed=np.atleast_2d(self.samples[step][:n_keep, :]))
+            new_mcmc_object.algorithm_inputs = self.mcmc_objects[0].algorithm_inputs
             self.mcmc_objects.append(new_mcmc_object)
 
             # Set the number of samples to propagate each chain (n_prop) in the conditional level
@@ -227,7 +229,7 @@ class SubsetSimulation:
             self.d22.append(d2 ** 2)
 
             if self.verbose:
-                print('UQpy: Subset Simulation, conditional level ' + step + 'complete.')
+                print('UQpy: Subset Simulation, conditional level ' + str(step) + ' complete.')
 
         n_fail = len([value for value in self.g[step] if value < 0])
 
