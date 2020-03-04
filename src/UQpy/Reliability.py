@@ -19,6 +19,7 @@
 
 from UQpy.RunModel import RunModel
 from UQpy.SampleMethods import MCMC
+from UQpy.Surrogates import Krig
 from UQpy.Transformations import *
 import warnings
 
@@ -159,7 +160,8 @@ class SubsetSimulation:
             self.g[step][:n_keep] = self.g[step - 1][g_ind[:n_keep]]
 
             # Initialize a new MCMC object for each conditional level
-            new_mcmc_object = MCMC(dimension=self.mcmc_objects[0].dimension, algorithm=self.mcmc_objects[0].algorithm,
+            new_mcmc_object = MCMC(dimension=self.mcmc_objects[0].dimension,
+                                   algorithm=self.mcmc_objects[0].algorithm,
                                    log_pdf_target=self.mcmc_objects[0].log_pdf_target,
                                    seed=np.atleast_2d(self.samples[step][:n_keep, :]))
             self.mcmc_objects.append(new_mcmc_object)
@@ -227,7 +229,7 @@ class SubsetSimulation:
             self.d22.append(d2 ** 2)
 
             if self.verbose:
-                print('UQpy: Subset Simulation, conditional level ' + step + 'complete.')
+                print('UQpy: Subset Simulation, conditional level ' + str(step) + ' complete.')
 
         n_fail = len([value for value in self.g[step] if value < 0])
 
@@ -1005,9 +1007,8 @@ class TaylorSeries:
             qoi = self.model.qoi_list[0]
             g_record.append(qoi)
             # 2. evaluate Limit State Function gradient at point u_k and direction cosines
-            dg = self.gradient(df_method=self.df_method, order='first', sample=x.reshape(1, -1),
-                               dimension=self.dimension, df_step=self.df_step, model=self.model,
-                               dist_params=self.dist_params,
+            dg = self.gradient(df_method=self.df_method, order='first', samples=x.reshape(1, -1),
+                               dimension=self.dimension, df_step=self.df_step, model=self.model, dist_params=self.dist_params,
                                dist_name=self.dist_name)
             dg_record.append(np.dot(dg[0, :], jacobi_x_to_u))
             norm_grad = np.linalg.norm(dg_record[k])
@@ -1056,17 +1057,17 @@ class TaylorSeries:
             # self.g_check = g_check
 
     @staticmethod
-    def gradient(sample=None, dist_params=None, dist_name=None, model=None, dimension=None, df_step=None, order=None,
-                 df_method=None):
+    def gradient(samples=None, dist_params=None, dist_name=None, model=None, dimension=None, df_step=None, order=None,
+                 df_method=None, scale=True):
 
         """
              Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
 
              Input:
-                 :param sample: The sample values at which the gradient of the model will be evaluated. Samples can be
+                 :param samples: The sample values at which the gradient of the model will be evaluated. Samples can be
                  passed directly as  an array or can be passed through the text file 'UQpy_Samples.txt'.
                  If passing samples via text file, set samples = None or do not set the samples input.
-                 :type sample: ndarray
+                 :type samples: ndarray
 
                  :param dist_params: Probability distribution model parameters for each random variable.
                                        (see Distributions class).
@@ -1079,14 +1080,17 @@ class TaylorSeries:
                  :param dimension: Number of random variables.
                  :type dimension: int
 
-                 :param method: Finite difference method (Options: Central, backwards, forward).
-                 :type dimension: int
+                 :param df_method: Finite difference method (Options: Central, backwards, forward).
+                 :type df_method: str
 
                  :param df_step: step for the finite difference.
                  :type df_step: float
 
                  :param model: An object of type RunModel
                  :type model: RunModel object
+
+                 :param scale: Uses the dist_name and dist_params to scale it in the original parameter space
+                 :type scale: boolean
 
              Output:
                  :return du_dj: vector of first-order gradients
@@ -1096,14 +1100,17 @@ class TaylorSeries:
                  :return d2u_dij: vector of mixed gradients
                  :rtype: ndarray
          """
-        from UQpy.Transformations import Nataf
+        samples = np.atleast_2d(samples)
+
         if order is None:
             raise ValueError('Exit code: Provide type of derivatives: first, second or mixed.')
 
         if dimension is None:
             raise ValueError('Error: Dimension must be defined')
+
         if df_method is None:
             df_method = 'Central'
+
         if df_step is None:
             df_step = [0.1] * dimension
         elif isinstance(df_step, float):
@@ -1114,79 +1121,99 @@ class TaylorSeries:
             if len(df_step) == 1:
                 df_step = [df_step[0]] * dimension
 
-        if model is None:
-            raise RuntimeError('A model must be provided.')
+        if isinstance(model, Krig):
+            qoi = model.interpolate(samples)
+        elif isinstance(model, RunModel):
+            qoi = model.qoi_list
+        elif isinstance(model, (types.FunctionType, types.MethodType)):
+            qoi = model(samples)
+        else:
+            raise RuntimeError('A Krig or RunModel object must be provided as model.')
 
-        scale = np.zeros(len(dist_name))
-        for j in range(len(dist_name)):
-            dist = Distribution(dist_name[j])
-            mean, var, skew, kurt = dist.moments(dist_params[j])
-            scale[j] = np.sqrt(var)
+        def func(m):
+            def func_eval(x):
+                if isinstance(m, Krig):
+                    return m.interpolate(x=x)
+                elif isinstance(m, RunModel):
+                    m.run(samples=x, append_samples=False)
+                    return np.array(m.qoi_list)
+                else:
+                    return m(x)
+
+            return func_eval
+
+        f_eval = func(m=model)
+
+        scale_ = np.ones(dimension)
+        if scale:
+            for j in range(dimension):
+                dist = Distribution(dist_name[j])
+                mean, var, skew, kurt = dist.moments(dist_params[j])
+                scale_[j] = np.sqrt(var)
 
         if order == 'first' or order == 'second':
-            du_dj = np.zeros(dimension)
-            d2u_dj = np.zeros(dimension)
+            du_dj = np.zeros([samples.shape[0], dimension])
+            d2u_dj = np.zeros([samples.shape[0], dimension])
             for ii in range(dimension):
-                eps_i = df_step[ii] * scale[ii]
-                x_i1_j = np.array(sample)
-                x_i1_j[0, ii] = x_i1_j[0, ii] + eps_i
-                x_1i_j = np.array(sample)
-                x_1i_j[0, ii] = x_1i_j[0, ii] - eps_i
+                eps_i = df_step[ii] * scale_[ii]
+                x_i1_j = samples.copy()
+                x_i1_j[:, ii] = x_i1_j[:, ii] + eps_i
+                x_1i_j = samples.copy()
+                x_1i_j[:, ii] = x_1i_j[:, ii] - eps_i
 
-                qoi = model.qoi_list[0]
                 if df_method.lower() == 'Forward':
-                    model.run(x_i1_j, append_samples=False)
-                    qoi_plus = model.qoi_list[0]
-                    du_dj[ii] = (qoi_plus - qoi) / eps_i
+                    qoi_plus = f_eval(x_i1_j)
+                    du_dj[:, ii] = ((qoi_plus - qoi) / eps_i)[:, 0]
                 elif df_method.lower() == 'Backwards':
-                    model.run(x_1i_j, append_samples=False)
-                    qoi_minus = model.qoi_list[0]
-                    du_dj[ii] = (qoi - qoi_minus) / eps_i
+                    qoi_minus = f_eval(x_1i_j)
+                    du_dj[:, ii] = ((qoi - qoi_minus) / eps_i)[:, 0]
                 else:
-                    model.run(x_i1_j, append_samples=False)
-                    qoi_plus = model.qoi_list[0]
-                    model.run(x_1i_j, append_samples=False)
-                    qoi_minus = model.qoi_list[0]
-                    du_dj[ii] = (qoi_plus - qoi_minus) / (2 * eps_i)
+                    qoi_plus = f_eval(x_i1_j)
+                    qoi_minus = f_eval(x_1i_j)
+                    du_dj[:, ii] = ((qoi_plus - qoi_minus) / (2 * eps_i))[:, 0]
                     if order == 'second':
-                        d2u_dj[ii] = (qoi_plus - 2 * qoi + qoi_minus) / (eps_i ** 2)
+                        d2u_dj[:, ii] = ((qoi_plus - 2 * qoi + qoi_minus) / (eps_i ** 2))[:, 0]
 
-            return np.vstack([du_dj, d2u_dj])
+            if order == 'first':
+                return du_dj
+            if order == 'second':
+                return np.vstack([du_dj, d2u_dj])
 
         elif order == 'mixed':
             import itertools
             range_ = list(range(dimension))
-            d2u_dij = list()
+            d2u_dij = np.zeros([samples.shape[0], int(dimension*(dimension-1)/2)])
+            count = 0
             for i in itertools.combinations(range_, 2):
-                x_i1_j1 = np.array(sample)
-                x_i1_1j = np.array(sample)
-                x_1i_j1 = np.array(sample)
-                x_1i_1j = np.array(sample)
+                x_i1_j1 = samples.copy()
+                x_i1_1j = samples.copy()
+                x_1i_j1 = samples.copy()
+                x_1i_1j = samples.copy()
 
-                eps_i1_0 = df_step[i[0]] * scale[i[0]]
-                eps_i1_1 = df_step[i[1]] * scale[i[1]]
+                eps_i1_0 = df_step[i[0]] * scale_[i[0]]
+                eps_i1_1 = df_step[i[1]] * scale_[i[1]]
 
-                x_i1_j1[0, i[0]] += eps_i1_0
-                x_i1_j1[0, i[1]] += eps_i1_1
+                x_i1_j1[:, i[0]] += eps_i1_0
+                x_i1_j1[:, i[1]] += eps_i1_1
 
-                x_i1_1j[0, i[0]] += eps_i1_0
-                x_i1_1j[0, i[1]] -= eps_i1_1
+                x_i1_1j[:, i[0]] += eps_i1_0
+                x_i1_1j[:, i[1]] -= eps_i1_1
 
-                x_1i_j1[0, i[0]] -= eps_i1_0
-                x_1i_j1[0, i[1]] += eps_i1_1
+                x_1i_j1[:, i[0]] -= eps_i1_0
+                x_1i_j1[:, i[1]] += eps_i1_1
 
-                x_1i_1j[0, i[0]] -= eps_i1_0
-                x_1i_1j[0, i[1]] -= eps_i1_1
+                x_1i_1j[:, i[0]] -= eps_i1_0
+                x_1i_1j[:, i[1]] -= eps_i1_1
 
-                qoi_0 = model.run(x_i1_j1, append_samples=False)
-                qoi_1 = model.run(x_i1_1j, append_samples=False)
-                qoi_2 = model.run(x_1i_j1, append_samples=False)
-                qoi_3 = model.run(x_1i_1j, append_samples=False)
+                qoi_0 = f_eval(x_i1_j1)
+                qoi_1 = f_eval(x_i1_1j)
+                qoi_2 = f_eval(x_1i_j1)
+                qoi_3 = f_eval(x_1i_1j)
 
-                d2u_dij.append((qoi_0 - qoi_1 - qoi_2 + qoi_3)
-                               / (4 * eps_i1_0 * eps_i1_1))
+                d2u_dij[:, count] = ((qoi_0 - qoi_1 - qoi_2 + qoi_3) / (4 * eps_i1_0 * eps_i1_1))[:, 0]
+                count += 1
 
-            return np.array(d2u_dij)
+            return d2u_dij
 
     @staticmethod
     def hessian(dimension=None, mixed_der=None, der=None):

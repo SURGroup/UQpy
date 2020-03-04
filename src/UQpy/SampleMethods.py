@@ -750,6 +750,12 @@ class RSS:
                               used as surrogate approximation.
             :type step_size: float
 
+            :param n_add: Number of samples generated in each iteration
+            :type n_add: int
+
+            :param verbose: A boolean declaring whether to write text to the terminal.
+            :type verbose: bool
+
         Output:
             :return: RSS.sample_object.samples: Final/expanded samples.
             :rtype: RSS.sample_object.samples: ndarray
@@ -757,10 +763,10 @@ class RSS:
     """
 
     # Authors: Mohit S. Chauhan
-    # Last modified: 12/01/2019 by Mohit S. Chauhan
+    # Last modified: 01/07/2020 by Mohit S. Chauhan
 
     def __init__(self, sample_object=None, run_model_object=None, krig_object=None, local=False, max_train_size=None,
-                 step_size=0.005, qoi_name=None, verbose=False):
+                 step_size=0.005, qoi_name=None, n_add=1, verbose=False):
 
         # Initialize attributes that are common to all approaches
         self.sample_object = sample_object
@@ -770,58 +776,49 @@ class RSS:
 
         self.cell = self.sample_object.stype
         self.dimension = np.shape(self.sample_object.samples)[1]
-        if run_model_object is not None:
-            self.option = 'Gradient'
+        self.nexist = 0
+        self.n_add = n_add
 
         if self.cell == 'Voronoi':
             self.mesh = []
             self.mesh_vertices, self.vertices_in_U01 = [], []
             self.points_to_samplesU01, self.training_points = [], []
 
-        if self.option == 'Gradient':
-            self.meta = ''
+        # Run Initial Error Checks
+        self.init_rss()
+
+        if run_model_object is not None:
             self.local = local
             self.max_train_size = max_train_size
             self.krig_object = krig_object
             self.qoi_name = qoi_name
             self.step_size = step_size
-            self.nexist = 0
-
-        # Run Initial Error Checks
-        self.init_rss()
-
-        if self.option == 'Gradient':
-            self.initiate_gerss()
-        else:
-            self.initiate_rss()
-
-    def initiate_gerss(self):
-        # Check if the initial sample design already has model evaluations with it.
-        # If it does not, run the initial calculations.
-        if self.run_model_object is None:
-            raise NotImplementedError('UQpy Error: Gradient Enhanced RSS requires a predefined RunModel object.')
-        elif not self.run_model_object.samples:
             if self.verbose:
                 print('UQpy: GE-RSS - Running the initial sample set.')
             self.run_model_object.run(samples=self.sample_object.samples)
+            if self.verbose:
+                print('UQpy: GE-RSS - A RSS class object has been initiated.')
+        else:
+            if self.verbose:
+                print('UQpy: RSS - A RSS class object has been initiated.')
 
-        self.nexist = len(self.run_model_object.samples)
-
-    def initiate_rss(self):
-        if self.verbose:
-            print('UQpy: RSS - A RSS class object has been initiated.')
-
-    def sample(self, nsamples=0):
+    def sample(self, nsamples=0, n_add=None):
         """
                 Inputs:
                     :param nsamples: Final size of the samples.
                     :type nsamples: int
+
+                    :param n_add: Number of samples to generate with each iteration.
+                    :type n_add: int
         """
         self.nsamples = nsamples
+        self.nexist = self.sample_object.samples.shape[0]
+        if n_add is not None:
+            self.n_add = n_add
         if self.nsamples <= self.nexist:
             raise NotImplementedError('UQpy Error: The number of requested samples must be larger than the existing '
                                       'sample set.')
-        if self.option == 'Gradient':
+        if self.run_model_object is not None:
             self.run_gerss()
         else:
             self.run_rss()
@@ -845,9 +842,8 @@ class RSS:
             dy_dx = np.zeros((self.nsamples, np.size(self.training_points[1])))
 
             # Primary loop for adding samples and performing refinement.
-            for i in range(self.nexist, self.nsamples):
-
-                # TODO: Add visualize option to plot the points and their strata in 2D.
+            for i in range(self.nexist, self.nsamples, self.n_add):
+                p = min(self.n_add, self.nsamples - i)  # Number of points to add in this iteration
 
                 # If the quantity of interest is a dictionary, convert it to a list
                 qoi = [None] * len(self.run_model_object.qoi_list)
@@ -895,58 +891,64 @@ class RSS:
                 var = (1 / 12) * self.sample_object.strata.widths ** 2
 
                 # Estimate the variance over the stratum by Delta Method
-                s = np.zeros([i, 1])
+                s = np.zeros([i])
                 for j in range(i):
-                    s[j, 0] = np.sum(dy_dx1[j, :] * var[j, :] * dy_dx1[j, :] *
-                                     (self.sample_object.strata.weights[j] ** 2))
+                    s[j] = np.sum(dy_dx1[j, :] * var[j, :] * dy_dx1[j, :]) * self.sample_object.strata.weights[j] ** 2
 
-                # TODO: Break n strata with the highest gradients and sample in each. Allow this to use multiple cores.
+                # Break the 'p' stratum with the maximum weight
+                bin2break, p_left = np.array([]), p
+                while np.where(s == s.max())[0].shape[0] < p_left:
+                    t = np.where(s == s.max())[0]
+                    bin2break = np.hstack([bin2break, t])
+                    s[t] = 0
+                    p_left -= t.shape[0]
+                bin2break = np.hstack(
+                    [bin2break, np.random.choice(np.where(s == s.max())[0], p_left, replace=False)])
+                bin2break = list(map(int, bin2break))
 
-                # Break the stratum with the maximum variance
-                bin2break = np.argmax(s)
+                new_point = np.zeros([p, self.dimension])
+                for j in range(p):
+                    # Cut the stratum in the direction of maximum gradient
+                    cut_dir_temp = self.sample_object.strata.widths[bin2break[j], :]
+                    t = np.argwhere(cut_dir_temp == np.amax(cut_dir_temp))
+                    dir2break = t[np.argmax(abs(dy_dx1[bin2break[j], t]))]
 
-                # Cut the stratum in the direction of maximum gradient
-                cut_dir_temp = self.sample_object.strata.widths[bin2break, :]
-                t = np.argwhere(cut_dir_temp == np.amax(cut_dir_temp))
-                dir2break = t[np.argmax(abs(dy_dx1[bin2break, t]))]
+                    # Divide the stratum bin2break in the direction dir2break
+                    self.sample_object.strata.widths[bin2break[j], dir2break] = \
+                        self.sample_object.strata.widths[bin2break[j], dir2break] / 2
+                    self.sample_object.strata.widths = np.vstack([self.sample_object.strata.widths,
+                                                                  self.sample_object.strata.widths[bin2break[j], :]])
+                    self.sample_object.strata.origins = np.vstack([self.sample_object.strata.origins,
+                                                                   self.sample_object.strata.origins[bin2break[j], :]])
+                    if self.sample_object.samplesU01[bin2break[j], dir2break] < \
+                            self.sample_object.strata.origins[-1, dir2break] + \
+                            self.sample_object.strata.widths[bin2break[j], dir2break]:
+                        self.sample_object.strata.origins[-1, dir2break] = \
+                            self.sample_object.strata.origins[-1, dir2break] + \
+                            self.sample_object.strata.widths[bin2break[j], dir2break]
+                    else:
+                        self.sample_object.strata.origins[bin2break[j], dir2break] = \
+                            self.sample_object.strata.origins[bin2break[j], dir2break] + \
+                            self.sample_object.strata.widths[bin2break[j], dir2break]
 
-                # Divide the stratum bin2break in the direction dir2break
-                self.sample_object.strata.widths[bin2break, dir2break] = \
-                    self.sample_object.strata.widths[bin2break, dir2break] / 2
-                self.sample_object.strata.widths = np.vstack([self.sample_object.strata.widths,
-                                                              self.sample_object.strata.widths[bin2break, :]])
-                self.sample_object.strata.origins = np.vstack([self.sample_object.strata.origins,
-                                                               self.sample_object.strata.origins[bin2break, :]])
-                if self.sample_object.samplesU01[bin2break, dir2break] < \
-                        self.sample_object.strata.origins[-1, dir2break] + \
-                        self.sample_object.strata.widths[bin2break, dir2break]:
-                    self.sample_object.strata.origins[-1, dir2break] = \
-                        self.sample_object.strata.origins[-1, dir2break] + \
-                        self.sample_object.strata.widths[bin2break, dir2break]
-                else:
-                    self.sample_object.strata.origins[bin2break, dir2break] = \
-                        self.sample_object.strata.origins[bin2break, dir2break] + \
-                        self.sample_object.strata.widths[bin2break, dir2break]
+                    self.sample_object.strata.weights[bin2break[j]] = self.sample_object.strata.weights[bin2break[j]]/2
+                    self.sample_object.strata.weights = np.append(self.sample_object.strata.weights,
+                                                                  self.sample_object.strata.weights[bin2break[j]])
 
-                self.sample_object.strata.weights[bin2break] = self.sample_object.strata.weights[bin2break] / 2
-                self.sample_object.strata.weights = np.append(self.sample_object.strata.weights,
-                                                              self.sample_object.strata.weights[bin2break])
-
-                # Add a uniform random sample inside the new stratum
-                new_point = np.random.uniform(self.sample_object.strata.origins[i, :],
-                                              self.sample_object.strata.origins[i, :] +
-                                              self.sample_object.strata.widths[i, :])
+                    # Add a uniform random sample inside the new stratum
+                    new_point[j, :] = np.random.uniform(self.sample_object.strata.origins[i+j, :],
+                                                        self.sample_object.strata.origins[i+j, :] +
+                                                        self.sample_object.strata.widths[i+j, :])
 
                 # Adding new sample to training points, samplesU01 and samples attributes
                 self.training_points = np.vstack([self.training_points, new_point])
                 self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
                 for j in range(0, self.dimension):
                     i_cdf = self.sample_object.distribution[j].icdf
-                    new_point[j] = i_cdf(np.atleast_2d(new_point[j]).T, self.sample_object.dist_params[j])
+                    new_point[:, j] = i_cdf(np.atleast_2d(new_point[:, j]).T, self.sample_object.dist_params[j])
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 # Run the model at the new sample point
-                self.run_model_object.ntasks = 1
                 self.run_model_object.run(samples=np.atleast_2d(new_point))
 
                 if self.verbose:
@@ -973,7 +975,7 @@ class RSS:
                     any(np.logical_and(self.sample_object.strata.vertices[i, :] >= 1-1e-10,
                                        self.sample_object.strata.vertices[i, :] <= 1+1e-10)):
                     self.mesh_vertices = np.vstack([self.mesh_vertices, self.sample_object.strata.vertices[i, :]])
-                    self.points_to_samplesU01 = np.hstack([self.points_to_samplesU01, np.array([np.nan])])
+                    self.points_to_samplesU01 = np.hstack([np.array([-1]), self.points_to_samplesU01])
 
             # Define the simplex mesh to be used for gradient estimation and sampling
             self.mesh = Delaunay(self.mesh_vertices, furthest_site=False, incremental=True, qhull_options=None)
@@ -987,7 +989,8 @@ class RSS:
             dy_dx_old = 0
 
             # Primary loop for adding samples and performing refinement.
-            for i in range(self.nexist, self.nsamples):
+            for i in range(self.nexist, self.nsamples, self.n_add):
+                p = min(self.n_add, self.nsamples - i)  # Number of points to add in this iteration
 
                 # Compute the centroids and the volumes of each simplex cell in the mesh
                 self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
@@ -1089,26 +1092,33 @@ class RSS:
                         std = np.std(points[self.mesh.vertices[j]][:, k])
                         var[j, k] = (self.mesh.volumes[j] * math.factorial(self.dimension) /
                                      math.factorial(self.dimension + 2)) * (self.dimension * std ** 2)
-                    s[j] = np.sum(dy_dx[j, :] * var[j, :] * dy_dx[j, :] * (self.mesh.volumes ** 2))
+                    s[j] = np.sum(dy_dx[j, :] * var[j, :] * dy_dx[j, :]) * (self.mesh.volumes[j] ** 2)
                 dy_dx_old = dy_dx
 
-                # TODO: Update this to sample n points with the highest variance. Allow it to run on multiple cores.
+                # Identify the stratum with the maximum weight
+                bin2add, p_left = np.array([]), p
+                while np.where(s == s.max())[0].shape[0] < p_left:
+                    t = np.where(s == s.max())[0]
+                    bin2add = np.hstack([bin2add, t])
+                    s[t] = 0
+                    p_left -= t.shape[0]
+                bin2add = np.hstack([bin2add, np.random.choice(np.where(s == s.max())[0], p_left, replace=False)])
 
-                # Identify the stratum with the maximum variance
-                bin2add = np.argmax(s)
+                # Create 'p' sub-simplex within the simplex with maximum variance
+                new_point = np.zeros([p, self.dimension])
+                for j in range(p):
+                    # Create a sub-simplex within the simplex with maximum variance.
+                    tmp_vertices = points[self.mesh.simplices[int(bin2add[j]), :]]
+                    col_one = np.array(list(itertools.combinations(np.arange(self.dimension + 1), self.dimension)))
+                    self.mesh.sub_simplex = np.zeros_like(tmp_vertices)  # node: an array containing mid-point of edges
+                    for m in range(self.dimension + 1):
+                        self.mesh.sub_simplex[m, :] = np.sum(tmp_vertices[col_one[m] - 1, :], 0) / self.dimension
 
-                # Create a sub-simplex within the simplex with maximum variance.
-                tmp_vertices = points[self.mesh.simplices[bin2add, :]]
-                col_one = np.array(list(itertools.combinations(np.arange(self.dimension + 1), self.dimension)))
-                self.mesh.sub_simplex = np.zeros_like(tmp_vertices)  # node: an array containing mid-point of edges
-                for m in range(self.dimension + 1):
-                    self.mesh.sub_simplex[m, :] = np.sum(tmp_vertices[col_one[m] - 1, :], 0) / self.dimension
-
-                # Using the Simplex class to generate a new sample in the sub-simplex
-                new_point = Simplex(nodes=self.mesh.sub_simplex, nsamples=1).samples
+                    # Using the Simplex class to generate a new sample in the sub-simplex
+                    new_point[j, :] = Simplex(nodes=self.mesh.sub_simplex, nsamples=1).samples
 
                 # Update the matrices to have recognize the new point
-                self.points_to_samplesU01 = np.hstack([self.points_to_samplesU01, np.array([i])])
+                self.points_to_samplesU01 = np.hstack([self.points_to_samplesU01, np.arange(i, i+p)])
                 self.mesh.old_vertices = self.mesh.vertices
 
                 # Update the Delaunay triangulation mesh to include the new point.
@@ -1118,15 +1128,203 @@ class RSS:
                 # Update the sample arrays to include the new point
                 self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
                 self.training_points = np.vstack([self.training_points, new_point])
+                self.mesh_vertices = np.vstack([self.mesh_vertices, new_point])
 
                 # Identify the new point in the parameter space and update the sample array to include the new point.
                 for j in range(self.dimension):
-                    new_point[0, j] = self.sample_object.distribution[j].icdf(np.atleast_2d(new_point[0, j]).T,
+                    new_point[:, j] = self.sample_object.distribution[j].icdf(np.atleast_2d(new_point[:, j]).T,
                                                                               self.sample_object.dist_params[j])
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 # Run the mode at the new point.
-                self.run_model_object.run(samples=np.atleast_2d(new_point))
+                self.run_model_object.run(samples=new_point)
+
+                # Compute the strata weights.
+                self.sample_object.strata = voronoi_unit_hypercube(self.sample_object.samplesU01)
+
+                self.sample_object.strata.centroids = []
+                self.sample_object.strata.weights = []
+                for region in self.sample_object.strata.bounded_regions:
+                    vertices = self.sample_object.strata.vertices[region + [region[0]], :]
+                    centroid, volume = compute_Voronoi_centroid_volume(vertices)
+                    self.sample_object.strata.centroids.append(centroid[0, :])
+                    self.sample_object.strata.weights.append(volume)
+
+                if self.verbose:
+                    print("Iteration:", i)
+
+    #################################
+    # Run Refined Stratified Sampling
+    #################################
+    def run_rss(self):
+        # --------------------------
+        # RECTANGULAR STRATIFICATION
+        # --------------------------
+        if self.cell == 'Rectangular':
+
+            if self.verbose:
+                print('UQpy: Performing RSS with rectangular stratification...')
+
+            # Initialize the training points for the surrogate model
+            self.training_points = self.sample_object.samplesU01
+
+            # Primary loop for adding samples and performing refinement.
+            for i in range(self.nexist, self.nsamples, self.n_add):
+                p = min(self.n_add, self.nsamples - i)  # Number of points to add in this iteration
+                # ------------------------------
+                # Determine the stratum to break
+                # ------------------------------
+                # Estimate the weight corresponding to each stratum
+                s = np.zeros(i)
+                for j in range(i):
+                    s[j] = self.sample_object.strata.weights[j] ** 2
+
+                # Break the 'p' stratum with the maximum weight
+                bin2break, p_left = np.array([]), p
+                while np.where(s == s.max())[0].shape[0] < p_left:
+                    t = np.where(s == s.max())[0]
+                    bin2break = np.hstack([bin2break, t])
+                    s[t] = 0
+                    p_left -= t.shape[0]
+                bin2break = np.hstack([bin2break, np.random.choice(np.where(s == s.max())[0], p_left, replace=False)])
+                bin2break = list(map(int, bin2break))
+
+                new_point = np.zeros([p, self.dimension])
+                for j in range(p):
+                    # Cut the stratum in the direction of maximum length
+                    cut_dir_temp = self.sample_object.strata.widths[bin2break[j], :]
+                    dir2break = np.random.choice(np.argwhere(cut_dir_temp == np.amax(cut_dir_temp))[0])
+
+                    # Divide the stratum bin2break in the direction dir2break
+                    self.sample_object.strata.widths[bin2break[j], dir2break] = \
+                        self.sample_object.strata.widths[bin2break[j], dir2break] / 2
+                    self.sample_object.strata.widths = np.vstack([self.sample_object.strata.widths,
+                                                                  self.sample_object.strata.widths[bin2break[j], :]])
+                    self.sample_object.strata.origins = np.vstack([self.sample_object.strata.origins,
+                                                                   self.sample_object.strata.origins[bin2break[j], :]])
+                    if self.sample_object.samplesU01[bin2break[j], dir2break] < \
+                            self.sample_object.strata.origins[-1, dir2break] + \
+                            self.sample_object.strata.widths[bin2break[j], dir2break]:
+                        self.sample_object.strata.origins[-1, dir2break] = \
+                            self.sample_object.strata.origins[-1, dir2break] + \
+                            self.sample_object.strata.widths[bin2break[j], dir2break]
+                    else:
+                        self.sample_object.strata.origins[bin2break[j], dir2break] = \
+                            self.sample_object.strata.origins[bin2break[j], dir2break] + \
+                            self.sample_object.strata.widths[bin2break[j], dir2break]
+
+                    self.sample_object.strata.weights[bin2break[j]] = self.sample_object.strata.weights[bin2break[j]]/2
+                    self.sample_object.strata.weights = np.append(self.sample_object.strata.weights,
+                                                                  self.sample_object.strata.weights[bin2break[j]])
+
+                    # Add a uniform random sample inside the new stratum
+                    new_point[j, :] = np.random.uniform(self.sample_object.strata.origins[i+j, :],
+                                                        self.sample_object.strata.origins[i+j, :] +
+                                                        self.sample_object.strata.widths[i+j, :])
+
+                # Adding new sample to training points, samplesU01 and samples attributes
+                self.training_points = np.vstack([self.training_points, new_point])
+                self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
+                for k in range(self.dimension):
+                    i_cdf = self.sample_object.distribution[k].icdf
+                    new_point[:, k] = i_cdf(np.atleast_2d(new_point[:, k]).T, self.sample_object.dist_params[k])
+                self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
+
+                if self.verbose:
+                    print("Iteration:", i)
+
+        # ----------------------
+        # VORONOI STRATIFICATION
+        # ----------------------
+        elif self.cell == 'Voronoi':
+
+            from UQpy.Utilities import compute_Delaunay_centroid_volume, voronoi_unit_hypercube
+            from scipy.spatial.qhull import Delaunay
+            import math
+            import itertools
+
+            self.training_points = self.sample_object.samplesU01
+
+            # Extract the boundary vertices and use them in the Delaunay triangulation / mesh generation
+            self.mesh_vertices = self.training_points
+            self.points_to_samplesU01 = np.arange(0, self.training_points.shape[0])
+            for i in range(np.shape(self.sample_object.strata.vertices)[0]):
+                if any(np.logical_and(self.sample_object.strata.vertices[i, :] >= -1e-10,
+                                      self.sample_object.strata.vertices[i, :] <= 1e-10)) or \
+                        any(np.logical_and(self.sample_object.strata.vertices[i, :] >= 1 - 1e-10,
+                                           self.sample_object.strata.vertices[i, :] <= 1 + 1e-10)):
+                    self.mesh_vertices = np.vstack(
+                        [self.mesh_vertices, self.sample_object.strata.vertices[i, :]])
+                    self.points_to_samplesU01 = np.hstack([np.array([-1]), self.points_to_samplesU01, ])
+
+            # Define the simplex mesh to be used for sampling
+            self.mesh = Delaunay(self.mesh_vertices, furthest_site=False, incremental=True, qhull_options=None)
+
+            # Defining attributes of Delaunay, so that pycharm can check that it exists
+            self.mesh.nsimplex: int = self.mesh.nsimplex
+            self.mesh.vertices: np.ndarray = self.mesh.vertices
+            self.mesh.simplices: np.ndarray = self.mesh.simplices
+            self.mesh.add_points: classmethod = self.mesh.add_points
+            points = getattr(self.mesh, 'points')
+
+            # Primary loop for adding samples and performing refinement.
+            for i in range(self.nexist, self.nsamples, self.n_add):
+                p = min(self.n_add, self.nsamples - i)  # Number of points to add in this iteration
+
+                # Compute the centroids and the volumes of each simplex cell in the mesh
+                self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
+                self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
+                for j in range(self.mesh.nsimplex):
+                    self.mesh.centroids[j, :], self.mesh.volumes[j] = \
+                        compute_Delaunay_centroid_volume(points[self.mesh.vertices[j]])
+
+                # ----------------------------------------------------
+                # Determine the simplex to break and draw a new sample
+                # ----------------------------------------------------
+                s = np.zeros(self.mesh.nsimplex)
+                for j in range(self.mesh.nsimplex):
+                    s[j] = self.mesh.volumes[j] ** 2
+
+                # Identify the stratum with the maximum weight
+                bin2add, p_left = np.array([]), p
+                while np.where(s == s.max())[0].shape[0] < p_left:
+                    t = np.where(s == s.max())[0]
+                    bin2add = np.hstack([bin2add, t])
+                    s[t] = 0
+                    p_left -= t.shape[0]
+                bin2add = np.hstack([bin2add, np.random.choice(np.where(s == s.max())[0], p_left, replace=False)])
+
+                # Create 'p' sub-simplex within the simplex with maximum weight
+                new_point = np.zeros([p, self.dimension])
+                for j in range(p):
+                    tmp_vertices = points[self.mesh.simplices[int(bin2add[j]), :]]
+                    col_one = np.array(list(itertools.combinations(np.arange(self.dimension + 1), self.dimension)))
+                    self.mesh.sub_simplex = np.zeros_like(
+                        tmp_vertices)  # node: an array containing mid-point of edges
+                    for m in range(self.dimension + 1):
+                        self.mesh.sub_simplex[m, :] = np.sum(tmp_vertices[col_one[m] - 1, :], 0) / self.dimension
+
+                    # Using the Simplex class to generate a new sample in the sub-simplex
+                    new_point[j, :] = Simplex(nodes=self.mesh.sub_simplex, nsamples=1).samples
+
+                # Update the matrices to have recognize the new point
+                self.points_to_samplesU01 = np.hstack([self.points_to_samplesU01, np.arange(i, i+p)])
+                self.mesh.old_vertices = self.mesh.vertices
+
+                # Update the Delaunay triangulation mesh to include the new point.
+                self.mesh.add_points(new_point)
+                points = getattr(self.mesh, 'points')
+
+                # Update the sample arrays to include the new point
+                self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
+                self.training_points = np.vstack([self.training_points, new_point])
+                self.mesh_vertices = np.vstack([self.mesh_vertices, new_point])
+
+                # Identify the new point in the parameter space and update the sample array to include the new point.
+                for j in range(self.dimension):
+                    new_point[:, j] = self.sample_object.distribution[j].icdf(np.atleast_2d(new_point[:, j]).T,
+                                                                              self.sample_object.dist_params[j])
+                self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 # Compute the strata weights.
                 self.sample_object.strata = voronoi_unit_hypercube(self.sample_object.samplesU01)
@@ -1147,40 +1345,23 @@ class RSS:
     # Code for estimating gradients with a metamodel (surrogate)
     # TODO: We may want to consider moving this to Utilities.
     def estimate_gradient(self, x, y, xt):
-        # meta = 'Delaunay' is not currently functional.
-        if self.meta == 'delaunay':
-
-            # TODO: Here we need to add a reflection of the sample points over each face of the hypercube and build the
-            # linear interpolator from the reflected points.
-
+        from UQpy.Reliability import TaylorSeries
+        if type(self.krig_object).__name__ == 'Krig':
+            self.krig_object.fit(samples=x, values=y)
+            tck = self.krig_object
+        elif type(self.krig_object).__name__ == 'GaussianProcessRegressor':
+            self.krig_object.fit(x, y)
+            tck = self.krig_object.predict
+        else:
             from scipy.interpolate import LinearNDInterpolator
 
-            tck = LinearNDInterpolator(x, y, fill_value=0)
-            gr = self.cent_diff(tck, xt, self.step_size)
-        elif self.meta == 'kriging':
-            with suppress_stdout():  # disable printing output comments
-                self.krig_object.fit(samples=x, values=y)
-            gr = self.cent_diff(self.krig_object.interpolate, xt, self.step_size)
+            # TODO: Here we need to add a reflection of the sample points over each face of the hypercube and build the
+            #       linear interpolator from the reflected points.
+            tck = LinearNDInterpolator(x, y, fill_value=0).__call__
 
-        elif self.meta == 'sklearn':
-            self.krig_object.fit(x, y)
-            gr = self.cent_diff(self.krig_object.predict, xt, self.step_size)
-        else:
-            raise NotImplementedError("UQpy Error: 'meta' must be specified in order to calculate gradients.")
+        gr = TaylorSeries.gradient(samples=xt, model=tck, dimension=self.dimension, order='first',
+                                   df_step=self.step_size, scale=False)
         return gr
-
-    # Implementation of the central difference method for calculating gradients.
-    # TODO: This should probably be moved to Utilities.
-    @staticmethod
-    def cent_diff(f, x, h):
-        dy_dx = np.zeros((np.size(x, 0), np.size(x, 1)))
-        for ir in range(np.size(x, 1)):
-            temp = np.zeros((np.size(x, 0), np.size(x, 1)))
-            temp[:, ir] = np.ones(np.size(x, 0))
-            low = x - h / 2 * temp
-            hi = x + h / 2 * temp
-            dy_dx[:, ir] = ((f.__call__(hi) - f.__call__(low)) / h)[:].reshape((len(hi),))
-        return dy_dx
 
     # Initialization and preliminary error checks.
     def init_rss(self):
@@ -1188,23 +1369,14 @@ class RSS:
             raise NotImplementedError("UQpy Error: sample_object must be an object of the STS or RSS class.")
 
         if self.run_model_object is not None:
-            self.option = 'Gradient'
             if type(self.run_model_object).__name__ not in ['RunModel']:
                 raise NotImplementedError("UQpy Error: run_model_object must be an object of the RunModel class.")
 
-        if self.option == 'Gradient':
-            if self.krig_object is None:
-                self.meta = 'delaunay'
-            elif type(self.krig_object).__name__ == 'GaussianProcessRegressor':
-                self.meta = 'sklearn'
-            else:
-                self.meta = 'kriging'
 
 ########################################################################################################################
 ########################################################################################################################
 #                                        Generating random samples inside a Simplex
 ########################################################################################################################
-
 
 class Simplex:
     """
@@ -1334,6 +1506,9 @@ class AKMCS:
                             user-defined learning function is used.
             :type save_pf: boolean
 
+            :param verbose: A boolean declaring whether to write text to the terminal.
+            :type verbose: bool
+
         Output:
             :return: AKMCS.sample_object.samples: Final/expanded samples.
             :rtype: AKMCS..sample_object.samples: ndarray
@@ -1351,11 +1526,11 @@ class AKMCS:
     """
 
     # Authors: Mohit S. Chauhan
-    # Last modified: 12/01/2019 by Mohit S. Chauhan
+    # Last modified: 01/07/2020 by Mohit S. Chauhan
 
     def __init__(self, run_model_object=None, samples=None, krig_object=None, nlearn=10000, nstart=None,
                  population=None, dist_name=None, dist_params=None, qoi_name=None, lf='U', n_add=1,
-                 min_cov=0.05, max_p=None, verbose=False, kriging='UQpy', visualize=False, save_pf=None):
+                 min_cov=0.05, max_p=None, verbose=False, kriging='UQpy', save_pf=None):
 
         # Initialize the internal variables of the class.
         self.run_model_object = run_model_object
@@ -1383,7 +1558,6 @@ class AKMCS:
         self.population = population
         self.kriging = kriging
         self.save_pf = save_pf
-        self.visualize = visualize
         self.dimension = 0
         self.qoi = None
         self.krig_model = None
@@ -1408,7 +1582,7 @@ class AKMCS:
 
         self.run_model_object.run(samples=self.samples)
 
-    def sample(self, samples=None, n_add=None, append_samples=True, nsamples=0, lf=None):
+    def sample(self, samples=None, n_add=1, append_samples=True, nsamples=0, lf=None):
         """
         Description:
 
@@ -1677,7 +1851,7 @@ class AKMCS:
     def learning(self):
         if type(self.lf).__name__ == 'function':
             self.lf = self.lf
-        elif self.lf not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF', 'USI']:
+        elif self.lf not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
             raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
         elif self.lf == 'EIGF':
             self.lf = self.eigf
