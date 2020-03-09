@@ -23,7 +23,7 @@ import scipy as sp
 import numpy as np
 import itertools
 from scipy.interpolate import LinearNDInterpolator
-from fbpca import pca
+#from fbpca import pca
 from os import path
 import math
 
@@ -46,9 +46,9 @@ class Grassmann:
         Description:
 
             DimensionReduction is a class containing the methods to compute distances on the Grassmann manifold,
-            as well as to project points onto the Grassmann manifold and the tangent space. It also perform the
-            interpolation of points on the Grassmann manifold projecting then onto the tangent space and to interpolate
-            them employing standard methods.
+            as well as to project points onto the Grassmann manifold and the tangent space. Moreover, it also implements
+            the interpolation of large matrices on a tangent space taking advantage of their lower dimensional structure
+            when projected on the Grassmann manifold.
 
             References:
             Jiayao Zhang, Guangxu Zhu, Robert W. Heath Jr., and Kaibin Huang, "Grassmannian Learning: Embedding Geometry
@@ -60,29 +60,36 @@ class Grassmann:
 
         Input:
 
-            :param dist_object: It specifies the name of the function or class with the distance metric.
+            :param dist_object: It specifies the name of a function or class implementing the distance metric.
             :type dist_object: str
 
-            :param dist_script: The filename (with extension) of the Python script containing the implementation
-                                of dist_object (only for user defined metrics).
+            :param dist_script: The filename (with extension) of a Python script implementing dist_object 
+                                (only for user defined metrics).
+            :type dist_script: str
+            
+            :param kernel_object: It specifies the name of a function or class implementing the Grassmann kernel.
+            :type dist_object: str
+            
+            :param kernel_script: The filename (with extension) of a Python script implementing kernel_object 
+                                (only for user defined metrics).
             :type dist_script: str
 
-            :param interp_object: It specifies the name of the function or class with the employed interpolator.
+            :param interp_object: It specifies the name of the function or class implementing the interpolator.
             :type interp_object: str
 
-            :param interp_script: The filename (with extension) of the Python script containing the implementation
-                                  of interp_object (only for user defined interpolator).
+            :param interp_script: The filename (with extension) of the Python script implementing of interp_object 
+                                  (only for user defined interpolator).
             :type interp_script: str
 
         """
 
-    # Authors: Ketson R. M. dos Santos
-    # Updated: 10/30/19 by Ketson R. M. dos Santos
+    # Authors: Ketson R. M. dos Santos, Dimitris G. Giovanis
+    # Updated: 03/04/20 by Ketson R. M. dos Santos
 
     def __init__(self, dist_object=None, dist_script=None, kernel_object=None, kernel_script=None, interp_object=None,
                  interp_script=None):
 
-        # Distance
+        # Distance.
         self.dist_script = dist_script
         self.dist_object = dist_object
         if dist_script is not None:
@@ -92,12 +99,11 @@ class Grassmann:
 
         if self.user_dist_check:
             try:
-                # import user_distance
                 self.module_dist = __import__(self.dist_script[:-3])
             except ImportError:
-                raise ImportError('There is no module implementing a  metric on the Grassmann manifold.')
+                raise ImportError('There is no module implementing a metric on the Grassmann manifold.')
 
-        # Kernels
+        # Kernels.
         self.kernel_script = kernel_script
         self.kernel_object = kernel_object
         if kernel_script is not None:
@@ -107,41 +113,34 @@ class Grassmann:
 
         if self.user_kernel_check:
             try:
-                # import user_distance
                 self.module_kernel = __import__(self.kernel_script[:-3])
             except ImportError:
-                raise ImportError('There is no module implementing a kernel.')
+                raise ImportError('There is no module implementing a Grassmann kernel.')
 
-        # Interpolation
+        # Interpolation.
         self.interp_script = interp_script
         self.interp_object = interp_object
         if interp_script is not None:
             self.user_interp_check = path.exists(interp_script)
-            # self.user_dist_check = path.exists("user_distance.py")
         else:
             self.user_interp_check = False
 
         if self.user_interp_check:
             try:
-                # import user_distance
-                # self.user_distance = user_distance.user_dist
                 self.module_interp = __import__(self.interp_script[:-3])
-                # self.user_distance = self.module_dist.user_dist
             except ImportError:
                 raise ImportError('There is no module implementing the distance metric.')
-        # pass
 
+    # Calculate the distance on the manifold            
     def distance(self, *argv, **kwargs):
 
         """
-        GrassmannDistance: Estimate the distance of points in the Grassmann manifold
-                           using different metrics.
-        argv: list or numpy ndarray containing all the matrices (at least 2) corresponding to the posints
-              in the Grassmann manifold
+        distance: Estimate the distance of points on the Grassmann manifold.
+        
+        argv: list or numpy ndarray containing all the matrices (at least 2) corresponding to the points
+              on the Grassmann manifold
         """
-
-        # vari is a list containing each point, and nargs is the number of points
-        # Check arguments: verify the consistency of input arguments
+        
         nargs = len(argv[0])
         psi = argv[0]
         #psi, nargs = check_arguments(argv, min_num_matrix=2, ortho=False)
@@ -155,7 +154,7 @@ class Grassmann:
 
             cont += 1
 
-        # If rank is not provide compute internally 
+        # If rank is not provide compute internally.
         if ranks is None:
             ranks = []
             for i in range(nargs):
@@ -164,8 +163,7 @@ class Grassmann:
         if type(ranks) != list and type(ranks) != np.ndarray:
             raise TypeError('rank MUST be either a list or ndarray.')
 
-
-        # Define the pairs of points to compute the Grassmann distance
+        # Define the pairs of points to compute the Grassmann distance.
         indices = range(nargs)
         pairs = list(itertools.combinations(indices, 2))
 
@@ -180,11 +178,6 @@ class Grassmann:
             ii = pairs[id_pair][0]  # Point i
             jj = pairs[id_pair][1]  # Point j
 
-            #rank = min(x0.shape[1], x1.shape[1])
-            #x0 = x0[:, :rank]  # Truncate matrices with rank
-            #x1 = x1[:, :rank]
-            #rank0 = min(x0.shape[1], x0.shape[1])
-            #rank1 = min(x1.shape[1], x1.shape[1])
             rank0 = int(ranks[ii])
             rank1 = int(ranks[jj])
             
@@ -198,8 +191,10 @@ class Grassmann:
         return distances_list
 
     # ==================================================================================================================
-    # The pre-defined metrics are implemented in this section. Any new pre-defined metric must be implemented
+    # Built-in metrics are implemented in this section. Any new built-in metric must be implemented
     # here with the decorator @staticmethod.
+    
+    # Grassmann distance.
     @staticmethod
     def grassmann_dist(x0, x1):
 
@@ -216,6 +211,7 @@ class Grassmann:
 
         return dist
 
+    #Chordal distance.
     @staticmethod
     def chordal_dist(x0, x1):
 
@@ -233,6 +229,7 @@ class Grassmann:
 
         return dist
 
+    # Procrustes distance.
     @staticmethod
     def procrustes_dist(x0, x1):
 
@@ -250,38 +247,33 @@ class Grassmann:
 
         return dist
 
+    # Projections distance.
     @staticmethod
     def projection_dist(x0, x1):
 
-        # Check rank and swap
+        # Check rank and swap.
         c = np.zeros([x0.shape[0], x0.shape[1]])
         if x0.shape[1] < x1.shape[1]:
             x0 = x1
             x1 = c
 
-        # Compute the projection according to[1].
+        # Compute the projection.
         r = np.dot(x0.T, x1)
         x1 = x1 - np.dot(x0, r)
 
-        # Make sure it's magnitude is less than 1.
-        dist = np.arcsin(min(1, scipy.linalg.norm(x1)))
+        dist = np.arcsin(min(1, sp.linalg.norm(x1)))
 
         return dist
 
     # ==================================================================================================================
-    # The pre-defined kernels are implemented in this section. Any new pre-defined kernel must be implemented
-    # here with the decorator @staticmethod.
-
     def kernel(self, *argv, **kwargs):
 
         """
-        GrassmannDistance: Estimate the distance of points in the Grassmann manifold
-                           using different metrics.
-        argv: list or numpy ndarray containing all the matrices (at least 2) corresponding to the posints
-              in the Grassmann manifold
+        kernel: it implements different kernels defined on the Grassmann manifold.
+        argv: list or numpy ndarray containing all the matrices (at least 2) corresponding to the points
+              on the Grassmann manifold
         """
-        # vari is a list containing each point, and nargs is the number of points
-        # Check arguments: verify the consistency of input arguments
+        
         nargs = len(argv[0])
         psi = argv[0]
         #psi, nargs = check_arguments(argv, min_num_matrix=2, ortho=False)
@@ -295,7 +287,7 @@ class Grassmann:
 
             cont += 1
 
-        # If rank is not provide compute internally 
+        # If rank is not provide compute internally.
         if ranks is None:
             ranks = []
             for i in range(nargs):
@@ -304,7 +296,7 @@ class Grassmann:
         if type(ranks) != list and type(ranks) != np.ndarray:
             raise TypeError('rank MUST be either a list or ndarray.')
 
-        # Define the pairs of points to compute the Grassmann distance
+        # Define the pairs of points to compute the Grassmann distance.
         indices = range(nargs)
         pairs = list(itertools.combinations(indices, 2))
 
@@ -322,12 +314,9 @@ class Grassmann:
             x0 = psi[ii]
             x1 = psi[jj]
 
-            #rank = min(x0.shape[1], x1.shape[1])
-            #rank0 = min(x0.shape[1], x0.shape[1])
-            #rank1 = min(x1.shape[1], x1.shape[1])
             rank0 = ranks[ii]
             rank1 = ranks[jj]
-            x0 = x0[:, :rank0]  # Truncating matrices
+            x0 = x0[:, :rank0]  # Truncating the matrices.
             x1 = x1[:, :rank1]
 
             ker = kernel_fun(x0, x1)
@@ -348,14 +337,20 @@ class Grassmann:
         
         return kernel_matrix
 
+    # ==================================================================================================================
+    # Built-in kernels are implemented in this section. Any new built-in kernel must be implemented
+    # here with the decorator @staticmethod.
+    
+    # Projection kernel.
     @staticmethod
     def projection_kernel(x0, x1):
-
+        
         r = np.dot(x0.T, x1)
         n = np.linalg.norm(r, 'fro')
         ker = n * n
         return ker
 
+    # Binet-Cauchy kernel.
     @staticmethod
     def binet_cauchy_kernel(x0, x1):
 
@@ -369,15 +364,13 @@ class Grassmann:
     def project_points(*argv, **kwargs):
 
         """
-        project_points: project the input matrices on the Grassmann manifold via
-                        singular value decomposition (SVD)
+        project_points: project the input matrices onto the Grassmann manifold via singular value decomposition (SVD)
         argv: list or numpy nadarray containing the matrices to be projected onto the Grassmann manifold.
-        kwargs: contains the keyword for the rank. If a list or numpy ndarray containing the rank of each matrix is not
-                provided, the code compute them using numpy.linalg.matrix_rank.
+        kwargs: contains the keyword for the user defined rank. If a list or numpy ndarray containing the 
+                rank of each matrix is not provided, the code will compute them using numpy.linalg.matrix_rank.
         """
-
-        # matrix is a list containing each point, and nargs is the number of points
-        # Check arguments: verify the consistency of input arguments
+        
+        # Check the input arguments.
         matrix, nargs = check_arguments(argv, min_num_matrix=1, ortho=False)
 
         ranks = None
@@ -389,25 +382,25 @@ class Grassmann:
 
             cont += 1
 
-        # If rank is not provide compute internally 
+        # If user defined rank is not provided.
         if ranks is None:
             ranks = []
             for i in range(nargs):
+                
+                # Estimate the rank of each solution.
                 ranks.append(np.linalg.matrix_rank(matrix[i]))
        
         if type(ranks) != list and type(ranks) != np.ndarray:
             raise TypeError('rank MUST be either a list or ndarray.')
 
         max_rank = int(np.max(ranks))  # rank = max(r1, r2, ..., rn)
-        psi = []  # initialize the left singular vectors as a list
-        sigma = []  # initialize the singular values as a list
-        phi = []  # initialize the right singular vectors as a list
+        psi = []  # initialize the left singular vectors as a list.
+        sigma = []  # initialize the singular values as a list.
+        phi = []  # initialize the right singular vectors as a list.
 
-        # For each point perform svd with max_rank columns
+        # For each point perform svd with max_rank columns.
         for i in range(nargs):
-            u, s, v = svd(matrix[i], max_rank) #Old version
-            #(u, s, v) = pca(matrix[i], max_rank, True)
-            #(u, s, v) = pca(matrix[i], ranks[i], True)
+            u, s, v = svd(matrix[i], max_rank) 
             psi.append(u)
             sigma.append(np.diag(s))
             phi.append(v.T)
@@ -419,13 +412,14 @@ class Grassmann:
         """
         log_mapping: projecting points on the Grassmann manifold onto the tangent space.
         
-        argv: list or numpy ndarray containing all the points in the Grassmann manifold
-        ref: list or numpy ndarray containing the reference point in the Grassmann manifold
+        argv: list or numpy ndarray containing all the points on the Grassmann manifold.
+        ref: list or numpy ndarray containing the reference point on the Grassmann manifold
              where the tangent space is approximated.
         """
-        # Check the input arguments
+        # Check the input arguments.
         u, nr = check_arguments(argv, min_num_matrix=1, ortho=False)
 
+        # The input matrices are truncated by the user.
         rank = []
         for i in range(nr):
             rank.append(min(np.shape(u[i])))
@@ -446,12 +440,9 @@ class Grassmann:
             else:
 
                 # M = ((I - psi0*psi0')*psi1)*inv(psi0'*psi1)
-                # m1 = np.dot(u[i], np.dot(refT, u[i]))
-                # m = m1 - np.dot(m0, m1)
                 minv = np.linalg.inv(np.dot(refT,u[i]))
                 m = np.dot(u[i] - np.dot(m0, u[i]),minv)
                 ui, si, vi = np.linalg.svd(m, full_matrices=False)              #svd(m, max_rank)
-                #(ui, si, vi) = pca(m, rank[i], True)
                 _gamma.append(np.dot(np.dot(ui, np.diag(np.arctan(si))), vi))
 
         return _gamma
@@ -462,11 +453,11 @@ class Grassmann:
         """
         exp_mapping: perform the exponential mapping from the tangent space
                      to the Grassmann manifold.
-        ref: list or ndarray containing the reference point in the Grassmann manifold 
+        ref: list or ndarray containing the reference point on the Grassmann manifold 
              where the tangent space is approximated.
         
         """
-        # sample, nodes, matrix
+        # Check input arguments.
         u, nr = check_arguments(argv, min_num_matrix=1, ortho=False)
 
         rank = []
@@ -477,16 +468,15 @@ class Grassmann:
         for j in range(nr):
 
             ui, si, vi = np.linalg.svd(u[j], full_matrices=False)
-            #(ui, si, vi) = pca(u[j], rank[j], True)
 
-            # Exponential mapping
+            # Exponential mapping.
             x0 = np.dot(np.dot(np.dot(ref, vi.T), np.diag(np.cos(si))) + np.dot(ui, np.diag(np.sin(si))), vi)
 
-            # Test orthogonality
+            # Test orthogonality.
             xtest = np.dot(x0.T, x0)
 
             if not np.allclose(xtest, np.identity(np.shape(xtest)[0])):
-                x0, unused = np.linalg.qr(x0)  # re-orthonormalizing
+                x0, unused = np.linalg.qr(x0)  # re-orthonormalizing.
 
             x.append(x0)
 
@@ -495,7 +485,13 @@ class Grassmann:
     # @staticmethod
     def karcher_mean(self, *argv, acc=False, tol=1e-3, maxiter=1000):
 
-        # np.random.seed( 234 )
+        """
+        karcher_mean: estimate the Karcher mean.
+        acc: boolean variable for the use of the Nesterov approach to accelerate the rate of convergence.
+        tol: real value for the tolerance.
+        maxiter: integer with the maximum number of iterations.
+        """
+        # np.random.seed( 234 ) if a fixed seed is desired.
         matrix, n_mat = check_arguments(argv, min_num_matrix=2, ortho=False)
 
         alpha = 0.5  # todo: this can be adaptive (e.g., Armijo rule).
@@ -503,18 +499,16 @@ class Grassmann:
         for i in range(n_mat):
             rnk.append(min(np.shape(matrix[i])))
 
+        # Maximum rank
         max_rank = np.max(rnk)
-        # max_rank = max(rank)
 
         fmean = []
         for i in range(n_mat):
             fmean.append(self.frechet_mean(matrix[i], matrix))
 
         index_0 = fmean.index(min(fmean))
-        # index_0 = np.random.randint(0, n_mat)
         mean_element = list()
         mean_element = matrix[index_0].tolist()
-        # nrow = np.shape(mean_element)[0]
 
         avg_gamma = np.zeros([np.shape(matrix[0])[0], np.shape(matrix[0])[1]])
 
@@ -530,6 +524,7 @@ class Grassmann:
                 avg_gamma += _gamma[i] / n_mat
             avg.append(avg_gamma)
 
+        # Main loop
         while itera <= maxiter:
 
             _gamma = Grassmann.log_mapping(matrix, ref=np.asarray(mean_element))
@@ -565,12 +560,17 @@ class Grassmann:
 
             itera += 1
 
-        print(itera)
         return mean_element, _gamma
 
     # @staticmethod
     def karcher_mean_sgd(self, *argv, tol=1e-3, maxiter=1000):
 
+        """
+        karcher_mean_sgd: estimate the Karcher mean using the stochastic gradient descent.
+        acc: boolean variable for the use of the Nesterov approach to accelerate the rate of convergence.
+        tol: real value for the tolerance.
+        maxiter: integer with the maximum number of iterations.
+        """
         matrix, n_mat = check_arguments(argv, min_num_matrix=2, ortho=False)
 
         rnk = []
@@ -584,7 +584,6 @@ class Grassmann:
             fmean.append(self.frechet_mean(matrix[i], matrix))
 
         index_0 = fmean.index(min(fmean))
-        # index_0 = np.random.randint(0, n_mat)
 
         mean_element = matrix[index_0].tolist()
         itera = 0
@@ -592,14 +591,12 @@ class Grassmann:
         k = 1
         while itera < maxiter:
 
-            # indices = np.random.choice(n_mat, 7)
             indices = np.arange(n_mat)
             np.random.shuffle(indices)
 
             melem = mean_element
             for i in range(len(indices)):
                 alpha = 0.5 / k
-                # idx = np.random.randint(0, n_mat)
                 idx = indices[i]
                 _gamma = Grassmann.log_mapping(matrix[idx], ref=np.asarray(mean_element))
 
@@ -624,11 +621,14 @@ class Grassmann:
     # @staticmethod
     def frechet_mean(self, k_mean, *argv):
 
+        """
+        frechet_mean: estimate the Frechet mean.
+        k_mean: list of numpy ndarray point of interested (on a manifold).
+        """
         matrix, n_mat = check_arguments(argv, min_num_matrix=2, ortho=False)
 
         accum = 0
         for i in range(n_mat):
-            # D = Grassmann.distance(k_mean, matrix[i], metric=metric)
             d = self.distance([k_mean, matrix[i]])
             accum += d[0] * d[0]
 
@@ -638,15 +638,16 @@ class Grassmann:
     def interpolate_sample(self, *argv, sample=None, nodes=None, reg_model=None, corr_model=None, n_opt=1):
 
         """
-        interpolate_sample: interpolate U, Sigma, and V using the volumes of sub-simplexes.
+        interpolate_sample: interpolate U, Sigma, and V.
         sample: list or numpy ndarray with the coordinates of the point being interpolated.
         nodes: list or numpy ndarray with the coordinates of the nodes of the element.
         argv: list or numpy ndarray containing the solution matrix assigned to each node.
+        reg_model: str with the used regression method (linear_interp or kriging_interp).
         corr_model: Correlation model contains the correlation function, which uses sample distance
                     to define similarity between samples.
                     Options: Exponential, Gaussian, Linear, Spherical, Cubic, Spline.
         corr_model_params: Initial values corresponding to hyperparameters/scale parameters.
-        n_opt: Number of times optimization problem is to be solved with different starting point.
+        n_opt: int with the number of times optimization problem is to be solved with different starting point.
                Default: 1
         """
 
@@ -671,14 +672,7 @@ class Grassmann:
         if type(nodes) == list:
             nodes = np.array(nodes)
 
-        # Test if the sample lies within the element
-        #isinside = inelement(sample, nodes)
-        #if isinside:
-
         interp_matrix = interp_fun(nodes, matrix, sample, reg_model, corr_model, n_opt)
-
-        #else:
-        #    raise TypeError('The sample MUST be within the element.')
 
         return interp_matrix
 
@@ -686,6 +680,7 @@ class Grassmann:
     # The pre-defined interpolators are implemented in this section. Any new pre-defined interpolator must be
     # implemented here with the decorator @staticmethod.
 
+    # Linear interpolation
     @staticmethod
     def linear_interp(*argv):
 
@@ -698,6 +693,7 @@ class Grassmann:
 
         return interp_matrix
 
+    # Kringing interpolation
     @staticmethod
     def kriging_interp(*argv):
 
@@ -810,11 +806,45 @@ class Grassmann:
 # ========================= DIFFUSION MAPS ===========================================
 class DiffusionMaps:
 
+    """
+
+    Description:
+
+        DiffusionMaps is a class containing the methods to perform the diffusion maps based on the input dataset.
+
+        References:
+        Ronald R. Coifman, Stéphane Lafon, "Diffusion maps", Applied and Computational Harmonic Analysis, Volume 21,
+        Issue 1, Pages 5-30, 2006.
+
+        Nadler, B., Lafon, S., Coifman, R., and Kevrekidis, I., "Diffusion maps, spectral clustering 
+        and eigenfunctions of Fokker-Planck operators", In Y. Weiss, B. Scholkopf, and J. Platt (Eds.), Advances in Neural 
+        Information Processing Systems, 18, pages 955 – 962, 2006, Cambridge, MA: MIT Press
+
+    Input:
+
+
+
+    """
+
+    # Authors: Ketson R. M. dos Santos, Dimitris G. Giovanis
+    # Updated: 03/04/20 by Ketson R. M. dos Santos
+    
     def __init__(self):
         pass
 
     @staticmethod
     def mapping(data=None, alpha=0.5, n_evecs=2, epsilon=None, kernel_mat=None, sparse=False, k_neighbors=1):
+        
+        """
+        mapping: compute the diffusion cordinates when either the kernel_matrix of the data are provided.
+        data: list or ndarray containing the input data.
+        alpha: real constant defining the diffusion operator - alpha = 0 (Graph Laplacian normalization), 0.5 (Fokker-Plank), 1 (Laplace-Beltrami).
+        n_evecs: interger with the maximum number of eigenvectors/eigenvalues to be computed.
+        episilon: real value containing the epsilon used in the exponential kernel (if no kernel matrix is provided).
+        kernel_mat: list or ndarray containing the kernel matrix.
+        sparse: boolean variable to define if a sparse representation of the graph is of interest (it can improve the computational performance). 
+        k_neighbors: integer defining the number of neighbors of each point used to construct the sparse graph.
+        """
         
         if data is None and kernel_mat is None:
             raise TypeError('data and kernel_mat both are None.')
@@ -832,26 +862,20 @@ class DiffusionMaps:
         else:
             N = np.shape(data)[0]
 
+        # Construct the Kernel matrix if no Kernel matrix is provided.    
         k_matrix, epsilon = DiffusionMaps.create_kernel_matrix(data, epsilon, sparse=sparse, kernel_mat=kernel_mat, k_neighbors=k_neighbors)
 
-        b, b_inv = DiffusionMaps.b_matrix(k_matrix, alpha)
+        # Compute the diagonal matrix D(i,i) = sum(Kernel(i,j)^alpha,j) and its inverse.
+        D, D_inv = DiffusionMaps.D_matrix(k_matrix, alpha)
 
-        Ps = DiffusionMaps.lr_normalize(k_matrix, b_inv, sparse)
+        # Compute L^alpha = D^(-alpha)*L*D^(-alpha).
+        Ps = DiffusionMaps.l_alpha_normalize(k_matrix, D_inv, sparse)
         
-        #Ps0 = sps.csr_matrix(Ps)
-        #u, s, v = spsl.svds(Ps0, k=n_evecs + 1)
-        #s=np.flip(s)
-        #u=np.fliplr(u)
-
-        #u, s, v = np.linalg.svd(Ps, full_matrices=False)
-        
+        # Find the eigenvalues and eigenvectors of Ps.
         if sparse:
             evals, evecs = spsl.eigs(Ps, k=(n_evecs+1), which='LR')
         else:
             evals, evecs = np.linalg.eig(Ps)
-            
-        #Ps0 = sps.csr_matrix(Ps)
-        #evals, evecs = spsl.eigs(Ps0, k=(n_evecs+1), which='LR')
 
         ix = np.argsort(np.abs(evals))
         ix = ix[::-1]
@@ -860,9 +884,9 @@ class DiffusionMaps:
 
         evals = s[:n_evecs]
         Pfia = u[:, :n_evecs]
-        b_inv_ = np.diag(b_inv)
-        evecs = np.dot(b_inv_, Pfia)
-        # A = np.dot(np.dot(psa.T, b), psa)
+        D_inv_ = np.diag(D_inv)
+        evecs = np.dot(D_inv_, Pfia)
+
         dcoords = np.zeros([N, n_evecs])
         for i in range(n_evecs):
             dcoords[:, i] = evals[i] * evecs[:, i]
@@ -872,13 +896,23 @@ class DiffusionMaps:
     @staticmethod
     def create_kernel_matrix(data, epsilon, sparse=False, kernel_mat=None, k_neighbors=1):
  
+        """
+        create_kernel_matrix: Compute the kernel matrix.
+        epsilon: real value containing the epsilon used in the exponential kernel (if no kernel matrix is provided).
+        sparse: boolean variable to define if a sparse representation of the graph is of interest (it can improve the computational performance). 
+        kernel_mat: list or ndarray containing the kernel matrix.
+        k_neighbors: integer defining the number of neighbors of each point used to construct the sparse graph.
+        """
+    
+        # If only data is provided compute the kernel matrix using the Gaussian kernel.
         if kernel_mat is None and data is not None:
   
+            # Compute the pairwise distances.
             if len(np.shape(data)) == 2:
                 dist_pairs = sd.pdist(data, 'euclidean')
             elif len(np.shape(data)) == 3:
 
-                # Check arguments: verify the consistency of input arguments
+                # Check arguments: verify the consistency of input arguments.
                 datam, nargs = check_arguments(data, min_num_matrix=2, ortho=False)
 
                 indices = range(nargs)
@@ -898,12 +932,13 @@ class DiffusionMaps:
             else:
                 raise TypeError('The size of the input data is not adequate.')
             
+            # Find a suitable episilon if it is not provided by the user.
             if epsilon is None:
                 epsilon = DiffusionMaps.find_epsilon(dist_pairs)
-            
-            #print(np.std(dist_pairs), np.mean(dist_pairs))
+
             kernel_mat = np.exp(-sd.squareform(dist_pairs) ** 2 / (4 * epsilon))
             
+        # If the user prefer to use a sparse graph.
         if sparse:
 
             nrows = np.shape(kernel_mat)[0]
@@ -914,46 +949,55 @@ class DiffusionMaps:
                 kernel_mat[i,idx]=0
 
             kernel_mat = sps.csc_matrix(kernel_mat)
-        
-        #plt.figure()
-        #plt.matshow(kernel_mat)
-        #plt.show()
 
         return kernel_mat, epsilon
     
     @staticmethod
     def find_epsilon(dist_pairs):
         
+        """
+        find_epsilon: Find a suitable episilon based on the median of the square value of the pairwise distances.
+        dist_pairs: list of numpy ndarray containing the pairwise distances.
+        """
+        
         dist_pairs_sq = dist_pairs**2
         epsilon = np.median(dist_pairs_sq)
+        
         return epsilon
 
     @staticmethod
-    def b_matrix(kernel_matrix, alpha):
+    def D_matrix(kernel_matrix, alpha):
+        
+        """
+        D_matrix: Compute the diagonal matrix D(i,i) = sum(Kernel(i,j)^alpha,j) and its inverse.
+        kernel_matrix: list of numpy ndarray containing the kernel matrix.
+        alpha:real constant defining the diffusion operator - alpha = 0 (Graph Laplacian normalization), 0.5 (Fokker-Plank), 1 (Laplace-Beltrami).
+        """
+            
         m = np.shape(kernel_matrix)[0]
-        kmat = kernel_matrix  # todo .toarray()
-        b = np.array(kmat.sum(axis=1)).flatten()
+        kmat = kernel_matrix 
+        D = np.array(kmat.sum(axis=1)).flatten()
 
-        b_inv = np.power(b, -alpha)
-        return b, b_inv
+        D_inv = np.power(D, -alpha)
+        return D, D_inv
 
     @staticmethod
-    def lr_normalize(kernel_matrix, b_inv, sparse=False):
-        m = b_inv.shape[0]
-        # Dalpha = sps.spdiags(b_inv, 0, m, m)
-        # kernel_matrix = kernel_matrix * Dalpha
-        # Ps = Dalpha * kernel_matrix
+    def l_alpha_normalize(kernel_matrix, D_inv, sparse=False):
+        
+        """
+        lr_normalize:
+        kernel_matrix: list of numpy ndarray containing the kernel matrix.
+        D_inv: inverse of D(i,i) = sum(Kernel(i,j)^alpha,j)
+        sparse: boolean variable to define if a sparse representation of the graph is of interest (it can improve the computational performance).
+        """
+        
+        m = D_inv.shape[0]
         
         if sparse:
-            Dalpha = sps.spdiags(b_inv, 0, m, m)
+            Dalpha = sps.spdiags(D_inv, 0, m, m)
         else:
-            Dalpha = np.diag(b_inv)
+            Dalpha = np.diag(D_inv)
             
         Ps = Dalpha.dot(kernel_matrix.dot(Dalpha))
-        """
-        row_sum = kernel_matrix.sum(axis=1).transpose()
-        n = row_sum.shape[1]
-        Dalpha = sps.spdiags(np.power(row_sum, -1), 0, n, n)
-        P = Dalpha * kernel_matrix
-        """
+
         return Ps
