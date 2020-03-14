@@ -747,58 +747,6 @@ class Grassmann:
 
         return interp_matrix
 
-    # ==================================================================================================================
-
-    def exp_mapping_interp(self, sample, nodes, ref, *argv):
-
-        """
-        exp_mapping_interp: perform the exponential mapping of the interpolated point
-                            from the tangent space to the Grassmann manifold.
-        sample: list or ndarray with the coordinates of the point being interpolated.
-        nodes: list or ndarray with the coordinates of the nodes of the element.
-        ref: list or ndarray containing the reference point in the Grassmann manifold
-             where the tangent space is approximated.
-        argv: list or ndarray containing the solution matrix assigned to each node.
-
-        """
-
-        matrix, n_mat = check_arguments(argv, min_num_matrix=3, ortho=False)
-
-        # Test if the sample is stored as a list
-        if type(sample) == list:
-            sample = np.asarray(sample)
-
-        # Test if the nodes are stored as a list
-        if type(nodes) == list:
-            nodes = np.asarray(nodes)
-
-        # Test if the sample lies within the element
-        isinside = inelement(sample, nodes)
-        if isinside:
-
-            # interp_matrix = Grassmann.interpolate_points(point, nodes, matrix)
-            interp_matrix = Grassmann(interp_object=self.interp_object,
-                                      interp_script=self.interp_script).interpolate_sample(matrix, sample=sample,
-                                                                                           nodes=nodes)
-            # interp_matrix = Grassmann.interpolate_sample(matrix, interpolator=interpolator, sample=sample, nodes=nodes)
-            # ui, si, vi = np.linalg.svd(interp_matrix, full_matrices=False)
-            rank = min(np.shape(interp_matrix))
-            (ui, si, vi) = pca(interp_matrix, rank, True)
-
-            # Exponential mapping
-            x = np.dot(np.dot(np.dot(ref, vi.T), np.diag(np.cos(si))) + np.dot(ui, np.diag(np.sin(si))), vi)
-
-            # Test orthogonality
-            xtest = np.dot(x.T, x)
-            if not np.allclose(xtest, np.identity(np.shape(xtest)[0])):
-                x, unused = np.linalg.qr(x)  # re-orthonormalizing
-
-        else:
-            raise TypeError('The sample MUST be within the element.')
-
-        return x
-
-
 # ========================= DIFFUSION MAPS ===========================================
 class DiffusionMaps:
     """
@@ -864,7 +812,15 @@ class DiffusionMaps:
         D, D_inv = DiffusionMaps.D_matrix(k_matrix, alpha)
 
         # Compute L^alpha = D^(-alpha)*L*D^(-alpha).
-        Ps = DiffusionMaps.l_alpha_normalize(k_matrix, D_inv, sparse)
+        Lstar = DiffusionMaps.l_alpha_normalize(k_matrix, D_inv, sparse)
+
+        Dstar, Dstar_inv = DiffusionMaps.D_matrix(Lstar, 1.0)
+        if sparse:
+            Dstar_invd = sps.spdiags(Dstar_inv, 0, Dstar_inv.shape[0], Dstar_inv.shape[0])
+        else:
+            Dstar_invd = np.diag(Dstar_inv)
+            
+        Ps = Dstar_invd.dot(Lstar)
 
         # Find the eigenvalues and eigenvectors of Ps.
         if sparse:
@@ -878,13 +834,11 @@ class DiffusionMaps:
         u = np.real(evecs[:, ix])
 
         evals = s[:n_evecs]
-        Pfia = u[:, :n_evecs]
-        D_inv_ = np.diag(D_inv)
-        evecs = np.dot(D_inv_, Pfia)
+        evecs = u[:, :n_evecs]
 
         dcoords = np.zeros([N, n_evecs])
         for i in range(n_evecs):
-            dcoords[:, i] = evals[i] * evecs[:, i]
+            dcoords[:, i] = evals[i]* evecs[:, i]
 
         return dcoords, evals, evecs
 
