@@ -15,6 +15,20 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+"""
+RunModel is the core module for UQpy to execute computational models
+
+RunModel contains a single class, also called RunModel that is used to execute computational models at specified sample
+points. RunModel may be used to execute Python models or third-party software models and is capable of running models
+serially or in parallel on both local machines or HPC clusters.
+
+List of Classes:
+    RunModel - Class for execution of a computational model
+
+List of Methods
+    RunModel.
+"""
+
 
 import os
 import subprocess
@@ -136,13 +150,18 @@ class RunModel:
     :type cluster: Boolean
 
     :param fmt: If the input file requires variables to be written in specific format, this format can be specified
-    here.
+    here. Format specification follows standard Python conventions for the str.format() command described at:
+    https://docs.python.org/3/library/stdtypes.html#str.format
+    For additional details, see the Format String Syntax description at:
+    https://docs.python.org/3/library/string.html#formatstrings
     The default is fmt = None
-    Existing formats include:
-    fmt = 'ls-dyna': This format is used for ls-dyna .k files where each card is required to be exactly 10 characters
+    Some noteworthy formats include:
+    For ls-dyna .k files, each card is required to be exactly 10 characters. The following format string syntax is
+    recommended, "{:>10.4f}"
     :type fmt: String
 
     :param kwargs: Additional inputs to the python function (model_object_name)
+    This option is only used for execution of Python models.
     :type kwargs: dictionary
 
     Output:
@@ -150,6 +169,10 @@ class RunModel:
     files by output_script. This is a list of length equal to the number of simulations. Each item of this list contains
     the quantity of interest from the associated simulation.
     :rtype: RunModel.qoi_list: list
+
+    List of instance variables:
+        python_command: Specifies the terminal command for calling Python
+
     """
 
     def __init__(self, samples=None, model_script=None, model_object_name=None,
@@ -169,15 +192,12 @@ class RunModel:
         self.verbose = verbose
 
         # Format option
-        available_formats = {'ls-dyna': "{:>10.4f}"}
         self.fmt = fmt
         if self.fmt is None:
             pass
-        elif self.fmt in available_formats.keys():
-                self.fmt = available_formats[self.fmt]
         elif isinstance(self.fmt, str):
             if (self.fmt[0] != "{") or (self.fmt[-1] != "}") or (":" not in self.fmt):
-                raise ValueError('fmt should be in ["ls-dyna"], or a string in brackets indicating a format.')
+                raise ValueError('fmt should be a string in brackets indicating a standard Python format.')
         else:
             raise TypeError('fmt should be a str.')
 

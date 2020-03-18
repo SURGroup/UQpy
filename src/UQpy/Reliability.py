@@ -161,6 +161,8 @@ class SubsetSimulation:
             new_mcmc_object = MCMC(dimension=self.mcmc_objects[0].dimension,
                                        algorithm=self.mcmc_objects[0].algorithm,
                                        log_pdf_target=self.mcmc_objects[0].log_pdf_target,
+                                       pdf_target=self.mcmc_objects[0].pdf_target,
+                                       args_target=self.mcmc_objects[0].args_target,
                                        seed=np.atleast_2d(self.samples[step][:n_keep, :]))
             new_mcmc_object.algorithm_inputs = self.mcmc_objects[0].algorithm_inputs
             self.mcmc_objects.append(new_mcmc_object)
