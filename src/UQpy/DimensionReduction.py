@@ -83,7 +83,7 @@ class Grassmann:
         """
 
     # Authors: Ketson R. M. dos Santos, Dimitris G. Giovanis
-    # Updated: 03/04/20 by Ketson R. M. dos Santos
+    # Updated: 03/24/20 by Ketson R. M. dos Santos
 
     def __init__(self, distance_object=None, distance_script=None, kernel_object=None, kernel_script=None, interp_object=None,
                  interp_script=None):
@@ -132,26 +132,23 @@ class Grassmann:
 
     # Calculate the distance on the manifold
     def distance(self, *argv, **kwargs):
-
+        
         """
         distance: Estimate the distance of points on the Grassmann manifold.
 
-        argv: list or numpy ndarray containing all the matrices (at least 2) corresponding to the points
+        :param argv: list or numpy ndarray containing all the matrices (at least 2) corresponding to the points
               on the Grassmann manifold
+        :param kwargs: contains the keyword for the user defined rank. If a list or numpy ndarray containing the
+                       rank of each matrix is not provided, the code will compute them using numpy.linalg.matrix_rank. 
         """
 
         nargs = len(argv[0])
         psi = argv[0]
-        # psi, nargs = check_arguments(argv, min_num_matrix=2, ortho=False)
 
-        ranks = None
-        cont = 0
-        for key, value in kwargs.items():
-            if key == "rank":
-                ranks = value
-                break
-
-            cont += 1
+        if 'rank' in kwargs.keys():
+            ranks = kwargs['rank']
+        else:
+            ranks = None
 
         # If rank is not provide compute internally.
         if ranks is None:
@@ -172,7 +169,7 @@ class Grassmann:
         else:
             distance_fun = eval("Grassmann." + self.distance_object)
 
-        distances_list = []
+        distance_list = []
         for id_pair in range(np.shape(pairs)[0]):
             ii = pairs[id_pair][0]  # Point i
             jj = pairs[id_pair][1]  # Point j
@@ -185,9 +182,9 @@ class Grassmann:
 
             dist = distance_fun(x0, x1)
 
-            distances_list.append(dist)
+            distance_list.append(dist)
 
-        return distances_list
+        return distance_list
 
     # ==================================================================================================================
     # Built-in metrics are implemented in this section. Any new built-in metric must be implemented
@@ -196,7 +193,7 @@ class Grassmann:
     # Grassmann distance.
     @staticmethod
     def grassmann_distance(x0, x1):
-
+       
         l = min(np.shape(x0))
         k = min(np.shape(x1))
         rank = min(l, k)
@@ -269,22 +266,19 @@ class Grassmann:
 
         """
         kernel: it implements different kernels defined on the Grassmann manifold.
-        argv: list or numpy ndarray containing all the matrices (at least 2) corresponding to the points
-              on the Grassmann manifold
+        :param argv: list or numpy ndarray containing all the matrices (at least 2) corresponding to the points
+              on the Grassmann manifold.
+        :param kwargs: contains the keyword for the user defined rank. If a list or numpy ndarray containing the
+                       rank of each matrix is not provided, the code will compute them using numpy.linalg.matrix_rank.      
         """
 
         nargs = len(argv[0])
         psi = argv[0]
-        # psi, nargs = check_arguments(argv, min_num_matrix=2, ortho=False)
 
-        ranks = None
-        cont = 0
-        for key, value in kwargs.items():
-            if key == "rank":
-                ranks = value
-                break
-
-            cont += 1
+        if 'rank' in kwargs.keys():
+            ranks = kwargs['rank']
+        else:
+            ranks = None
 
         # If rank is not provide compute internally.
         if ranks is None:
@@ -362,9 +356,9 @@ class Grassmann:
 
         """
         project_points: project the input matrices onto the Grassmann manifold via singular value decomposition (SVD)
-        argv: list or numpy nadarray containing the matrices to be projected onto the Grassmann manifold.
-        kwargs: contains the keyword for the user defined rank. If a list or numpy ndarray containing the
-                rank of each matrix is not provided, the code will compute them using numpy.linalg.matrix_rank.
+        :param argv: list or numpy nadarray containing the matrices to be projected onto the Grassmann manifold.
+        :param kwargs: contains the keyword for the user defined rank. If a list or numpy ndarray containing the
+                       rank of each matrix is not provided, the code will compute them using numpy.linalg.matrix_rank.
         """
 
         # Check the input arguments.
@@ -408,9 +402,9 @@ class Grassmann:
         """
         log_mapping: projecting points on the Grassmann manifold onto the tangent space.
 
-        argv: list or numpy ndarray containing all the points on the Grassmann manifold.
-        ref: list or numpy ndarray containing the reference point on the Grassmann manifold
-             where the tangent space is approximated.
+        :param argv: list or numpy ndarray containing all the points on the Grassmann manifold.
+        :param ref: list or numpy ndarray containing the reference point on the Grassmann manifold
+                    where the tangent space is approximated.
         """
         # Check the input arguments.
         u, nr = check_arguments(argv, min_num_matrix=1, ortho=False)
@@ -449,8 +443,8 @@ class Grassmann:
         """
         exp_mapping: perform the exponential mapping from the tangent space
                      to the Grassmann manifold.
-        ref: list or ndarray containing the reference point on the Grassmann manifold
-             where the tangent space is approximated.
+        :param ref: list or ndarray containing the reference point on the Grassmann manifold
+                    where the tangent space is approximated.
 
         """
         # Check input arguments.
@@ -483,9 +477,9 @@ class Grassmann:
 
         """
         karcher_mean: estimate the Karcher mean.
-        acc: boolean variable for the use of the Nesterov approach to accelerate the rate of convergence.
-        tol: real value for the tolerance.
-        maxiter: integer with the maximum number of iterations.
+        :param acc: boolean variable for the use of the Nesterov approach to accelerate the rate of convergence.
+        :param tol: tolerance.
+        :param maxiter: integer with the maximum number of iterations.
         """
         # np.random.seed( 234 ) if a fixed seed is desired.
         matrix, n_mat = check_arguments(argv, min_num_matrix=2, ortho=False)
@@ -556,16 +550,16 @@ class Grassmann:
 
             itera += 1
 
-        return mean_element, _gamma
+        return mean_element
 
     # @staticmethod
     def karcher_mean_sgd(self, *argv, tol=1e-3, maxiter=1000):
 
         """
         karcher_mean_sgd: estimate the Karcher mean using the stochastic gradient descent.
-        acc: boolean variable for the use of the Nesterov approach to accelerate the rate of convergence.
-        tol: real value for the tolerance.
-        maxiter: integer with the maximum number of iterations.
+        :param acc: boolean variable for the use of the Nesterov approach to accelerate the rate of convergence.
+        :param tol: real value for the tolerance.
+        :param maxiter: integer with the maximum number of iterations.
         """
         matrix, n_mat = check_arguments(argv, min_num_matrix=2, ortho=False)
 
@@ -611,15 +605,14 @@ class Grassmann:
 
             itera += 1
 
-        print(itera)
-        return mean_element, _gamma
+        return mean_element
 
     # @staticmethod
     def frechet_mean(self, k_mean, *argv):
 
         """
         frechet_mean: estimate the Frechet mean.
-        k_mean: list of numpy ndarray point of interested (on a manifold).
+        :param k_mean: list of numpy ndarray point of interested (on a manifold).
         """
         matrix, n_mat = check_arguments(argv, min_num_matrix=2, ortho=False)
 
@@ -635,15 +628,15 @@ class Grassmann:
 
         """
         interpolate_sample: interpolate U, Sigma, and V.
-        sample: list or numpy ndarray with the coordinates of the point being interpolated.
-        nodes: list or numpy ndarray with the coordinates of the nodes of the element.
-        argv: list or numpy ndarray containing the solution matrix assigned to each node.
-        reg_model: str with the used regression method (linear_interp or kriging_interp).
-        corr_model: Correlation model contains the correlation function, which uses sample distance
+        :param sample: list or numpy ndarray with the coordinates of the point being interpolated.
+        :param nodes: list or numpy ndarray with the coordinates of the nodes of the element.
+        :param argv: list or numpy ndarray containing the solution matrix assigned to each node.
+        :param reg_model: str with the used regression method (linear_interp or kriging_interp).
+        :param corr_model: Correlation model contains the correlation function, which uses sample distance
                     to define similarity between samples.
                     Options: Exponential, Gaussian, Linear, Spherical, Cubic, Spline.
-        corr_model_params: Initial values corresponding to hyperparameters/scale parameters.
-        n_opt: int with the number of times optimization problem is to be solved with different starting point.
+        :param corr_model_params: Initial values corresponding to hyperparameters/scale parameters.
+        :param n_opt: int with the number of times optimization problem is to be solved with different starting point.
                Default: 1
         """
 
@@ -765,39 +758,88 @@ class DiffusionMaps:
 
     Input:
 
+        :param alpha: Assumes a value between 0 and 1 (default values is 0.5) and corresponding to different diffusion
+                      operators.
+        :type alpha: float
 
+        :param n_evecs: the number of eigenvectors and eigenvalues used in the representation of the diffusion coordinates.
+        :type n_evecs: int
+
+        :param sparse: Is a boolean variable defining the sparsity of the graph generated when data is provided to estimate the
+                       diffusion coordinates using the standard approach.
+        :type sparse: bool
+
+        :param k_neighbors: Used when sparse is True to define the number of samples close to a given sample
+                            used in the construction of the affinity matrix.
+        :type k_neighbors: int
 
     """
 
     # Authors: Ketson R. M. dos Santos, Dimitris G. Giovanis
     # Updated: 03/04/20 by Ketson R. M. dos Santos
 
-    def __init__(self):
-        pass
+    def __init__(self, alpha=0.5, n_evecs=2, sparse=False, k_neighbors=1):
+        self.alpha = alpha
+        self.n_evecs = n_evecs
+        self.sparse = sparse
+        self.k_neighbors = k_neighbors
+        
+        if alpha < 0 or alpha > 1:
+                    raise ValueError('alpha should be a value between 0 and 1.')
+        
+        if isinstance(n_evecs, int):
+            if n_evecs<1:
+                raise ValueError('n_evecs should be larger than or equal to one.')
+        else:
+            raise TypeError('n_evecs should be integer.')
 
-    @staticmethod
-    def mapping(data=None, alpha=0.5, n_evecs=2, epsilon=None, kernel_mat=None, sparse=False, k_neighbors=1):
+        if not isinstance(sparse, bool):
+            raise TypeError('sparse should be a boolean variable.')
+        elif sparse is True:    
+            if isinstance(k_neighbors, int):
+                if k_neighbors<1:
+                    raise ValueError('k_neighbors should be larger than or equal to one.')
+            else:
+                raise TypeError('k_neighbors should be integer.')
+            
+    #@staticmethod
+    #def mapping(self, data=None, epsilon=None, kernel_mat=None):
+    def mapping(self, **kwargs):
 
         """
         mapping: compute the diffusion cordinates when either the kernel_matrix of the data are provided.
-        data: list or ndarray containing the input data.
-        alpha: real constant defining the diffusion operator - alpha = 0 (Graph Laplacian normalization), 0.5 (Fokker-Plank), 1 (Laplace-Beltrami).
-        n_evecs: interger with the maximum number of eigenvectors/eigenvalues to be computed.
-        episilon: real value containing the epsilon used in the exponential kernel (if no kernel matrix is provided).
-        kernel_mat: list or ndarray containing the kernel matrix.
-        sparse: boolean variable to define if a sparse representation of the graph is of interest (it can improve the computational performance).
-        k_neighbors: integer defining the number of neighbors of each point used to construct the sparse graph.
+        :param kwargs: input arguments used in the diffusion maps technique.
         """
+        
+        if 'data' in kwargs.keys():
+            data = kwargs['data']
+        else:
+            data = None
+            
+        if 'epsilon' in kwargs.keys():
+            epsilon = kwargs['epsilon']
+        else:
+            epsilon = None
+            
+        if 'kernel_mat' in kwargs.keys():
+            kernel_mat = kwargs['kernel_mat']
+        else:
+            kernel_mat = None
+        
+        alpha = self.alpha
+        n_evecs = self.n_evecs
+        sparse = self.sparse
+        k_neighbors = self.k_neighbors
 
         if data is None and kernel_mat is None:
-            raise TypeError('data and kernel_mat both are None.')
+            raise ValueError('data and kernel_mat both are None.')
 
         if kernel_mat is not None:
             if np.shape(kernel_mat)[0] != np.shape(kernel_mat)[1]:
-                raise TypeError('kernel_mat is not a square matrix.')
+                raise ValueError('kernel_mat is not a square matrix.')
             else:
                 if n_evecs > max(np.shape(kernel_mat)):
-                    raise TypeError('n_evecs is larger than the size of kernel_mat.')
+                    raise ValueError('n_evecs is larger than the size of kernel_mat.')
 
         if data is None:
             N = np.shape(kernel_mat)[0]
@@ -805,14 +847,17 @@ class DiffusionMaps:
             N = np.shape(data)[0]
 
         # Construct the Kernel matrix if no Kernel matrix is provided.
-        k_matrix, epsilon = DiffusionMaps.create_kernel_matrix(data, epsilon, sparse=sparse, kernel_mat=kernel_mat,
-                                                               k_neighbors=k_neighbors)
+        #k_matrix, epsilon = DiffusionMaps.create_kernel_matrix(self, data, epsilon, kernel_mat=kernel_mat)
+        if kernel_mat is None:
+            k_matrix = DiffusionMaps.create_kernel_matrix(self, data, epsilon)
+        else:
+            k_matrix = kernel_mat
 
         # Compute the diagonal matrix D(i,i) = sum(Kernel(i,j)^alpha,j) and its inverse.
         D, D_inv = DiffusionMaps.D_matrix(k_matrix, alpha)
 
         # Compute L^alpha = D^(-alpha)*L*D^(-alpha).
-        Lstar = DiffusionMaps.l_alpha_normalize(k_matrix, D_inv, sparse)
+        Lstar = DiffusionMaps.l_alpha_normalize(self, k_matrix, D_inv)
 
         Dstar, Dstar_inv = DiffusionMaps.D_matrix(Lstar, 1.0)
         if sparse:
@@ -842,50 +887,49 @@ class DiffusionMaps:
 
         return dcoords, evals, evecs
 
-    @staticmethod
-    def create_kernel_matrix(data, epsilon, sparse=False, kernel_mat=None, k_neighbors=1):
+    #@staticmethod
+    def create_kernel_matrix(self, data, epsilon=1):
 
         """
         create_kernel_matrix: Compute the kernel matrix.
-        epsilon: real value containing the epsilon used in the exponential kernel (if no kernel matrix is provided).
+        :param data: input data
+        :param epsilon: real value containing the epsilon used in the exponential kernel (if no kernel matrix is provided).
         sparse: boolean variable to define if a sparse representation of the graph is of interest (it can improve the computational performance).
-        kernel_mat: list or ndarray containing the kernel matrix.
-        k_neighbors: integer defining the number of neighbors of each point used to construct the sparse graph.
         """
+        
+        sparse = self.sparse
+        k_neighbors = self.k_neighbors
 
-        # If only data is provided compute the kernel matrix using the Gaussian kernel.
-        if kernel_mat is None and data is not None:
+        # Compute the pairwise distances.
+        if len(np.shape(data)) == 2:
+            dist_pairs = sd.pdist(data, 'euclidean')
+        elif len(np.shape(data)) == 3:
 
-            # Compute the pairwise distances.
-            if len(np.shape(data)) == 2:
-                dist_pairs = sd.pdist(data, 'euclidean')
-            elif len(np.shape(data)) == 3:
+            # Check arguments: verify the consistency of input arguments.
+            datam, nargs = check_arguments(data, min_num_matrix=2, ortho=False)
 
-                # Check arguments: verify the consistency of input arguments.
-                datam, nargs = check_arguments(data, min_num_matrix=2, ortho=False)
+            indices = range(nargs)
+            pairs = list(itertools.combinations(indices, 2))
 
-                indices = range(nargs)
-                pairs = list(itertools.combinations(indices, 2))
+            dist_pairs = []
+            for id_pair in range(np.shape(pairs)[0]):
+                ii = pairs[id_pair][0]  # Point i
+                jj = pairs[id_pair][1]  # Point j
 
-                dist_pairs = []
-                for id_pair in range(np.shape(pairs)[0]):
-                    ii = pairs[id_pair][0]  # Point i
-                    jj = pairs[id_pair][1]  # Point j
+                x0 = datam[ii]
+                x1 = datam[jj]
 
-                    x0 = datam[ii]
-                    x1 = datam[jj]
+                dist = np.linalg.norm(x0 - x1, 'fro')
 
-                    dist = np.linalg.norm(x0 - x1, 'fro')
+                dist_pairs.append(dist)
+        else:
+            raise TypeError('The size of the input data is not adequate.')
 
-                    dist_pairs.append(dist)
-            else:
-                raise TypeError('The size of the input data is not adequate.')
+        # Find a suitable episilon if it is not provided by the user.
+        if epsilon is None:
+            epsilon = DiffusionMaps.find_epsilon(dist_pairs)
 
-            # Find a suitable episilon if it is not provided by the user.
-            if epsilon is None:
-                epsilon = DiffusionMaps.find_epsilon(dist_pairs)
-
-            kernel_mat = np.exp(-sd.squareform(dist_pairs) ** 2 / (4 * epsilon))
+        kernel_mat = np.exp(-sd.squareform(dist_pairs) ** 2 / (4 * epsilon))
 
         # If the user prefer to use a sparse graph.
         if sparse:
@@ -899,47 +943,47 @@ class DiffusionMaps:
 
             kernel_mat = sps.csc_matrix(kernel_mat)
 
-        return kernel_mat, epsilon
+        return kernel_mat
 
     @staticmethod
     def find_epsilon(dist_pairs):
 
         """
         find_epsilon: Find a suitable episilon based on the median of the square value of the pairwise distances.
-        dist_pairs: list of numpy ndarray containing the pairwise distances.
+        :param dist_pairs: list of numpy ndarray containing the pairwise distances.
         """
 
-        dist_pairs_sq = dist_pairs ** 2
+        dist_pairs_sq = np.array(dist_pairs) ** 2
         epsilon = np.median(dist_pairs_sq)
 
         return epsilon
 
     @staticmethod
-    def D_matrix(kernel_matrix, alpha):
+    def D_matrix(kernel_mat, alpha):
 
         """
         D_matrix: Compute the diagonal matrix D(i,i) = sum(Kernel(i,j)^alpha,j) and its inverse.
-        kernel_matrix: list of numpy ndarray containing the kernel matrix.
-        alpha:real constant defining the diffusion operator - alpha = 0 (Graph Laplacian normalization), 0.5 (Fokker-Plank), 1 (Laplace-Beltrami).
+        :param kernel_mat: list of numpy ndarray containing the kernel matrix.
+        :param alpha:real constant defining the diffusion operator - alpha = 0 (Graph Laplacian normalization), 0.5 (Fokker-Plank), 1 (Laplace-Beltrami).
         """
 
-        m = np.shape(kernel_matrix)[0]
-        kmat = kernel_matrix
+        m = np.shape(kernel_mat)[0]
+        kmat = kernel_mat
         D = np.array(kmat.sum(axis=1)).flatten()
 
         D_inv = np.power(D, -alpha)
         return D, D_inv
 
-    @staticmethod
-    def l_alpha_normalize(kernel_matrix, D_inv, sparse=False):
+    #@staticmethod
+    def l_alpha_normalize(self, kernel_mat, D_inv):
 
         """
-        lr_normalize:
-        kernel_matrix: list of numpy ndarray containing the kernel matrix.
-        D_inv: inverse of D(i,i) = sum(Kernel(i,j)^alpha,j)
-        sparse: boolean variable to define if a sparse representation of the graph is of interest (it can improve the computational performance).
+        lr_normalize
+        :param kernel_mat: list of numpy ndarray containing the kernel matrix.
+        :param D_inv: inverse of D(i,i) = sum(Kernel(i,j)^alpha,j)
         """
 
+        sparse = self.sparse
         m = D_inv.shape[0]
 
         if sparse:
@@ -947,7 +991,7 @@ class DiffusionMaps:
         else:
             Dalpha = np.diag(D_inv)
 
-        Ps = Dalpha.dot(kernel_matrix.dot(Dalpha))
+        Ps = Dalpha.dot(kernel_mat.dot(Dalpha))
 
         return Ps
 
