@@ -23,7 +23,6 @@ import scipy as sp
 import numpy as np
 import itertools
 from scipy.interpolate import LinearNDInterpolator
-# from fbpca import pca
 from os import path
 import math
 
@@ -83,7 +82,7 @@ class Grassmann:
         """
 
     # Authors: Ketson R. M. dos Santos, Dimitris G. Giovanis
-    # Updated: 03/24/20 by Ketson R. M. dos Santos
+    # Updated: 03/26/20 by Ketson R. M. dos Santos
 
     def __init__(self, distance_object=None, distance_script=None, kernel_object=None, kernel_script=None, interp_object=None,
                  interp_script=None):
@@ -141,7 +140,7 @@ class Grassmann:
         :param kwargs: contains the keyword for the user defined rank. If a list or numpy ndarray containing the
                        rank of each matrix is not provided, the code will compute them using numpy.linalg.matrix_rank. 
         """
-
+        
         nargs = len(argv[0])
         psi = argv[0]
 
@@ -164,9 +163,15 @@ class Grassmann:
         pairs = list(itertools.combinations(indices, 2))
 
         if self.user_distance_check:
+            if self.distance_script is None:
+                raise TypeError('distance_script cannot be None')
+                
             exec('from ' + self.distance_script[:-3] + ' import ' + self.distance_object)
             distance_fun = eval(self.distance_object)
         else:
+            if self.distance_object is None:
+                raise TypeError('distance_object cannot be None')
+                
             distance_fun = eval("Grassmann." + self.distance_object)
 
         distance_list = []
@@ -624,22 +629,17 @@ class Grassmann:
         fmean = accum / n_mat
         return fmean
 
-    def interpolate_sample(self, *argv, sample=None, nodes=None, reg_model=None, corr_model=None, n_opt=1):
+    def interpolate_sample(self, *argv, sample=None, nodes=None, **kwargs):
 
         """
         interpolate_sample: interpolate U, Sigma, and V.
         :param sample: list or numpy ndarray with the coordinates of the point being interpolated.
         :param nodes: list or numpy ndarray with the coordinates of the nodes of the element.
         :param argv: list or numpy ndarray containing the solution matrix assigned to each node.
-        :param reg_model: str with the used regression method (linear_interp or kriging_interp).
-        :param corr_model: Correlation model contains the correlation function, which uses sample distance
-                    to define similarity between samples.
-                    Options: Exponential, Gaussian, Linear, Spherical, Cubic, Spline.
-        :param corr_model_params: Initial values corresponding to hyperparameters/scale parameters.
-        :param n_opt: int with the number of times optimization problem is to be solved with different starting point.
-               Default: 1
+        :param kwargs: keywords for the parameters used by the interpolation method.
+                       If Kriging interpolation is employed the user must pass the variables used by the UQpy class Krig
         """
-
+        
         matrix, nargs = check_arguments(argv, min_num_matrix=3, ortho=False)
 
         if self.user_interp_check:
@@ -661,7 +661,7 @@ class Grassmann:
         if type(nodes) == list:
             nodes = np.array(nodes)
 
-        interp_matrix = interp_fun(nodes, matrix, sample, reg_model, corr_model, n_opt)
+        interp_matrix = interp_fun(nodes, matrix, sample, kwargs)
 
         return interp_matrix
 
@@ -671,11 +671,8 @@ class Grassmann:
 
     # Linear interpolation
     @staticmethod
-    def linear_interp(*argv):
-
-        nodes = argv[0]
-        matrix = argv[1]
-        sample = argv[2]
+    def linear_interp(nodes, matrix, sample, kwargs):
+        
         myInterpolator = LinearNDInterpolator(nodes, matrix)
         interp_matrix = myInterpolator(sample)
         interp_matrix = interp_matrix[0]
@@ -684,18 +681,22 @@ class Grassmann:
 
     # Kringing interpolation
     @staticmethod
-    def kriging_interp(*argv):
+    def kriging_interp(nodes, matrix, sample, kwargs):
 
-        if len(argv) < 6:
-            raise ValueError('Six arguments are expected.')
-
-        nodes = argv[0]
-        matrix = argv[1]
-        sample = argv[2]
-
-        reg_model = argv[3]
-        corr_model = argv[4]
-        n_opt = argv[5]
+        if 'reg_model' in kwargs.keys():
+            reg_model = kwargs['reg_model']
+        else:
+            reg_model = None
+            
+        if 'corr_model' in kwargs.keys():
+            corr_model = kwargs['corr_model']
+        else:
+            corr_model = None
+            
+        if 'n_opt' in kwargs.keys():
+            n_opt = kwargs['n_opt']
+        else:
+            n_opt = None
 
         if reg_model is None:
             raise ValueError('reg_model is missing.')
@@ -719,11 +720,10 @@ class Grassmann:
         ncols = matrix[0].shape[1]
 
         val_matrix = []
-        # to_interp = np.zeros(nargs)
+
         for j in range(nrows):
             for k in range(ncols):
                 for i in range(nargs):
-                    # to_interp[i] = [matrix[i][j,k]]
                     val_matrix.append([matrix[i][j, k]])
 
                 if val_matrix.count(val_matrix[0]) == len(val_matrix):

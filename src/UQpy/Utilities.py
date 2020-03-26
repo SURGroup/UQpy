@@ -1006,7 +1006,7 @@ def SampleSimplex(X):
 
 # Grassmann: svd
 def svd(matrix, value):
-    ui, si, vi = np.linalg.svd(matrix, full_matrices=True)  # Compute the SVD of matrix
+    ui, si, vi = np.linalg.svd(matrix, full_matrices=True,hermitian=False)  # Compute the SVD of matrix
     si = np.diag(si)  # Transform the array si into a diagonal matrix containing the singular values
     vi = vi.T  # Transpose of vi
 
@@ -1156,5 +1156,6 @@ def nn_coord(x, k):
     idx = x.argsort()[:len(x)-k]
     #idx = idx[0:k]
     #idx = idx[k+1:]
-    return idx     
+    return idx  
+
 
