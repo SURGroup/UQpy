@@ -15,7 +15,13 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""This module contains functionality for all the reliability methods supported in UQpy."""
+"""
+This module contains classes and functions for reliability analysis, probability of failure estimation, and rare event
+simulation. The module currently contains the following classes:
+
+* SubsetSimulation: Estimate probability of failure using subset simulation.
+* TaylorSeries: Estimate probability of failure using FORM or SORM.
+"""
 
 from UQpy.RunModel import RunModel
 from UQpy.SampleMethods import MCMC
@@ -30,47 +36,103 @@ import warnings
 
 class SubsetSimulation:
     """
-        Description:
+    Perform Subset Simulation to estimate probability of failure.
 
-            A class used to perform Subset Simulation.
+    This class estimates probability of failure for a user-defined model using Subset Simulation. The class can
+    use one of several MCMC algorithms to draw conditional samples.
 
-            This class estimates probability of failure for a user-defined model using Subset Simulation
+    **References:**
 
-            References:
-            S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by
-            subset simulation,” Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+    1. S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by subset simulation,”
+       Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+    2. Shields, M.D., Giovanis, D.G., and Sundar, V.S. "Subset simulation for problems with strongly non-Gaussian,
+       highly anisotropics, and degenerate distributions," Computers & Structures (In Review)
 
-        Input:
-            :param dimension:  A scalar value defining the dimension of target density function.
-                            Default: 1
-            :type dimension: int
+    **Input:**
 
-            :param nsamples_ss: Number of samples to generate in each conditional subset
-                                No Default Value: nsamples_ss must be prescribed
-            :type nsamples_ss: int
+    :param mcmc_object: An instance of the UQpy.SampleMethods.MCMC class that is used to specify the MCMC algorithm
+                        used for conditional sampling
 
-            :param p_cond: Conditional probability at each level
-                                Default: p_cond = 0.1
-            :type p_cond: float
+                        This object must be specified.
 
-            :param pdf_proposal_type, pdf_proposal_scale, pdf_target, log_pdf_target, pdf_target_params, jump, nburn,
-                    pdf_target_copula, pdf_target_copula_params, pdf_target_type, algorithm: See MCMC in SampleMethods
+                        Default: None
+    :type mcmc_object: object
 
-            :param model_script, model_object_name, input_template, var_names, output_script, output_object_name,
-                       ntasks, cores_per_task, nodes, resume, verbose, model_dir, cluster: See RunModel class.
+    :param runmodel_object: An instance of the UQpy.RunModel.RunModel class that is used to specify the computational
+                            model for which probability of failure is to be estimated.
 
-    Output:
+                            This object must be specified.
 
-    :return self.pf: Probability of failure estimate
-    :rtype self.pf: float
-    :return self.cov1: Coefficient of variation - Au & Beck, Independent Chains
-    :rtype self.cov1: float
-    :return self.cov2: Coefficient of variation - New Dependent Chains
-    :rtype self.cov2: float
+                            Default: None
+    :type runmodel_object: object
+
+    :param samples_init: A set of samples from the specified probability distribution. These are the samples from the
+                         original distribution. They are not conditional samples. The samples must be an array of size
+                         nsamples_ss x dimension.
+
+                         If samples_init is not specified, the Subset_Simulation class will use the mcmc_object to
+                         draw the initial samples.
+
+                         Default: None
+
+    :type samples_init: numpy array
+
+    :param dimension:  A scalar value defining the dimension of target density function.
+
+                       Default: 1
+    :type dimension: int
+
+    :param p_cond: Conditional probability for each conditional level
+
+                   Default: 0.1
+    :type p_cond: float
+
+    :param nsamples_ss: Number of samples to draw in each conditional level.
+
+                        Default: 1000
+    :type nsamples_ss: int
+
+    :param max_level: Maximum number of allowable conditional levels.
+
+                      Default: 10
+    :type max_level: int
+
+    :param verbose: Specifies whether algorithm progress is reported in the terminal.
+
+                    Default: False
+    :type verbose: boolean
+
+    **Attributes:**
+
+    :param samples: A list of arrays containing the samples in each conditional level.
+    :type samples: list of numpy arrays
+
+    :param g: A list of arrays containing the evaluation of the performance function at each sample in each conditional
+              level.
+    :type g: list of numpy arrays
+
+    :param g_level: Threshold value of the performance function for each conditional level
+    :type g_level: list
+
+    :param self.pf: Probability of failure estimate
+    :type self.pf: float
+
+    :param self.cov1: Coefficient of variation of the probability of failure estimate assuming independent chains
+
+                      From Reference [1]
+    :type self.cov1: float
+
+    :param self.cov2: Coefficient of variation of the probability of failure estimate with dependent chains
+
+                      From Reference [2]
+    :type self.cov2: float
+
+    **Authors:**
+
+    Michael D. Shields
+
+    Last Modified: 1/23/20 by Michael D. Shields
     """
-
-    # Authors: Dimitris G.Giovanis, Michael D. Shields
-    # Last Modified: 4/7/19 by Dimitris G. Giovanis
 
     def __init__(self, mcmc_object=None, runmodel_object=None, samples_init=None, p_cond=0.1, nsamples_ss=1000,
                  max_level=10, verbose=False):
@@ -91,8 +153,6 @@ class SubsetSimulation:
         self.samples = list()
         self.g = list()
         self.g_level = list()
-        self.d12 = list()
-        self.d22 = list()
 
         if self.verbose:
             if self.mcmc_objects[0].algorithm == 'MH':
@@ -114,9 +174,28 @@ class SubsetSimulation:
 #-----------------------------------------------------------------------------------------------------------------------
 # The run function executes the chosen subset simulation algorithm
     def run(self):
+        """
+        Execute subset simulation
+
+        This is an instance method that runs subset simulation. It is automatically called when the SubsetSimulation
+        class is instantiated.
+
+        **Output/Returns:**
+
+        :param pf: Probability of failure estimate
+        :type pf: float
+
+        :param cov1: Coefficient of variation of the probability of failure estimate assuming independent chains
+        :type cov1: float
+
+        :param cov2: Coefficient of variation of the probability of failure estimate with dependent chains
+        :type cov2: float
+        """
 
         step = 0
         n_keep = int(self.p_cond * self.nsamples_ss)
+        d12 = list()
+        d22 = list()
 
         # Generate the initial samples - Level 0
         # Here we need to make sure that we have good initial samples from the target joint density.
@@ -140,8 +219,8 @@ class SubsetSimulation:
 
         # Estimate coefficient of variation of conditional probability of first level
         d1, d2 = self.cov_sus(step)
-        self.d12.append(d1 ** 2)
-        self.d22.append(d2 ** 2)
+        d12.append(d1 ** 2)
+        d22.append(d2 ** 2)
 
         if self.verbose:
             print('UQpy: Subset Simulation, conditional level 0 complete.')
@@ -227,8 +306,8 @@ class SubsetSimulation:
 
             # Estimate coefficient of variation of conditional probability of first level
             d1, d2 = self.cov_sus(step)
-            self.d12.append(d1 ** 2)
-            self.d22.append(d2 ** 2)
+            d12.append(d1 ** 2)
+            d22.append(d2 ** 2)
 
             if self.verbose:
                 print('UQpy: Subset Simulation, conditional level ' + str(step) + ' complete.')
@@ -236,8 +315,8 @@ class SubsetSimulation:
         n_fail = len([value for value in self.g[step] if value < 0])
 
         pf = self.p_cond ** step * n_fail / self.nsamples_ss
-        cov1 = np.sqrt(np.sum(self.d12))
-        cov2 = np.sqrt(np.sum(self.d22))
+        cov1 = np.sqrt(np.sum(d12))
+        cov2 = np.sqrt(np.sum(d22))
 
         return pf, cov1, cov2
 
@@ -245,7 +324,14 @@ class SubsetSimulation:
 # Support functions for subset simulation
 
     def init_sus(self):
-        # Basic error checks for subset simulation.
+        """
+        Check for errors in the SubsetSimulation class input
+
+        This is an instance method that checks for errors in the input to the SubsetSimulation class. It is
+        automatically called when the SubsetSimualtion class is instantiated.
+
+        No inputs or returns.
+        """
 
         # Check that an MCMC object is being passed in.
         if self.mcmc_objects[0] is None:
@@ -270,7 +356,26 @@ class SubsetSimulation:
             raise AttributeError('UQpy: The maximum subset level (max_level) must be integer valued.')
 
     def cov_sus(self, step):
-    # Compute the coefficient of variation of the samples in a conditional level
+
+        """
+        Compute the coefficient of variation of the samples in a conditional level
+
+        This is an instance method that is called after each conditional level is complete to compute the coefficient
+        of variation of the conditional probability in that level.
+
+        **Input:**
+
+        :param step: Specifies the conditional level
+        :type step: int
+
+        **Output/Returns:**
+
+        :param d1: Coefficient of variation in conditional level assuming independent chains
+        :type d1: float
+
+        :param d2: Coefficient of variation in conditional level with dependent chains
+        :type d2: float
+        """
 
         # Here, we assume that the initial samples are drawn to be uncorrelated such that the correction factors do not
         # need to be computed.
@@ -294,6 +399,31 @@ class SubsetSimulation:
 
     # Computes the conventional correlation factor gamma from Au and Beck
     def corr_factor_gamma(self, indicator, n_s, n_c):
+        """
+        Compute the conventional correlation factor gamma from Au and Beck (Reference [1])
+
+        This is an instance method that computes the correlation factor gamma used to estimate the coefficient of
+        variation of the conditional probability estimate from a given conditional level. This method is called
+        automatically within the cov_sus method.
+
+        **Input:**
+
+        :param indicator: An array of booleans indicating whether the performance function is below the threshold for
+                          the conditional probability.
+        :type indicator: boolean array
+
+        :param n_s: Number of samples drawn from each Markov chain in each conditional level
+        :type n_s: int
+
+        :param n_c: Number of Markov chains in each conditional level
+        :type n_c: int
+
+        **Output/Returns:**
+
+        :param gam: Gamma factor in coefficient of variation estimate
+        :type gam: float
+
+        """
 
         gam = np.zeros(n_s - 1)
         r = np.zeros(n_s)
@@ -314,6 +444,28 @@ class SubsetSimulation:
 
     # Computes the updated correlation factor beta from Shields et al.
     def corr_factor_beta(self, g, step):
+        """
+        Compute the additional correlation factor beta from Shields et al. (Reference [2])
+
+        This is an instance method that computes the correlation factor beta used to estimate the coefficient of
+        variation of the conditional probability estimate from a given conditional level. This method is called
+        automatically within the cov_sus method.
+
+        **Input:**
+
+        :param g: An array containing the performance function evaluation at all points in the current conditional
+                  level.
+        :type g: numpy array
+
+        :param step: Current conditional level
+        :type step: int
+
+        **Output/Returns:**
+
+        :param beta: Beta factor in coefficient of variation estimate
+        :type beta: float
+
+        """
 
         beta = 0
         for i in range(np.shape(g)[1]):

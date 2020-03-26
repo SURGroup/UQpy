@@ -59,7 +59,8 @@ class RunModel:
     :type samples: ndarray or list
 
     :param model_script: The filename (with extension) of the Python script which contains commands to execute the
-    model. The model script must be present in the current working directory from which RunModel is called.
+                         model. The model script must be present in the current working directory from which RunModel
+                         is called.
     :type model_script: str
 
     :param model_object_name: In the Python model workflow, model_object_name specifies the name of the function or
