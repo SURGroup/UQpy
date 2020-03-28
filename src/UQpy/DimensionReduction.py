@@ -638,7 +638,8 @@ class Grassmann:
 
         It maps the points on the Grassmann manifold, passed to the method using *argv, onto the tangent space
         constructed on ref (a reference point on the Grassmann manifold). It is mandatory that the user pass a reference
-        point to the method.
+        point to the method. Moreover, the user is asked to to provide the dimension of the manifold where the tangent 
+        space is constructed, but if this value is not provided the method compute the rank of the reference point.
 
         **Input:**
 
@@ -647,6 +648,9 @@ class Grassmann:
 
         :param ref: A point on the Grassmann manifold used as reference to construct the tangent space.
         :type ref: list or numpy array
+        
+        :param rank_ref: Rank of the reference point.
+        :type rank_ref: int
 
         **Output/Returns:**
 
@@ -700,7 +704,8 @@ class Grassmann:
 
         It maps the points on the tangent space, passed to the method using *argv, onto the Grassmann manifold
         constructed on ref (a reference point on the Grassmann manifold). It is mandatory that the user pass a reference
-        point to the method.
+        point to the method. Moreover, the user is asked to to provide the dimension of the manifold where the tangent 
+        space is constructed, but if this value is not provided the method compute the rank of the reference point.
 
         **Input:**
 
@@ -709,6 +714,9 @@ class Grassmann:
 
         :param ref: A point on the Grassmann manifold used as reference to construct the tangent space.
         :type ref: list or numpy array
+        
+        :param rank_ref: Rank of the reference point.
+        :type rank_ref: int
 
         **Output/Returns:**
 
