@@ -858,8 +858,8 @@ def check_arguments(argv, min_num_matrix, ortho):
     """
     Check input arguments for consistency.
 
-    Check the input matrices for consistency given the minimum number of matrices and the boolean varible
-    to test the orthogonality.
+    Check the input matrices for consistency given the minimum number of matrices (min_num_matrix) 
+    and the boolean varible (ortho) to test the orthogonality.
 
     **Input:**
 
