@@ -147,119 +147,6 @@ def compute_Delaunay_centroid_volume(vertices):
 
     return centroid, volume
 
-
-def transform_ng_to_g(corr_norm, dist, dist_params, samples_ng, jacobian=True):
-
-    """
-        Description:
-
-            A function that performs transformation of a non-Gaussian random variable to a Gaussian one.
-
-        Input:
-            :param corr_norm: Correlation matrix in the standard normal space
-            :type corr_norm: ndarray
-
-            :param dist: marginal distributions
-            :type dist: list
-
-            :param dist_params: marginal distribution parameters
-            :type dist_params: list
-
-            :param samples_ng: non-Gaussian samples
-            :type samples_ng: ndarray
-
-            :param jacobian: The Jacobian of the transformation
-            :type jacobian: ndarray
-
-        Output:
-            :return: samples_g: Gaussian samples
-            :rtype: samples_g: ndarray
-
-            :return: jacobian: The jacobian
-            :rtype: jacobian: ndarray
-
-    """
-
-    from scipy.linalg import cholesky
-
-    a_ = cholesky(corr_norm, lower=True)
-    samples_g = np.zeros_like(samples_ng)
-    m, n = np.shape(samples_ng)
-    for j in range(n):
-        cdf = dist[j].cdf
-        samples_g[:, j] = stats.norm.ppf(cdf(samples_ng[:, j], dist_params[j]))
-
-    if not jacobian:
-        print("UQpy: Done.")
-        return samples_g, None
-    else:
-        temp_ = np.zeros([n, n])
-        jacobian = [None] * m
-        for i in range(m):
-            for j in range(n):
-                pdf = dist[j].pdf
-                temp_[j, j] = stats.norm.pdf(samples_g[i, j]) / pdf(samples_ng[i, j], dist_params[j])
-            jacobian[i] = np.linalg.solve(temp_, a_)
-
-        return samples_g, jacobian
-
-
-def transform_g_to_ng(corr_norm, dist, dist_params, samples_g, jacobian=True):
-
-    """
-        Description:
-
-            A function that performs transformation of a Gaussian random variable to a non-Gaussian one.
-
-        Input:
-            :param corr_norm: Correlation matrix in the standard normal space
-            :type corr_norm: ndarray
-
-            :param dist: marginal distributions
-            :type dist: list
-
-            :param dist_params: marginal distribution parameters
-            :type dist_params: list
-
-            :param samples_g: Gaussian samples
-            :type samples_g: ndarray
-
-            :param jacobian: The Jacobian of the transformation
-            :type jacobian: ndarray
-
-        Output:
-            :return: samples_ng: Gaussian samples
-            :rtype: samples_ng: ndarray
-
-            :return: jacobian: The jacobian
-            :rtype: jacobian: ndarray
-
-    """
-
-    from scipy.linalg import cholesky
-
-    samples_ng = np.zeros_like(samples_g)
-    m, n = np.shape(samples_g)
-    for j in range(n):
-        i_cdf = dist[j].icdf
-        samples_ng[:, j] = i_cdf(stats.norm.cdf(samples_g[:, j]), dist_params[j])
-
-    if not jacobian:
-        print("UQpy: Done.")
-        return samples_ng, None
-    else:
-        a_ = cholesky(corr_norm, lower=True)
-        temp_ = np.zeros([n, n])
-        jacobian = [None] * m
-        for i in range(m):
-            for j in range(n):
-                pdf = dist[j].pdf
-                temp_[j, j] = pdf(samples_ng[i, j], dist_params[j]) / stats.norm.pdf(samples_g[i, j])
-            jacobian[i] = np.linalg.solve(a_, temp_)
-
-        return samples_ng, jacobian
-
-
 def correlation_distortion(marginal, params, rho_norm):
 
     """
@@ -321,8 +208,8 @@ def correlation_distortion(marginal, params, rho_norm):
             if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
                 raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
 
-            tmp_f_xi = ((i_cdf_j(stats.norm.cdf(xi), params[j]) - mj[0]) / np.sqrt(mj[1]))
-            tmp_f_eta = ((i_cdf_i(stats.norm.cdf(eta), params[i]) - mi[0]) / np.sqrt(mi[1]))
+            tmp_f_xi = ((i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T, params[j]) - mj[0]) / np.sqrt(mj[1]))
+            tmp_f_eta = ((i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T, params[i]) - mi[0]) / np.sqrt(mi[1]))
             coef = tmp_f_xi * tmp_f_eta * w2d
 
             rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
@@ -693,184 +580,6 @@ def R_to_r(R):
     return r
 
 
-def gradient(sample=None, dimension=None, eps=None,  model_script=None, model_object_name=None, input_template=None,
-             var_names=None,
-             output_script=None, output_object_name=None, ntasks=None, cores_per_task=None, nodes=None, resume=None,
-             verbose=None, model_dir=None, cluster=None, order=None):
-    """
-         Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
-
-
-         Input:
-             :param sample: The sample values at which the gradient of the model will be evaluated. Samples can be
-             passed directly as  an array or can be passed through the text file 'UQpy_Samples.txt'.
-             If passing samples via text file, set samples = None or do not set the samples input.
-             :type sample: ndarray
-
-             :param order: The type of derivatives to calculate (1st order, second order, mixed).
-             :type order: str
-
-             :param dimension: Number of random variables.
-             :type dimension: int
-
-             :param eps: step for the finite difference.
-             :type eps: float
-
-             :param model_script: The filename of the Python script which contains commands to execute the model
-
-             :param model_object_name: The name of the function or class which executes the model
-
-             :param input_template: The name of the template input file which will be used to generate input files for
-              each run of the model. Refer documentation for more details.
-
-             :param var_names: A list containing the names of the variables which are present in the template input
-              files
-
-             :param output_script: The filename of the Python script which contains the commands to process the output
-
-             :param output_object_name: The name of the function or class which has the output values. If the object
-              is a class named cls, the output must be saved as cls.qoi. If it a function, it should return the output
-              quantity of interest
-
-             :param ntasks: Number of tasks to be run in parallel. RunModel uses GNU parallel to execute models which
-              require an input template
-
-             :param cores_per_task: Number of cores to be used by each task
-
-             :param nodes: On MARCC, each node has 24 cores_per_task. Specify the number of nodes if more than one
-              node is required.
-
-             :param resume: This option can be set to True if a parallel execution of a model with input template
-              failed to finish running all jobs. GNU parallel will then run only the jobs which failed to execute.
-
-             :param verbose: This option can be set to False if you do not want RunModel to print status messages to
-              the screen during execution. It is True by default.
-
-             :param model_dir: The directory  that contains the Python script which contains commands to execute the
-             model
-
-             :param cluster: This option defines if we run the code into a cluster
-
-         Output:
-             :return du_dj: vector of first-order gradients
-             :rtype: ndarray
-             :return d2u_dj: vector of second-order gradients
-             :rtype: ndarray
-             :return d2u_dij: vector of mixed gradients
-             :rtype: ndarray
-     """
-
-    from UQpy.RunModel import RunModel
-
-    if order is None:
-        raise ValueError('Exit code: Provide type of derivatives: first, second or mixed.')
-
-    if dimension is None:
-     raise ValueError('Error: Dimension must be defined')
-
-    if eps is None:
-        eps = [0.1]*dimension
-    elif isinstance(eps, float):
-        eps = [eps] * dimension
-    elif isinstance(eps, list):
-        if len(eps) != 1 and len(eps) != dimension:
-            raise ValueError('Exit code: Inconsistent dimensions.')
-        if len(eps) == 1:
-            eps = [eps[0]] * dimension
-
-    if order == 'first' or order == 'second':
-        du_dj = np.zeros(dimension)
-        d2u_dj = np.zeros(dimension)
-        for i in range(dimension):
-            x_i1_j = np.array(sample)
-            x_i1_j[0, i] += eps[i]
-            x_1i_j = np.array(sample)
-            x_1i_j[0, i] -= eps[i]
-
-            g0 = RunModel(samples=x_i1_j,  model_script=model_script,
-                          model_object_name=model_object_name,
-                          input_template=input_template, var_names=var_names, output_script=output_script,
-                          output_object_name=output_object_name,
-                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
-                          verbose=verbose, model_dir=model_dir, cluster=cluster)
-
-            g1 = RunModel(samples=x_1i_j,  model_script=model_script,
-                          model_object_name=model_object_name,
-                          input_template=input_template, var_names=var_names, output_script=output_script,
-                          output_object_name=output_object_name,
-                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
-                          verbose=verbose, model_dir=model_dir, cluster=cluster)
-
-            du_dj[i] = (g0.qoi_list[0] - g1.qoi_list[0])/(2*eps[i])
-
-            if order == 'second':
-                g = RunModel(samples=sample, model_script=model_script,
-                             model_object_name=model_object_name,
-                             input_template=input_template, var_names=var_names, output_script=output_script,
-                             output_object_name=output_object_name,
-                             ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
-                             verbose=verbose, model_dir=model_dir, cluster=cluster)
-
-                d2u_dj[i] = (g0.qoi_list[0] - 2 * g.qoi_list[0] + g1.qoi_list[0]) / (eps[i]**2)
-
-        return np.vstack([du_dj, d2u_dj])
-
-    elif order == 'mixed':
-        import itertools
-        range_ = list(range(dimension))
-        d2u_dij = list()
-        for i in itertools.combinations(range_, 2):
-            x_i1_j1 = np.array(sample)
-            x_i1_1j = np.array(sample)
-            x_1i_j1 = np.array(sample)
-            x_1i_1j = np.array(sample)
-
-            x_i1_j1[0, i[0]] += eps[i[0]]
-            x_i1_j1[0, i[1]] += eps[i[1]]
-
-            x_i1_1j[0, i[0]] += eps[i[0]]
-            x_i1_1j[0, i[1]] -= eps[i[1]]
-
-            x_1i_j1[0, i[0]] -= eps[i[0]]
-            x_1i_j1[0, i[1]] += eps[i[1]]
-
-            x_1i_1j[0, i[0]] -= eps[i[0]]
-            x_1i_1j[0, i[1]] -= eps[i[1]]
-
-            g0 = RunModel(samples=x_i1_j1,  model_script=model_script,
-                          model_object_name=model_object_name,
-                          input_template=input_template, var_names=var_names, output_script=output_script,
-                          output_object_name=output_object_name,
-                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
-                          verbose=verbose, model_dir=model_dir, cluster=cluster)
-
-            g1 = RunModel(samples=x_i1_1j,  model_script=model_script,
-                          model_object_name=model_object_name,
-                          input_template=input_template, var_names=var_names, output_script=output_script,
-                          output_object_name=output_object_name,
-                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
-                          verbose=verbose, model_dir=model_dir, cluster=cluster)
-
-            g2 = RunModel(samples=x_1i_j1,  model_script=model_script,
-                          model_object_name=model_object_name,
-                          input_template=input_template, var_names=var_names, output_script=output_script,
-                          output_object_name=output_object_name,
-                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
-                          verbose=verbose, model_dir=model_dir, cluster=cluster)
-
-            g3 = RunModel(samples=x_1i_1j,  model_script=model_script,
-                          model_object_name=model_object_name,
-                          input_template=input_template, var_names=var_names, output_script=output_script,
-                          output_object_name=output_object_name,
-                          ntasks=ntasks, cores_per_task=cores_per_task, nodes=nodes, resume=resume,
-                          verbose=verbose, model_dir=model_dir, cluster=cluster)
-
-            d2u_dij.append((g0.qoi_list[0] - g1.qoi_list[0] - g2.qoi_list[0] + g3.qoi_list[0])
-                           / (4 * eps[i[0]]*eps[i[1]]))
-
-        return np.array(d2u_dij)
-
-
 def eval_hessian(dimension, mixed_der, der):
 
     """
@@ -1097,3 +806,164 @@ def recursive_update_mean_covariance(n, new_sample, previous_mean, previous_cova
         delta_n = (new_sample - previous_mean).reshape((dim, 1))
         new_covariance = (n - 2) / (n - 1) * previous_covariance + 1 / n * np.matmul(delta_n, delta_n.T)
     return new_mean, new_covariance
+
+# Grassmann: svd
+def svd(matrix, value):
+    """
+    Compute the singular value decomposition of a matrix and truncate it.
+
+    Given a matrix compute its singular value decomposition (SVD) and given a desired rank you
+    can truncate the matrix containing the eigenvectors.
+
+    **Input:**
+
+    :param matrix: Input matrix.
+    :type  matrix: list or numpy array
+
+    :param value: Rank.
+    :type  value: int
+
+    **Output/Returns:**
+
+    :param u: left-singular eigenvectors.
+    :type  u: numpy array
+
+    :param u: eigenvalues.
+    :type  u: numpy array
+
+    :param v: right-singular eigenvectors.
+    :type  v: numpy array
+    """
+    ui, si, vi = np.linalg.svd(matrix, full_matrices=True,hermitian=False)  # Compute the SVD of matrix
+    si = np.diag(si)  # Transform the array si into a diagonal matrix containing the singular values
+    vi = vi.T  # Transpose of vi
+
+    # Select the size of the matrices u, s, and v
+    # either based on the rank of (si) or on a user defined value
+    if value == 0:
+        rank = np.linalg.matrix_rank(si)  # increase the number of basis up to rank
+        u = ui[:, :rank]
+        s = si[:rank, :rank]
+        v = vi[:, :rank]
+
+    else:
+        u = ui[:, :value]
+        s = si[:value, :value]
+        v = vi[:, :value]
+
+    return u, s, v
+
+def check_arguments(argv, min_num_matrix, ortho):
+    
+    """
+    Check input arguments for consistency.
+
+    Check the input matrices for consistency given the minimum number of matrices (min_num_matrix) 
+    and the boolean varible (ortho) to test the orthogonality.
+
+    **Input:**
+
+    :param argv: Matrices to be tested.
+    :type  argv: list of arguments
+
+    :param min_num_matrix: Minimum number of matrices.
+    :type  min_num_matrix: int
+    
+    :param ortho: boolean varible to test the orthogonality.
+    :type  ortho: bool
+
+    **Output/Returns:**
+
+    :param inputs: Return the input matrices.
+    :type  inputs: numpy array
+
+    :param nargs: Number of matrices.
+    :type  nargs: numpy array
+    """
+        
+    # Check the minimum number of matrices involved in the operations
+    if type(min_num_matrix) != int:
+        raise ValueError('The minimum number of matrices MUST be an integer number!')
+    elif min_num_matrix < 1:
+        raise ValueError('Number of arguments MUST be larger than or equal to one!')
+
+    # Check if the variable controlling the orthogonalization is boolean
+    if type(ortho) != bool:
+        raise ValueError('The last argument MUST be a boolean!')
+
+    nargv = len(argv)
+
+    # If the number of provided inputs are zero exit the code
+    if nargv == 0:
+        raise ValueError('Missing input arguments!')
+
+    # Else if the number of arguments is equal to 1 
+    elif nargv == 1:
+
+        # Check if the number of expected matrices are higher than or equal to 2
+        args = argv[0]
+        nargs = len(args)
+      
+        if np.shape(args)[0] == 1 or len(np.shape(args)) == 2:
+            nargs = 1
+        # if it is lower than two exit the code, otherwise store them in a list
+        if nargs < min_num_matrix:
+            raise ValueError('The number of points must be higher than:', min_num_matrix)
+
+        else:
+            inputs = []
+            if nargs == 1:
+                inputs = [args]
+            else:
+
+                # Loop over all elements
+                for i in range(nargs):                  
+                    # Verify the type of the input variables and store in a list
+                    inputs.append(test_type(args[i], ortho))
+
+    else:
+
+        nargs = nargv
+        # Each argument MUST be a matrix
+        inputs = []
+        for i in range(nargv):
+            # Verify the type of the input variables and store in a list
+            inputs.append(test_type(argv[i], ortho))
+
+    return inputs, nargs
+
+
+def test_type(X, ortho):
+    
+    """
+    Test the datatype of X.
+
+    Check if the datatype of the matrix X is consistent.
+
+    **Input:**
+
+    :param X: Matrices to be tested.
+    :type  X: list or numpy array
+    
+    :param ortho: boolean varible to test the orthogonality.
+    :type  ortho: bool
+
+    **Output/Returns:**
+
+    :param Y: Tested and adjusted matrices.
+    :type  Y: numpy array
+    """
+        
+    if not isinstance(X, (list, np.ndarray)):
+        raise TypeError('Elements of input arguments should be provided either as list or array')
+    elif type(X) == list:
+        Y = np.array(X)
+    else:
+        Y = X
+
+    if ortho:
+        Ytest = np.dot(Y.T, Y)
+        if not np.array_equal(Ytest, np.identity(np.shape(Ytest)[0])):
+            Y, unused = np.linalg.qr(Y)
+
+    return Y

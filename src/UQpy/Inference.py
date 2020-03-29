@@ -470,42 +470,41 @@ class InfoModelSelection:
 ########################################################################################################################
 
 class BayesParameterEstimation:
+    """
+    Generates samples from the posterior distribution, using MCMC or IS.
+
+    Inputs:
+
+    :param inference_model: model, must be an instance of class InferenceModel
+    :type inference_model: list
+
+    :param data: Available data
+    :type data: ndarray
+
+    :param sampling_method: Method to be used
+    :type sampling_method: str, 'MCMC' or 'IS'
+
+    :param nsamples: number of samples used in MCMC/IS
+    :type nsamples: int
+
+    :param nsamples_per_chain: number of samples per chain used in MCMC (not used if nsamples is defined)
+    :type nsamples_per_chain: int
+
+    :param nchains: number of chains in MCMC, will be used to sample seed from prior if seed is not provided
+    :type nchains: int
+
+    :param kwargs: inputs to the sampling method, see MCMC and IS
+    :type kwargs: dictionary
+
+    Outputs:
+
+    :return sampler: sampling object, contains e.g. the samples
+    :rtype sampler: SampleMethods.MCMC or SampleMethods.IS object
+
+    """
 
     def __init__(self, inference_model, data, sampling_method='MCMC', nsamples=None, nsamples_per_chain=None, nchains=1,
                  verbose=False, **kwargs):
-
-        """
-            Generates samples from the posterior distribution, using MCMC or IS.
-
-            Inputs:
-
-            :param inference_model: model, must be an instance of class InferenceModel
-            :type inference_model: list
-
-            :param data: Available data
-            :type data: ndarray
-
-            :param sampling_method: Method to be used
-            :type sampling_method: str, 'MCMC' or 'IS'
-
-            :param nsamples: number of samples used in MCMC/IS
-            :type nsamples: int
-
-            :param nsamples_per_chain: number of samples per chain used in MCMC (not used if nsamples is defined)
-            :type nsamples_per_chain: int
-
-            :param nchains: number of chains in MCMC, will be used to sample seed from prior if seed is not provided
-            :type nchains: int
-
-            :param kwargs: inputs to the sampling method, see MCMC and IS
-            :type kwargs: dictionary
-
-            Outputs:
-
-            :return sampler: sampling object, contains e.g. the samples
-            :rtype sampler: SampleMethods.MCMC or SampleMethods.IS object
-
-        """
 
         self.inference_model = inference_model
         if not isinstance(self.inference_model, InferenceModel):
