@@ -2383,87 +2383,111 @@ class MCMC_old:
 
 class MCMC:
     """
-        Description:
-            Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
-            Supported algorithms at this time are:
-            - Metropolis-Hastings(MH),
-            - Modified Metropolis-Hastings (MMH),
-            - Affine Invariant Ensemble Sampler with stretch moves (Stretch),
-            - DEMC,
-            - Delayed Rejection Adaptive Metropolis (DRAM)
-            References:
-            S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
-                Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
-            J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
-                no. 1, pp. 65–80, 2010.
-            R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
-        Input:
-            :param dimension: A scalar value defining the dimension of target density function. Default: 1
-            :type dimension: int
+    Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
 
-            :param pdf_target: Target density function from which to draw random samples
-            :type pdf_target: (list of) callables
+    Supported algorithms at this time are:
+    - Metropolis-Hastings(MH),
+    - Modified Metropolis-Hastings (MMH),
+    - Affine Invariant Ensemble Sampler with stretch moves (Stretch),
+    - Delayed Rejection Adaptive Metropolis (DRAM),
+    - Differential Evolution Adaptive Metropolis (DREAM).
+    For each algorithm, there exists an init_algorithm and run_algorithm method that are being called internally when
+    creating the MCMC object and running the chain.
 
-            :param log_pdf_target: Alternative way to define the target pdf, see above.
-            :type log_pdf_target: (list of) callables
+    **References:**
 
-            :param args_target: Parameters of the target pdf copula (used when calling log_pdf method).
-            :type args_target: tuple
+    1. S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
+       Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+    2. J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
+       no. 1, pp. 65–80, 2010.
+    3. Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. "emcee: The MCMC Hammer". Publications
+       of the Astronomical Society of the Pacific, 125(925):306–312,2013.
+    4. Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive MCMC". Statistics
+       and Computing, 16(4):339–354, 2006.
+    5. J.A. Vrugt et al. "Accelerating Markov chain Monte Carlo simulation by differential evolution with self-adaptive
+       randomized subspace sampling". International Journal of Nonlinear Sciences and Numerical Simulation,
+       10(3):273–290, 2009.[68]
+    6. J.A. Vrugt. "Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and MATLAB
+       implementation". Environmental Modelling & Software, 75:273–316, 2016.
+    7. R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
 
-            :param algorithm:  Algorithm used to generate random samples.
-                            Options:
-                                'MH': Metropolis Hastings Algorithm
-                                'MMH': Component-wise Modified Metropolis Hastings Algorithm
-                                'Stretch': Affine Invariant Ensemble MCMC with stretch moves
-                                'DEMC': Affine Invariant Ensemble MCMC with stretch moves
-                                'DRAM': Delayed Rejection Adaptive Metropolis
-                            Default: 'MH'
-            :type algorithm: str
+    **Inputs:**
 
-            :param nsamples: Number of samples to generate
-            :type nsamples: int
+    :param dimension: A scalar value defining the dimension of target density function.
 
-            :param nsamples_per_chain: Number of samples to generate
-            :type nsamples_per_chain: int
+                      This input must be provided.
 
-            :param jump: Number of samples between accepted states of the Markov chain.
-                                Default value: 1 (Accepts every state)
-            :type: jump: int
+                      Default: 1
+    :type dimension: int
 
-            :param nburn: Length of burn-in. Number of samples at the beginning of the chain to discard.
-                            This option is only used for the 'MMH' and 'MH' algorithms.
-                            Default: nburn = 0
-            :type nburn: int
+    :param pdf_target: Target density function from which to draw random samples. Either pdf_target or log_pdf_target
+                       must be provided.
+    :type pdf_target: (list of) callables
 
-            :param seed: Seed of the Markov chain(s)
-                            Default: zeros(1 x dimension) - will raise an error for some algorithms for which the seed
-                            must be specified
-            :type seed: numpy array of dimension (nchains, dimension)
+    :param log_pdf_target: Log of the target density function from which to draw random samples. Either pdf_target or
+                           log_pdf_target must be provided.
+    :type log_pdf_target: (list of) callables
 
-            :param **algorithm_inputs: Inputs that are algorithm specific - see user manual for a detailed list
-            :type **algorithm_inputs: dictionary
+    :param args_target: Positional arguments of the pdf target.
+    :type args_target: tuple
 
-            :param save_log_pdf: boolean that indicates whether to save log_pdf_values along with the samples
-            :type save_log_pdf: bool, default False
+    :param algorithm: Algorithm used to generate random samples. Options are 'MH', 'MMH', 'Stretch', 'DRAM', 'DREAM'.
 
-            :param concat_chains_: boolean that indicates whether to concatenate the chains after a run,
-                    if True: self.samples will be of size (nchains * nsamples, dimension)
-                    if False: self.samples will be of size (nsamples, nchains, dimension)
-            :type concat_chains_: bool, default True
-        Output:
-            :return: MCMC.samples: Set of MCMC samples following the target distribution
-            :rtype: MCMC.samples: ndarray
+                      Default: 'MH'
+    :type algorithm: str
 
-            :return: MCMC.log_pdf_values: Values of
-            :rtype: MCMC.log_pdf_values: ndarray
+    :param nsamples: Number of samples to generate.
+    :type nsamples: int
 
-            :return: MCMC.acceptance_rate: Acceptance ratio of the MCMC samples
-            :rtype: MCMC.acceptance_rate: float
+    :param nsamples_per_chain: Number of samples to generate per chain.
+    :type nsamples_per_chain: int
 
+    :param jump: Number of samples between accepted states of the Markov chain.
+
+                 Default: 1 (Accepts every state)
+    :type: jump: int
+
+    :param nburn: Length of burn-in. Number of samples at the beginning of the chain to discard.
+
+                  Default: 0
+    :type nburn: int
+
+    :param seed: Seed of the Markov chain(s)
+
+                 Default: zeros(1 x dimension) - will raise an error for some algorithms for which the seed
+                 must be specified
+    :type seed: numpy array of dimension (nchains, dimension)
+
+    :param algorithm_inputs: Keyword inputs that are algorithm specific
+    :type algorithm_inputs: dictionary
+
+    :param save_log_pdf: boolean that indicates whether to save log_pdf_values along with the samples
+
+                         Default: False
+    :type save_log_pdf: bool
+
+    :param concat_chains_: boolean that indicates whether to concatenate the chains after a run
+
+                           Default: True
+    :type concat_chains_: bool
+
+    ** Attributes:**
+
+    :param: samples: Set of MCMC samples following the target distribution
+    :type: samples: ndarray of shape (nchains * nsamples, dimension) or (nsamples, nchains, dimension)
+
+    :param: log_pdf_values: Values of the log pdf for the accepted samples
+    :type: log_pdf_values: ndarray of shape (nchains * nsamples,) or (nsamples, nchains)
+
+    :param: acceptance_rate: Acceptance ratio of the MCMC samples
+    :type: acceptance_rate: float
+
+    **Authors:**
+
+    Audrey Olivier, Michael D. Shields, Mohit Chauhan, Dimitris G. Giovanis
+
+    Last Modified: 1/21/20 by Michael D. Shields
     """
-
-    # Authors: Audrey Olivier, Michael D. Shields, Mohit Chauhan, Dimitris G. Giovanis
-    # Updated: 04/08/2019 by Audrey Olivier
 
     def __init__(self, dimension=1, pdf_target=None, log_pdf_target=None, args_target=None,
                  algorithm='MH', seed=None, nsamples=None, nsamples_per_chain=None, nburn=0, jump=1,
@@ -2520,8 +2544,23 @@ class MCMC:
             self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
     def run(self, nsamples=None, nsamples_per_chain=None):
-        """ Run MCMC algorithm. If run was called before, new samples are appended to self.samples, otherwise
-        self.samples is created from scratch. """
+        """
+        Run the MCMC chain.
+
+        This function samples from the MCMC chains and append samples to existing ones (if any). This method calls the
+        run_algorithm method that is specific to each algorithm. If inputs nsamples or nsamples_per_chain are provided
+        when creating the MCMC object, this method is called when the object is created. It can also be called
+        separately.
+
+        **Inputs:**
+
+        :param nsamples: Number of samples to generate.
+        :type nsamples: int
+
+        :param nsamples_per_chain: Number of samples to generate per chain.
+        :type nsamples_per_chain: int
+
+        """
 
         # Compute nsamples from nsamples_per_chain or vice-versa
         nsamples, nsamples_per_chain = self.preprocess_nsamples(nchains=self.nchains, nsamples=nsamples,
@@ -2554,7 +2593,17 @@ class MCMC:
     ####################################################################################################################
     # Functions for MH algorithm: init_mh and run_mh
     def init_mh(self):
-        """ Check MH algorithm inputs """
+        """
+        Initialize the MH algorithm.
+
+        This function is being called when creating an MCMC object with algorithm='MH', it initializes necessary
+        variables and algorithm-specific inputs, namely:
+        - proposal: Distribution object that defines the proposal, default is standard normal.
+        - proposal_params: Parameters of the proposal distribution (list of floats)
+        - proposal_is_symmetric: Boolean, indicates whether the proposal density is symmetric. Default is False.
+
+        No inputs/outputs.
+        """
 
         # MH algorithm inputs: proposal and proposal_params
         names = ['proposal', 'proposal_params', 'proposal_is_symmetric']
@@ -2585,7 +2634,21 @@ class MCMC:
             self.algorithm_inputs['proposal_is_symmetric'] = False
 
     def run_mh(self, nsims, current_state):
-        """ Run ns_per_chain * jump + nburn iterations  """
+        """
+        Run the MCMC chain for MH algorithm.
+
+        This function performs nsims iterations of the MH algorithm, starting at a given current state. It saved the
+        samples / log_pdf in attribute samples and log_pdf_values. It also computes the acceptance ratio of the chains.
+
+        **Inputs:**
+
+        :param nsims: Number of iterations to perform.
+        :type nsims: int
+
+        :param current_state: Current state of the chain to start from.
+        :type current_state: ndarray of shape (nchains, dim)
+
+        """
         current_log_pdf = self.evaluate_log_target(current_state)
 
         # Loop over the samples
@@ -2624,7 +2687,19 @@ class MCMC:
     ####################################################################################################################
     # Functions for MMH algorithm: init_mmh and iterations_mmh
     def init_mmh(self):
-        """ Perform some checks and initialize the MMH algorithm """
+        """
+        Initialize the MMH algorithm.
+
+        This function is being called when creating an MCMC object with algorithm='MMH'. In this algorithm, candidate
+        samples are drawn separately in each dimension, thus the proposal consists in a list of 1d distributions. The
+        target pdf can be given as a joint pdf or a list of marginal pdfs in all dimensions. This will trigger two
+        different algorithms. The algorithm-specific inputs for MMH are:
+        - proposal: Distribution object that defines the proposals, default is a list of 1d standard normal.
+        - proposal_params: Parameters of the proposal distributions
+        - proposal_is_symmetric: list of bool (default False), indicates whether the proposal densities are symmetric.
+
+        No inputs/outputs.
+        """
 
         # Algorithms inputs are pdf_target_type, proposal_type and proposal_scale.
         used_inputs = ['proposal', 'proposal_params', 'proposal_is_symmetric']
@@ -2671,7 +2746,21 @@ class MCMC:
                 raise TypeError('MMH: proposal_is_symmetric should be a (list of) boolean(s)')
 
     def run_mmh(self, nsims, current_state):
-        # Loop over the samples
+        """
+        Run the MCMC chain for MMH algorithm.
+
+        This function performs nsims iterations of the MMH algorithm, starting at a given current state. It saved the
+        samples / log_pdf in attribute samples and log_pdf_values. It also computes the acceptance ratio of the chains.
+
+        **Inputs:**
+
+        :param nsims: Number of iterations to perform.
+        :type nsims: int
+
+        :param current_state: Current state of the chain to start from.
+        :type current_state: ndarray of shape (nchains, dim)
+
+        """
 
         # The target pdf is provided via its marginals
         if self.evaluate_log_target_marginals is not None:
@@ -2755,7 +2844,15 @@ class MCMC:
     ####################################################################################################################
     # Functions for Stretch algorithm: init_stretch and iterations_stretch
     def init_stretch(self):
-        """ Perform some checks and initialize the Stretch algorithm """
+        """
+        Initialize the Stretch algorithm.
+
+        This function is being called when creating an MCMC object with algorithm='Stretch', it initializes necessary
+        variables and algorithm-specific inputs, namely:
+        - scale: scale parameter, default is 2
+
+        No inputs/outputs.
+        """
 
         # Check nchains = ensemble size for the Stretch algorithm
         if self.nchains < 2:
@@ -2771,7 +2868,21 @@ class MCMC:
             raise ValueError('For Stretch, algorithm input "scale" should be a float.')
 
     def run_stretch(self, nsims, current_state):
-        # Evaluate the current log_pdf and initialize acceptance ratio
+        """
+        Run the MCMC chain for Stretch algorithm.
+
+        This function performs nsims iterations of the Stretch algorithm, starting at a given current state. It saves
+        the samples / log_pdf in attribute samples and log_pdf_values.
+
+        **Inputs:**
+
+        :param nsims: Number of iterations to perform.
+        :type nsims: int
+
+        :param current_state: Current state of the chain to start from.
+        :type current_state: ndarray of shape (nchains, dim)
+
+        """
         current_log_pdf = self.evaluate_log_target(current_state)
 
         # Start the loop over nsamples - this code uses the parallel version of the stretch algorithm
@@ -2818,7 +2929,23 @@ class MCMC:
     ####################################################################################################################
     # Functions from DRAM algorithm
     def init_dram(self):
-        """ Perform some checks and initialize the DRAM algorithm """
+        """
+        Initialize the DRAM algorithm.
+
+        This function is being called when creating an MCMC object with algorithm='DRAM'. In this algorithm, the
+        proposal density is Gaussian and its covariance C is being updated from samples as C = sp * C_sample where
+        C_sample is the sample covariance. Also, the delayed rejection scheme is applied, i.e, if a candidate is not
+        accepted another one is generated from proposal with covariance gamma_2 ** 2 * C. The parameters for this
+        algorithm are:
+        - initial_cov: initial covariance for the gaussian proposal distribution, default if I(dim)
+        - k0: rate at which covariance is being updated, i.e., every k0 iterations, default is 100
+        - sp: scale parameter for covariance updating, default 2.38 ** 2 / dim
+        - gamma_2: scale parameter for delayed rejection scheme, default 1 / 5
+        - save_cov: boolean, indicates if updated covariance is being saved in attribute adaptive_covariance, default
+        False
+
+        No inputs/outputs.
+        """
 
         # The inputs to this algorithm are the initial_cov, k0, sp and gamma_2
         used_ins = ['initial_cov', 'k0', 'sp', 'gamma_2', 'save_cov']
@@ -2846,7 +2973,21 @@ class MCMC:
             self.adaptive_covariance = [self.algorithm_inputs['initial_cov']]
 
     def run_dram(self, nsims, current_state):
-        # Evaluate the current log_pdf and initialize acceptance ratio
+        """
+        Run the MCMC chain for DRAM algorithm.
+
+        This function performs nsims iterations of the DRAM algorithm, starting at a given current state. It saved the
+        samples / log_pdf in attribute samples and log_pdf_values. It also computes the acceptance ratio of the chains.
+
+        **Inputs:**
+
+        :param nsims: Number of iterations to perform.
+        :type nsims: int
+
+        :param current_state: Current state of the chain to start from.
+        :type current_state: ndarray of shape (nchains, dim)
+
+        """
         current_log_pdf = self.evaluate_log_target(current_state)
 
         # Initialize scale parameter
@@ -2927,17 +3068,28 @@ class MCMC:
     ####################################################################################################################
     # Functions for DREAM algorithm
     def init_dream(self):
-        """ Perform some checks and initialize the DREAM algorithm """
+        """
+        Initialize the DREAM algorithm.
+
+        This function is being called when creating an MCMC object with algorithm='DREAM'. The parameters for this
+        algorithm are (see references 5/6 for detailed explanations):
+        - delta: jump rate, default is 3
+        - c: differential evolution parameter, default 0.1
+        - c_star: differential evolution parameter, default 1e-6 (should be small compared to width of target)
+        - n_CR: number of crossover probabilities, default 3
+        - p_g: prob(gamma=1), default 0.2
+        - adapt_CR: (iter_max, rate) governs the adapation of crossover probabilities, default (-1, 1) no adaptation
+        - check_chains: (iter_max, rate) governs the discarding of outlier chains, default (-1, 1) no check on outlier
+        chains
+
+        No inputs/outputs.
+        """
 
         # Check nb of chains
         if self.nchains < 2:
             raise ValueError('For the DREAM algorithm, a seed must be provided with at least two samples.')
 
-        # The algorithm inputs are: jump rate gamma - default is 3, c and c_star are parameters involved in the
-        # differential evolution part of the algorithm - c_star should be small compared to the width of the target,
-        # n_CR is the number of crossover probabilities - default 3, and p_g: prob(gamma=1) - default is 0.2
-        # adapt_CR = (iter_max, rate) governs the adapation of crossover probabilities (default: no adaptation)
-        # check_chains = (iter_max, rate) governs the discrading of outlier chains (default: no check on outlier chains)
+        # Check user-specific algorithms
         names = ['delta', 'c', 'c_star', 'n_CR', 'p_g', 'adapt_CR', 'check_chains']
         defaults = [3, 0.1, 1e-6, 3, 0.2, (-1, 1), (-1, 1)]
         types = [int, (float, int), (float, int), int, float, tuple, tuple]
@@ -2957,9 +3109,22 @@ class MCMC:
                                                               for i in self.algorithm_inputs[key])):
                 raise TypeError('Inputs adapt_CR and check_chains should be tuples of 2 integers.')
 
-
     def run_dream(self, nsims, current_state):
-        # Initialize some variables
+        """
+        Run the MCMC chain for DREAM algorithm.
+
+        This function performs nsims iterations of the DREAM algorithm, starting at a given current state. It saved the
+        samples / log_pdf in attribute samples and log_pdf_values. It also computes the acceptance ratio of the chains.
+
+        **Inputs:**
+
+        :param nsims: Number of iterations to perform.
+        :type nsims: int
+
+        :param current_state: Current state of the chain to start from.
+        :type current_state: ndarray of shape (nchains, dim)
+
+        """
         delta, c, c_star, n_CR, p_g = self.algorithm_inputs['delta'], self.algorithm_inputs['c'], \
                                       self.algorithm_inputs['c_star'], self.algorithm_inputs['n_CR'], \
                                       self.algorithm_inputs['p_g']
@@ -3034,8 +3199,23 @@ class MCMC:
         return None
 
     def check_outlier_chains(self, replace_with_best=False):
+        """
+        Check outlier chains in DREAM algorithm.
+
+        This function check for outlier chains as part of the DREAM algorithm, potentially replacing outlier chains
+        (i.e. the samples and log_pdf_values) with 'good' chains. The function does not have any returned output but it
+        prints out the number of outlier chains.
+
+        **Inputs:**
+
+        :param replace_with_best: indicates whether to replace outlier chains with the best (most probable) chain.
+
+                                  default: False
+        :type replace_with_best: bool
+
+        """
         if not self.save_log_pdf:
-            return ValueError('attribute save_log_pdf must be True in order to check outlier chains')
+            raise ValueError('attribute save_log_pdf must be True in order to check outlier chains')
         start_ = self.current_sample_index // 2
         avgs_logpdf = np.mean(self.log_pdf_values[start_:], axis=0)
         best_ = np.argmax(avgs_logpdf)
@@ -3062,22 +3242,57 @@ class MCMC:
     # Methods preprocess_target, preprocess_proposal, check_seed and check_integers can be called in the init stage.
 
     def concatenate_chains(self):
-        # Concatenate chains so that samples go from (nsamples, nchains, dimension) to (nsamples * nchains, dimension)
+        """
+        Concatenate chains.
+
+        Utility function that reshapes (in place) attribute samples from (nsamples, nchains, dimension) to
+        (nsamples * nchains, dimension), and log_pdf_values from (nsamples, nchains) to (nsamples * nchains, ).
+
+        No input / output.
+
+        """
         self.samples = self.samples.reshape((-1, self.dimension), order='C')
         if self.save_log_pdf:
             self.log_pdf_values = self.log_pdf_values.reshape((-1, ), order='C')
         return None
 
     def unconcatenate_chains(self):
-        # Inverse of concatenate_chains method
+        """
+        Inverse of concatenate_chains.
+
+        Utility function that reshapes (in place) attribute samples from (nsamples * nchains, dimension) to
+        (nsamples, nchains, dimension), and log_pdf_values from (nsamples * nchains) to (nsamples, nchains).
+
+        No input / output.
+
+        """
         self.samples = self.samples.reshape((-1, self.nchains, self.dimension), order='C')
         if self.save_log_pdf:
             self.log_pdf_values = self.log_pdf_values.reshape((-1, self.nchains), order='C')
         return None
 
     def initialize_samples(self, nsamples_per_chain):
-        """ Allocate space for samples and log likelihood values, initialize sample_index, acceptance ratio
-        If some samples already exist, allocate space to append new samples to the old ones """
+        """
+        Initialize necessary attributes and variables before running the chain forward.
+
+        Utility function that allocates space for samples and log likelihood values, initialize sample_index,
+        acceptance ratio. If some samples already exist, allocate space to append new samples to the old ones. Computes
+        the number of forward iterations nsims to be run (depending on burnin and jump parameters).
+
+        **Inputs:**
+
+        :param nsamples_per_chain: number of samples to be generated per chain
+        :type nsamples_per_chain: int
+
+        **Output/Returns:**
+
+        :param nsims: Number of iterations to perform.
+        :type nsims: int
+
+        :param current_state: Current state of the chain to start from.
+        :type current_state: ndarray of shape (nchains, dim)
+
+        """
         if self.samples is None:    # very first call of run, set current_state as the seed and initialize self.samples
             self.samples = np.zeros((nsamples_per_chain, self.nchains, self.dimension))
             if self.save_log_pdf:
@@ -3109,6 +3324,21 @@ class MCMC:
         return nsims, current_state
 
     def update_samples(self, current_state, current_log_pdf):
+        """
+        Save current state.
+
+        Utility function that saves the current state and it log pdf value to attributes samples and log_pdf_values.
+        Only saved if burn-in period is over and this state is not to be 'jumped'.
+
+        **Inputs:**
+
+        :param current_state: Current state of the chain to start from.
+        :type current_state: ndarray of shape (nchains, dim)
+
+        :param current_log_pdf: Log pdf of current state.
+        :type current_log_pdf: ndarray of shape (nchains, )
+
+        """
         # Update the chain, only if burn-in is over and the sample is not being jumped over
         if self.total_iterations >= self.nburn and (self.total_iterations-self.nburn) % self.jump == 0:
             self.samples[self.current_sample_index, :, :] = current_state
@@ -3117,14 +3347,52 @@ class MCMC:
             self.current_sample_index += 1
 
     def update_acceptance_rate(self, new_accept=None):
-        # Use an iterative function to update the acceptance rate
+        """
+        Update acceptance rate of the chains.
+
+        Utility function, uses an iterative function to update the acceptance rate of all the chains separately.
+
+        **Inputs:**
+
+        :param new_accept: indicates whether the current state was accepted (for each chain separately).
+        :type new_accept: list (length nchains) of bool
+
+        """
         self.acceptance_rate = [na / (self.total_iterations+1) + self.total_iterations / (self.total_iterations+1) * a
                                 for (na, a) in zip(new_accept, self.acceptance_rate)]
 
     @staticmethod
     def preprocess_target(log_pdf, pdf, args):
-        """ This function transforms the log_pdf, pdf, args inputs into a function that evaluates log_pdf_target(x)
-        for a given x. """
+        """
+        Preprocess the target pdf inputs.
+
+        Utility function (static method), that transforms the log_pdf, pdf, args inputs into a function that evaluates
+        log_pdf_target(x) for a given x. If the target is given as a list of callables (marginal pdfs), the list of
+        log margianals is also returned.
+
+        **Inputs:**
+
+        :param log_pdf: Log of the target density function from which to draw random samples. Either pdf_target or
+                        log_pdf_target must be provided.
+        :type log_pdf: (list of) callables
+
+        :param pdf: Target density function from which to draw random samples. Either pdf_target or log_pdf_target
+                    must be provided.
+        :type pdf: (list of) callables
+
+        :param args: Positional arguments of the pdf target.
+        :type args: tuple
+
+        **Output/Returns:**
+
+        :param evaluate_log_pdf: Callable that computes the log of the target density function
+        :type evaluate_log_pdf: callable
+
+        :param evaluate_log_pdf_marginals: List of callables to compute the log pdf of the marginals
+        :type evaluate_log_pdf_marginals: list of callables
+
+        """
+
         # log_pdf is provided
         if log_pdf is not None:
             if callable(log_pdf):
@@ -3133,7 +3401,6 @@ class MCMC:
                 evaluate_log_pdf = (lambda x: log_pdf(x, *args))
                 evaluate_log_pdf_marginals = None
             elif isinstance(log_pdf, list) and (all(callable(p) for p in log_pdf)):
-
                 if args is None:
                     args = [()] * len(log_pdf)
                 if not (isinstance(args, list) and len(args) == len(log_pdf)):
@@ -3173,7 +3440,20 @@ class MCMC:
 
     @staticmethod
     def preprocess_nsamples(nchains, nsamples=None, nsamples_per_chain=None):
-        """ Compute nsamples_per_chain from nsamples and vice-versa """
+        """
+        Preprocess inputs nsamples and nsamples_per_chain.
+
+        Utility function (static method), that computes nsamples_per_chain from nsamples and vice-versa.
+
+        **Inputs:**
+
+        :param nsamples: number of samples to be generated
+        :type nsamples: int
+
+        :param nsamples_per_chain: number of samples to be generated per chain
+        :type nsamples_per_chain: int
+
+        """
         if ((nsamples is not None) and (nsamples_per_chain is not None)) or (
                 nsamples is None and nsamples_per_chain is None):
             raise ValueError('Either nsamples or nsamples_per_chain must be provided (not both)')
@@ -3189,7 +3469,25 @@ class MCMC:
 
     @staticmethod
     def preprocess_seed(seed, dim):
-        """ Check the dimension of seed, assign [0., 0., ..., 0.] if not provided. """
+        """
+        Preprocess input seed.
+
+        Utility function (static method), that checks the dimension of seed, assign [0., 0., ..., 0.] if not provided.
+
+        **Inputs:**
+
+        :param seed: seed for MCMC
+        :type seed: None or ndarray
+
+        :param dim: dimension of target density
+        :type dim: int
+
+        **Output/Returns:**
+
+        :param seed: number of samples to be generated
+        :type seed: ndarray of shape (ns, dim)
+
+        """
         if seed is None:
             seed = np.zeros((1, dim))
         else:
@@ -3201,8 +3499,27 @@ class MCMC:
 
     @staticmethod
     def check_methods_proposal(proposal, proposal_params=None):
-        """ Check that the given proposal distribution has 1) a rvs method and 2) a log pdf or pdf method
-        Used in the MH and MMH initializations"""
+        """
+        Check if proposal has required methods.
+
+        Utility function (static method), that checks that the given proposal distribution has 1) a rvs method and 2) a
+        log pdf or pdf method. If a pdf method exists but no log_pdf, the log_pdf methods is added to the proposal
+        object. Used in the MH and MMH initializations.
+
+        **Inputs:**
+
+        :param proposal: proposal distribution
+        :type proposal: Distribution object
+
+        :param proposal_params: parameters of the proposal distribution
+        :type proposal_params: list of floats
+
+        **Output/Returns:**
+
+        :param proposal: processed proposal
+        :type proposal: Distribution object
+
+        """
         if not isinstance(proposal, Distribution):
             raise TypeError('proposal should be a Distribution object')
         if proposal_params is not None:
@@ -3224,46 +3541,48 @@ class MCMC:
 class IS:
     """
 
-        Description:
+    Sample from a user-defined target density using importance sampling.
 
-            Perform Importance Sampling (IS) of independent random variables given a target and a
-            proposal distribution.
+    Sample from a given proposal distribution, then weight samples.
 
-        Input:
+    **Inputs:**
 
-            :param proposal: proposal to sample from: this Distribution object must have an rvs method and a log_pdf (
-                             or pdf) methods
-            :type proposal: Distribution object
+    :param proposal: Proposal to sample from: this Distribution object must have an rvs method and a log_pdf (
+                     or pdf) methods
+    :type proposal: Distribution object
 
-            :param proposal_params: parameters of the proposal distribution
-            :type proposal_params: list
+    :param proposal_params: Parameters of the proposal distribution
+    :type proposal_params: list
 
-            :param log_pdf_target: callable that evaluates the target log pdf
-            :type log_pdf_target: callable
+    :param log_pdf_target: Callable that evaluates the target log pdf
+    :type log_pdf_target: callable
 
-            :param pdf_target: callable that evaluates the target pdf (log_pdf_target is preferred though)
-            :type pdf_target: callable
+    :param pdf_target: Callable that evaluates the target pdf
+    :type pdf_target: callable
 
-            :param args_target: arguments of the target log_pdf (pdf) callable - i.e., log pdf target at x is evaluated
-                                as log_pdf_target(x, *args)
-            :type args_target: tuple
+    :param args_target: Positional arguments of the target log_pdf (pdf) callable
+    :type args_target: tuple
 
-            :param nsamples: Number of samples to generate.
-            :type nsamples: int
+    :param nsamples: Number of samples to generate.
+    :type nsamples: int
 
-        Output:
-            :return: IS.samples: Set of generated samples
-            :rtype: IS.samples: ndarray (nsamples, dim)
+    ** Attributes:**
 
-            :return: IS.weights: Importance weights of samples (weighted so that they sum up to 1)
-            :rtype: IS.weights: ndarray (nsamples, )
+    :param: samples: Set of samples
+    :type: samples: ndarray (nsamples, dim)
 
-            :return: IS.unnormalized_log_weights: unnormalized log weights of samples
-            :rtype: IS.unnormalized_log_weights: ndarray (nsamples, )
+    :param: unnormalized_log_weights: unnormalized log weights of samples
+    :type: unnormalized_log_weights: ndarray (nsamples, )
+
+    :param: weights: Importance weights of samples (weighted so that they sum up to 1)
+    :type: weights: ndarray (nsamples, )
+
+    **Authors:**
+
+    Audrey Olivier, Dimitris G. Giovanis
+
+    Last Modified: 10/2019 by Audrey Olivier
     """
-
-    # Authors: Audrey Olivier, Dimitris G.Giovanis
-    # Last Modified: 10/2019 by Audrey Olivier
 
     def __init__(self, nsamples=None, pdf_target=None, log_pdf_target=None, args_target=None,
                  proposal=None, proposal_params=None, verbose=False):
@@ -3294,7 +3613,20 @@ class IS:
             self.run(nsamples)
 
     def run(self, nsamples):
-        """ Perform IS """
+        """
+        Generate and weight samples.
+
+        This function samples from the proposal and append samples to existing ones (if any). It then weights the
+        samples as log_w_unnormalized) = log(target)-log(proposal). This function updates the output attributes
+        samples, unnormalized_log_weights and weights. If nsamples is provided when creating the object, this method is
+        directly called in init.
+
+        **Inputs:**
+
+        :param nsamples: Number of samples to generate.
+        :type nsamples: int
+
+        """
 
         if self.verbose:
             print('Running Importance Sampling')
@@ -3320,14 +3652,60 @@ class IS:
             print('Importance Sampling performed successfully')
 
     def resample(self, method='multinomial', size=None):
-        """ Resample: create a set of un-weighted samples from a set of weighted samples """
+        """
+        Resample to get a set of un-weighted samples that represent the target pdf.
+
+        Utility function that create a set of un-weighted samples from a set of weighted samples. Can be useful for
+        plotting for instance.
+
+        **Inputs:**
+
+        :param method: resampling method, as of V3 only multinomial resampling is supported
+
+                       Default: 'multinomial'
+        :type method: str
+
+        :param size: Number of un-weighted samples to generate.
+
+                     Default: None (same number of samples is generated as number of existing samples).
+        :type pdf: int
+
+        **Output/Returns:**
+
+        :param unweighted_samples: Un-weighted samples that represent the target pdf
+        :type unweighted_samples: ndarray
+        
+        """
         from .Utilities import resample
         return resample(self.samples, self.weights, method=method, size=size)
 
     @staticmethod
     def preprocess_target(log_pdf, pdf, args):
-        """ This function transforms the log_pdf, pdf, args inputs into a function that evaluates log_pdf_target(x)
-        for a given x. """
+        """
+        Preprocess the target pdf inputs.
+
+        Utility function (static method), that transforms the log_pdf, pdf, args inputs into a function that evaluates
+        log_pdf_target(x) for a given x.
+
+        **Inputs:**
+
+        :param log_pdf: Log of the target density function from which to draw random samples. Either pdf_target or
+                        log_pdf_target must be provided.
+        :type log_pdf: (list of) callables
+
+        :param pdf: Target density function from which to draw random samples. Either pdf_target or log_pdf_target
+                    must be provided.
+        :type pdf: (list of) callables
+
+        :param args: Positional arguments of the pdf target.
+        :type args: tuple
+
+        **Output/Returns:**
+
+        :param evaluate_log_pdf: Callable that computes the log of the target density function
+        :type evaluate_log_pdf: callable
+
+        """
         # log_pdf is provided
         if log_pdf is not None:
             if callable(log_pdf):
