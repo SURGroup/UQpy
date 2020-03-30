@@ -599,24 +599,29 @@ def eval_hessian(dimension, mixed_der, der):
 
 
 def IS_diagnostics(sampling_outputs=None, weights=None, graphics=False, figsize=(8, 3), ):
+    """
+    Diagnostics for IS.
+
+    These diagnostics are qualitative, they can help the user in understanding how the IS algorithm is performing.
+    This function returns printouts and plots.
+
+    **Inputs:**
+
+    :param sampling_outputs: output object of a sampling method
+    :type sampling_outputs: object of class MCMC
+
+    :param weights: output weights (alternative to giving sampling_outputs)
+    :type weights: ndarray
+
+    :param graphics: indicates whether or not to do a plot
+
+                     Default: False
+    :type graphics: boolean
+
+    :param figsize: size of the figure for output plots
+    :type figsize: tuple (width, height)
 
     """
-         Input:
-             :param sampling_outputs: output object of a sampling method
-             :type sampling_outputs: object of class MCMC or IS
-
-             :param weights: output weights of IS (alternative to giving sampling_outputs for IS)
-             :type weights: ndarray
-
-             :param graphics: indicates whether or not to do a plot
-             :type graphics: boolean, default False
-
-             :param figsize: size of the figure for output plots
-             :type figsize: tuple (width, height)
-
-         Output:
-             returns various diagnostics values/plots to evaluate importance sampling outputs
-     """
 
     if (sampling_outputs is None) and (weights is None):
         raise ValueError('UQpy error: sampling_outputs or weights should be provided')
@@ -639,30 +644,36 @@ def IS_diagnostics(sampling_outputs=None, weights=None, graphics=False, figsize=
 
 def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ESS=0.05,
                      graphics=False, figsize=None):
+    """
+    Diagnostics for MCMC.
+
+    These diagnostics are qualitative, they can help the user in understanding how the MCMC algorithm is performing.
+    These diagnostics are not intended to give a quantitative assessment of MCMC algorithms. This function returns
+    printouts and plots.
+
+    **Inputs:**
+
+    :param sampling_outputs: output object of a sampling method
+    :type sampling_outputs: object of class MCMC
+
+    :param samples: output samples of a sampling method, alternative to giving sampling_outputs
+    :type samples: ndarray
+
+    :param eps_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
+    :type eps_ESS: float in [0,1]
+
+    :param alpha_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
+    :type alpha_ESS: float in [0,1]
+
+    :param graphics: indicates whether or not to do a plot
+
+                     Default: False
+    :type graphics: boolean
+
+    :param figsize: size of the figure for output plots
+    :type figsize: tuple (width, height)
 
     """
-         Input:
-             :param sampling_outputs: output object of a sampling method
-             :type sampling_outputs: object of class MCMC or IS
-
-             :param samples: output samples of a sampling method (alternative to giving sampling_outputs for MCMC)
-             :type samples: ndarray
-
-             :param eps_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
-             :type eps_ESS: float in [0,1]
-
-             :param alpha_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
-             :type alpha_ESS: float in [0,1]
-
-             :param graphics: indicates whether or not to do a plot
-             :type graphics: boolean, default False
-
-             :param figsize: size of the figure for output plots
-             :type figsize: tuple (width, height)
-
-         Output:
-             returns various diagnostics values/plots to evaluate MCMC sampling outputs
-     """
 
     if (eps_ESS < 0) or (eps_ESS > 1):
         raise ValueError('eps_ESS should be a float between 0 and 1.')
@@ -755,6 +766,33 @@ def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ES
 
 
 def resample(samples, weights, method='multinomial', size=None):
+    """
+    Resample to get a set of un-weighted samples that represent a density in place of a set of weighted samples.
+
+    **Inputs:**
+
+    :param samples: Existing weighted samples
+    :type samples: ndarray (nsamples, dim)
+
+    :param weights: Weights of samples.
+    :type pdf: ndarray (nsamples,)
+
+    :param method: resampling method, as of V3 only multinomial resampling is supported
+
+                   Default: 'multinomial'
+    :type method: str
+
+    :param size: Number of un-weighted samples to generate.
+
+                 Default: None (same number of samples is generated as number of existing samples).
+    :type pdf: int
+
+    **Output/Returns:**
+
+    :param unweighted_samples: Un-weighted samples that represent the target pdf
+    :type unweighted_samples: ndarray
+
+    """
     nsamples = samples.shape[0]
     if size is None:
         size = nsamples
@@ -783,6 +821,15 @@ def suppress_stdout():
 
 
 def check_input_dims(x):
+    """
+    Check that x is a 2D ndarray.
+
+    **Inputs:**
+
+    :param x: Existing samples
+    :type x: ndarray (nsamples, dim)
+
+    """
     if not isinstance(x, np.ndarray):
         try:
             x = np.array(x)
@@ -794,8 +841,34 @@ def check_input_dims(x):
 
 
 def recursive_update_mean_covariance(n, new_sample, previous_mean, previous_covariance=None):
-    """ Iterative formula to compute a new mean, covariance based on previous ones and new sample.
-     n is the number of samples used to compute the current mean """
+    """
+    Iterative formula to compute a new sample mean and covariance based on previous ones and new sample.
+
+    New covariance is computed only of previous_covariance is provided.
+
+    **Inputs:**
+
+    :param n: Number of samples used to compute the new mean
+    :type n: int
+
+    :param new_sample: new sample
+    :type new_sample: ndarray (dim, )
+
+    :param previous_mean: Previous sample mean, to be updated with new sample value
+    :type previous_mean: ndarray (dim, )
+
+    :param previous_covariance: Previous sample covariance, to be updated with new sample value
+    :type previous_covariance: ndarray (dim, dim)
+
+    **Output/Returns:**
+
+    :param new_mean: Updated sample mean
+    :type new_mean: ndarray (dim, )
+
+    :param new_covariance: Updated sample covariance
+    :type new_covariance: ndarray (dim, dim)
+
+    """
     new_mean = (n - 1) / n * previous_mean + 1 / n * new_sample
     if previous_covariance is None:
         return new_mean

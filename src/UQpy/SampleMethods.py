@@ -3616,9 +3616,9 @@ class IS:
         """
         Generate and weight samples.
 
-        This function samples from the proposal and append samples to existing ones (if any). It then weights the
-        samples as log_w_unnormalized) = log(target)-log(proposal). This function updates the output attributes
-        samples, unnormalized_log_weights and weights. If nsamples is provided when creating the object, this method is
+        This function samples from the proposal and append samples to existing ones (if any). It then weights the 
+        samples as log_w_unnormalized) = log(target)-log(proposal). This function updates the output attributes 
+        samples, unnormalized_log_weights and weights. If nsamples is provided when creating the object, this method is 
         directly called in init.
 
         **Inputs:**
@@ -3652,21 +3652,21 @@ class IS:
             print('Importance Sampling performed successfully')
 
     def resample(self, method='multinomial', size=None):
-        """
+        """ 
         Resample to get a set of un-weighted samples that represent the target pdf.
-
+        
         Utility function that create a set of un-weighted samples from a set of weighted samples. Can be useful for
         plotting for instance.
-
+        
         **Inputs:**
 
         :param method: resampling method, as of V3 only multinomial resampling is supported
-
+        
                        Default: 'multinomial'
         :type method: str
 
         :param size: Number of un-weighted samples to generate.
-
+        
                      Default: None (same number of samples is generated as number of existing samples).
         :type pdf: int
 
