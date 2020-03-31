@@ -1651,7 +1651,7 @@ class AKMCS:
         # Train the initial Kriging model.
         if self.kriging == 'UQpy':
             with suppress_stdout():  # disable printing output comments
-                self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(self.qoi)))
+                self.krig_object.fit(samples=self.samples, values=np.atleast_2d(self.qoi))
             self.krig_model = self.krig_object.interpolate
         else:
             from sklearn.gaussian_process import GaussianProcessRegressor
@@ -1669,7 +1669,7 @@ class AKMCS:
 
             # Apply the learning function to identify the new point to run the model.
 
-            new_ind = self.lf(self.krig_model, rest_pop)
+            new_ind = self.lf(rest_pop)
             new_point = np.atleast_2d(rest_pop[new_ind])
 
             # Add the new points to the training set and to the sample set.
@@ -1690,7 +1690,7 @@ class AKMCS:
             if self.kriging == 'UQpy':
                 with suppress_stdout():
                     # disable printing output comments
-                    self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(self.qoi)))
+                    self.krig_object.fit(samples=self.samples, values=np.atleast_2d(self.qoi))
                 self.krig_model = self.krig_object.interpolate
             else:
                 from sklearn.gaussian_process import GaussianProcessRegressor
@@ -1718,15 +1718,15 @@ class AKMCS:
     # ------------------
     # LEARNING FUNCTIONS
     # ------------------
-    def eigf(self, surr, pop):
+    def eigf(self, pop):
         # Expected Improvement for Global Fit (EIGF)
         # Reference: J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
         # Link: https://arxiv.org/pdf/1905.05345.pdf
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
 
@@ -1747,15 +1747,15 @@ class AKMCS:
         return rows
 
     # This learning function has not yet been tested.
-    def u(self, surr, pop):
+    def u(self, pop):
         # U-function
         # References: B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining
         # Kriging and Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
 
@@ -1768,15 +1768,15 @@ class AKMCS:
         return rows
 
     # This learning function has not yet been tested.
-    def weighted_u(self, surr, pop):
+    def weighted_u(self, pop):
         # Probability Weighted U-function
         # References: V.S. Sundar and M.S. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH
         # MULTIMODEL INFERENCE".
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
 
@@ -1797,15 +1797,15 @@ class AKMCS:
         return rows
 
     # This learning function has not yet been tested.
-    def eff(self, surr, pop):
+    def eff(self, pop):
         # Expected Feasibilty Function (EFF)
         # References: B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, "Efficient Global Reliability
         # Analysis for Nonlinear Implicit Performance Functions", AIAA JOURNAL, Volume 46, 2008.
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             g = g.reshape(g.size, 1)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
@@ -1831,16 +1831,16 @@ class AKMCS:
         return rows
 
     # This learning function has not yet been tested.
-    def eif(self, surr, pop):
+    def eif(self, pop):
         # Expected Improvement Function (EIF)
         # References: D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box
         # Functions", Journal of Global Optimization, Pages 455–492, 1998.
 
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
         fm = min(self.qoi)
@@ -1849,18 +1849,54 @@ class AKMCS:
 
         return rows
 
-    def integrand(self, x1, y1, d, s):
+    def integrand(self, x1, y1, d, s, k):
+        """ Returns integrand for the covariance matrix"""
         x1, y1 = np.atleast_2d(x1).T, np.atleast_2d(y1).T
-        f1 = np.exp(-(x1 - y1) ** 2 * self.krig_object.corr_model_params[d])
-        if s == 's':
-            f2 = self.distribution[d].pdf(x=x1)
+        x1_ = x1 * k.std_s[d] + k.mean_s[d]
+        y1_ = y1 * k.std_s[d] + k.mean_s[d]
+        p = k.corr_model_params
+        if k.cmodel == 'Gaussian':
+            f1 = np.exp(-(x1 - y1) ** 2 * p[d])
+        elif k.cmodel == 'Exponential':
+            f1 = np.exp(-p[d] * abs(x1-y1))
+
+        # Joint probability density function
+        if self.dist_name[d].lower() == 'uniform':
+            px = 1/self.dist_params[d][1]
+            py = px
+        elif self.dist_name[d].lower() == 'normal':
+            sig = self.dist_params[d][1]
+            px = np.exp(-(x1_-self.dist_params[d][0])**2/(2*sig**2))/(np.sqrt(2*np.pi)*sig)
+            py = np.exp(-(y1_-self.dist_params[d][0])**2/(2*sig**2))/(np.sqrt(2*np.pi)*sig)
         else:
-            f2 = self.distribution[d].pdf(x=x1) * self.distribution[d].pdf(x=y1)
+            px = self.distribution[d].pdf(x=x1_)
+            py = self.distribution[d].pdf(x=y1_)
+
+        # Part of integrand due to pdf/joint pdf
+        if s == 's':
+            # Single integration
+            f2 = px
+        else:
+            # Double integration
+            f2 = px * py
+
         return f1 * f2
 
-    def integral(self, y1_, d_):
+    def integral(self, y1_, d_, k_):
         from scipy.integrate import quad
-        return quad(self.integrand, -np.inf, np.inf, args=(y1_, d_, 's'))[0]
+
+        p_ = k_.corr_model_params
+        l1 = (self.distribution[d_].icdf([[0.01]]) - k_.mean_s[d_])/k_.std_s[d_]
+        l2 = (self.distribution[d_].icdf([[0.99]]) - k_.mean_s[d_])/k_.std_s[d_]
+        return quad(self.integrand, l1, l2, args=(y1_, d_, 's', k_))[0]
+        # if self.dist_name[d_].lower() == 'uniform':
+        #     p = 1/self.dist_params[d_][1]
+        #     x1 = (self.dist_params[d_][0] - y1_)*np.sqrt(2*p_[d_])
+        #     x2 = (self.dist_params[d_][0] + self.dist_params[d_][1] - y1_) * np.sqrt(2 * p_[d_])
+        #     diff = stats.norm.cdf(x2) - stats.norm.cdf(x1)
+        #     return 2*p*np.sqrt(np.pi*p_[d_])*diff
+        # else:
+
 
     def usi_sobol(self, xi, points, vals, kr):
         """
@@ -1873,14 +1909,22 @@ class AKMCS:
         :param: points: n-D array of samples design points
         :type: points: n-D array
 
-        :return: mean_axi: Mean value of conditioned gaussian process (A[X_i])
-        :rtype: mean_axi: float
+        :return: mean_sobol: List of expected value of sobol estimates
+        :rtype: mean_sobol: list
+
+        :return: std_sobol: List of expected value of sobol estimates
+        :rtype: std_sobol: list
         """
         # from sympy import integrate, exp, oo
         # from sympy.abc import x, y
         from scipy.stats import multivariate_normal
         from scipy.linalg import cholesky
         from UQpy.Surrogates import Krig
+        from scipy.integrate import simps
+
+        # Reference: Probabilistic sensitivity analysis of complex models: a Bayesian approach - "Jeremy E. Oakley and
+        # Anthony O'Hagan"
+        # For calculation of mean and covariance refer to eq. 15 to 19
 
         # Update kriging parameters
         if kr:
@@ -1890,36 +1934,48 @@ class AKMCS:
         else:
             tmp_krig_object = self.krig_object
 
+        # Center and Scale, xi and points
+        xi = (xi-tmp_krig_object.mean_s)/tmp_krig_object.std_s
+        points = (points-tmp_krig_object.mean_s)/tmp_krig_object.std_s
+
+        # W = inv(F' * inv(R) * F)
+        w_cho = cholesky(np.matmul(tmp_krig_object.F_dash.T, tmp_krig_object.F_dash))
+        w_inv = np.linalg.inv(w_cho)
+        R_inv = np.matmul(tmp_krig_object.C_inv.T, tmp_krig_object.C_inv)
+        R_inv_F = np.matmul(tmp_krig_object.C_inv.T, tmp_krig_object.F_dash)
+
         # tmp is an n-D array of expected value points except for the ith column
-        tmp = self.moments[:, 0] * np.ones([xi.shape[0], self.moments.shape[0]])
+        moments_scaled = (self.moments[:, 0]-tmp_krig_object.mean_s)/tmp_krig_object.std_s
+        tmp = moments_scaled * np.ones([xi.shape[0], self.dimension])
 
         # TODO: Need to define this integral for 'Constant' and 'Quadratic' kriging regression model
         integrated_fx, jf = Krig.regress(model='Linear')(tmp)
         # fx = np.concatenate((np.ones([np.size(E1, 0), 1]), e1), 1)
 
-        vec = np.vectorize(self.integral)
+        vec = np.vectorize(self.integral, excluded=['d_', 'k_'])
 
         # Marginal expectation of correlation term in predictor w.r.t each input variable
         integrated_rx = np.ones([points.shape[0], xi.shape[0], self.dimension])
         for ii in range(self.dimension):
-            integrated_rx[:, :, ii] = np.tile(vec(points[:, ii], ii), (xi.shape[0], 1)).T
+            integrated_rx[:, :, ii] = np.tile(vec(y1_=points[:, ii], d_=ii, k_=tmp_krig_object),
+                                              (xi.shape[0], 1)).T
 
         stack = - np.tile(np.swapaxes(np.atleast_3d(xi), 1, 2), (1, np.size(points, 0), 1)) + \
             np.tile(points, (np.size(xi, 0), 1, 1))
 
         # Computing sobol indices
-        mean_sobol, std_sobol = [], []
+        mean_sobol, var_sobol = [], []
         for i in range(self.dimension):
-            e1 = integrated_fx
-            e1[:, i] = xi[:, i]
-            # e2 = np.tile(np.swapaxes(np.atleast_3d(integrated_rx), 1, 2), (xi.shape[0], 1, 1))
-            e2 = integrated_rx
-            e2[:, :, i] = np.exp(-(stack[:, :, i]) ** 2 * self.krig_object.corr_model_params[i]).T
-            rx = np.prod(e2, axis=2).T
+            ef = integrated_fx.copy()
+            ef[:, i+1] = xi[:, i]
+
+            er = integrated_rx.copy()
+            er[:, :, i] = np.exp(-(stack[:, :, i]) ** 2 * tmp_krig_object.corr_model_params[i]).T
+            rx = np.prod(er, axis=2).T
 
             # Computing mean of ith independent variable conditioned on other variables
-            mean_xi = np.einsum('ij,jk->ik', e1, tmp_krig_object.beta) + np.einsum('ij,jk->ik', rx,
-                                                                                   tmp_krig_object.gamma)
+            mean_xi = np.einsum('ij,jk->ik', (ef - integrated_fx), tmp_krig_object.beta) + np.einsum('ij,jk->ik', (
+                        rx - np.prod(integrated_rx, axis=2).T), tmp_krig_object.gamma)
 
             # Computing covariance of ith independent variable conditioned on other variables
             corr_xi = np.eye(xi.shape[0])
@@ -1927,46 +1983,73 @@ class AKMCS:
             tmp[i] = 1
             for ii in range(xi.shape[0]):
                 for ij in range(ii, xi.shape[0]):
-                    corr_xi[ii, ij] = np.prod(tmp) * np.exp(-(xi[ii, i] - xi[ij, i])**2 *
-                                                            self.krig_object.corr_model_params[i])
+                    ef1 = integrated_fx.copy()[ii, :]
+                    ef1[i+1] = xi[ii, i]
+                    ef2 = integrated_fx.copy()[ij, :]
+                    ef2[i+1] = xi[ij, i]
+
+                    er1 = integrated_rx.copy()[:, ii, :]
+
+                    er1[:, i] = np.exp(-(stack[ii, :, i]) ** 2 * tmp_krig_object.corr_model_params[i]).T
+                    er1 = np.prod(er1, axis=1)
+                    er2 = integrated_rx.copy()[:, ij, :]
+                    er2[:, i] = np.exp(-(stack[ij, :, i]) ** 2 * tmp_krig_object.corr_model_params[i]).T
+                    er2 = np.prod(er2, axis=1)
+
+                    tmp1 = np.matmul(er1.T, np.matmul(R_inv, er2))
+                    tmp2 = np.matmul(ef1 - np.matmul(er1, R_inv_F), w_inv.T)
+                    tmp3 = np.matmul(w_inv, (ef2 - np.matmul(er2, R_inv_F)).T)
+                    tmp4 = np.matmul(tmp2, tmp3)
+                    tmp5 = np.prod(tmp) * np.exp(-(xi[ii, i] - xi[ij, i])**2 *
+                                                 tmp_krig_object.corr_model_params[i])
+
+                    corr_xi[ii, ij] = tmp5 - tmp1 + tmp4
                     if ii != ij:
                         corr_xi[ij, ii] = corr_xi[ii, ij]
 
-            corr_xi = self.krig_object.sig * corr_xi
+            corr_xi = tmp_krig_object.sig * corr_xi
 
             # Generating realizations of random vector (V_{dis})
             k = 1000
             eps = multivariate_normal(np.zeros(xi.shape[0]), np.eye(xi.shape[0])).rvs(size=k)
-            lower = cholesky(corr_xi+10**(-6)*np.eye(xi.shape[0]), lower=True)
+            lower = cholesky(corr_xi+2**(-10)*np.eye(xi.shape[0]), lower=True)
 
             sam = np.tile(mean_xi, (1, k)) + np.matmul(lower, eps.T)
 
+            # Kriging estimate of total output variance
+            var = np.var(tmp_krig_object.interpolate(self.population.samples))
             # Computing sobol index using realizations of random vector
-            est_si = np.mean(sam, axis=0)/tmp_krig_object.sig
-            mean_sobol.append(np.mean(est_si))
-            std_sobol.append(np.std(est_si))
+            # est_si = np.var(sam, axis=1)/tmp_krig_object.sig
+            tmp = ((sam - np.tile(np.mean(sam, 0), (xi.shape[0], 1))).T**2) * self.distribution[i].pdf(xi)
+            est_si = np.zeros([k, 1])
+            for lj in range(k):
+                est_si[lj, 0] = simps(y=tmp[lj, :], x=xi[:, i])
 
-        return mean_sobol, std_sobol
+            # est_si = np.var(sam, axis=1)
+            mean_sobol.append(np.mean(est_si))
+            var_sobol.append(np.var(est_si))
+
+        return mean_sobol/np.sum(mean_sobol), var_sobol/(np.sum(mean_sobol)**2)
 
     # This learning function has not yet been tested.
-    def usi(self, surr, pop):
+    def usi(self, pop):
         """
             Calculations of Sobol indices for the Gaussian process metamodel
         :param surr:
         :param pop:
         :return:
         """
-        from scipy.integrate import dblquad
+        from scipy.integrate import dblquad, quad
 
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
 
-        # Decompose each input dimension into 'N=100' points
+        # Decompose each input dimension into 'N=50' points
         ndis = 50
         tmp = np.arange(0.1, 0.9, 0.8/ndis)
         dm = np.zeros([ndis, self.dimension])
@@ -1975,11 +2058,23 @@ class AKMCS:
 
         self.dblintegrated_rx = np.ones([self.dimension])
         for ij in range(self.dimension):
-            tmp = dblquad(self.integrand, -np.inf, np.inf, lambda x: -np.inf, lambda x: np.inf, args=(ij, 'd'))
+            l1 = (self.distribution[0].icdf([[0.01]]) - self.krig_object.mean_s[ij])/ self.krig_object.std_s[ij]
+            l2 = (self.distribution[0].icdf([[0.99]])- self.krig_object.mean_s[ij])/ self.krig_object.std_s[ij]
+            tmp = dblquad(self.integrand, l1, l2, lambda x: l1, lambda x: l2, args=(ij, 'd', self.krig_object))
             self.dblintegrated_rx[ij] = tmp[0]
+            # if self.dist_name[ij].lower() == 'uniform':
+            #     def integral_unif(y, t):
+            #         x1 = (self.dist_params[ij][0] - y)*np.sqrt(2*t)
+            #         x2 = (self.dist_params[ij][0]+self.dist_params[ij][1] - y) * np.sqrt(2 * t)
+            #         return 2*np.sqrt(np.pi*t)*(stats.norm.cdf(x2)-stats.norm.cdf(x1))
+            #     tmp = quad(integral_unif, self.dist_params[ij][0], self.dist_params[ij][0] + self.dist_params[ij][1],
+            #                args=(self.krig_object.corr_model_params[ij]))
+            #     self.dblintegrated_rx[ij] = tmp[0]/(self.dist_params[ij][1]**2)
+            # else:
+
 
         # Compute current sobol indices
-        curr_si_mean, curr_si_std = self.usi_sobol(dm, self.samples, self.qoi, False)
+        curr_si_mean, curr_si_var = self.usi_sobol(dm, self.samples, self.qoi, False)
         self.si.append(curr_si_mean)
 
         pdf = np.zeros_like(pop)
@@ -1990,11 +2085,11 @@ class AKMCS:
         for i in range(pop.shape[0]):
             print(i)
             # Compute new sobol indices
-            new_si_mean, new_si_std = self.usi_sobol(dm, np.vstack([self.samples, pop[i, :]]),
+            new_si_mean, new_si_var = self.usi_sobol(dm, np.vstack([self.samples, pop[i, :]]),
                                                      np.vstack([self.qoi, g[i, :]]), True)
 
             # Compute the change in sobol indices (usi-function)
-            s = np.sum(abs(np.array(curr_si_mean))*(np.array(curr_si_std) - np.array(new_si_std)))
+            s = np.sum(np.array(curr_si_mean)*(np.array(curr_si_var) - np.array(new_si_var)))
             change_in_si.append(s*np.prod(pdf[i, :]))
 
         # Return the index of selected samples

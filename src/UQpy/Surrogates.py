@@ -339,7 +339,7 @@ class Krig:
     # Last modified: 12/17/2018 by Mohit S. Chauhan
 
     def __init__(self, reg_model='Linear', corr_model='Exponential', corr_model_params=None, bounds=None, op=True,
-                 n_opt=1, dimension=None, verbose=False):
+                 n_opt=1, dimension=None, normalize=True, verbose=False):
 
         self.reg_model = reg_model
         self.corr_model = corr_model
@@ -348,10 +348,8 @@ class Krig:
         self.bounds = bounds
         self.n_opt = n_opt
         self.op = op
+        self.normalize = normalize
         self.verbose = verbose
-
-        # Initialize and run preliminary error checks.
-        self.init_krig()
 
         # Variables are used outside the __init__
         self.samples = None
@@ -361,6 +359,10 @@ class Krig:
         self.rmodel, self.cmodel = None, None
         self.beta, self.gamma, self.sig = None, None, None
         self.F_dash, self.C_inv, self.G = None, None, None
+        self.F, self.R = None, None
+
+        # Initialize and run preliminary error checks.
+        self.init_krig()
 
     def fit(self, samples, values):
         if self.verbose:
@@ -372,10 +374,14 @@ class Krig:
         self.values = np.array(values)
 
         # Normalizing the data
-        self.mean_s, self.std_s = np.mean(self.samples, 0), np.std(self.samples, 0)
-        self.mean_y, self.std_y = np.mean(self.values, 0), np.std(self.values, 0)
-        s_ = (self.samples - self.mean_s)/self.std_s
-        y_ = (self.values - self.mean_y)/self.std_y
+        if self.normalize:
+            self.mean_s, self.std_s = np.mean(self.samples, 0), np.std(self.samples, 0)
+            self.mean_y, self.std_y = np.mean(self.values, 0), np.std(self.values, 0)
+            s_ = (self.samples - self.mean_s)/self.std_s
+            y_ = (self.values - self.mean_y)/self.std_y
+        else:
+            s_ = self.samples
+            y_ = self.values
         # Number of samples and dimensions of samples and values
         m_, n_ = s_.shape
         q = int(np.size(y_)/m_)
@@ -532,36 +538,47 @@ class Krig:
 
         self.beta, self.gamma, self.sig = beta, gamma, sigma
         self.F_dash, self.C_inv, self.G = f_dash, c_inv, g_
+        self.F, self.R = f_, r_
         if self.verbose:
             print('Done!')
 
     def interpolate(self, x, dy=False):
-        x = (x - self.mean_s)/self.std_s
-        s_ = (self.samples - self.mean_s) / self.std_s
+        if self.normalize:
+            x = (x - self.mean_s)/self.std_s
+            s_ = (self.samples - self.mean_s) / self.std_s
+        else:
+            s_ = self.samples
         fx, jf = self.reg_model(x)
         rx = self.corr_model(x=x, s=s_, params=self.corr_model_params)
         y = np.einsum('ij,jk->ik', fx, self.beta) + np.einsum('ij,jk->ik', rx, self.gamma)
-        y = self.mean_y + y * self.std_y
+        if self.normalize:
+            y = self.mean_y + y * self.std_y
         if dy:
-            # print(self.C_inv.shape)
-            # print(rx.shape)
             r_dash = np.einsum('ij,jk->ik', self.C_inv, rx.T)
             u = np.einsum('ij,jk->ik', self.F_dash.T, r_dash)-fx.T
             norm1 = np.sum(r_dash**2, 0)**0.5
             norm2 = np.sum(np.linalg.solve(self.G, u)**2, 0)**0.5
-            mse = (self.std_y**2)*(self.sig ** 2) * (1 + norm2**2 - norm1**2)
+            mse = (self.sig ** 2) * (1 + norm2**2 - norm1**2)
+            if self.normalize:
+                mse = (self.std_y**2) * mse
             return y, mse.reshape(y.shape)
         else:
             return y
 
     def jacobian(self, x):
-        x = (x - self.mean_s) / self.std_s
-        s_ = (self.samples - self.mean_s) / self.std_s
+        if self.normalize:
+            x = (x - self.mean_s) / self.std_s
+            s_ = (self.samples - self.mean_s) / self.std_s
+        else:
+            s_ = self.samples
+
         fx, jf = self.reg_model(x)
         rx, drdx = self.corr_model(x=x, s=s_, params=self.corr_model_params, dx=True)
         a = np.einsum('ikj,jm->ik', jf, self.beta)
         b = np.einsum('ijk,jm->ki', drdx.T, self.gamma)
-        y_grad = (a + b)*self.std_y/self.std_s
+        y_grad = a + b
+        if self.normalize:
+            y_grad = (a + b)*self.std_y/self.std_s
         return y_grad
 
     # Defining Regression model (Linear)
