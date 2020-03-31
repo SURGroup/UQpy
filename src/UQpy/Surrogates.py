@@ -329,6 +329,8 @@ class Krig:
                 :param n_opt: Number of times optimization problem is to be solved with different starting point.
                               Default: 1
                 :type n_opt: int
+                :param verbose: A boolean declaring whether to write text to the terminal.
+                :type verbose: bool
             Output:
                 :return: Krig.interpolate: This function predicts the function value and uncertainty associated with
                                            it at unknown samples.

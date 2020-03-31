@@ -806,3 +806,164 @@ def recursive_update_mean_covariance(n, new_sample, previous_mean, previous_cova
         delta_n = (new_sample - previous_mean).reshape((dim, 1))
         new_covariance = (n - 2) / (n - 1) * previous_covariance + 1 / n * np.matmul(delta_n, delta_n.T)
     return new_mean, new_covariance
+
+# Grassmann: svd
+def svd(matrix, value):
+    """
+    Compute the singular value decomposition of a matrix and truncate it.
+
+    Given a matrix compute its singular value decomposition (SVD) and given a desired rank you
+    can truncate the matrix containing the eigenvectors.
+
+    **Input:**
+
+    :param matrix: Input matrix.
+    :type  matrix: list or numpy array
+
+    :param value: Rank.
+    :type  value: int
+
+    **Output/Returns:**
+
+    :param u: left-singular eigenvectors.
+    :type  u: numpy array
+
+    :param u: eigenvalues.
+    :type  u: numpy array
+
+    :param v: right-singular eigenvectors.
+    :type  v: numpy array
+    """
+    ui, si, vi = np.linalg.svd(matrix, full_matrices=True,hermitian=False)  # Compute the SVD of matrix
+    si = np.diag(si)  # Transform the array si into a diagonal matrix containing the singular values
+    vi = vi.T  # Transpose of vi
+
+    # Select the size of the matrices u, s, and v
+    # either based on the rank of (si) or on a user defined value
+    if value == 0:
+        rank = np.linalg.matrix_rank(si)  # increase the number of basis up to rank
+        u = ui[:, :rank]
+        s = si[:rank, :rank]
+        v = vi[:, :rank]
+
+    else:
+        u = ui[:, :value]
+        s = si[:value, :value]
+        v = vi[:, :value]
+
+    return u, s, v
+
+def check_arguments(argv, min_num_matrix, ortho):
+    
+    """
+    Check input arguments for consistency.
+
+    Check the input matrices for consistency given the minimum number of matrices (min_num_matrix) 
+    and the boolean varible (ortho) to test the orthogonality.
+
+    **Input:**
+
+    :param argv: Matrices to be tested.
+    :type  argv: list of arguments
+
+    :param min_num_matrix: Minimum number of matrices.
+    :type  min_num_matrix: int
+    
+    :param ortho: boolean varible to test the orthogonality.
+    :type  ortho: bool
+
+    **Output/Returns:**
+
+    :param inputs: Return the input matrices.
+    :type  inputs: numpy array
+
+    :param nargs: Number of matrices.
+    :type  nargs: numpy array
+    """
+        
+    # Check the minimum number of matrices involved in the operations
+    if type(min_num_matrix) != int:
+        raise ValueError('The minimum number of matrices MUST be an integer number!')
+    elif min_num_matrix < 1:
+        raise ValueError('Number of arguments MUST be larger than or equal to one!')
+
+    # Check if the variable controlling the orthogonalization is boolean
+    if type(ortho) != bool:
+        raise ValueError('The last argument MUST be a boolean!')
+
+    nargv = len(argv)
+
+    # If the number of provided inputs are zero exit the code
+    if nargv == 0:
+        raise ValueError('Missing input arguments!')
+
+    # Else if the number of arguments is equal to 1 
+    elif nargv == 1:
+
+        # Check if the number of expected matrices are higher than or equal to 2
+        args = argv[0]
+        nargs = len(args)
+      
+        if np.shape(args)[0] == 1 or len(np.shape(args)) == 2:
+            nargs = 1
+        # if it is lower than two exit the code, otherwise store them in a list
+        if nargs < min_num_matrix:
+            raise ValueError('The number of points must be higher than:', min_num_matrix)
+
+        else:
+            inputs = []
+            if nargs == 1:
+                inputs = [args]
+            else:
+
+                # Loop over all elements
+                for i in range(nargs):                  
+                    # Verify the type of the input variables and store in a list
+                    inputs.append(test_type(args[i], ortho))
+
+    else:
+
+        nargs = nargv
+        # Each argument MUST be a matrix
+        inputs = []
+        for i in range(nargv):
+            # Verify the type of the input variables and store in a list
+            inputs.append(test_type(argv[i], ortho))
+
+    return inputs, nargs
+
+
+def test_type(X, ortho):
+    
+    """
+    Test the datatype of X.
+
+    Check if the datatype of the matrix X is consistent.
+
+    **Input:**
+
+    :param X: Matrices to be tested.
+    :type  X: list or numpy array
+    
+    :param ortho: boolean varible to test the orthogonality.
+    :type  ortho: bool
+
+    **Output/Returns:**
+
+    :param Y: Tested and adjusted matrices.
+    :type  Y: numpy array
+    """
+        
+    if not isinstance(X, (list, np.ndarray)):
+        raise TypeError('Elements of input arguments should be provided either as list or array')
+    elif type(X) == list:
+        Y = np.array(X)
+    else:
+        Y = X
+
+    if ortho:
+        Ytest = np.dot(Y.T, Y)
+        if not np.array_equal(Ytest, np.identity(np.shape(Ytest)[0])):
+            Y, unused = np.linalg.qr(Y)
+
+    return Y

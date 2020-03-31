@@ -758,6 +758,12 @@ class RSS:
                               used as surrogate approximation.
             :type step_size: float
 
+            :param n_add: Number of samples generated in each iteration
+            :type n_add: int
+
+            :param verbose: A boolean declaring whether to write text to the terminal.
+            :type verbose: bool
+
         Output:
             :return: RSS.sample_object.samples: Final/expanded samples.
             :rtype: RSS.sample_object.samples: ndarray
@@ -1507,6 +1513,9 @@ class AKMCS:
                             user-defined learning function is used.
             :type save_pf: boolean
 
+            :param verbose: A boolean declaring whether to write text to the terminal.
+            :type verbose: bool
+
         Output:
             :return: AKMCS.sample_object.samples: Final/expanded samples.
             :rtype: AKMCS..sample_object.samples: ndarray
@@ -1528,7 +1537,7 @@ class AKMCS:
 
     def __init__(self, run_model_object=None, samples=None, krig_object=None, nlearn=10000, nstart=None,
                  population=None, dist_name=None, dist_params=None, qoi_name=None, lf='U', n_add=1,
-                 min_cov=0.05, max_p=None, verbose=False, kriging='UQpy', visualize=False, save_pf=None):
+                 min_cov=0.05, max_p=None, verbose=False, kriging='UQpy', save_pf=None):
 
         # Initialize the internal variables of the class.
         self.run_model_object = run_model_object
@@ -1556,7 +1565,6 @@ class AKMCS:
         self.population = population
         self.kriging = kriging
         self.save_pf = save_pf
-        self.visualize = visualize
         self.dimension = 0
         self.qoi = None
         self.krig_model = None
