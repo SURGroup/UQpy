@@ -967,3 +967,45 @@ def test_type(X, ortho):
             Y, unused = np.linalg.qr(Y)
 
     return Y
+
+def nn_coord(x, k):
+    
+    """
+    Select k elements close to x.
+
+    Select k elements close to x to be used to construct a sparse kernel
+    matrix to be used in the diffusion maps.
+
+    **Input:**
+
+    :param x: Matrices to be tested.
+    :type  x: list or numpy array
+    
+    :param k: Number of points close to x.
+    :type  k: int
+
+    **Output/Returns:**
+
+    :param idx: Indices of the closer points.
+    :type  idx: int
+    """
+        
+    if isinstance(x, list):
+        x = np.array(x)
+        
+    dim = np.shape(x)
+    
+    if len(dim) is not 1:
+        raise ValueError('k MUST be a vector.')
+    
+    if not isinstance(k, int):
+        raise TypeError('k MUST be integer.')
+
+    if k<1:
+        raise ValueError('k MUST be larger than or equal to 1.')
+    
+    #idx = x.argsort()[::-1][:k]
+    idx = x.argsort()[:len(x)-k]
+    #idx = idx[0:k]
+    #idx = idx[k+1:]
+    return idx
