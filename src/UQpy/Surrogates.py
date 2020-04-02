@@ -15,7 +15,12 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""This module contains functionality for all the surrogate methods supported in UQpy."""
+"""This module contains functionality for all the surrogate methods supported in UQpy.
+
+* SROM: Estimate a discrete approximation for a continuous random variable using Stochastic Reduced Order Model.
+
+* Krig: Generates an approximates surrogate model using Kriging.
+"""
 
 from UQpy.Distributions import *
 
