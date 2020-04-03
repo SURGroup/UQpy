@@ -102,6 +102,7 @@ class SROM:
     :type correlation: ndarray or list (float)
 
     **Attributes:**
+
     :return: SROM.samples: Last column contains the probabilities/weights defining discrete approximation of
                            continuous random variables.
     :rtype: SROM.samples: ndarray
@@ -109,7 +110,6 @@ class SROM:
     **Authors:**
 
     Authors: Mohit Chauhan
-
     Last modified: 6/7/18 by Dimitris G. Giovanis
 
     """
@@ -317,9 +317,12 @@ class SROM:
 
 class Krig:
     """
-    Krig generates an surrogate model to approximately predict the function value at unknown locations. This
-    class returns a functions, i.e. Krig.interpolate. This functions estimates the approximate functional
-    value and mean square error at unknown/new samples.
+    Krig generates an approximate surrogate model to predict the function value at unknown/new samples.
+
+    A Surrogate is generated using training data and information about regression and correlation model. A Maximum
+    Likelihood Estimator (MLE) is computed for hyperparameter of correlation model. This class create a method,
+    i.e. Krig.interpolate. This functions estimates the approximate functional value and mean square error at
+    unknown/new samples.
 
     **References:**
     1. S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, "DACE -- A MATLAB Kriging Toolbox", Informatics and
@@ -370,8 +373,8 @@ class Krig:
     **Authors:**
 
     Authors: Mohit Chauhan, Matthew Lombardo
-
     Last modified: 3/30/2020 by Mohit S. Chauhan
+
     """
 
     def __init__(self, reg_model='Linear', corr_model='Exponential', corr_model_params=None, bounds=None, op=True,
