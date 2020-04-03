@@ -15,9 +15,14 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""This module contains functionality for all the surrogate methods supported in UQpy."""
+"""
+This module contains functionality for all the surrogate methods supported in UQpy.
 
-import numpy as np
+* SROM: Estimate a discrete approximation for a continuous random variable using Stochastic Reduced Order Model.
+
+* Krig: Generates an approximates surrogate model using Kriging.
+"""
+
 from UQpy.Distributions import *
 
 
@@ -30,74 +35,84 @@ from UQpy.Distributions import *
 class SROM:
 
     """
+    Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random
+    quantity.
 
-        Description:
+    SROM generates a discrete approximation of continuous random variables. The probabilities/weights are
+    considered to be the parameters for the SROM and they can be obtained by minimizing the error between the
+    marginal distributions, first and second order moments about origin and correlation between random variables.
 
-            Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random
-            quantity.
-            SROM generates a discrete approximation of continuous random variables. The probabilities/weights are
-            considered to be the parameters for the SROM and they can be obtained by minimizing the error between the
-            marginal distributions, first and second order moments about origin and correlation between random variables
-            References:
-            M. Grigoriu, "Reduced order models for random functions. Application to stochastic problems",
-                Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.
-        Input:
-            :param samples: An array/list of samples corresponding to each random variables
+    **References:**
 
-            :param cdf_target: A list of Cumulative distribution functions of random variables
-            :type cdf_target: list str or list function
+    1. M. Grigoriu, "Reduced order models for random functions. Application to stochastic problems",
+       Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.
 
-            :param cdf_target_params: Parameters of distribution
-            :type cdf_target_params: list
+    **Input:**
 
-            :param moments: A list containing first and second order moment about origin of all random variables
+    :param samples: An array/list of samples corresponding to each random variables
+    :type samples: numpy array
 
-            :param weights_errors: Weights associated with error in distribution, moments and correlation.
-                                   Default: weights_errors = [1, 0.2, 0]
-            :type weights_errors: list
+    :param cdf_target: A list of Cumulative distribution functions of random variables
+    :type cdf_target: list str or list function
 
-            :param properties: A list of booleans representing properties, which are required to match in reduce
-                               order model. This class focus on reducing errors in distribution, first order moment
-                               about origin, second order moment about origin and correlation of samples.
-                               Default: properties = [True, True, True, False]
-                               Example: properties = [True, True, False, False] will minimize errors in distribution and
-                               errors in first order moment about origin in reduce order model.
-            :type properties: list
+    :param cdf_target_params: Parameters of distribution
+    :type cdf_target_params: list
 
-            :param weights_distribution: An list or array containing weights associated with different samples.
-                                         Options:
-                                            If weights_distribution is None, then default value is assigned.
-                                            If size of weights_distribution is 1xd, then it is assigned as dot product
-                                                of weights_distribution and default value.
-                                            Otherwise size of weights_distribution should be equal to Nxd.
-                                         Default: weights_distribution = Nxd dimensional array with all elements equal
-                                         to 1.
+    :param moments: A list containing first and second order moment about origin of all random variables
+    :type moments: ndarray or list (float)
 
-            :param weights_moments: An array of dimension 2xd, where 'd' is number of random variables. It contain
-                                    weights associated with moments.
-                                    Options:
-                                        If weights_moments is None, then default value is assigned.
-                                        If size of weights_moments is 1xd, then it is assigned as dot product
-                                            of weights_moments and default value.
-                                        Otherwise size of weights_distribution should be equal to 2xd.
-                                    Default: weights_moments = Square of reciprocal of elements of moments.
-            :type weights_moments: ndarray or list (float)
+    :param weights_errors: Weights associated with error in distribution, moments and correlation.
+                           Default: weights_errors = [1, 0.2, 0]
+    :type weights_errors: list
 
-            :param weights_correlation: An array of dimension dxd, where 'd' is number of random variables. It contain
-                                        weights associated with correlation of random variables.
-                                        Default: weights_correlation = dxd dimensional array with all elements equal to
-                                        1.
+    :param properties: A list of booleans representing properties, which are required to match in reduce
+                       order model. This class focus on reducing errors in distribution, first order moment
+                       about origin, second order moment about origin and correlation of samples.
+                       Default: properties = [True, True, True, False]
+                       Example: properties = [True, True, False, False] will minimize errors in distribution and
+                       errors in first order moment about origin in reduce order model.
+    :type properties: list
 
-            :param correlation: Correlation matrix between random variables.
+    :param weights_distribution: An list or array containing weights associated with different samples.
+                                 Options:
+                                    If weights_distribution is None, then default value is assigned.
+                                    If size of weights_distribution is 1xd, then it is assigned as dot product
+                                        of weights_distribution and default value.
+                                    Otherwise size of weights_distribution should be equal to Nxd.
+                                 Default: weights_distribution = Nxd dimensional array with all elements equal
+                                 to 1.
+    :type weights_distribution: ndarray or list (float)
 
-        Output:
-            :return: SROM.samples: Last column contains the probabilities/weights defining discrete approximation of
-                                   continuous random variables.
-            :rtype: SROM.samples: ndarray
+    :param weights_moments: An array of dimension 2xd, where 'd' is number of random variables. It contain
+                            weights associated with moments.
+                            Options:
+                                If weights_moments is None, then default value is assigned.
+                                If size of weights_moments is 1xd, then it is assigned as dot product
+                                    of weights_moments and default value.
+                                Otherwise size of weights_distribution should be equal to 2xd.
+                            Default: weights_moments = Square of reciprocal of elements of moments.
+    :type weights_moments: ndarray or list (float)
 
+    :param weights_correlation: An array of dimension dxd, where 'd' is number of random variables. It contain
+                                weights associated with correlation of random variables.
+                                Default: weights_correlation = dxd dimensional array with all elements equal to
+                                1.
+    :type weights_correlation: ndarray or list (float)
+
+    :param correlation: Correlation matrix between random variables.
+    :type correlation: ndarray or list (float)
+
+    **Attributes:**
+
+    :return: SROM.sample_weights: The probabilities/weights defining discrete approximation of continuous random
+             variables.
+    :rtype: SROM.sample_weights: ndarray
+
+    **Authors:**
+
+    Authors: Mohit Chauhan
+    Last modified: 6/7/18 by Dimitris G. Giovanis
     """
-    # Authors: Mohit Chauhan
-    # Updated: 6/7/18 by Dimitris G. Giovanis
 
     def __init__(self, samples=None, cdf_target=None, moments=None, weights_errors=None,
                  weights_distribution=None, weights_moments=None, weights_correlation=None,
@@ -144,6 +159,16 @@ class SROM:
         self.sample_weights = self.run_srom()
 
     def run_srom(self):
+        """
+        Runs stochastic reduced order model.
+
+        This is an instance method that runs SROM. It is automatically called when the SROM class is instantiated.
+
+        **Output:**
+
+        :return p_.x: Weights associated with each sample
+        :rtype p_.x: numpy array
+        """
         print('UQpy: Performing SROM...')
         from scipy import optimize
 
@@ -207,6 +232,9 @@ class SROM:
         return p_.x
 
     def init_srom(self):
+        """
+        Initialization and preliminary error checks.
+        """
 
         if self.cdf_target is None:
             raise NotImplementedError("Exit code: Distribution not defined.")
@@ -302,44 +330,65 @@ class SROM:
 
 class Krig:
     """
-            Description:
-                Krig generates an surrogate model to approxiamtely predict the function value at unknown locations. This
-                class returns a functions, i.e. Krig.interpolate. This functions estimates the approximate functional
-                value and mean square error at unknown/new samples.
-                References:
-                S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, "DACE -- A MATLAB Kriging Toolbox",
-                    Informatics and Mathematical Modelling, Version 2.0, 2002.
-            Input:
-                :param reg_model: Regression model contains the basis function, which defines the trend of the model.
-                                  Options: Constant, Linear, Quadratic.
-                :type reg_model: string or function
-                :param corr_model: Correlation model contains the correlation function, which uses sample distance
-                                   to define similarity between samples.
-                                   Options: Exponential, Gaussian, Linear, Spherical, Cubic, Spline.
-                :type corr_model: string or function
-                :param corr_model_params: Initial values corresponding to hyperparameters/scale parameters.
-                :type corr_model_params: ndarray
-                :param bounds: Bounds for hyperparameters used to solve optimization problem to estimate maximum
-                               likelihood estimator. This should be a closed bound.
-                               Default: [0.001, 10**7] for each hyperparamter.
-                :type bounds: list
-                :param op: Indicator to solve MLE problem or not. If 'True' corr_model_params will be used as initial
-                           solution for optimization problem. Otherwise, corr_model_params will be directly use as
-                           hyperparamter. Default: 'True'.
-                :type op: boolean
-                :param n_opt: Number of times optimization problem is to be solved with different starting point.
-                              Default: 1
-                :type n_opt: int
-                :param verbose: A boolean declaring whether to write text to the terminal.
-                :type verbose: bool
-            Output:
-                :return: Krig.interpolate: This function predicts the function value and uncertainty associated with
-                                           it at unknown samples.
-                :rtype: Krig.interpolate: function
-        """
+    Krig generates an approximate surrogate model to predict the function value at unknown/new samples.
 
-    # Authors: Mohit Chauhan, Matthew Lombardo
-    # Last modified: 12/17/2018 by Mohit S. Chauhan
+    A Surrogate is generated using training data and information about regression and correlation model. A Maximum
+    Likelihood Estimator (MLE) is computed for hyperparameter of correlation model. This class create a method,
+    i.e. Krig.interpolate. This functions estimates the approximate functional value and mean square error at
+    unknown/new samples.
+
+    **References:**
+
+    1. S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, "DACE -- A MATLAB Kriging Toolbox", Informatics and
+       Mathematical Modelling, Version 2.0, 2002.
+
+    **Input:**
+
+    :param reg_model: Regression model contains the basis function, which defines the trend of the model.
+                      Options: Constant, Linear, Quadratic.
+    :type reg_model: str or function
+
+    :param corr_model: Correlation model contains the correlation function, which uses sample distance
+                       to define similarity between samples.
+                       Options: Exponential, Gaussian, Linear, Spherical, Cubic, Spline.
+    :type corr_model: str or function
+
+    :param corr_model_params: Initial values corresponding to hyperparameters/scale parameters.
+    :type corr_model_params: numpy array
+
+    :param bounds: Bounds for hyperparameters used to solve optimization problem to estimate maximum
+                   likelihood estimator. This should be a closed bound.
+                   Default: [0.001, 10**7] for each hyperparamter.
+    :type bounds: list
+
+    :param op: Indicator to solve MLE problem or not. If 'True' corr_model_params will be used as initial
+               solution for optimization problem. Otherwise, corr_model_params will be directly use as
+               hyperparamter. Default: 'True'.
+    :type op: boolean
+
+    :param n_opt: Number of times optimization problem is to be solved with different starting point.
+                  Default: 1
+    :type n_opt: int
+
+    :param verbose: A boolean declaring whether to write text to the terminal.
+    :type verbose: bool
+
+    **Attributes:**
+
+    :return: beta: Regression coefficients
+    :rtype: beta: numpy array
+
+    :return: err_var: Variance in the error (assumed to be gaussian process)
+    :rtype: err_var: numpy array
+
+    :return: C_inv: Inverse of cholesky decomposition of the Correlation matrix
+    :rtype: C_inv: numpy array
+
+    **Authors:**
+
+    Authors: Mohit Chauhan, Matthew Lombardo
+    Last modified: 3/30/2020 by Mohit S. Chauhan
+    """
 
     def __init__(self, reg_model='Linear', corr_model='Exponential', corr_model_params=None, bounds=None, op=True,
                  n_opt=1, dimension=None, verbose=False):
@@ -366,6 +415,19 @@ class Krig:
         self.F_dash, self.C_inv, self.G = None, None, None
 
     def fit(self, samples, values):
+        """
+        Fit the surrogate model using training points.
+
+        This method estimate the maximum likelihood estimator of hyperparameters of correlation model and the regression
+        coefficient.
+
+        :param samples: An array/list of samples corresponding to each variables
+        :type samples: list or numpy array
+
+        :param values: Function value at the sample points.
+        :type values: list or numpy array
+        :return:
+        """
         if self.verbose:
             print('UQpy: Performing Krig...')
         from scipy import optimize
@@ -401,7 +463,7 @@ class Krig:
                 if re == 0:
                     return np.inf, np.zeros(n)
                 else:
-                    return np.inf2
+                    return np.inf
 
             f__ = cho_solve((cc, True), f)
             y__ = cho_solve((cc, True), y)
@@ -489,6 +551,30 @@ class Krig:
             print('Done!')
 
     def interpolate(self, x, dy=False):
+        """
+        Predict the function value at new points.
+
+        This method evaluates the regression and correlation model at new sample point. Then, it predicts the function
+        value and mean square error using regression coefficients and training data.
+
+        **Input:**
+
+        :param x: nD-array (2 dimensional) corresponding to the new points.
+        :type  x: list or array
+
+        :param dy: Contains the keyword for the user defined rank. If a list or numpy ndarray containing the rank of
+               each matrix is not provided, the code will compute them using numpy.linalg.matrix_rank.
+        :type dy: dictionary of arguments
+
+        **Output:**
+
+        :return y: Kriging prediction at new samples 'x'.
+        :rtype y: numpy array
+
+        :return mse: Mean square error in the kriging prediction.
+        :rtype mse: numpy array
+        """
+        x = np.atleast_2d(x)
         x = (x - self.mean_s)/self.std_s
         s_ = (self.samples - self.mean_s) / self.std_s
         fx, jf = self.reg_model(x)
@@ -508,6 +594,23 @@ class Krig:
             return y
 
     def jacobian(self, x):
+        """
+        Predict the gradient of the function at new points.
+
+        This method evaluates the regression and correlation model at new sample point. Then, it predicts the gradient
+        using regression coefficients and training data.
+
+        **Input:**
+
+        :param x: nD-array (2 dimensional) corresponding to the new points.
+        :type  x: list or array
+
+        **Output:**
+
+        :return y_grad: Kriging gradient prediction at new samples 'x'.
+        :rtype y_grad: numpy array
+        """
+        x = np.atleast_2d(x)
         x = (x - self.mean_s) / self.std_s
         s_ = (self.samples - self.mean_s) / self.std_s
         fx, jf = self.reg_model(x)
@@ -520,6 +623,17 @@ class Krig:
     # Defining Regression model (Linear)
     @staticmethod
     def regress(model=None):
+        """
+        Defines a function to evaluate basis functions.
+
+        This method defines a function based on the choice of regression model, which computes the basis functions
+        for provided samples.
+
+        **Input:**
+
+        :param model: nD-array (2 dimensional) corresponding to the new points.
+        :type  model: str
+        """
         def r(s):
             s = np.atleast_2d(s)
             if model == 'Constant':
@@ -559,6 +673,17 @@ class Krig:
     # Defining Correlation model (Gaussian Process)
     @staticmethod
     def corr(model):
+        """
+        Defines a function to compute correlation matrix.
+
+        This method defines a function based on the choice of correlation model, which computes the correlation matrix
+        for provided samples.
+
+        **Input:**
+
+        :param model: nD-array (2 dimensional) corresponding to the new points.
+        :type  model: str
+        """
         def c(x, s, params, dt=False, dx=False):
             rx, drdt, drdx = [0.], [0.], [0.]
             x = np.atleast_2d(x)
@@ -717,6 +842,9 @@ class Krig:
         return c
 
     def init_krig(self):
+        """
+        Initialization and preliminary error checks.
+        """
         if self.reg_model is None:
             raise NotImplementedError("Exit code: Regression model is not defined.")
 
