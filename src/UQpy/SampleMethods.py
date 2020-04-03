@@ -247,7 +247,7 @@ class LHS:
         samples_u_to_x = np.zeros_like(samples)
         for j in range(samples.shape[1]):
             i_cdf = self.distribution[j].icdf
-            samples_u_to_x[:, j] = i_cdf(samples[:, j], self.dist_params[j])
+            samples_u_to_x[:, j] = i_cdf(np.atleast_2d(samples[:, j]).T, self.dist_params[j])
 
         if self.verbose:
             print('Successful execution of LHS design..')
@@ -385,60 +385,61 @@ class LHS:
 ########################################################################################################################
 class STS:
     """
-        Description:
+    Generate samples from an assigned probability density function using Stratified Sampling.
 
-            Generate samples from an assigned probability density function using Stratified Sampling.
+    **References:**
 
-            References:
-            M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte
-            Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
+    1. M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte
+       Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
 
-        Input:
-            :param dimension: A scalar value defining the dimension of target density function.
-                              Default: Length of sts_design.
-            :type dimension: int
+    **Input:**
 
-            :param dist_name: A list containing the names of the distributions of the random variables.
-                              Distribution names must match those in the Distributions module.
-                              If the distribution does not match one from the Distributions module, the user must
-                              provide custom_dist.py.
-                              The length of the string must be 1 (if all distributions are the same) or equal to
-                              dimension.
-            :type dist_name: string list
+    :param dimension: A scalar value defining the dimension of target density function.
+                      Default: Length of sts_design.
+    :type dimension: int
 
-            :param dist_params: Parameters of the distribution
-                                Parameters for each random variable are defined as ndarrays.
-                                Each item in the list, dist_params[i], specifies the parameters for the corresponding
-                                distribution, dist[i].
-            :type dist_params: list
+    :param dist_name: A list containing the names of the distributions of the random variables.
+                      Distribution names must match those in the Distributions module.
+                      If the distribution does not match one from the Distributions module, the user must
+                      provide custom_dist.py.
+                      The length of the string must be 1 (if all distributions are the same) or equal to
+                      dimension.
+    :type dist_name: string list
 
-            param: distribution: An object list containing the distributions of the random variables.
-                                 Each item in the list is an object of the Distribution class (see Distributions.py).
-                                 The list has length equal to dimension.
-            :type distribution: list
+    :param dist_params: Parameters of the distribution
+                        Parameters for each random variable are defined as ndarrays.
+                        Each item in the list, dist_params[i], specifies the parameters for the corresponding
+                        distribution, dist[i].
+    :type dist_params: list
 
-            :param sts_design: Specifies the number of strata in each dimension
-            :type sts_design: int list
+    param: distribution: An object list containing the distributions of the random variables.
+                         Each item in the list is an object of the Distribution class (see Distributions.py).
+                         The list has length equal to dimension.
+    :type distribution: list
 
-            :param input_file: File path to input file specifying stratum origins and stratum widths.
-                               Default: None.
-            :type input_file: string
+    :param sts_design: Specifies the number of strata in each dimension
+    :type sts_design: int list
 
-        Output:
-            :return: STS.samples: Set of stratified samples.
-            :rtype: STS.samples: ndarray
+    :param input_file: File path to input file specifying stratum origins and stratum widths.
+                       Default: None.
+    :type input_file: string
 
-            :return: STS.samplesU01: Set of uniform stratified samples on [0, 1]^dimension
-            :rtype: STS.samplesU01: ndarray
+    **Attributes:**
 
-            :return: STS.strata: Instance of the class SampleMethods.Strata
-            :rtype: STS.strata: ndarray
+    :return: STS.samples: Set of stratified samples.
+    :rtype: STS.samples: ndarray
 
+    :return: STS.samplesU01: Set of uniform stratified samples on [0, 1]^dimension
+    :rtype: STS.samplesU01: ndarray
+
+    :return: STS.strata: Instance of the class SampleMethods.Strata
+    :rtype: STS.strata: ndarray
+
+    **Authors:**
+
+    Authors: Michael Shields
+    Last modified: 6/7/2018 by Dimitris Giovanis & Michael Shields
     """
-
-    # Authors: Michael Shields
-    # Last modified: 6/7/2018 by Dimitris Giovanis & Michael Shields
-
     def __init__(self, dimension=None, dist_name=None, dist_params=None, sts_design=None, input_file=None,
                  sts_criterion="random", stype='Rectangular', nsamples=None, n_iters=20):
 
@@ -469,6 +470,12 @@ class STS:
             self.samplesU01, self.samples = self.run_sts()
 
     def run_sts(self):
+        """
+        Execute stratified sampling
+
+        This is an instance method that runs stratified sampling. It is automatically called when the STS class is
+        instantiated.
+        """
 
         if self.stype == 'Rectangular':
             samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
@@ -523,6 +530,7 @@ class STS:
         return in_cube
 
     def init_sts(self):
+        """Preliminary error checks."""
 
         # Check for dimensional consistency
         if self.dimension is None and self.sts_design is not None:
@@ -577,51 +585,53 @@ class STS:
 
 class Strata:
     """
-        Description:
+    Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^dimension with N strata.
 
-            Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^dimension with N strata.
+    **Input:**
 
-        Input:
-            :param n_strata: A list of dimension n defining the number of strata in each of the n dimensions
-                            Creates an equal stratification with strata widths equal to 1/n_strata
-                            The total number of strata, N, is the product of the terms of n_strata
-                            Example -
-                            n_strata = [2, 3, 2] creates a 3d stratification with:
-                            2 strata in dimension 0 with stratum widths 1/2
-                            3 strata in dimension 1 with stratum widths 1/3
-                            2 strata in dimension 2 with stratum widths 1/2
-            :type n_strata int list
+    :param n_strata: A list of dimension n defining the number of strata in each of the n dimensions
+                    Creates an equal stratification with strata widths equal to 1/n_strata
+                    The total number of strata, N, is the product of the terms of n_strata
+                    Example -
+                    n_strata = [2, 3, 2] creates a 3d stratification with:
+                    2 strata in dimension 0 with stratum widths 1/2
+                    3 strata in dimension 1 with stratum widths 1/3
+                    2 strata in dimension 2 with stratum widths 1/2
+    :type n_strata int list
 
-            :param input_file: File path to input file specifying stratum origins and stratum widths.
-                               Default: None
-            :type input_file: string
+    :param input_file: File path to input file specifying stratum origins and stratum widths.
+                       Default: None
+    :type input_file: string
 
-        Output:
-            :return origins: An array of dimension N x n specifying the origins of all strata
-                            The origins of the strata are the coordinates of the stratum orthotope nearest the global
-                            origin.
-                            Example - A 2D stratification with 2 strata in each dimension
-                            origins = [[0, 0]
-                                      [0, 0.5]
-                                      [0.5, 0]
-                                      [0.5, 0.5]]
-            :rtype origins: array
+    :param origins: An array of dimension N x n specifying the origins of all strata
+                    The origins of the strata are the coordinates of the stratum orthotope nearest the global
+                    origin.
+                    Example - A 2D stratification with 2 strata in each dimension
+                    origins = [[0, 0]
+                              [0, 0.5]
+                              [0.5, 0]
+                              [0.5, 0.5]]
+    :type origins: numpy array
 
-            :return widths: An array of dimension N x n specifying the widths of all strata in each dimension
-                           Example - A 2D stratification with 2 strata in each dimension
-                           widths = [[0.5, 0.5]
-                                     [0.5, 0.5]
-                                     [0.5, 0.5]
-                                     [0.5, 0.5]]
-            :rtype widths: ndarray
+    :param widths: An array of dimension N x n specifying the widths of all strata in each dimension
+                   Example - A 2D stratification with 2 strata in each dimension
+                   widths = [[0.5, 0.5]
+                             [0.5, 0.5]
+                             [0.5, 0.5]
+                             [0.5, 0.5]]
+    :type widths: numpy array
 
-            :return weights: An array of dimension 1 x N containing sample weights.
-                            Sample weights are equal to the product of the strata widths (i.e. they are equal to the
-                            size of the strata in the [0, 1]^n space.
-            :rtype weights: ndarray
+    **Attributes:**
 
+    :param Strata.weights: An array of dimension 1 x N containing sample weights.
+                    Sample weights are equal to the product of the strata widths (i.e. they are equal to the
+                    size of the strata in the [0, 1]^n space.
+    :type Strata.weights: numpy array
+
+    **Author:**
+
+    Michael D. Shields
     """
-
     def __init__(self, n_strata=None, input_file=None, origins=None, widths=None):
 
         self.input_file = input_file
@@ -661,33 +671,35 @@ class Strata:
     def fullfact(levels):
 
         """
-            Description:
+        Create a full-factorial design
 
-                Create a full-factorial design
+        Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
+        Copyright (C) 2012 - 2013 - Michael Baudin
+        Copyright (C) 2012 - Maria Christopoulou
+        Copyright (C) 2010 - 2011 - INRIA - Michael Baudin
+        Copyright (C) 2009 - Yann Collette
+        Copyright (C) 2009 - CEA - Jean-Marc Martinez
+        Original source code can be found at:
+        https://pythonhosted.org/pyDOE/#
+        or
+        https://pypi.org/project/pyDOE/
+        or
+        https://github.com/tisimst/pyDOE/
 
-                Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
-                Copyright (C) 2012 - 2013 - Michael Baudin
-                Copyright (C) 2012 - Maria Christopoulou
-                Copyright (C) 2010 - 2011 - INRIA - Michael Baudin
-                Copyright (C) 2009 - Yann Collette
-                Copyright (C) 2009 - CEA - Jean-Marc Martinez
-                Original source code can be found at:
-                https://pythonhosted.org/pyDOE/#
-                or
-                https://pypi.org/project/pyDOE/
-                or
-                https://github.com/tisimst/pyDOE/
+        **Input:**
 
-            Input:
-                :param levels: A list of integers that indicate the number of levels of each input design factor.
-                :type levels: list
+        :param levels: A list of integers that indicate the number of levels of each input design factor.
+        :type levels: list
 
-            Output:
-                :return ff: Full-factorial design matrix.
-                :rtype ff: ndarray
+        **Output:**
 
+        :return ff: Full-factorial design matrix.
+        :rtype ff: ndarray
+
+        **Author:**
+
+        Michael D. Shields
         """
-
         # Number of factors
         n_factors = len(levels)
         # Number of combinations
@@ -716,54 +728,54 @@ class Strata:
 
 class RSS:
     """
+    Generate new samples using adaptive sampling methods, i.e. Refined Stratified Sampling and Gradient
+    Enhanced Refined Stratified Sampling.
 
-        Description:
+    **References:**
 
-            Generate new samples using adaptive sampling methods, i.e. Refined Stratified Sampling and Gradient
-            Enhanced Refined Stratified Sampling.
+    1. Michael D. Shields, Kirubel Teferra, Adam Hapij and Raymond P. Daddazio, "Refined Stratified Sampling for
+       efficient Monte Carlo based uncertainty quantification", Reliability Engineering & System Safety,
+       ISSN: 0951-8320, Vol: 142, Page: 310-325, 2015.
+    2. M. D. Shields, "Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems",
+       Reliability Engineering & System Safety, ISSN: 0951-8320, Vol: 175, Page: 207-224, 2018.
 
-            References:
-            Michael D. Shields, Kirubel Teferra, Adam Hapij and Raymond P. Daddazio, "Refined Stratified Sampling for
-                efficient Monte Carlo based uncertainty quantification", Reliability Engineering & System Safety,
-                ISSN: 0951-8320, Vol: 142, Page: 310-325, 2015.
+    **Input:**
 
-            M. D. Shields, "Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems",
-                Reliability Engineering & System Safety, ISSN: 0951-8320, Vol: 175, Page: 207-224, 2018.
-        Input:
-            :param run_model_object: A RunModel object, which is used to evaluate the function value
-            :type run_model_object: class
+    :param run_model_object: A RunModel object, which is used to evaluate the function value
+    :type run_model_object: class
 
-            :param sample_object: A SampleMethods class object, which contains information about existing samples
-            :type sample_object: class
+    :param sample_object: A SampleMethods class object, which contains information about existing samples
+    :type sample_object: class
 
-            :param krig_object: A kriging class object, only  required if meta is 'Kriging'.
-            :type krig_object: class
+    :param krig_object: A kriging class object, only  required if meta is 'Kriging'.
+    :type krig_object: class
 
-            :param local: Indicator to update surrogate locally.
-            :type local: boolean
+    :param local: Indicator to update surrogate locally.
+    :type local: boolean
 
-            :param max_train_size: Minimum size of training data around new sample used to update surrogate.
-                                   Default: nsamples
-            :type max_train_size: int
+    :param max_train_size: Minimum size of training data around new sample used to update surrogate.
+                           Default: nsamples
+    :type max_train_size: int
+    :param step_size: Step size to calculate the gradient using central difference. Only required if Delaunay is
+                      used as surrogate approximation.
+    :type step_size: float
 
-            :param step_size: Step size to calculate the gradient using central difference. Only required if Delaunay is
-                              used as surrogate approximation.
-            :type step_size: float
+    :param n_add: Number of samples generated in each iteration
+    :type n_add: int
 
-            :param n_add: Number of samples generated in each iteration
-            :type n_add: int
+    :param verbose: A boolean declaring whether to write text to the terminal.
+    :type verbose: bool
 
-            :param verbose: A boolean declaring whether to write text to the terminal.
-            :type verbose: bool
+    **Attributes:**
 
-        Output:
-            :return: RSS.sample_object.samples: Final/expanded samples.
-            :rtype: RSS.sample_object.samples: ndarray
+    :param: RSS.sample_object.samples: Final/expanded samples.
+    :type: RSS.sample_object.samples: ndarray
 
+    **Authors:**
+
+    Authors: Mohit S. Chauhan
+    Last modified: 01/07/2020 by Mohit S. Chauhan
     """
-
-    # Authors: Mohit S. Chauhan
-    # Last modified: 01/07/2020 by Mohit S. Chauhan
 
     def __init__(self, sample_object=None, run_model_object=None, krig_object=None, local=False, max_train_size=None,
                  step_size=0.005, qoi_name=None, n_add=1, verbose=False):
@@ -804,12 +816,18 @@ class RSS:
 
     def sample(self, nsamples=0, n_add=None):
         """
-                Inputs:
-                    :param nsamples: Final size of the samples.
-                    :type nsamples: int
+        Execute refined stratified sampling.
 
-                    :param n_add: Number of samples to generate with each iteration.
-                    :type n_add: int
+        This is an instance method that runs refined stratified sampling. It is automatically called when the RSS class
+        is instantiated.
+
+        **Inputs:**
+
+        :param nsamples: Final size of the samples.
+        :type nsamples: int
+
+        :param n_add: Number of samples to generate with each iteration.
+        :type n_add: int
         """
         self.nsamples = nsamples
         self.nexist = self.sample_object.samples.shape[0]
@@ -827,6 +845,9 @@ class RSS:
     # Run Gradient-Enhanced Refined Stratified Sampling
     ###################################################
     def run_gerss(self):
+        """
+        Samples are generated using Gradient Enhanced-Refined Stratified Sampling.
+        """
         # --------------------------
         # RECTANGULAR STRATIFICATION
         # --------------------------
@@ -1157,6 +1178,9 @@ class RSS:
     # Run Refined Stratified Sampling
     #################################
     def run_rss(self):
+        """
+        Samples are generated using Refined Stratified Sampling.
+        """
         # --------------------------
         # RECTANGULAR STRATIFICATION
         # --------------------------
@@ -1342,9 +1366,25 @@ class RSS:
 
     # Support functions for RSS and GE-RSS
 
-    # Code for estimating gradients with a metamodel (surrogate)
-    # TODO: We may want to consider moving this to Utilities.
     def estimate_gradient(self, x, y, xt):
+        """
+        Estimating gradients with a metamodel (surrogate).
+
+        **Inputs:**
+
+        :param x: Samples in the training data.
+        :type x: numpy array
+
+        :param y: Function values evaluated at the samples in the training data.
+        :type y: numpy array
+
+        :param xt: Samples where gradients are computed.
+        :type xt: numpy array
+
+        **Outputs:**
+        :return gr: First-order gradient evaluated at the points 'xt'.
+        :rtype gr: numpy array
+        """
         from UQpy.Reliability import TaylorSeries
         if type(self.krig_object).__name__ == 'Krig':
             self.krig_object.fit(samples=x, values=y)
@@ -1354,17 +1394,14 @@ class RSS:
             tck = self.krig_object.predict
         else:
             from scipy.interpolate import LinearNDInterpolator
-
-            # TODO: Here we need to add a reflection of the sample points over each face of the hypercube and build the
-            #       linear interpolator from the reflected points.
             tck = LinearNDInterpolator(x, y, fill_value=0).__call__
 
         gr = TaylorSeries.gradient(samples=xt, model=tck, dimension=self.dimension, order='first',
                                    df_step=self.step_size, scale=False)
         return gr
 
-    # Initialization and preliminary error checks.
     def init_rss(self):
+        """Preliminary error checks."""
         if type(self.sample_object).__name__ not in ['STS', 'RSS']:
             raise NotImplementedError("UQpy Error: sample_object must be an object of the STS or RSS class.")
 
@@ -1380,22 +1417,30 @@ class RSS:
 
 class Simplex:
     """
-        Description:
+    Generate random samples inside a simplex using uniform probability distribution.
 
-            Generate random samples inside a simplex using uniform probability distribution.
+    **References:**
 
-            References:
-            W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, "Simplex-stochastic collocation method with improved
-                calability",Journal of Computational Physics, 310:301–328 2016.
-        Input:
-            :param nodes: The vertices of the simplex
-            :type nodes: ndarray
+    1. W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, "Simplex-stochastic collocation method with improved
+       calability",Journal of Computational Physics, 310:301–328 2016.
 
-            :param nsamples: The number of samples to be generated inside the simplex
-            :type nsamples: int
-        Output:
-            :return samples: New generated samples
-            :rtype samples: ndarray
+    **Input:**
+
+    :param nodes: The vertices of the simplex
+    :type nodes: ndarray
+
+    :param nsamples: The number of samples to be generated inside the simplex
+    :type nsamples: int
+
+    **Attributes:**
+
+    :return Simplex.samples: New random samples distributed uniformly inside the simplex.
+    :rtype Simplex.samples: ndarray
+
+    **Authors:**
+
+    Authors: Dimitris G.Giovanis
+    Last modified: 11/28/2018 by Mohit S. Chauhan
     """
 
     # Authors: Dimitris G.Giovanis
@@ -1408,6 +1453,17 @@ class Simplex:
         self.samples = self.run_sis()
 
     def run_sis(self):
+        """
+        Generates uniformly distributed random samples inside the simplex.
+
+        This is an instance method that generates samples. It is automatically called when the Simplex class is
+        instantiated.
+
+        **Output:**
+
+        :return sample: Random samples
+        :rtype sample: numpy array
+        """
         dimension = self.nodes.shape[1]
         if dimension > 1:
             sample = np.zeros([self.nsamples, dimension])
@@ -1431,6 +1487,7 @@ class Simplex:
         return sample
 
     def init_sis(self):
+        """Preliminary error checks."""
         if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
             raise NotImplementedError("Exit code: Number of samples to be generated 'nsamples' should be a positive "
                                       "integer.")
@@ -1445,88 +1502,93 @@ class Simplex:
 ########################################################################################################################
 class AKMCS:
     """
+    Generate new samples using different active learning method and properties of kriging surrogate along with
+    MCS.
 
-        Description:
+    **References:**
 
-            Generate new samples using different active learning method and properties of kriging surrogate along with
-            MCS.
+    1. B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
+        Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
 
-            References:
-        Input:
-            :param run_model_object: A RunModel object, which is used to evaluate the function value
-            :type run_model_object: class
+    **Input:**
 
-            :param samples: A 2d-array of samples
-            :type samples: ndarray
+    :param run_model_object: A RunModel object, which is used to evaluate the function value
+    :type run_model_object: class
 
-            :param krig_object: A kriging class object
-            :type krig_object: class
+    :param samples: A 2d-array of samples
+    :type samples: ndarray
 
-            :param population: Sample which are used as learning set by AKMCS class.
-            :type population: ndarray
+    :param krig_object: A kriging class object
+    :type krig_object: class
 
-            :param nlearn: Number of sample generated using MCS, which are used as learning set by AKMCS. Only required
-                           if population is not defined.
-            :type nlearn: int
+    :param population: Sample which are used as learning set by AKMCS class.
+    :type population: ndarray
 
-            :param nstart: Number of initial samples generated using LHS. Only required if sample_object is not defined.
-            :type nstart: int
+    :param nlearn: Number of sample generated using MCS, which are used as learning set by AKMCS. Only required
+                   if population is not defined.
+    :type nlearn: int
 
-            :param dist_name: A list containing the names of the distributions of the random variables. This is only
-                              required if sample_object is not defined.
-                              Distribution names must match those in the Distributions module.
-                              If the distribution does not match one from the Distributions module, the user must
-                              provide custom_dist.py.
-                              The length of the string must be 1 (if all distributions are the same) or equal to
-                              dimension.
-            :type dist_name: string list
+    :param nstart: Number of initial samples generated using LHS. Only required if sample_object is not defined.
+    :type nstart: int
 
-            :param dist_params: Parameters of the distribution
-                                Parameters for each random variable are defined as ndarrays.
-                                Each item in the list, dist_params[i], specifies the parameters for the corresponding
-                                distribution, dist[i].
-            :type dist_params: list
+    :param dist_name: A list containing the names of the distributions of the random variables. This is only
+                      required if sample_object is not defined.
+                      Distribution names must match those in the Distributions module.
+                      If the distribution does not match one from the Distributions module, the user must
+                      provide custom_dist.py.
+                      The length of the string must be 1 (if all distributions are the same) or equal to
+                      dimension.
+    :type dist_name: string list
 
-            :param lf: Learning function used as selection criteria to identify the new samples.
-                       Options: U, Weighted-U, EFF, EIF and EGIF
-            :type lf: str/function
+    :param dist_params: Parameters of the distribution
+                        Parameters for each random variable are defined as ndarrays.
+                        Each item in the list, dist_params[i], specifies the parameters for the corresponding
+                        distribution, dist[i].
+    :type dist_params: list
 
-            :param n_add: Number of samples to be selected per iteration.
-            :type n_add: int
+    :param lf: Learning function used as selection criteria to identify the new samples.
+               Options: U, Weighted-U, EFF, EIF and EGIF
+    :type lf: str/function
 
-            :param min_cov: Minimum Covariance used as the stopping criteria of AKMCS method in case of reliability
-                            analysis.
-            :type min_cov: float
+    :param n_add: Number of samples to be selected per iteration.
+    :type n_add: int
 
-            :param max_p: Maximum possible value of probability density function of samples. Only required with
-                          'Weighted-U' learning function.
-            :type max_p: float
+    :param min_cov: Minimum Covariance used as the stopping criteria of AKMCS method in case of reliability
+                    analysis.
+    :type min_cov: float
 
-            :param save_pf: Indicator to estimate probability of failure after each iteration. Only required if
-                            user-defined learning function is used.
-            :type save_pf: boolean
+    :param max_p: Maximum possible value of probability density function of samples. Only required with
+                  'Weighted-U' learning function.
+    :type max_p: float
 
-            :param verbose: A boolean declaring whether to write text to the terminal.
-            :type verbose: bool
+    :param save_pf: Indicator to estimate probability of failure after each iteration. Only required if
+                    user-defined learning function is used.
+    :type save_pf: boolean
 
-        Output:
-            :return: AKMCS.sample_object.samples: Final/expanded samples.
-            :rtype: AKMCS..sample_object.samples: ndarray
+    :param verbose: A boolean declaring whether to write text to the terminal.
+    :type verbose: bool
 
-            :return: AKMCS.krig_model: Prediction function for the final surrogate model.
-            :rtype: AKMCS.krig_model: function
+    **Attributes:**
 
-            :return: AKMCS.pf: Probability of failure after every iteration of AKMCS. Available as an output only for
-                               Reliability Analysis.
-            :rtype: AKMCS.pf: float list
+    :param: AKMCS.sample_object.samples: Final/expanded samples.
+    :type: AKMCS..sample_object.samples: ndarray
 
-            :return: AKMCS.cov_pf: Covariance of probability of failure after every iteration of AKMCS. Available as an
-                                   output only for Reliability Analysis.
-            :rtype: AKMCS.pf: float list
+    :param: AKMCS.krig_model: Prediction function for the final surrogate model.
+    :type: AKMCS.krig_model: function
+
+    :param: AKMCS.pf: Probability of failure after every iteration of AKMCS. Available as an output only for
+                       Reliability Analysis.
+    :type: AKMCS.pf: float list
+
+    :param: AKMCS.cov_pf: Covariance of probability of failure after every iteration of AKMCS. Available as an
+                           output only for Reliability Analysis.
+    :type: AKMCS.pf: float list
+
+    **Authors:**
+
+    Authors: Mohit S. Chauhan
+    Last modified: 01/07/2020 by Mohit S. Chauhan
     """
-
-    # Authors: Mohit S. Chauhan
-    # Last modified: 01/07/2020 by Mohit S. Chauhan
 
     def __init__(self, run_model_object=None, samples=None, krig_object=None, nlearn=10000, nstart=None,
                  population=None, dist_name=None, dist_params=None, qoi_name=None, lf='U', n_add=1,
@@ -1569,9 +1631,14 @@ class AKMCS:
         self.run_akmcs()
 
     def run_akmcs(self):
+        """
+        Executes Adaptive Kriging - Monte Carlo Method.
 
-        # Check if the initial sample design already exists and has model evaluations with it.
-        # If it does not, run the initial calculations.
+        This is an instance method that check initial sample design an evaluate model at the training points. It is
+        automatically called when the STS class is instantiated.
+        """
+
+        # If the initial sample design does not exists, run the initial calculations.
         if self.samples is None:
             if self.verbose:
                 print('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
@@ -1580,31 +1647,33 @@ class AKMCS:
         if self.verbose:
             print('UQpy: AKMCS - Running the initial sample set using RunModel.')
 
+        # Evaluate model at the training points
         self.run_model_object.run(samples=self.samples)
 
     def sample(self, samples=None, n_add=1, append_samples=True, nsamples=0, lf=None):
         """
-        Description:
+        Iterative procedure is applied to learn samples based on metamodel and learning function, and then metamodel is
+        updated based on new samples.
 
-        Inputs:
-            :param samples: A 2d-array of samples
-            :type samples: ndarray
+        **Inputs:**
 
-            :param n_add: Number of samples to be selected per iteration.
-            :type n_add: int
+        :param samples: A 2d-array of samples
+        :type samples: ndarray
 
-            :param append_samples: If 'True', new samples are append to existing samples in sample_object. Otherwise,
-                                   existing samples are discarded.
-            :type append_samples: boolean
+        :param n_add: Number of samples to be selected per iteration.
+        :type n_add: int
 
-            :param nsamples: Number of samples to generate. No Default Value: nsamples must be prescribed.
-            :type nsamples: int
+        :param append_samples: If 'True', new samples are append to existing samples in sample_object. Otherwise,
+                               existing samples are discarded.
+        :type append_samples: boolean
 
-            :param lf: Learning function used as selection criteria to identify the new samples. Only required, if
-                       samples are generated using multiple criterion
-                       Options: U, Weighted-U, EFF, EIF and EGIF
-            :type lf: str/function
+        :param nsamples: Number of samples to generate. No Default Value: nsamples must be prescribed.
+        :type nsamples: int
 
+        :param lf: Learning function used as selection criteria to identify the new samples. Only required, if
+                   samples are generated using multiple criterion
+                   Options: U, Weighted-U, EFF, EIF and EGIF
+        :type lf: str/function
         """
 
         if self.kriging != 'UQpy':
@@ -1717,15 +1786,24 @@ class AKMCS:
     # ------------------
     # LEARNING FUNCTIONS
     # ------------------
-    def eigf(self, surr, pop):
-        # Expected Improvement for Global Fit (EIGF)
-        # Reference: J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
-        # Link: https://arxiv.org/pdf/1905.05345.pdf
+    def eigf(self, pop):
+        """
+        Learns new samples based on Expected Improvement for Global Fit (EIGF) as learning function
+
+        **References:**
+
+        1. J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
+           (Link: https://arxiv.org/pdf/1905.05345.pdf)
+
+        **Inputs:**
+        :param pop: Remaining sample population (new samples are learn from this population)
+        :type pop
+        """
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
 
@@ -1746,15 +1824,25 @@ class AKMCS:
         return rows
 
     # This learning function has not yet been tested.
-    def u(self, surr, pop):
-        # U-function
-        # References: B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining
-        # Kriging and Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
+    def u(self, pop):
+        """
+        Learns new samples based on U-function as learning function.
+
+        **References:**
+
+        1. B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
+        Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
+
+        **Inputs:**
+
+        :param pop: Remaining sample population (new samples are learn from this population)
+        :type pop
+        """
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
 
@@ -1767,15 +1855,25 @@ class AKMCS:
         return rows
 
     # This learning function has not yet been tested.
-    def weighted_u(self, surr, pop):
-        # Probability Weighted U-function
-        # References: V.S. Sundar and M.S. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH
-        # MULTIMODEL INFERENCE".
+    def weighted_u(self, pop):
+        """
+        Learns new samples based on Probability Weighted U-function as learning function.
+
+        **References:**
+
+        1. V.S. Sundar and M.S. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH MULTIMODEL
+           INFERENCE".
+
+        **Inputs:**
+
+        :param pop: Remaining sample population (new samples are learn from this population)
+        :type pop: numpy array
+        """
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
 
@@ -1796,15 +1894,25 @@ class AKMCS:
         return rows
 
     # This learning function has not yet been tested.
-    def eff(self, surr, pop):
-        # Expected Feasibilty Function (EFF)
-        # References: B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, "Efficient Global Reliability
-        # Analysis for Nonlinear Implicit Performance Functions", AIAA JOURNAL, Volume 46, 2008.
+    def eff(self, pop):
+        """
+        Learns new samples based on Expected Feasibilty Function (EFF) as learning function.
+
+        **References:**
+
+        1. B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, "Efficient Global Reliability Analysis
+           for Nonlinear Implicit Performance Functions", AIAA JOURNAL, Volume 46, 2008.
+
+        **Inputs:**
+
+        :param pop: Remaining sample population (new samples are learn from this population)
+        :type pop: numpy array
+        """
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             g = g.reshape(g.size, 1)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
@@ -1830,16 +1938,26 @@ class AKMCS:
         return rows
 
     # This learning function has not yet been tested.
-    def eif(self, surr, pop):
-        # Expected Improvement Function (EIF)
-        # References: D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box
-        # Functions", Journal of Global Optimization, Pages 455–492, 1998.
+    def eif(self, pop):
+        """
+        Learns new samples based on Expected Improvement Function (EIF) as learning function.
+
+        **References:**
+
+        1. D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box Functions",
+           Journal of Global Optimization, Pages 455–492, 1998.
+
+        **Inputs:**
+
+        :param pop: Remaining sample population (new samples are learn from this population)
+        :type pop: numpy array
+        """
 
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
         fm = min(self.qoi)
@@ -1849,6 +1967,9 @@ class AKMCS:
         return rows
 
     def learning(self):
+        """
+        Defines the leaning function used to generate new samples.
+        """
         if type(self.lf).__name__ == 'function':
             self.lf = self.lf
         elif self.lf not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
@@ -1864,8 +1985,8 @@ class AKMCS:
         else:
             self.lf = self.eff
 
-    # Initial check for errors
     def init_akmcs(self):
+        """Preliminary error checks."""
         if self.run_model_object is None:
             raise NotImplementedError('UQpy: AKMCS requires a predefined RunModel object.')
 
