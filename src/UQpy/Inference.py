@@ -15,12 +15,21 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""This module contains functionality for all the Inference supported in UQpy."""
+"""
+This module contains classes and functions for statistical inference from data. The module currently contains the
+following classes:
 
-from .RunModel import RunModel
-from .SampleMethods import MCMC, IS
-from .Utilities import check_input_dims
-from .Distributions import Distribution
+* InferenceModel: Define a probabilistic model for Inference.
+* MLEstimation: Compute maximum likelihood parameter estimate.
+* InfoModelSelection: Perform model selection using information theoretic criteria.
+* BayesParameterEstimation: Perform Bayesian parameter estimation (estimate posterior density) via MCMC or IS.
+* BayesModelSelection: Estimate model posterior probabilities.
+"""
+
+from UQpy.RunModel import RunModel
+from UQpy.SampleMethods import MCMC, IS
+from UQpy.Utilities import check_input_dims
+from UQpy.Distributions import Distribution
 
 import numpy as np
 from scipy.stats import multivariate_normal
@@ -33,48 +42,77 @@ from scipy.optimize import minimize
 ########################################################################################################################
 
 class InferenceModel:
+    """
+    Define a probabilistic model for inference.
+
+    This class defines an inference model that will serve as input for all remaining inference classes. A model can be
+    defined in various ways:
+    - case 1a: Gaussian error model powered by RunModel, i.e., data ~ h(theta) + eps, where eps is iid Gaussian and h
+    consists in running RunModel. Data is a 1D ndarray in this setting.
+    - case 1b: non-Gaussian error model powered by RunModel, the user must provide the likelihood function in addition
+    to a RunModel object. The data type is user-defined and must be consistent with the likelihood function definition.
+    - case 2: the likelihood function is user-defined and does not leverage RunModel. The data type must be consistent
+    with the likelihood function definition.
+    - case 3: Learn parameters of a probability distribution pi (in dimension dim). Data is an ndarray of shape
+    (ndata, dim) and consists in ndata iid samples from pi. The user must define the distribution_object input.
+
+    **Input:**
+
+    :param nparams: Number of parameters to be estimated.
+
+                    This input must be specified.
+    :type nparams: int
+
+    :param name: Name of model - optional but useful in a model selection setting.
+    :type name: string
+
+    :param run_model_object: RunModel class object that defines the forward model.
+
+                             This input is required for cases 1a and 1b.
+    :type run_model_object: object of class RunModel
+
+    :param log_likelihood: Function that defines the log-likelihood model, possibly in conjunction with the
+                           run_model_object.
+
+                           Default is None, then a Gaussian-error model is considered (case 1a). It must be provided for
+                           cases 1b and 2.
+    :type log_likelihood: callable
+
+    :param distribution_object: Distribution pi for which to learn parameters from iid data.
+
+                                This input is required for case 3.
+    :type distribution_object: object of Distribution class
+
+    :param error_covariance: Covariance for Gaussian error model (case 1a).
+
+                             Default is 1.
+    :type error_covariance: ndarray or float
+
+    :param prior: Prior distribution.
+    :type prior: object of Distribution class
+
+    :param prior_params: Parameters of the prior pdf.
+    :type prior_params: ndarray or list of ndarrays
+
+    :param prior_copula_params: Parameters of the copula of the prior.
+    :param prior_copula_params: ndarray or list of ndarrays
+
+    :param kwargs_likelihood: Additional keyword arguments for the log-likelihood function.
+    :type kwargs_likelihood: dictionary
+
+    **Authors:**
+
+    Audrey Olivier
+
+    Last Modified: 12/19 by Audrey Olivier
+    """
+
     def __init__(self, nparams, run_model_object=None, log_likelihood=None, distribution_object=None, name='',
                  error_covariance=1.0, prior=None, prior_params=None, prior_copula_params=None,
                  verbose=False, **kwargs_likelihood
                  ):
 
-        """
-        Define the inference_model. This class possesses two method that, given some data and parameter values,
-         evaluate the log likelihood and scaled log posterior (log_likelihood + log_prior)
-
-        Inputs:
-            :param nparams: number of parameters to be estimated, required
-            :type nparams: int
-
-            :param name: name of model
-            :type name: string
-
-            :param run_model_object: RunModel class object that defines the forward model h(param)
-            :type run_model_object: object of class RunModel or None
-
-            :param log_likelihood: log-likelihood function. Default is None. This function defines the
-            log-likelihood model, possibly in conjunction with the run_model_object.
-            :type log_likelihood: callable or None
-
-            :param distribution_object: distribution pi for which to learn parameters from iid data
-            :type distribution_object: object of Distribution class
-
-            :param error_covariance: covariance of the Gaussian error for model defined by a python script
-            :type error_covariance: ndarray (full covariance matrix) or float (diagonal values)
-
-            :param prior: prior distribution
-            :type prior: object of Distribution class
-
-            :param prior_params: parameters of the prior pdf
-            :type prior_params: ndarray or list of ndarrays
-
-            :param prior_copula_params: parameters of the copula of the prior, if necessary
-            :param prior_copula_params: str
-
-            :param kwargs_likelihood: all additional keyword arguments for the log-likelihood function, if necessary
-            :type kwargs_likelihood: dictionary
-
-        """
+        # Initialize some parameters
         self.nparams = nparams
         if not isinstance(self.nparams, int) or self.nparams <= 0:
             raise TypeError('Input nparams must be an integer > 0.')
@@ -83,7 +121,7 @@ class InferenceModel:
             raise TypeError('Input name must be a string.')
         self.verbose = verbose
 
-        # Perform checks on inputs run_model_object, log_likelihood, distribution_object
+        # Perform checks on inputs run_model_object, log_likelihood, distribution_object that define the inference model
         if (run_model_object is None) and (log_likelihood is None) and (distribution_object is None):
             raise ValueError('One of run_model_object, log_likelihood or distribution_object inputs must be provided.')
         if run_model_object is not None and (not isinstance(run_model_object, RunModel)):
@@ -119,11 +157,28 @@ class InferenceModel:
         self.prior = prior
 
     def evaluate_log_likelihood(self, params, data):
-        """ Computes the log-likelihood of model
-            inputs: data
-                    params, ndarray of dimension (nsamples, nparams)
-            output: ndarray of size (nsamples, ), contains log likelihood of p(data | params[i,:]), i=1:nsamples
         """
+        Evaluate the log likelihood log p(data|params).
+
+        This method is the central piece for the Inference module, it is being called repeatedly by all other inference
+        classes to evaluate the likelihood of the data. The log likelihood can be evaluated at several parameter vectors
+        at once, i.e., params is a (nsamples, nparams) ndarray. If the inference model is powered by RunModel the
+        RunModel.run method is called here, possibly leveraging its serial/parallel execution.
+
+        **Inputs:**
+
+        :param params: Parameter vector(s) at which to evaluate the likelihood function.
+        :type params: ndarray of shape (nsamples, nparams)
+
+        :param data: Data from which to learn.
+        :type data: ndarray
+
+        **Output/Returns:**
+
+        :param log_like_values: Log-likelihood evaluated at all nsamples parameter vector values.
+        :type log_like_values: ndarray of shape (nsamples, )
+        """
+
         params = check_input_dims(params)
         if params.shape[1] != self.nparams:
             raise ValueError('Wrong dimensions in params.')
@@ -131,43 +186,59 @@ class InferenceModel:
         # Case 1 - Forward model is given by RunModel
         if self.run_model_object is not None:
             self.run_model_object.run(samples=params, append_samples=False)
-            model_outputs = self.run_model_object.qoi_list    # [-params.shape[0]:]
+            model_outputs = self.run_model_object.qoi_list
 
             # Case 1.a: Gaussian error model
             if self.log_likelihood is None:
-                results = np.array([multivariate_normal.logpdf(data, mean=np.array(outpt).reshape((-1,)),
-                                                               cov=self.error_covariance) for outpt in model_outputs])
+                log_like_values = np.array(
+                    [multivariate_normal.logpdf(data, mean=np.array(outpt).reshape((-1,)), cov=self.error_covariance)
+                     for outpt in model_outputs]
+                )
 
             # Case 1.b: likelihood is user-defined
             else:
-                results = self.log_likelihood(data=data, model_outputs=model_outputs, params=params,
-                                              **self.kwargs_likelihood)
-                if not isinstance(results, np.ndarray):
-                    results = np.array(results)
-                if results.shape != (params.shape[0],):
+                log_like_values = self.log_likelihood(
+                    data=data, model_outputs=model_outputs, params=params, **self.kwargs_likelihood
+                )
+                if not isinstance(log_like_values, np.ndarray):
+                    log_like_values = np.array(log_like_values)
+                if log_like_values.shape != (params.shape[0],):
                     raise ValueError('Likelihood function should output a (nsamples, ) nd array of likelihood values.')
 
         # Case 2 - Log likelihood is user defined
         elif self.log_likelihood is not None:
-            results = self.log_likelihood(data=data, params=params, **self.kwargs_likelihood)
-            if not isinstance(results, np.ndarray):
-                results = np.array(results)
-            if results.shape != (params.shape[0],):
+            log_like_values = self.log_likelihood(data=data, params=params, **self.kwargs_likelihood)
+            if not isinstance(log_like_values, np.ndarray):
+                log_like_values = np.array(log_like_values)
+            if log_like_values.shape != (params.shape[0],):
                 raise ValueError('Likelihood function should output a (nsamples, ) nd array of likelihood values.')
 
         # Case 3 - Learn parameters of a probability distribution pi. Data consists in iid sampled from pi.
         else:
-            results = np.array([np.sum(self.distribution_object.log_pdf(x=data, params=params_))
-                                for params_ in params])
+            log_like_values = np.array([np.sum(self.distribution_object.log_pdf(x=data, params=params_))
+                                        for params_ in params])
 
-        return results
+        return log_like_values
 
     def evaluate_log_posterior(self, params, data):
-        """ Computes the (scaled) log posterior: log[p(data|params) * p(params)]
-            If the Inference model does not possess a prior, an uninformatic prior p(params)=1 is assumed
-            inputs: data
-                    params, ndarray of dimension (nsamples, nparams)
-            output: ndarray of size (nsamples, )
+        """
+        Evaluate the scaled log posterior log [ p(data|params) p(prior) ].
+
+        This method is called by classes that perform Bayesian inference. If the Inference model does not possess a
+        prior, an uninformative prior p(params)=1 is assumed.
+
+        **Inputs:**
+
+        :param params: Parameter vector(s) at which to evaluate the log posterior function.
+        :type params: ndarray of shape (nsamples, nparams)
+
+        :param data: Data from which to learn.
+        :type data: ndarray
+
+        **Output/Returns:**
+
+        :param log_posterior: Log-posterior evaluated at all nsamples parameter vector values.
+        :type log_posterior: ndarray of shape (nsamples, )
         """
 
         # Compute log likelihood
@@ -189,44 +260,56 @@ class InferenceModel:
 ########################################################################################################################
 
 class MLEstimation:
+    """
+    Evaluate the maximum likelihood estimate of a model given some data.
+
+    Perform maximum likelihood estimation, i.e., given some data, compute the parameter vector that maximizes the
+    likelihood p(data|theta).
+
+    **Inputs:**
+
+    :param model: The inference model that defines the likelihood function.
+    :type model: object of class InferenceModel
+
+    :param data: Available data
+    :type data: ndarray or consistent with log likelihood function in InferenceModel
+
+    :param optimizer: Optimization algorithm used to compute the mle.
+                      This callable takes in as inputs the function to be minimized and an initial guess and returns
+                      an object with attributes x (minimizer) and fun (minimum function value). See scipy.optimize.
+                      Default is None, then the optimizer used is scipy.optimize.minimize.
+    :type optimizer: callable
+
+    :param x0: Starting point(s) for optimization. If not provided, see iter_optim.
+    :type x0: ndarray of shape (n_starts, nparams) or (nparams, )
+
+    :param iter_optim: number of iterations that the optimization is run, starting at random initial guesses. It is only
+                       used if x0 is not provided. If neither x0 nor iter_optim are provided, the optimization is not
+                       performed (see run_estiamtion method).
+    :type iter_optim: integer
+
+    :param kwargs: Additional keyword arguments to the optimizer
+    :type kwargs: dictionary
+
+    **Attributes:**
+
+    :param: mle: value of parameter vector that maximizes the likelihood function
+    :type: mle: ndarray of shape (nparams, )
+
+    :param: max_log_like: value of the likelihood function at the MLE
+    :type: max_log_like: float
+
+    **Authors:**
+
+    Audrey Olivier, Dimitris Giovanis
+
+    Last Modified: 12/19 by Audrey Olivier
+
+    """
 
     def __init__(self, inference_model, data, verbose=False, iter_optim=None, x0=None, optimizer=None, **kwargs):
 
-        """
-        Perform maximum likelihood estimation, i.e., given some data y, compute the parameter vector that maximizes the
-        likelihood p(y|theta).
-
-        Inputs:
-            :param model: the inference model
-            :type model: instance of class InferenceModel
-
-            :param data: Available data
-            :type data: ndarray of size (ndata, ) for case 1a or (ndata, dimension) for case 2a, or consistent with
-            definition of log_likelihood in the inference_model
-
-            :param optimizer: optimization algorithm used to compute the mle
-            :type optimizer: function that takes as first input the function to be minimized, as second input a starting
-            point for the optimization. It should return an object with attributes x and fun (the minimizer and the
-            value of the function at its minimum). If None (default), the optimizer used is scipy.optimize.minimize
-
-            :param iter_optim: number of iterations for the maximization procedure (each iteration starts at a random
-            point)
-            :type iter_optim: an integer, default None
-
-            :param x0: starting points for optimization
-            :type x0: 1D array (dimension, ) or 2D array (n_starts, dimension), default None
-
-            :param kwargs: input arguments to the optimizer
-            :type kwargs: dictionary
-
-        Output:
-            :return: mle: value of parameter vector that maximizes the likelihood
-            :rtype: mle: ndarray (nparams, )
-
-            :return: max_log_like: value of the maximum likelihood
-            :rtype: max_log_like: float
-
-        """
+        # Initialize variables
         self.inference_model = inference_model
         if not isinstance(inference_model, InferenceModel):
             raise TypeError('Input inference_model should be of type InferenceModel')
@@ -250,9 +333,23 @@ class MLEstimation:
 
     def run_estimation(self, iter_optim=1, x0=None):
         """
-        Run optimization
-        :param iter_optim: number of iterations of the optimization procedure
-        :param x0: starting points for optimization, takes precedence over iter_optim
+        Run the maximum likelihood estimation procedure.
+
+        This function runs the optimization and updates the mle and max_log_like attributes of the class. If the
+        parameters of a distribution pi are being learnt (case 3), the fit method of that distribution (it it exists)
+        is called to compute the MLE instead of running the optimization. If x0 or iter_optim are given when creating
+        the MLEstimation object, this method is called directly when the object is created.
+
+        **Inputs:**
+
+        :param x0: Starting point(s) for optimization. Default is None. If not provided, see iter_optim.
+        :type x0: ndarray of shape (n_starts, nparams) or (nparams, )
+
+        :param iter_optim: Number of iterations that the optimization is run, starting at random initial guesses. It is
+                           only used if x0 is not provided.
+
+                           Default is 1.
+        :type iter_optim: integer
         """
 
         # Case 3: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization below.
@@ -309,8 +406,22 @@ class MLEstimation:
 
     def evaluate_neg_log_likelihood_data(self, one_param):
         """
-        Compute the negative log-likelihood for one value of the parameter vector (function to be minimized)
+        Compute negative log likelihood for one parameter vector.
+
+        This is the function to be minimized in the optimization procedure. This is a utility function that will not be
+        called by the user.
+
+        **Inputs:**
+
+        :param one_param: A single parameter vector.
+        :type one_param: ndarray of shape (nparams, )
+
+        **Output/Returns:**
+
+        :param neg_log_like: negative log-likelihood.
+        :type neg_log_like: float
         """
+
         return -1 * self.inference_model.evaluate_log_likelihood(params=one_param.reshape((1, -1)), data=self.data)[0]
 
 
@@ -320,49 +431,58 @@ class MLEstimation:
 ########################################################################################################################
 
 class InfoModelSelection:
+    """
+    Perform model selection using information theoretic criteria.
+
+    Supported criteria are BIC, AIC (default), AICc. This class leverages the MLEstimation class for maximum likelihood
+    estimation.
+
+    **Inputs:**
+
+    :param candidate_models: Candidate models, must be a list of objects of class InferenceModel
+    :type candidate_models: list
+
+    :param data: Available data
+    :type data: ndarray
+
+    :param criterion: Criterion to be used (AIC, BIC, AICc)
+
+                      Default is 'AIC'
+    :type criterion: str
+
+    :param x0: starting points for optimization - see MLEstimation
+    :type x0: list (length nmodels) of ndarrays
+
+    :param iter_optim: number of iterations for the maximization procedure - see MLEstimation
+    :type iter_optim: list (length nmodels) of integers
+
+    :param kwargs: Additional keyword inputs to the maximum likelihood estimator for each model
+    :type kwargs: dictionary, each value is a list of length nmodels
+
+    **Attributes:**
+
+    :return ml_estimators: MLEstimation results for all models (contains e.g. fitted parameters).
+    :rtype ml_estimators: list (length nmodels) of MLEstimation objects
+
+    :return criterion_values: Value of the criterion for all models.
+    :rtype criterion_values: list (length nmodels) of floats
+
+    :return penalty_terms: Value of the penalty term for all models. Data fit term is then
+                           criterion_value - penalty_term.
+    :rtype penalty_terms: list (length nmodels) of floats
+
+    :return probabilities: Value of the model probabilities, p = exp(-criterion/2).
+    :rtype probabilities: list (length nmodels) of floats
+
+    **Authors:**
+
+    Audrey Olivier, Dimitris Giovanis
+
+    Last Modified: 12/19 by Audrey Olivier
+
+    """
 
     def __init__(self, candidate_models, data, criterion='AIC', verbose=False, iter_optim=None, x0=None, **kwargs):
-
-        """
-            Perform model selection using information theoretic criteria.
-            Supported criteria are BIC, AIC (default), AICc.
-
-            Inputs:
-
-            :param candidate_models: Candidate models, must be a list of instances of class InferenceModel
-            :type candidate_models: list
-
-            :param data: Available data
-            :type data: ndarray
-
-            :param criterion: Criterion to be used (AIC, BIC, AICc)
-            :type criterion: str
-
-            :param iter_optim: number of iterations for the maximization procedure - see MLEstimation
-            :type iter_optim: list (length nmodels) of integers, default None
-
-            :param x0: starting points for optimization - see MLEstimation
-            :type x0: list (length nmodels) of 1D arrays (dimension, ) or 2D arrays (n_starts, dimension), default None
-
-            :param kwargs: inputs to the maximum likelihood estimator, for each model
-            :type kwargs: dictionary, each value should be a list of length nmodels
-
-            Outputs:
-
-            :return ml_estimators: MLEstimation results for all models (contains e.g. fitted parameters)
-            :rtype ml_estimators: list (length nmodels) of MLEstimation objects
-
-            :return criterion_values: Value of the criterion for all models
-            :rtype criterion_values: list (length nmodels) of floats
-
-            :return penalty_terms: Value of the penalty term for all models. Data fit is then
-            criterion_value - penalty_term
-            :rtype penalty_terms: list (length nmodels) of floats
-
-            :return probabilities: Value of the model probabilities, p = exp(-criterion/2)
-            :rtype probabilities: list (length nmodels) of floats
-
-        """
 
         # Check inputs
         # candidate_models is a list of InferenceModel objects
@@ -399,9 +519,24 @@ class InfoModelSelection:
 
     def run_estimation(self, iter_optim=1, x0=None):
         """
-        Run estimation, i.e. compute the maximum log likelihood for all models then compute criterion
-        :param iter_optim: number of iterations of the optimization procedure
-        :param x0: starting points for optimization, takes precedence over iter_optim
+        Run the model selection procedure, i.e., compute criterion for all models.
+
+        This function calls the run_estimation method of the MLEstimation object for each model to compute the maximum
+        log likelihood, then computes the value of the criterion for all models. This function updates attributes
+        ml_estimators, criterion_values, penalty_terms and probabilities. If x0 or iter_optim are given when creating
+        the object, this method is called directly when the object is created.
+
+        **Inputs:**
+
+        :param x0: Starting point(s) for optimization for all models. Default is None. If not provided, see iter_optim.
+        :type x0: list (length nmodels) of ndarrays
+
+        :param iter_optim: number of iterations that the optimization is run, starting at random initial guesses. It is
+                           only used if x0 is not provided.
+
+                           Default is 1.
+        :type iter_optim: integer or list (length nmodels) of integers
+
         """
 
         # Check inputs x0, iter_optim
@@ -429,7 +564,14 @@ class InfoModelSelection:
 
     def sort_models(self):
         """
-        Sort models (all outputs lists) in descending order of model probability (increasing order of criterion value)
+        Sort models in descending order of model probability (increasing order of criterion value).
+
+        This function sorts - in place - the attribute lists candidate_models, ml_estimators, criterion_values,
+        penalty_terms and probabilities so that they are sorted from most probable to least probable model. It is a
+        stand-alone function that is provided to help the user to easily visualize which model is the best.
+
+        No inputs/outputs.
+
         """
         sort_idx = list(np.argsort(np.array(self.criterion_values)))
 
@@ -441,7 +583,41 @@ class InfoModelSelection:
 
     @staticmethod
     def compute_info_criterion(criterion, data, inference_model, max_log_like, return_penalty=False):
-        """ Helper function: compute the criterion value, also returns the penalty term if asked for it """
+        """
+        Compute the criterion value for a given model, given a max_log_likelihood value.
+
+        The criterion value is -2 * max_log_like + penalty, the penalty depends on the chosen criterion. This function
+        is a utility function (static method), called within the run_estimation method.
+
+        **Inputs:**
+
+        :param criterion: Chosen criterion.
+        :type criterion: str
+
+        :param data: Available data.
+        :type data: ndarray
+
+        :param inference_model: Inference model.
+        :type inference_model: object of class InferenceModel
+
+        :param max_log_like: Value of likelihood function at MLE.
+        :type max_log_like: float
+
+        :param return_penalty: Boolean that sets whether to return the penalty term as additional output.
+
+                               Default is False
+        :type return_penalty: bool
+
+        **Output/Returns:**
+
+        :param criterion_value: Value of criterion.
+        :type criterion_value: float
+
+        :param penalty_term: Value of penalty term.
+        :type penalty_term: float
+
+        """
+
         n_params = inference_model.nparams
         ndata = len(data)
         if criterion == 'BIC':
@@ -454,11 +630,28 @@ class InfoModelSelection:
             raise ValueError('Criterion should be AIC (default), BIC or AICc')
         if return_penalty:
             return -2 * max_log_like + penalty_term, penalty_term
-        return -2 * max_log_like
+        return -2 * max_log_like + penalty_term
 
     @staticmethod
     def compute_probabilities(criterion_values):
-        """ Helper function: compute probability, proportional to exp(-criterion/2) """
+        """
+        Compute the model probability given criterion values for all models.
+
+        Model probability is proportional to exp(-criterion/2), model probabilities over all models sum up to 1. This
+        function is a utility function (static method), called within the run_estimation method.
+
+        **Inputs:**
+
+        :param criterion_values: Values of criterion for all models.
+        :type criterion_values: list (length nmodels) of floats
+
+        **Output/Returns:**
+
+        :param probabilities: Values of model probabilities
+        :type probabilities: list (length nmodels) of floats
+
+        """
+
         delta = np.array(criterion_values) - min(criterion_values)
         prob = np.exp(-delta / 2)
         return prob / np.sum(prob)
@@ -466,46 +659,58 @@ class InfoModelSelection:
 
 ########################################################################################################################
 ########################################################################################################################
-#                                  Inference Parameter estimation
+#                                  Bayesian Parameter estimation
 ########################################################################################################################
 
 class BayesParameterEstimation:
+    """
+    Estimate the parameter posterior density given some data.
+
+    This class generates samples from the parameter posterior distribution, using MCMC or IS. It leverages the MCMC and
+    IS classes from the SampleMethods module.
+
+    **Inputs:**
+
+    :param inference_model: Model for inference
+    :type inference_model: object of class InferenceModel
+
+    :param data: Available data
+    :type data: ndarray
+
+    :param sampling_method: Sampling method to be used, 'MCMC' or 'IS'.
+
+                            Default is 'MCMC'
+    :type sampling_method: str
+
+    :param nsamples: Number of samples used in MCMC/IS
+    :type nsamples: int
+
+    :param nsamples_per_chain: Number of samples per chain used in MCMC (not used if nsamples is defined)
+    :type nsamples_per_chain: int
+
+    :param nchains: Number of chains in MCMC, will be used to sample seed from prior if seed is not provided.
+
+                    Default is 1.
+    :type nchains: int
+
+    :param kwargs: Additional keyword inputs to the sampling method, see MCMC and IS
+    :type kwargs: dictionary
+
+    **Attributes:**
+
+    :return sampler: sampling method object, contains e.g. the samples
+    :rtype sampler: object of class SampleMethods.MCMC or SampleMethods.IS
+
+    **Authors:**
+
+    Audrey Olivier, Dimitris Giovanis
+
+    Last Modified: 12/19 by Audrey Olivier
+
+    """
 
     def __init__(self, inference_model, data, sampling_method='MCMC', nsamples=None, nsamples_per_chain=None, nchains=1,
                  verbose=False, **kwargs):
-
-        """
-            Generates samples from the posterior distribution, using MCMC or IS.
-
-            Inputs:
-
-            :param inference_model: model, must be an instance of class InferenceModel
-            :type inference_model: list
-
-            :param data: Available data
-            :type data: ndarray
-
-            :param sampling_method: Method to be used
-            :type sampling_method: str, 'MCMC' or 'IS'
-
-            :param nsamples: number of samples used in MCMC/IS
-            :type nsamples: int
-
-            :param nsamples_per_chain: number of samples per chain used in MCMC (not used if nsamples is defined)
-            :type nsamples_per_chain: int
-
-            :param nchains: number of chains in MCMC, will be used to sample seed from prior if seed is not provided
-            :type nchains: int
-
-            :param kwargs: inputs to the sampling method, see MCMC and IS
-            :type kwargs: dictionary
-
-            Outputs:
-
-            :return sampler: sampling object, contains e.g. the samples
-            :rtype sampler: SampleMethods.MCMC or SampleMethods.IS object
-
-        """
 
         self.inference_model = inference_model
         if not isinstance(self.inference_model, InferenceModel):
@@ -547,9 +752,20 @@ class BayesParameterEstimation:
 
     def run_estimation(self, nsamples=None, nsamples_per_chain=None):
         """
-        Run estimation, i.e. generate samples from the posterior (call the run method of MCMC/IS)
-        :param nsamples: see MCMC, IS
-        :param nsamples_per_chain: see MCMC
+        Run the Bayesian inference procedure, i.e., sample from the parameter posterior distribution.
+
+        This function calls the run method of MCMC/IS to generate samples from the parameter posterior distribution. It
+        updates the sampler attribute. If nsamples or nsamples_per_chain are given when creating the object, this method
+        is called directly when the object is created. It can also be called separately.
+
+        **Inputs:**
+
+        :param nsamples: Number of samples used in MCMC/IS. Either nsamples or nsamples_per_chain must be provided.
+        :type nsamples: int
+
+        :param nsamples_per_chain: Number of samples per chain used in MCMC (not used in IS or if nsamples is defined).
+        :type nsamples_per_chain: int
+
         """
 
         if isinstance(self.sampler, MCMC):
@@ -565,58 +781,71 @@ class BayesParameterEstimation:
         if self.verbose:
             print('Running parameter estimation with ' + self.sampling_method + ' completed successfully!')
 
+
 ########################################################################################################################
 ########################################################################################################################
-#                                  Inference Model Selection
+#                                  Bayesian Model Selection
 ########################################################################################################################
 
 
 class BayesModelSelection:
 
+    """
+    Perform model selection via Bayesian inference, i.e., compute model posterior probabilities given data.
+
+    This class leverages the BayesParameterEstimation class to get samples from the parameter posterior densities. These
+    samples are then used to compute the model evidence p(data|model) for all models and the model posterior
+    probabilities.
+
+    **References:**
+
+    1. A.E. Raftery, M.A. Newton, J.M. Satagopan, and P.N. Krivitsky. "Estimating the integrated likelihood via
+       posterior simulation using the harmonic mean identity". In Bayesian Statistics 8, pages 1–45, 2007.
+
+    **Inputs:**
+
+    :param candidate_models: Candidate models, must be a list of objects of class InferenceModel
+    :type candidate_models: list
+
+    :param data: Available data
+    :type data: ndarray
+
+    :param prior_probabilities: Prior probabilities of each model, default is 1/nmodels for all models
+    :type prior_probabilities: list of floats
+
+    :param method_evidence_computation: as of v3, only the harmonic mean method is supported
+    :type method_evidence_computation: str
+
+    :param kwargs: Additional keyword inputs to the BayesParameterEstimation class, for all models
+    :type kwargs: dictionary, each value is a list of length nmodels
+
+    :param nsamples: number of samples used in MCMC
+    :type nsamples: list (length nmodels) of integers
+
+    :param nsamples_per_chain: number of samples per chain used in MCMC (not used if nsamples is defined)
+    :type nsamples_per_chain: list (length nmodels) of integers
+
+    **Attributes:**
+
+    :return bayes_estimators: results of the Bayesian parameter estimation
+    :rtype bayes_estimators: list (length nmodels) of BayesParameterEstimation objects
+
+    :return evidences: value of the evidence for all models
+    :rtype evidences: list (length nmodels) of floats
+
+    :return probabilities: posterior probability for all models
+    :rtype probabilities: list (length nmodels) of floats
+
+    **Authors:**
+
+    Audrey Olivier, Yuchen Zhou
+
+    Last Modified: 01/24/2020 by Audrey Olivier
+
+    """
+
     def __init__(self, candidate_models, data, prior_probabilities=None, method_evidence_computation='harmonic_mean',
                  verbose=False, nsamples=None, nsamples_per_chain=None, **kwargs):
-
-        """
-            Perform model selection using Inference criteria.
-
-            Inputs:
-
-            :param candidate_models: candidate models, must be a list of instances of class InferenceModel
-            :type candidate_models: list
-
-            :param data: available data
-            :type data: ndarray
-
-            :param prior_probabilities: prior probabilities of each model, default is 1/nmodels for all models
-            :type prior_probabilities: list of floats
-
-            :param method_evidence_computation: for now only the harmonic mean is supported
-            :type method_evidence_computation: str
-
-            :param kwargs: inputs to the Bayes parameter estimator, for each model
-            :type kwargs: dictionary, each value should be a list of length len(candidate_models)
-
-            :param nsamples: number of samples used in MCMC
-            :type nsamples: list (length nmodels) of integers
-
-            :param nsamples_per_chain: number of samples per chain used in MCMC (not used if nsamples is defined)
-            :type nsamples_per_chain: list (length nmodels) of integers
-
-            Outputs:
-
-            :return bayes_estimators: results of the Bayesian parameter estimation
-            :rtype bayes_estimators: list (length nmodels) of BayesParameterEstimation objects
-
-            :return evidence_values: value of the evidence for all models
-            :rtype evidence_values: list (length nmodels) of floats
-
-            :return probabilities: posterior probability for all models
-            :rtype probabilities: list (length nmodels) of floats
-
-            # Authors: Yuchen Zhou
-            # Updated: 01/24/2020 by Audrey Olivier
-
-        """
 
         # Check inputs: candidate_models is a list of instances of Model, data must be provided, and input arguments
         # for MCMC must be provided as a list of length len(candidate_models)
@@ -657,6 +886,25 @@ class BayesModelSelection:
 
     def run_estimation(self, nsamples=None, nsamples_per_chain=None):
 
+        """
+        Run the Bayesian model selection procedure, i.e., compute model posterior probabilities.
+
+        This function calls the run_estimation method of the BayesParameterEstimation object for each model to sample
+        from the parameter posterior probability, then computes the model evidence and model posterior probability.
+        This function updates attributes bayes_estimators, evidences and probabilities. If nsamples or
+        nsamples_per_chain are given when creating the object, this method is called directly when the object is
+        created. It can also be called separately.
+
+        **Inputs:**
+
+        :param nsamples: number of samples used in MCMC
+        :type nsamples: list (length nmodels) of integers
+
+        :param nsamples_per_chain: number of samples per chain used in MCMC (not used if nsamples is defined)
+        :type nsamples_per_chain: list (length nmodels) of integers
+
+        """
+
         if nsamples is not None and not (isinstance(nsamples, list) and len(nsamples) == self.nmodels
                                          and all(isinstance(n, int) for n in nsamples)):
             raise ValueError('nsamples should be a list of integers')
@@ -690,17 +938,51 @@ class BayesModelSelection:
 
     def sort_models(self):
         """
-        Sort models (all outputs lists) in descending order of model probability (increasing order of criterion value)
+        Sort models in descending order of model probability (increasing order of criterion value).
+
+        This function sorts - in place - the attribute lists candidate_models, prior_probabilities, probabilities and
+        evidences so that they are sorted from most probable to least probable model. It is a stand-alone function that
+        is provided to help the user to easily visualize which model is the best.
+
+        No inputs/outputs.
+
         """
         sort_idx = list(np.argsort(np.array(self.probabilities)))[::-1]
 
         self.candidate_models = [self.candidate_models[i] for i in sort_idx]
+        self.prior_probabilities = [self.prior_probabilities[i] for i in sort_idx]
         self.probabilities = [self.probabilities[i] for i in sort_idx]
         self.evidences = [self.evidences[i] for i in sort_idx]
 
     @staticmethod
     def estimate_evidence(method_evidence_computation, inference_model, posterior_samples, log_posterior_values):
-        """ Estimate evidence from MCMC samples, for one model """
+        """
+        Compute the model evidence, given samples from the parameter posterior pdf.
+
+        As of V3, only the harmonic mean method is supported for evidence computation. This function
+        is a utility function (static method), called within the run_estimation method.
+
+        **Inputs:**
+
+        :param method_evidence_computation: Method for evidence computation. As of v3, only the harmonic mean is
+                                            supported.
+        :type method_evidence_computation: str
+
+        :param inference_model: Inference model.
+        :type inference_model: object of class InferenceModel
+
+        :param posterior_samples: Samples from parameter posterior density.
+        :type posterior_samples: ndarray of shape (nsamples, nparams)
+
+        :param log_posterior_values: Log-posterior values of the posterior samples.
+        :type log_posterior_values: ndarray of shape (nsamples, )
+
+        **Output/Returns:**
+
+        :param evidence: Value of evidence p(data|M).
+        :type evidence: float
+
+        """
         if method_evidence_computation.lower() == 'harmonic_mean':
             #samples[int(0.5 * len(samples)):]
             log_likelihood_values = log_posterior_values - inference_model.prior.log_pdf(x=posterior_samples)
@@ -711,6 +993,25 @@ class BayesModelSelection:
 
     @staticmethod
     def compute_posterior_probabilities(prior_probabilities, evidence_values):
-        """ Compute the posterior probabilities, knowing the values of the evidence """
+        """
+        Compute the model probability given prior probabilities P(M) and evidence values p(data|M).
+
+        Model posterior probability P(M|data) is proportional to p(data|M)P(M). Posterior probabilities sum up to 1 over
+        all models. This function is a utility function (static method), called within the run_estimation method.
+
+        **Inputs:**
+
+        :param prior_probabilities: Values of prior probabilities for all models.
+        :type prior_probabilities: list (length nmodels) of floats
+
+        :param prior_probabilities: Values of evidence for all models.
+        :type prior_probabilities: list (length nmodels) of floats
+
+        **Output/Returns:**
+
+        :param probabilities: Values of model posterior probabilities
+        :type probabilities: list (length nmodels) of floats
+
+        """
         scaled_evidences = [evi * prior_prob for (evi, prior_prob) in zip(evidence_values, prior_probabilities)]
         return scaled_evidences / np.sum(scaled_evidences)

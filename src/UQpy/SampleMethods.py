@@ -247,7 +247,7 @@ class LHS:
         samples_u_to_x = np.zeros_like(samples)
         for j in range(samples.shape[1]):
             i_cdf = self.distribution[j].icdf
-            samples_u_to_x[:, j] = i_cdf(samples[:, j], self.dist_params[j])
+            samples_u_to_x[:, j] = i_cdf(np.atleast_2d(samples[:, j]).T, self.dist_params[j])
 
         if self.verbose:
             print('Successful execution of LHS design..')
@@ -385,60 +385,61 @@ class LHS:
 ########################################################################################################################
 class STS:
     """
-        Description:
+    Generate samples from an assigned probability density function using Stratified Sampling.
 
-            Generate samples from an assigned probability density function using Stratified Sampling.
+    **References:**
 
-            References:
-            M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte
-            Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
+    1. M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte
+       Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
 
-        Input:
-            :param dimension: A scalar value defining the dimension of target density function.
-                              Default: Length of sts_design.
-            :type dimension: int
+    **Input:**
 
-            :param dist_name: A list containing the names of the distributions of the random variables.
-                              Distribution names must match those in the Distributions module.
-                              If the distribution does not match one from the Distributions module, the user must
-                              provide custom_dist.py.
-                              The length of the string must be 1 (if all distributions are the same) or equal to
-                              dimension.
-            :type dist_name: string list
+    :param dimension: A scalar value defining the dimension of target density function.
+                      Default: Length of sts_design.
+    :type dimension: int
 
-            :param dist_params: Parameters of the distribution
-                                Parameters for each random variable are defined as ndarrays.
-                                Each item in the list, dist_params[i], specifies the parameters for the corresponding
-                                distribution, dist[i].
-            :type dist_params: list
+    :param dist_name: A list containing the names of the distributions of the random variables.
+                      Distribution names must match those in the Distributions module.
+                      If the distribution does not match one from the Distributions module, the user must
+                      provide custom_dist.py.
+                      The length of the string must be 1 (if all distributions are the same) or equal to
+                      dimension.
+    :type dist_name: string list
 
-            param: distribution: An object list containing the distributions of the random variables.
-                                 Each item in the list is an object of the Distribution class (see Distributions.py).
-                                 The list has length equal to dimension.
-            :type distribution: list
+    :param dist_params: Parameters of the distribution
+                        Parameters for each random variable are defined as ndarrays.
+                        Each item in the list, dist_params[i], specifies the parameters for the corresponding
+                        distribution, dist[i].
+    :type dist_params: list
 
-            :param sts_design: Specifies the number of strata in each dimension
-            :type sts_design: int list
+    param: distribution: An object list containing the distributions of the random variables.
+                         Each item in the list is an object of the Distribution class (see Distributions.py).
+                         The list has length equal to dimension.
+    :type distribution: list
 
-            :param input_file: File path to input file specifying stratum origins and stratum widths.
-                               Default: None.
-            :type input_file: string
+    :param sts_design: Specifies the number of strata in each dimension
+    :type sts_design: int list
 
-        Output:
-            :return: STS.samples: Set of stratified samples.
-            :rtype: STS.samples: ndarray
+    :param input_file: File path to input file specifying stratum origins and stratum widths.
+                       Default: None.
+    :type input_file: string
 
-            :return: STS.samplesU01: Set of uniform stratified samples on [0, 1]^dimension
-            :rtype: STS.samplesU01: ndarray
+    **Attributes:**
 
-            :return: STS.strata: Instance of the class SampleMethods.Strata
-            :rtype: STS.strata: ndarray
+    :return: STS.samples: Set of stratified samples.
+    :rtype: STS.samples: ndarray
 
+    :return: STS.samplesU01: Set of uniform stratified samples on [0, 1]^dimension
+    :rtype: STS.samplesU01: ndarray
+
+    :return: STS.strata: Instance of the class SampleMethods.Strata
+    :rtype: STS.strata: ndarray
+
+    **Authors:**
+
+    Authors: Michael Shields
+    Last modified: 6/7/2018 by Dimitris Giovanis & Michael Shields
     """
-
-    # Authors: Michael Shields
-    # Last modified: 6/7/2018 by Dimitris Giovanis & Michael Shields
-
     def __init__(self, dimension=None, dist_name=None, dist_params=None, sts_design=None, input_file=None,
                  sts_criterion="random", stype='Rectangular', nsamples=None, n_iters=20):
 
@@ -469,6 +470,12 @@ class STS:
             self.samplesU01, self.samples = self.run_sts()
 
     def run_sts(self):
+        """
+        Execute stratified sampling
+
+        This is an instance method that runs stratified sampling. It is automatically called when the STS class is
+        instantiated.
+        """
 
         if self.stype == 'Rectangular':
             samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
@@ -523,6 +530,7 @@ class STS:
         return in_cube
 
     def init_sts(self):
+        """Preliminary error checks."""
 
         # Check for dimensional consistency
         if self.dimension is None and self.sts_design is not None:
@@ -577,51 +585,53 @@ class STS:
 
 class Strata:
     """
-        Description:
+    Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^dimension with N strata.
 
-            Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^dimension with N strata.
+    **Input:**
 
-        Input:
-            :param n_strata: A list of dimension n defining the number of strata in each of the n dimensions
-                            Creates an equal stratification with strata widths equal to 1/n_strata
-                            The total number of strata, N, is the product of the terms of n_strata
-                            Example -
-                            n_strata = [2, 3, 2] creates a 3d stratification with:
-                            2 strata in dimension 0 with stratum widths 1/2
-                            3 strata in dimension 1 with stratum widths 1/3
-                            2 strata in dimension 2 with stratum widths 1/2
-            :type n_strata int list
+    :param n_strata: A list of dimension n defining the number of strata in each of the n dimensions
+                    Creates an equal stratification with strata widths equal to 1/n_strata
+                    The total number of strata, N, is the product of the terms of n_strata
+                    Example -
+                    n_strata = [2, 3, 2] creates a 3d stratification with:
+                    2 strata in dimension 0 with stratum widths 1/2
+                    3 strata in dimension 1 with stratum widths 1/3
+                    2 strata in dimension 2 with stratum widths 1/2
+    :type n_strata int list
 
-            :param input_file: File path to input file specifying stratum origins and stratum widths.
-                               Default: None
-            :type input_file: string
+    :param input_file: File path to input file specifying stratum origins and stratum widths.
+                       Default: None
+    :type input_file: string
 
-        Output:
-            :return origins: An array of dimension N x n specifying the origins of all strata
-                            The origins of the strata are the coordinates of the stratum orthotope nearest the global
-                            origin.
-                            Example - A 2D stratification with 2 strata in each dimension
-                            origins = [[0, 0]
-                                      [0, 0.5]
-                                      [0.5, 0]
-                                      [0.5, 0.5]]
-            :rtype origins: array
+    :param origins: An array of dimension N x n specifying the origins of all strata
+                    The origins of the strata are the coordinates of the stratum orthotope nearest the global
+                    origin.
+                    Example - A 2D stratification with 2 strata in each dimension
+                    origins = [[0, 0]
+                              [0, 0.5]
+                              [0.5, 0]
+                              [0.5, 0.5]]
+    :type origins: numpy array
 
-            :return widths: An array of dimension N x n specifying the widths of all strata in each dimension
-                           Example - A 2D stratification with 2 strata in each dimension
-                           widths = [[0.5, 0.5]
-                                     [0.5, 0.5]
-                                     [0.5, 0.5]
-                                     [0.5, 0.5]]
-            :rtype widths: ndarray
+    :param widths: An array of dimension N x n specifying the widths of all strata in each dimension
+                   Example - A 2D stratification with 2 strata in each dimension
+                   widths = [[0.5, 0.5]
+                             [0.5, 0.5]
+                             [0.5, 0.5]
+                             [0.5, 0.5]]
+    :type widths: numpy array
 
-            :return weights: An array of dimension 1 x N containing sample weights.
-                            Sample weights are equal to the product of the strata widths (i.e. they are equal to the
-                            size of the strata in the [0, 1]^n space.
-            :rtype weights: ndarray
+    **Attributes:**
 
+    :param Strata.weights: An array of dimension 1 x N containing sample weights.
+                    Sample weights are equal to the product of the strata widths (i.e. they are equal to the
+                    size of the strata in the [0, 1]^n space.
+    :type Strata.weights: numpy array
+
+    **Author:**
+
+    Michael D. Shields
     """
-
     def __init__(self, n_strata=None, input_file=None, origins=None, widths=None):
 
         self.input_file = input_file
@@ -661,33 +671,35 @@ class Strata:
     def fullfact(levels):
 
         """
-            Description:
+        Create a full-factorial design
 
-                Create a full-factorial design
+        Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
+        Copyright (C) 2012 - 2013 - Michael Baudin
+        Copyright (C) 2012 - Maria Christopoulou
+        Copyright (C) 2010 - 2011 - INRIA - Michael Baudin
+        Copyright (C) 2009 - Yann Collette
+        Copyright (C) 2009 - CEA - Jean-Marc Martinez
+        Original source code can be found at:
+        https://pythonhosted.org/pyDOE/#
+        or
+        https://pypi.org/project/pyDOE/
+        or
+        https://github.com/tisimst/pyDOE/
 
-                Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
-                Copyright (C) 2012 - 2013 - Michael Baudin
-                Copyright (C) 2012 - Maria Christopoulou
-                Copyright (C) 2010 - 2011 - INRIA - Michael Baudin
-                Copyright (C) 2009 - Yann Collette
-                Copyright (C) 2009 - CEA - Jean-Marc Martinez
-                Original source code can be found at:
-                https://pythonhosted.org/pyDOE/#
-                or
-                https://pypi.org/project/pyDOE/
-                or
-                https://github.com/tisimst/pyDOE/
+        **Input:**
 
-            Input:
-                :param levels: A list of integers that indicate the number of levels of each input design factor.
-                :type levels: list
+        :param levels: A list of integers that indicate the number of levels of each input design factor.
+        :type levels: list
 
-            Output:
-                :return ff: Full-factorial design matrix.
-                :rtype ff: ndarray
+        **Output:**
 
+        :return ff: Full-factorial design matrix.
+        :rtype ff: ndarray
+
+        **Author:**
+
+        Michael D. Shields
         """
-
         # Number of factors
         n_factors = len(levels)
         # Number of combinations
@@ -716,54 +728,54 @@ class Strata:
 
 class RSS:
     """
+    Generate new samples using adaptive sampling methods, i.e. Refined Stratified Sampling and Gradient
+    Enhanced Refined Stratified Sampling.
 
-        Description:
+    **References:**
 
-            Generate new samples using adaptive sampling methods, i.e. Refined Stratified Sampling and Gradient
-            Enhanced Refined Stratified Sampling.
+    1. Michael D. Shields, Kirubel Teferra, Adam Hapij and Raymond P. Daddazio, "Refined Stratified Sampling for
+       efficient Monte Carlo based uncertainty quantification", Reliability Engineering & System Safety,
+       ISSN: 0951-8320, Vol: 142, Page: 310-325, 2015.
+    2. M. D. Shields, "Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems",
+       Reliability Engineering & System Safety, ISSN: 0951-8320, Vol: 175, Page: 207-224, 2018.
 
-            References:
-            Michael D. Shields, Kirubel Teferra, Adam Hapij and Raymond P. Daddazio, "Refined Stratified Sampling for
-                efficient Monte Carlo based uncertainty quantification", Reliability Engineering & System Safety,
-                ISSN: 0951-8320, Vol: 142, Page: 310-325, 2015.
+    **Input:**
 
-            M. D. Shields, "Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems",
-                Reliability Engineering & System Safety, ISSN: 0951-8320, Vol: 175, Page: 207-224, 2018.
-        Input:
-            :param run_model_object: A RunModel object, which is used to evaluate the function value
-            :type run_model_object: class
+    :param run_model_object: A RunModel object, which is used to evaluate the function value
+    :type run_model_object: class
 
-            :param sample_object: A SampleMethods class object, which contains information about existing samples
-            :type sample_object: class
+    :param sample_object: A SampleMethods class object, which contains information about existing samples
+    :type sample_object: class
 
-            :param krig_object: A kriging class object, only  required if meta is 'Kriging'.
-            :type krig_object: class
+    :param krig_object: A kriging class object, only  required if meta is 'Kriging'.
+    :type krig_object: class
 
-            :param local: Indicator to update surrogate locally.
-            :type local: boolean
+    :param local: Indicator to update surrogate locally.
+    :type local: boolean
 
-            :param max_train_size: Minimum size of training data around new sample used to update surrogate.
-                                   Default: nsamples
-            :type max_train_size: int
+    :param max_train_size: Minimum size of training data around new sample used to update surrogate.
+                           Default: nsamples
+    :type max_train_size: int
+    :param step_size: Step size to calculate the gradient using central difference. Only required if Delaunay is
+                      used as surrogate approximation.
+    :type step_size: float
 
-            :param step_size: Step size to calculate the gradient using central difference. Only required if Delaunay is
-                              used as surrogate approximation.
-            :type step_size: float
+    :param n_add: Number of samples generated in each iteration
+    :type n_add: int
 
-            :param n_add: Number of samples generated in each iteration
-            :type n_add: int
+    :param verbose: A boolean declaring whether to write text to the terminal.
+    :type verbose: bool
 
-            :param verbose: A boolean declaring whether to write text to the terminal.
-            :type verbose: bool
+    **Attributes:**
 
-        Output:
-            :return: RSS.sample_object.samples: Final/expanded samples.
-            :rtype: RSS.sample_object.samples: ndarray
+    :param: RSS.sample_object.samples: Final/expanded samples.
+    :type: RSS.sample_object.samples: ndarray
 
+    **Authors:**
+
+    Authors: Mohit S. Chauhan
+    Last modified: 01/07/2020 by Mohit S. Chauhan
     """
-
-    # Authors: Mohit S. Chauhan
-    # Last modified: 01/07/2020 by Mohit S. Chauhan
 
     def __init__(self, sample_object=None, run_model_object=None, krig_object=None, local=False, max_train_size=None,
                  step_size=0.005, qoi_name=None, n_add=1, verbose=False):
@@ -804,12 +816,18 @@ class RSS:
 
     def sample(self, nsamples=0, n_add=None):
         """
-                Inputs:
-                    :param nsamples: Final size of the samples.
-                    :type nsamples: int
+        Execute refined stratified sampling.
 
-                    :param n_add: Number of samples to generate with each iteration.
-                    :type n_add: int
+        This is an instance method that runs refined stratified sampling. It is automatically called when the RSS class
+        is instantiated.
+
+        **Inputs:**
+
+        :param nsamples: Final size of the samples.
+        :type nsamples: int
+
+        :param n_add: Number of samples to generate with each iteration.
+        :type n_add: int
         """
         self.nsamples = nsamples
         self.nexist = self.sample_object.samples.shape[0]
@@ -827,6 +845,9 @@ class RSS:
     # Run Gradient-Enhanced Refined Stratified Sampling
     ###################################################
     def run_gerss(self):
+        """
+        Samples are generated using Gradient Enhanced-Refined Stratified Sampling.
+        """
         # --------------------------
         # RECTANGULAR STRATIFICATION
         # --------------------------
@@ -1157,6 +1178,9 @@ class RSS:
     # Run Refined Stratified Sampling
     #################################
     def run_rss(self):
+        """
+        Samples are generated using Refined Stratified Sampling.
+        """
         # --------------------------
         # RECTANGULAR STRATIFICATION
         # --------------------------
@@ -1342,9 +1366,25 @@ class RSS:
 
     # Support functions for RSS and GE-RSS
 
-    # Code for estimating gradients with a metamodel (surrogate)
-    # TODO: We may want to consider moving this to Utilities.
     def estimate_gradient(self, x, y, xt):
+        """
+        Estimating gradients with a metamodel (surrogate).
+
+        **Inputs:**
+
+        :param x: Samples in the training data.
+        :type x: numpy array
+
+        :param y: Function values evaluated at the samples in the training data.
+        :type y: numpy array
+
+        :param xt: Samples where gradients are computed.
+        :type xt: numpy array
+
+        **Outputs:**
+        :return gr: First-order gradient evaluated at the points 'xt'.
+        :rtype gr: numpy array
+        """
         from UQpy.Reliability import TaylorSeries
         if type(self.krig_object).__name__ == 'Krig':
             self.krig_object.fit(samples=x, values=y)
@@ -1354,17 +1394,14 @@ class RSS:
             tck = self.krig_object.predict
         else:
             from scipy.interpolate import LinearNDInterpolator
-
-            # TODO: Here we need to add a reflection of the sample points over each face of the hypercube and build the
-            #       linear interpolator from the reflected points.
             tck = LinearNDInterpolator(x, y, fill_value=0).__call__
 
         gr = TaylorSeries.gradient(samples=xt, model=tck, dimension=self.dimension, order='first',
                                    df_step=self.step_size, scale=False)
         return gr
 
-    # Initialization and preliminary error checks.
     def init_rss(self):
+        """Preliminary error checks."""
         if type(self.sample_object).__name__ not in ['STS', 'RSS']:
             raise NotImplementedError("UQpy Error: sample_object must be an object of the STS or RSS class.")
 
@@ -1380,22 +1417,30 @@ class RSS:
 
 class Simplex:
     """
-        Description:
+    Generate random samples inside a simplex using uniform probability distribution.
 
-            Generate random samples inside a simplex using uniform probability distribution.
+    **References:**
 
-            References:
-            W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, "Simplex-stochastic collocation method with improved
-                calability",Journal of Computational Physics, 310:301–328 2016.
-        Input:
-            :param nodes: The vertices of the simplex
-            :type nodes: ndarray
+    1. W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, "Simplex-stochastic collocation method with improved
+       calability",Journal of Computational Physics, 310:301–328 2016.
 
-            :param nsamples: The number of samples to be generated inside the simplex
-            :type nsamples: int
-        Output:
-            :return samples: New generated samples
-            :rtype samples: ndarray
+    **Input:**
+
+    :param nodes: The vertices of the simplex
+    :type nodes: ndarray
+
+    :param nsamples: The number of samples to be generated inside the simplex
+    :type nsamples: int
+
+    **Attributes:**
+
+    :return Simplex.samples: New random samples distributed uniformly inside the simplex.
+    :rtype Simplex.samples: ndarray
+
+    **Authors:**
+
+    Authors: Dimitris G.Giovanis
+    Last modified: 11/28/2018 by Mohit S. Chauhan
     """
 
     # Authors: Dimitris G.Giovanis
@@ -1408,6 +1453,17 @@ class Simplex:
         self.samples = self.run_sis()
 
     def run_sis(self):
+        """
+        Generates uniformly distributed random samples inside the simplex.
+
+        This is an instance method that generates samples. It is automatically called when the Simplex class is
+        instantiated.
+
+        **Output:**
+
+        :return sample: Random samples
+        :rtype sample: numpy array
+        """
         dimension = self.nodes.shape[1]
         if dimension > 1:
             sample = np.zeros([self.nsamples, dimension])
@@ -1431,6 +1487,7 @@ class Simplex:
         return sample
 
     def init_sis(self):
+        """Preliminary error checks."""
         if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
             raise NotImplementedError("Exit code: Number of samples to be generated 'nsamples' should be a positive "
                                       "integer.")
@@ -1445,88 +1502,93 @@ class Simplex:
 ########################################################################################################################
 class AKMCS:
     """
+    Generate new samples using different active learning method and properties of kriging surrogate along with
+    MCS.
 
-        Description:
+    **References:**
 
-            Generate new samples using different active learning method and properties of kriging surrogate along with
-            MCS.
+    1. B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
+        Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
 
-            References:
-        Input:
-            :param run_model_object: A RunModel object, which is used to evaluate the function value
-            :type run_model_object: class
+    **Input:**
 
-            :param samples: A 2d-array of samples
-            :type samples: ndarray
+    :param run_model_object: A RunModel object, which is used to evaluate the function value
+    :type run_model_object: class
 
-            :param krig_object: A kriging class object
-            :type krig_object: class
+    :param samples: A 2d-array of samples
+    :type samples: ndarray
 
-            :param population: Sample which are used as learning set by AKMCS class.
-            :type population: ndarray
+    :param krig_object: A kriging class object
+    :type krig_object: class
 
-            :param nlearn: Number of sample generated using MCS, which are used as learning set by AKMCS. Only required
-                           if population is not defined.
-            :type nlearn: int
+    :param population: Sample which are used as learning set by AKMCS class.
+    :type population: ndarray
 
-            :param nstart: Number of initial samples generated using LHS. Only required if sample_object is not defined.
-            :type nstart: int
+    :param nlearn: Number of sample generated using MCS, which are used as learning set by AKMCS. Only required
+                   if population is not defined.
+    :type nlearn: int
 
-            :param dist_name: A list containing the names of the distributions of the random variables. This is only
-                              required if sample_object is not defined.
-                              Distribution names must match those in the Distributions module.
-                              If the distribution does not match one from the Distributions module, the user must
-                              provide custom_dist.py.
-                              The length of the string must be 1 (if all distributions are the same) or equal to
-                              dimension.
-            :type dist_name: string list
+    :param nstart: Number of initial samples generated using LHS. Only required if sample_object is not defined.
+    :type nstart: int
 
-            :param dist_params: Parameters of the distribution
-                                Parameters for each random variable are defined as ndarrays.
-                                Each item in the list, dist_params[i], specifies the parameters for the corresponding
-                                distribution, dist[i].
-            :type dist_params: list
+    :param dist_name: A list containing the names of the distributions of the random variables. This is only
+                      required if sample_object is not defined.
+                      Distribution names must match those in the Distributions module.
+                      If the distribution does not match one from the Distributions module, the user must
+                      provide custom_dist.py.
+                      The length of the string must be 1 (if all distributions are the same) or equal to
+                      dimension.
+    :type dist_name: string list
 
-            :param lf: Learning function used as selection criteria to identify the new samples.
-                       Options: U, Weighted-U, EFF, EIF and EGIF
-            :type lf: str/function
+    :param dist_params: Parameters of the distribution
+                        Parameters for each random variable are defined as ndarrays.
+                        Each item in the list, dist_params[i], specifies the parameters for the corresponding
+                        distribution, dist[i].
+    :type dist_params: list
 
-            :param n_add: Number of samples to be selected per iteration.
-            :type n_add: int
+    :param lf: Learning function used as selection criteria to identify the new samples.
+               Options: U, Weighted-U, EFF, EIF and EGIF
+    :type lf: str/function
 
-            :param min_cov: Minimum Covariance used as the stopping criteria of AKMCS method in case of reliability
-                            analysis.
-            :type min_cov: float
+    :param n_add: Number of samples to be selected per iteration.
+    :type n_add: int
 
-            :param max_p: Maximum possible value of probability density function of samples. Only required with
-                          'Weighted-U' learning function.
-            :type max_p: float
+    :param min_cov: Minimum Covariance used as the stopping criteria of AKMCS method in case of reliability
+                    analysis.
+    :type min_cov: float
 
-            :param save_pf: Indicator to estimate probability of failure after each iteration. Only required if
-                            user-defined learning function is used.
-            :type save_pf: boolean
+    :param max_p: Maximum possible value of probability density function of samples. Only required with
+                  'Weighted-U' learning function.
+    :type max_p: float
 
-            :param verbose: A boolean declaring whether to write text to the terminal.
-            :type verbose: bool
+    :param save_pf: Indicator to estimate probability of failure after each iteration. Only required if
+                    user-defined learning function is used.
+    :type save_pf: boolean
 
-        Output:
-            :return: AKMCS.sample_object.samples: Final/expanded samples.
-            :rtype: AKMCS..sample_object.samples: ndarray
+    :param verbose: A boolean declaring whether to write text to the terminal.
+    :type verbose: bool
 
-            :return: AKMCS.krig_model: Prediction function for the final surrogate model.
-            :rtype: AKMCS.krig_model: function
+    **Attributes:**
 
-            :return: AKMCS.pf: Probability of failure after every iteration of AKMCS. Available as an output only for
-                               Reliability Analysis.
-            :rtype: AKMCS.pf: float list
+    :param: AKMCS.sample_object.samples: Final/expanded samples.
+    :type: AKMCS..sample_object.samples: ndarray
 
-            :return: AKMCS.cov_pf: Covariance of probability of failure after every iteration of AKMCS. Available as an
-                                   output only for Reliability Analysis.
-            :rtype: AKMCS.pf: float list
+    :param: AKMCS.krig_model: Prediction function for the final surrogate model.
+    :type: AKMCS.krig_model: function
+
+    :param: AKMCS.pf: Probability of failure after every iteration of AKMCS. Available as an output only for
+                       Reliability Analysis.
+    :type: AKMCS.pf: float list
+
+    :param: AKMCS.cov_pf: Covariance of probability of failure after every iteration of AKMCS. Available as an
+                           output only for Reliability Analysis.
+    :type: AKMCS.pf: float list
+
+    **Authors:**
+
+    Authors: Mohit S. Chauhan
+    Last modified: 01/07/2020 by Mohit S. Chauhan
     """
-
-    # Authors: Mohit S. Chauhan
-    # Last modified: 01/07/2020 by Mohit S. Chauhan
 
     def __init__(self, run_model_object=None, samples=None, krig_object=None, nlearn=10000, nstart=None,
                  population=None, dist_name=None, dist_params=None, qoi_name=None, lf='U', n_add=1,
@@ -1569,9 +1631,14 @@ class AKMCS:
         self.run_akmcs()
 
     def run_akmcs(self):
+        """
+        Executes Adaptive Kriging - Monte Carlo Method.
 
-        # Check if the initial sample design already exists and has model evaluations with it.
-        # If it does not, run the initial calculations.
+        This is an instance method that check initial sample design an evaluate model at the training points. It is
+        automatically called when the STS class is instantiated.
+        """
+
+        # If the initial sample design does not exists, run the initial calculations.
         if self.samples is None:
             if self.verbose:
                 print('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
@@ -1580,31 +1647,33 @@ class AKMCS:
         if self.verbose:
             print('UQpy: AKMCS - Running the initial sample set using RunModel.')
 
+        # Evaluate model at the training points
         self.run_model_object.run(samples=self.samples)
 
     def sample(self, samples=None, n_add=1, append_samples=True, nsamples=0, lf=None):
         """
-        Description:
+        Iterative procedure is applied to learn samples based on metamodel and learning function, and then metamodel is
+        updated based on new samples.
 
-        Inputs:
-            :param samples: A 2d-array of samples
-            :type samples: ndarray
+        **Inputs:**
 
-            :param n_add: Number of samples to be selected per iteration.
-            :type n_add: int
+        :param samples: A 2d-array of samples
+        :type samples: ndarray
 
-            :param append_samples: If 'True', new samples are append to existing samples in sample_object. Otherwise,
-                                   existing samples are discarded.
-            :type append_samples: boolean
+        :param n_add: Number of samples to be selected per iteration.
+        :type n_add: int
 
-            :param nsamples: Number of samples to generate. No Default Value: nsamples must be prescribed.
-            :type nsamples: int
+        :param append_samples: If 'True', new samples are append to existing samples in sample_object. Otherwise,
+                               existing samples are discarded.
+        :type append_samples: boolean
 
-            :param lf: Learning function used as selection criteria to identify the new samples. Only required, if
-                       samples are generated using multiple criterion
-                       Options: U, Weighted-U, EFF, EIF and EGIF
-            :type lf: str/function
+        :param nsamples: Number of samples to generate. No Default Value: nsamples must be prescribed.
+        :type nsamples: int
 
+        :param lf: Learning function used as selection criteria to identify the new samples. Only required, if
+                   samples are generated using multiple criterion
+                   Options: U, Weighted-U, EFF, EIF and EGIF
+        :type lf: str/function
         """
 
         if self.kriging != 'UQpy':
@@ -1717,15 +1786,24 @@ class AKMCS:
     # ------------------
     # LEARNING FUNCTIONS
     # ------------------
-    def eigf(self, surr, pop):
-        # Expected Improvement for Global Fit (EIGF)
-        # Reference: J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
-        # Link: https://arxiv.org/pdf/1905.05345.pdf
+    def eigf(self, pop):
+        """
+        Learns new samples based on Expected Improvement for Global Fit (EIGF) as learning function
+
+        **References:**
+
+        1. J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
+           (Link: https://arxiv.org/pdf/1905.05345.pdf)
+
+        **Inputs:**
+        :param pop: Remaining sample population (new samples are learn from this population)
+        :type pop
+        """
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
 
@@ -1746,15 +1824,25 @@ class AKMCS:
         return rows
 
     # This learning function has not yet been tested.
-    def u(self, surr, pop):
-        # U-function
-        # References: B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining
-        # Kriging and Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
+    def u(self, pop):
+        """
+        Learns new samples based on U-function as learning function.
+
+        **References:**
+
+        1. B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
+        Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
+
+        **Inputs:**
+
+        :param pop: Remaining sample population (new samples are learn from this population)
+        :type pop
+        """
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
 
@@ -1767,15 +1855,25 @@ class AKMCS:
         return rows
 
     # This learning function has not yet been tested.
-    def weighted_u(self, surr, pop):
-        # Probability Weighted U-function
-        # References: V.S. Sundar and M.S. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH
-        # MULTIMODEL INFERENCE".
+    def weighted_u(self, pop):
+        """
+        Learns new samples based on Probability Weighted U-function as learning function.
+
+        **References:**
+
+        1. V.S. Sundar and M.S. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH MULTIMODEL
+           INFERENCE".
+
+        **Inputs:**
+
+        :param pop: Remaining sample population (new samples are learn from this population)
+        :type pop: numpy array
+        """
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
 
@@ -1796,15 +1894,25 @@ class AKMCS:
         return rows
 
     # This learning function has not yet been tested.
-    def eff(self, surr, pop):
-        # Expected Feasibilty Function (EFF)
-        # References: B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, "Efficient Global Reliability
-        # Analysis for Nonlinear Implicit Performance Functions", AIAA JOURNAL, Volume 46, 2008.
+    def eff(self, pop):
+        """
+        Learns new samples based on Expected Feasibilty Function (EFF) as learning function.
+
+        **References:**
+
+        1. B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, "Efficient Global Reliability Analysis
+           for Nonlinear Implicit Performance Functions", AIAA JOURNAL, Volume 46, 2008.
+
+        **Inputs:**
+
+        :param pop: Remaining sample population (new samples are learn from this population)
+        :type pop: numpy array
+        """
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             g = g.reshape(g.size, 1)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
@@ -1830,16 +1938,26 @@ class AKMCS:
         return rows
 
     # This learning function has not yet been tested.
-    def eif(self, surr, pop):
-        # Expected Improvement Function (EIF)
-        # References: D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box
-        # Functions", Journal of Global Optimization, Pages 455–492, 1998.
+    def eif(self, pop):
+        """
+        Learns new samples based on Expected Improvement Function (EIF) as learning function.
+
+        **References:**
+
+        1. D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box Functions",
+           Journal of Global Optimization, Pages 455–492, 1998.
+
+        **Inputs:**
+
+        :param pop: Remaining sample population (new samples are learn from this population)
+        :type pop: numpy array
+        """
 
         if self.kriging == 'UQpy':
-            g, sig = surr(pop, dy=True)
+            g, sig = self.krig_model(pop, dy=True)
             sig = np.sqrt(sig)
         else:
-            g, sig = surr(pop, return_std=True)
+            g, sig = self.krig_model(pop, return_std=True)
             sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
         fm = min(self.qoi)
@@ -1849,6 +1967,9 @@ class AKMCS:
         return rows
 
     def learning(self):
+        """
+        Defines the leaning function used to generate new samples.
+        """
         if type(self.lf).__name__ == 'function':
             self.lf = self.lf
         elif self.lf not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
@@ -1864,8 +1985,8 @@ class AKMCS:
         else:
             self.lf = self.eff
 
-    # Initial check for errors
     def init_akmcs(self):
+        """Preliminary error checks."""
         if self.run_model_object is None:
             raise NotImplementedError('UQpy: AKMCS requires a predefined RunModel object.')
 
@@ -2383,87 +2504,111 @@ class MCMC_old:
 
 class MCMC:
     """
-        Description:
-            Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
-            Supported algorithms at this time are:
-            - Metropolis-Hastings(MH),
-            - Modified Metropolis-Hastings (MMH),
-            - Affine Invariant Ensemble Sampler with stretch moves (Stretch),
-            - DEMC,
-            - Delayed Rejection Adaptive Metropolis (DRAM)
-            References:
-            S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
-                Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
-            J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
-                no. 1, pp. 65–80, 2010.
-            R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
-        Input:
-            :param dimension: A scalar value defining the dimension of target density function. Default: 1
-            :type dimension: int
+    Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
 
-            :param pdf_target: Target density function from which to draw random samples
-            :type pdf_target: (list of) callables
+    Supported algorithms at this time are:
+    - Metropolis-Hastings(MH),
+    - Modified Metropolis-Hastings (MMH),
+    - Affine Invariant Ensemble Sampler with stretch moves (Stretch),
+    - Delayed Rejection Adaptive Metropolis (DRAM),
+    - Differential Evolution Adaptive Metropolis (DREAM).
+    For each algorithm, there exists an init_algorithm and run_algorithm method that are being called internally when
+    creating the MCMC object and running the chain.
 
-            :param log_pdf_target: Alternative way to define the target pdf, see above.
-            :type log_pdf_target: (list of) callables
+    **References:**
 
-            :param args_target: Parameters of the target pdf copula (used when calling log_pdf method).
-            :type args_target: tuple
+    1. S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
+       Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+    2. J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
+       no. 1, pp. 65–80, 2010.
+    3. Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. "emcee: The MCMC Hammer". Publications
+       of the Astronomical Society of the Pacific, 125(925):306–312,2013.
+    4. Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive MCMC". Statistics
+       and Computing, 16(4):339–354, 2006.
+    5. J.A. Vrugt et al. "Accelerating Markov chain Monte Carlo simulation by differential evolution with self-adaptive
+       randomized subspace sampling". International Journal of Nonlinear Sciences and Numerical Simulation,
+       10(3):273–290, 2009.[68]
+    6. J.A. Vrugt. "Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and MATLAB
+       implementation". Environmental Modelling & Software, 75:273–316, 2016.
+    7. R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
 
-            :param algorithm:  Algorithm used to generate random samples.
-                            Options:
-                                'MH': Metropolis Hastings Algorithm
-                                'MMH': Component-wise Modified Metropolis Hastings Algorithm
-                                'Stretch': Affine Invariant Ensemble MCMC with stretch moves
-                                'DEMC': Affine Invariant Ensemble MCMC with stretch moves
-                                'DRAM': Delayed Rejection Adaptive Metropolis
-                            Default: 'MH'
-            :type algorithm: str
+    **Inputs:**
 
-            :param nsamples: Number of samples to generate
-            :type nsamples: int
+    :param dimension: A scalar value defining the dimension of target density function.
 
-            :param nsamples_per_chain: Number of samples to generate
-            :type nsamples_per_chain: int
+                      This input must be provided.
 
-            :param jump: Number of samples between accepted states of the Markov chain.
-                                Default value: 1 (Accepts every state)
-            :type: jump: int
+                      Default: 1
+    :type dimension: int
 
-            :param nburn: Length of burn-in. Number of samples at the beginning of the chain to discard.
-                            This option is only used for the 'MMH' and 'MH' algorithms.
-                            Default: nburn = 0
-            :type nburn: int
+    :param pdf_target: Target density function from which to draw random samples. Either pdf_target or log_pdf_target
+                       must be provided.
+    :type pdf_target: (list of) callables
 
-            :param seed: Seed of the Markov chain(s)
-                            Default: zeros(1 x dimension) - will raise an error for some algorithms for which the seed
-                            must be specified
-            :type seed: numpy array of dimension (nchains, dimension)
+    :param log_pdf_target: Log of the target density function from which to draw random samples. Either pdf_target or
+                           log_pdf_target must be provided.
+    :type log_pdf_target: (list of) callables
 
-            :param **algorithm_inputs: Inputs that are algorithm specific - see user manual for a detailed list
-            :type **algorithm_inputs: dictionary
+    :param args_target: Positional arguments of the pdf target.
+    :type args_target: tuple
 
-            :param save_log_pdf: boolean that indicates whether to save log_pdf_values along with the samples
-            :type save_log_pdf: bool, default False
+    :param algorithm: Algorithm used to generate random samples. Options are 'MH', 'MMH', 'Stretch', 'DRAM', 'DREAM'.
 
-            :param concat_chains_: boolean that indicates whether to concatenate the chains after a run,
-                    if True: self.samples will be of size (nchains * nsamples, dimension)
-                    if False: self.samples will be of size (nsamples, nchains, dimension)
-            :type concat_chains_: bool, default True
-        Output:
-            :return: MCMC.samples: Set of MCMC samples following the target distribution
-            :rtype: MCMC.samples: ndarray
+                      Default: 'MH'
+    :type algorithm: str
 
-            :return: MCMC.log_pdf_values: Values of
-            :rtype: MCMC.log_pdf_values: ndarray
+    :param nsamples: Number of samples to generate.
+    :type nsamples: int
 
-            :return: MCMC.acceptance_rate: Acceptance ratio of the MCMC samples
-            :rtype: MCMC.acceptance_rate: float
+    :param nsamples_per_chain: Number of samples to generate per chain.
+    :type nsamples_per_chain: int
 
+    :param jump: Number of samples between accepted states of the Markov chain.
+
+                 Default: 1 (Accepts every state)
+    :type: jump: int
+
+    :param nburn: Length of burn-in. Number of samples at the beginning of the chain to discard.
+
+                  Default: 0
+    :type nburn: int
+
+    :param seed: Seed of the Markov chain(s)
+
+                 Default: zeros(1 x dimension) - will raise an error for some algorithms for which the seed
+                 must be specified
+    :type seed: numpy array of dimension (nchains, dimension)
+
+    :param algorithm_inputs: Keyword inputs that are algorithm specific
+    :type algorithm_inputs: dictionary
+
+    :param save_log_pdf: boolean that indicates whether to save log_pdf_values along with the samples
+
+                         Default: False
+    :type save_log_pdf: bool
+
+    :param concat_chains_: boolean that indicates whether to concatenate the chains after a run
+
+                           Default: True
+    :type concat_chains_: bool
+
+    ** Attributes:**
+
+    :param: samples: Set of MCMC samples following the target distribution
+    :type: samples: ndarray of shape (nchains * nsamples, dimension) or (nsamples, nchains, dimension)
+
+    :param: log_pdf_values: Values of the log pdf for the accepted samples
+    :type: log_pdf_values: ndarray of shape (nchains * nsamples,) or (nsamples, nchains)
+
+    :param: acceptance_rate: Acceptance ratio of the MCMC samples
+    :type: acceptance_rate: float
+
+    **Authors:**
+
+    Audrey Olivier, Michael D. Shields, Mohit Chauhan, Dimitris G. Giovanis
+
+    Last Modified: 1/21/20 by Michael D. Shields
     """
-
-    # Authors: Audrey Olivier, Michael D. Shields, Mohit Chauhan, Dimitris G. Giovanis
-    # Updated: 04/08/2019 by Audrey Olivier
 
     def __init__(self, dimension=1, pdf_target=None, log_pdf_target=None, args_target=None,
                  algorithm='MH', seed=None, nsamples=None, nsamples_per_chain=None, nburn=0, jump=1,
@@ -2520,8 +2665,23 @@ class MCMC:
             self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
     def run(self, nsamples=None, nsamples_per_chain=None):
-        """ Run MCMC algorithm. If run was called before, new samples are appended to self.samples, otherwise
-        self.samples is created from scratch. """
+        """
+        Run the MCMC chain.
+
+        This function samples from the MCMC chains and append samples to existing ones (if any). This method calls the
+        run_algorithm method that is specific to each algorithm. If inputs nsamples or nsamples_per_chain are provided
+        when creating the MCMC object, this method is called when the object is created. It can also be called
+        separately.
+
+        **Inputs:**
+
+        :param nsamples: Number of samples to generate.
+        :type nsamples: int
+
+        :param nsamples_per_chain: Number of samples to generate per chain.
+        :type nsamples_per_chain: int
+
+        """
 
         # Compute nsamples from nsamples_per_chain or vice-versa
         nsamples, nsamples_per_chain = self.preprocess_nsamples(nchains=self.nchains, nsamples=nsamples,
@@ -2554,7 +2714,17 @@ class MCMC:
     ####################################################################################################################
     # Functions for MH algorithm: init_mh and run_mh
     def init_mh(self):
-        """ Check MH algorithm inputs """
+        """
+        Initialize the MH algorithm.
+
+        This function is being called when creating an MCMC object with algorithm='MH', it initializes necessary
+        variables and algorithm-specific inputs, namely:
+        - proposal: Distribution object that defines the proposal, default is standard normal.
+        - proposal_params: Parameters of the proposal distribution (list of floats)
+        - proposal_is_symmetric: Boolean, indicates whether the proposal density is symmetric. Default is False.
+
+        No inputs/outputs.
+        """
 
         # MH algorithm inputs: proposal and proposal_params
         names = ['proposal', 'proposal_params', 'proposal_is_symmetric']
@@ -2585,7 +2755,21 @@ class MCMC:
             self.algorithm_inputs['proposal_is_symmetric'] = False
 
     def run_mh(self, nsims, current_state):
-        """ Run ns_per_chain * jump + nburn iterations  """
+        """
+        Run the MCMC chain for MH algorithm.
+
+        This function performs nsims iterations of the MH algorithm, starting at a given current state. It saved the
+        samples / log_pdf in attribute samples and log_pdf_values. It also computes the acceptance ratio of the chains.
+
+        **Inputs:**
+
+        :param nsims: Number of iterations to perform.
+        :type nsims: int
+
+        :param current_state: Current state of the chain to start from.
+        :type current_state: ndarray of shape (nchains, dim)
+
+        """
         current_log_pdf = self.evaluate_log_target(current_state)
 
         # Loop over the samples
@@ -2624,7 +2808,19 @@ class MCMC:
     ####################################################################################################################
     # Functions for MMH algorithm: init_mmh and iterations_mmh
     def init_mmh(self):
-        """ Perform some checks and initialize the MMH algorithm """
+        """
+        Initialize the MMH algorithm.
+
+        This function is being called when creating an MCMC object with algorithm='MMH'. In this algorithm, candidate
+        samples are drawn separately in each dimension, thus the proposal consists in a list of 1d distributions. The
+        target pdf can be given as a joint pdf or a list of marginal pdfs in all dimensions. This will trigger two
+        different algorithms. The algorithm-specific inputs for MMH are:
+        - proposal: Distribution object that defines the proposals, default is a list of 1d standard normal.
+        - proposal_params: Parameters of the proposal distributions
+        - proposal_is_symmetric: list of bool (default False), indicates whether the proposal densities are symmetric.
+
+        No inputs/outputs.
+        """
 
         # Algorithms inputs are pdf_target_type, proposal_type and proposal_scale.
         used_inputs = ['proposal', 'proposal_params', 'proposal_is_symmetric']
@@ -2671,7 +2867,21 @@ class MCMC:
                 raise TypeError('MMH: proposal_is_symmetric should be a (list of) boolean(s)')
 
     def run_mmh(self, nsims, current_state):
-        # Loop over the samples
+        """
+        Run the MCMC chain for MMH algorithm.
+
+        This function performs nsims iterations of the MMH algorithm, starting at a given current state. It saved the
+        samples / log_pdf in attribute samples and log_pdf_values. It also computes the acceptance ratio of the chains.
+
+        **Inputs:**
+
+        :param nsims: Number of iterations to perform.
+        :type nsims: int
+
+        :param current_state: Current state of the chain to start from.
+        :type current_state: ndarray of shape (nchains, dim)
+
+        """
 
         # The target pdf is provided via its marginals
         if self.evaluate_log_target_marginals is not None:
@@ -2755,7 +2965,15 @@ class MCMC:
     ####################################################################################################################
     # Functions for Stretch algorithm: init_stretch and iterations_stretch
     def init_stretch(self):
-        """ Perform some checks and initialize the Stretch algorithm """
+        """
+        Initialize the Stretch algorithm.
+
+        This function is being called when creating an MCMC object with algorithm='Stretch', it initializes necessary
+        variables and algorithm-specific inputs, namely:
+        - scale: scale parameter, default is 2
+
+        No inputs/outputs.
+        """
 
         # Check nchains = ensemble size for the Stretch algorithm
         if self.nchains < 2:
@@ -2771,7 +2989,21 @@ class MCMC:
             raise ValueError('For Stretch, algorithm input "scale" should be a float.')
 
     def run_stretch(self, nsims, current_state):
-        # Evaluate the current log_pdf and initialize acceptance ratio
+        """
+        Run the MCMC chain for Stretch algorithm.
+
+        This function performs nsims iterations of the Stretch algorithm, starting at a given current state. It saves
+        the samples / log_pdf in attribute samples and log_pdf_values.
+
+        **Inputs:**
+
+        :param nsims: Number of iterations to perform.
+        :type nsims: int
+
+        :param current_state: Current state of the chain to start from.
+        :type current_state: ndarray of shape (nchains, dim)
+
+        """
         current_log_pdf = self.evaluate_log_target(current_state)
 
         # Start the loop over nsamples - this code uses the parallel version of the stretch algorithm
@@ -2818,7 +3050,23 @@ class MCMC:
     ####################################################################################################################
     # Functions from DRAM algorithm
     def init_dram(self):
-        """ Perform some checks and initialize the DRAM algorithm """
+        """
+        Initialize the DRAM algorithm.
+
+        This function is being called when creating an MCMC object with algorithm='DRAM'. In this algorithm, the
+        proposal density is Gaussian and its covariance C is being updated from samples as C = sp * C_sample where
+        C_sample is the sample covariance. Also, the delayed rejection scheme is applied, i.e, if a candidate is not
+        accepted another one is generated from proposal with covariance gamma_2 ** 2 * C. The parameters for this
+        algorithm are:
+        - initial_cov: initial covariance for the gaussian proposal distribution, default if I(dim)
+        - k0: rate at which covariance is being updated, i.e., every k0 iterations, default is 100
+        - sp: scale parameter for covariance updating, default 2.38 ** 2 / dim
+        - gamma_2: scale parameter for delayed rejection scheme, default 1 / 5
+        - save_cov: boolean, indicates if updated covariance is being saved in attribute adaptive_covariance, default
+        False
+
+        No inputs/outputs.
+        """
 
         # The inputs to this algorithm are the initial_cov, k0, sp and gamma_2
         used_ins = ['initial_cov', 'k0', 'sp', 'gamma_2', 'save_cov']
@@ -2846,7 +3094,21 @@ class MCMC:
             self.adaptive_covariance = [self.algorithm_inputs['initial_cov']]
 
     def run_dram(self, nsims, current_state):
-        # Evaluate the current log_pdf and initialize acceptance ratio
+        """
+        Run the MCMC chain for DRAM algorithm.
+
+        This function performs nsims iterations of the DRAM algorithm, starting at a given current state. It saved the
+        samples / log_pdf in attribute samples and log_pdf_values. It also computes the acceptance ratio of the chains.
+
+        **Inputs:**
+
+        :param nsims: Number of iterations to perform.
+        :type nsims: int
+
+        :param current_state: Current state of the chain to start from.
+        :type current_state: ndarray of shape (nchains, dim)
+
+        """
         current_log_pdf = self.evaluate_log_target(current_state)
 
         # Initialize scale parameter
@@ -2927,17 +3189,28 @@ class MCMC:
     ####################################################################################################################
     # Functions for DREAM algorithm
     def init_dream(self):
-        """ Perform some checks and initialize the DREAM algorithm """
+        """
+        Initialize the DREAM algorithm.
+
+        This function is being called when creating an MCMC object with algorithm='DREAM'. The parameters for this
+        algorithm are (see references 5/6 for detailed explanations):
+        - delta: jump rate, default is 3
+        - c: differential evolution parameter, default 0.1
+        - c_star: differential evolution parameter, default 1e-6 (should be small compared to width of target)
+        - n_CR: number of crossover probabilities, default 3
+        - p_g: prob(gamma=1), default 0.2
+        - adapt_CR: (iter_max, rate) governs the adapation of crossover probabilities, default (-1, 1) no adaptation
+        - check_chains: (iter_max, rate) governs the discarding of outlier chains, default (-1, 1) no check on outlier
+        chains
+
+        No inputs/outputs.
+        """
 
         # Check nb of chains
         if self.nchains < 2:
             raise ValueError('For the DREAM algorithm, a seed must be provided with at least two samples.')
 
-        # The algorithm inputs are: jump rate gamma - default is 3, c and c_star are parameters involved in the
-        # differential evolution part of the algorithm - c_star should be small compared to the width of the target,
-        # n_CR is the number of crossover probabilities - default 3, and p_g: prob(gamma=1) - default is 0.2
-        # adapt_CR = (iter_max, rate) governs the adapation of crossover probabilities (default: no adaptation)
-        # check_chains = (iter_max, rate) governs the discrading of outlier chains (default: no check on outlier chains)
+        # Check user-specific algorithms
         names = ['delta', 'c', 'c_star', 'n_CR', 'p_g', 'adapt_CR', 'check_chains']
         defaults = [3, 0.1, 1e-6, 3, 0.2, (-1, 1), (-1, 1)]
         types = [int, (float, int), (float, int), int, float, tuple, tuple]
@@ -2957,9 +3230,22 @@ class MCMC:
                                                               for i in self.algorithm_inputs[key])):
                 raise TypeError('Inputs adapt_CR and check_chains should be tuples of 2 integers.')
 
-
     def run_dream(self, nsims, current_state):
-        # Initialize some variables
+        """
+        Run the MCMC chain for DREAM algorithm.
+
+        This function performs nsims iterations of the DREAM algorithm, starting at a given current state. It saved the
+        samples / log_pdf in attribute samples and log_pdf_values. It also computes the acceptance ratio of the chains.
+
+        **Inputs:**
+
+        :param nsims: Number of iterations to perform.
+        :type nsims: int
+
+        :param current_state: Current state of the chain to start from.
+        :type current_state: ndarray of shape (nchains, dim)
+
+        """
         delta, c, c_star, n_CR, p_g = self.algorithm_inputs['delta'], self.algorithm_inputs['c'], \
                                       self.algorithm_inputs['c_star'], self.algorithm_inputs['n_CR'], \
                                       self.algorithm_inputs['p_g']
@@ -3034,8 +3320,23 @@ class MCMC:
         return None
 
     def check_outlier_chains(self, replace_with_best=False):
+        """
+        Check outlier chains in DREAM algorithm.
+
+        This function check for outlier chains as part of the DREAM algorithm, potentially replacing outlier chains
+        (i.e. the samples and log_pdf_values) with 'good' chains. The function does not have any returned output but it
+        prints out the number of outlier chains.
+
+        **Inputs:**
+
+        :param replace_with_best: indicates whether to replace outlier chains with the best (most probable) chain.
+
+                                  default: False
+        :type replace_with_best: bool
+
+        """
         if not self.save_log_pdf:
-            return ValueError('attribute save_log_pdf must be True in order to check outlier chains')
+            raise ValueError('attribute save_log_pdf must be True in order to check outlier chains')
         start_ = self.current_sample_index // 2
         avgs_logpdf = np.mean(self.log_pdf_values[start_:], axis=0)
         best_ = np.argmax(avgs_logpdf)
@@ -3062,22 +3363,57 @@ class MCMC:
     # Methods preprocess_target, preprocess_proposal, check_seed and check_integers can be called in the init stage.
 
     def concatenate_chains(self):
-        # Concatenate chains so that samples go from (nsamples, nchains, dimension) to (nsamples * nchains, dimension)
+        """
+        Concatenate chains.
+
+        Utility function that reshapes (in place) attribute samples from (nsamples, nchains, dimension) to
+        (nsamples * nchains, dimension), and log_pdf_values from (nsamples, nchains) to (nsamples * nchains, ).
+
+        No input / output.
+
+        """
         self.samples = self.samples.reshape((-1, self.dimension), order='C')
         if self.save_log_pdf:
             self.log_pdf_values = self.log_pdf_values.reshape((-1, ), order='C')
         return None
 
     def unconcatenate_chains(self):
-        # Inverse of concatenate_chains method
+        """
+        Inverse of concatenate_chains.
+
+        Utility function that reshapes (in place) attribute samples from (nsamples * nchains, dimension) to
+        (nsamples, nchains, dimension), and log_pdf_values from (nsamples * nchains) to (nsamples, nchains).
+
+        No input / output.
+
+        """
         self.samples = self.samples.reshape((-1, self.nchains, self.dimension), order='C')
         if self.save_log_pdf:
             self.log_pdf_values = self.log_pdf_values.reshape((-1, self.nchains), order='C')
         return None
 
     def initialize_samples(self, nsamples_per_chain):
-        """ Allocate space for samples and log likelihood values, initialize sample_index, acceptance ratio
-        If some samples already exist, allocate space to append new samples to the old ones """
+        """
+        Initialize necessary attributes and variables before running the chain forward.
+
+        Utility function that allocates space for samples and log likelihood values, initialize sample_index,
+        acceptance ratio. If some samples already exist, allocate space to append new samples to the old ones. Computes
+        the number of forward iterations nsims to be run (depending on burnin and jump parameters).
+
+        **Inputs:**
+
+        :param nsamples_per_chain: number of samples to be generated per chain
+        :type nsamples_per_chain: int
+
+        **Output/Returns:**
+
+        :param nsims: Number of iterations to perform.
+        :type nsims: int
+
+        :param current_state: Current state of the chain to start from.
+        :type current_state: ndarray of shape (nchains, dim)
+
+        """
         if self.samples is None:    # very first call of run, set current_state as the seed and initialize self.samples
             self.samples = np.zeros((nsamples_per_chain, self.nchains, self.dimension))
             if self.save_log_pdf:
@@ -3109,6 +3445,21 @@ class MCMC:
         return nsims, current_state
 
     def update_samples(self, current_state, current_log_pdf):
+        """
+        Save current state.
+
+        Utility function that saves the current state and it log pdf value to attributes samples and log_pdf_values.
+        Only saved if burn-in period is over and this state is not to be 'jumped'.
+
+        **Inputs:**
+
+        :param current_state: Current state of the chain to start from.
+        :type current_state: ndarray of shape (nchains, dim)
+
+        :param current_log_pdf: Log pdf of current state.
+        :type current_log_pdf: ndarray of shape (nchains, )
+
+        """
         # Update the chain, only if burn-in is over and the sample is not being jumped over
         if self.total_iterations >= self.nburn and (self.total_iterations-self.nburn) % self.jump == 0:
             self.samples[self.current_sample_index, :, :] = current_state
@@ -3117,14 +3468,52 @@ class MCMC:
             self.current_sample_index += 1
 
     def update_acceptance_rate(self, new_accept=None):
-        # Use an iterative function to update the acceptance rate
+        """
+        Update acceptance rate of the chains.
+
+        Utility function, uses an iterative function to update the acceptance rate of all the chains separately.
+
+        **Inputs:**
+
+        :param new_accept: indicates whether the current state was accepted (for each chain separately).
+        :type new_accept: list (length nchains) of bool
+
+        """
         self.acceptance_rate = [na / (self.total_iterations+1) + self.total_iterations / (self.total_iterations+1) * a
                                 for (na, a) in zip(new_accept, self.acceptance_rate)]
 
     @staticmethod
     def preprocess_target(log_pdf, pdf, args):
-        """ This function transforms the log_pdf, pdf, args inputs into a function that evaluates log_pdf_target(x)
-        for a given x. """
+        """
+        Preprocess the target pdf inputs.
+
+        Utility function (static method), that transforms the log_pdf, pdf, args inputs into a function that evaluates
+        log_pdf_target(x) for a given x. If the target is given as a list of callables (marginal pdfs), the list of
+        log margianals is also returned.
+
+        **Inputs:**
+
+        :param log_pdf: Log of the target density function from which to draw random samples. Either pdf_target or
+                        log_pdf_target must be provided.
+        :type log_pdf: (list of) callables
+
+        :param pdf: Target density function from which to draw random samples. Either pdf_target or log_pdf_target
+                    must be provided.
+        :type pdf: (list of) callables
+
+        :param args: Positional arguments of the pdf target.
+        :type args: tuple
+
+        **Output/Returns:**
+
+        :param evaluate_log_pdf: Callable that computes the log of the target density function
+        :type evaluate_log_pdf: callable
+
+        :param evaluate_log_pdf_marginals: List of callables to compute the log pdf of the marginals
+        :type evaluate_log_pdf_marginals: list of callables
+
+        """
+
         # log_pdf is provided
         if log_pdf is not None:
             if callable(log_pdf):
@@ -3133,7 +3522,6 @@ class MCMC:
                 evaluate_log_pdf = (lambda x: log_pdf(x, *args))
                 evaluate_log_pdf_marginals = None
             elif isinstance(log_pdf, list) and (all(callable(p) for p in log_pdf)):
-
                 if args is None:
                     args = [()] * len(log_pdf)
                 if not (isinstance(args, list) and len(args) == len(log_pdf)):
@@ -3173,7 +3561,20 @@ class MCMC:
 
     @staticmethod
     def preprocess_nsamples(nchains, nsamples=None, nsamples_per_chain=None):
-        """ Compute nsamples_per_chain from nsamples and vice-versa """
+        """
+        Preprocess inputs nsamples and nsamples_per_chain.
+
+        Utility function (static method), that computes nsamples_per_chain from nsamples and vice-versa.
+
+        **Inputs:**
+
+        :param nsamples: number of samples to be generated
+        :type nsamples: int
+
+        :param nsamples_per_chain: number of samples to be generated per chain
+        :type nsamples_per_chain: int
+
+        """
         if ((nsamples is not None) and (nsamples_per_chain is not None)) or (
                 nsamples is None and nsamples_per_chain is None):
             raise ValueError('Either nsamples or nsamples_per_chain must be provided (not both)')
@@ -3189,7 +3590,25 @@ class MCMC:
 
     @staticmethod
     def preprocess_seed(seed, dim):
-        """ Check the dimension of seed, assign [0., 0., ..., 0.] if not provided. """
+        """
+        Preprocess input seed.
+
+        Utility function (static method), that checks the dimension of seed, assign [0., 0., ..., 0.] if not provided.
+
+        **Inputs:**
+
+        :param seed: seed for MCMC
+        :type seed: None or ndarray
+
+        :param dim: dimension of target density
+        :type dim: int
+
+        **Output/Returns:**
+
+        :param seed: number of samples to be generated
+        :type seed: ndarray of shape (ns, dim)
+
+        """
         if seed is None:
             seed = np.zeros((1, dim))
         else:
@@ -3201,8 +3620,27 @@ class MCMC:
 
     @staticmethod
     def check_methods_proposal(proposal, proposal_params=None):
-        """ Check that the given proposal distribution has 1) a rvs method and 2) a log pdf or pdf method
-        Used in the MH and MMH initializations"""
+        """
+        Check if proposal has required methods.
+
+        Utility function (static method), that checks that the given proposal distribution has 1) a rvs method and 2) a
+        log pdf or pdf method. If a pdf method exists but no log_pdf, the log_pdf methods is added to the proposal
+        object. Used in the MH and MMH initializations.
+
+        **Inputs:**
+
+        :param proposal: proposal distribution
+        :type proposal: Distribution object
+
+        :param proposal_params: parameters of the proposal distribution
+        :type proposal_params: list of floats
+
+        **Output/Returns:**
+
+        :param proposal: processed proposal
+        :type proposal: Distribution object
+
+        """
         if not isinstance(proposal, Distribution):
             raise TypeError('proposal should be a Distribution object')
         if proposal_params is not None:
@@ -3224,46 +3662,48 @@ class MCMC:
 class IS:
     """
 
-        Description:
+    Sample from a user-defined target density using importance sampling.
 
-            Perform Importance Sampling (IS) of independent random variables given a target and a
-            proposal distribution.
+    Sample from a given proposal distribution, then weight samples.
 
-        Input:
+    **Inputs:**
 
-            :param proposal: proposal to sample from: this Distribution object must have an rvs method and a log_pdf (
-                             or pdf) methods
-            :type proposal: Distribution object
+    :param proposal: Proposal to sample from: this Distribution object must have an rvs method and a log_pdf (
+                     or pdf) methods
+    :type proposal: Distribution object
 
-            :param proposal_params: parameters of the proposal distribution
-            :type proposal_params: list
+    :param proposal_params: Parameters of the proposal distribution
+    :type proposal_params: list
 
-            :param log_pdf_target: callable that evaluates the target log pdf
-            :type log_pdf_target: callable
+    :param log_pdf_target: Callable that evaluates the target log pdf
+    :type log_pdf_target: callable
 
-            :param pdf_target: callable that evaluates the target pdf (log_pdf_target is preferred though)
-            :type pdf_target: callable
+    :param pdf_target: Callable that evaluates the target pdf
+    :type pdf_target: callable
 
-            :param args_target: arguments of the target log_pdf (pdf) callable - i.e., log pdf target at x is evaluated
-                                as log_pdf_target(x, *args)
-            :type args_target: tuple
+    :param args_target: Positional arguments of the target log_pdf (pdf) callable
+    :type args_target: tuple
 
-            :param nsamples: Number of samples to generate.
-            :type nsamples: int
+    :param nsamples: Number of samples to generate.
+    :type nsamples: int
 
-        Output:
-            :return: IS.samples: Set of generated samples
-            :rtype: IS.samples: ndarray (nsamples, dim)
+    ** Attributes:**
 
-            :return: IS.weights: Importance weights of samples (weighted so that they sum up to 1)
-            :rtype: IS.weights: ndarray (nsamples, )
+    :param: samples: Set of samples
+    :type: samples: ndarray (nsamples, dim)
 
-            :return: IS.unnormalized_log_weights: unnormalized log weights of samples
-            :rtype: IS.unnormalized_log_weights: ndarray (nsamples, )
+    :param: unnormalized_log_weights: unnormalized log weights of samples
+    :type: unnormalized_log_weights: ndarray (nsamples, )
+
+    :param: weights: Importance weights of samples (weighted so that they sum up to 1)
+    :type: weights: ndarray (nsamples, )
+
+    **Authors:**
+
+    Audrey Olivier, Dimitris G. Giovanis
+
+    Last Modified: 10/2019 by Audrey Olivier
     """
-
-    # Authors: Audrey Olivier, Dimitris G.Giovanis
-    # Last Modified: 10/2019 by Audrey Olivier
 
     def __init__(self, nsamples=None, pdf_target=None, log_pdf_target=None, args_target=None,
                  proposal=None, proposal_params=None, verbose=False):
@@ -3294,7 +3734,20 @@ class IS:
             self.run(nsamples)
 
     def run(self, nsamples):
-        """ Perform IS """
+        """
+        Generate and weight samples.
+
+        This function samples from the proposal and append samples to existing ones (if any). It then weights the 
+        samples as log_w_unnormalized) = log(target)-log(proposal). This function updates the output attributes 
+        samples, unnormalized_log_weights and weights. If nsamples is provided when creating the object, this method is 
+        directly called in init.
+
+        **Inputs:**
+
+        :param nsamples: Number of samples to generate.
+        :type nsamples: int
+
+        """
 
         if self.verbose:
             print('Running Importance Sampling')
@@ -3320,14 +3773,60 @@ class IS:
             print('Importance Sampling performed successfully')
 
     def resample(self, method='multinomial', size=None):
-        """ Resample: create a set of un-weighted samples from a set of weighted samples """
+        """ 
+        Resample to get a set of un-weighted samples that represent the target pdf.
+        
+        Utility function that create a set of un-weighted samples from a set of weighted samples. Can be useful for
+        plotting for instance.
+        
+        **Inputs:**
+
+        :param method: resampling method, as of V3 only multinomial resampling is supported
+        
+                       Default: 'multinomial'
+        :type method: str
+
+        :param size: Number of un-weighted samples to generate.
+        
+                     Default: None (same number of samples is generated as number of existing samples).
+        :type pdf: int
+
+        **Output/Returns:**
+
+        :param unweighted_samples: Un-weighted samples that represent the target pdf
+        :type unweighted_samples: ndarray
+        
+        """
         from .Utilities import resample
         return resample(self.samples, self.weights, method=method, size=size)
 
     @staticmethod
     def preprocess_target(log_pdf, pdf, args):
-        """ This function transforms the log_pdf, pdf, args inputs into a function that evaluates log_pdf_target(x)
-        for a given x. """
+        """
+        Preprocess the target pdf inputs.
+
+        Utility function (static method), that transforms the log_pdf, pdf, args inputs into a function that evaluates
+        log_pdf_target(x) for a given x.
+
+        **Inputs:**
+
+        :param log_pdf: Log of the target density function from which to draw random samples. Either pdf_target or
+                        log_pdf_target must be provided.
+        :type log_pdf: (list of) callables
+
+        :param pdf: Target density function from which to draw random samples. Either pdf_target or log_pdf_target
+                    must be provided.
+        :type pdf: (list of) callables
+
+        :param args: Positional arguments of the pdf target.
+        :type args: tuple
+
+        **Output/Returns:**
+
+        :param evaluate_log_pdf: Callable that computes the log of the target density function
+        :type evaluate_log_pdf: callable
+
+        """
         # log_pdf is provided
         if log_pdf is not None:
             if callable(log_pdf):
