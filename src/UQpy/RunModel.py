@@ -37,119 +37,154 @@ class RunModel:
     object. If the model is not in Python, RunModel must be provided the name of a template input file and an output
     Python script along with the name of the Python script that runs the model.
 
+    **Input:**
 
     :param samples: Samples to be passed as inputs to the model. Samples can be passed either as an ndarray or a list.
-    If an ndarray is passed, each row of the ndarray contains one set of samples required for one execution of the
-    model. (The first dimension of the ndarray is considered to be the number of rows.)
-    If a list is passed, each item of the list contains one set of samples required for one execution of the model.
+                    If an ndarray is passed, each row of the ndarray contains one set of samples required for one
+                    execution of the
+                    model. (The first dimension of the ndarray is considered to be the number of rows.)
+                    If a list is passed, each item of the list contains one set of samples required for one execution of
+                    the model.
     :type samples: ndarray or list
 
     :param model_script: The filename (with extension) of the Python script which contains commands to execute the
-    model. The model script must be present in the current working directory from which RunModel is called.
+                         model. The model script must be present in the current working directory from which RunModel is
+                         called.
     :type model_script: str
 
     :param model_object_name: In the Python model workflow, model_object_name specifies the name of the function or
-    class within model_script which executes the model. If there is only one function or class in the model_script, then
-    it is not necessary to specify the model_object_name. If there are multiple objects within the model_script, then
-    model_object_name must be specified.
-    model_object_name is not used in the third-party software model workflow.
+                              class within model_script which executes the model. If there is only one function or class
+                              in the model_script, then
+                              it is not necessary to specify the model_object_name. If there are multiple objects within
+                              the model_script, then
+                              model_object_name must be specified.
+                              model_object_name is not used in the third-party software model workflow.
     :type model_object_name: str
 
     :param input_template: The name of the template input file which will be used to generate input files for each
-    run of the model. When operating RunModel with a third-party software model, input_template must be specified.
-    input_template is not used in the Python model workflow.
+                           run of the model. When operating RunModel with a third-party software model, input_template
+                           must be specified.
+                           input_template is not used in the Python model workflow.
     :type input_template: str
 
     :param var_names: A list containing the names of the variables present in the template input file. If an
-    input template is provided and a list of variable names is not passed, ie if var_names=None, then the default
-    variable names x0, x1, x2,...,xn are created and used by RunModel, where n is the number of variables. The
-    number of variables is equal to the shape of the first row if samples is passed as an ndarray or the shape of the
-    first item if samples is passed as a list.
-    varnamesis not used in the Python model workflow.
+                      input template is provided and a list of variable names is not passed, ie if var_names=None, then
+                      the default
+                      variable names x0, x1, x2,...,xn are created and used by RunModel, where n is the number of
+                      variables. The
+                      number of variables is equal to the shape of the first row if samples is passed as an ndarray or
+                      the shape of the
+                      first item if samples is passed as a list.
+                      varnames is not used in the Python model workflow.
     :type var_names: list of str or None
 
     :param output_script: The filename of the Python script which contains the commands to process the output from
-    third-party software model evaluation. The output_script is used to return the output quantities of interest to
-    RunModel for subsequent UQpy processing (e.g. for adaptive methods that utilize the results of previous simualtions
-    to initialize new simulations).
-    output_script is not used in the Python model workflow. In the Python model workflow, all model postprocessing is
-    handled within model_script.
-    If, in the third-party software model workflow, output_script = None (the default), then RunModel.qoi_list is empty
-    and postprocessing must be handled outside of UQpy.
+                          third-party software model evaluation. The output_script is used to return the output
+                          quantities of interest to
+                          RunModel for subsequent UQpy processing (e.g. for adaptive methods that utilize the results of
+                          previous simualtions
+                          to initialize new simulations).
+                          output_script is not used in the Python model workflow. In the Python model workflow, all
+                          model postprocessing is
+                          handled within model_script.
+                          If, in the third-party software model workflow, output_script = None (the default), then
+                          RunModel.qoi_list is empty
+                          and postprocessing must be handled outside of UQpy.
     :type output_script: str
 
     :param output_object_name: The name of the function or class that is used to collect the output values from
-    third-party software model output files.
-    If the object is aclass named cls, for example, the output must be saved as cls.qoi. If it is a function, it should
-    return the output quantity of interest. If there is only one function or only one class in output_script, then it is
-    not necessary to specify output_object_name. If there are multiple objects in output_script, then output_object_name
-    must be specified.
-    outputobjectname is not used in the Python model workflow.
+                               third-party software model output files.
+                               If the object is aclass named cls, for example, the output must be saved as cls.qoi.
+                               If it is a function, it should
+                               return the output quantity of interest. If there is only one function or only one class
+                               in output_script, then it is
+                               not necessary to specify output_object_name. If there are multiple objects in
+                               output_script, then output_object_name
+                               must be specified.
+                               outputobjectname is not used in the Python model workflow.
     :type output_object_name: str
 
     :param ntasks: Number of tasks to be run in parallel.
-    By default, ntasks = 1 and the models are executed serially. Setting ntasks equal to a positive integer greater than
-    1 will trigger the parallel workflow.
-    RunModel uses GNU parallel to execute models which require an input template in parallel and the concurrent module
-    to execute Python models in parallel.
+                   By default, ntasks = 1 and the models are executed serially. Setting ntasks equal to a positive
+                   integer greater than
+                   1 will trigger the parallel workflow.
+                   RunModel uses GNU parallel to execute models which require an input template in parallel and the
+                   concurrent module
+                   to execute Python models in parallel.
     :type ntasks: int
 
     :param cores_per_task: Number of cores to be used by each task.
-    In cases where a third-party model runs across multiple CPUs, this optional attribute allocates the necessary
-    resources to each model evaluation.
-    cores_per_task is not used in the Python model workflow
+                           In cases where a third-party model runs across multiple CPUs, this optional attribute
+                           allocates the necessary
+                           resources to each model evaluation.
+                           cores_per_task is not used in the Python model workflow
     :type cores_per_task: int
 
     :param nodes: Number of nodes across which to distribute parallel jobs on an HPC cluster in the third-party software
-    model workflow.
-    If more than one compute node is required to execute the runs in parallel, nodes must be specified. For example, on
-    the Maryland Advanced Research Computing Center (MARCC), an HPC shared by Johns Hopkins University and the
-    University of Maryland, each compute node has 24 cores. To run an analysis with more than 24 parallel jobs on MARCC
-    requires nodes > 1.
-    nodes is not used in the Python model workflow.
-
+                  model workflow.
+                  If more than one compute node is required to execute the runs in parallel, nodes must be specified.
+                  For example, on
+                  the Maryland Advanced Research Computing Center (MARCC), an HPC shared by Johns Hopkins University
+                  and the
+                  University of Maryland, each compute node has 24 cores. To run an analysis with more than 24 parallel
+                  jobs on MARCC
+                  requires nodes > 1.
+                  nodes is not used in the Python model workflow.
     :type nodes: int
 
     :param resume: If resume = True, GNU parallel enables UQpy to resume execution of any model evaluations that failed
-    to execute in the third-party software model workflow.
-    To use this feature, execute the same call to RunModel which failed to complete but with resume = True.  The same
-    set of samples must be passed to resume processing from the last successful execution of the model.
-    resume is not used in the Python model workflow.
+                   to execute in the third-party software model workflow.
+                   To use this feature, execute the same call to RunModel which failed to complete but with
+                   resume = True.  The same
+                   set of samples must be passed to resume processing from the last successful execution of the model.
+                   resume is not used in the Python model workflow.
     :type resume: Boolean
 
     :param verbose: Set verbose = True if you want RunModel to print status messages to the terminal during execution.
-    verbose = False by default.
+                    verbose = False by default.
     :type verbose: Boolean
 
     :param model_dir: Specifies the name of the sub-directory from which the model will be executed and to which output
-    files will be saved.
-    model_dir = None by default, which results in model execution from the Python current working directory. If
-    model_dir is passed a string, then a new directory is created by RunModel within the current directory whose name is
-    model_dir appended with a timestamp.
+                      files will be saved.
+                      model_dir = None by default, which results in model execution from the Python current working
+                      directory. If
+                      model_dir is passed a string, then a new directory is created by RunModel within the current
+                      directory whose name is
+                      model_dir appended with a timestamp.
     :type model_dir: str
 
     :param cluster: Set cluster = True if executing on an HPC cluster. Setting cluster = True enables RunModel to
-    execute the model using the necessary SLURM commands. cluster = False by default.
-    RunModel is configured for HPC clusters that operate with the SLURM scheduler. In order to execute a third-party
-    model with RunModel on an HPC cluster, the HPC must use SLURM.
-    cluster is not used for the Python model workflow.
+                    execute the model using the necessary SLURM commands. cluster = False by default.
+                    RunModel is configured for HPC clusters that operate with the SLURM scheduler. In order to execute
+                    a third-party
+                    model with RunModel on an HPC cluster, the HPC must use SLURM.
+                    cluster is not used for the Python model workflow.
     :type cluster: Boolean
 
     :param fmt: If the input file requires variables to be written in specific format, this format can be specified
-    here.
-    The default is fmt = None
-    Existing formats include:
-    fmt = 'ls-dyna': This format is used for ls-dyna .k files where each card is required to be exactly 10 characters
+                here.
+                The default is fmt = None
+                Existing formats include:
+                fmt = 'ls-dyna': This format is used for ls-dyna .k files where each card is required to be exactly 10
+                characters
     :type fmt: String
 
     :param kwargs: Additional inputs to the python function (model_object_name)
     :type kwargs: dictionary
 
-    Output:
-    :return: RunModel.qoi_list: A list containing the output quantities of interest extracted from the model output
-    files by output_script. This is a list of length equal to the number of simulations. Each item of this list contains
-    the quantity of interest from the associated simulation.
-    :rtype: RunModel.qoi_list: list
+    **Attributes**
+
+    :param RunModel.qoi_list: A list containing the output quantities of interest extracted from the model output
+                                files by output_script. This is a list of length equal to the number of simulations.
+                                Each item of this list contains
+                                the quantity of interest from the associated simulation.
+    :type RunModel.qoi_list: list
+
+    **Authors:**
+
+    B.S. Aakash, Michael D. Shields
+
+    Last modified: 3/26/2020 by B.S. Aakash
     """
 
     def __init__(self, samples=None, model_script=None, model_object_name=None,
