@@ -24,9 +24,6 @@ from .Utilities import check_input_dims
 import importlib
 import types
 
-# Authors: Dimitris G.Giovanis, Michael D. Shields
-# Last Modified: 11/6/2019 by Audrey Olivier
-
 ########################################################################################################################
 #        Define the probability distribution of the random parameters
 ########################################################################################################################
@@ -41,52 +38,78 @@ list_multivariates = ['mvnormal']
 # All scipy supported distributions
 list_all_scipy = list_univariates + list_multivariates
 
+
 class Distribution:
     """
-        Description:
+    Main distribution class available to the user. The user can define a probability distribution by providing:
+    - A name that points to a univariate/multivariate distribution (see supported distributions in
+       SubDistribution class or custom distribution)
+    - A list of names that points to a list of univariate distributions. In that case, a multivariate
+       distribution is built for which all dimensions are independent and given by Distribution(name)
+    - A list of names and a copula, in that case a multivariate distribution is built using Distribution(name)
+        for the marginal pdfs, while the dependence structure is given by the copula.
 
-            Main distribution class available to the user. The user can define a probability distribution by providing:
-            - a name that points to a univariate/multivariate distribution (see supported distributions in
-            SubDistribution class or custom distribution)
-            - a list of names that points to a list of univariate distributions. In that case, a multivariate
-            distribution is built for which all dimensions are independent and given by Distribution(name)
-            - a list of names and a copula, in that case a multivariate distribution is built using Distribution(name)
-            for the marginal pdfs, while the dependence structure is given by the copula.
+    The following methods are defined:
 
-            The following methods are defined:
+    1. pdf: probability density function
+    2. cdf: cumulative distribution function
+    3. icdf: inverse cumulative distribution function
+    4. rvs: generate random numbers (it doesn't need a point)
+    5. log_pdf: logarithm of the pdf
+    6. fit: Estimates the parameters of the distribution over arbitrary data
+    7. moments: Calculate the first four moments of the distribution (mean, variance, skewness, kurtosis)
 
-                1. pdf: probability density function
-                2. cdf: cumulative distribution function
-                3. icdf inverse cumulative distribution function
-                4. rvs: generate random numbers (it doesn't need a point)
-                5. log_pdf: logarithm of the pdf
-                6. fit: Estimates the parameters of the distribution over arbitrary data
-                7. moments: Calculate the first four moments of the distribution (mean, variance, skewness, kurtosis)
+    **Input:**
 
-        Input:
-            :param dist_name: Name of distribution.
-            :type: dist_name: string or list of strings
+    :param dist_name: Name of distribution.
+    :type: dist_name: string or list of strings
 
-            :param copula: copula to create dependence within dimensions, used only if name is a list
-            :type: copula: str or None (default None)
-
-        Output:
-            A handler pointing to a distribution and its associated methods. Inputs to the various methods may be:
-                x: 2D ndarray of shape (nsamples, dimension)
-                params: list of parameters for the distribution (list of lists if distribution is defined via its
+    :param params: list of parameters for the distribution (list of lists if distribution is defined via its
                         marginals)
-                copula_params: list of parameters for the copula
-                nsamples: an integer providing the desired number of iid samples to be drawn
+    :type: params: list of lists or ndarray
+
+    :param copula: Copula to create dependence within dimensions, used only if name is a list
+    :type: copula: str or None (default None)
+
+    :param copula_params: Parameters of the copula
+    :type: copula_params: list or ndarray
+
+    **Attributes:**
+
+    :param self.pdf: Probability density function
+    :type: self.pdf: ndarray
+
+    :param self.cdf: Cumulative distribution function
+    :type: self.cdf: ndarray
+
+    :param self.icdf: Inverse cumulative distribution function
+    :type: self.icdf: ndarray
+
+    :param self.rvs: Identical distributed realizations of the random variable
+    :type: self.rvs: ndarray
+
+    :param self.log_pdf: Logarithm of the pdf
+    :type: self.log_pdf: ndarray
+
+    :param self.fit: Estimates the parameters of the distribution over arbitrary data
+    :type: self.fit: ndarray
+
+    :param self.moments: Calculate the first four moments of the distribution (mean, variance, skewness, kurtosis)
+    :type: self.moments: ndarray
+
+    **Authors:**
+
+    Dimitris Giovanis & Audrey Olivier
     """
 
     def __init__(self, dist_name, copula=None, params=None, copula_params=None):
 
         # Check dist_name
         if isinstance(dist_name, str):
-            if not (dist_name in list_all_scipy or os.path.isfile(os.path.join(dist_name + '.py'))):
+            if not (dist_name.lower() in list_all_scipy or os.path.isfile(os.path.join(dist_name + '.py'))):
                 raise ValueError('dist_name should be a supported density or name of an existing .py file')
         elif isinstance(dist_name, (list, tuple)) and all(isinstance(d_, str) for d_ in dist_name):
-            if not all([(d_ in list_all_scipy or os.path.isfile(os.path.join(dist_name + '.py'))) for d_ in dist_name]):
+            if not all([(d_.lower() in list_all_scipy or os.path.isfile(os.path.join(d_ + '.py'))) for d_ in dist_name]):
                 raise ValueError('dist_name should be a list of supported densities or names of an existing .py file')
         else:
             raise TypeError('dist_name should be a (list of) string(s)')
@@ -133,7 +156,27 @@ class Distribution:
 
 # Define the function that computes pdf
 def define_pdf(self, x, params=None, copula_params=None):
-    """ Computes the probability density function at inputs points x """
+    """
+    A method that computes the probability density function at inputs points x
+    
+    **Input:**
+
+    :param x: Points to estimate the pdf.
+    :type x:  2D ndarray (nsamples, dimension)
+                nsamples: an integer providing the desired number of iid samples to be drawn
+
+    :param params: list of parameters for the distribution (list of lists if distribution is defined via its
+                        marginals)
+    :type: params: list of lists or ndarray
+
+    :param copula_params: Parameters of the copula
+    :type: copula_params: list or ndarray
+
+    **Output:**
+
+    :return prod_pdf: Values of the pdf
+    :rtype prod_pdf: ndarray
+    """
     x = check_input_dims(x)
     self.update_params(params, copula_params)
     if isinstance(self.dist_name, str):
@@ -153,7 +196,27 @@ def define_pdf(self, x, params=None, copula_params=None):
 
 # Define the function that computes the log pdf
 def define_log_pdf(self, x, params=None, copula_params=None):
-    """ Computes the log probability density function at inputs points x """
+    """
+    A method that computes the logarithmic probability density function at inputs points x
+
+    **Input:**
+
+    :param x: Points to estimate the pdf.
+    :type x:  2D ndarray (nsamples, dimension)
+                nsamples: an integer providing the desired number of iid samples to be drawn
+
+    :param params: list of parameters for the distribution (list of lists if distribution is defined via its
+                        marginals)
+    :type: params: list of lists or ndarray
+
+    :param copula_params: Parameters of the copula
+    :type: copula_params: list or ndarray
+
+    **Output:**
+
+    :return sum_log_pdf: Values of the pdf
+    :rtype sum_log_pdf: ndarray
+    """
     x = check_input_dims(x)
     self.update_params(params, copula_params)
     if isinstance(self.dist_name, str):
@@ -173,7 +236,27 @@ def define_log_pdf(self, x, params=None, copula_params=None):
 
 # Function that computes the cdf
 def define_cdf(self, x, params=None, copula_params=None):
-    """ Computes the cumulative distribution function at inputs points x """
+    """
+    A method that computes the cumulative distribution function at inputs points x
+
+    **Input:**
+
+    :param x: Points to estimate the pdf.
+    :type x:  2D ndarray (nsamples, dimension)
+                nsamples: an integer providing the desired number of iid samples to be drawn
+
+    :param params: list of parameters for the distribution (list of lists if distribution is defined via its
+                        marginals)
+    :type: params: list of lists or ndarray
+
+    :param copula_params: Parameters of the copula
+    :type: copula_params: list or ndarray
+
+    **Output:**
+
+    :return c: Values of the cdf
+    :rtype c: ndarray
+    """
     x = check_input_dims(x)
     self.update_params(params, copula_params)
     if isinstance(self.dist_name, str):
@@ -193,8 +276,24 @@ def define_cdf(self, x, params=None, copula_params=None):
 
 # Method that computes the icdf
 def define_icdf(self, x, params=None):
-    """ Computes the inverse cumulative probability function at inputs points x -
-    only for univariate distributions """
+    """
+    A method that computes the cumulative distribution function at inputs points x. Only for univariate distributions.
+
+    **Input:**
+
+    :param x: Points to estimate the pdf.
+    :type x:  2D ndarray (nsamples, dimension)
+                nsamples: an integer providing the desired number of iid samples to be drawn
+
+    :param params: list of parameters for the distribution (list of lists if distribution is defined via its
+                        marginals)
+    :type: params: list of lists or ndarray
+
+    **Output:**
+
+    :return c: Values of the cdf
+    :rtype c: ndarray
+    """
     x = check_input_dims(x)
     self.update_params(params, copula_params=None)
     if isinstance(self.dist_name, str):
@@ -205,7 +304,25 @@ def define_icdf(self, x, params=None):
 
 # Method that generates RVs
 def define_rvs(self, nsamples=1, params=None):
-    """ Sample iid realizations from the distribution - does not support distributions with copula """
+    """
+    A method that samples iid realizations from the distribution - does not support distributions with copula
+
+    **Input:**
+
+    :param nsamples: An integer providing the desired number of iid samples to be drawn.
+
+                    Default: 1
+    :type nsamples:  int
+
+    :param params: list of parameters for the distribution (list of lists if distribution is defined via its
+                        marginals)
+    :type: params: list of lists or ndarray
+
+    **Output:**
+
+    :return rvs: Realizations from the distribution
+    :rtype rvs: ndarray
+    """
     self.update_params(params, copula_params=None)
     if isinstance(self.dist_name, str):
         return subdistribution_rvs(dist_name=self.dist_name, nsamples=nsamples, params=self.params)
@@ -222,7 +339,19 @@ def define_rvs(self, nsamples=1, params=None):
 
 
 def define_fit(self, x):
-    """ Compute MLE parameters of a distribution from data x - does not support distributions with copula """
+    """
+    Compute the MLE parameters of a distribution from data x - does not support distributions with copula
+
+    **Input:**
+
+    :param x: Vector of data x
+    :type x:  ndarray
+
+    **Output:**
+
+    :return params_fit: MLE parameters.
+    :rtype params_fit: ndarray
+    """
     x = check_input_dims(x)
     if isinstance(self.dist_name, str):
         return subdistribution_fit(dist_name=self.dist_name, x=x)
@@ -240,13 +369,34 @@ def define_fit(self, x):
 
 # Method that computes moments
 def define_moments(self, params=None):
-    """ Compute marginal moments (mean, variance, skewness, kurtosis)
-    - does not support distributions with copula """
+    """
+    Compute marginal moments (mean, variance, skewness, kurtosis) - does not support distributions with copula.
+
+    **Input:**
+
+    :param params: list of parameters for the distribution (list of lists if distribution is defined via its
+                        marginals)
+    :type: params: list of lists or ndarray
+
+    **Output:**
+
+    :return mean: Mean value.
+    :rtype mean: list
+
+    :return var: Variance.
+    :rtype var: list
+
+    :return skew: Kyrtosis.
+    :rtype skew: list
+
+    :return kurt: Kyrtosis.
+    :rtype kurt: list
+     """
     self.update_params(params, copula_params=None)
     if isinstance(self.dist_name, str):
         return subdistribution_moments(dist_name=self.dist_name, params=self.params)
     elif isinstance(self.dist_name, list):
-        if len(params) != len(self.dist_name):
+        if len(self.params) != len(self.dist_name):
             raise ValueError('UQpy error: Inconsistent dimensions')
         if not hasattr(self, 'copula'):
             mean, var, skew, kurt = [0]*len(self.dist_name), [0]*len(self.dist_name), [0]*len(self.dist_name), \
@@ -261,23 +411,20 @@ def define_moments(self, params=None):
 
 class Copula:
     """
-        Description:
+    This class computes terms required to compute cdf, pdf and log_pdf for a multivariate distribution whose
+    dependence structure is defined with a copula. The following copula are supported:  Gumbel
 
-            This class computes terms required to compute cdf, pdf and log_pdf for a multivariate distribution whose
-            dependence structure is defined with a copula. The following copula are supported:
-            [gumbel]
+    **Input:**
+    :param copula_name: Name of copula.
+    :type: copula_name: string
 
-        Input:
-            :param copula_name: Name of copula.
-            :type: copula_name: string
+    :param dist_name: names of the marginal distributions.
+    :type: dist_name: list of strings
 
-            :param dist_name: names of the marginal distributions.
-            :type: dist_name: list of strings
-
-        Output:
-            A handler pointing to a copula and its associated methods, in particular its method evaluate_copula, which
-            evaluates the terms c, c_ necessary to evaluate the cdf and pdf, respectively, of the multivariate
-            Distribution.
+    **Output:**
+    A handler pointing to a copula and its associated methods, in particular its method evaluate_copula, which
+     evaluates the terms c, c_ necessary to evaluate the cdf and pdf, respectively, of the multivariate
+    Distribution.
     """
 
     def __init__(self, copula_name=None, dist_name=None):
@@ -336,10 +483,10 @@ def exist_method(method, dist_name, has_copula):
 # Helper functions for subdistributions, i.e., distributions where dist_name is only a string
 def subdistribution_exist_method(dist_name, method):
     # Univariate scipy distributions have all methods
-    if dist_name in list_univariates:
+    if dist_name.lower() in list_univariates:
         return True
     # Multivariate scipy distributions have pdf, logpdf, cdf and rvs
-    elif dist_name in list_multivariates:
+    elif dist_name.lower() in list_multivariates:
         if method in ['pdf', 'log_pdf', 'cdf', 'rvs']:
             return True
         else:
@@ -352,10 +499,10 @@ def subdistribution_exist_method(dist_name, method):
 
 def subdistribution_pdf(dist_name, x, params):
     # If it is a supported scipy distribution:
-    if dist_name in list_univariates:
+    if dist_name.lower() in list_univariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.pdf(x[:, 0], **kwargs)
-    elif dist_name in list_multivariates:
+    elif dist_name.lower() in list_multivariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.pdf(x, **kwargs)
     # Otherwise it must be a file
@@ -370,10 +517,10 @@ def subdistribution_pdf(dist_name, x, params):
 
 def subdistribution_log_pdf(dist_name, x, params):
     # If it is a supported scipy distribution:
-    if dist_name in list_univariates:
+    if dist_name.lower() in list_univariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.logpdf(x[:, 0], **kwargs)
-    elif dist_name in list_multivariates:
+    elif dist_name.lower() in list_multivariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.logpdf(x, **kwargs)
     # Otherwise it must be a file
@@ -388,10 +535,10 @@ def subdistribution_log_pdf(dist_name, x, params):
 
 def subdistribution_cdf(dist_name, x, params):
     # If it is a supported scipy distribution:
-    if dist_name in list_univariates:
+    if dist_name.lower() in list_univariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.cdf(x=x[:, 0], **kwargs)
-    elif dist_name in list_multivariates:
+    elif dist_name.lower() in list_multivariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.cdf(x=x, **kwargs)
     # Otherwise it must be a file
@@ -406,7 +553,7 @@ def subdistribution_cdf(dist_name, x, params):
 
 def subdistribution_rvs(dist_name, nsamples, params):
     # If it is a supported scipy distribution:
-    if dist_name in (list_univariates + list_multivariates):
+    if dist_name.lower() in (list_univariates + list_multivariates):
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         rvs = d.rvs(size=nsamples, **kwargs)
     # Otherwise it must be a file
@@ -426,10 +573,10 @@ def subdistribution_rvs(dist_name, nsamples, params):
 
 def subdistribution_fit(dist_name, x):
     # If it is a supported scipy distribution:
-    if dist_name in list_univariates:
+    if dist_name.lower() in list_univariates:
         d, kwargs = scipy_distributions(dist_name=dist_name)
         return d.fit(x[:, 0])
-    elif dist_name in list_multivariates:
+    elif dist_name.lower() in list_multivariates:
         d, kwargs = scipy_distributions(dist_name=dist_name)
         return d.fit(x)
     # Otherwise it must be a file
@@ -441,9 +588,15 @@ def subdistribution_fit(dist_name, x):
 
 def subdistribution_moments(dist_name, params):
     # If it is a supported scipy distribution:
-    if dist_name in list_univariates:
+    if dist_name.lower() in list_univariates:
+        y = [np.nan, np.nan, np.nan, np.nan]
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
-        return d.stats(moments='mvsk', **kwargs)
+        mean, var, skew, kurt = d.stats(moments='mvsk', **kwargs)
+        y[0] = mean
+        y[1] = var
+        y[2] = skew
+        y[3] = kurt
+        return np.array(y)
     # Otherwise it must be a file
     else:
         custom_dist = importlib.import_module(dist_name)
@@ -453,10 +606,10 @@ def subdistribution_moments(dist_name, params):
 
 def subdistribution_icdf(dist_name, x, params):
     # If it is a supported scipy distribution:
-    if dist_name in list_univariates:
+    if dist_name.lower() in list_univariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.ppf(x[:, 0], **kwargs)
-    elif dist_name in list_multivariates:
+    elif dist_name.lower() in list_multivariates:
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
         val = d.ppf(x, **kwargs)
     # Otherwise it must be a file
@@ -491,9 +644,9 @@ def scipy_distributions(dist_name, params=None):
             kwargs = {'a': params[0], 'b': params[1]}
         return stats.beta, kwargs
 
-    elif dist_name.lower() == 'gumbel_r':
+    elif dist_name.lower() == 'genextreme':
         if params is not None:
-            kwargs = {'c': 0, 'loc': params[0], 'scale': params[1]}
+            kwargs = {'c': params[0], 'loc': params[0], 'scale': params[1]}
         return stats.genextreme, kwargs
 
     elif dist_name.lower() == 'chisquare':
@@ -517,7 +670,7 @@ def scipy_distributions(dist_name, params=None):
     elif dist_name.lower() == 'cauchy':
         return stats.cauchy, kwargs
 
-    elif dist_name.lower() == 'inv_gauss':
+    elif dist_name.lower() == 'inverse gauss':
         if params is not None:
             kwargs = {'mu': params[0], 'loc': params[1], 'scale': params[2]}
         return stats.invgauss, kwargs
