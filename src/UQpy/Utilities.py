@@ -580,24 +580,6 @@ def R_to_r(R):
     return r
 
 
-def eval_hessian(dimension, mixed_der, der):
-
-    """
-    Calculate the hessian matrix with finite differences
-    Parameters:
-
-    """
-    hessian = np.diag(der)
-    import itertools
-    range_ = list(range(dimension))
-    add_ = 0
-    for i in itertools.combinations(range_, 2):
-        hessian[i[0], i[1]] = mixed_der[add_]
-        hessian[i[1], i[0]] = hessian[i[0], i[1]]
-        add_ += 1
-    return hessian
-
-
 def IS_diagnostics(sampling_outputs=None, weights=None, graphics=False, figsize=(8, 3), ):
     """
     Diagnostics for IS.

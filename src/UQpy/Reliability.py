@@ -78,11 +78,6 @@ class SubsetSimulation:
 
     :type samples_init: numpy array
 
-    :param dimension:  A scalar value defining the dimension of target density function.
-
-                       Default: 1
-    :type dimension: int
-
     :param p_cond: Conditional probability for each conditional level
 
                    Default: 0.1
@@ -105,15 +100,15 @@ class SubsetSimulation:
 
     **Attributes:**
 
-    :param samples: A list of arrays containing the samples in each conditional level.
-    :type samples: list of numpy arrays
+    :param self.samples: A list of arrays containing the samples in each conditional level.
+    :type self.samples: list of numpy arrays
 
-    :param g: A list of arrays containing the evaluation of the performance function at each sample in each conditional
+    :param self.g: A list of arrays containing the evaluation of the performance function at each sample in each conditional
               level.
-    :type g: list of numpy arrays
+    :type self.g: list of numpy arrays
 
-    :param g_level: Threshold value of the performance function for each conditional level
-    :type g_level: list
+    :param self.g_level: Threshold value of the performance function for each conditional level
+    :type self.g_level: list
 
     :param self.pf: Probability of failure estimate
     :type self.pf: float
@@ -239,11 +234,11 @@ class SubsetSimulation:
 
             # Initialize a new MCMC object for each conditional level
             new_mcmc_object = MCMC(dimension=self.mcmc_objects[0].dimension,
-                                       algorithm=self.mcmc_objects[0].algorithm,
-                                       log_pdf_target=self.mcmc_objects[0].log_pdf_target,
-                                       pdf_target=self.mcmc_objects[0].pdf_target,
-                                       args_target=self.mcmc_objects[0].args_target,
-                                       seed=np.atleast_2d(self.samples[step][:n_keep, :]))
+                                   algorithm=self.mcmc_objects[0].algorithm,
+                                   log_pdf_target=self.mcmc_objects[0].log_pdf_target,
+                                   pdf_target=self.mcmc_objects[0].pdf_target,
+                                   args_target=self.mcmc_objects[0].args_target,
+                                   seed=np.atleast_2d(self.samples[step][:n_keep, :]))
             new_mcmc_object.algorithm_inputs = self.mcmc_objects[0].algorithm_inputs
             self.mcmc_objects.append(new_mcmc_object)
 
@@ -1221,7 +1216,7 @@ class TaylorSeries:
                  df_method=None, scale=True):
 
         """
-        A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
+        A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences.
 
         **Input:**
 
@@ -1382,11 +1377,8 @@ class TaylorSeries:
 
     @staticmethod
     def hessian(dimension=None, mixed_der=None, der=None):
-
-        """
-        Calculate the hessian matrix with finite differences
-        Parameters:
-        """
+        """The function to calculate the hessian matrix with finite differences. This function is part of the
+        TaylorSeries class."""
         hessian = np.diag(der)
         import itertools
         range_ = list(range(dimension))
