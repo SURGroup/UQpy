@@ -14,7 +14,12 @@
 # WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+This module contains classes and functions to execute a computational model using specified sample inputs.
 
+The module contains the following class:
+* RunModel: Run a computational model at specified sample points.
+"""
 
 import os
 import subprocess
@@ -209,7 +214,7 @@ class RunModel:
         if self.fmt is None:
             pass
         elif self.fmt in available_formats.keys():
-                self.fmt = available_formats[self.fmt]
+            self.fmt = available_formats[self.fmt]
         elif isinstance(self.fmt, str):
             if (self.fmt[0] != "{") or (self.fmt[-1] != "}") or (":" not in self.fmt):
                 raise ValueError('fmt should be in ["ls-dyna"], or a string in brackets indicating a format.')
@@ -307,7 +312,6 @@ class RunModel:
         else:
             raise ValueError("Samples must be passed as a list or numpy ndarray")
 
-
         # If samples are provided, invoke the run method.
         # if self.samples is not None:
         #     self.run()
@@ -317,6 +321,30 @@ class RunModel:
             os.chdir(current_dir)
 
     def run(self, samples=None, append_samples=True):
+        """
+        Execute a computational model with given inputs.
+
+        This function selects the appropriate workflow depending on the type of the model (Python vs third
+        party software) and the runs the model based on the type of execution (series vs parallel).
+
+        **Input:**
+
+        :param samples: Samples to be passed as inputs to the model.
+                        If an ndarray is passed, each row of the ndarray contains one set of samples required for one
+                        execution of the
+                        model. (The first dimension of the ndarray is considered to be the number of rows.)
+                        If a list is passed, each item of the list contains one set of samples required for one
+                        execution of the model.
+
+                        Default: None
+        :type samples: ndarray or list
+
+        :param append_samples: If append_samples is False, a new set of samples is created, the previous ones are
+                               deleted. If append samples is True, samples are appended to the existing ones.
+
+                               Default: True
+        :type append_samples: Boolean
+        """
 
         # Nb of simulations to be performed
         self.nsim = len(samples)
@@ -326,15 +354,15 @@ class RunModel:
             self.samples = []
 
         # Check if samples already exist, if yes append new samples to old ones
-        if self.samples == []:    # There are currently no samples
+        if self.samples == []:  # There are currently no samples
             self.nexist = 0
             self.qoi_list = [None] * self.nsim
             if type(samples) == list:
                 self.samples = samples
             else:
                 self.samples = list(samples)
-        else:     # Samples already exist in the RunModel object, append new ones
-            self.nexist=len(self.samples)
+        else:  # Samples already exist in the RunModel object, append new ones
+            self.nexist = len(self.samples)
             self.qoi_list.extend([None] * self.nsim)
             if type(samples) == list:
                 self.samples.extend(samples)
@@ -379,20 +407,21 @@ class RunModel:
 
     ####################################################################################################################
 
-
-
-
     def _serial_execution(self):
         """
         Perform serial execution of the model when there is a template input file
-        :return:
+
+        This function loops over the number of simulations, executing the model once per loop. In each loop, the
+        function creates a directory for each model run, copies files to model run directory,
+        changes current working directory to model run directory, calls the input function, executes the model,
+        calls the output function, removes the copied files and folders, and returns to the previous directory.
         """
         if self.verbose:
             print('\nPerforming serial execution of the model with template input.\n')
 
         # Loop over the number of simulations, executing the model once per loop
         ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%p")
-        for i in range(self.nexist, self.nexist+self.nsim):
+        for i in range(self.nexist, self.nexist + self.nsim):
             # Create a directory for each model run
             work_dir = os.path.join(os.getcwd(), "run_" + str(i) + '_' + ts)
             os.makedirs(work_dir)
@@ -429,12 +458,15 @@ class RunModel:
             # Return to the previous directory
             os.chdir(self.return_dir)
 
-####################################################################################################################
+    ####################################################################################################################
 
     def _parallel_execution(self):
         """
         Execute the model in parallel when there is a template input file
-        :return:
+
+        This function calls the input function and generates input files for all the samples, then creates a directory
+        for each model run, copies files to model run directory, executes the model in parallel, collects output,
+        removes the copied files and folders.
         """
         if self.verbose:
             print('\nPerforming parallel execution of the model with template input.\n')
@@ -443,7 +475,7 @@ class RunModel:
 
         ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%p")
 
-        for i in range(self.nexist, self.nexist+self.nsim):
+        for i in range(self.nexist, self.nexist + self.nsim):
             # Create a directory for each model run
             work_dir = os.path.join(os.getcwd(), "run_" + str(i) + '_' + ts)
             os.makedirs(work_dir)
@@ -493,7 +525,9 @@ class RunModel:
     def _serial_python_execution(self):
         """
         Execute the python model in serial when there is no template input file
-        :return:
+
+        This function imports the model object from the model script, and executes the model in series by passing the
+        corresponding sample along with keyword arguments, if any, as inputs to the model object.
         """
         if self.verbose:
             print('\nPerforming serial execution of the model without template input.\n')
@@ -502,24 +536,26 @@ class RunModel:
         exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
         for i in range(self.nsim):
             if isinstance(self.samples, list):
-                sample_to_send = self.samples[i+self.nexist]
+                sample_to_send = self.samples[i + self.nexist]
             elif isinstance(self.samples, np.ndarray):
-                sample_to_send = self.samples[i+self.nexist]
+                sample_to_send = self.samples[i + self.nexist]
                 # self.model_output = eval(self.model_object_name + '(self.samples[i])')
             if len(self.python_kwargs) == 0:
                 self.model_output = eval(self.model_object_name + '(sample_to_send)')
             else:
                 self.model_output = eval(self.model_object_name + '(sample_to_send, **self.python_kwargs)')
             if self.model_is_class:
-                self.qoi_list[i+self.nexist] = self.model_output.qoi
+                self.qoi_list[i + self.nexist] = self.model_output.qoi
             else:
-                self.qoi_list[i+self.nexist] = self.model_output
+                self.qoi_list[i + self.nexist] = self.model_output
 
     ####################################################################################################################
     def _parallel_python_execution(self):
         """
         Execute the python model in parallel when there is no template input file
-        :return:
+
+        This function imports the model object from the model script, and executes the model in parallel by passing the
+        samples along with keyword arguments, if any, as inputs to the model object.
         """
         if self.verbose:
             print('\nPerforming parallel execution of the model without template input.\n')
@@ -547,12 +583,11 @@ class RunModel:
 
         for i in range(self.nsim):
             if self.model_is_class:
-                self.qoi_list[i+self.nexist] = results[i].qoi
+                self.qoi_list[i + self.nexist] = results[i].qoi
             else:
-                self.qoi_list[i+self.nexist] = results[i]
+                self.qoi_list[i + self.nexist] = results[i]
 
         pool.close()
-
 
         # with concurrent.futures.ThreadPoolExecutor(max_workers=self.ntasks) as executor:
         #     index = 0
@@ -612,8 +647,11 @@ class RunModel:
     def _input_serial(self, index):
         """
         Create one input file using the template and attach the index to the filename
+
+        ** Input: **
+
         :param index: The simulation number
-        :return:
+        :type index: int
         """
         # Create new text to write to file
         self.new_text = self._find_and_replace_var_names_with_values(var_names=self.var_names,
@@ -628,8 +666,11 @@ class RunModel:
     def _execute_serial(self, index):
         """
         Execute the model once using the input file of index number
+
+        ** Input: **
+
         :param index: The simulation number
-        :return:
+        :type index: int
         """
         self.model_command = ([self.python_command, str(self.model_script), str(index)])
         subprocess.run(self.model_command)
@@ -637,8 +678,11 @@ class RunModel:
     def _output_serial(self, index):
         """
         Execute the output script, obtain the output qoi and save it in qoi_list
+
+        ** Input: **
+
         :param index: The simulation number
-        :return:
+        :type index: int
         """
         # Run output module
         exec('from ' + self.output_script[:-3] + ' import ' + self.output_object_name)
@@ -651,7 +695,11 @@ class RunModel:
     def _input_parallel(self, timestamp):
         """
         Create all the input files required
-        :return:
+
+        ** Input: **
+
+        :param timestamp: Timestamp which is appended to the name of the input file
+        :type timestamp: str
         """
         # Loop over the number of samples and create input files in a folder in current directory
         for i in range(self.nsim):
@@ -671,7 +719,11 @@ class RunModel:
     def _execute_parallel(self, timestamp):
         """
         Build the command string and execute the model in parallel using subprocess and gnu parallel
-        :return:
+
+        ** Input: **
+
+        :param timestamp: Timestamp which is appended to the name of the input file
+        :type timestamp: str
         """
         # Check if logs folder exists, if not, create it
         if not os.path.exists("logs"):
@@ -703,14 +755,36 @@ class RunModel:
     def _output_parallel(self, index):
         """
         Extract output from parallel execution
+
+        ** Input: **
+
         :param index: The simulation number
-        :return:
+        :type index: int
         """
         self._output_serial(index)
 
     ####################################################################################################################
     # Helper functions
     def _create_input_files(self, file_name, num, text, new_folder='InputFiles'):
+        """
+        Create input files using filename, index, text
+
+        ** Input: **
+
+        :param file_name: Name of index file
+        :type file_name: str
+
+        :param num: The simulation number
+        :type num: int
+
+        :param text: Content of input file
+        :type text: str
+
+        :param new_folder: Name of directory where the created input files are placed
+
+                           Default: 'InputFiles'
+        :type new_folder: str
+        """
         if not os.path.exists(new_folder):
             os.makedirs(new_folder)
         base_name = os.path.splitext(os.path.basename(file_name))
@@ -720,6 +794,24 @@ class RunModel:
         return
 
     def _find_and_replace_var_names_with_values(self, var_names, samples, template_text, index, user_format='{:.4E}'):
+        """
+        Replace placeholders containing variable names in template input text with sample values.
+
+        ** Input: **
+
+        :param var_names: Name of the probabilistic input variables.
+        :type var_names: list of str
+
+        :param samples: Samples values of the input variables.
+        :type samples: ndarray
+
+        :param template_text: Text in the template input file, with placeholders where the sample values of the input
+                              variables need to be placed.
+        :type template_text: str
+
+        :param index: The sample number
+        :type index: int
+        """
         # TODO: deal with cases which have both var1 and var11
         new_text = template_text
         for j in range(len(var_names)):
@@ -754,9 +846,27 @@ class RunModel:
         return new_text
 
     def _is_list_of_strings(self, lst):
+        """
+        Check if input list contains only strings
+
+        ** Input: **
+
+        :param lst: A list whose entries should be checked to see if they are strings
+        :type lst: list
+        """
         return bool(lst) and isinstance(lst, list) and all(isinstance(elem, str) for elem in lst)
 
     def _check_python_model(self):
+        """
+        Check if python model name is valid
+
+        This function gets the name of the classes and functions in the imported python module whose names is passed in
+        as the python model to RunModel. There should be at least one class or function in the module - if not there,
+        then the function exits raising a ValueError. If there is at least one class or function in the module,
+        if the model object name is not given as input and there is only one class or function, that class name or
+        function name is used to run the model. If there is a model_object_name given, check if it is a valid name.
+        Else, a ValueError is raised.
+        """
         # Get the names of the classes and functions in the imported module
         import inspect
         class_list = []
@@ -799,6 +909,15 @@ class RunModel:
                     raise ValueError("The file does not contain an object which was specified as the model.")
 
     def _check_output_module(self):
+        """
+        Check if output script name is valid
+
+        This function get the names of the classes and functions in the imported module. There should be at least one
+        class or function in the module - if not there, exit with ValueError. If there is at least one class or
+        function in the module, if the output object name is not given as input and there is only one class or function,
+        take that class name or function name to extract output. If there is a output_object_name given, check if it is
+        a valid name. Else, a ValueError is raised.
+        """
         # Get the names of the classes and functions in the imported module
         import inspect
         class_list = []
