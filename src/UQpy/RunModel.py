@@ -29,7 +29,6 @@ List of Methods
     RunModel.
 """
 
-
 import os
 import subprocess
 import pathlib
@@ -176,18 +175,18 @@ class RunModel:
     :type cluster: Boolean
 
     :param fmt: If the input file requires variables to be written in specific format, this format can be specified
-    here. Format specification follows standard Python conventions for the str.format() command described at:
-    https://docs.python.org/3/library/stdtypes.html#str.format
-    For additional details, see the Format String Syntax description at:
-    https://docs.python.org/3/library/string.html#formatstrings
-    The default is fmt = None
-    Some noteworthy formats include:
-    For ls-dyna .k files, each card is required to be exactly 10 characters. The following format string syntax is
-    recommended, "{:>10.4f}"
-    :type fmt: String
+                here. Format specification follows standard Python conventions for the str.format() command described
+                at: https://docs.python.org/3/library/stdtypes.html#str.format
+                For additional details, see the Format String Syntax description at:
+                https://docs.python.org/3/library/string.html#formatstrings
+                The default is fmt = None
+                Some noteworthy formats include:
+                For ls-dyna .k files, each card is required to be exactly 10 characters. The following format string
+                syntax is recommended, "{:>10.4f}"
+    :type fmt: str
 
     :param kwargs: Additional inputs to the python function (model_object_name)
-    This option is only used for execution of Python models.
+                   This option is only used for execution of Python models.
     :type kwargs: dictionary
 
     **Attributes**
@@ -584,9 +583,9 @@ class RunModel:
         pool = multiprocessing.Pool(processes=self.ntasks)
         for i in range(self.nsim):
             if isinstance(self.samples, list):
-                sample_to_send = np.atleast_2d(self.samples[i+self.nexist])
+                sample_to_send = np.atleast_2d(self.samples[i + self.nexist])
             elif isinstance(self.samples, np.ndarray):
-                sample_to_send = np.atleast_2d(self.samples[i+self.nexist])
+                sample_to_send = np.atleast_2d(self.samples[i + self.nexist])
             # if len(self.python_kwargs) == 0:
             #     sample.append([self.model_script, self.model_object_name, self.samples[i + self.nexist]])
             # else:
