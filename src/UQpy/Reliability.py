@@ -1048,12 +1048,19 @@ class TaylorSeries:
     def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=100, df_step=None, corr=None,
                  model=None, df_method=None, tol=None):
         """
-        A class that performs reliability analysis of a model using the First Order Reliability Method (FORM) and
-        Second Order Reliability Method (SORM) that belong to the family of Taylor series expansion methods.
+        Perform First and Second Order Reliability (FORM/SORM) methods.
+
+        A class that calculates the reliability  of a model using the First Order Reliability Method (FORM) and
+        Second Order Reliability Method (SORM) based on the first-order and second-order Taylor series expansion
+        approximation of the performance function.
+
+        **References:**
+
+        1. , “ ”,
 
         **Input:**
 
-        :param dimension: Number of random variables
+        :param dimension: Number of random variables.
         :type dimension: int
 
         :param dist_name: Probability distribution model for each random variable (see Distributions class).
@@ -1064,6 +1071,8 @@ class TaylorSeries:
         :type dist_params: list
 
         :param n_iter: Maximum number of iterations for the Hasofer-Lind algorithm
+
+                       Default: 100
         :type n_iter: int
 
         :param df_method: Method for finite difference used for the estimation of the gradient
@@ -1073,17 +1082,59 @@ class TaylorSeries:
         :type df_step: float/list of floats
 
         :param tol: Convergence threshold for FORM
+
+                    Default: 0.001
         :type tol: float
 
         :param corr: Correlation structure of the random vector (See Transformation class).
         :type corr: ndarray
+
+        **Attributes:**
+
+        :param self.HL_beta: Hasofer-Lind reliability index
+        :type self.HL_beta: float
+
+        :param self.DesignPoint_U: Design point in the standard normal space
+        :type self.DesignPoint_U: ndarray
+
+        :param self.DesignPoint_X: Design point in the physical space
+        :type self.DesignPoint_X: ndarray
+
+        :param self.alpha: Direction cosine
+        :type self.alpha: ndarray
+
+        :param self.Prob_FORM: First Order probability of failure
+        :type self.Prob_FORM: float
+
+        :param self.iterations: Number of model evaluations
+        :type self.iterations: iter
+
+        #:param self.u_record:
+        :type self.u_record:
+
+        :param self.x_record:
+        :type self.x_record:
+
+        :param self.dg_record:
+        :type self.dg_record:
+
+        :param self.alpha_record:
+        :type self.alpha_record:
+
+        :param self.u_check:
+        :type self.u_check:
+
+        :param self.g_check:
+        :type self.g_check:
+
+        :param self.g_record:
+        :type self.g_record:
 
         **Author:**
 
         Authors: Dimitris G. Giovanis
         Last Modified: 1/2/2020 by Dimitris G. Giovanis
         """
-
         self.dimension = dimension
         self.dist_name = dist_name
         self.dist_params = dist_params
@@ -1163,7 +1214,8 @@ class TaylorSeries:
             g_record.append(qoi)
             # 2. evaluate Limit State Function gradient at point u_k and direction cosines
             dg = self.gradient(df_method=self.df_method, order='first', samples=x.reshape(1, -1),
-                               dimension=self.dimension, df_step=self.df_step, model=self.model, dist_params=self.dist_params,
+                               dimension=self.dimension, df_step=self.df_step, model=self.model,
+                               dist_params=self.dist_params,
                                dist_name=self.dist_name)
             dg_record.append(np.dot(dg[0, :], jacobi_x_to_u))
             norm_grad = np.linalg.norm(dg_record[k])
@@ -1202,14 +1254,14 @@ class TaylorSeries:
             self.DesignPoint_X = x
             self.Prob_FORM = stats.norm.cdf(-self.HL_beta)
             self.iterations = k
-            # self.alpha = alpha
-            # self.g_record = g_record
-            # self.u_record = u_record
-            # self.x_record = x_record
-            # self.dg_record = dg_record
-            # self.alpha_record = alpha_record
-            # self.u_check = u_check
-            # self.g_check = g_check
+            self.alpha = alpha
+            self.g_record = g_record
+            self.u_record = u_record
+            self.x_record = x_record
+            self.dg_record = dg_record
+            self.alpha_record = alpha_record
+            self.u_check = u_check
+            self.g_check = g_check
 
     @staticmethod
     def gradient(samples=None, dist_params=None, dist_name=None, model=None, dimension=None, df_step=None, order=None,
@@ -1221,8 +1273,8 @@ class TaylorSeries:
         **Input:**
 
         :param samples: The sample values at which the gradient of the model will be evaluated. Samples can be
-        passed directly as  an array or can be passed through the text file 'UQpy_Samples.txt'.
-        If passing samples via text file, set samples = None or do not set the samples input.
+                        passed directly as  an array or can be passed through the text file 'UQpy_Samples.txt'.
+                        If passing samples via text file, set samples = None or do not set the samples input.
         :type samples: ndarray
 
         :param dist_params: Probability distribution model parameters for each random variable.
