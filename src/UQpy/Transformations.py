@@ -47,9 +47,8 @@ class Nataf:
     :param dist_name: A list containing the names of the distributions of the random variables.
                       Distribution names must match those in the Distributions module.
                       If the distribution does not match one from the Distributions module, the user must
-                      provide custom_dist.py.
-                      The length of the string must be 1 (if all distributions are the same) or equal to
-                      dimension.
+                      provide custom_dist.py. The length of the string must be 1 (if all distributions are the same)
+                      or equal to dimension.
     :type dist_name: string list
 
     :param dist_params: Parameters of the distribution.
