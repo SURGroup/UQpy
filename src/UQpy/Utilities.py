@@ -241,7 +241,7 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
             :type corr: ndarray
 
             :param beta:  A variable selected to optimize convergence speed and desired accuracy.
-            :type beta: int
+            :type beta: float
 
             :param thresh1: Threshold
             :type thresh1: float
@@ -256,7 +256,7 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
     """
 
     if beta is None:
-        beta = 1
+        beta = 1.0
     if thresh1 is None:
         thresh1 = 0.0001
     if thresh2 is None:

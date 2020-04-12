@@ -63,8 +63,8 @@ class Nataf:
 
     :param beta: A variable selected to optimize convergence speed and desired accuracy of the ITAM method.
 
-                 Default: 1
-    :type beta: int
+                 Default: 1.0
+    :type beta: float
 
     :param itam_error1: A threshold value the ITAM method.
 
@@ -103,8 +103,8 @@ class Nataf:
     Last Modified: 1/2/2020 by Dimitris G. Giovanis
     """
 
-    def __init__(self, corr=None, dist_name=None, dist_params=None, dimension=None, beta=None,
-                 itam_error1=None, itam_error2=None):
+    def __init__(self, corr=None, dist_name=None, dist_params=None, dimension=None, beta=1.0,
+                 itam_error1=0.001, itam_error2=0.01):
 
         self.beta = beta
         self.itam_error1 = itam_error1
@@ -187,7 +187,7 @@ class Nataf:
                                                              self.dist_params, jacobian=True)
 
     @staticmethod
-    def distortion_x_to_z(distribution, dist_params, corr_x, beta=None, itam_error1=None, itam_error2=None):
+    def distortion_x_to_z(distribution, dist_params, corr_x, beta, itam_error1, itam_error2):
         """
         Calculate correlation distortion.
 
@@ -207,8 +207,8 @@ class Nataf:
 
         :param beta: A variable selected to optimize convergence speed and desired accuracy of the ITAM method.
 
-                     Default: 1
-        :type beta: int
+                     Default: 1.0
+        :type beta: float
 
         :param itam_error1: A threshold value the ITAM method.
 
