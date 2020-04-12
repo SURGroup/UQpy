@@ -580,43 +580,30 @@ def R_to_r(R):
     return r
 
 
-def eval_hessian(dimension, mixed_der, der):
-
-    """
-    Calculate the hessian matrix with finite differences
-    Parameters:
-
-    """
-    hessian = np.diag(der)
-    import itertools
-    range_ = list(range(dimension))
-    add_ = 0
-    for i in itertools.combinations(range_, 2):
-        hessian[i[0], i[1]] = mixed_der[add_]
-        hessian[i[1], i[0]] = hessian[i[0], i[1]]
-        add_ += 1
-    return hessian
-
-
 def IS_diagnostics(sampling_outputs=None, weights=None, graphics=False, figsize=(8, 3), ):
+    """
+    Diagnostics for IS.
+
+    These diagnostics are qualitative, they can help the user in understanding how the IS algorithm is performing.
+    This function returns printouts and plots.
+
+    **Inputs:**
+
+    :param sampling_outputs: output object of a sampling method
+    :type sampling_outputs: object of class MCMC
+
+    :param weights: output weights (alternative to giving sampling_outputs)
+    :type weights: ndarray
+
+    :param graphics: indicates whether or not to do a plot
+
+                     Default: False
+    :type graphics: boolean
+
+    :param figsize: size of the figure for output plots
+    :type figsize: tuple (width, height)
 
     """
-         Input:
-             :param sampling_outputs: output object of a sampling method
-             :type sampling_outputs: object of class MCMC or IS
-
-             :param weights: output weights of IS (alternative to giving sampling_outputs for IS)
-             :type weights: ndarray
-
-             :param graphics: indicates whether or not to do a plot
-             :type graphics: boolean, default False
-
-             :param figsize: size of the figure for output plots
-             :type figsize: tuple (width, height)
-
-         Output:
-             returns various diagnostics values/plots to evaluate importance sampling outputs
-     """
 
     if (sampling_outputs is None) and (weights is None):
         raise ValueError('UQpy error: sampling_outputs or weights should be provided')
@@ -639,30 +626,36 @@ def IS_diagnostics(sampling_outputs=None, weights=None, graphics=False, figsize=
 
 def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ESS=0.05,
                      graphics=False, figsize=None):
+    """
+    Diagnostics for MCMC.
+
+    These diagnostics are qualitative, they can help the user in understanding how the MCMC algorithm is performing.
+    These diagnostics are not intended to give a quantitative assessment of MCMC algorithms. This function returns
+    printouts and plots.
+
+    **Inputs:**
+
+    :param sampling_outputs: output object of a sampling method
+    :type sampling_outputs: object of class MCMC
+
+    :param samples: output samples of a sampling method, alternative to giving sampling_outputs
+    :type samples: ndarray
+
+    :param eps_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
+    :type eps_ESS: float in [0,1]
+
+    :param alpha_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
+    :type alpha_ESS: float in [0,1]
+
+    :param graphics: indicates whether or not to do a plot
+
+                     Default: False
+    :type graphics: boolean
+
+    :param figsize: size of the figure for output plots
+    :type figsize: tuple (width, height)
 
     """
-         Input:
-             :param sampling_outputs: output object of a sampling method
-             :type sampling_outputs: object of class MCMC or IS
-
-             :param samples: output samples of a sampling method (alternative to giving sampling_outputs for MCMC)
-             :type samples: ndarray
-
-             :param eps_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
-             :type eps_ESS: float in [0,1]
-
-             :param alpha_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
-             :type alpha_ESS: float in [0,1]
-
-             :param graphics: indicates whether or not to do a plot
-             :type graphics: boolean, default False
-
-             :param figsize: size of the figure for output plots
-             :type figsize: tuple (width, height)
-
-         Output:
-             returns various diagnostics values/plots to evaluate MCMC sampling outputs
-     """
 
     if (eps_ESS < 0) or (eps_ESS > 1):
         raise ValueError('eps_ESS should be a float between 0 and 1.')
@@ -755,6 +748,33 @@ def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ES
 
 
 def resample(samples, weights, method='multinomial', size=None):
+    """
+    Resample to get a set of un-weighted samples that represent a density in place of a set of weighted samples.
+
+    **Inputs:**
+
+    :param samples: Existing weighted samples
+    :type samples: ndarray (nsamples, dim)
+
+    :param weights: Weights of samples.
+    :type pdf: ndarray (nsamples,)
+
+    :param method: resampling method, as of V3 only multinomial resampling is supported
+
+                   Default: 'multinomial'
+    :type method: str
+
+    :param size: Number of un-weighted samples to generate.
+
+                 Default: None (same number of samples is generated as number of existing samples).
+    :type pdf: int
+
+    **Output/Returns:**
+
+    :param unweighted_samples: Un-weighted samples that represent the target pdf
+    :type unweighted_samples: ndarray
+
+    """
     nsamples = samples.shape[0]
     if size is None:
         size = nsamples
@@ -783,6 +803,15 @@ def suppress_stdout():
 
 
 def check_input_dims(x):
+    """
+    Check that x is a 2D ndarray.
+
+    **Inputs:**
+
+    :param x: Existing samples
+    :type x: ndarray (nsamples, dim)
+
+    """
     if not isinstance(x, np.ndarray):
         try:
             x = np.array(x)
@@ -794,8 +823,34 @@ def check_input_dims(x):
 
 
 def recursive_update_mean_covariance(n, new_sample, previous_mean, previous_covariance=None):
-    """ Iterative formula to compute a new mean, covariance based on previous ones and new sample.
-     n is the number of samples used to compute the current mean """
+    """
+    Iterative formula to compute a new sample mean and covariance based on previous ones and new sample.
+
+    New covariance is computed only of previous_covariance is provided.
+
+    **Inputs:**
+
+    :param n: Number of samples used to compute the new mean
+    :type n: int
+
+    :param new_sample: new sample
+    :type new_sample: ndarray (dim, )
+
+    :param previous_mean: Previous sample mean, to be updated with new sample value
+    :type previous_mean: ndarray (dim, )
+
+    :param previous_covariance: Previous sample covariance, to be updated with new sample value
+    :type previous_covariance: ndarray (dim, dim)
+
+    **Output/Returns:**
+
+    :param new_mean: Updated sample mean
+    :type new_mean: ndarray (dim, )
+
+    :param new_covariance: Updated sample covariance
+    :type new_covariance: ndarray (dim, dim)
+
+    """
     new_mean = (n - 1) / n * previous_mean + 1 / n * new_sample
     if previous_covariance is None:
         return new_mean
@@ -806,3 +861,206 @@ def recursive_update_mean_covariance(n, new_sample, previous_mean, previous_cova
         delta_n = (new_sample - previous_mean).reshape((dim, 1))
         new_covariance = (n - 2) / (n - 1) * previous_covariance + 1 / n * np.matmul(delta_n, delta_n.T)
     return new_mean, new_covariance
+
+# Grassmann: svd
+def svd(matrix, value):
+    """
+    Compute the singular value decomposition of a matrix and truncate it.
+
+    Given a matrix compute its singular value decomposition (SVD) and given a desired rank you
+    can truncate the matrix containing the eigenvectors.
+
+    **Input:**
+
+    :param matrix: Input matrix.
+    :type  matrix: list or numpy array
+
+    :param value: Rank.
+    :type  value: int
+
+    **Output/Returns:**
+
+    :param u: left-singular eigenvectors.
+    :type  u: numpy array
+
+    :param u: eigenvalues.
+    :type  u: numpy array
+
+    :param v: right-singular eigenvectors.
+    :type  v: numpy array
+    """
+    ui, si, vi = np.linalg.svd(matrix, full_matrices=True,hermitian=False)  # Compute the SVD of matrix
+    si = np.diag(si)  # Transform the array si into a diagonal matrix containing the singular values
+    vi = vi.T  # Transpose of vi
+
+    # Select the size of the matrices u, s, and v
+    # either based on the rank of (si) or on a user defined value
+    if value == 0:
+        rank = np.linalg.matrix_rank(si)  # increase the number of basis up to rank
+        u = ui[:, :rank]
+        s = si[:rank, :rank]
+        v = vi[:, :rank]
+
+    else:
+        u = ui[:, :value]
+        s = si[:value, :value]
+        v = vi[:, :value]
+
+    return u, s, v
+
+def check_arguments(argv, min_num_matrix, ortho):
+    
+    """
+    Check input arguments for consistency.
+
+    Check the input matrices for consistency given the minimum number of matrices (min_num_matrix) 
+    and the boolean varible (ortho) to test the orthogonality.
+
+    **Input:**
+
+    :param argv: Matrices to be tested.
+    :type  argv: list of arguments
+
+    :param min_num_matrix: Minimum number of matrices.
+    :type  min_num_matrix: int
+    
+    :param ortho: boolean varible to test the orthogonality.
+    :type  ortho: bool
+
+    **Output/Returns:**
+
+    :param inputs: Return the input matrices.
+    :type  inputs: numpy array
+
+    :param nargs: Number of matrices.
+    :type  nargs: numpy array
+    """
+        
+    # Check the minimum number of matrices involved in the operations
+    if type(min_num_matrix) != int:
+        raise ValueError('The minimum number of matrices MUST be an integer number!')
+    elif min_num_matrix < 1:
+        raise ValueError('Number of arguments MUST be larger than or equal to one!')
+
+    # Check if the variable controlling the orthogonalization is boolean
+    if type(ortho) != bool:
+        raise ValueError('The last argument MUST be a boolean!')
+
+    nargv = len(argv)
+
+    # If the number of provided inputs are zero exit the code
+    if nargv == 0:
+        raise ValueError('Missing input arguments!')
+
+    # Else if the number of arguments is equal to 1 
+    elif nargv == 1:
+
+        # Check if the number of expected matrices are higher than or equal to 2
+        args = argv[0]
+        nargs = len(args)
+      
+        if np.shape(args)[0] == 1 or len(np.shape(args)) == 2:
+            nargs = 1
+        # if it is lower than two exit the code, otherwise store them in a list
+        if nargs < min_num_matrix:
+            raise ValueError('The number of points must be higher than:', min_num_matrix)
+
+        else:
+            inputs = []
+            if nargs == 1:
+                inputs = [args]
+            else:
+
+                # Loop over all elements
+                for i in range(nargs):                  
+                    # Verify the type of the input variables and store in a list
+                    inputs.append(test_type(args[i], ortho))
+
+    else:
+
+        nargs = nargv
+        # Each argument MUST be a matrix
+        inputs = []
+        for i in range(nargv):
+            # Verify the type of the input variables and store in a list
+            inputs.append(test_type(argv[i], ortho))
+
+    return inputs, nargs
+
+
+def test_type(X, ortho):
+    
+    """
+    Test the datatype of X.
+
+    Check if the datatype of the matrix X is consistent.
+
+    **Input:**
+
+    :param X: Matrices to be tested.
+    :type  X: list or numpy array
+    
+    :param ortho: boolean varible to test the orthogonality.
+    :type  ortho: bool
+
+    **Output/Returns:**
+
+    :param Y: Tested and adjusted matrices.
+    :type  Y: numpy array
+    """
+        
+    if not isinstance(X, (list, np.ndarray)):
+        raise TypeError('Elements of input arguments should be provided either as list or array')
+    elif type(X) == list:
+        Y = np.array(X)
+    else:
+        Y = X
+
+    if ortho:
+        Ytest = np.dot(Y.T, Y)
+        if not np.array_equal(Ytest, np.identity(np.shape(Ytest)[0])):
+            Y, unused = np.linalg.qr(Y)
+
+    return Y
+
+def nn_coord(x, k):
+    
+    """
+    Select k elements close to x.
+
+    Select k elements close to x to be used to construct a sparse kernel
+    matrix to be used in the diffusion maps.
+
+    **Input:**
+
+    :param x: Matrices to be tested.
+    :type  x: list or numpy array
+    
+    :param k: Number of points close to x.
+    :type  k: int
+
+    **Output/Returns:**
+
+    :param idx: Indices of the closer points.
+    :type  idx: int
+    """
+        
+    if isinstance(x, list):
+        x = np.array(x)
+        
+    dim = np.shape(x)
+    
+    if len(dim) is not 1:
+        raise ValueError('k MUST be a vector.')
+    
+    if not isinstance(k, int):
+        raise TypeError('k MUST be integer.')
+
+    if k<1:
+        raise ValueError('k MUST be larger than or equal to 1.')
+    
+    #idx = x.argsort()[::-1][:k]
+    idx = x.argsort()[:len(x)-k]
+    #idx = idx[0:k]
+    #idx = idx[k+1:]
+    return idx

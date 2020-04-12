@@ -15,14 +15,19 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""This module contains functionality for all the reliability methods supported in UQpy."""
+"""
+This module contains classes and functions for reliability analysis, probability of failure estimation, and rare event
+simulation. The module currently contains the following classes:
+
+* SubsetSimulation: Estimate probability of failure using subset simulation.
+* TaylorSeries: Estimate probability of failure using FORM or SORM.
+"""
 
 from UQpy.RunModel import RunModel
 from UQpy.SampleMethods import MCMC
 from UQpy.Surrogates import Krig
 from UQpy.Transformations import *
 import warnings
-
 
 ########################################################################################################################
 ########################################################################################################################
@@ -32,47 +37,98 @@ import warnings
 
 class SubsetSimulation:
     """
-        Description:
+    Perform Subset Simulation to estimate probability of failure.
 
-            A class used to perform Subset Simulation.
+    This class estimates probability of failure for a user-defined model using Subset Simulation. The class can
+    use one of several MCMC algorithms to draw conditional samples.
 
-            This class estimates probability of failure for a user-defined model using Subset Simulation
+    **References:**
 
-            References:
-            S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by
-            subset simulation,” Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+    1. S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by subset simulation,”
+       Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+    2. Shields, M.D., Giovanis, D.G., and Sundar, V.S. "Subset simulation for problems with strongly non-Gaussian,
+       highly anisotropics, and degenerate distributions," Computers & Structures (In Review)
 
-        Input:
-            :param dimension:  A scalar value defining the dimension of target density function.
-                            Default: 1
-            :type dimension: int
+    **Input:**
 
-            :param nsamples_ss: Number of samples to generate in each conditional subset
-                                No Default Value: nsamples_ss must be prescribed
-            :type nsamples_ss: int
+    :param mcmc_object: An instance of the UQpy.SampleMethods.MCMC class that is used to specify the MCMC algorithm
+                        used for conditional sampling
 
-            :param p_cond: Conditional probability at each level
-                                Default: p_cond = 0.1
-            :type p_cond: float
+                        This object must be specified.
 
-            :param pdf_proposal_type, pdf_proposal_scale, pdf_target, log_pdf_target, pdf_target_params, jump, nburn,
-                    pdf_target_copula, pdf_target_copula_params, pdf_target_type, algorithm: See MCMC in SampleMethods
+                        Default: None
+    :type mcmc_object: object
 
-            :param model_script, model_object_name, input_template, var_names, output_script, output_object_name,
-                       ntasks, cores_per_task, nodes, resume, verbose, model_dir, cluster: See RunModel class.
+    :param runmodel_object: An instance of the UQpy.RunModel.RunModel class that is used to specify the computational
+                            model for which probability of failure is to be estimated.
 
-    Output:
+                            This object must be specified.
 
-    :return self.pf: Probability of failure estimate
-    :rtype self.pf: float
-    :return self.cov1: Coefficient of variation - Au & Beck, Independent Chains
-    :rtype self.cov1: float
-    :return self.cov2: Coefficient of variation - New Dependent Chains
-    :rtype self.cov2: float
+                            Default: None
+    :type runmodel_object: object
+
+    :param samples_init: A set of samples from the specified probability distribution. These are the samples from the
+                         original distribution. They are not conditional samples. The samples must be an array of size
+                         nsamples_ss x dimension.
+
+                         If samples_init is not specified, the Subset_Simulation class will use the mcmc_object to
+                         draw the initial samples.
+
+                         Default: None
+
+    :type samples_init: numpy array
+
+    :param p_cond: Conditional probability for each conditional level
+
+                   Default: 0.1
+    :type p_cond: float
+
+    :param nsamples_ss: Number of samples to draw in each conditional level.
+
+                        Default: 1000
+    :type nsamples_ss: int
+
+    :param max_level: Maximum number of allowable conditional levels.
+
+                      Default: 10
+    :type max_level: int
+
+    :param verbose: Specifies whether algorithm progress is reported in the terminal.
+
+                    Default: False
+    :type verbose: boolean
+
+    **Attributes:**
+
+    :param self.samples: A list of arrays containing the samples in each conditional level.
+    :type self.samples: list of numpy arrays
+
+    :param self.g: A list of arrays containing the evaluation of the performance function at each sample in each conditional
+              level.
+    :type self.g: list of numpy arrays
+
+    :param self.g_level: Threshold value of the performance function for each conditional level
+    :type self.g_level: list
+
+    :param self.pf: Probability of failure estimate
+    :type self.pf: float
+
+    :param self.cov1: Coefficient of variation of the probability of failure estimate assuming independent chains
+
+                      From Reference [1]
+    :type self.cov1: float
+
+    :param self.cov2: Coefficient of variation of the probability of failure estimate with dependent chains
+
+                      From Reference [2]
+    :type self.cov2: float
+
+    **Authors:**
+
+    Michael D. Shields
+
+    Last Modified: 1/23/20 by Michael D. Shields
     """
-
-    # Authors: Dimitris G.Giovanis, Michael D. Shields
-    # Last Modified: 4/7/19 by Dimitris G. Giovanis
 
     def __init__(self, mcmc_object=None, runmodel_object=None, samples_init=None, p_cond=0.1, nsamples_ss=1000,
                  max_level=10, verbose=False):
@@ -93,8 +149,6 @@ class SubsetSimulation:
         self.samples = list()
         self.g = list()
         self.g_level = list()
-        self.d12 = list()
-        self.d22 = list()
 
         if self.verbose:
             if self.mcmc_objects[0].algorithm == 'MH':
@@ -113,12 +167,31 @@ class SubsetSimulation:
         if self.verbose:
             print('UQpy: Subset Simulation Complete!')
 
-    # -----------------------------------------------------------------------------------------------------------------------
-    # The run function executes the chosen subset simulation algorithm
+#-----------------------------------------------------------------------------------------------------------------------
+# The run function executes the chosen subset simulation algorithm
     def run(self):
+        """
+        Execute subset simulation
+
+        This is an instance method that runs subset simulation. It is automatically called when the SubsetSimulation
+        class is instantiated.
+
+        **Output/Returns:**
+
+        :param pf: Probability of failure estimate
+        :type pf: float
+
+        :param cov1: Coefficient of variation of the probability of failure estimate assuming independent chains
+        :type cov1: float
+
+        :param cov2: Coefficient of variation of the probability of failure estimate with dependent chains
+        :type cov2: float
+        """
 
         step = 0
         n_keep = int(self.p_cond * self.nsamples_ss)
+        d12 = list()
+        d22 = list()
 
         # Generate the initial samples - Level 0
         # Here we need to make sure that we have good initial samples from the target joint density.
@@ -142,8 +215,8 @@ class SubsetSimulation:
 
         # Estimate coefficient of variation of conditional probability of first level
         d1, d2 = self.cov_sus(step)
-        self.d12.append(d1 ** 2)
-        self.d22.append(d2 ** 2)
+        d12.append(d1 ** 2)
+        d22.append(d2 ** 2)
 
         if self.verbose:
             print('UQpy: Subset Simulation, conditional level 0 complete.')
@@ -152,7 +225,7 @@ class SubsetSimulation:
 
             # Increment the conditional level
             step = step + 1
-
+            
             # Initialize the samples and the performance function at the next conditional level
             self.samples.append(np.zeros_like(self.samples[step - 1]))
             self.samples[step][:n_keep] = self.samples[step - 1][g_ind[0:n_keep], :]
@@ -165,7 +238,10 @@ class SubsetSimulation:
                                    pdf_target=self.mcmc_objects[0].pdf_target,
                                    args_target=self.mcmc_objects[0].args_target,
                                    log_pdf_target=self.mcmc_objects[0].log_pdf_target,
+                                   pdf_target=self.mcmc_objects[0].pdf_target,
+                                   args_target=self.mcmc_objects[0].args_target,
                                    seed=np.atleast_2d(self.samples[step][:n_keep, :]))
+            new_mcmc_object.algorithm_inputs = self.mcmc_objects[0].algorithm_inputs
             self.mcmc_objects.append(new_mcmc_object)
 
             # Set the number of samples to propagate each chain (n_prop) in the conditional level
@@ -176,19 +252,19 @@ class SubsetSimulation:
                 raise AttributeError(
                     'UQpy: The number of samples per subset (nsamples_ss) must be an integer multiple of '
                     'the number of MCMC chains.')
-
+            
             # Propagate each chain n_prop times and evaluate the model to accept or reject.
-            for i in range(n_prop - 1):
+            for i in range(n_prop-1):
 
                 # Propagate each chain
                 if i == 0:
-                    self.mcmc_objects[step].run(nsamples=2 * self.mcmc_objects[step].nchains)
+                    self.mcmc_objects[step].run(nsamples=2*self.mcmc_objects[step].nchains)
                 else:
                     self.mcmc_objects[step].run(nsamples=self.mcmc_objects[step].nchains)
 
                 # Decide whether a new simulation is needed for each proposed state
-                a = self.mcmc_objects[step].samples[i * n_keep:(i + 1) * n_keep, :]
-                b = self.mcmc_objects[step].samples[(i + 1) * n_keep:(i + 2) * n_keep, :]
+                a = self.mcmc_objects[step].samples[i*n_keep:(i+1)*n_keep, :]
+                b = self.mcmc_objects[step].samples[(i+1)*n_keep:(i+2)*n_keep, :]
                 test1 = np.equal(a, b)
                 test = np.logical_and(test1[:, 0], test1[:, 1])
 
@@ -198,37 +274,38 @@ class SubsetSimulation:
                 ind_true = [i for i, val in enumerate(test) if val]
 
                 # Do not run the model for those samples where the MCMC state remains unchanged.
-                self.samples[step][[x + (i + 1) * n_keep for x in ind_true], :] = \
+                self.samples[step][[x+(i+1)*n_keep for x in ind_true], :] = \
                     self.mcmc_objects[step].samples[ind_true, :]
                 self.g[step][[x + (i + 1) * n_keep for x in ind_true], :] = self.g[step][ind_true, :]
 
                 # Run the model at each of the new sample points
-                x_run = self.mcmc_objects[step].samples[[x + (i + 1) * n_keep for x in ind_false], :]
-                self.runmodel_object.run(samples=x_run)
+                x_run = self.mcmc_objects[step].samples[[x+(i+1)*n_keep for x in ind_false], :]
+                if x_run.size != 0:
+                    self.runmodel_object.run(samples=x_run)
 
-                # Temporarily save the latest model runs
-                g_temp = np.asarray(self.runmodel_object.qoi_list[-len(x_run):])
+                    # Temporarily save the latest model runs
+                    g_temp = np.asarray(self.runmodel_object.qoi_list[-len(x_run):])
 
-                # Accept the states with g <= g_level
-                ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
-                for ii in ind_accept:
-                    self.samples[step][(i + 1) * n_keep + ind_false[ii]] = x_run[ii]
-                    self.g[step][(i + 1) * n_keep + ind_false[ii]] = g_temp[ii]
+                    # Accept the states with g <= g_level
+                    ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
+                    for ii in ind_accept:
+                        self.samples[step][(i + 1) * n_keep + ind_false[ii]] = x_run[ii]
+                        self.g[step][(i + 1) * n_keep + ind_false[ii]] = g_temp[ii]
 
-                # Reject the states with g > g_level
-                ind_reject = np.where(g_temp[:, 0] > self.g_level[step - 1])[0]
-                for ii in ind_reject:
-                    self.samples[step][(i + 1) * n_keep + ind_false[ii]] = \
-                        self.samples[step][i * n_keep + ind_false[ii]]
-                    self.g[step][(i + 1) * n_keep + ind_false[ii]] = self.g[step][i * n_keep + ind_false[ii]]
+                    # Reject the states with g > g_level
+                    ind_reject = np.where(g_temp[:, 0] > self.g_level[step - 1])[0]
+                    for ii in ind_reject:
+                        self.samples[step][(i + 1) * n_keep + ind_false[ii]] = \
+                            self.samples[step][i * n_keep + ind_false[ii]]
+                        self.g[step][(i + 1) * n_keep + ind_false[ii]] = self.g[step][i * n_keep + ind_false[ii]]
 
             g_ind = np.argsort(self.g[step][:, 0])
             self.g_level.append(self.g[step][g_ind[n_keep]])
 
             # Estimate coefficient of variation of conditional probability of first level
             d1, d2 = self.cov_sus(step)
-            self.d12.append(d1 ** 2)
-            self.d22.append(d2 ** 2)
+            d12.append(d1 ** 2)
+            d22.append(d2 ** 2)
 
             if self.verbose:
                 print('UQpy: Subset Simulation, conditional level ' + str(step) + ' complete.')
@@ -236,16 +313,23 @@ class SubsetSimulation:
         n_fail = len([value for value in self.g[step] if value < 0])
 
         pf = self.p_cond ** step * n_fail / self.nsamples_ss
-        cov1 = np.sqrt(np.sum(self.d12))
-        cov2 = np.sqrt(np.sum(self.d22))
+        cov1 = np.sqrt(np.sum(d12))
+        cov2 = np.sqrt(np.sum(d22))
 
         return pf, cov1, cov2
 
-    # -----------------------------------------------------------------------------------------------------------------------
-    # Support functions for subset simulation
+# -----------------------------------------------------------------------------------------------------------------------
+# Support functions for subset simulation
 
     def init_sus(self):
-        # Basic error checks for subset simulation.
+        """
+        Check for errors in the SubsetSimulation class input
+
+        This is an instance method that checks for errors in the input to the SubsetSimulation class. It is
+        automatically called when the SubsetSimualtion class is instantiated.
+
+        No inputs or returns.
+        """
 
         # Check that an MCMC object is being passed in.
         if self.mcmc_objects[0] is None:
@@ -270,7 +354,26 @@ class SubsetSimulation:
             raise AttributeError('UQpy: The maximum subset level (max_level) must be integer valued.')
 
     def cov_sus(self, step):
-        # Compute the coefficient of variation of the samples in a conditional level
+
+        """
+        Compute the coefficient of variation of the samples in a conditional level
+
+        This is an instance method that is called after each conditional level is complete to compute the coefficient
+        of variation of the conditional probability in that level.
+
+        **Input:**
+
+        :param step: Specifies the conditional level
+        :type step: int
+
+        **Output/Returns:**
+
+        :param d1: Coefficient of variation in conditional level assuming independent chains
+        :type d1: float
+
+        :param d2: Coefficient of variation in conditional level with dependent chains
+        :type d2: float
+        """
 
         # Here, we assume that the initial samples are drawn to be uncorrelated such that the correction factors do not
         # need to be computed.
@@ -294,6 +397,31 @@ class SubsetSimulation:
 
     # Computes the conventional correlation factor gamma from Au and Beck
     def corr_factor_gamma(self, indicator, n_s, n_c):
+        """
+        Compute the conventional correlation factor gamma from Au and Beck (Reference [1])
+
+        This is an instance method that computes the correlation factor gamma used to estimate the coefficient of
+        variation of the conditional probability estimate from a given conditional level. This method is called
+        automatically within the cov_sus method.
+
+        **Input:**
+
+        :param indicator: An array of booleans indicating whether the performance function is below the threshold for
+                          the conditional probability.
+        :type indicator: boolean array
+
+        :param n_s: Number of samples drawn from each Markov chain in each conditional level
+        :type n_s: int
+
+        :param n_c: Number of Markov chains in each conditional level
+        :type n_c: int
+
+        **Output/Returns:**
+
+        :param gam: Gamma factor in coefficient of variation estimate
+        :type gam: float
+
+        """
 
         gam = np.zeros(n_s - 1)
         r = np.zeros(n_s)
@@ -307,628 +435,655 @@ class SubsetSimulation:
         r = r / r0
 
         for i in range(n_s - 1):
-            gam[i] = (1 - ((i + 1) / n_s)) * r[i + 1]
+            gam[i] = (1 - ((i + 1) / n_s)) * r[i+1]
         gam = 2 * np.sum(gam)
 
         return gam
 
     # Computes the updated correlation factor beta from Shields et al.
     def corr_factor_beta(self, g, step):
+        """
+        Compute the additional correlation factor beta from Shields et al. (Reference [2])
+
+        This is an instance method that computes the correlation factor beta used to estimate the coefficient of
+        variation of the conditional probability estimate from a given conditional level. This method is called
+        automatically within the cov_sus method.
+
+        **Input:**
+
+        :param g: An array containing the performance function evaluation at all points in the current conditional
+                  level.
+        :type g: numpy array
+
+        :param step: Current conditional level
+        :type step: int
+
+        **Output/Returns:**
+
+        :param beta: Beta factor in coefficient of variation estimate
+        :type beta: float
+
+        """
 
         beta = 0
         for i in range(np.shape(g)[1]):
-            for j in range(i + 1, np.shape(g)[1]):
+            for j in range(i+1, np.shape(g)[1]):
                 if g[0, i] == g[0, j]:
                     beta = beta + 1
-        beta = beta * 2
+        beta = beta*2
 
         ar = np.asarray(self.mcmc_objects[step].acceptance_rate)
         ar_mean = np.mean(ar)
 
         factor = 0
-        for i in range(np.shape(g)[0] - 1):
-            factor = factor + (1 - (i + 1) * np.shape(g)[0] / np.shape(g)[1]) * (1 - ar_mean)
-        factor = factor * 2 + 1
+        for i in range(np.shape(g)[0]-1):
+            factor = factor + (1-(i+1)*np.shape(g)[0]/np.shape(g)[1])*(1-ar_mean)
+        factor = factor*2+1
 
-        beta = beta / np.shape(g)[1] * factor
+        beta = beta/np.shape(g)[1] * factor
         r_jn = 0
 
         return beta
+# ######### OLD Subset simulation code #################################################################################
+
+    # dimension=None,
+    #
+    #
+    # pdf_proposal_type=None, pdf_proposal_scale=None,
+    # pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None,
+    # pdf_target_copula_params=None, pdf_target_type='joint_pdf', seed=None,
+    # algorithm='MH', jump=1,  nburn=0,
+    # model_object=None):
+    #
+    #
+    # # model_script=None, model_object_name=None, input_template=None, var_names=None,
+    # # output_script=None, output_object_name=None, n_tasks=1, cores_per_task=1, nodes=1, resume=False,
+    # # model_dir=None, cluster=False):
+
+    # self.dimension = dimension
+    # self.pdf_proposal_type = pdf_proposal_type
+    # self.pdf_proposal_scale = pdf_proposal_scale
+    #
+    # self.log_pdf_target = log_pdf_target
+    # self.pdf_target_copula = pdf_target_copula
+    #
+    # self.pdf_target_copula_params = pdf_target_copula_params
+    # self.jump = jump
+    # self.nburn = nburn
+    #
+    # self.pdf_target_type = pdf_target_type
+    # self.pdf_target = pdf_target
+    # self.pdf_target_params = pdf_target_params
+    # self.algorithm = algorithm
+    #
+    # if seed is None:
+    #     self.seed = np.zeros(self.dimension)
+    # else:
+    #     self.seed = seed
+    # # Hard-wire the maximum number of conditional levels.
+
+    # Select the appropriate Subset Simulation Algorithm
+    # if self.mcmc_object.algorithm == 'MMH':
+    #     # if self.verbose:
+    #     #     print('UQpy: Running Subset Simulation with MMH....')
+    #     # [self.pf, self.cov1, self.cov2] = self.run_subsim_mmh()
+    #     if self.verbose:
+    #         print('UQpy: Running Subset Simulation with Stretch....')
+    #     [self.pf, self.cov1, self.cov2] = self.run()
+    # elif self.mcmc_object.algorithm == 'Stretch':
+    #     if self.verbose:
+    #         print('UQpy: Running Subset Simulation with Stretch....')
+    #     [self.pf, self.cov1, self.cov2] = self.run()
+    # elif self.mcmc_object.algorithm == 'DRAM':
+    #     # if self.verbose:
+    #     #     print('UQpy: Running Subset Simulation with MMH....')
+    #     # [self.pf, self.cov1, self.cov2] = self.run_subsim_mmh()
+    #     if self.verbose:
+    #         print('UQpy: Running Subset Simulation with Stretch....')
+    #     [self.pf, self.cov1, self.cov2] = self.run()
+    # # **** Add calls to new methods here.****
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Run Subset Simulation using Modified Metropolis Hastings
+    # def run_subsim_mmh(self):
+    #     step = 0
+    #     n_keep = int(self.p_cond * self.nsamples_ss)
+    #
+    #     # Generate the initial samples - Level 0
+    #     if self.samples_init is None:
+    #         self.mcmc_object.run(nsamples=self.nsamples_ss)
+    #         self.samples.append(self.mcmc_object.samples)
+    #         if self.verbose:
+    #             print('UQpy: If the target distribution is other than standard normal, it is highly recommended that '
+    #                   'the user provide a set of nsamples_ss samples that follow the target distribution using the '
+    #                   'argument samples_init.')
+    #     else:
+    #         self.samples.append(self.samples_init)
+    #
+    #     # Run the model for the initial samples,
+    #     # sort them by their performance function, and
+    #     # identify the conditional level
+    #     self.runmodel_object.run(samples=np.atleast_2d(self.samples[step]))
+    #     self.g.append(np.asarray(self.runmodel_object.qoi_list))
+    #     g_ind = np.argsort(self.g[step][:, 0])
+    #     self.g_level.append(self.g[step][g_ind[n_keep-1]])
+    #
+    #     # Estimate coefficient of variation of conditional probability of first level
+    #     d1, d2 = self.cov_sus(step)
+    #     self.d12.append(d1 ** 2)
+    #     self.d22.append(d2 ** 2)
+    #
+    #     t = time.time()
+    #
+    #     if self.verbose:
+    #         print('UQpy: Subset Simulation, conditional level 0 complete.')
+    #
+    #     while self.g_level[step] > 0 and step < self.max_level:
+    #
+    #         step = step + 1
+    #         self.samples.append(np.zeros_like(self.samples[step-1]))
+    #         self.samples[step][:n_keep] = self.samples[step - 1][g_ind[0:n_keep], :]
+    #         self.g.append(np.zeros_like(self.g[step-1]))
+    #         self.g[step][:n_keep] = self.g[step - 1][g_ind[:n_keep]]
+    #
+    #         for i in range(int(self.nsamples_ss/n_keep)-1):
+    #
+    #             ind = np.arange(0, n_keep)
+    #             # while np.size(ind) != 0:
+    #             x_mcmc = np.zeros([np.size(ind), self.samples[step].shape[1]])
+    #             x_run = []
+    #
+    #             k = 0
+    #             for j in ind:
+    #
+    #                 # Generate new candidate states
+    #                 self.mcmc_object.samples = None
+    #                 self.mcmc_object.seed = np.atleast_2d(self.samples[step][i*n_keep+j, :])
+    #                 self.mcmc_object.run(nsamples=1)
+    #                 x_mcmc[k] = self.mcmc_object.samples[0, :]
+    #
+    #                 # Decide whether a new simulation is needed for the proposed state
+    #                 if np.array_equal(np.atleast_2d(x_mcmc[k]), self.mcmc_object.seed) is False:
+    #                     x_run.append(x_mcmc[k])
+    #                 else:
+    #                     self.samples[step][(i+1)*n_keep+j] = x_mcmc[k]
+    #                     self.g[step][(i+1)*n_keep+j] = self.g[step][i*n_keep+j]
+    #
+    #                 k += 1
+    #
+    #             ind = np.where(self.g[step][(i+1)*n_keep:(i+2)*n_keep, 0] == 0)[0]
+    #             if np.size(ind) == 0:
+    #                 break
+    #
+    #             # Run the model for the new states.
+    #             self.runmodel_object.run(samples=x_run)
+    #
+    #             # Temporarily save the latest model runs
+    #             g_temp = np.asarray(self.runmodel_object.qoi_list[-len(x_run):])
+    #
+    #             # Accept the states with g < g_level
+    #             ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
+    #             for ii in ind_accept:
+    #                 self.samples[step][(i+1)*n_keep+ind[ii]] = x_mcmc[ind[ii]]
+    #                 self.g[step][(i+1)*n_keep+ind[ii]] = g_temp[ii]
+    #
+    #             ind_reject = np.where(g_temp[:, 0] > self.g_level[step - 1])[0]
+    #             for ii in ind_reject:
+    #                 self.samples[step][(i+1)*n_keep+ind[ii]] = self.samples[step][i*n_keep+ind[ii]]
+    #                 self.g[step][(i+1)*n_keep+ind[ii]] = self.g[step][i*n_keep+ind[ii]]
+    #
+    #         if self.verbose:
+    #             print('UQpy: Subset Simulation, conditional level ' + step + 'complete.')
+    #
+    #         g_ind = np.argsort(self.g[step][:, 0])
+    #         self.g_level.append(self.g[step][g_ind[n_keep]])
+    #
+    #         # Estimate coefficient of variation of conditional probability of first level
+    #         d1, d2 = self.cov_sus(step)
+    #         self.d12.append(d1 ** 2)
+    #         self.d22.append(d2 ** 2)
+    #
+    #     n_fail = len([value for value in self.g[step] if value < 0])
+    #
+    #     pf = self.p_cond ** step * n_fail / self.nsamples_ss
+    #     cov1 = np.sqrt(np.sum(self.d12))
+    #     cov2 = np.sqrt(np.sum(self.d22))
+    #
+    #     return pf, cov1, cov2
+
+    #         # Accept or reject each sample
+    #
+    #
+    #     for i in range(int(self.nsamples_ss / n_keep) - 1):
+    #
+    #         ind = np.arange(0, n_keep)
+    #         # while np.size(ind) != 0:
+    #         x_mcmc = np.zeros([np.size(ind), self.samples[step].shape[1]])
+    #         x_run = []
+    #
+    #         k = 0
+    #         for j in ind:
+    #
+    #             # Generate new candidate states
+    #             ######### Create a new MCMC object for each conditional level. ########
+    #
+    #             self.mcmc_object.seed = np.atleast_2d(self.samples[step][:n_keep, :])
+    #             # self.mcmc_object.samples = self.mcmc_object.seed
+    #             self.mcmc_object.nchains = self.mcmc_object.seed.shape[0]
+    #             self.mcmc_object.run(nsamples=2)
+    #             x_mcmc[k] = self.mcmc_object.samples[0, :]
+    #
+    #             # Decide whether a new simulation is needed for the proposed state
+    #             if np.array_equal(np.atleast_2d(x_mcmc[k]), self.mcmc_object.seed) is False:
+    #                 x_run.append(x_mcmc[k])
+    #             else:
+    #                 self.samples[step][(i + 1) * n_keep + j] = x_mcmc[k]
+    #                 self.g[step][(i + 1) * n_keep + j] = self.g[step][i * n_keep + j]
+    #
+    #             k += 1
+    #
+    #         ind = np.where(self.g[step][(i + 1) * n_keep:(i + 2) * n_keep, 0] == 0)[0]
+    #         if np.size(ind) == 0:
+    #             break
+    #
+    #         # Run the model for the new states.
+    #         self.runmodel_object.run(samples=x_run)
+    #
+    #         # Temporarily save the latest model runs
+    #         g_temp = np.asarray(self.runmodel_object.qoi_list[-len(x_run):])
+    #
+    #         # Accept the states with g < g_level
+    #         ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
+    #         for ii in ind_accept:
+    #             self.samples[step][(i + 1) * n_keep + ind[ii]] = x_mcmc[ind[ii]]
+    #             self.g[step][(i + 1) * n_keep + ind[ii]] = g_temp[ii]
+    #
+    #         ind_reject = np.where(g_temp[:, 0] > self.g_level[step - 1])[0]
+    #         for ii in ind_reject:
+    #             self.samples[step][(i + 1) * n_keep + ind[ii]] = self.samples[step][i * n_keep + ind[ii]]
+    #             self.g[step][(i + 1) * n_keep + ind[ii]] = self.g[step][i * n_keep + ind[ii]]
+    #
+    #     if self.verbose:
+    #         print('UQpy: Subset Simulation, conditional level ' + step + 'complete.')
+    #
+    #     g_ind = np.argsort(self.g[step][:, 0])
+    #     self.g_level.append(self.g[step][g_ind[n_keep]])
+    #
+    #     # Estimate coefficient of variation of conditional probability of first level
+    #     d1, d2 = self.cov_sus(step)
+    #     self.d12.append(d1 ** 2)
+    #     self.d22.append(d2 ** 2)
+    #
+    # n_fail = len([value for value in self.g[step] if value < 0])
+    #
+    # pf = self.p_cond ** step * n_fail / self.nsamples_ss
+    # cov1 = np.sqrt(np.sum(self.d12))
+    # cov2 = np.sqrt(np.sum(self.d22))
+    #
+    # return pf, cov1, cov2
+
+    # def run_subsim_stretch(self):
 
 
-########### OLD Subset simulation code #################################################################################
+    # Generate the initial samples - Level 0
+    # if self.samples_init is None:
+    #     x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
+    #                   pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
+    #                   log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
+    #                   pdf_target_copula=self.pdf_target_copula,
+    #                   pdf_target_copula_params=self.pdf_target_copula_params,
+    #                   pdf_target_type=self.pdf_target_type,
+    #                   algorithm='MMH', jump=self.jump, nsamples=self.nsamples_ss, seed=self.seed,
+    #                   nburn=self.nburn, verbose=self.verbose)
+    #     self.samples.append(x_init.samples)
+    # else:
+    #     self.samples.append(self.samples_init)
 
-# dimension=None,
-#
-#
-# pdf_proposal_type=None, pdf_proposal_scale=None,
-# pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None,
-# pdf_target_copula_params=None, pdf_target_type='joint_pdf', seed=None,
-# algorithm='MH', jump=1,  nburn=0,
-# model_object=None):
-#
-#
-# # model_script=None, model_object_name=None, input_template=None, var_names=None,
-# # output_script=None, output_object_name=None, n_tasks=1, cores_per_task=1, nodes=1, resume=False,
-# # model_dir=None, cluster=False):
+    # g_init = RunModel(samples=self.samples[step], model_script=self.model_script,
+    #                   model_object_name=self.model_object_name,
+    #                   input_template=self.input_template, var_names=self.var_names,
+    #                   output_script=self.output_script,
+    #                   output_object_name=self.output_object_name,
+    #                   ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes, resume=self.resume,
+    #                   verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
 
-# self.dimension = dimension
-# self.pdf_proposal_type = pdf_proposal_type
-# self.pdf_proposal_scale = pdf_proposal_scale
-#
-# self.log_pdf_target = log_pdf_target
-# self.pdf_target_copula = pdf_target_copula
-#
-# self.pdf_target_copula_params = pdf_target_copula_params
-# self.jump = jump
-# self.nburn = nburn
-#
-# self.pdf_target_type = pdf_target_type
-# self.pdf_target = pdf_target
-# self.pdf_target_params = pdf_target_params
-# self.algorithm = algorithm
-#
-# if seed is None:
-#     self.seed = np.zeros(self.dimension)
-# else:
-#     self.seed = seed
-# # Hard-wire the maximum number of conditional levels.
+    # self.g.append(np.asarray(g_init.qoi_list))
+    # g_ind = np.argsort(self.g[step])
+    # self.g_level.append(self.g[step][g_ind[n_keep]])
 
-# Select the appropriate Subset Simulation Algorithm
-# if self.mcmc_object.algorithm == 'MMH':
-#     # if self.verbose:
-#     #     print('UQpy: Running Subset Simulation with MMH....')
-#     # [self.pf, self.cov1, self.cov2] = self.run_subsim_mmh()
-#     if self.verbose:
-#         print('UQpy: Running Subset Simulation with Stretch....')
-#     [self.pf, self.cov1, self.cov2] = self.run()
-# elif self.mcmc_object.algorithm == 'Stretch':
-#     if self.verbose:
-#         print('UQpy: Running Subset Simulation with Stretch....')
-#     [self.pf, self.cov1, self.cov2] = self.run()
-# elif self.mcmc_object.algorithm == 'DRAM':
-#     # if self.verbose:
-#     #     print('UQpy: Running Subset Simulation with MMH....')
-#     # [self.pf, self.cov1, self.cov2] = self.run_subsim_mmh()
-#     if self.verbose:
-#         print('UQpy: Running Subset Simulation with Stretch....')
-#     [self.pf, self.cov1, self.cov2] = self.run()
-# # **** Add calls to new methods here.****
+    # Estimate coefficient of variation of conditional probability of first level
+    # d1, d2 = self.cov_sus(step)
+    # self.d12.append(d1 ** 2)
+    # self.d22.append(d2 ** 2)
 
-# ------------------------------------------------------------------------------------------------------------------
-# Run Subset Simulation using Modified Metropolis Hastings
-# def run_subsim_mmh(self):
-#     step = 0
-#     n_keep = int(self.p_cond * self.nsamples_ss)
-#
-#     # Generate the initial samples - Level 0
-#     if self.samples_init is None:
-#         self.mcmc_object.run(nsamples=self.nsamples_ss)
-#         self.samples.append(self.mcmc_object.samples)
-#         if self.verbose:
-#             print('UQpy: If the target distribution is other than standard normal, it is highly recommended that '
-#                   'the user provide a set of nsamples_ss samples that follow the target distribution using the '
-#                   'argument samples_init.')
-#     else:
-#         self.samples.append(self.samples_init)
-#
-#     # Run the model for the initial samples,
-#     # sort them by their performance function, and
-#     # identify the conditional level
-#     self.runmodel_object.run(samples=np.atleast_2d(self.samples[step]))
-#     self.g.append(np.asarray(self.runmodel_object.qoi_list))
-#     g_ind = np.argsort(self.g[step][:, 0])
-#     self.g_level.append(self.g[step][g_ind[n_keep-1]])
-#
-#     # Estimate coefficient of variation of conditional probability of first level
-#     d1, d2 = self.cov_sus(step)
-#     self.d12.append(d1 ** 2)
-#     self.d22.append(d2 ** 2)
-#
-#     t = time.time()
-#
-#     if self.verbose:
-#         print('UQpy: Subset Simulation, conditional level 0 complete.')
-#
-#     while self.g_level[step] > 0 and step < self.max_level:
-#
-#         step = step + 1
-#         self.samples.append(np.zeros_like(self.samples[step-1]))
-#         self.samples[step][:n_keep] = self.samples[step - 1][g_ind[0:n_keep], :]
-#         self.g.append(np.zeros_like(self.g[step-1]))
-#         self.g[step][:n_keep] = self.g[step - 1][g_ind[:n_keep]]
-#
-#         for i in range(int(self.nsamples_ss/n_keep)-1):
-#
-#             ind = np.arange(0, n_keep)
-#             # while np.size(ind) != 0:
-#             x_mcmc = np.zeros([np.size(ind), self.samples[step].shape[1]])
-#             x_run = []
-#
-#             k = 0
-#             for j in ind:
-#
-#                 # Generate new candidate states
-#                 self.mcmc_object.samples = None
-#                 self.mcmc_object.seed = np.atleast_2d(self.samples[step][i*n_keep+j, :])
-#                 self.mcmc_object.run(nsamples=1)
-#                 x_mcmc[k] = self.mcmc_object.samples[0, :]
-#
-#                 # Decide whether a new simulation is needed for the proposed state
-#                 if np.array_equal(np.atleast_2d(x_mcmc[k]), self.mcmc_object.seed) is False:
-#                     x_run.append(x_mcmc[k])
-#                 else:
-#                     self.samples[step][(i+1)*n_keep+j] = x_mcmc[k]
-#                     self.g[step][(i+1)*n_keep+j] = self.g[step][i*n_keep+j]
-#
-#                 k += 1
-#
-#             ind = np.where(self.g[step][(i+1)*n_keep:(i+2)*n_keep, 0] == 0)[0]
-#             if np.size(ind) == 0:
-#                 break
-#
-#             # Run the model for the new states.
-#             self.runmodel_object.run(samples=x_run)
-#
-#             # Temporarily save the latest model runs
-#             g_temp = np.asarray(self.runmodel_object.qoi_list[-len(x_run):])
-#
-#             # Accept the states with g < g_level
-#             ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
-#             for ii in ind_accept:
-#                 self.samples[step][(i+1)*n_keep+ind[ii]] = x_mcmc[ind[ii]]
-#                 self.g[step][(i+1)*n_keep+ind[ii]] = g_temp[ii]
-#
-#             ind_reject = np.where(g_temp[:, 0] > self.g_level[step - 1])[0]
-#             for ii in ind_reject:
-#                 self.samples[step][(i+1)*n_keep+ind[ii]] = self.samples[step][i*n_keep+ind[ii]]
-#                 self.g[step][(i+1)*n_keep+ind[ii]] = self.g[step][i*n_keep+ind[ii]]
-#
-#         if self.verbose:
-#             print('UQpy: Subset Simulation, conditional level ' + step + 'complete.')
-#
-#         g_ind = np.argsort(self.g[step][:, 0])
-#         self.g_level.append(self.g[step][g_ind[n_keep]])
-#
-#         # Estimate coefficient of variation of conditional probability of first level
-#         d1, d2 = self.cov_sus(step)
-#         self.d12.append(d1 ** 2)
-#         self.d22.append(d2 ** 2)
-#
-#     n_fail = len([value for value in self.g[step] if value < 0])
-#
-#     pf = self.p_cond ** step * n_fail / self.nsamples_ss
-#     cov1 = np.sqrt(np.sum(self.d12))
-#     cov2 = np.sqrt(np.sum(self.d22))
-#
-#     return pf, cov1, cov2
-
-#         # Accept or reject each sample
-#
-#
-#     for i in range(int(self.nsamples_ss / n_keep) - 1):
-#
-#         ind = np.arange(0, n_keep)
-#         # while np.size(ind) != 0:
-#         x_mcmc = np.zeros([np.size(ind), self.samples[step].shape[1]])
-#         x_run = []
-#
-#         k = 0
-#         for j in ind:
-#
-#             # Generate new candidate states
-#             ######### Create a new MCMC object for each conditional level. ########
-#
-#             self.mcmc_object.seed = np.atleast_2d(self.samples[step][:n_keep, :])
-#             # self.mcmc_object.samples = self.mcmc_object.seed
-#             self.mcmc_object.nchains = self.mcmc_object.seed.shape[0]
-#             self.mcmc_object.run(nsamples=2)
-#             x_mcmc[k] = self.mcmc_object.samples[0, :]
-#
-#             # Decide whether a new simulation is needed for the proposed state
-#             if np.array_equal(np.atleast_2d(x_mcmc[k]), self.mcmc_object.seed) is False:
-#                 x_run.append(x_mcmc[k])
-#             else:
-#                 self.samples[step][(i + 1) * n_keep + j] = x_mcmc[k]
-#                 self.g[step][(i + 1) * n_keep + j] = self.g[step][i * n_keep + j]
-#
-#             k += 1
-#
-#         ind = np.where(self.g[step][(i + 1) * n_keep:(i + 2) * n_keep, 0] == 0)[0]
-#         if np.size(ind) == 0:
-#             break
-#
-#         # Run the model for the new states.
-#         self.runmodel_object.run(samples=x_run)
-#
-#         # Temporarily save the latest model runs
-#         g_temp = np.asarray(self.runmodel_object.qoi_list[-len(x_run):])
-#
-#         # Accept the states with g < g_level
-#         ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
-#         for ii in ind_accept:
-#             self.samples[step][(i + 1) * n_keep + ind[ii]] = x_mcmc[ind[ii]]
-#             self.g[step][(i + 1) * n_keep + ind[ii]] = g_temp[ii]
-#
-#         ind_reject = np.where(g_temp[:, 0] > self.g_level[step - 1])[0]
-#         for ii in ind_reject:
-#             self.samples[step][(i + 1) * n_keep + ind[ii]] = self.samples[step][i * n_keep + ind[ii]]
-#             self.g[step][(i + 1) * n_keep + ind[ii]] = self.g[step][i * n_keep + ind[ii]]
-#
-#     if self.verbose:
-#         print('UQpy: Subset Simulation, conditional level ' + step + 'complete.')
-#
-#     g_ind = np.argsort(self.g[step][:, 0])
-#     self.g_level.append(self.g[step][g_ind[n_keep]])
-#
-#     # Estimate coefficient of variation of conditional probability of first level
-#     d1, d2 = self.cov_sus(step)
-#     self.d12.append(d1 ** 2)
-#     self.d22.append(d2 ** 2)
-#
-# n_fail = len([value for value in self.g[step] if value < 0])
-#
-# pf = self.p_cond ** step * n_fail / self.nsamples_ss
-# cov1 = np.sqrt(np.sum(self.d12))
-# cov2 = np.sqrt(np.sum(self.d22))
-#
-# return pf, cov1, cov2
-
-# def run_subsim_stretch(self):
+    # while self.g_level[step] > 0:
+    #
+    #     step = step + 1
+    #     self.samples.append(self.samples[step - 1][g_ind[0:n_keep]])
+    #     self.g.append(self.g[step - 1][g_ind[:n_keep]])
+    #
+    #     for i in range(self.nsamples_ss - n_keep):
+    #
+    #         x0 = self.samples[step][i:i+n_keep]
+    #
+    #         x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
+    #                       pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
+    #                       log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
+    #                       pdf_target_copula=self.pdf_target_copula,
+    #                       pdf_target_copula_params=self.pdf_target_copula_params,
+    #                       pdf_target_type=self.pdf_target_type,
+    #                       algorithm= self.algorithm, jump=self.jump, nsamples=n_keep+1, seed=x0,
+    #                       nburn=self.nburn, verbose=self.verbose)
+    #
+    #         x_temp = x_mcmc.samples[n_keep].reshape((1, self.dimension))
+    #         g_model = RunModel(samples=x_temp, model_script=self.model_script,
+    #                            model_object_name=self.model_object_name,
+    #                            input_template=self.input_template, var_names=self.var_names,
+    #                            output_script=self.output_script,
+    #                            output_object_name=self.output_object_name,
+    #                            ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes,
+    #                            resume=self.resume,
+    #                            verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
+    #
+    #         g_temp = g_model.qoi_list
+    #
+    #         # Accept or reject the sample
+    #         if g_temp < self.g_level[step - 1]:
+    #             self.samples[step] = np.vstack((self.samples[step], x_temp))
+    #             self.g[step] = np.hstack((self.g[step], g_temp[0]))
+    #         else:
+    #             self.samples[step] = np.vstack((self.samples[step], self.samples[step][i]))
+    #             self.g[step] = np.hstack((self.g[step], self.g[step][i]))
+    #
+    #     g_ind = np.argsort(self.g[step])
+    #     self.g_level.append(self.g[step][g_ind[n_keep]])
+    #     d1, d2 = self.cov_sus(step)
+    #     self.d12.append(d1 ** 2)
+    #     self.d22.append(d2 ** 2)
+    #
+    # n_fail = len([value for value in self.g[step] if value < 0])
+    # pf = self.p_cond ** step * n_fail / self.nsamples_ss
+    # cov1 = np.sqrt(np.sum(self.d12))
+    # cov2 = np.sqrt(np.sum(self.d22))
+    #
+    # return pf, cov1, cov2
 
 
-# Generate the initial samples - Level 0
-# if self.samples_init is None:
-#     x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-#                   pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
-#                   log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
-#                   pdf_target_copula=self.pdf_target_copula,
-#                   pdf_target_copula_params=self.pdf_target_copula_params,
-#                   pdf_target_type=self.pdf_target_type,
-#                   algorithm='MMH', jump=self.jump, nsamples=self.nsamples_ss, seed=self.seed,
-#                   nburn=self.nburn, verbose=self.verbose)
-#     self.samples.append(x_init.samples)
-# else:
-#     self.samples.append(self.samples_init)
+    # -------------------
+    # Incomplete Code
 
-# g_init = RunModel(samples=self.samples[step], model_script=self.model_script,
-#                   model_object_name=self.model_object_name,
-#                   input_template=self.input_template, var_names=self.var_names,
-#                   output_script=self.output_script,
-#                   output_object_name=self.output_object_name,
-#                   ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes, resume=self.resume,
-#                   verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
-
-# self.g.append(np.asarray(g_init.qoi_list))
-# g_ind = np.argsort(self.g[step])
-# self.g_level.append(self.g[step][g_ind[n_keep]])
-
-# Estimate coefficient of variation of conditional probability of first level
-# d1, d2 = self.cov_sus(step)
-# self.d12.append(d1 ** 2)
-# self.d22.append(d2 ** 2)
-
-# while self.g_level[step] > 0:
-#
-#     step = step + 1
-#     self.samples.append(self.samples[step - 1][g_ind[0:n_keep]])
-#     self.g.append(self.g[step - 1][g_ind[:n_keep]])
-#
-#     for i in range(self.nsamples_ss - n_keep):
-#
-#         x0 = self.samples[step][i:i+n_keep]
-#
-#         x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-#                       pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
-#                       log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
-#                       pdf_target_copula=self.pdf_target_copula,
-#                       pdf_target_copula_params=self.pdf_target_copula_params,
-#                       pdf_target_type=self.pdf_target_type,
-#                       algorithm= self.algorithm, jump=self.jump, nsamples=n_keep+1, seed=x0,
-#                       nburn=self.nburn, verbose=self.verbose)
-#
-#         x_temp = x_mcmc.samples[n_keep].reshape((1, self.dimension))
-#         g_model = RunModel(samples=x_temp, model_script=self.model_script,
-#                            model_object_name=self.model_object_name,
-#                            input_template=self.input_template, var_names=self.var_names,
-#                            output_script=self.output_script,
-#                            output_object_name=self.output_object_name,
-#                            ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes,
-#                            resume=self.resume,
-#                            verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
-#
-#         g_temp = g_model.qoi_list
-#
-#         # Accept or reject the sample
-#         if g_temp < self.g_level[step - 1]:
-#             self.samples[step] = np.vstack((self.samples[step], x_temp))
-#             self.g[step] = np.hstack((self.g[step], g_temp[0]))
-#         else:
-#             self.samples[step] = np.vstack((self.samples[step], self.samples[step][i]))
-#             self.g[step] = np.hstack((self.g[step], self.g[step][i]))
-#
-#     g_ind = np.argsort(self.g[step])
-#     self.g_level.append(self.g[step][g_ind[n_keep]])
-#     d1, d2 = self.cov_sus(step)
-#     self.d12.append(d1 ** 2)
-#     self.d22.append(d2 ** 2)
-#
-# n_fail = len([value for value in self.g[step] if value < 0])
-# pf = self.p_cond ** step * n_fail / self.nsamples_ss
-# cov1 = np.sqrt(np.sum(self.d12))
-# cov2 = np.sqrt(np.sum(self.d22))
-#
-# return pf, cov1, cov2
+    # # Set default dimension to 1
+    # if self.dimension is None:
+    #     self.dimension = 1
+    #
+    #
+    #
+    # # Check that the MCMC algorithm is properly defined.
+    # if self.algorithm is None:
+    #     self.algorithm = 'MMH'
+    # elif self.algorithm not in ['Stretch', 'MMH']:
+    #     raise NotImplementedError('Invalid MCMC algorithm. Select from: MMH, Stretch')
 
 
-# -------------------
-# Incomplete Code
+    # -------------------
 
-# # Set default dimension to 1
-# if self.dimension is None:
-#     self.dimension = 1
-#
-#
-#
-# # Check that the MCMC algorithm is properly defined.
-# if self.algorithm is None:
-#     self.algorithm = 'MMH'
-# elif self.algorithm not in ['Stretch', 'MMH']:
-#     raise NotImplementedError('Invalid MCMC algorithm. Select from: MMH, Stretch')
-
-
-# -------------------
-
-# def corr_factor_beta(self, indicator, n_s, n_c, p_cond):
-#
-#     beta = np.zeros(n_s - 1)
-#     r_jn = np.zeros(n_s)
-#     I = indicator * 1
-#
-#     for i in range(n_s):
-#         Rx = I[0:n_s-i, :].T @ I[i:, :]
-#         # np.fill_diagonal(Rx, 0)
-#         r_jn[i] = np.sum(Rx) / ((n_c * (n_c)) * (n_s - i)) - p_cond ** 2
-#         # r_jn[i] = np.sum(Rx) / ((n_c * n_c) * (n_s - i)) - p_cond ** 2
-#     r0 = p_cond * (1 - p_cond)
-#     r_jn = r_jn / r0
-#
-#     for k in range(n_s - 1):
-#         beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * r_jn[0]
-#
-#     beta = 2 * (n_c - 1) * np.sum(beta)
-#
-#     return beta, r_jn[0]
+    # def corr_factor_beta(self, indicator, n_s, n_c, p_cond):
+    #
+    #     beta = np.zeros(n_s - 1)
+    #     r_jn = np.zeros(n_s)
+    #     I = indicator * 1
+    #
+    #     for i in range(n_s):
+    #         Rx = I[0:n_s-i, :].T @ I[i:, :]
+    #         # np.fill_diagonal(Rx, 0)
+    #         r_jn[i] = np.sum(Rx) / ((n_c * (n_c)) * (n_s - i)) - p_cond ** 2
+    #         # r_jn[i] = np.sum(Rx) / ((n_c * n_c) * (n_s - i)) - p_cond ** 2
+    #     r0 = p_cond * (1 - p_cond)
+    #     r_jn = r_jn / r0
+    #
+    #     for k in range(n_s - 1):
+    #         beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * r_jn[0]
+    #
+    #     beta = 2 * (n_c - 1) * np.sum(beta)
+    #
+    #     return beta, r_jn[0]
 
 
-# def corr_factor_beta(self, g, n_s, n_c, p_cond):
-#
-#     beta = np.zeros(n_s - 1)
-#     r_jn = np.zeros(n_s)
-#     I = g
-#
-#     for i in range(n_s):
-#         Rx = I[0:n_s-i, :].T @ I[i:, :]
-#         np.fill_diagonal(Rx, 0)
-#         r_jn[i] = np.sum(Rx) / ((n_c * (n_c-1)) * (n_s - i)) - np.mean(g) ** 2
-#         print(r_jn)
-#         # r_jn[i] = np.sum(Rx) / ((n_c * n_c) * (n_s - i)) - p_cond ** 2
-#     r0 = np.var(g)
-#     r_jn = r_jn / r0
-#
-#     for k in range(n_s - 1):
-#         beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * r_jn[0]
-#
-#     beta = 2 * (n_c - 1) * np.sum(beta)
-#
-#     return beta, r_jn[0]
+
+    # def corr_factor_beta(self, g, n_s, n_c, p_cond):
+    #
+    #     beta = np.zeros(n_s - 1)
+    #     r_jn = np.zeros(n_s)
+    #     I = g
+    #
+    #     for i in range(n_s):
+    #         Rx = I[0:n_s-i, :].T @ I[i:, :]
+    #         np.fill_diagonal(Rx, 0)
+    #         r_jn[i] = np.sum(Rx) / ((n_c * (n_c-1)) * (n_s - i)) - np.mean(g) ** 2
+    #         print(r_jn)
+    #         # r_jn[i] = np.sum(Rx) / ((n_c * n_c) * (n_s - i)) - p_cond ** 2
+    #     r0 = np.var(g)
+    #     r_jn = r_jn / r0
+    #
+    #     for k in range(n_s - 1):
+    #         beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * r_jn[0]
+    #
+    #     beta = 2 * (n_c - 1) * np.sum(beta)
+    #
+    #     return beta, r_jn[0]
 
 
-# Version where cross-correlations are computed from g
-# def corr_factor_beta(self, g, n_s, n_c, p_cond):
-#
-#     beta = np.zeros(n_s - 1)
-#     r_jn = np.zeros(n_s )
-#     # n = n_c * n_s
-#     # factor = scipy.misc.comb(n_c,2)
-#
-#     # sums = 0
-#     # for j in range(n_c):
-#     #     for n_ in range(n_c):
-#     #         for l in range(n_s):
-#     #             if n_ != j:
-#     #                 sums = sums + (indicator[l, n_] * indicator[l, j])
-#     # I = indicator*1
-#     # R1 =  np.dot(np.transpose(I), I)/10 - p_cond**2
-#
-#     mu_g = np.mean(g)
-#     R = np.dot(g, g.T)/n_c - mu_g**2
-#     for i in range(R.shape[0]):
-#         r_jn[i] = np.sum(np.diag(R,i))/(R.shape[0]-i)
-#     # R0 = p_cond*(1-p_cond)
-#     R0 = np.var(g)
-#     r_jn = r_jn/R0
-#     # s1 = np.sum(np.dot(np.transpose(I), I))
-#     # s2 = np.sum(np.dot(np.transpose(I), I)) - np.sum(np.diag(np.dot(np.transpose(I), I)))
-#     # np.mean(R1)
-#
-#     # r_jn0 = (1 / n) * sums - self.p_cond ** 2
-#     # r_jn0 = 1 / (factor - n_c) * (1 / (n / n_c)) * sums - self.p_cond ** 2
-#
-#     for k in range(n_s - 1):
-#         # z = 0
-#         # for j in range(n_c):
-#         #     for n_ in range(n_c - k):
-#         #         for l in range(n_s - k - 1):
-#         #             if n_ != j:
-#         #                 z = z + (indicator[l, j] * indicator[l + k + 1, n_])
-#         #
-#         # r_jn[k] = 1 / (factor - n_c) * (1 / (n - (k + 1) * n_c)) * z - self.p_cond ** 2
-#         beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k])*R0
-#
-#     beta = 2 * (n_c - 1) * np.sum(beta)
-#     # beta = 2 * np.sum(beta)
-#
-#     return beta, r_jn[0]
+    # Version where cross-correlations are computed from g
+    # def corr_factor_beta(self, g, n_s, n_c, p_cond):
+    #
+    #     beta = np.zeros(n_s - 1)
+    #     r_jn = np.zeros(n_s )
+    #     # n = n_c * n_s
+    #     # factor = scipy.misc.comb(n_c,2)
+    #
+    #     # sums = 0
+    #     # for j in range(n_c):
+    #     #     for n_ in range(n_c):
+    #     #         for l in range(n_s):
+    #     #             if n_ != j:
+    #     #                 sums = sums + (indicator[l, n_] * indicator[l, j])
+    #     # I = indicator*1
+    #     # R1 =  np.dot(np.transpose(I), I)/10 - p_cond**2
+    #
+    #     mu_g = np.mean(g)
+    #     R = np.dot(g, g.T)/n_c - mu_g**2
+    #     for i in range(R.shape[0]):
+    #         r_jn[i] = np.sum(np.diag(R,i))/(R.shape[0]-i)
+    #     # R0 = p_cond*(1-p_cond)
+    #     R0 = np.var(g)
+    #     r_jn = r_jn/R0
+    #     # s1 = np.sum(np.dot(np.transpose(I), I))
+    #     # s2 = np.sum(np.dot(np.transpose(I), I)) - np.sum(np.diag(np.dot(np.transpose(I), I)))
+    #     # np.mean(R1)
+    #
+    #     # r_jn0 = (1 / n) * sums - self.p_cond ** 2
+    #     # r_jn0 = 1 / (factor - n_c) * (1 / (n / n_c)) * sums - self.p_cond ** 2
+    #
+    #     for k in range(n_s - 1):
+    #         # z = 0
+    #         # for j in range(n_c):
+    #         #     for n_ in range(n_c - k):
+    #         #         for l in range(n_s - k - 1):
+    #         #             if n_ != j:
+    #         #                 z = z + (indicator[l, j] * indicator[l + k + 1, n_])
+    #         #
+    #         # r_jn[k] = 1 / (factor - n_c) * (1 / (n - (k + 1) * n_c)) * z - self.p_cond ** 2
+    #         beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k])*R0
+    #
+    #     beta = 2 * (n_c - 1) * np.sum(beta)
+    #     # beta = 2 * np.sum(beta)
+    #
+    #     return beta, r_jn[0]
 
-# Version where cross-correlations are computed just from indicator
-# def corr_factor_beta(self, indicator, n_s, n_c, p_cond):
-#
-#         beta = np.zeros(n_s - 1)
-#         r_jn = np.zeros(n_s)
-#         # n = n_c * n_s
-#         # factor = scipy.misc.comb(n_c,2)
-#
-#         # sums = 0
-#         # for j in range(n_c):
-#         #     for n_ in range(n_c):
-#         #         for l in range(n_s):
-#         #             if n_ != j:
-#         #                 sums = sums + (indicator[l, n_] * indicator[l, j])
-#         I = indicator * 1
-#         # R1 =  np.dot(np.transpose(I), I)/10 - p_cond**2
-#
-#         R = np.dot(I, np.transpose(I)) / n_c - p_cond ** 2
-#         for i in range(R.shape[0]):
-#             r_jn[i] = np.sum(np.diag(R, i)) / (R.shape[0] - i)
-#         R0 = p_cond * (1 - p_cond)
-#         r_jn = r_jn / R0
-#         # s1 = np.sum(np.dot(np.transpose(I), I))
-#         # s2 = np.sum(np.dot(np.transpose(I), I)) - np.sum(np.diag(np.dot(np.transpose(I), I)))
-#         # np.mean(R1)
-#
-#         # r_jn0 = (1 / n) * sums - self.p_cond ** 2
-#         # r_jn0 = 1 / (factor - n_c) * (1 / (n / n_c)) * sums - self.p_cond ** 2
-#
-#         for k in range(n_s - 1):
-#             # z = 0
-#             # for j in range(n_c):
-#             #     for n_ in range(n_c - k):
-#             #         for l in range(n_s - k - 1):
-#             #             if n_ != j:
-#             #                 z = z + (indicator[l, j] * indicator[l + k + 1, n_])
-#             #
-#             # r_jn[k] = 1 / (factor - n_c) * (1 / (n - (k + 1) * n_c)) * z - self.p_cond ** 2
-#             beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * R0
-#
-#         beta = 2 * (n_c - 1) * np.sum(beta)
-#         # beta = 2 * np.sum(beta)
-#
-#         # r_jn[0] = 0.
-#         return beta, r_jn[0]
+        # Version where cross-correlations are computed just from indicator
+    # def corr_factor_beta(self, indicator, n_s, n_c, p_cond):
+    #
+    #         beta = np.zeros(n_s - 1)
+    #         r_jn = np.zeros(n_s)
+    #         # n = n_c * n_s
+    #         # factor = scipy.misc.comb(n_c,2)
+    #
+    #         # sums = 0
+    #         # for j in range(n_c):
+    #         #     for n_ in range(n_c):
+    #         #         for l in range(n_s):
+    #         #             if n_ != j:
+    #         #                 sums = sums + (indicator[l, n_] * indicator[l, j])
+    #         I = indicator * 1
+    #         # R1 =  np.dot(np.transpose(I), I)/10 - p_cond**2
+    #
+    #         R = np.dot(I, np.transpose(I)) / n_c - p_cond ** 2
+    #         for i in range(R.shape[0]):
+    #             r_jn[i] = np.sum(np.diag(R, i)) / (R.shape[0] - i)
+    #         R0 = p_cond * (1 - p_cond)
+    #         r_jn = r_jn / R0
+    #         # s1 = np.sum(np.dot(np.transpose(I), I))
+    #         # s2 = np.sum(np.dot(np.transpose(I), I)) - np.sum(np.diag(np.dot(np.transpose(I), I)))
+    #         # np.mean(R1)
+    #
+    #         # r_jn0 = (1 / n) * sums - self.p_cond ** 2
+    #         # r_jn0 = 1 / (factor - n_c) * (1 / (n / n_c)) * sums - self.p_cond ** 2
+    #
+    #         for k in range(n_s - 1):
+    #             # z = 0
+    #             # for j in range(n_c):
+    #             #     for n_ in range(n_c - k):
+    #             #         for l in range(n_s - k - 1):
+    #             #             if n_ != j:
+    #             #                 z = z + (indicator[l, j] * indicator[l + k + 1, n_])
+    #             #
+    #             # r_jn[k] = 1 / (factor - n_c) * (1 / (n - (k + 1) * n_c)) * z - self.p_cond ** 2
+    #             beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * R0
+    #
+    #         beta = 2 * (n_c - 1) * np.sum(beta)
+    #         # beta = 2 * np.sum(beta)
+    #
+    #         # r_jn[0] = 0.
+    #         return beta, r_jn[0]
 
-# for i in range(u.size):
-#     ii = indicator[:, g[0, :] == u[i]]
-#     r_jn = r_jn + ii.shape[1]*(ii.shape[1]-1)/2
-#
-# beta = 0
+    # for i in range(u.size):
+    #     ii = indicator[:, g[0, :] == u[i]]
+    #     r_jn = r_jn + ii.shape[1]*(ii.shape[1]-1)/2
+    #
+    # beta = 0
 
-# total = 0
-# r_jn = 0
-# if U.size < n_c:
-#     for i in range(U.size):
-#         I = indicator[:, g[0, :] == U[i]]
-#         I = I * 1
-#
-#         r_temp = I.T @ I
-#         r0 = np.sum(r_temp) / (((r_temp.shape[0] * r_temp.shape[0])) * n_s) - p_cond ** 2
-#         r0 = r0 * r_temp.shape[0] * (r_temp.shape[0] - 1) / 2
-#         r0 = r0
-#         r_jn = r_jn + r0
-#         # r = r_temp / (I.shape[1] * (I.shape[1]-1))
-#         total = total + I.shape[1]
-#
-#     r_jn = r_jn / total
-#     print(r_jn)
-#
-# # for i in range(n_c):
-#
-#
-# beta = np.zeros(n_s - 1)
-# r_jn = np.zeros(n_s)
-# I = g
-#
-# for i in range(n_s):
-#     Rx = I[0:n_s-i, :].T @ I[i:, :]
-#     np.fill_diagonal(Rx, 0)
-#     r_jn[i] = np.sum(Rx) / ((n_c * (n_c-1)) * (n_s - i)) - np.mean(g) ** 2
-#     print(r_jn)
-#     # r_jn[i] = np.sum(Rx) / ((n_c * n_c) * (n_s - i)) - p_cond ** 2
-# r0 = np.var(g)
-# r_jn = r_jn / r0
-#
-# for k in range(n_s - 1):
-#     beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * r_jn[0]
-#
-# beta = 2 * (n_c - 1) * np.sum(beta)
+    # total = 0
+    # r_jn = 0
+    # if U.size < n_c:
+    #     for i in range(U.size):
+    #         I = indicator[:, g[0, :] == U[i]]
+    #         I = I * 1
+    #
+    #         r_temp = I.T @ I
+    #         r0 = np.sum(r_temp) / (((r_temp.shape[0] * r_temp.shape[0])) * n_s) - p_cond ** 2
+    #         r0 = r0 * r_temp.shape[0] * (r_temp.shape[0] - 1) / 2
+    #         r0 = r0
+    #         r_jn = r_jn + r0
+    #         # r = r_temp / (I.shape[1] * (I.shape[1]-1))
+    #         total = total + I.shape[1]
+    #
+    #     r_jn = r_jn / total
+    #     print(r_jn)
+    #
+    # # for i in range(n_c):
+    #
+    #
+    # beta = np.zeros(n_s - 1)
+    # r_jn = np.zeros(n_s)
+    # I = g
+    #
+    # for i in range(n_s):
+    #     Rx = I[0:n_s-i, :].T @ I[i:, :]
+    #     np.fill_diagonal(Rx, 0)
+    #     r_jn[i] = np.sum(Rx) / ((n_c * (n_c-1)) * (n_s - i)) - np.mean(g) ** 2
+    #     print(r_jn)
+    #     # r_jn[i] = np.sum(Rx) / ((n_c * n_c) * (n_s - i)) - p_cond ** 2
+    # r0 = np.var(g)
+    # r_jn = r_jn / r0
+    #
+    # for k in range(n_s - 1):
+    #     beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * r_jn[0]
+    #
+    # beta = 2 * (n_c - 1) * np.sum(beta)
 
-# def cov_sus(self, step):
-#     n = self.g[step].size
-#     if step == 0:
-#         di = np.sqrt((1 - self.p_cond) / (self.p_cond * n))
-#     else:
-#         nc = int(self.p_cond * n)
-#         r_zero = self.p_cond * (1 - self.p_cond)
-#         index = np.zeros(n)
-#         index[np.where(self.g[step] < self.g_level[step])] = 1
-#         indices = np.zeros(shape=(int(n / nc), nc)).astype(int)
-#         for i in range(int(n / nc)):
-#             for j in range(nc):
-#                 if i == 0:
-#                     indices[i, j] = j
-#                 else:
-#                     indices[i, j] = indices[i - 1, j] + nc
-#         gamma = 0
-#         rho = np.zeros(int(n / nc) - 1)
-#         for k in range(int(n / nc) - 1):
-#             z = 0
-#             for j in range(int(nc)):
-#                 for l in range(int(n / nc) - k):
-#                     z = z + index[indices[l, j]] * index[indices[l + k, j]]
-#
-#             rho[k] = (1 / (n - k * nc) * z - self.p_cond ** 2) / r_zero
-#             gamma = gamma + 2 * (1 - k * nc / n) * rho[k]
-#
-#         di = np.sqrt((1 - self.p_cond) / (self.p_cond * n) * (1 + gamma))
-#
-#     return di
-
-
+        # def cov_sus(self, step):
+        #     n = self.g[step].size
+        #     if step == 0:
+        #         di = np.sqrt((1 - self.p_cond) / (self.p_cond * n))
+        #     else:
+        #         nc = int(self.p_cond * n)
+        #         r_zero = self.p_cond * (1 - self.p_cond)
+        #         index = np.zeros(n)
+        #         index[np.where(self.g[step] < self.g_level[step])] = 1
+        #         indices = np.zeros(shape=(int(n / nc), nc)).astype(int)
+        #         for i in range(int(n / nc)):
+        #             for j in range(nc):
+        #                 if i == 0:
+        #                     indices[i, j] = j
+        #                 else:
+        #                     indices[i, j] = indices[i - 1, j] + nc
+        #         gamma = 0
+        #         rho = np.zeros(int(n / nc) - 1)
+        #         for k in range(int(n / nc) - 1):
+        #             z = 0
+        #             for j in range(int(nc)):
+        #                 for l in range(int(n / nc) - k):
+        #                     z = z + index[indices[l, j]] * index[indices[l + k, j]]
+        #
+        #             rho[k] = (1 / (n - k * nc) * z - self.p_cond ** 2) / r_zero
+        #             gamma = gamma + 2 * (1 - k * nc / n) * rho[k]
+        #
+        #         di = np.sqrt((1 - self.p_cond) / (self.p_cond * n) * (1 + gamma))
+        #
+        #     return di
 ########################################################################################################################
 ########################################################################################################################
 #                                        First/Second order reliability method
 ########################################################################################################################
-
 class TaylorSeries:
 
-    # Authors: Dimitris G. Giovanis
-    # Last Modified: 1/2/2020 by Dimitris G. Giovanis
-
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=100, df_step=None, corr=None, model=None,
-                 df_method=None, tol=None):
+    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=100, df_step=None, corr=None,
+                 model=None, df_method=None, tol=None):
         """
-            Description: A class that performs reliability analysis of a model using the First Order Reliability Method
-                         (FORM) and Second Order Reliability Method (SORM) that belong to the family of Taylor series
-                         expansion methods.
+        A class that performs reliability analysis of a model using the First Order Reliability Method (FORM) and
+        Second Order Reliability Method (SORM) that belong to the family of Taylor series expansion methods.
 
-            Input:
-                :param dimension: Number of random variables
-                :type dimension: int
-                :param dist_name: Probability distribution model for each random variable (see Distributions class).
-                :type dist_name: list/string
-                :param dist_params: Probability distribution model parameters for each random variable.
-                                   (see Distributions class).
-                :type dist_params: list
-                :param n_iter: Maximum number of iterations for the Hasofer-Lind algorithm
-                :type n_iter: int
-                :param df_method: Method for finite difference used for the estimation of the gradient
-                :type df_method: str
-                :param df_step: Step for estimating the gradient of a function
-                :type df_step: float/list of floats
-                :param tol: Convergence threshold for FORM
-                :type tol: float
-                :param corr: Correlation structure of the random vector (See Transformation class).
-                :type corr: ndarray
+        **Input:**
+
+        :param dimension: Number of random variables
+        :type dimension: int
+
+        :param dist_name: Probability distribution model for each random variable (see Distributions class).
+        :type dist_name: list/string
+
+        :param dist_params: Probability distribution model parameters for each random variable.
+                           (see Distributions class).
+        :type dist_params: list
+
+        :param n_iter: Maximum number of iterations for the Hasofer-Lind algorithm
+        :type n_iter: int
+
+        :param df_method: Method for finite difference used for the estimation of the gradient
+        :type df_method: str
+
+        :param df_step: Step for estimating the gradient of a function
+        :type df_step: float/list of floats
+
+        :param tol: Convergence threshold for FORM
+        :type tol: float
+
+        :param corr: Correlation structure of the random vector (See Transformation class).
+        :type corr: ndarray
+
+        **Author:**
+
+        Authors: Dimitris G. Giovanis
+        Last Modified: 1/2/2020 by Dimitris G. Giovanis
         """
 
         self.dimension = dimension
@@ -1063,45 +1218,50 @@ class TaylorSeries:
                  df_method=None, scale=True):
 
         """
-             Description: A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences
+        A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences.
 
-             Input:
-                 :param samples: The sample values at which the gradient of the model will be evaluated. Samples can be
-                 passed directly as  an array or can be passed through the text file 'UQpy_Samples.txt'.
-                 If passing samples via text file, set samples = None or do not set the samples input.
-                 :type samples: ndarray
+        **Input:**
 
-                 :param dist_params: Probability distribution model parameters for each random variable.
-                                       (see Distributions class).
-                 :type dist_params: list
-                 :param dist_name: Probability distribution name (see Distributions class).
-                 :type dist_params: list of strings
-                 :param order: The type of derivatives to calculate (1st order, second order, mixed).
-                 :type order: str
+        :param samples: The sample values at which the gradient of the model will be evaluated. Samples can be
+        passed directly as  an array or can be passed through the text file 'UQpy_Samples.txt'.
+        If passing samples via text file, set samples = None or do not set the samples input.
+        :type samples: ndarray
 
-                 :param dimension: Number of random variables.
-                 :type dimension: int
+        :param dist_params: Probability distribution model parameters for each random variable.
+                   (see Distributions class).
+        :type dist_params: list
 
-                 :param df_method: Finite difference method (Options: Central, backwards, forward).
-                 :type df_method: str
+        :param dist_name: Probability distribution name (see Distributions class).
+        :type dist_params: list of strings
 
-                 :param df_step: step for the finite difference.
-                 :type df_step: float
+        :param order: The type of derivatives to calculate (1st order, second order, mixed).
+        :type order: str
 
-                 :param model: An object of type RunModel
-                 :type model: RunModel object
+        :param dimension: Number of random variables.
+        :type dimension: int
 
-                 :param scale: Uses the dist_name and dist_params to scale it in the original parameter space
-                 :type scale: boolean
+        :param df_method: Finite difference method (Options: Central, backwards, forward).
+        :type df_method: str
 
-             Output:
-                 :return du_dj: vector of first-order gradients
-                 :rtype: ndarray
-                 :return d2u_dj: vector of second-order gradients
-                 :rtype: ndarray
-                 :return d2u_dij: vector of mixed gradients
-                 :rtype: ndarray
-         """
+        :param df_step: step for the finite difference.
+        :type df_step: float
+
+        :param model: An object of type RunModel
+        :type model: RunModel object
+
+        :param scale: Uses the dist_name and dist_params to scale it in the original parameter space
+        :type scale: boolean
+
+        **Output:**
+        :return du_dj: vector of first-order gradients
+        :rtype: ndarray
+
+        :return d2u_dj: vector of second-order gradients
+        :rtype: ndarray
+
+        :return d2u_dij: vector of mixed gradients
+        :rtype: ndarray
+        """
         samples = np.atleast_2d(samples)
 
         if order is None:
@@ -1219,12 +1379,8 @@ class TaylorSeries:
 
     @staticmethod
     def hessian(dimension=None, mixed_der=None, der=None):
-
-        """
-        Calculate the hessian matrix with finite differences
-        Parameters:
-
-        """
+        """The function to calculate the hessian matrix with finite differences. This function is part of the
+        TaylorSeries class."""
         hessian = np.diag(der)
         import itertools
         range_ = list(range(dimension))
@@ -1235,4 +1391,3 @@ class TaylorSeries:
             add_ += 1
 
         return hessian
-
