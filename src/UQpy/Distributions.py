@@ -61,45 +61,46 @@ class Distribution:
 
     **Input:**
 
-    :param dist_name: Name of distribution.
-    :type: dist_name: string or list of strings
+    :param dist_name: Name of the marginal distribution(s).
+    :type dist_name: string or list of strings
 
-    :param params: list of parameters for the distribution (list of lists if distribution is defined via its
-                        marginals)
-    :type: params: list of lists or ndarray
+    :param params: List of parameters for the margingal distribution(s).
+    :type params: list of lists or ndarray
 
-    :param copula: Copula to create dependence within dimensions, used only if name is a list
-    :type: copula: str or None (default None)
+    :param copula: Copula to create dependence between dimensions, used only if dist_name is a list
+
+                   Default: None
+    :type copula: str
 
     :param copula_params: Parameters of the copula
-    :type: copula_params: list or ndarray
+    :type copula_params: list or ndarray
 
     **Attributes:**
 
     :param self.pdf: Probability density function
-    :type: self.pdf: ndarray
+    :type self.pdf: ndarray
 
     :param self.cdf: Cumulative distribution function
-    :type: self.cdf: ndarray
+    :type self.cdf: ndarray
 
     :param self.icdf: Inverse cumulative distribution function
-    :type: self.icdf: ndarray
+    :type self.icdf: ndarray
 
-    :param self.rvs: Identical distributed realizations of the random variable
-    :type: self.rvs: ndarray
+    :param self.rvs: Independent realizations of the random variable
+    :type self.rvs: ndarray
 
     :param self.log_pdf: Logarithm of the pdf
-    :type: self.log_pdf: ndarray
+    :type self.log_pdf: ndarray
 
-    :param self.fit: Estimates the parameters of the distribution over arbitrary data
-    :type: self.fit: ndarray
+    :param self.fit: Estimates the parameters of the distribution from provided data
+    :type self.fit: ndarray
 
     :param self.moments: Calculate the first four moments of the distribution (mean, variance, skewness, kurtosis)
-    :type: self.moments: ndarray
+    :type self.moments: ndarray
 
     **Authors:**
 
-    Dimitris Giovanis & Audrey Olivier
+    Dimitris Giovanis, Audrey Olivier
     """
 
     def __init__(self, dist_name, copula=None, params=None, copula_params=None):
@@ -152,7 +153,6 @@ class Distribution:
             self.params = params
         if copula_params is not None:
             self.copula_params = copula_params
-
 
 # Define the function that computes pdf
 def define_pdf(self, x, params=None, copula_params=None):
@@ -415,13 +415,15 @@ class Copula:
     dependence structure is defined with a copula. The following copula are supported:  Gumbel
 
     **Input:**
+
     :param copula_name: Name of copula.
-    :type: copula_name: string
+    :type copula_name: string
 
     :param dist_name: names of the marginal distributions.
-    :type: dist_name: list of strings
+    :type dist_name: list of strings
 
     **Output:**
+
     A handler pointing to a copula and its associated methods, in particular its method evaluate_copula, which
      evaluates the terms c, c_ necessary to evaluate the cdf and pdf, respectively, of the multivariate
     Distribution.
