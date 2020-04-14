@@ -241,7 +241,7 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
             :type corr: ndarray
 
             :param beta:  A variable selected to optimize convergence speed and desired accuracy.
-            :type beta: int
+            :type beta: float
 
             :param thresh1: Threshold
             :type thresh1: float
@@ -256,7 +256,7 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
     """
 
     if beta is None:
-        beta = 1
+        beta = 1.0
     if thresh1 is None:
         thresh1 = 0.0001
     if thresh2 is None:
@@ -578,24 +578,6 @@ def R_to_r(R):
     """
     r = R/R[0]
     return r
-
-
-def eval_hessian(dimension, mixed_der, der):
-
-    """
-    Calculate the hessian matrix with finite differences
-    Parameters:
-
-    """
-    hessian = np.diag(der)
-    import itertools
-    range_ = list(range(dimension))
-    add_ = 0
-    for i in itertools.combinations(range_, 2):
-        hessian[i[0], i[1]] = mixed_der[add_]
-        hessian[i[1], i[0]] = hessian[i[0], i[1]]
-        add_ += 1
-    return hessian
 
 
 def IS_diagnostics(sampling_outputs=None, weights=None, graphics=False, figsize=(8, 3), ):
