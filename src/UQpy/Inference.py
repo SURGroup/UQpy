@@ -698,8 +698,8 @@ class BayesParameterEstimation:
 
     **Attributes:**
 
-    :return sampler: sampling method object, contains e.g. the samples
-    :rtype sampler: object of class SampleMethods.MCMC or SampleMethods.IS
+    :param self.sampler: sampling method object, contains e.g. the samples
+    :type self.sampler: object of class SampleMethods.MCMC or SampleMethods.IS
 
     **Authors:**
 
@@ -827,14 +827,14 @@ class BayesModelSelection:
 
     **Attributes:**
 
-    :return bayes_estimators: results of the Bayesian parameter estimation
-    :rtype bayes_estimators: list (length nmodels) of BayesParameterEstimation objects
+    :param self.bayes_estimators: results of the Bayesian parameter estimation
+    :type self.bayes_estimators: list (length nmodels) of BayesParameterEstimation objects
 
-    :return evidences: value of the evidence for all models
-    :rtype evidences: list (length nmodels) of floats
+    :param self.evidences: value of the evidence for all models
+    :type self.evidences: list (length nmodels) of floats
 
-    :return probabilities: posterior probability for all models
-    :rtype probabilities: list (length nmodels) of floats
+    :param self.probabilities: posterior probability for all models
+    :type self.probabilities: list (length nmodels) of floats
 
     **Authors:**
 
