@@ -15,7 +15,14 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""This module contains functionality for all the distribution supported in UQpy."""
+"""This module contains functionality for all the distribution supported in UQpy.
+
+The module currently contains the following classes:
+
+- Distribution: Defines a probability distribution in UQpy.
+- Copula: Defines a copula for modeling dependence in multivariate distributions.
+
+"""
 
 import scipy.stats as stats
 import os
@@ -493,8 +500,7 @@ def moments(dist_object, params=None):
 
 class Copula:
     """
-    Computes terms required to compute cdf, pdf and log_pdf for a multivariate distribution whose dependence structure
-    is defined with a copula.
+    Define a copula for a multivariate distribution whose dependence structure is defined with a copula.
 
     This class is used in support of the main Distribution class. The following copula are supported: Gumbel.
 
@@ -519,14 +525,22 @@ class Copula:
 
         **Input:**
 
-        :param x: Points where to evaluate the cdf and pdf.
-        :type ndarray of shape (npoints, dimension)
+        :param x: Points at which to evaluate the copula cdf and pdf.
+        :type x: ndarray of shape (npoints, dimension)
 
         :param dist_params: Parameters of the marginal distributions.
         :type dist_params: list of lists or ndarray
 
         :param copula_params: Parameter of the copula.
         :type copula_params: list or ndarray
+
+        **Output/Returns**
+
+        :param c: Copula cdf
+        :type c: ndarray
+
+        :param c\_: Copula pdf
+        :type c\_: ndarray
         """
         if self.copula_name.lower() == 'gumbel':
             if x.shape[1] > 2:
@@ -538,7 +552,8 @@ class Copula:
 
             uu = np.zeros_like(x)
             for i in range(uu.shape[1]):
-                uu[:, i] = subdistribution_cdf(dist_name=self.dist_name[i], x=x[:, i, np.newaxis], params=dist_params[i])
+                uu[:, i] = subdistribution_cdf(dist_name=self.dist_name[i], x=x[:, i, np.newaxis],
+                                               params=dist_params[i])
             if copula_params[0] == 1:
                 return np.prod(uu, axis=1), np.ones(x.shape[0])
             else:
@@ -718,7 +733,8 @@ def subdistribution_cdf(dist_name, x, params):
 
 def subdistribution_icdf(dist_name, x, params):
     """
-    Evaluate pdf for sub-distribution (i.e., distribution defined by a single string, univariate marginal or custom).
+    Evaluate inverse cdf for sub-distribution (i.e., distribution defined by a single string, univariate marginal
+    or custom).
 
     This is a helper function, used within the main Distribution class.
 
@@ -913,7 +929,8 @@ def scipy_distributions(dist_name, params=None):
     """
     Create a scipy distribution object and map argument params to the scipy parameters.
 
-    This is a helper function, used within the main Distribution class.
+    This is a helper function, used within the main Distribution class that serves to translate UQpy distribution
+    parameters to scipy distribution parameters in order to leverage scipy distribution objects.
 
     **Inputs:**
 
