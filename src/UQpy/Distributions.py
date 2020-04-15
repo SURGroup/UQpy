@@ -131,20 +131,274 @@ class Distribution:
         for method in ['pdf', 'log_pdf', 'cdf', 'rvs', 'icdf', 'fit', 'moments']:
             exist_methods[method] = exist_method(method=method, dist_name=self.dist_name,
                                                  has_copula=hasattr(self, 'copula'))
+
         if exist_methods['pdf']:
-            self.pdf = types.MethodType(define_pdf, self)
+            # Define the function that computes pdf
+            def pdf(self, x, params=None, copula_params=None):
+                """
+                A method that computes the probability density function at inputs points x
+
+                **Input:**
+
+                :param x: Points to estimate the pdf.
+                :type x:  2D ndarray (nsamples, dimension)
+                            nsamples: an integer providing the desired number of iid samples to be drawn
+
+                :param params: list of parameters for the distribution (list of lists if distribution is defined via its
+                                    marginals)
+                :type: params: list of lists or ndarray
+
+                :param copula_params: Parameters of the copula
+                :type: copula_params: list or ndarray
+
+                **Output:**
+
+                :return prod_pdf: Values of the pdf
+                :rtype prod_pdf: ndarray
+                """
+                x = check_input_dims(x)
+                self.update_params(params, copula_params)
+                if isinstance(self.dist_name, str):
+                    return subdistribution_pdf(dist_name=self.dist_name, x=x, params=self.params)
+                elif isinstance(self.dist_name, list):
+                    if (x.shape[1] != len(self.dist_name)) or (len(self.params) != len(self.dist_name)):
+                        raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
+                    prod_pdf = np.ones((x.shape[0],))
+                    for i in range(len(self.dist_name)):
+                        prod_pdf = prod_pdf * subdistribution_pdf(dist_name=self.dist_name[i], x=x[:, i, np.newaxis],
+                                                                  params=self.params[i])
+                    if hasattr(self, 'copula'):
+                        _, c_ = self.copula.evaluate_copula(x=x, dist_params=self.params,
+                                                            copula_params=self.copula_params)
+                        prod_pdf *= c_
+                    return prod_pdf
+            self.pdf = types.MethodType(pdf, self)
+
         if exist_methods['log_pdf']:
-            self.log_pdf = types.MethodType(define_log_pdf, self)
+            # Define the function that computes the log pdf
+            def log_pdf(self, x, params=None, copula_params=None):
+                """
+                A method that computes the logarithmic probability density function at inputs points x
+
+                **Input:**
+
+                :param x: Points to estimate the pdf.
+                :type x:  2D ndarray (nsamples, dimension)
+                            nsamples: an integer providing the desired number of iid samples to be drawn
+
+                :param params: list of parameters for the distribution (list of lists if distribution is defined via its
+                                    marginals)
+                :type: params: list of lists or ndarray
+
+                :param copula_params: Parameters of the copula
+                :type: copula_params: list or ndarray
+
+                **Output:**
+
+                :return sum_log_pdf: Values of the pdf
+                :rtype sum_log_pdf: ndarray
+                """
+                x = check_input_dims(x)
+                self.update_params(params, copula_params)
+                if isinstance(self.dist_name, str):
+                    return subdistribution_log_pdf(dist_name=self.dist_name, x=x, params=self.params)
+                elif isinstance(self.dist_name, list):
+                    if (x.shape[1] != len(self.dist_name)) or (len(self.params) != len(self.dist_name)):
+                        raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
+                    sum_log_pdf = np.zeros((x.shape[0],))
+                    for i in range(len(self.dist_name)):
+                        sum_log_pdf = sum_log_pdf + subdistribution_log_pdf(dist_name=self.dist_name[i],
+                                                                            x=x[:, i, np.newaxis],
+                                                                            params=self.params[i])
+                    if hasattr(self, 'copula'):
+                        _, c_ = self.copula.evaluate_copula(x=x, dist_params=self.params,
+                                                            copula_params=self.copula_params)
+                        sum_log_pdf += np.log(c_)
+                    return sum_log_pdf
+            self.log_pdf = types.MethodType(log_pdf, self)
+
         if exist_methods['cdf']:
-            self.cdf = types.MethodType(define_cdf, self)
+            # Function that computes the cdf
+            def cdf(self, x, params=None, copula_params=None):
+                """
+                A method that computes the cumulative distribution function at inputs points x
+
+                **Input:**
+
+                :param x: Points to estimate the pdf.
+                :type x:  2D ndarray (nsamples, dimension)
+                            nsamples: an integer providing the desired number of iid samples to be drawn
+
+                :param params: list of parameters for the distribution (list of lists if distribution is defined via its
+                                    marginals)
+                :type: params: list of lists or ndarray
+
+                :param copula_params: Parameters of the copula
+                :type: copula_params: list or ndarray
+
+                **Output:**
+
+                :return c: Values of the cdf
+                :rtype c: ndarray
+                """
+                x = check_input_dims(x)
+                self.update_params(params, copula_params)
+                if isinstance(self.dist_name, str):
+                    return subdistribution_cdf(dist_name=self.dist_name, x=x, params=self.params)
+                elif isinstance(self.dist_name, list):
+                    if (x.shape[1] != len(self.dist_name)) or (len(params) != len(self.dist_name)):
+                        raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
+                    if not hasattr(self, 'copula'):
+                        cdfs = np.zeros_like(x)
+                        for i in range(len(self.dist_name)):
+                            cdfs[:, i] = subdistribution_cdf(dist_name=self.dist_name[i], x=x[:, i, np.newaxis],
+                                                             params=self.params[i])
+                        return np.prod(cdfs, axis=1)
+                    else:
+                        c, _ = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
+                        return c
+            self.cdf = types.MethodType(cdf, self)
+
         if exist_methods['icdf']:
-            self.icdf = types.MethodType(define_icdf, self)
+            # Method that computes the icdf
+            def icdf(self, x, params=None):
+                """
+                A method that computes the cumulative distribution function at inputs points x. Only for univariate distributions.
+
+                **Input:**
+
+                :param x: Points to estimate the pdf.
+                :type x:  2D ndarray (nsamples, dimension)
+                            nsamples: an integer providing the desired number of iid samples to be drawn
+
+                :param params: list of parameters for the distribution (list of lists if distribution is defined via its
+                                    marginals)
+                :type: params: list of lists or ndarray
+
+                **Output:**
+
+                :return c: Values of the cdf
+                :rtype c: ndarray
+                """
+                x = check_input_dims(x)
+                self.update_params(params, copula_params=None)
+                if isinstance(self.dist_name, str):
+                    return subdistribution_icdf(dist_name=self.dist_name, x=x, params=self.params)
+                elif isinstance(self.dist_name, list):
+                    raise AttributeError('Method icdf not defined for multivariate distributions.')
+            self.icdf = types.MethodType(icdf, self)
+
         if exist_methods['rvs']:
-            self.rvs = types.MethodType(define_rvs, self)
+            # Method that generates RVs
+            def rvs(self, nsamples=1, params=None):
+                """
+                A method that samples iid realizations from the distribution - does not support distributions with copula
+
+                **Input:**
+
+                :param nsamples: An integer providing the desired number of iid samples to be drawn.
+
+                                Default: 1
+                :type nsamples:  int
+
+                :param params: list of parameters for the distribution (list of lists if distribution is defined via its
+                                    marginals)
+                :type: params: list of lists or ndarray
+
+                **Output:**
+
+                :return rvs: Realizations from the distribution
+                :rtype rvs: ndarray
+                """
+                self.update_params(params, copula_params=None)
+                if isinstance(self.dist_name, str):
+                    return subdistribution_rvs(dist_name=self.dist_name, nsamples=nsamples, params=self.params)
+                elif isinstance(self.dist_name, list):
+                    if len(self.params) != len(self.dist_name):
+                        raise ValueError('UQpy error: Inconsistent dimensions')
+                    if not hasattr(self, 'copula'):
+                        rvs = np.zeros((nsamples, len(self.dist_name)))
+                        for i in range(len(self.dist_name)):
+                            rvs[:, i] = subdistribution_rvs(dist_name=self.dist_name[i], nsamples=nsamples,
+                                                            params=self.params[i])[:, 0]
+                        return rvs
+                    else:
+                        raise AttributeError('Method rvs not defined for distributions with copula.')
+            self.rvs = types.MethodType(rvs, self)
+
         if exist_methods['fit']:
-            self.fit = types.MethodType(define_fit, self)
+            def fit(self, x):
+                """
+                Compute the MLE parameters of a distribution from data x - does not support distributions with copula
+
+                **Input:**
+
+                :param x: Vector of data x
+                :type x:  ndarray
+
+                **Output:**
+
+                :return params_fit: MLE parameters.
+                :rtype params_fit: ndarray
+                """
+                x = check_input_dims(x)
+                if isinstance(self.dist_name, str):
+                    return subdistribution_fit(dist_name=self.dist_name, x=x)
+                elif isinstance(self.dist_name, list):
+                    if x.shape[1] != len(self.dist_name):
+                        raise ValueError('Inconsistent dimensions in inputs dist_name and x.')
+                    if not hasattr(self, 'copula'):
+                        params_fit = []
+                        for i in range(len(self.dist_name)):
+                            params_fit.append(subdistribution_fit(dist_name=self.dist_name[i], x=x[:, i, np.newaxis]))
+                        return params_fit
+                    else:
+                        raise AttributeError('Method fit not defined for distributions with copula.')
+            self.fit = types.MethodType(fit, self)
+
         if exist_methods['moments']:
-            self.moments = types.MethodType(define_moments, self)
+            # Method that computes moments
+            def moments(self, params=None):
+                """
+                Compute marginal moments (mean, variance, skewness, kurtosis) - does not support distributions with copula.
+
+                **Input:**
+
+                :param params: list of parameters for the distribution (list of lists if distribution is defined via its
+                                    marginals)
+                :type: params: list of lists or ndarray
+
+                **Output:**
+
+                :return mean: Mean value.
+                :rtype mean: list
+
+                :return var: Variance.
+                :rtype var: list
+
+                :return skew: Kyrtosis.
+                :rtype skew: list
+
+                :return kurt: Kyrtosis.
+                :rtype kurt: list
+                 """
+                self.update_params(params, copula_params=None)
+                if isinstance(self.dist_name, str):
+                    return subdistribution_moments(dist_name=self.dist_name, params=self.params)
+                elif isinstance(self.dist_name, list):
+                    if len(self.params) != len(self.dist_name):
+                        raise ValueError('UQpy error: Inconsistent dimensions')
+                    if not hasattr(self, 'copula'):
+                        mean, var, skew, kurt = [0] * len(self.dist_name), [0] * len(self.dist_name), [0] * len(
+                            self.dist_name), \
+                                                [0] * len(self.dist_name),
+                        for i in range(len(self.dist_name)):
+                            mean[i], var[i], skew[i], kurt[i] = subdistribution_moments(dist_name=self.dist_name[i],
+                                                                                        params=self.params[i])
+                        return mean, var, skew, kurt
+                    else:
+                        raise AttributeError('Method moments not defined for distributions with copula.')
+            self.moments = types.MethodType(moments, self)
 
     def update_params(self, params=None, copula_params=None):
         # Update the parameters, unless they are given as None, then do not update
@@ -152,257 +406,6 @@ class Distribution:
             self.params = params
         if copula_params is not None:
             self.copula_params = copula_params
-
-    # Define the function that computes pdf
-    def define_pdf(self, x, params=None, copula_params=None):
-        """
-        A method that computes the probability density function at inputs points x
-
-        **Input:**
-
-        :param x: Points to estimate the pdf.
-        :type x:  2D ndarray (nsamples, dimension)
-                    nsamples: an integer providing the desired number of iid samples to be drawn
-
-        :param params: list of parameters for the distribution (list of lists if distribution is defined via its
-                            marginals)
-        :type: params: list of lists or ndarray
-
-        :param copula_params: Parameters of the copula
-        :type: copula_params: list or ndarray
-
-        **Output:**
-
-        :return prod_pdf: Values of the pdf
-        :rtype prod_pdf: ndarray
-        """
-        x = check_input_dims(x)
-        self.update_params(params, copula_params)
-        if isinstance(self.dist_name, str):
-            return subdistribution_pdf(dist_name=self.dist_name, x=x, params=self.params)
-        elif isinstance(self.dist_name, list):
-            if (x.shape[1] != len(self.dist_name)) or (len(self.params) != len(self.dist_name)):
-                raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
-            prod_pdf = np.ones((x.shape[0], ))
-            for i in range(len(self.dist_name)):
-                prod_pdf = prod_pdf * subdistribution_pdf(dist_name=self.dist_name[i], x=x[:, i, np.newaxis],
-                                                          params=self.params[i])
-            if hasattr(self, 'copula'):
-                _, c_ = self.copula.evaluate_copula(x=x, dist_params=self.params, copula_params=self.copula_params)
-                prod_pdf *= c_
-            return prod_pdf
-
-    # Define the function that computes the log pdf
-    def define_log_pdf(self, x, params=None, copula_params=None):
-        """
-        A method that computes the logarithmic probability density function at inputs points x
-
-        **Input:**
-
-        :param x: Points to estimate the pdf.
-        :type x:  2D ndarray (nsamples, dimension)
-                    nsamples: an integer providing the desired number of iid samples to be drawn
-
-        :param params: list of parameters for the distribution (list of lists if distribution is defined via its
-                            marginals)
-        :type: params: list of lists or ndarray
-
-        :param copula_params: Parameters of the copula
-        :type: copula_params: list or ndarray
-
-        **Output:**
-
-        :return sum_log_pdf: Values of the pdf
-        :rtype sum_log_pdf: ndarray
-        """
-        x = check_input_dims(x)
-        self.update_params(params, copula_params)
-        if isinstance(self.dist_name, str):
-            return subdistribution_log_pdf(dist_name=self.dist_name, x=x, params=self.params)
-        elif isinstance(self.dist_name, list):
-            if (x.shape[1] != len(self.dist_name)) or (len(self.params) != len(self.dist_name)):
-                raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
-            sum_log_pdf = np.zeros((x.shape[0], ))
-            for i in range(len(self.dist_name)):
-                sum_log_pdf = sum_log_pdf + subdistribution_log_pdf(dist_name=self.dist_name[i], x=x[:, i, np.newaxis],
-                                                                    params=self.params[i])
-            if hasattr(self, 'copula'):
-                _, c_ = self.copula.evaluate_copula(x=x, dist_params=self.params, copula_params=self.copula_params)
-                sum_log_pdf += np.log(c_)
-            return sum_log_pdf
-
-    # Function that computes the cdf
-    def define_cdf(self, x, params=None, copula_params=None):
-        """
-        A method that computes the cumulative distribution function at inputs points x
-
-        **Input:**
-
-        :param x: Points to estimate the pdf.
-        :type x:  2D ndarray (nsamples, dimension)
-                    nsamples: an integer providing the desired number of iid samples to be drawn
-
-        :param params: list of parameters for the distribution (list of lists if distribution is defined via its
-                            marginals)
-        :type: params: list of lists or ndarray
-
-        :param copula_params: Parameters of the copula
-        :type: copula_params: list or ndarray
-
-        **Output:**
-
-        :return c: Values of the cdf
-        :rtype c: ndarray
-        """
-        x = check_input_dims(x)
-        self.update_params(params, copula_params)
-        if isinstance(self.dist_name, str):
-            return subdistribution_cdf(dist_name=self.dist_name, x=x, params=self.params)
-        elif isinstance(self.dist_name, list):
-            if (x.shape[1] != len(self.dist_name)) or (len(params) != len(self.dist_name)):
-                raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
-            if not hasattr(self, 'copula'):
-                cdfs = np.zeros_like(x)
-                for i in range(len(self.dist_name)):
-                    cdfs[:, i] = subdistribution_cdf(dist_name=self.dist_name[i], x=x[:, i, np.newaxis], params=self.params[i])
-                return np.prod(cdfs, axis=1)
-            else:
-                c, _ = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
-                return c
-
-    # Method that computes the icdf
-    def define_icdf(self, x, params=None):
-        """
-        A method that computes the cumulative distribution function at inputs points x. Only for univariate distributions.
-
-        **Input:**
-
-        :param x: Points to estimate the pdf.
-        :type x:  2D ndarray (nsamples, dimension)
-                    nsamples: an integer providing the desired number of iid samples to be drawn
-
-        :param params: list of parameters for the distribution (list of lists if distribution is defined via its
-                            marginals)
-        :type: params: list of lists or ndarray
-
-        **Output:**
-
-        :return c: Values of the cdf
-        :rtype c: ndarray
-        """
-        x = check_input_dims(x)
-        self.update_params(params, copula_params=None)
-        if isinstance(self.dist_name, str):
-            return subdistribution_icdf(dist_name=self.dist_name, x=x, params=self.params)
-        elif isinstance(self.dist_name, list):
-            raise AttributeError('Method icdf not defined for multivariate distributions.')
-
-
-# Method that generates RVs
-def define_rvs(self, nsamples=1, params=None):
-    """
-    A method that samples iid realizations from the distribution - does not support distributions with copula
-
-    **Input:**
-
-    :param nsamples: An integer providing the desired number of iid samples to be drawn.
-
-                    Default: 1
-    :type nsamples:  int
-
-    :param params: list of parameters for the distribution (list of lists if distribution is defined via its
-                        marginals)
-    :type: params: list of lists or ndarray
-
-    **Output:**
-
-    :return rvs: Realizations from the distribution
-    :rtype rvs: ndarray
-    """
-    self.update_params(params, copula_params=None)
-    if isinstance(self.dist_name, str):
-        return subdistribution_rvs(dist_name=self.dist_name, nsamples=nsamples, params=self.params)
-    elif isinstance(self.dist_name, list):
-        if len(self.params) != len(self.dist_name):
-            raise ValueError('UQpy error: Inconsistent dimensions')
-        if not hasattr(self, 'copula'):
-            rvs = np.zeros((nsamples, len(self.dist_name)))
-            for i in range(len(self.dist_name)):
-                rvs[:, i] = subdistribution_rvs(dist_name=self.dist_name[i], nsamples=nsamples, params=self.params[i])[:, 0]
-            return rvs
-        else:
-            raise AttributeError('Method rvs not defined for distributions with copula.')
-
-
-def define_fit(self, x):
-    """
-    Compute the MLE parameters of a distribution from data x - does not support distributions with copula
-
-    **Input:**
-
-    :param x: Vector of data x
-    :type x:  ndarray
-
-    **Output:**
-
-    :return params_fit: MLE parameters.
-    :rtype params_fit: ndarray
-    """
-    x = check_input_dims(x)
-    if isinstance(self.dist_name, str):
-        return subdistribution_fit(dist_name=self.dist_name, x=x)
-    elif isinstance(self.dist_name, list):
-        if x.shape[1] != len(self.dist_name):
-            raise ValueError('Inconsistent dimensions in inputs dist_name and x.')
-        if not hasattr(self, 'copula'):
-            params_fit = []
-            for i in range(len(self.dist_name)):
-                params_fit.append(subdistribution_fit(dist_name=self.dist_name[i], x=x[:, i, np.newaxis]))
-            return params_fit
-        else:
-            raise AttributeError('Method fit not defined for distributions with copula.')
-
-
-# Method that computes moments
-def define_moments(self, params=None):
-    """
-    Compute marginal moments (mean, variance, skewness, kurtosis) - does not support distributions with copula.
-
-    **Input:**
-
-    :param params: list of parameters for the distribution (list of lists if distribution is defined via its
-                        marginals)
-    :type: params: list of lists or ndarray
-
-    **Output:**
-
-    :return mean: Mean value.
-    :rtype mean: list
-
-    :return var: Variance.
-    :rtype var: list
-
-    :return skew: Kyrtosis.
-    :rtype skew: list
-
-    :return kurt: Kyrtosis.
-    :rtype kurt: list
-     """
-    self.update_params(params, copula_params=None)
-    if isinstance(self.dist_name, str):
-        return subdistribution_moments(dist_name=self.dist_name, params=self.params)
-    elif isinstance(self.dist_name, list):
-        if len(self.params) != len(self.dist_name):
-            raise ValueError('UQpy error: Inconsistent dimensions')
-        if not hasattr(self, 'copula'):
-            mean, var, skew, kurt = [0]*len(self.dist_name), [0]*len(self.dist_name), [0]*len(self.dist_name), \
-                                    [0]*len(self.dist_name),
-            for i in range(len(self.dist_name)):
-                mean[i], var[i], skew[i], kurt[i] = subdistribution_moments(dist_name=self.dist_name[i],
-                                                                            params=self.params[i])
-            return mean, var, skew, kurt
-        else:
-            raise AttributeError('Method moments not defined for distributions with copula.')
 
 
 class Copula:

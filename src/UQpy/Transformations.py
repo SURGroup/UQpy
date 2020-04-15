@@ -187,7 +187,7 @@ class Nataf:
                                                              self.dist_params, jacobian=True)
 
     @staticmethod
-    def distortion_x_to_z(distribution, dist_params, corr_x, beta, itam_error1, itam_error2):
+    def distortion_x_to_z(distribution, dist_params, corr_x, beta=None, itam_error1=None, itam_error2=None):
         """
         Calculate correlation distortion.
 
