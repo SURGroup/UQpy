@@ -41,34 +41,34 @@ list_all_scipy = list_univariates + list_multivariates
 
 class Distribution:
     """
-    Main distribution class available to the user. The user can define a probability distribution by providing:
-    - A name that points to a univariate/multivariate distribution (see supported distributions in
-       SubDistribution class or custom distribution)
-    - A list of names that points to a list of univariate distributions. In that case, a multivariate
-       distribution is built for which all dimensions are independent and given by Distribution(name)
-    - A list of names and a copula, in that case a multivariate distribution is built using Distribution(name)
-        for the marginal pdfs, while the dependence structure is given by the copula.
+    Define a probability distribution and invoke methods of a distribution
 
-    The following methods are defined:
+    This is the main distribution class in UQpy. The user can define a probability distribution by providing:
 
-    1. pdf: probability density function
-    2. cdf: cumulative distribution function
-    3. icdf: inverse cumulative distribution function
-    4. rvs: generate random numbers (it doesn't need a point)
-    5. log_pdf: logarithm of the pdf
-    6. fit: Estimates the parameters of the distribution over arbitrary data
-    7. moments: Calculate the first four moments of the distribution (mean, variance, skewness, kurtosis)
+    - A name that points to a univariate/multivariate distribution.
+    - A list of names of univariate distributions. In that case, a multivariate  distribution is built for which all
+      dimensions are independent
+    - A list of names of univariate distributions and a copula. In that case a multivariate distribution is built
+      using the univariate distributions for the marginal pdfs and the prescribed copula for the dependence structure.
+
+    The Distribution class provides a number of methods as well for computing the probability density function and its
+    logarithm, computing the cumulative distribution function and its inverse, generating samples of random variables
+    following the distribution, fitting a distribution, and computing the moments of the distribuiton. Note that all
+    methods do not exist for all distributions.
 
     The helper function exist_method described below indicates which methods are defined for various types of
     distributions (i.e., univariate vs. multivariate, with or without copula, user-defined).
 
     **Input:**
 
-    :param dist_name: Name of the marginal distribution(s).
+    :param dist_name: Name of the marginal distribution(s). The following distributions are available: 'normal',
+                      'uniform', 'binomial', 'beta', 'genextreme', 'chisquare', 'lognormal', 'gamma', 'exponential',
+                      'cauchy', 'levy', 'logistic', 'laplace', 'maxwell', 'inverse gauss', 'pareto', 'rayleigh',
+                      'truncnorm', 'mvnormal'.
+
     :type dist_name: string or list of strings
 
-    :param params: List of parameters for the marginal distribution(s) (list of lists if distribution is defined via its
-                   marginals).
+    :param params: Parameters for the marginal distribution(s) (must be a list if distribution is multivariate).
     :type params: list or ndarray
 
     :param copula: Copula to create dependence between dimensions, used only if dist_name is a list
@@ -81,37 +81,44 @@ class Distribution:
 
     **Methods:**
 
+    Note that methods here are defined using *types.MethodType* because all of the methods listed below do not exist for
+    all distributions. See the function *UQpy.Distributions.exist_method* below for further details on which methods
+    are available for each distribution.
+
     :param self.pdf: Dynamic method that computes the probability density function (input arguments are x, params,
-                     copula_params). Invoking this method executes the UQpy.Distributions.pdf function described below.
+                     copula_params). Invoking this method executes the *UQpy.Distributions.pdf* function described
+                     below.
     :type self.pdf: Callable
 
     :param self.cdf: Dynamic method that computes the cumulative distribution function. Invoking this method executes
-                     the UQpy.Distributions.cdf function described below.
+                     the *UQpy.Distributions.cdf* function described below.
     :type self.cdf: Callable
 
-    :param self.icdf: Dynamic method that computes the inverse distribution function. Invoking this method executes the
-                      UQpy.Distributions.icdf function described below.
+    :param self.icdf: Dynamic method that computes the inverse cumulative distribution function. Invoking this method
+                      executes the *UQpy.Distributions.icdf* function described below.
     :type self.icdf: Callable
 
-    :param self.rvs: Dynamic method that generate random samples from the distribution. Invoking this method executes
-                     the UQpy.Distributions.rvs function described below.
+    :param self.rvs: Dynamic method that generates random samples from the distribution. Invoking this method executes
+                     the *UQpy.Distributions.rvs* function described below.
     :type self.rvs: Callable
 
     :param self.log_pdf: Dynamic method that computes the logarithm of the probability density function. Invoking this
-                         method executes the UQpy.Distributions.log_pdf function described below.
+                         method executes the *UQpy.Distributions.log_pdf* function described below.
     :type self.log_pdf: Callable
 
     :param self.fit: Dynamic method that estimates distribution parameters from provided data. Invoking this method
-                     executes the UQpy.Distributions.fit function described below.
+                     executes the *UQpy.Distributions.fit* function described below.
     :type self.fit: Callable
 
     :param self.moments: Dynamic method that calculates the first four moments of the distribution. Invoking this
-                         method executes the UQpy.Distributions.moments function described below.
+                         method executes the *UQpy.Distributions.moments* function described below.
     :type self.moments: Callable
 
     **Authors:**
 
-    Dimitris Giovanis, Audrey Olivier
+    Dimitris Giovanis, Audrey Olivier, Michael D. Shields
+
+    Last Modified: 4/15/20 by Audrey Olivier & Michael D. Shields
     """
 
     def __init__(self, dist_name, copula=None, params=None, copula_params=None):
@@ -167,14 +174,19 @@ class Distribution:
 
     def update_params(self, params=None, copula_params=None):
         """
-        Update the params/copula_params attributes of the distribution.
+        Sets the params/copula_params attributes of the distribution.
 
-        :param params: List of parameters for the marginal distribution(s) (list of lists if distribution is defined
-                       via its marginals).
+        **Input:**
+
+        :param params: Parameters for the marginal distribution(s) (must be a list if distribution is multivariate).
         :type params: list or ndarray
 
         :param copula_params: Parameters of the copula.
         :type copula_params: list or ndarray
+
+        **Output/Returns**
+
+        None
         """
 
         if params is not None:
@@ -194,14 +206,17 @@ def pdf(dist_object, x, params=None, copula_params=None):
 
     **Input:**
 
-    :param x: Point(s) where to evaluate the pdf.
+    :param dist_object: Object of the Distribution class defining the distribution
+    :type dist_object: Object of *UQpy.Distributions.Distribution*
+
+    :param x: Point(s) at which to evaluate the pdf.
     :type x: ndarray of shape (npoints, dimension)
 
     :param params: Parameters for the distribution
-    :type: params: list of lists or ndarray
+    :type params: list of lists or ndarray
 
     :param copula_params: Parameters of the copula
-    :type: copula_params: list or ndarray
+    :type copula_params: list or ndarray
 
     **Output/Returns:**
 
@@ -227,9 +242,9 @@ def pdf(dist_object, x, params=None, copula_params=None):
 
 
 # Function that computes the cdf
-def cdf(self, x, params=None, copula_params=None):
+def cdf(dist_object, x, params=None, copula_params=None):
     """
-    Evaluate the cumulative distribution function at inputs points x.
+    Evaluate the cumulative distribution function at input points x.
 
     This is a utility function used to define the cdf method of the Distribution class. This method is called as
     dist_object.cdf(x, params, copula_params). If given, inputs params/copula_params overwrite the params/copula_params
@@ -237,14 +252,17 @@ def cdf(self, x, params=None, copula_params=None):
 
     **Input:**
 
-    :param x: Point(s) where to evaluate the cdf.
+    :param dist_object: Object of the Distribution class defining the distribution
+    :type dist_object: Object of *UQpy.Distributions.Distribution*
+
+    :param x: Point(s) at which to evaluate the cdf.
     :type x: ndarray of shape (npoints, dimension)
 
     :param params: Parameters for the distribution
-    :type: params: list of lists or ndarray
+    :type params: list of lists or ndarray
 
     :param copula_params: Parameters of the copula
-    :type: copula_params: list or ndarray
+    :type copula_params: list or ndarray
 
     **Output/Returns:**
 
@@ -252,25 +270,25 @@ def cdf(self, x, params=None, copula_params=None):
     :type cdf_values: ndarray of shape (npoints, )
     """
     x = check_input_dims(x)
-    self.update_params(params, copula_params)
-    if isinstance(self.dist_name, str):
-        return subdistribution_cdf(dist_name=self.dist_name, x=x, params=self.params)
-    elif isinstance(self.dist_name, list):
-        if (x.shape[1] != len(self.dist_name)) or (len(params) != len(self.dist_name)):
+    dist_object.update_params(params, copula_params)
+    if isinstance(dist_object.dist_name, str):
+        return subdistribution_cdf(dist_name=dist_object.dist_name, x=x, params=dist_object.params)
+    elif isinstance(dist_object.dist_name, list):
+        if (x.shape[1] != len(dist_object.dist_name)) or (len(params) != len(dist_object.dist_name)):
             raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
-        if not hasattr(self, 'copula'):
+        if not hasattr(dist_object, 'copula'):
             cdfs = np.zeros_like(x)
-            for i in range(len(self.dist_name)):
-                cdfs[:, i] = subdistribution_cdf(dist_name=self.dist_name[i], x=x[:, i, np.newaxis],
-                                                 params=self.params[i])
+            for i in range(len(dist_object.dist_name)):
+                cdfs[:, i] = subdistribution_cdf(dist_name=dist_object.dist_name[i], x=x[:, i, np.newaxis],
+                                                 params=dist_object.params[i])
             return np.prod(cdfs, axis=1)
         else:
-            cdf_values, _ = self.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
+            cdf_values, _ = dist_object.copula.evaluate_copula(x=x, dist_params=params, copula_params=copula_params)
             return cdf_values
 
 
 # Method that computes the icdf
-def icdf(self, x, params=None):
+def icdf(dist_object, x, params=None):
     """
     Evaluate the inverse distribution function at inputs points x (only for univariate distributions).
 
@@ -279,11 +297,14 @@ def icdf(self, x, params=None):
 
     **Input:**
 
+    :param dist_object: Object of the Distribution class defining the distribution
+    :type dist_object: Object of *UQpy.Distributions.Distribution*
+
     :param x: Point(s) where to evaluate the icdf.
     :type x: ndarray of shape (npoints, 1)
 
     :param params: Parameters for the distribution
-    :type: params: list or ndarray
+    :type params: list or ndarray
 
     **Output/Returns:**
 
@@ -291,15 +312,15 @@ def icdf(self, x, params=None):
     :type icdf_values: ndarray of shape (npoints, )
     """
     x = check_input_dims(x)
-    self.update_params(params, copula_params=None)
-    if isinstance(self.dist_name, str):
-        return subdistribution_icdf(dist_name=self.dist_name, x=x, params=self.params)
+    dist_object.update_params(params, copula_params=None)
+    if isinstance(dist_object.dist_name, str):
+        return subdistribution_icdf(dist_name=dist_object.dist_name, x=x, params=dist_object.params)
     else:
         raise AttributeError('Method icdf not defined for multivariate distributions.')
 
 
 # Method that generates RVs
-def rvs(self, nsamples=1, params=None):
+def rvs(dist_object, nsamples=1, params=None):
     """
     Sample iid realizations from the distribution - does not support distributions with copula.
 
@@ -308,37 +329,40 @@ def rvs(self, nsamples=1, params=None):
 
     **Input:**
 
+    :param dist_object: Object of the Distribution class defining the distribution
+    :type dist_object: Object of *UQpy.Distributions.Distribution*
+
     :param nsamples: An integer providing the desired number of iid samples to be drawn.
 
                      Default: 1
     :type nsamples:  int
 
     :param params: Parameters for the distribution
-    :type: params: list or ndarray
+    :type params: list or ndarray
 
     **Output:**
 
     :return rvs: Realizations from the distribution
     :rtype rvs: ndarray of shape (nsamples, dimension)
     """
-    self.update_params(params, copula_params=None)
-    if isinstance(self.dist_name, str):
-        return subdistribution_rvs(dist_name=self.dist_name, nsamples=nsamples, params=self.params)
-    elif isinstance(self.dist_name, list):
-        if len(self.params) != len(self.dist_name):
+    dist_object.update_params(params, copula_params=None)
+    if isinstance(dist_object.dist_name, str):
+        return subdistribution_rvs(dist_name=dist_object.dist_name, nsamples=nsamples, params=dist_object.params)
+    elif isinstance(dist_object.dist_name, list):
+        if len(dist_object.params) != len(dist_object.dist_name):
             raise ValueError('UQpy error: Inconsistent dimensions')
-        if not hasattr(self, 'copula'):
-            rvs = np.zeros((nsamples, len(self.dist_name)))
-            for i in range(len(self.dist_name)):
-                rvs[:, i] = subdistribution_rvs(dist_name=self.dist_name[i], nsamples=nsamples,
-                                                params=self.params[i])[:, 0]
+        if not hasattr(dist_object, 'copula'):
+            rvs = np.zeros((nsamples, len(dist_object.dist_name)))
+            for i in range(len(dist_object.dist_name)):
+                rvs[:, i] = subdistribution_rvs(dist_name=dist_object.dist_name[i], nsamples=nsamples,
+                                                params=dist_object.params[i])[:, 0]
             return rvs
         else:
             raise AttributeError('Method rvs not defined for distributions with copula.')
 
 
 # Define the function that computes the log pdf
-def log_pdf(self, x, params=None, copula_params=None):
+def log_pdf(dist_object, x, params=None, copula_params=None):
     """
     Evaluate the logarithm of the probability density function of a distribution at input points x.
 
@@ -348,14 +372,17 @@ def log_pdf(self, x, params=None, copula_params=None):
 
     **Input:**
 
+    :param dist_object: Object of the Distribution class defining the distribution
+    :type dist_object: Object of *UQpy.Distributions.Distribution*
+
     :param x: Points where to estimate the log-pdf.
     :type x: 2D ndarray (npoints, dimension)
 
     :param params: Parameters of the distribution.
-    :type: params: list or ndarray
+    :type params: list or ndarray
 
     :param copula_params: Parameters of the copula.
-    :type: copula_params: list or ndarray
+    :type copula_params: list or ndarray
 
     **Output/Returns:**
 
@@ -363,25 +390,25 @@ def log_pdf(self, x, params=None, copula_params=None):
     :type log_pdf_values: ndarray of shape (npoints, )
     """
     x = check_input_dims(x)
-    self.update_params(params, copula_params)
-    if isinstance(self.dist_name, str):
-        return subdistribution_log_pdf(dist_name=self.dist_name, x=x, params=self.params)
-    elif isinstance(self.dist_name, list):
-        if (x.shape[1] != len(self.dist_name)) or (len(self.params) != len(self.dist_name)):
+    dist_object.update_params(params, copula_params)
+    if isinstance(dist_object.dist_name, str):
+        return subdistribution_log_pdf(dist_name=dist_object.dist_name, x=x, params=dist_object.params)
+    elif isinstance(dist_object.dist_name, list):
+        if (x.shape[1] != len(dist_object.dist_name)) or (len(dist_object.params) != len(dist_object.dist_name)):
             raise ValueError('Inconsistent dimensions in inputs dist_name and params.')
         log_pdf_values = np.zeros((x.shape[0],))
-        for i in range(len(self.dist_name)):
-            log_pdf_values = log_pdf_values + subdistribution_log_pdf(dist_name=self.dist_name[i],
+        for i in range(len(dist_object.dist_name)):
+            log_pdf_values = log_pdf_values + subdistribution_log_pdf(dist_name=dist_object.dist_name[i],
                                                                       x=x[:, i, np.newaxis],
-                                                                      params=self.params[i])
-        if hasattr(self, 'copula'):
-            _, c_ = self.copula.evaluate_copula(x=x, dist_params=self.params,
-                                                copula_params=self.copula_params)
+                                                                      params=dist_object.params[i])
+        if hasattr(dist_object, 'copula'):
+            _, c_ = dist_object.copula.evaluate_copula(x=x, dist_params=dist_object.params,
+                                                copula_params=dist_object.copula_params)
             log_pdf_values += np.log(c_)
         return log_pdf_values
 
 
-def fit(self, x):
+def fit(dist_object, x):
     """
     Compute the MLE parameters of a distribution from data x - does not support distributions with copula.
 
@@ -389,6 +416,9 @@ def fit(self, x):
     dist_object.fit(x).
 
     **Input:**
+
+    :param dist_object: Object of the Distribution class defining the distribution
+    :type dist_object: Object of *UQpy.Distributions.Distribution*
 
     :param x: Vector of data x, contains iid samples from the distribution
     :type x: ndarray of shape (nsamples, dimension)
@@ -399,32 +429,35 @@ def fit(self, x):
     :type params_fit: ndarray
     """
     x = check_input_dims(x)
-    if isinstance(self.dist_name, str):
-        return subdistribution_fit(dist_name=self.dist_name, x=x)
-    elif isinstance(self.dist_name, list):
-        if x.shape[1] != len(self.dist_name):
+    if isinstance(dist_object.dist_name, str):
+        return subdistribution_fit(dist_name=dist_object.dist_name, x=x)
+    elif isinstance(dist_object.dist_name, list):
+        if x.shape[1] != len(dist_object.dist_name):
             raise ValueError('Inconsistent dimensions in inputs dist_name and x.')
-        if not hasattr(self, 'copula'):
+        if not hasattr(dist_object, 'copula'):
             params_fit = []
-            for i in range(len(self.dist_name)):
-                params_fit.append(subdistribution_fit(dist_name=self.dist_name[i], x=x[:, i, np.newaxis]))
+            for i in range(len(dist_object.dist_name)):
+                params_fit.append(subdistribution_fit(dist_name=dist_object.dist_name[i], x=x[:, i, np.newaxis]))
             return params_fit
         else:
             raise AttributeError('Method fit not defined for distributions with copula.')
 
 
 # Method that computes moments
-def moments(self, params=None):
+def moments(dist_object, params=None):
     """
-    Compute marginal moments (mean, variance, skewness, kurtosis) - does not support distributions with copula.
+    Compute marginal moments (mean, variance, skewness, kurtosis). Does not support distributions with copula.
 
     This is a utility function used to define the moments method of the Distribution class. This method is called as
     dist_object.moments(x, params). If given, input params overwrites the params attributes of the dist_object.
 
     **Input:**
 
+    :param dist_object: Object of the Distribution class defining the distribution
+    :type dist_object: Object of *UQpy.Distributions.Distribution*
+
     :param params: Parameters of the distribution
-    :type: params: list or ndarray
+    :type params: list or ndarray
 
     **Output/Returns:**
 
@@ -440,19 +473,19 @@ def moments(self, params=None):
     :param kurt: Kurtosis value(s).
     :type kurt: list
      """
-    self.update_params(params, copula_params=None)
-    if isinstance(self.dist_name, str):
-        return subdistribution_moments(dist_name=self.dist_name, params=self.params)
-    elif isinstance(self.dist_name, list):
-        if len(self.params) != len(self.dist_name):
+    dist_object.update_params(params, copula_params=None)
+    if isinstance(dist_object.dist_name, str):
+        return subdistribution_moments(dist_name=dist_object.dist_name, params=dist_object.params)
+    elif isinstance(dist_object.dist_name, list):
+        if len(dist_object.params) != len(dist_object.dist_name):
             raise ValueError('UQpy error: Inconsistent dimensions')
-        if not hasattr(self, 'copula'):
-            mean, var, skew, kurt = [0] * len(self.dist_name), [0] * len(self.dist_name), [0] * len(
-                self.dist_name), \
-                                    [0] * len(self.dist_name),
-            for i in range(len(self.dist_name)):
-                mean[i], var[i], skew[i], kurt[i] = subdistribution_moments(dist_name=self.dist_name[i],
-                                                                            params=self.params[i])
+        if not hasattr(dist_object, 'copula'):
+            mean, var, skew, kurt = [0] * len(dist_object.dist_name), [0] * len(dist_object.dist_name), [0] * len(
+                dist_object.dist_name), \
+                                    [0] * len(dist_object.dist_name),
+            for i in range(len(dist_object.dist_name)):
+                mean[i], var[i], skew[i], kurt[i] = subdistribution_moments(dist_name=dist_object.dist_name[i],
+                                                                            params=dist_object.params[i])
             return mean, var, skew, kurt
         else:
             raise AttributeError('Method moments not defined for distributions with copula.')
@@ -528,19 +561,20 @@ def exist_method(method, dist_name, has_copula):
     Check whether a method exists for a given distribution.
 
     In particular:
+
     - All methods exist for univariate scipy distributions,
     - Multivariate scipy distributions have pdf, logpdf, cdf and rvs,
     - icdf method does not exist for any multivariate distribution,
     - rvs, fit and moments method do not exist for multivariate distributions with copula.
-    - for any multivariate distribution, a method exist if it exists for all its marginals.
+    - For any multivariate distribution with independent marginals, a method exists if it exists for all its marginals.
     - For custom distributions, only methods provided within the corresponding .py file exist.
 
     **Inputs:**
 
-    :param method: name of the method to be checked (pdf, cdf, icdf, rvs, log_pdf, moments, fit)
+    :param method: Name of the method to be checked (pdf, cdf, icdf, rvs, log_pdf, moments, fit)
     :type method: str
 
-    :param dist_name: name of the marginal distribution(s)
+    :param dist_name: Name of the marginal distribution(s)
     :type dist_name: str or list of str
 
     :param has_copula: indicates whether a copula exists
@@ -548,7 +582,7 @@ def exist_method(method, dist_name, has_copula):
 
     **Output/Returns:**
 
-    :param method_exist: indicates whether the method exist for this distribution
+    :param method_exist: Indicates whether the method exists for this distribution
     :type method_exist: bool
     """
     if isinstance(dist_name, str):    # check the subdistribution
