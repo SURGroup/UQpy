@@ -146,8 +146,8 @@ class Distribution:
         if copula is not None:
             if not isinstance(copula, str):
                 raise ValueError('UQpy error: when provided, copula should be a string.')
-            if isinstance(dist_name, str):
-                raise ValueError('UQpy error: it does not make sense to define a copula when name is a single string.')
+            if isinstance(self.dist_name, str):
+                raise ValueError('UQpy error: dist_name must be a list of strings to define a copula.')
             self.copula = Copula(copula_name=copula, dist_name=self.dist_name)
 
         # Method that saves the parameters as attributes of the class if they are provided
@@ -240,10 +240,10 @@ def pdf(dist_object, x, params=None, copula_params=None):
         pdf_values = np.ones((x.shape[0],))
         for i in range(len(dist_object.dist_name)):
             pdf_values = pdf_values * subdistribution_pdf(dist_name=dist_object.dist_name[i], x=x[:, i, np.newaxis],
-                                                      params=dist_object.params[i])
+                                                          params=dist_object.params[i])
         if hasattr(dist_object, 'copula'):
             _, c_ = dist_object.copula.evaluate_copula(x=x, dist_params=dist_object.params,
-                                                copula_params=dist_object.copula_params)
+                                                       copula_params=dist_object.copula_params)
             pdf_values *= c_
         return pdf_values
 
@@ -349,8 +349,8 @@ def rvs(dist_object, nsamples=1, params=None):
 
     **Output:**
 
-    :return rvs: Realizations from the distribution
-    :rtype rvs: ndarray of shape (nsamples, dimension)
+    :return rv_s: Realizations from the distribution
+    :rtype rv_s: ndarray of shape (nsamples, dimension)
     """
     dist_object.update_params(params, copula_params=None)
     if isinstance(dist_object.dist_name, str):
@@ -359,11 +359,11 @@ def rvs(dist_object, nsamples=1, params=None):
         if len(dist_object.params) != len(dist_object.dist_name):
             raise ValueError('UQpy error: Inconsistent dimensions')
         if not hasattr(dist_object, 'copula'):
-            rvs = np.zeros((nsamples, len(dist_object.dist_name)))
+            rv_s = np.zeros((nsamples, len(dist_object.dist_name)))
             for i in range(len(dist_object.dist_name)):
-                rvs[:, i] = subdistribution_rvs(dist_name=dist_object.dist_name[i], nsamples=nsamples,
-                                                params=dist_object.params[i])[:, 0]
-            return rvs
+                rv_s[:, i] = subdistribution_rvs(dist_name=dist_object.dist_name[i], nsamples=nsamples,
+                                                 params=dist_object.params[i])[:, 0]
+            return rv_s
         else:
             raise AttributeError('Method rvs not defined for distributions with copula.')
 
@@ -410,7 +410,7 @@ def log_pdf(dist_object, x, params=None, copula_params=None):
                                                                       params=dist_object.params[i])
         if hasattr(dist_object, 'copula'):
             _, c_ = dist_object.copula.evaluate_copula(x=x, dist_params=dist_object.params,
-                                                copula_params=dist_object.copula_params)
+                                                       copula_params=dist_object.copula_params)
             log_pdf_values += np.log(c_)
         return log_pdf_values
 
@@ -798,20 +798,20 @@ def subdistribution_rvs(dist_name, nsamples, params):
     # If it is a supported scipy distribution:
     if dist_name.lower() in (list_univariates + list_multivariates):
         d, kwargs = scipy_distributions(dist_name=dist_name, params=params)
-        rvs = d.rvs(size=nsamples, **kwargs)
+        rv_s = d.rvs(size=nsamples, **kwargs)
     # Otherwise it must be a file
     else:
         custom_dist = importlib.import_module(dist_name)
         tmp = getattr(custom_dist, 'rvs')
-        rvs = tmp(nsamples=nsamples, params=params)
-    if isinstance(rvs, (float, int)):
-        return np.array([[rvs]])    # one sample in a 1d space
-    if len(rvs.shape) == 1:
+        rv_s = tmp(nsamples=nsamples, params=params)
+    if isinstance(rv_s, (float, int)):
+        return np.array([[rv_s]])    # one sample in a 1d space
+    if len(rv_s.shape) == 1:
         if nsamples == 1:
-            return rvs[np.newaxis, :]    # one sample in a d-dimensional space
+            return rv_s[np.newaxis, :]    # one sample in a d-dimensional space
         else:
-            return rvs[:, np.newaxis]    # several samples in a one-dimensional space
-    return rvs
+            return rv_s[:, np.newaxis]    # several samples in a one-dimensional space
+    return rv_s
 
 
 def subdistribution_log_pdf(dist_name, x, params):
