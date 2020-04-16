@@ -1047,8 +1047,8 @@ class SubsetSimulation:
 ########################################################################################################################
 class TaylorSeries:
 
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=100, df_step=None, corr=None,
-                 model=None, df_method=None, tol=None):
+    def __init__(self, dimension=None, dist_name=None, dist_params=None, n_iter=100,  corr=None, model=None,
+                 tol=1e-3,  sorm=False):
         """
         Perform First and Second Order Reliability (FORM/SORM) methods.
 
@@ -1058,7 +1058,10 @@ class TaylorSeries:
 
         **References:**
 
-        1. , “ ”,
+        1. R. Rackwitz and R. Fiessler, “Structural reliability under combined random load sequences”,
+           Structural Safety, Vol. 22, no. 1, pp: 27–60, 1978.
+        2. K. Breitung, “Asymptotic approximations for multinormal integrals”, J. Eng. Mech., ASCE, Vol. 110, no. 3,
+           pp: 357–367, 1984.
 
         **Input:**
 
@@ -1077,12 +1080,6 @@ class TaylorSeries:
                        Default: 100
         :type n_iter: int
 
-        :param df_method: Method for finite difference used for the estimation of the gradient
-        :type df_method: str
-
-        :param df_step: Step for estimating the gradient of a function
-        :type df_step: float/list of floats
-
         :param tol: Convergence threshold for FORM
 
                     Default: 0.001
@@ -1090,6 +1087,11 @@ class TaylorSeries:
 
         :param corr: Correlation structure of the random vector (See Transformation class).
         :type corr: ndarray
+
+        :param sorm: Perform SORM approximation of the failure probability.
+
+                    Default: False
+        :type sorm: boolean
 
         **Attributes:**
 
@@ -1107,6 +1109,9 @@ class TaylorSeries:
 
         :param self.Prob_FORM: First Order probability of failure
         :type self.Prob_FORM: float
+
+        :param self.Prob_SORM: Second Order probability of failure (optional)
+        :type self.Prob_SORM: float
 
         :param self.iterations: Number of model evaluations
         :type self.iterations: int
@@ -1142,31 +1147,28 @@ class TaylorSeries:
         self.dist_params = dist_params
         self.n_iter = n_iter
         self.corr = corr
-        self.df_method = df_method
-        self.df_step = df_step
         self.model = model
         self.tol = tol
-        if self.tol is None:
-            self.tol = 1e-3
+        self.sorm = sorm
         self.distribution = [None] * self.dimension
         for j in range(dimension):
             self.distribution[j] = Distribution(self.dist_name[j])
 
-        # Set initial values to np.inf
-        self.HL_beta = np.inf
-        self.DesignPoint_U = np.inf
-        self.DesignPoint_X = np.inf
-        self.alpha = np.inf
-        self.Prob_FORM = np.inf
-        self.iterations = np.inf
-        self.u_record = np.inf
-        self.x_record = np.inf
-        self.dg_record = np.inf
-        self.alpha_record = np.inf
-        self.u_check = np.inf
-        self.g_check = np.inf
-        self.g_record = np.inf
-
+        # Set initial values to None
+        self.HL_beta = None
+        self.DesignPoint_U = None
+        self.DesignPoint_X = None
+        self.alpha = None
+        self.Prob_FORM = None
+        self.iterations = None
+        self.u_record = None
+        self.x_record = None
+        self.dg_record = None
+        self.alpha_record = None
+        self.u_check = None
+        self.g_check = None
+        self.g_record = None
+        self.df_step = 0.001
         if self.model is None:
             raise RuntimeError("In order to use class TaylorSeries a model of type RunModel is required.")
 
@@ -1175,8 +1177,6 @@ class TaylorSeries:
         print('Running FORM...')
 
         # initialization
-        max_iter = self.n_iter
-        tol = self.tol
         u_record = list()
         x_record = list()
         g_record = list()
@@ -1201,25 +1201,27 @@ class TaylorSeries:
             u = Nataf.transform_x_to_u(seed.reshape(1, -1), self.corr_z, self.distribution, self.dist_params,
                                        jacobian=False)
         else:
-            u = np.zeros(self.dimension)
+            u = Nataf.transform_x_to_u(np.zeros(shape=(1, self.dimension)), self.corr_z, self.distribution,
+                                       self.dist_params, jacobian=False)
 
         k = 0
         while conv_flag == 0:
             # transform the initial point in the original space:  U to X
             x, jacobi_u_to_x = Nataf.transform_u_to_x(u.reshape(1, -1), self.corr_z, self.distribution,
                                                       self.dist_params, jacobian=True)
-            jacobi_x_to_u = np.linalg.inv(jacobi_u_to_x)
+            #jacobi_x_to_u = np.linalg.inv(jacobi_u_to_x[0])
 
             # 1. evaluate Limit State Function at the point
             self.model.run(x.reshape(1, -1), append_samples=False)
             qoi = self.model.qoi_list[0]
             g_record.append(qoi)
             # 2. evaluate Limit State Function gradient at point u_k and direction cosines
-            dg = self.gradient(df_method=self.df_method, order='first', samples=x.reshape(1, -1),
-                               dimension=self.dimension, df_step=self.df_step, model=self.model,
+            dg = self.gradient(order='first', samples=u.reshape(1, -1),
+                               dimension=self.dimension, df_step=self.df_step, model=self.model, corr=self.corr_z,
                                dist_params=self.dist_params,
-                               dist_name=self.dist_name)
-            dg_record.append(np.dot(dg[0, :], jacobi_x_to_u))
+                               dist_name=self.dist_name, run_form=True)
+            #dg_record.append(np.dot(dg[0, :], jacobi_x_to_u)) # use this if the input in gradient function is x
+            dg_record.append(dg[0, :])
             norm_grad = np.linalg.norm(dg_record[k])
             alpha = - dg_record[k] / norm_grad
             alpha_record.append(alpha)
@@ -1234,9 +1236,9 @@ class TaylorSeries:
                                           * alpha.reshape(-1, 1)))
             g_check.append(abs(qoi / g0))
 
-            if u_check[k] <= tol and g_check[k] <= tol:
+            if u_check[k] <= self.tol and g_check[k] <= self.tol:
                 conv_flag = 1
-            if k == max_iter:
+            if k == self.n_iter:
                 conv_flag = 1
 
             u_record.append(u)
@@ -1248,7 +1250,7 @@ class TaylorSeries:
                 u = u_new
                 k = k + 1
 
-        if k == max_iter:
+        if k == self.n_iter:
             print('Maximum number of iterations was reached before convergence.')
         else:
             self.HL_beta = np.dot(u, alpha.T)
@@ -1265,14 +1267,43 @@ class TaylorSeries:
             self.u_check = u_check
             self.g_check = g_check
 
+        if self.sorm is True:
+            print('Calculating SORM correction...')
+
+            matrix_a = np.fliplr(np.eye(self.dimension))
+            matrix_a[:, 0] = self.alpha
+
+            def normalize(v):
+                return v / np.sqrt(v.dot(v))
+
+            q = np.zeros(shape=(self.dimension, self.dimension))
+            q[:, 0] = normalize(matrix_a[:, 0])
+
+            for i in range(1, self.dimension):
+                ai = matrix_a[:, i]
+                for j in range(0, i):
+                    aj = matrix_a[:, j]
+                    t = ai.dot(aj)
+                    ai = ai - t * aj
+                q[:, i] = normalize(ai)
+
+            r1 = np.fliplr(q).T
+            hessian_g = self.hessian(self.dimension, self.DesignPoint_U, self.df_step, self.model,
+                                     self.corr_z, self.dist_params, self.dist_name, self.g_record[-1])
+            matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(self.dg_record[-1])
+            kappa = np.linalg.eig(matrix_b[:self.dimension-1, :self.dimension-1])
+            self.Prob_SORM = stats.norm.cdf(-self.HL_beta) * np.prod(1 / (1 + self.HL_beta * kappa[0]) ** 0.5)
+            self.beta_SORM = -stats.norm.ppf(self.Prob_SORM)
+
     @staticmethod
-    def gradient(samples=None, dist_params=None, dist_name=None, model=None, dimension=None, df_step=None, order=None,
-                 df_method=None, scale=True):
+    def gradient(samples=None, dist_name=None, dist_params=None, order='first', dimension=None, corr=None, model=None,
+                 df_step=None, run_form=False, read_qoi=None):
         """
         Compute the gradient of a model
 
-        A function to estimate the gradients (1st, 2nd, mixed) of a function using finite differences.
-        This is a static method
+        A function to estimate the gradients (1st, 2nd, mixed) of a function using a finite difference scheme. First
+        order gradients are calculated using forward finite differences. This is a static method, part of the
+        TaylorSeries class.
 
         **Input:**
 
@@ -1286,22 +1317,29 @@ class TaylorSeries:
         :type dist_params: list of strings
 
         :param order: The type of derivatives to calculate (1st order, second order, mixed).
+
+                      Default: 'first'
         :type order: str
 
         :param dimension: Number of random variables.
         :type dimension: int
 
-        :param df_method: Finite difference method (Options: Central, backwards, forward).
-        :type df_method: str
-
         :param df_step: step for the finite difference.
         :type df_step: float
 
-        :param model: An object of type RunModel
+        :param model: The model of which the gradient will be estimated.
         :type model: RunModel object
 
-        :param scale: Uses the dist_name and dist_params to scale it in the original parameter space
-        :type scale: boolean
+        :param run_form: Use gradient function in the framework of FORM reliability method.
+
+                        Default: False
+        :type run_form: boolean
+
+        :param read_qoi: Value of the model provided manually.
+        :type read_qoi: float
+
+        :param corr: Correlation between random variables (mandatory when form=True)
+        :type corr: ndarray
 
         **Output/Returns:**
 
@@ -1314,20 +1352,19 @@ class TaylorSeries:
         :param d2u_dij: Vector of mixed gradients
         :type: ndarray
 
+        **Author:**
+
+        Authors: Dimitris G. Giovanis
+        Last Modified: 4/16/2020 by Dimitris G. Giovanis
+
         """
         samples = np.atleast_2d(samples)
-
-        if order is None:
-            raise ValueError('Exit code: Provide type of derivatives: first, second or mixed.')
 
         if dimension is None:
             raise ValueError('Error: Dimension must be defined')
 
-        if df_method is None:
-            df_method = 'Central'
-
         if df_step is None:
-            df_step = [0.1] * dimension
+            df_step = [0.001] * dimension
         elif isinstance(df_step, float):
             df_step = [df_step] * dimension
         elif isinstance(df_step, list):
@@ -1338,8 +1375,10 @@ class TaylorSeries:
 
         if isinstance(model, Krig):
             qoi = model.interpolate(samples)
-        elif isinstance(model, RunModel):
-            qoi = model.qoi_list
+        elif isinstance(model, RunModel) and read_qoi is None:
+            qoi = model.qoi_list[0]
+        elif isinstance(model, RunModel) and read_qoi is not None:
+            qoi = read_qoi
         elif isinstance(model, (types.FunctionType, types.MethodType)):
             qoi = model(samples)
         else:
@@ -1359,83 +1398,125 @@ class TaylorSeries:
 
         f_eval = func(m=model)
 
-        scale_ = np.ones(dimension)
-        if scale:
+        if run_form:
+            distribution = list()
             for j in range(dimension):
-                dist = Distribution(dist_name[j])
-                mean, var, skew, kurt = dist.moments(dist_params[j])
-                scale_[j] = np.sqrt(var)
+                distribution.append(Distribution(dist_name[j]))
 
-        if order == 'first' or order == 'second':
+        if order.lower() == 'first':
             du_dj = np.zeros([samples.shape[0], dimension])
+
+            for ii in range(dimension):
+                eps_i = df_step[ii]
+                u_i1_j = samples.copy()
+                u_i1_j[:, ii] = u_i1_j[:, ii] + eps_i
+
+                if run_form is True:
+                    temp_x_i1_j = Nataf.transform_u_to_x(u_i1_j, corr, distribution, dist_params,
+                                                         jacobian=False)[0]
+                    x_i1_j = temp_x_i1_j[0].reshape(1, -1)
+
+                    qoi_plus = f_eval(x_i1_j)
+                else:
+                    qoi_plus = f_eval(u_i1_j)
+
+                du_dj[:, ii] = ((qoi_plus[0] - qoi) / eps_i)
+
+            return du_dj
+
+        elif order.lower() =='second':
+            print('Calculating second order derivatives..')
             d2u_dj = np.zeros([samples.shape[0], dimension])
             for ii in range(dimension):
-                eps_i = df_step[ii] * scale_[ii]
-                x_i1_j = samples.copy()
-                x_i1_j[:, ii] = x_i1_j[:, ii] + eps_i
-                x_1i_j = samples.copy()
-                x_1i_j[:, ii] = x_1i_j[:, ii] - eps_i
+                u_i1_j = samples.copy()
+                u_i1_j[:, ii] = u_i1_j[:, ii] + df_step[ii]
+                u_1i_j = samples.copy()
+                u_1i_j[:, ii] = u_1i_j[:, ii] - df_step[ii]
 
-                if df_method.lower() == 'Forward':
+                if run_form is True:
+                    temp_x_i1_j = Nataf.transform_u_to_x(u_i1_j, corr, distribution, dist_params,
+                                                         jacobian=False)[0]
+                    x_i1_j = temp_x_i1_j[0].reshape(1, -1)
+
+                    temp_x_1i_j = Nataf.transform_u_to_x(u_1i_j, corr, distribution, dist_params,
+                                                         jacobian=False)[0]
+                    x_1i_j = temp_x_1i_j[0].reshape(1, -1)
+
                     qoi_plus = f_eval(x_i1_j)
-                    du_dj[:, ii] = ((qoi_plus - qoi) / eps_i)[:, 0]
-                elif df_method.lower() == 'Backwards':
                     qoi_minus = f_eval(x_1i_j)
-                    du_dj[:, ii] = ((qoi - qoi_minus) / eps_i)[:, 0]
                 else:
-                    qoi_plus = f_eval(x_i1_j)
-                    qoi_minus = f_eval(x_1i_j)
-                    du_dj[:, ii] = ((qoi_plus - qoi_minus) / (2 * eps_i))[:, 0]
-                    if order == 'second':
-                        d2u_dj[:, ii] = ((qoi_plus - 2 * qoi + qoi_minus) / (eps_i ** 2))[:, 0]
+                    qoi_plus = f_eval(u_i1_j)
+                    qoi_minus = f_eval(u_1i_j)
+                d2u_dj[:, ii] = ((qoi_plus[0] - 2 * qoi + qoi_minus[0]) / (df_step[ii] *df_step[ii]))
 
-            if order == 'first':
-                return du_dj
-            if order == 'second':
-                return np.vstack([du_dj, d2u_dj])
+            return d2u_dj
 
-        elif order == 'mixed':
+        elif order.lower() == 'mixed':
+
             import itertools
             range_ = list(range(dimension))
             d2u_dij = np.zeros([samples.shape[0], int(dimension * (dimension - 1) / 2)])
             count = 0
             for i in itertools.combinations(range_, 2):
-                x_i1_j1 = samples.copy()
-                x_i1_1j = samples.copy()
-                x_1i_j1 = samples.copy()
-                x_1i_1j = samples.copy()
+                u_i1_j1 = samples.copy()
+                u_i1_1j = samples.copy()
+                u_1i_j1 = samples.copy()
+                u_1i_1j = samples.copy()
 
-                eps_i1_0 = df_step[i[0]] * scale_[i[0]]
-                eps_i1_1 = df_step[i[1]] * scale_[i[1]]
+                eps_i1_0 = df_step[i[0]]
+                eps_i1_1 = df_step[i[1]]
 
-                x_i1_j1[:, i[0]] += eps_i1_0
-                x_i1_j1[:, i[1]] += eps_i1_1
+                u_i1_j1[:, i[0]] += eps_i1_0
+                u_i1_j1[:, i[1]] += eps_i1_1
 
-                x_i1_1j[:, i[0]] += eps_i1_0
-                x_i1_1j[:, i[1]] -= eps_i1_1
+                u_i1_1j[:, i[0]] += eps_i1_0
+                u_i1_1j[:, i[1]] -= eps_i1_1
 
-                x_1i_j1[:, i[0]] -= eps_i1_0
-                x_1i_j1[:, i[1]] += eps_i1_1
+                u_1i_j1[:, i[0]] -= eps_i1_0
+                u_1i_j1[:, i[1]] += eps_i1_1
 
-                x_1i_1j[:, i[0]] -= eps_i1_0
-                x_1i_1j[:, i[1]] -= eps_i1_1
+                u_1i_1j[:, i[0]] -= eps_i1_0
+                u_1i_1j[:, i[1]] -= eps_i1_1
 
-                qoi_0 = f_eval(x_i1_j1)
-                qoi_1 = f_eval(x_i1_1j)
-                qoi_2 = f_eval(x_1i_j1)
-                qoi_3 = f_eval(x_1i_1j)
+                if run_form:
+                    temp_x_i1_j1 = Nataf.transform_u_to_x(u_i1_j1, corr, distribution, dist_params,
+                                                          jacobian=False)[0]
+                    x_i1_j1 = temp_x_i1_j1[0].reshape(1, -1)
 
-                d2u_dij[:, count] = ((qoi_0 - qoi_1 - qoi_2 + qoi_3) / (4 * eps_i1_0 * eps_i1_1))[:, 0]
+                    temp_x_i1_1j = Nataf.transform_u_to_x(u_i1_1j, corr, distribution, dist_params,
+                                                          jacobian=False)[0]
+                    x_i1_1j = temp_x_i1_1j[0].reshape(1, -1)
+
+                    temp_x_1i_j1 = Nataf.transform_u_to_x(u_1i_j1, corr, distribution, dist_params,
+                                                          jacobian=False)[0]
+                    x_1i_j1 = temp_x_1i_j1[0].reshape(1, -1)
+
+                    temp_x_1i_1j = Nataf.transform_u_to_x(u_1i_1j, corr, distribution, dist_params,
+                                                          jacobian=False)[0]
+                    x_1i_1j = temp_x_1i_1j[0].reshape(1, -1)
+
+                    qoi_0 = f_eval(x_i1_j1)
+                    qoi_1 = f_eval(x_i1_1j)
+                    qoi_2 = f_eval(x_1i_j1)
+                    qoi_3 = f_eval(x_1i_1j)
+                else:
+                    qoi_0 = f_eval(u_i1_j1)
+                    qoi_1 = f_eval(u_i1_1j)
+                    qoi_2 = f_eval(u_1i_j1)
+                    qoi_3 = f_eval(u_1i_1j)
+
+                d2u_dij[:, count] = ((qoi_0[0] + qoi_3[0] - qoi_1[0] - qoi_2[0]) / (4 * eps_i1_0 * eps_i1_1))
+
                 count += 1
-
             return d2u_dij
 
     @staticmethod
-    def hessian(dimension=None, mixed_der=None, der=None):
+    def hessian(dimension, samples, df_step, model, corr, dist_params, dist_name, qoi):
         """
         Calculate the Hessian.
 
-        The function to calculate the hessian matrix with finite differences. This  is a static method, part of the
+        The function to calculate the hessian matrix  with finite differences. The Hessian matrix is a  square matrix
+        of second-order partial derivatives of a scalar-valued function. This is a static method, part of the
         TaylorSeries class.
 
         **Input:**
@@ -1443,11 +1524,26 @@ class TaylorSeries:
         :param dimension: Number of random variables
         :type dimension: int
 
-        :param mixed_der: Matrix of mixed derivatives
-        :type mixed_der: ndarray
+        :param samples: The sample values at which the hessian of the model will be evaluated.
+        :type samples: ndarray
 
-        :param der: Matrix of derivatives
-        :type der: ndarray
+        :param df_step: step for the finite difference.
+        :type df_step: float
+
+        :param model: The model of which the Hessian will be estimated.
+        :type model: RunModel object
+
+        :param corr: Correlation between random variables (mandatory when form=True)
+        :type corr: ndarray
+
+        :param dist_params: Probability distribution model parameters for each random variable(see Distributions class).
+        :type dist_params: list
+
+        :param dist_name: Probability distribution name (see Distributions class).
+        :type dist_params: list of strings
+
+        :param qoi: Value of the model provided manually.
+        :type qoi: float
 
         **Output/Returns:**
 
@@ -1458,15 +1554,23 @@ class TaylorSeries:
 
         Authors: Dimitris G. Giovanis
 
-        Last Modified: 4/12/2020 by Dimitris G. Giovanis
+        Last Modified: 4/16/2020 by Dimitris G. Giovanis
 
         """
-        hessian = np.diag(der)
+
+        dg_second = TaylorSeries.gradient(order='second', samples=samples.reshape(1, -1),
+                                          dimension=dimension, df_step=df_step, model=model, dist_params=dist_params,
+                                          dist_name=dist_name, corr=corr, read_qoi=qoi, run_form=True)
+
+        dg_mixed = TaylorSeries.gradient(order='mixed', samples=samples.reshape(1, -1), dimension=dimension,
+                                         df_step=df_step, model=model, dist_params=dist_params, dist_name=dist_name,
+                                          read_qoi=qoi, corr=corr, run_form=True)
+        hessian = np.diag(dg_second[0, :])
         import itertools
         range_ = list(range(dimension))
         add_ = 0
         for i in itertools.combinations(range_, 2):
-            hessian[i[0], i[1]] = mixed_der[add_]
+            hessian[i[0], i[1]] = dg_mixed[add_]
             hessian[i[1], i[0]] = hessian[i[0], i[1]]
             add_ += 1
 
