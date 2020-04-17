@@ -22,11 +22,9 @@ RunModel contains a single class, also called RunModel that is used to execute c
 points. RunModel may be used to execute Python models or third-party software models and is capable of running models
 serially or in parallel on both local machines or HPC clusters.
 
-List of Classes:
-    RunModel - Class for execution of a computational model
+The module currently contains the following classes:
 
-List of Methods
-    RunModel.
+* RunModel - Class for execution of a computational model
 """
 
 import os
