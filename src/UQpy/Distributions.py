@@ -141,6 +141,7 @@ class Distribution:
         else:
             raise TypeError('dist_name should be a (list of) string(s)')
         self.dist_name = dist_name
+        self.params = None
 
         # Instantiate copula
         if copula is not None:
@@ -149,6 +150,7 @@ class Distribution:
             if isinstance(self.dist_name, str):
                 raise ValueError('UQpy error: dist_name must be a list of strings to define a copula.')
             self.copula = Copula(copula_name=copula, dist_name=self.dist_name)
+            self.copula_params = None
 
         # Method that saves the parameters as attributes of the class if they are provided
         self.update_params(params, copula_params)
