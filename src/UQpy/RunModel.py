@@ -272,26 +272,25 @@ class RunModel:
         self.cores_per_task = cores_per_task
         # Number of nodes
         self.nodes = nodes
+        self.template_text = ''
+        self.output_module = None
+        self.python_model = None
 
         # If running on cluster or not
         self.cluster = cluster
 
         # Check if samples are provided
         self.samples = []
+        self.qoi_list = []
+        self.nexist = 0
         if samples is None:
             if self.verbose:
                 print("No samples. Creating the object alone.")
             self.nsim = 0
         elif isinstance(samples, (list, np.ndarray)):
             self.run(samples)
-            # self.samples = samples
-            # self.nsim = len(self.samples)  # This assumes that the number of rows is the number of simulations.
         else:
             raise ValueError("Samples must be passed as a list or numpy ndarray")
-
-        # If samples are provided, invoke the run method.
-        # if self.samples is not None:
-        #     self.run()
 
         # Return to current directory
         if self.model_dir is not None:
@@ -329,7 +328,7 @@ class RunModel:
             self.samples = []
 
         # Check if samples already exist, if yes append new samples to old ones
-        if self.samples == []:  # There are currently no samples
+        if not self.samples:  # There are currently no samples
             self.nexist = 0
             self.qoi_list = [None] * self.nsim
             if type(samples) == list:
@@ -452,6 +451,7 @@ class RunModel:
 
         for i in range(self.nexist, self.nexist + self.nsim):
             # Create a directory for each model run
+            # TODO: Make the next 11 lines into a function
             work_dir = os.path.join(os.getcwd(), "run_" + str(i) + '_' + ts)
             os.makedirs(work_dir)
             # Copy files from the model list to model run directory
@@ -508,14 +508,15 @@ class RunModel:
             print('\nPerforming serial execution of the model without template input.\n')
 
         # Run python model
+        # TODO: Aakash - Make sure we are passing only np arrays into the model calls
         exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
         for i in range(self.nsim):
             if isinstance(self.samples, list):
                 sample_to_send = self.samples[i + self.nexist]
             elif isinstance(self.samples, np.ndarray):
                 sample_to_send = self.samples[i + self.nexist]
-                # self.model_output = eval(self.model_object_name + '(self.samples[i])')
             if len(self.python_kwargs) == 0:
+                # TODO: Aakash - See if we can use sample_to_send directly
                 self.model_output = eval(self.model_object_name + '(sample_to_send)')
             else:
                 self.model_output = eval(self.model_object_name + '(sample_to_send, **self.python_kwargs)')
@@ -534,31 +535,24 @@ class RunModel:
         """
         if self.verbose:
             print('\nPerforming parallel execution of the model without template input.\n')
-        import concurrent.futures
         import multiprocessing
         import UQpy.Utilities as Utilities
-        # Try processes # Does not work - raises TypeError: can't pickle module objects
-        # indices = range(self.nsim)
-        # with concurrent.futures.ProcessPoolExecutor() as executor:
-        #     for index, res in zip(indices, executor.map(self._run_parallel_python, self.samples)):
-        #         self.qoi_list[index] = res
-
-        # Try threads - this works but is slow
 
         sample = []
         pool = multiprocessing.Pool(processes=self.ntasks)
+        # TODO: Aakash - Make sure we are passing only np arrays into the model calls
         for i in range(self.nsim):
             if isinstance(self.samples, list):
                 sample_to_send = np.atleast_2d(self.samples[i + self.nexist])
             elif isinstance(self.samples, np.ndarray):
                 sample_to_send = np.atleast_2d(self.samples[i + self.nexist])
+            # TODO: Aakash - Talk to Audrey about this
             # if len(self.python_kwargs) == 0:
             #     sample.append([self.model_script, self.model_object_name, self.samples[i + self.nexist]])
             # else:
-            sample.append([self.model_script, self.model_object_name, sample_to_send,
-                           self.python_kwargs])
+            sample.append([self.model_script, self.model_object_name, sample_to_send, self.python_kwargs])
 
-        results = pool.starmap(Utilities._run_parallel_python, sample)
+        results = pool.starmap(Utilities.run_parallel_python, sample)
 
         for i in range(self.nsim):
             if self.model_is_class:
@@ -567,60 +561,6 @@ class RunModel:
                 self.qoi_list[i + self.nexist] = results[i]
 
         pool.close()
-
-        # with concurrent.futures.ThreadPoolExecutor(max_workers=self.ntasks) as executor:
-        #     index = 0
-        #     # res = {executor.submit(self._run_parallel_python, sample): sample for sample in self.samples}
-        #     res = executor.map(self._run_parallel_python, self.samples, chunksize=self.ntasks)
-        #     for future in concurrent.futures.as_completed(res):
-        #         resnum = res[future]
-        #         try:
-        #             data = future.result()
-        #             print(data)
-        #         except Exception as exc:
-        #             print('%r generated an exception: %s' % (resnum, exc))
-        #         else:
-        #             if self.verbose:
-        #                 print(index)
-        #             self.qoi_list[index] = data
-        #         index += 1
-
-        # from multiprocessing import Process
-        # from multiprocessing import Queue
-        #
-        # # Initialize the parallel processing queue and processes
-        # que = Queue()
-        # jobs = [Process(target=self._run_parallel_python_chunked,
-        #                 args=([self.samples[index*self.ntasks:(index+1)*self.ntasks-1]]))
-        #         for index in range(self.ntasks)]
-        # # Start the parallel processes.
-        # for j in jobs:
-        #     j.start()
-        # for j in jobs:
-        #     j.join()
-        #
-        # # Collect the results from the processes and sort them into the original sample order.
-        # results = [que.get(j) for j in jobs]
-        # for i in range(self.nsim):
-        #     k = 0
-        #     for j in results[i][0]:
-        #         self.qoi_list[j] = results[i][1][k]
-        #         k = k + 1
-
-    # def _run_parallel_python(self, sample):
-    #     """
-    #     Execute the python model in parallel
-    #     :param sample: One sample point where the model has to be evaluated
-    #     :return:
-    #     """
-    #     exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
-    #     parallel_output = eval(self.model_object_name + '(sample)')
-    #     if self.model_is_class:
-    #         par_res = parallel_output.qoi
-    #     else:
-    #         par_res = parallel_output
-    #
-    #     return par_res
 
     ####################################################################################################################
     def _input_serial(self, index):
@@ -634,12 +574,11 @@ class RunModel:
         """
         # Create new text to write to file
         self.new_text = self._find_and_replace_var_names_with_values(var_names=self.var_names,
-                                                                     samples=self.samples[index],
+                                                                     samples=self.samples[index+self.nexist],
                                                                      template_text=self.template_text,
-                                                                     index=index,
-                                                                     user_format='{:.4E}')
+                                                                     index=index+self.nexist)
         # Write the new text to the input file
-        self._create_input_files(file_name=self.input_template, num=index, text=self.new_text,
+        self._create_input_files(file_name=self.input_template, num=index+self.nexist, text=self.new_text,
                                  new_folder='InputFiles')
 
     def _execute_serial(self, index):
@@ -684,13 +623,12 @@ class RunModel:
         for i in range(self.nsim):
             # Create new text to write to file
             new_text = self._find_and_replace_var_names_with_values(var_names=self.var_names,
-                                                                    samples=self.samples[i],
+                                                                    samples=self.samples[i+self.nexist],
                                                                     template_text=self.template_text,
-                                                                    index=i,
-                                                                    user_format='{:.4E}')
-            folder_to_write = 'run_' + str(i) + '_' + timestamp + '/InputFiles'
+                                                                    index=i+self.nexist)
+            folder_to_write = 'run_' + str(i+self.nexist) + '_' + timestamp + '/InputFiles'
             # Write the new text to the input file
-            self._create_input_files(file_name=self.input_template, num=i, text=new_text,
+            self._create_input_files(file_name=self.input_template, num=i+self.nexist, text=new_text,
                                      new_folder=folder_to_write)
         if self.verbose:
             print('Created ' + str(self.nsim) + ' input files in the directory ./InputFiles. \n')
@@ -744,7 +682,8 @@ class RunModel:
 
     ####################################################################################################################
     # Helper functions
-    def _create_input_files(self, file_name, num, text, new_folder='InputFiles'):
+    @staticmethod
+    def _create_input_files(file_name, num, text, new_folder='InputFiles'):
         """
         Create input files using filename, index, text
 
@@ -772,7 +711,7 @@ class RunModel:
             f.write(text)
         return
 
-    def _find_and_replace_var_names_with_values(self, var_names, samples, template_text, index, user_format='{:.4E}'):
+    def _find_and_replace_var_names_with_values(self, var_names, samples, template_text, index):
         """
         Replace placeholders containing variable names in template input text with sample values.
 
@@ -792,6 +731,8 @@ class RunModel:
         :type index: int
         """
         # TODO: deal with cases which have both var1 and var11
+        # TODO: Aakash - Update formatting specifications here
+        # TODO: Aakash - Check writing only specific components & build an example
         new_text = template_text
         for j in range(len(var_names)):
             string_regex = re.compile(r"<" + var_names[j] + r".*?>")
@@ -811,8 +752,8 @@ class RunModel:
                     to_add += str(temp[-1])
                 else:
                     to_add = str(temp)
-                new_text = new_text[0:new_text.index(string)] + to_add \
-                           + new_text[(new_text.index(string) + len(string)):]
+                new_text = new_text[0:new_text.index(string)] + to_add + new_text[(new_text.index(string) +
+                                                                                   len(string)):]
                 count += 1
             if self.verbose:
                 if index == 0:
@@ -824,7 +765,8 @@ class RunModel:
                             "Found " + str(count) + " instance of variable: '" + var_names[j] + "' in the input file.")
         return new_text
 
-    def _is_list_of_strings(self, lst):
+    @staticmethod
+    def _is_list_of_strings(lst):
         """
         Check if input list contains only strings
 
@@ -937,9 +879,3 @@ class RunModel:
                 else:
                     print('You specified the output object name as: ' + str(self.output_object_name))
                     raise ValueError("The file does not contain an object which was specified as the output processor.")
-
-    ####################################################################################################################
-    # Unused functions
-    def _collect_output(self, qoi_list, qoi_output, pos):
-        qoi_list[pos] = qoi_output
-        return qoi_list
