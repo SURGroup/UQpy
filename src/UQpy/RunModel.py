@@ -22,11 +22,9 @@ RunModel contains a single class, also called RunModel that is used to execute c
 points. RunModel may be used to execute Python models or third-party software models and is capable of running models
 serially or in parallel on both local machines or HPC clusters.
 
-List of Classes:
-    RunModel - Class for execution of a computational model
+The module currently contains the following classes:
 
-List of Methods
-    RunModel.
+* RunModel - Class for execution of a computational model
 """
 
 import os
@@ -54,8 +52,7 @@ class RunModel:
 
     :param samples: Samples to be passed as inputs to the model. Samples can be passed either as an ndarray or a list.
                     If an ndarray is passed, each row of the ndarray contains one set of samples required for one
-                    execution of the
-                    model. (The first dimension of the ndarray is considered to be the number of rows.)
+                    execution of the model. (The first dimension of the ndarray is considered to be the number of rows.)
                     If a list is passed, each item of the list contains one set of samples required for one execution of
                     the model.
     :type samples: ndarray or list
@@ -67,90 +64,67 @@ class RunModel:
 
     :param model_object_name: In the Python model workflow, model_object_name specifies the name of the function or
                               class within model_script which executes the model. If there is only one function or class
-                              in the model_script, then
-                              it is not necessary to specify the model_object_name. If there are multiple objects within
-                              the model_script, then
-                              model_object_name must be specified.
+                              in the model_script, then it is not necessary to specify the model_object_name. If there
+                              are multiple objects within the model_script, then model_object_name must be specified.
                               model_object_name is not used in the third-party software model workflow.
     :type model_object_name: str
 
     :param input_template: The name of the template input file which will be used to generate input files for each
                            run of the model. When operating RunModel with a third-party software model, input_template
-                           must be specified.
-                           input_template is not used in the Python model workflow.
+                           must be specified. input_template is not used in the Python model workflow.
     :type input_template: str
 
     :param var_names: A list containing the names of the variables present in the template input file. If an
                       input template is provided and a list of variable names is not passed, ie if var_names=None, then
-                      the default
-                      variable names x0, x1, x2,...,xn are created and used by RunModel, where n is the number of
-                      variables. The
-                      number of variables is equal to the shape of the first row if samples is passed as an ndarray or
-                      the shape of the
-                      first item if samples is passed as a list.
-                      varnames is not used in the Python model workflow.
+                      the default variable names x0, x1, x2,...,xn are created and used by RunModel, where n is the
+                      number of variables. The number of variables is equal to the shape of the first row if samples
+                      is passed as an ndarray or the shape of the first item if samples is passed as a list. var_names
+                      is not used in the Python model workflow.
     :type var_names: list of str or None
 
-    :param output_script: The filename of the Python script which contains the commands to process the output from
+    :param output_script: The filename of the Python script that contains the commands to process the output from
                           third-party software model evaluation. The output_script is used to return the output
-                          quantities of interest to
-                          RunModel for subsequent UQpy processing (e.g. for adaptive methods that utilize the results of
-                          previous simualtions
-                          to initialize new simulations).
-                          output_script is not used in the Python model workflow. In the Python model workflow, all
-                          model postprocessing is
-                          handled within model_script.
-                          If, in the third-party software model workflow, output_script = None (the default), then
-                          RunModel.qoi_list is empty
-                          and postprocessing must be handled outside of UQpy.
+                          quantities of interest to RunModel for subsequent UQpy processing (e.g. for adaptive methods
+                          that utilize the results of previous simulations to initialize new simulations). output_script
+                          is not used in the Python model workflow. In the Python model workflow, all model
+                          postprocessing is handled within model_script. If, in the third-party software model workflow,
+                          output_script = None (the default), then RunModel.qoi_list is empty and postprocessing must be
+                          handled outside of UQpy.
     :type output_script: str
 
-    :param output_object_name: The name of the function or class that is used to collect the output values from
-                               third-party software model output files.
-                               If the object is aclass named cls, for example, the output must be saved as cls.qoi.
-                               If it is a function, it should
+    :param output_object_name: The name of the function or class that is used to collect and process the output values
+                               from third-party software model output files. If the object is a class named cls, for
+                               example, the output must be saved as cls.qoi. If it is a function, it should
                                return the output quantity of interest. If there is only one function or only one class
-                               in output_script, then it is
-                               not necessary to specify output_object_name. If there are multiple objects in
-                               output_script, then output_object_name
-                               must be specified.
-                               outputobjectname is not used in the Python model workflow.
+                               in output_script, then it is not necessary to specify output_object_name. If there are
+                               multiple objects in output_script, then output_object_name must be specified.
+                               output_object_name is not used in the Python model workflow.
     :type output_object_name: str
 
-    :param ntasks: Number of tasks to be run in parallel.
-                   By default, ntasks = 1 and the models are executed serially. Setting ntasks equal to a positive
-                   integer greater than
-                   1 will trigger the parallel workflow.
+    :param ntasks: Number of tasks to be run in parallel. By default, ntasks = 1 and the models are executed serially.
+                   Setting ntasks equal to a positive integer greater than 1 will trigger the parallel workflow.
                    RunModel uses GNU parallel to execute models which require an input template in parallel and the
-                   concurrent module
-                   to execute Python models in parallel.
+                   concurrent module to execute Python models in parallel.
     :type ntasks: int
 
-    :param cores_per_task: Number of cores to be used by each task.
-                           In cases where a third-party model runs across multiple CPUs, this optional attribute
-                           allocates the necessary
-                           resources to each model evaluation.
-                           cores_per_task is not used in the Python model workflow
+    :param cores_per_task: Number of cores to be used by each task. In cases where a third-party model runs across
+                           multiple CPUs, this optional attribute allocates the necessary resources to each model
+                           evaluation. cores_per_task is not used in the Python model workflow.
     :type cores_per_task: int
 
     :param nodes: Number of nodes across which to distribute parallel jobs on an HPC cluster in the third-party software
+                  model workflow. If more than one compute node is required to execute the runs in parallel, nodes must
+                  be specified. For example, on the Maryland Advanced Research Computing Center (MARCC), an HPC shared
+                  by Johns Hopkins University and the University of Maryland, each compute node has 24 cores. To run an
+                  analysis with more than 24 parallel jobs on MARCC requires nodes > 1. nodes is not used in the Python
                   model workflow.
-                  If more than one compute node is required to execute the runs in parallel, nodes must be specified.
-                  For example, on
-                  the Maryland Advanced Research Computing Center (MARCC), an HPC shared by Johns Hopkins University
-                  and the
-                  University of Maryland, each compute node has 24 cores. To run an analysis with more than 24 parallel
-                  jobs on MARCC
-                  requires nodes > 1.
-                  nodes is not used in the Python model workflow.
     :type nodes: int
 
     :param resume: If resume = True, GNU parallel enables UQpy to resume execution of any model evaluations that failed
-                   to execute in the third-party software model workflow.
-                   To use this feature, execute the same call to RunModel which failed to complete but with
-                   resume = True.  The same
-                   set of samples must be passed to resume processing from the last successful execution of the model.
-                   resume is not used in the Python model workflow.
+                   to execute in the third-party software model workflow. To use this feature, execute the same call to
+                   RunModel which failed to complete but with resume = True.  The same set of samples must be passed to
+                   resume processing from the last successful execution of the model. resume is not used in the Python
+                   model workflow.
     :type resume: Boolean
 
     :param verbose: Set verbose = True if you want RunModel to print status messages to the terminal during execution.
@@ -158,48 +132,42 @@ class RunModel:
     :type verbose: Boolean
 
     :param model_dir: Specifies the name of the sub-directory from which the model will be executed and to which output
-                      files will be saved.
-                      model_dir = None by default, which results in model execution from the Python current working
-                      directory. If
-                      model_dir is passed a string, then a new directory is created by RunModel within the current
-                      directory whose name is
-                      model_dir appended with a timestamp.
+                      files will be saved. model_dir = None by default, which results in model execution from the Python
+                      current working directory. If model_dir is passed a string, then a new directory is created by
+                      RunModel within the current directory whose name is model_dir appended with a timestamp.
     :type model_dir: str
 
     :param cluster: Set cluster = True if executing on an HPC cluster. Setting cluster = True enables RunModel to
-                    execute the model using the necessary SLURM commands. cluster = False by default.
-                    RunModel is configured for HPC clusters that operate with the SLURM scheduler. In order to execute
-                    a third-party
-                    model with RunModel on an HPC cluster, the HPC must use SLURM.
-                    cluster is not used for the Python model workflow.
+                    execute the model using the necessary SLURM commands. cluster = False by default. RunModel is
+                    configured for HPC clusters that operate with the SLURM scheduler. In order to execute a third-party
+                    model with RunModel on an HPC cluster, the HPC must use SLURM. cluster is not used for the Python
+                    model workflow.
     :type cluster: Boolean
 
     :param fmt: If the input file requires variables to be written in specific format, this format can be specified
                 here. Format specification follows standard Python conventions for the str.format() command described
-                at: https://docs.python.org/3/library/stdtypes.html#str.format
-                For additional details, see the Format String Syntax description at:
-                https://docs.python.org/3/library/string.html#formatstrings
-                The default is fmt = None
-                Some noteworthy formats include:
-                For ls-dyna .k files, each card is required to be exactly 10 characters. The following format string
-                syntax is recommended, "{:>10.4f}"
+                at: https://docs.python.org/3/library/stdtypes.html#str.format For additional details, see the Format
+                String Syntax description at: https://docs.python.org/3/library/string.html#formatstrings The default is
+                fmt = None. Some noteworthy formats include:
+
+                * For ls-dyna .k files, each card is required to be exactly 10 characters. The following format string
+                  syntax is recommended, "{:>10.4f}".
     :type fmt: str
 
-    :param kwargs: Additional inputs to the python function (model_object_name)
-                   This option is only used for execution of Python models.
+    :param kwargs: Additional inputs to the python function (model_object_name). This option is only used for execution
+                   of Python models.
     :type kwargs: dictionary
 
     **Attributes**
 
-    :param RunModel.qoi_list: A list containing the output quantities of interest extracted from the model output
-                                files by output_script. This is a list of length equal to the number of simulations.
-                                Each item of this list contains
-                                the quantity of interest from the associated simulation.
+    :param RunModel.qoi_list: A list containing the output quantities of interest extracted from the model output files
+                              by output_script. This is a list of length equal to the number of simulations. Each item
+                              of this list contains the quantity of interest from the associated simulation.
     :type RunModel.qoi_list: list
 
     **Authors:**
 
-    B.S. Aakash, Michael D. Shields
+    B.S. Aakash, Lohit Vandanapu, Michael D. Shields
 
     Last modified: 3/26/2020 by B.S. Aakash
     """
@@ -304,26 +272,25 @@ class RunModel:
         self.cores_per_task = cores_per_task
         # Number of nodes
         self.nodes = nodes
+        self.template_text = ''
+        self.output_module = None
+        self.python_model = None
 
         # If running on cluster or not
         self.cluster = cluster
 
         # Check if samples are provided
         self.samples = []
+        self.qoi_list = []
+        self.nexist = 0
         if samples is None:
             if self.verbose:
                 print("No samples. Creating the object alone.")
             self.nsim = 0
         elif isinstance(samples, (list, np.ndarray)):
             self.run(samples)
-            # self.samples = samples
-            # self.nsim = len(self.samples)  # This assumes that the number of rows is the number of simulations.
         else:
             raise ValueError("Samples must be passed as a list or numpy ndarray")
-
-        # If samples are provided, invoke the run method.
-        # if self.samples is not None:
-        #     self.run()
 
         # Return to current directory
         if self.model_dir is not None:
@@ -338,18 +305,16 @@ class RunModel:
 
         **Input:**
 
-        :param samples: Samples to be passed as inputs to the model.
-                        If an ndarray is passed, each row of the ndarray contains one set of samples required for one
-                        execution of the
-                        model. (The first dimension of the ndarray is considered to be the number of rows.)
-                        If a list is passed, each item of the list contains one set of samples required for one
-                        execution of the model.
+        :param samples: Samples to be passed as inputs to the model. If an ndarray is passed, each row of the ndarray
+                        contains one set of samples required for one execution of the model. (The first dimension of the
+                        ndarray is considered to be the number of rows.) If a list is passed, each item of the list
+                        contains one set of samples required for one execution of the model.
 
                         Default: None
         :type samples: ndarray or list
 
-        :param append_samples: If append_samples is False, a new set of samples is created, the previous ones are
-                               deleted. If append samples is True, samples are appended to the existing ones.
+        :param append_samples: If append_samples is False, all previous samples and their responses are deleted. If
+                               append samples is True, samples are appended to the existing ones.
 
                                Default: True
         :type append_samples: Boolean
@@ -363,7 +328,7 @@ class RunModel:
             self.samples = []
 
         # Check if samples already exist, if yes append new samples to old ones
-        if self.samples == []:  # There are currently no samples
+        if not self.samples:  # There are currently no samples
             self.nexist = 0
             self.qoi_list = [None] * self.nsim
             if type(samples) == list:
@@ -486,6 +451,7 @@ class RunModel:
 
         for i in range(self.nexist, self.nexist + self.nsim):
             # Create a directory for each model run
+            # TODO: Make the next 11 lines into a function
             work_dir = os.path.join(os.getcwd(), "run_" + str(i) + '_' + ts)
             os.makedirs(work_dir)
             # Copy files from the model list to model run directory
@@ -542,14 +508,15 @@ class RunModel:
             print('\nPerforming serial execution of the model without template input.\n')
 
         # Run python model
+        # TODO: Aakash - Make sure we are passing only np arrays into the model calls
         exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
         for i in range(self.nsim):
             if isinstance(self.samples, list):
                 sample_to_send = self.samples[i + self.nexist]
             elif isinstance(self.samples, np.ndarray):
                 sample_to_send = self.samples[i + self.nexist]
-                # self.model_output = eval(self.model_object_name + '(self.samples[i])')
             if len(self.python_kwargs) == 0:
+                # TODO: Aakash - See if we can use sample_to_send directly
                 self.model_output = eval(self.model_object_name + '(sample_to_send)')
             else:
                 self.model_output = eval(self.model_object_name + '(sample_to_send, **self.python_kwargs)')
@@ -568,31 +535,24 @@ class RunModel:
         """
         if self.verbose:
             print('\nPerforming parallel execution of the model without template input.\n')
-        import concurrent.futures
         import multiprocessing
         import UQpy.Utilities as Utilities
-        # Try processes # Does not work - raises TypeError: can't pickle module objects
-        # indices = range(self.nsim)
-        # with concurrent.futures.ProcessPoolExecutor() as executor:
-        #     for index, res in zip(indices, executor.map(self._run_parallel_python, self.samples)):
-        #         self.qoi_list[index] = res
-
-        # Try threads - this works but is slow
 
         sample = []
         pool = multiprocessing.Pool(processes=self.ntasks)
+        # TODO: Aakash - Make sure we are passing only np arrays into the model calls
         for i in range(self.nsim):
             if isinstance(self.samples, list):
                 sample_to_send = np.atleast_2d(self.samples[i + self.nexist])
             elif isinstance(self.samples, np.ndarray):
                 sample_to_send = np.atleast_2d(self.samples[i + self.nexist])
+            # TODO: Aakash - Talk to Audrey about this
             # if len(self.python_kwargs) == 0:
             #     sample.append([self.model_script, self.model_object_name, self.samples[i + self.nexist]])
             # else:
-            sample.append([self.model_script, self.model_object_name, sample_to_send,
-                           self.python_kwargs])
+            sample.append([self.model_script, self.model_object_name, sample_to_send, self.python_kwargs])
 
-        results = pool.starmap(Utilities._run_parallel_python, sample)
+        results = pool.starmap(Utilities.run_parallel_python, sample)
 
         for i in range(self.nsim):
             if self.model_is_class:
@@ -601,60 +561,6 @@ class RunModel:
                 self.qoi_list[i + self.nexist] = results[i]
 
         pool.close()
-
-        # with concurrent.futures.ThreadPoolExecutor(max_workers=self.ntasks) as executor:
-        #     index = 0
-        #     # res = {executor.submit(self._run_parallel_python, sample): sample for sample in self.samples}
-        #     res = executor.map(self._run_parallel_python, self.samples, chunksize=self.ntasks)
-        #     for future in concurrent.futures.as_completed(res):
-        #         resnum = res[future]
-        #         try:
-        #             data = future.result()
-        #             print(data)
-        #         except Exception as exc:
-        #             print('%r generated an exception: %s' % (resnum, exc))
-        #         else:
-        #             if self.verbose:
-        #                 print(index)
-        #             self.qoi_list[index] = data
-        #         index += 1
-
-        # from multiprocessing import Process
-        # from multiprocessing import Queue
-        #
-        # # Initialize the parallel processing queue and processes
-        # que = Queue()
-        # jobs = [Process(target=self._run_parallel_python_chunked,
-        #                 args=([self.samples[index*self.ntasks:(index+1)*self.ntasks-1]]))
-        #         for index in range(self.ntasks)]
-        # # Start the parallel processes.
-        # for j in jobs:
-        #     j.start()
-        # for j in jobs:
-        #     j.join()
-        #
-        # # Collect the results from the processes and sort them into the original sample order.
-        # results = [que.get(j) for j in jobs]
-        # for i in range(self.nsim):
-        #     k = 0
-        #     for j in results[i][0]:
-        #         self.qoi_list[j] = results[i][1][k]
-        #         k = k + 1
-
-    # def _run_parallel_python(self, sample):
-    #     """
-    #     Execute the python model in parallel
-    #     :param sample: One sample point where the model has to be evaluated
-    #     :return:
-    #     """
-    #     exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
-    #     parallel_output = eval(self.model_object_name + '(sample)')
-    #     if self.model_is_class:
-    #         par_res = parallel_output.qoi
-    #     else:
-    #         par_res = parallel_output
-    #
-    #     return par_res
 
     ####################################################################################################################
     def _input_serial(self, index):
@@ -668,12 +574,11 @@ class RunModel:
         """
         # Create new text to write to file
         self.new_text = self._find_and_replace_var_names_with_values(var_names=self.var_names,
-                                                                     samples=self.samples[index],
+                                                                     samples=self.samples[index+self.nexist],
                                                                      template_text=self.template_text,
-                                                                     index=index,
-                                                                     user_format='{:.4E}')
+                                                                     index=index+self.nexist)
         # Write the new text to the input file
-        self._create_input_files(file_name=self.input_template, num=index, text=self.new_text,
+        self._create_input_files(file_name=self.input_template, num=index+self.nexist, text=self.new_text,
                                  new_folder='InputFiles')
 
     def _execute_serial(self, index):
@@ -718,13 +623,12 @@ class RunModel:
         for i in range(self.nsim):
             # Create new text to write to file
             new_text = self._find_and_replace_var_names_with_values(var_names=self.var_names,
-                                                                    samples=self.samples[i],
+                                                                    samples=self.samples[i+self.nexist],
                                                                     template_text=self.template_text,
-                                                                    index=i,
-                                                                    user_format='{:.4E}')
-            folder_to_write = 'run_' + str(i) + '_' + timestamp + '/InputFiles'
+                                                                    index=i+self.nexist)
+            folder_to_write = 'run_' + str(i+self.nexist) + '_' + timestamp + '/InputFiles'
             # Write the new text to the input file
-            self._create_input_files(file_name=self.input_template, num=i, text=new_text,
+            self._create_input_files(file_name=self.input_template, num=i+self.nexist, text=new_text,
                                      new_folder=folder_to_write)
         if self.verbose:
             print('Created ' + str(self.nsim) + ' input files in the directory ./InputFiles. \n')
@@ -778,7 +682,8 @@ class RunModel:
 
     ####################################################################################################################
     # Helper functions
-    def _create_input_files(self, file_name, num, text, new_folder='InputFiles'):
+    @staticmethod
+    def _create_input_files(file_name, num, text, new_folder='InputFiles'):
         """
         Create input files using filename, index, text
 
@@ -806,7 +711,7 @@ class RunModel:
             f.write(text)
         return
 
-    def _find_and_replace_var_names_with_values(self, var_names, samples, template_text, index, user_format='{:.4E}'):
+    def _find_and_replace_var_names_with_values(self, var_names, samples, template_text, index):
         """
         Replace placeholders containing variable names in template input text with sample values.
 
@@ -826,6 +731,8 @@ class RunModel:
         :type index: int
         """
         # TODO: deal with cases which have both var1 and var11
+        # TODO: Aakash - Update formatting specifications here
+        # TODO: Aakash - Check writing only specific components & build an example
         new_text = template_text
         for j in range(len(var_names)):
             string_regex = re.compile(r"<" + var_names[j] + r".*?>")
@@ -845,8 +752,8 @@ class RunModel:
                     to_add += str(temp[-1])
                 else:
                     to_add = str(temp)
-                new_text = new_text[0:new_text.index(string)] + to_add \
-                           + new_text[(new_text.index(string) + len(string)):]
+                new_text = new_text[0:new_text.index(string)] + to_add + new_text[(new_text.index(string) +
+                                                                                   len(string)):]
                 count += 1
             if self.verbose:
                 if index == 0:
@@ -858,7 +765,8 @@ class RunModel:
                             "Found " + str(count) + " instance of variable: '" + var_names[j] + "' in the input file.")
         return new_text
 
-    def _is_list_of_strings(self, lst):
+    @staticmethod
+    def _is_list_of_strings(lst):
         """
         Check if input list contains only strings
 
@@ -971,9 +879,3 @@ class RunModel:
                 else:
                     print('You specified the output object name as: ' + str(self.output_object_name))
                     raise ValueError("The file does not contain an object which was specified as the output processor.")
-
-    ####################################################################################################################
-    # Unused functions
-    def _collect_output(self, qoi_list, qoi_output, pos):
-        qoi_list[pos] = qoi_output
-        return qoi_list
