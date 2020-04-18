@@ -78,7 +78,7 @@ class Distribution:
     :param params: Parameters for the marginal distribution(s) (must be a list if distribution is multivariate).
     :type params: list or ndarray
 
-    :param copula: Copula to create dependence between dimensions, used only if dist_name is a list
+    :param copula: Name of copula to create dependence between dimensions, used only if dist_name is a list
 
                    Default: None
     :type copula: str
@@ -125,7 +125,7 @@ class Distribution:
 
     Dimitris Giovanis, Audrey Olivier, Michael D. Shields
 
-    Last Modified: 4/15/20 by Audrey Olivier & Michael D. Shields
+    Last Modified: 4/17/20 by Audrey Olivier & Michael D. Shields
     """
 
     def __init__(self, dist_name, copula=None, params=None, copula_params=None):
@@ -149,7 +149,7 @@ class Distribution:
                 raise ValueError('UQpy error: when provided, copula should be a string.')
             if isinstance(self.dist_name, str):
                 raise ValueError('UQpy error: dist_name must be a list of strings to define a copula.')
-            self.copula = Copula(copula_name=copula, dist_name=self.dist_name)
+            self.copula_obj = Copula(copula_name=copula, dist_name=self.dist_name)
             self.copula_params = None
 
         # Method that saves the parameters as attributes of the class if they are provided
@@ -244,7 +244,7 @@ def pdf(dist_object, x, params=None, copula_params=None):
             pdf_values = pdf_values * subdistribution_pdf(dist_name=dist_object.dist_name[i], x=x[:, i, np.newaxis],
                                                           params=dist_object.params[i])
         if hasattr(dist_object, 'copula'):
-            _, c_ = dist_object.copula.evaluate_copula(x=x, dist_params=dist_object.params,
+            _, c_ = dist_object.copula_obj.evaluate_copula(x=x, dist_params=dist_object.params,
                                                        copula_params=dist_object.copula_params)
             pdf_values *= c_
         return pdf_values
@@ -411,8 +411,8 @@ def log_pdf(dist_object, x, params=None, copula_params=None):
                                                                       x=x[:, i, np.newaxis],
                                                                       params=dist_object.params[i])
         if hasattr(dist_object, 'copula'):
-            _, c_ = dist_object.copula.evaluate_copula(x=x, dist_params=dist_object.params,
-                                                       copula_params=dist_object.copula_params)
+            _, c_ = dist_object.copula_obj.evaluate_copula(
+                x=x, dist_params=dist_object.params, copula_params=dist_object.copula_params)
             log_pdf_values += np.log(c_)
         return log_pdf_values
 
@@ -458,7 +458,7 @@ def moments(dist_object, params=None):
     Compute marginal moments (mean, variance, skewness, kurtosis). Does not support distributions with copula.
 
     This is a utility function used to define the moments method of the Distribution class. This method is called as
-    dist_object.moments(x, params). If given, input params overwrites the params attributes of the dist_object.
+    dist_object.moments(params). If given, input params overwrites the params attributes of the dist_object.
 
     **Input:**
 
