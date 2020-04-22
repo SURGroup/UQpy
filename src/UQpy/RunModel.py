@@ -165,6 +165,11 @@ class RunModel:
                               of this list contains the quantity of interest from the associated simulation.
     :type RunModel.qoi_list: list
 
+    :param RunModel.samples: Internally, RunModel converts samples into a list of numpy arrays where each sample (i.e.
+                             item in sample list) is a ndarray. RunModel then passes each sample to the model as an
+                             ndarray.
+    :type RunModel.samples: list of ndarrays
+
     **Authors:**
 
     B.S. Aakash, Lohit Vandanapu, Michael D. Shields
@@ -212,9 +217,9 @@ class RunModel:
                 raise ValueError("Variable names should be passed as a list of strings.")
         elif self.input_template is not None:
             # If var_names is not passed and there is an input template, create default variable names
-            nvars = samples[0].shape[0]
+            self.n_vars = samples[0].shape[0]
             self.var_names = []
-            for i in range(nvars):
+            for i in range(self.n_vars):
                 self.var_names.append('x%d' % i)
 
         # Model related
@@ -226,8 +231,6 @@ class RunModel:
         model_files = list()
         for f_name in os.listdir(current_dir):
             path = os.path.join(current_dir, f_name)
-            # if not os.path.isdir(path):
-            #     model_files.append(path)
             model_files.append(path)
         self.model_files = model_files
 
@@ -283,10 +286,11 @@ class RunModel:
         self.samples = []
         self.qoi_list = []
         self.nexist = 0
+        self.nsim = 0
         if samples is None:
             if self.verbose:
                 print("No samples. Creating the object alone.")
-            self.nsim = 0
+            # self.nsim = 0
         elif isinstance(samples, (list, np.ndarray)):
             self.run(samples)
         else:
@@ -398,16 +402,9 @@ class RunModel:
         for i in range(self.nexist, self.nexist + self.nsim):
             # Create a directory for each model run
             work_dir = os.path.join(os.getcwd(), "run_" + str(i) + '_' + ts)
-            os.makedirs(work_dir)
-            # Copy files from the model list to model run directory
             current_dir = os.getcwd()
-            for file_name in self.model_files:
-                full_file_name = os.path.join(current_dir, file_name)
-                if not os.path.isdir(full_file_name):
-                    shutil.copy(full_file_name, work_dir)
-                else:
-                    new_dir_name = os.path.join(work_dir, os.path.basename(full_file_name))
-                    shutil.copytree(full_file_name, new_dir_name)
+            self._copy_files(work_dir=work_dir)
+
             # Change current working directory to model run directory
             os.chdir(os.path.join(current_dir, work_dir))
 
@@ -451,18 +448,8 @@ class RunModel:
 
         for i in range(self.nexist, self.nexist + self.nsim):
             # Create a directory for each model run
-            # TODO: Make the next 11 lines into a function
             work_dir = os.path.join(os.getcwd(), "run_" + str(i) + '_' + ts)
-            os.makedirs(work_dir)
-            # Copy files from the model list to model run directory
-            current_dir = os.getcwd()
-            for file_name in self.model_files:
-                full_file_name = os.path.join(current_dir, file_name)
-                if not os.path.isdir(full_file_name):
-                    shutil.copy(full_file_name, work_dir)
-                else:
-                    new_dir_name = os.path.join(work_dir, os.path.basename(full_file_name))
-                    shutil.copytree(full_file_name, new_dir_name)
+            self._copy_files(work_dir=work_dir)
 
         self._input_parallel(ts)
 
@@ -508,18 +495,14 @@ class RunModel:
             print('\nPerforming serial execution of the model without template input.\n')
 
         # Run python model
-        # TODO: Aakash - Make sure we are passing only np arrays into the model calls
         exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
         for i in range(self.nsim):
-            if isinstance(self.samples, list):
-                sample_to_send = self.samples[i + self.nexist]
-            elif isinstance(self.samples, np.ndarray):
-                sample_to_send = self.samples[i + self.nexist]
+            sample_to_send = np.atleast_2d(self.samples[i + self.nexist])
+            model_object = getattr(self.python_model, self.model_object_name)
             if len(self.python_kwargs) == 0:
-                # TODO: Aakash - See if we can use sample_to_send directly
-                self.model_output = eval(self.model_object_name + '(sample_to_send)')
+                self.model_output = model_object(sample_to_send)
             else:
-                self.model_output = eval(self.model_object_name + '(sample_to_send, **self.python_kwargs)')
+                self.model_output = model_object(sample_to_send, **self.python_kwargs)
             if self.model_is_class:
                 self.qoi_list[i + self.nexist] = self.model_output.qoi
             else:
@@ -540,17 +523,12 @@ class RunModel:
 
         sample = []
         pool = multiprocessing.Pool(processes=self.ntasks)
-        # TODO: Aakash - Make sure we are passing only np arrays into the model calls
         for i in range(self.nsim):
-            if isinstance(self.samples, list):
-                sample_to_send = np.atleast_2d(self.samples[i + self.nexist])
-            elif isinstance(self.samples, np.ndarray):
-                sample_to_send = np.atleast_2d(self.samples[i + self.nexist])
-            # TODO: Aakash - Talk to Audrey about this
-            # if len(self.python_kwargs) == 0:
-            #     sample.append([self.model_script, self.model_object_name, self.samples[i + self.nexist]])
-            # else:
-            sample.append([self.model_script, self.model_object_name, sample_to_send, self.python_kwargs])
+            sample_to_send = np.atleast_2d(self.samples[i + self.nexist])
+            if len(self.python_kwargs) == 0:
+                sample.append([self.model_script, self.model_object_name, sample_to_send])
+            else:
+                sample.append([self.model_script, self.model_object_name, sample_to_send, self.python_kwargs])
 
         results = pool.starmap(Utilities.run_parallel_python, sample)
 
@@ -573,12 +551,9 @@ class RunModel:
         :type index: int
         """
         # Create new text to write to file
-        self.new_text = self._find_and_replace_var_names_with_values(var_names=self.var_names,
-                                                                     samples=self.samples[index+self.nexist],
-                                                                     template_text=self.template_text,
-                                                                     index=index+self.nexist)
+        self.new_text = self._find_and_replace_var_names_with_values(index=index + self.nexist)
         # Write the new text to the input file
-        self._create_input_files(file_name=self.input_template, num=index+self.nexist, text=self.new_text,
+        self._create_input_files(file_name=self.input_template, num=index + self.nexist, text=self.new_text,
                                  new_folder='InputFiles')
 
     def _execute_serial(self, index):
@@ -622,13 +597,10 @@ class RunModel:
         # Loop over the number of samples and create input files in a folder in current directory
         for i in range(self.nsim):
             # Create new text to write to file
-            new_text = self._find_and_replace_var_names_with_values(var_names=self.var_names,
-                                                                    samples=self.samples[i+self.nexist],
-                                                                    template_text=self.template_text,
-                                                                    index=i+self.nexist)
-            folder_to_write = 'run_' + str(i+self.nexist) + '_' + timestamp + '/InputFiles'
+            new_text = self._find_and_replace_var_names_with_values(index=i + self.nexist)
+            folder_to_write = 'run_' + str(i + self.nexist) + '_' + timestamp + '/InputFiles'
             # Write the new text to the input file
-            self._create_input_files(file_name=self.input_template, num=i+self.nexist, text=new_text,
+            self._create_input_files(file_name=self.input_template, num=i + self.nexist, text=new_text,
                                      new_folder=folder_to_write)
         if self.verbose:
             print('Created ' + str(self.nsim) + ' input files in the directory ./InputFiles. \n')
@@ -655,17 +627,14 @@ class RunModel:
 
         # If running on MARCC cluster
         if self.cluster:
-            self.srun_string = "srun -N " + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive"
+            self.srun_string = " srun -N " + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive"
             self.model_command_string = (
-                    self.parallel_string + self.srun_string + " 'cd run_{1}_" + timestamp + "&& " + self.python_command
+                    self.parallel_string + self.srun_string + " 'cd run_{1}_" + timestamp + " && " + self.python_command
                     + " -u " + str(self.model_script) + "' {1}  ::: {0.." + str(self.nsim - 1) + "}")
         else:  # If running locally
-            self.model_command_string = (self.parallel_string + " 'cd run_{1}_" + timestamp + "&& " +
+            self.model_command_string = (self.parallel_string + " 'cd run_{1}_" + timestamp + " && " +
                                          self.python_command + " -u " +
                                          str(self.model_script) + "' {1}  ::: {0.." + str(self.nsim - 1) + "}")
-
-        # self.model_command = shlex.split(self.model_command_string)
-        # subprocess.run(self.model_command)
 
         subprocess.run(self.model_command_string, shell=True)
 
@@ -711,50 +680,56 @@ class RunModel:
             f.write(text)
         return
 
-    def _find_and_replace_var_names_with_values(self, var_names, samples, template_text, index):
+    def _find_and_replace_var_names_with_values(self, index):
         """
         Replace placeholders containing variable names in template input text with sample values.
 
         ** Input: **
 
-        :param var_names: Name of the probabilistic input variables.
-        :type var_names: list of str
-
-        :param samples: Samples values of the input variables.
-        :type samples: ndarray
-
-        :param template_text: Text in the template input file, with placeholders where the sample values of the input
-                              variables need to be placed.
-        :type template_text: str
-
         :param index: The sample number
         :type index: int
         """
-        # TODO: deal with cases which have both var1 and var11
-        # TODO: Aakash - Update formatting specifications here
+        # TODO: Aakash - Update formatting specifications here - DONE
         # TODO: Aakash - Check writing only specific components & build an example
+        template_text = self.template_text
+        var_names = self.var_names
+        samples = self.samples[index + self.nexist]
+
         new_text = template_text
         for j in range(len(var_names)):
             string_regex = re.compile(r"<" + var_names[j] + r".*?>")
             count = 0
             for string in string_regex.findall(template_text):
-                if self.fmt is None:
-                    temp = string.replace(var_names[j], "samples[" + str(j) + "]")
-                    temp = eval(temp[1:-1])
-                else:
-                    temp = string.replace(var_names[j], self.fmt.format(samples[j]))
-                    temp = temp[1:-1]
-                if isinstance(temp, collections.Iterable):
-                    temp = np.array(temp).flatten()
-                    to_add = ''
-                    for i in range(len(temp) - 1):
-                        to_add += str(temp[i]) + ', '
-                    to_add += str(temp[-1])
-                else:
-                    to_add = str(temp)
-                new_text = new_text[0:new_text.index(string)] + to_add + new_text[(new_text.index(string) +
-                                                                                   len(string)):]
-                count += 1
+                temp_check = string[1:-1].split("[")[0]
+                pattern_check = re.compile(var_names[j])
+                if pattern_check.fullmatch(temp_check):
+                    temp = string[1:-1].replace(var_names[j], "samples[" + str(j) + "]")
+                    try:
+                        temp = eval(temp)
+                    except IndexError as err:
+                        print("Index Error: {0}\n".format(err))
+                        raise IndexError("{0}".format(err))
+
+                    if isinstance(temp, collections.Iterable):
+                        temp = np.array(temp).flatten()
+                        to_add = ''
+                        for i in range(len(temp) - 1):
+                            if self.fmt is None:
+                                to_add += str(temp[i]) + ', '
+                            else:
+                                to_add += self.fmt.format(temp[i]) + ', '
+                        if self.fmt is None:
+                            to_add += str(temp[-1])
+                        else:
+                            to_add += self.fmt.format(temp[-1])
+                    else:
+                        if self.fmt is None:
+                            to_add = str(temp)
+                        else:
+                            to_add = self.fmt.format(temp)
+                    new_text = new_text[0:new_text.index(string)] + to_add + new_text[(new_text.index(string) +
+                                                                                       len(string)):]
+                    count += 1
             if self.verbose:
                 if index == 0:
                     if count > 1:
@@ -879,3 +854,15 @@ class RunModel:
                 else:
                     print('You specified the output object name as: ' + str(self.output_object_name))
                     raise ValueError("The file does not contain an object which was specified as the output processor.")
+
+    def _copy_files(self, work_dir):
+        os.makedirs(work_dir)
+        # Copy files from the model list to model run directory
+        current_dir = os.getcwd()
+        for file_name in self.model_files:
+            full_file_name = os.path.join(current_dir, file_name)
+            if not os.path.isdir(full_file_name):
+                shutil.copy(full_file_name, work_dir)
+            else:
+                new_dir_name = os.path.join(work_dir, os.path.basename(full_file_name))
+                shutil.copytree(full_file_name, new_dir_name)
