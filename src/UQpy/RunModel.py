@@ -217,7 +217,7 @@ class RunModel:
                 raise ValueError("Variable names should be passed as a list of strings.")
         elif self.input_template is not None:
             # If var_names is not passed and there is an input template, create default variable names
-            self.n_vars = samples[0].shape[0]
+            self.n_vars = len(samples[0])
             self.var_names = []
             for i in range(self.n_vars):
                 self.var_names.append('x%d' % i)
@@ -228,7 +228,7 @@ class RunModel:
         self.return_dir = current_dir
 
         # Create a list of all of the files and directories in the working directory
-        model_files = list()
+        model_files = []
         for f_name in os.listdir(current_dir):
             path = os.path.join(current_dir, f_name)
             model_files.append(path)
@@ -282,9 +282,10 @@ class RunModel:
         # If running on cluster or not
         self.cluster = cluster
 
-        # Check if samples are provided
+        # TODO: Check if samples are provided
         self.samples = []
         self.qoi_list = []
+        # TODO: nexist and nsim ?
         self.nexist = 0
         self.nsim = 0
         if samples is None:
@@ -324,10 +325,13 @@ class RunModel:
         :type append_samples: Boolean
         """
 
-        # Nb of simulations to be performed
+        # No of simulations to be performed
         self.nsim = len(samples)
 
         # If append_samples is False, a new set of samples is created, the previous ones are deleted !!!!!
+        # TODO: define a method to clear all samples and qoi, since they are no longer required
+        # TODO: Dont change the master list everytime, run the execution with local variables and then add or replace
+        #  based on append samples parameter
         if not append_samples:
             self.samples = []
 
@@ -342,6 +346,7 @@ class RunModel:
         else:  # Samples already exist in the RunModel object, append new ones
             self.nexist = len(self.samples)
             self.qoi_list.extend([None] * self.nsim)
+            # TODO: Convert everything in to either lists or np.array from the begining ?
             if type(samples) == list:
                 self.samples.extend(samples)
             else:
@@ -495,18 +500,19 @@ class RunModel:
             print('\nPerforming serial execution of the model without template input.\n')
 
         # Run python model
+        # TODO: remove exec statement
         exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
-        for i in range(self.nsim):
-            sample_to_send = np.atleast_2d(self.samples[i + self.nexist])
+        for i in range(self.nexist, self.nexist + self.nsim):
+            sample_to_send = self.samples[i]
             model_object = getattr(self.python_model, self.model_object_name)
             if len(self.python_kwargs) == 0:
                 self.model_output = model_object(sample_to_send)
             else:
                 self.model_output = model_object(sample_to_send, **self.python_kwargs)
             if self.model_is_class:
-                self.qoi_list[i + self.nexist] = self.model_output.qoi
+                self.qoi_list[i] = self.model_output.qoi
             else:
-                self.qoi_list[i + self.nexist] = self.model_output
+                self.qoi_list[i] = self.model_output
 
     ####################################################################################################################
     def _parallel_python_execution(self):
@@ -516,6 +522,7 @@ class RunModel:
         This function imports the model object from the model script, and executes the model in parallel by passing the
         samples along with keyword arguments, if any, as inputs to the model object.
         """
+        # TODO: understand this function
         if self.verbose:
             print('\nPerforming parallel execution of the model without template input.\n')
         import multiprocessing
@@ -524,13 +531,14 @@ class RunModel:
         sample = []
         pool = multiprocessing.Pool(processes=self.ntasks)
         for i in range(self.nsim):
+            # TODO: same problem as above - samples can be of any shape
             sample_to_send = np.atleast_2d(self.samples[i + self.nexist])
             if len(self.python_kwargs) == 0:
                 sample.append([self.model_script, self.model_object_name, sample_to_send])
             else:
                 sample.append([self.model_script, self.model_object_name, sample_to_send, self.python_kwargs])
 
-        results = pool.starmap(Utilities.run_parallel_python, sample)
+        results = pool.starmap(Utilities.run_parallel_python, sample) # TODO: Does Utilities have run_parallel_python ?
 
         for i in range(self.nsim):
             if self.model_is_class:
@@ -550,10 +558,9 @@ class RunModel:
         :param index: The simulation number
         :type index: int
         """
-        # Create new text to write to file
         self.new_text = self._find_and_replace_var_names_with_values(index=index + self.nexist)
         # Write the new text to the input file
-        self._create_input_files(file_name=self.input_template, num=index + self.nexist, text=self.new_text,
+        self._create_input_files(file_name=self.input_template, num=index+self.nexist, text=self.new_text,
                                  new_folder='InputFiles')
 
     def _execute_serial(self, index):
@@ -596,11 +603,10 @@ class RunModel:
         """
         # Loop over the number of samples and create input files in a folder in current directory
         for i in range(self.nsim):
-            # Create new text to write to file
             new_text = self._find_and_replace_var_names_with_values(index=i + self.nexist)
-            folder_to_write = 'run_' + str(i + self.nexist) + '_' + timestamp + '/InputFiles'
+            folder_to_write = 'run_' + str(i+self.nexist) + '_' + timestamp + '/InputFiles'
             # Write the new text to the input file
-            self._create_input_files(file_name=self.input_template, num=i + self.nexist, text=new_text,
+            self._create_input_files(file_name=self.input_template, num=i+self.nexist, text=new_text,
                                      new_folder=folder_to_write)
         if self.verbose:
             print('Created ' + str(self.nsim) + ' input files in the directory ./InputFiles. \n')
@@ -614,6 +620,7 @@ class RunModel:
         :param timestamp: Timestamp which is appended to the name of the input file
         :type timestamp: str
         """
+        # TODO: generalize run_string and parallel_string for any cluster
         # Check if logs folder exists, if not, create it
         if not os.path.exists("logs"):
             os.makedirs("logs")
@@ -627,12 +634,12 @@ class RunModel:
 
         # If running on MARCC cluster
         if self.cluster:
-            self.srun_string = " srun -N " + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive"
+            self.srun_string = "srun -N " + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive"
             self.model_command_string = (
-                    self.parallel_string + self.srun_string + " 'cd run_{1}_" + timestamp + " && " + self.python_command
+                    self.parallel_string + self.srun_string + " 'cd run_{1}_" + timestamp + "&& " + self.python_command
                     + " -u " + str(self.model_script) + "' {1}  ::: {0.." + str(self.nsim - 1) + "}")
         else:  # If running locally
-            self.model_command_string = (self.parallel_string + " 'cd run_{1}_" + timestamp + " && " +
+            self.model_command_string = (self.parallel_string + " 'cd run_{1}_" + timestamp + "&& " +
                                          self.python_command + " -u " +
                                          str(self.model_script) + "' {1}  ::: {0.." + str(self.nsim - 1) + "}")
 
@@ -647,6 +654,7 @@ class RunModel:
         :param index: The simulation number
         :type index: int
         """
+        # TODO: parallelize output processing
         self._output_serial(index)
 
     ####################################################################################################################
@@ -686,16 +694,29 @@ class RunModel:
 
         ** Input: **
 
+        :param var_names: Name of the probabilistic input variables.
+        :type var_names: list of str
+
+        :param samples: Samples values of the input variables.
+        :type samples: ndarray
+
+        :param template_text: Text in the template input file, with placeholders where the sample values of the input
+                              variables need to be placed.
+        :type template_text: str
+
         :param index: The sample number
         :type index: int
         """
+        # TODO: deal with cases which have both var1 and var11 - DONE
         # TODO: Aakash - Update formatting specifications here - DONE
         # TODO: Aakash - Check writing only specific components & build an example
+        # TODO: use array2string instead of loops
         template_text = self.template_text
         var_names = self.var_names
-        samples = self.samples[index + self.nexist]
+        samples = self.samples[index+self.nexist]
 
         new_text = template_text
+        # TODO: use self.nvar instead of len(var_names)
         for j in range(len(var_names)):
             string_regex = re.compile(r"<" + var_names[j] + r".*?>")
             count = 0
@@ -741,16 +762,16 @@ class RunModel:
         return new_text
 
     @staticmethod
-    def _is_list_of_strings(lst):
+    def _is_list_of_strings(list_of_strings):
         """
         Check if input list contains only strings
 
         ** Input: **
 
-        :param lst: A list whose entries should be checked to see if they are strings
-        :type lst: list
+        :param list_of_strings: A list whose entries should be checked to see if they are strings
+        :type list_of_strings: list
         """
-        return bool(lst) and isinstance(lst, list) and all(isinstance(elem, str) for elem in lst)
+        return bool(list_of_strings) and isinstance(list_of_strings, list) and all(isinstance(element, str) for element in list_of_strings)
 
     def _check_python_model(self):
         """
