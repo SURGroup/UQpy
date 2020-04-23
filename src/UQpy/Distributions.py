@@ -30,6 +30,7 @@ import numpy as np
 from .Utilities import check_input_dims
 import importlib
 import types
+from functools import partial
 
 ########################################################################################################################
 #        Define the probability distribution of the random parameters
@@ -45,6 +46,326 @@ list_multivariates = ['mvnormal']
 # All scipy supported distributions
 list_all_scipy = list_univariates + list_multivariates
 
+
+class Distribution_v2:
+    """
+    Parent class
+    """
+
+    def __init__(self):
+        pass
+
+    def __pdf(self, x, params=None):
+        """ This is not needed but may be helpful for docstrings? """
+        pass
+
+
+class scipy_distribution(Distribution_v2):
+
+    @staticmethod
+    def get_scipy_class():
+        return stats.rv_continuous
+
+    @staticmethod
+    def get_scipy_params(params):
+        return {}
+
+    @classmethod
+    def pdf(cls, x, params):
+        if not (isinstance(x, np.ndarray) and len(x.shape) == 2 and x.shape[1] == 1):
+            raise ValueError('Wrong dimensions in input x.')
+        return cls.get_scipy_class().pdf(x=x[:, 0], **cls.get_scipy_params(params=params))
+
+    @classmethod
+    def log_pdf(cls, x, params):
+        if not (isinstance(x, np.ndarray) and len(x.shape) == 2 and x.shape[1] == 1):
+            raise ValueError('Wrong dimensions in input x.')
+        return cls.get_scipy_class().logpdf(x=x[:, 0], **cls.get_scipy_params(params=params))
+
+    @classmethod
+    def cdf(cls, x, params):
+        if not (isinstance(x, np.ndarray) and len(x.shape) == 2 and x.shape[1] == 1):
+            raise ValueError('Wrong dimensions in input x.')
+        return cls.get_scipy_class().cdf(x=x[:, 0], **cls.get_scipy_params(params=params))
+
+    @classmethod
+    def icdf(cls, x, params):
+        # Check input x
+        if not (isinstance(x, np.ndarray) and len(x.shape) == 2 and x.shape[1] == 1):
+            raise ValueError('Wrong dimensions in input x.')
+        return cls.get_scipy_class().icdf(x=x[:, 0], **cls.get_scipy_params(params=params))
+
+    @classmethod
+    def rvs(cls, nsamples, params):
+        if not isinstance(nsamples, int) and nsamples >= 1:
+            raise ValueError('Input nsamples must be an integer strictly greater than 0.')
+        tmp_rvs = cls.get_scipy_class().rvs(size=nsamples, **cls.get_scipy_params(params=params))
+        return tmp_rvs.reshape((-1, 1))
+
+    @classmethod
+    def fit(cls, x):
+        # Check input x
+        if not (isinstance(x, np.ndarray) and len(x.shape) == 2 and x.shape[1] == 1):
+            raise ValueError('Wrong dimensions in input x.')
+        return stats.lognorm.fit(data=x[:, 0])
+
+    @classmethod
+    def moments(cls, params):
+        return stats.lognorm.stats(moments='mvsk', **cls.get_scipy_params(params=params))
+
+
+class lognormal(scipy_distribution):
+    #TODO: use lognormal or Lognormal?
+    """
+    lognormal distribution, params are [s, loc, scale]
+    """
+    def __init__(self, params):
+        super().__init__()
+
+        if len(params) != 3:
+            raise ValueError('The lognormal distribution has three parameters: s, loc, scale.')
+        self.params = params
+
+        # bound the methods to the object
+        self.pdf = lambda x: lognormal.pdf(x=x, params=self.params)
+        self.log_pdf = lambda x: lognormal.log_pdf(x=x, params=self.params)
+        self.cdf = lambda x: lognormal.cdf(x=x, params=self.params)
+        self.icdf = lambda x: lognormal.icdf(x=x, params=self.params)
+        self.rvs = lambda nsamples: lognormal.rvs(nsamples, params=self.params)
+        self.fit = lambda x: lognormal.fit(x=x)
+        self.moments = lambda: lognormal.moments(params=self.params)
+
+    @staticmethod
+    def get_scipy_class():
+        return stats.lognorm
+
+    @staticmethod
+    def get_scipy_params(params):
+        return {'s': params[0], 'loc': params[1], 'scale': params[2]}
+
+
+class normal(scipy_distribution):
+    #TODO: use lognormal or Lognormal?
+    """
+    lognormal distribution, params are [s, loc, scale]
+    """
+    def __init__(self, params):
+        super().__init__()
+
+        if len(params) != 2:
+            raise ValueError('The normal distribution has 2 parameters: loc, scale.')
+        self.params = params
+
+        # bound the methods to the object
+        self.pdf = lambda x: normal.pdf(x=x, params=self.params)
+        self.log_pdf = lambda x: normal.log_pdf(x=x, params=self.params)
+        self.cdf = lambda x: normal.cdf(x=x, params=self.params)
+        self.icdf = lambda x: normal.icdf(x=x, params=self.params)
+        self.rvs = lambda nsamples: normal.rvs(nsamples, params=self.params)
+        self.fit = lambda x: normal.fit(x=x)
+        self.moments = lambda: normal.moments(params=self.params)
+
+    @staticmethod
+    def get_scipy_class():
+        return stats.norm
+
+    @staticmethod
+    def get_scipy_params(params):
+        return {'loc': params[0], 'scale': params[1]}
+
+
+class joint_iid(Distribution_v2):
+    """
+    Define a joint distribution from a list of marginals, potentially with a copula to introduce dependency
+    """
+    #TODO: for now the user must give a list of marginals as Distribution objects
+    #TODO: option 2 is for now not possible for multivariates (what would it even look like?)
+    def __init__(self, marginals):
+        super().__init__()
+
+        # Check and save the marginals
+        if not (isinstance(marginals, list) and all(isinstance(d, Distribution_v2) for d in marginals)):
+            raise ValueError('Input marginals must be a list of Distribution objects.')
+        self.marginals = marginals
+
+    def pdf(self, x):
+        # Check input x
+        if not (isinstance(x, np.ndarray) and len(x.shape) == 2 and x.shape[1] == len(self.marginals)):
+            raise ValueError('Wrong dimensions in input x.')
+        # Compute pdf of independent marginals
+        pdf_val = np.prod(np.array([m.pdf(x[:, i, np.newaxis]) for i, m in enumerate(self.marginals)]), axis=0)
+        return pdf_val
+
+    def log_pdf(self, x):
+        # Compute pdf of independent marginals
+        if not (isinstance(x, np.ndarray) and len(x.shape) == 2 and x.shape[1] == len(self.marginals)):
+            raise ValueError('Wrong dimensions in input x.')
+        # Compute log-pdf of independent marginals
+        logpdf_val = np.sum(np.array([m.log_pdf(x[:, i, np.newaxis]) for i, m in enumerate(self.marginals)]), axis=0)
+        return logpdf_val
+
+    def cdf(self, x):
+        # Compute pdf of independent marginals
+        if not (isinstance(x, np.ndarray) and len(x.shape) == 2 and x.shape[1] == len(self.marginals)):
+            raise ValueError('Wrong dimensions in input x.')
+        return np.prod(np.array([m.cdf(x[:, i, np.newaxis]) for i, m in enumerate(self.marginals)]), axis=0)
+
+    def rvs(self, nsamples=1):
+        # Check nsamples
+        if not isinstance(nsamples, int) and nsamples >= 1:
+            raise ValueError('Input nsamples must be an integer strictly greater than 0.')
+        # Go through all marginals
+        rv_s = np.zeros((nsamples, len(self.marginals)))
+        for i, m in enumerate(self.marginals):
+            rv_s[:, i] = m.rvs(nsamples=nsamples).reshape((-1,))
+        return rv_s
+
+    def fit(self, x):
+        # Check input data x
+        if not (isinstance(x, np.ndarray) and len(x.shape) == 2 and x.shape[1] == len(self.marginals)):
+            raise ValueError('Wrong dimensions in input x.')
+        # Go through all marginals
+        params = []
+        for i, m in enumerate(self.marginals):
+            params.append(m.fit(x=x[:, i, np.newaxis]))
+        return params
+
+    def moments(self):
+        # Go through all marginals
+        mean, var, skew, kurt = [], [], [], []
+        for i, m in enumerate(self.marginals):
+            moments_i = m.moments()
+            mean.append(moments_i[0])
+            var.append(moments_i[1])
+            skew.append(moments_i[2])
+            kurt.append(moments_i[3])
+        return mean, var, skew, kurt
+
+
+class joint_copula(Distribution_v2):
+    """
+    Define a joint distribution from a list of marginals, potentially with a copula to introduce dependency
+    """
+    def __init__(self, marginals, copula):
+        super().__init__()
+
+        # Check and save the marginals
+        if not (isinstance(marginals, list) and all(isinstance(d, Distribution_v2) for d in marginals)):
+            raise ValueError('Input marginals must be a list of Distribution objects.')
+        self.marginals = marginals
+
+        # Check if you have a copula
+        if not isinstance(copula, Copula_v2):
+            raise ValueError('The input copula should be a Copula object.')
+        self.copula = copula
+
+    def pdf(self, x):
+        # Check input x
+        if not (isinstance(x, np.ndarray) and len(x.shape) == 2 and x.shape[1] == len(self.marginals)):
+            raise ValueError('Wrong dimensions in input x.')
+        # Compute pdf of independent marginals
+        pdf_val = np.prod(np.array([m.pdf(x[:, i, np.newaxis]) for i, m in enumerate(self.marginals)]), axis=0)
+        # Add copula term
+        _, c_ = self.copula.evaluate_copula(x=x, marginals=self.marginals)
+        pdf_val *= c_
+        return pdf_val
+
+    def log_pdf(self, x):
+        # Compute pdf of independent marginals
+        if not (isinstance(x, np.ndarray) and len(x.shape) == 2 and x.shape[1] == len(self.marginals)):
+            raise ValueError('Wrong dimensions in input x.')
+        # Compute log-pdf of independent marginals
+        logpdf_val = np.sum(np.array([m.log_pdf(x[:, i, np.newaxis]) for i, m in enumerate(self.marginals)]), axis=0)
+        # Add copula term
+        _, c_ = self.copula.evaluate_copula(x=x, marginals=self.marginals)
+        logpdf_val += np.log(c_)
+        return logpdf_val
+
+    def cdf(self, x):
+        # Compute pdf of independent marginals
+        if not (isinstance(x, np.ndarray) and len(x.shape) == 2 and x.shape[1] == len(self.marginals)):
+            raise ValueError('Wrong dimensions in input x.')
+        # Case with copula
+        cdf_values, _ = self.copula.evaluate_copula(x=x, marginals=self.marginals)
+        return cdf_values
+
+
+class Copula_v2:
+    """
+    Define a copula for a multivariate distribution whose dependence structure is defined with a copula.
+
+    This class is used in support of the main Distribution class. The following copula are supported: Gumbel.
+
+    **Input:**
+
+    :param copula_params: parameters of the copula
+    :type copula_params: list
+    """
+
+    def __init__(self, copula_params=None):
+        self.copula_params = copula_params
+
+    def evaluate_copula(self, x, marginals):
+        #TODO: should we separate it into two functions, one to evaluate cdf the other pdf, since they are evaluated
+        # separately anyway
+        """
+        Compute the copula cdf c and copula density c_ necessary to evaluate the cdf and pdf, respectively, of the
+        associated multivariate distribution.
+
+        **Input:**
+
+        :param x: Points at which to evaluate the copula cdf and pdf.
+        :type x: ndarray of shape (npoints, dimension)
+
+        :param marginals: Marginal distributions.
+        :type marginals: list of Distribution objects
+
+        **Output/Returns**
+
+        :param c: Copula cdf
+        :type c: ndarray
+
+        :param c\_: Copula pdf
+        :type c\_: ndarray
+        """
+        return 1., 1.
+
+class Gumbel(Copula_v2):
+
+    def __init__(self, copula_params):
+        # Check the input copula_params
+        if isinstance(copula_params, (float, int)):
+            copula_params = [copula_params]
+        if not (isinstance(copula_params, (list, tuple)) and len(copula_params) == 1):
+            raise ValueError('Input copula_params for Gumbel must be a float or list of length 1.')
+        if copula_params[0] < 1:
+            raise ValueError('The parameter for Gumbel copula must be defined in [1, +oo)')
+        super().__init__(copula_params=copula_params)
+
+    def evaluate_copula(self, x, marginals):
+        if x.shape[1] > 2 or len(marginals) != 2:
+            raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
+
+        uu = np.zeros_like(x)
+        for i, m in enumerate(marginals):
+            uu[:, i] = m.cdf(x=x[:, i, np.newaxis])
+
+        if self.copula_params[0] == 1:
+            return np.prod(uu, axis=1), np.ones(x.shape[0])
+        else:
+            u = uu[:, 0]
+            v = uu[:, 1]
+            c = np.exp(-((-np.log(u)) ** self.copula_params[0]+(-np.log(v)) ** self.copula_params[0]) **
+                        (1/self.copula_params[0]))
+
+            c_ = c * 1/u*1/v*((-np.log(u)) ** self.copula_params[0]+(-np.log(v)) ** self.copula_params[0]) ** \
+                (-2 + 2/self.copula_params[0]) * (np.log(u) * np.log(v)) ** (self.copula_params[0]-1) *\
+                (1 + (self.copula_params[0] - 1) * ((-np.log(u)) ** self.copula_params[0] +
+                                               (-np.log(v)) ** self.copula_params[0]) ** (-1/self.copula_params[0]))
+            return c, c_
+
+
+#### Old one
 
 class Distribution:
     """
