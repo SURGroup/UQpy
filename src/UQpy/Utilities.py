@@ -26,7 +26,7 @@ from scipy.special import gamma
 from scipy.stats import chi2, norm
 
 
-def _run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
+def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
     """
     Execute the python model in parallel
     :param sample: One sample point where the model has to be evaluated
@@ -241,7 +241,7 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
             :type corr: ndarray
 
             :param beta:  A variable selected to optimize convergence speed and desired accuracy.
-            :type beta: int
+            :type beta: float
 
             :param thresh1: Threshold
             :type thresh1: float
@@ -256,7 +256,7 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
     """
 
     if beta is None:
-        beta = 1
+        beta = 1.0
     if thresh1 is None:
         thresh1 = 0.0001
     if thresh2 is None:
