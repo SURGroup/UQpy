@@ -212,6 +212,8 @@ class RunModel:
                 raise ValueError("Variable names should be passed as a list of strings.")
         elif self.input_template is not None:
             # If var_names is not passed and there is an input template, create default variable names
+            # TODO The following line will only work if samples[0] is an ndarray. We should handle this when we deal
+            #  with samples
             nvars = samples[0].shape[0]
             self.var_names = []
             for i in range(nvars):
@@ -280,6 +282,11 @@ class RunModel:
         self.cluster = cluster
 
         # Check if samples are provided
+        # TODO: Here we should have two distinct paths for samples provided as an ndarray and as a list. If samples are
+        #  given as ndarray, we should make them into a list with (ns, nv, ...)
+        # TODO: We need to make sure samples has the correct data structure here.
+        # TODO: In the array case, use var_names to determine whether to treat each samples as a single vector or as
+        #  distinct variables, then structure the self.samples list appropriately
         self.samples = []
         self.qoi_list = []
         self.nexist = 0
@@ -288,6 +295,7 @@ class RunModel:
                 print("No samples. Creating the object alone.")
             self.nsim = 0
         elif isinstance(samples, (list, np.ndarray)):
+            # TODO: We don't need to pass samples here, we can make it an attribute before the call.
             self.run(samples)
         else:
             raise ValueError("Samples must be passed as a list or numpy ndarray")
@@ -320,7 +328,8 @@ class RunModel:
         :type append_samples: Boolean
         """
 
-        # Nb of simulations to be performed
+        # Number of simulations to be performed
+        # TODO: This is not correct. nsim should be the first dimension of samples.
         self.nsim = len(samples)
 
         # If append_samples is False, a new set of samples is created, the previous ones are deleted !!!!!
@@ -335,9 +344,12 @@ class RunModel:
                 self.samples = samples
             else:
                 self.samples = list(samples)
+        # TODO: We will need to check the compatibility of the new samples with the structure of the existing samples
         else:  # Samples already exist in the RunModel object, append new ones
+            # TODO: Again, this will not work if only a single samples is provided. nexist = size of first dimension
             self.nexist = len(self.samples)
             self.qoi_list.extend([None] * self.nsim)
+            # TODO: Convert the given samples to the proper list structure.
             if type(samples) == list:
                 self.samples.extend(samples)
             else:
@@ -509,8 +521,10 @@ class RunModel:
 
         # Run python model
         # TODO: Aakash - Make sure we are passing only np arrays into the model calls
+        # TODO: Are we importing the model module twice? - See line 382
         exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
         for i in range(self.nsim):
+            # TODO: self.samples should always be a list
             if isinstance(self.samples, list):
                 sample_to_send = self.samples[i + self.nexist]
             elif isinstance(self.samples, np.ndarray):
@@ -542,6 +556,7 @@ class RunModel:
         pool = multiprocessing.Pool(processes=self.ntasks)
         # TODO: Aakash - Make sure we are passing only np arrays into the model calls
         for i in range(self.nsim):
+            # TODO: self.samples should always be a list
             if isinstance(self.samples, list):
                 sample_to_send = np.atleast_2d(self.samples[i + self.nexist])
             elif isinstance(self.samples, np.ndarray):
@@ -734,9 +749,11 @@ class RunModel:
         # TODO: Aakash - Update formatting specifications here
         # TODO: Aakash - Check writing only specific components & build an example
         new_text = template_text
+        # TODO: Let's actually create an attribute, self.nvar, and loop over this.
         for j in range(len(var_names)):
             string_regex = re.compile(r"<" + var_names[j] + r".*?>")
             count = 0
+            # TODO: Need np.array2string with proper formatting
             for string in string_regex.findall(template_text):
                 if self.fmt is None:
                     temp = string.replace(var_names[j], "samples[" + str(j) + "]")
