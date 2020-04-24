@@ -83,6 +83,7 @@ class SRM:
         B = np.exp(phi * 1.0j) * np.sqrt(2 ** (self.n + 1) * self.S * np.prod(self.dw))
         sample = np.fft.fftn(B, np.ones(self.n, dtype=np.int32) * self.nt)
         samples = np.real(sample)
+        samples = samples[:, np.newaxis]
         return samples
 
     def _simulate_multi(self, phi):
@@ -93,6 +94,7 @@ class SRM:
         F = Coeff * np.einsum('...ij,n...j -> n...i', R, np.exp(phi * 1.0j))
         F[np.isnan(F)] = 0
         samples = np.real(np.fft.fftn(F, s=[self.nt for _ in range(self.n)], axes=tuple(np.arange(1, 1 + self.n))))
+        samples = np.einsum('n...m->nm...')
         return samples
 
 
@@ -254,6 +256,7 @@ class BSRM:
         B = B * Coeff
         B[np.isnan(B)] = 0
         samples = np.fft.fftn(B, [self.nt for _ in range(self.n)])
+        samples = samples[:, np.newaxis]
         return np.real(samples)
 
 
@@ -305,6 +308,7 @@ class KLE:
         samples = np.dot(phi[:, :self.nRV], np.dot(sqrtm(lam[:self.nRV]), xi))
         samples = np.real(samples)
         samples = samples.T
+        samples = samples[:, np.newaxis]
         return samples
 
 
