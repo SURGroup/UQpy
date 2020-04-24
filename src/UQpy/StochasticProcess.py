@@ -94,7 +94,7 @@ class SRM:
         F = Coeff * np.einsum('...ij,n...j -> n...i', R, np.exp(phi * 1.0j))
         F[np.isnan(F)] = 0
         samples = np.real(np.fft.fftn(F, s=[self.nt for _ in range(self.n)], axes=tuple(np.arange(1, 1 + self.n))))
-        samples = np.einsum('n...m->nm...')
+        samples = np.einsum('n...m->nm...', samples)
         return samples
 
 
