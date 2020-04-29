@@ -3706,20 +3706,19 @@ class IS:
     """
 
     def __init__(self, nsamples=None, pdf_target=None, log_pdf_target=None, args_target=None,
-                 proposal=None, proposal_params=None, verbose=False):
-
+                 proposal=None, verbose=False):
         self.verbose = verbose
         # Initialize proposal: it should have an rvs and log pdf or pdf method
-        if not isinstance(proposal, Distribution):
-            raise TypeError('The proposal should be of type Distribution.')
-        if not hasattr(proposal, 'rvs'):
-            raise AttributeError('The proposal should have an rvs method')
-        if not hasattr(proposal, 'log_pdf'):
-            if not hasattr(proposal, 'pdf'):
-                raise AttributeError('The proposal should have a log_pdf or pdf method')
-            proposal.log_pdf = lambda x: np.log(np.maximum(proposal.pdf(x), 10 ** (-320) * np.ones((x.shape[0],))))
         self.proposal = proposal
-        self.proposal.update_params(params=proposal_params)
+        if not isinstance(self.proposal, Distribution):
+            raise TypeError('The proposal should be of type Distribution.')
+        if not hasattr(self.proposal, 'rvs'):
+            raise AttributeError('The proposal should have an rvs method')
+        if not hasattr(self.proposal, 'log_pdf'):
+            if not hasattr(self.proposal, 'pdf'):
+                raise AttributeError('The proposal should have a log_pdf or pdf method')
+            self.proposal.log_pdf = lambda x: np.log(np.maximum(self.proposal.pdf(x),
+                                                                10 ** (-320) * np.ones((x.shape[0],))))
 
         # Initialize target
         self.evaluate_log_target = self.preprocess_target(log_pdf=log_pdf_target, pdf=pdf_target, args=args_target)

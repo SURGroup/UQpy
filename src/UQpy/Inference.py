@@ -108,8 +108,7 @@ class InferenceModel:
     """
 
     def __init__(self, nparams, run_model_object=None, log_likelihood=None, distribution_object=None, name='',
-                 error_covariance=1.0, prior=None, prior_params=None, prior_copula_params=None,
-                 verbose=False, **kwargs_likelihood
+                 error_covariance=1.0, prior=None, verbose=False, fixed_params=None, **kwargs_likelihood
                  ):
 
         # Initialize some parameters
@@ -121,40 +120,41 @@ class InferenceModel:
             raise TypeError('Input name must be a string.')
         self.verbose = verbose
 
-        # Perform checks on inputs run_model_object, log_likelihood, distribution_object that define the inference model
-        if (run_model_object is None) and (log_likelihood is None) and (distribution_object is None):
-            raise ValueError('One of run_model_object, log_likelihood or distribution_object inputs must be provided.')
-        if run_model_object is not None and (not isinstance(run_model_object, RunModel)):
-            raise TypeError('Input run_model_object should be an object of class RunModel.')
-        if (log_likelihood is not None) and (not callable(log_likelihood)):
-            raise TypeError('Input log_likelihood should be a callable.')
-        if distribution_object is not None:
-            if (run_model_object is not None) or (log_likelihood is not None):
-                raise ValueError('Input distribution_object cannot be provided concurrently with log_likelihood or '
-                                 'run_model_object.')
-            if not isinstance(distribution_object, Distribution):
-                raise TypeError('Input distribution_object should be an object of class Distribution.')
-            if not hasattr(distribution_object, 'log_pdf'):
-                if not hasattr(distribution_object, 'pdf'):
-                    raise AttributeError('distribution_object should have a log_pdf or pdf method')
-                distribution_object.log_pdf = lambda x: np.log(distribution_object.pdf(x))
-            if self.name == '':
-                self.name = distribution_object.dist_name
-
         self.run_model_object = run_model_object
         self.error_covariance = error_covariance
         self.log_likelihood = log_likelihood
-        self.kwargs_likelihood = kwargs_likelihood
         self.distribution_object = distribution_object
+        self.kwargs_likelihood = kwargs_likelihood
+        # Perform checks on inputs run_model_object, log_likelihood, distribution_object that define the inference model
+        if (self.run_model_object is None) and (self.log_likelihood is None) and (self.distribution_object is None):
+            raise ValueError('One of run_model_object, log_likelihood or distribution_object inputs must be provided.')
+        if self.run_model_object is not None and (not isinstance(self.run_model_object, RunModel)):
+            raise TypeError('Input run_model_object should be an object of class RunModel.')
+        if (self.log_likelihood is not None) and (not callable(self.log_likelihood)):
+            raise TypeError('Input log_likelihood should be a callable.')
+        if self.distribution_object is not None:
+            if (self.run_model_object is not None) or (self.log_likelihood is not None):
+                raise ValueError('Input distribution_object cannot be provided concurrently with log_likelihood or '
+                                 'run_model_object.')
+            if not isinstance(self.distribution_object, Distribution):
+                raise TypeError('Input distribution_object should be an object of class Distribution.')
+            if not hasattr(self.distribution_object, 'log_pdf'):
+                if not hasattr(self.distribution_object, 'pdf'):
+                    raise AttributeError('distribution_object should have a log_pdf or pdf method')
+                self.distribution_object.log_pdf = lambda x: np.log(self.distribution_object.pdf(x))
+            self.fixed_params = fixed_params
+            #if self.name == '':
+            #    self.name = distribution_object.dist_name
 
-        # Define prior if it is given, and set its parameters if provided
-        if prior is not None:
-            prior.update_params(params=prior_params, copula_params=prior_copula_params)
-            if not hasattr(prior, 'log_pdf'):
-                if not hasattr(prior, 'pdf'):
-                    raise AttributeError('prior should have a log_pdf or pdf method')
-                prior.log_pdf = lambda x: np.log(prior.pdf(x))
+        # Define prior if it is given
         self.prior = prior
+        if self.prior is not None:
+            if not isinstance(self.prior, Distribution):
+                raise TypeError('Input prior should be an object of class Distribution.')
+            if not hasattr(self.prior, 'log_pdf'):
+                if not hasattr(self.prior, 'pdf'):
+                    raise AttributeError('Input prior should have a log_pdf or pdf method')
+                self.prior.log_pdf = lambda x: np.log(self.prior.pdf(x))
 
     def evaluate_log_likelihood(self, params, data):
         """
@@ -215,8 +215,11 @@ class InferenceModel:
 
         # Case 3 - Learn parameters of a probability distribution pi. Data consists in iid sampled from pi.
         else:
-            log_like_values = np.array([np.sum(self.distribution_object.log_pdf(x=data, params=params_))
-                                        for params_ in params])
+            log_like_values = []
+            for params_ in params:
+                self.distribution_object.update_parameters(params=params_, fixed_params=self.fixed_params)
+                log_like_values.append(np.sum(self.distribution_object.log_pdf(x=data)))
+            log_like_values = np.array(log_like_values)
 
         return log_like_values
 
@@ -352,55 +355,33 @@ class MLEstimation:
         :type iter_optim: integer
         """
 
-        # Case 3: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization below.
-        if (self.inference_model.distribution_object is not None) and \
-                hasattr(self.inference_model.distribution_object, 'fit'):
+        # Run optimization (use x0 if provided, otherwise sample starting point from [0, 1] or bounds)
+        if self.verbose:
+            print('Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name +
+                  ', via optimization.')
+        if x0 is None:
             if not (isinstance(iter_optim, int) and iter_optim >= 1):
                 raise ValueError('iter_optim should be an integer >= 1.')
-            if self.verbose:
-                print('Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name +
-                      ', using fit method.')
-            for _ in range(iter_optim):
-                mle_tmp = np.array(self.inference_model.distribution_object.fit(self.data))
-                max_log_like_tmp = self.inference_model.evaluate_log_likelihood(
-                    params=mle_tmp[np.newaxis, :], data=self.data)[0]
-                # Save result
-                if self.mle is None:
-                    self.mle = mle_tmp
-                    self.max_log_like = max_log_like_tmp
-                else:
-                    if max_log_like_tmp > self.max_log_like:
-                        self.mle = mle_tmp
-                        self.max_log_like = max_log_like_tmp
-
-        # Other cases: run optimization (use x0 if provided, otherwise sample starting point from [0, 1] or bounds)
+            x0 = np.random.rand(iter_optim, self.inference_model.nparams)
+            if 'bounds' in self.kwargs_optim.keys():
+                bounds = np.array(self.kwargs_optim['bounds'])
+                x0 = bounds[:, 0].reshape((1, -1)) + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) * x0
         else:
-            if self.verbose:
-                print('Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name +
-                      ', via optimization.')
-            if x0 is None:
-                if not (isinstance(iter_optim, int) and iter_optim >= 1):
-                    raise ValueError('iter_optim should be an integer >= 1.')
-                x0 = np.random.rand(iter_optim, self.inference_model.nparams)
-                if 'bounds' in self.kwargs_optim.keys():
-                    bounds = np.array(self.kwargs_optim['bounds'])
-                    x0 = bounds[:, 0].reshape((1, -1)) + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) * x0
+            x0 = np.atleast_2d(x0)
+            if x0.shape[1] != self.inference_model.nparams:
+                raise ValueError('Wrong dimensions in x0')
+        for x0_ in x0:
+            res = self.optimizer(self.evaluate_neg_log_likelihood_data, x0_, **self.kwargs_optim)
+            mle_tmp = res.x
+            max_log_like_tmp = (-1) * res.fun
+            # Save result
+            if self.mle is None:
+                self.mle = mle_tmp
+                self.max_log_like = max_log_like_tmp
             else:
-                x0 = np.atleast_2d(x0)
-                if x0.shape[1] != self.inference_model.nparams:
-                    raise ValueError('Wrong dimensions in x0')
-            for x0_ in x0:
-                res = self.optimizer(self.evaluate_neg_log_likelihood_data, x0_, **self.kwargs_optim)
-                mle_tmp = res.x
-                max_log_like_tmp = (-1) * res.fun
-                # Save result
-                if self.mle is None:
+                if max_log_like_tmp > self.max_log_like:
                     self.mle = mle_tmp
                     self.max_log_like = max_log_like_tmp
-                else:
-                    if max_log_like_tmp > self.max_log_like:
-                        self.mle = mle_tmp
-                        self.max_log_like = max_log_like_tmp
         if self.verbose:
             print('ML estimation completed.')
 

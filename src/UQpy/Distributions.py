@@ -21,9 +21,8 @@ This module contains functionality for all the distribution supported in UQpy.
 The module currently contains the following classes:
 
 - DistributionContinuous1D: Defines a 1-dimensional continuous probability distribution in UQpy.
-- DistributionContinuousND: Defines a multivariate continuous probability distribution in UQpy.
 - DistributionDiscrete1D: Defines a 1-dimensional discrete probability distribution in UQpy.
-- DistributionDiscreteND: Defines a multivariate discrete probability distribution in UQpy.
+- DistributionND: Defines a multivariate probability distribution in UQpy.
 - Copula: Defines a copula for modeling dependence in multivariate distributions.
 
 """
@@ -40,16 +39,17 @@ from types import MethodType
 ########################################################################################################################
 
 
-class DistributionContinuous1D:
+class Distribution:
     """
-    Define a 1-dimensional continuous probability distribution and its associated methods:
-    - pdf
-    - log_pdf
-    - cdf
-    - icdf
-    - rvs
-    - fit
-    - moments
+    A parent class to all Distribution classes
+    """
+    def __init__(self):
+        pass
+
+
+class DistributionContinuous1D(Distribution):
+    """
+    Define a 1-dimensional continuous probability distribution and its associated methods.
 
     **Authors:**
 
@@ -57,8 +57,9 @@ class DistributionContinuous1D:
 
     Last Modified: 4/23/20 by Audrey Olivier
     """
-    def __init__(self):
-        pass
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.parameters = kwargs
 
     def __pdf(self, x):
         """
@@ -142,7 +143,7 @@ class DistributionContinuous1D:
         """
         pass
 
-    def __fit(self, x):
+    def __mle(self, x):
         """
         Compute the MLE parameters of a distribution from data.
 
@@ -200,805 +201,222 @@ class DistributionContinuous1D:
 
 class ScipyContinuous(DistributionContinuous1D):
 
-    def __init__(self, params):
-        super().__init__()
-        self.params = params
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.scipy_name = stats.rv_continuous
+        self.ordered_params = ['loc', 'scale']
 
     def pdf(self, x):
         x = self.check_x_dimension(x)
-        return self.get_scipy_class().pdf(x=x, **self.get_scipy_params(self.params))
+        return self.scipy_name.pdf(x=x, **self.parameters)
 
     def log_pdf(self, x):
         x = self.check_x_dimension(x)
-        return self.get_scipy_class().logpdf(x=x, **self.get_scipy_params(self.params))
+        return self.scipy_name.logpdf(x=x, **self.parameters)
 
     def cdf(self, x):
         x = self.check_x_dimension(x)
-        return self.get_scipy_class().cdf(x=x, **self.get_scipy_params(self.params))
+        return self.scipy_name.cdf(x=x, **self.parameters)
 
     def icdf(self, x):
         x = self.check_x_dimension(x)
-        return self.get_scipy_class().ppf(x=x, **self.get_scipy_params(self.params))
+        return self.scipy_name.ppf(x=x, **self.parameters)
 
     def rvs(self, nsamples):
         if not isinstance(nsamples, int) and nsamples >= 1:
             raise ValueError('Input nsamples must be an integer strictly greater than 0.')
-        tmp_rvs = self.get_scipy_class().rvs(size=nsamples, **self.get_scipy_params(self.params))
+        tmp_rvs = self.scipy_name.rvs(size=nsamples, **self.parameters)
         return tmp_rvs.reshape((-1, 1))
 
-    def fit(self, x):
-        x = self.check_x_dimension(x)
-        return stats.lognorm.fit(data=x)
-
     def moments(self):
-        return stats.lognorm.stats(moments='mvsk', **self.get_scipy_params(self.params))
+        return self.scipy_name.stats(moments='mvsk', **self.parameters)
 
-    @staticmethod
-    def get_scipy_class():
-        return stats.rv_continuous
-
-    @staticmethod
-    def get_scipy_params(params):
-        return {'loc': params[0], 'scale': params[1]}
+    def update_parameters(self, params, fixed_params=None):
+        if fixed_params is None:
+            fixed_params = {}
+        if (len(np.array(params).shape) != 1) or (len(params) + len(fixed_params) != len(self.parameters)):
+            raise ValueError('Incorrect number of parameters.')
+        cnt_params = 0
+        for key in self.ordered_params:
+            if key in fixed_params.keys():
+                self.parameters[key] = fixed_params[key]
+            else:
+                self.parameters[key] = params[cnt_params]
+                cnt_params += 1
 
 
 class Normal(ScipyContinuous):
     """
     Normal distribution, params are [loc, scale]
     """
-    def __init__(self, params):
-        if len(params) != 2:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 2 parameters: loc, scale.')
-        super().__init__(params=params)
-
-    @staticmethod
-    def get_scipy_class():
-        return stats.norm
+    def __init__(self, loc=0., scale=1.):
+        super().__init__(loc=loc, scale=scale)
+        self.scipy_name = stats.norm
 
 
 class Uniform(ScipyContinuous):
     """
     Uniform distribution, params are [loc, scale]
     """
-    def __init__(self, params):
-        if len(params) != 2:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 2 parameters: loc, scale.')
-        super().__init__(params=params)
-
-    @staticmethod
-    def get_scipy_class():
-        return stats.uniform
+    def __init__(self, loc=0., scale=1.):
+        super().__init__(loc=loc, scale=scale)
+        self.scipy_name = stats.uniform
 
 
 class Beta(ScipyContinuous):
     """
-    Beta distribution, params are [a, b]
+    Beta distribution, params are [a, b, loc, scale]
     """
-    def __init__(self, params):
-        if len(params) != 2:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 2 parameters: a, b.')
-        super().__init__(params=params)
-
-    @staticmethod
-    def get_scipy_class():
-        return stats.beta
-
-    @staticmethod
-    def get_scipy_params(params):
-        return {'a': params[0], 'b': params[1]}
+    def __init__(self, a, b, loc=0., scale=1.):
+        super().__init__(a=a, b=b, loc=loc, scale=scale)
+        self.scipy_name = stats.beta
+        self.ordered_params = ['a', 'b', 'loc', 'scale']
 
 
 class Genextreme(ScipyContinuous):
     """
     Genextreme distribution, params are [c, loc, scale]
     """
-    def __init__(self, params):
-        if len(params) != 3:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 3 parameters: c, loc, scale.')
-        super().__init__(params=params)
-
-    @staticmethod
-    def get_scipy_class():
-        return stats.norm
-
-    @staticmethod
-    def get_scipy_params(params):
-        return {'c': params[0], 'loc': params[0], 'scale': params[1]}
+    def __init__(self, c, loc=0., scale=1.):
+        super().__init__(c=c, loc=loc, scale=scale)
+        self.scipy_name = stats.genextreme
+        self.ordered_params = ['c', 'loc', 'scale']
 
 
 class Chisquare(ScipyContinuous):
     """
     Chisquare distribution, params are [df, loc, scale]
     """
-    def __init__(self, params):
-        if len(params) != 3:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 3 parameters: df, loc, scale.')
-        super().__init__(params=params)
-
-    @staticmethod
-    def get_scipy_class():
-        return stats.chi2
-
-    @staticmethod
-    def get_scipy_params(params):
-        return {'df': params[0], 'loc': params[1], 'scale': params[2]}
+    def __init__(self, df, loc=0., scale=1):
+        super().__init__(df=df, loc=loc, scale=scale)
+        self.scipy_name = stats.chi2
+        self.ordered_params = ['df', 'loc', 'scale']
 
 
 class Lognormal(ScipyContinuous):
     """
     Lognormal distribution, params are [s, loc, scale]
     """
-    def __init__(self, params):
-        if len(params) != 3:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has three parameters: s, loc, scale.')
-        super().__init__(params=params)
-
-    @staticmethod
-    def get_scipy_class():
-        return stats.lognorm
-
-    @staticmethod
-    def get_scipy_params(params):
-        return {'s': params[0], 'loc': params[1], 'scale': params[2]}
+    def __init__(self, s, loc=0., scale=1.):
+        super().__init__(s=s, loc=loc, scale=scale)
+        self.scipy_name = stats.lognorm
+        self.ordered_params = ['s', 'loc', 'scale']
 
 
 class Gamma(ScipyContinuous):
     """
     Gamma distribution, params are [a, loc, scale]
     """
-    def __init__(self, params):
-
-        if len(params) != 3:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 3 parameters: a, loc, scale.')
-        super().__init__(params=params)
-
-    @staticmethod
-    def get_scipy_class():
-        return stats.gamma
-
-    @staticmethod
-    def get_scipy_params(params):
-        return {'a': params[0], 'loc': params[1], 'scale': params[2]}
+    def __init__(self, a, loc=0., scale=1.):
+        super().__init__(a=a, loc=loc, scale=scale)
+        self.scipy_name = stats.gamma
+        self.ordered_params = ['a', 'loc', 'scale']
 
 
 class Exponential(ScipyContinuous):
     """
     Exponential distribution, params are [loc, scale]
     """
-    def __init__(self, params):
-        if len(params) != 2:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 2 parameters: loc, scale.')
-        super().__init__(params=params)
-
-    @staticmethod
-    def get_scipy_class():
-        return stats.expon
+    def __init__(self, loc=0., scale=1.):
+        super().__init__(loc=loc, scale=scale)
+        self.scipy_name = stats.expon
 
 
 class Cauchy(ScipyContinuous):
     """
     Cauchy distribution, params are [loc, scale]
     """
-    def __init__(self, params):
-
-        if len(params) != 2:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 2 parameters: loc, scale.')
-        super().__init__(params=params)
-
-    @staticmethod
-    def get_scipy_class():
-        return stats.cauchy
+    def __init__(self, loc=0., scale=1.):
+        super().__init__(ploc=loc, scale=scale)
+        self.scipy_name = stats.cauchy
 
 
 class InvGauss(ScipyContinuous):
     """
     Inverse Gauss distribution, params are [mu, loc, scale]
     """
-    def __init__(self, params):
-        if len(params) != 3:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 3 parameters: mu, loc, scale.')
-        super().__init__(params=params)
-
-    @staticmethod
-    def get_scipy_class():
-        return stats.invgauss
-
-    @staticmethod
-    def get_scipy_params(params):
-        return {'mu': params[0], 'loc': params[1], 'scale': params[2]}
+    def __init__(self, mu, loc=0., scale=1.):
+        super().__init__(mu=mu, loc=loc, scale=scale)
+        self.scipy_name = stats.invgauss
+        self.ordered_params = ['mu', 'loc', 'scale']
 
 
 class Logistic(ScipyContinuous):
     """
     Logistic distribution, params are [loc, scale]
     """
-    def __init__(self, params):
-        if len(params) != 2:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 2 parameters: loc, scale.')
-        super().__init__(params=params)
-
-    @staticmethod
-    def get_scipy_class():
-        return stats.logistic
+    def __init__(self, loc=0, scale=1):
+        super().__init__(loc=loc, scale=scale)
+        self.scipy_name = stats.logistic
 
 
 class Pareto(ScipyContinuous):
     """
     Pareto distribution, params are [b, loc, scale]
     """
-    def __init__(self, params):
-        if len(params) != 3:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 3 parameters: b, loc, scale.')
-        super().__init__(params=params)
-
-    @staticmethod
-    def get_scipy_class():
-        return stats.pareto
-
-    @staticmethod
-    def get_scipy_params(params):
-        return {'b': params[0], 'loc': params[1], 'scale': params[2]}
+    def __init__(self, b, loc=0., scale=1.):
+        super().__init__(b=b, loc=loc, scale=scale)
+        self.scipy_name = stats.pareto
+        self.ordered_params = ['b', 'loc', 'scale']
 
 
 class Rayleigh(ScipyContinuous):
     """
     Logistic distribution, params are [loc, scale]
     """
-    def __init__(self, params):
-        if len(params) != 2:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 2 parameters: loc, scale.')
-        super().__init__(params=params)
 
-    @staticmethod
-    def get_scipy_class():
-        return stats.rayleigh
+    def __init__(self, loc=0, scale=1):
+        super().__init__(loc=loc, scale=scale)
+        self.scipy_name = stats.rayleigh
 
 
 class Levy(ScipyContinuous):
     """
     Levy distribution, params are [loc, scale]
     """
-    def __init__(self, params):
-        if len(params) != 2:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 2 parameters: loc, scale.')
-        super().__init__(params=params)
 
-    @staticmethod
-    def get_scipy_class():
-        return stats.levy
+    def __init__(self, loc=0, scale=1):
+        super().__init__(loc=loc, scale=scale)
+        self.scipy_name = stats.levy
 
 
 class Laplace(ScipyContinuous):
     """
     Laplace distribution, params are [loc, scale]
     """
-    def __init__(self, params):
-        if len(params) != 2:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 2 parameters: loc, scale.')
-        super().__init__(params=params)
 
-    @staticmethod
-    def get_scipy_class():
-        return stats.laplace
+    def __init__(self, loc=0, scale=1):
+        super().__init__(loc=loc, scale=scale)
+        self.scipy_name = stats.laplace
 
 
 class Maxwell(ScipyContinuous):
     """
     Maxwell distribution, params are [loc, scale]
     """
-    def __init__(self, params):
-        if len(params) != 2:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 2 parameters: loc, scale.')
-        super().__init__(params=params)
 
-    @staticmethod
-    def get_scipy_class():
-        return stats.maxwell
+    def __init__(self, loc=0, scale=1):
+        super().__init__(loc=loc, scale=scale)
+        self.scipy_name = stats.maxwell
 
 
 class TruncNorm(ScipyContinuous):
     """
-    Truncated normal distribution, params are [loc, scale]
+    Truncated normal distribution, params are [a, b, loc, scale]
     """
-    def __init__(self, params):
-        if len(params) != 4:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 4 parameters: a, b, loc, scale.')
-        super().__init__(params=params)
-
-    @staticmethod
-    def get_scipy_class():
-        return stats.truncnorm
-
-    @staticmethod
-    def get_scipy_params(params):
-        return {'a': params[0], 'b': params[1], 'loc': params[2], 'scale': params[3]}
-
-
-########################################################################################################################
-#        Multivariate Continuous Distributions
-########################################################################################################################
-
-class DistributionContinuousND:
-    """
-    Define a multivariate probability distribution and its associated methods.
-
-    A multivariate distribution can be defined in various ways:
-    - via direct sub-classing, see for instance the multivariate normal,
-    - via a list of independent marginals, each of them being of class DistributionContinuous1D,
-    - via a list of marginals and a copula (of class Copula) to account for dependency between dimensions.
-
-    **Authors:**
-
-    Dimitris Giovanis, Audrey Olivier, Michael D. Shields
-
-    Last Modified: 4/23/20 by Audrey Olivier
-    """
-    def __init__(self):
-        pass
-
-    def __pdf(self, x):
-        """
-        Evaluate the probability density function of a distribution at input points x.
-
-        **Input:**
-
-        :param x: Point(s) at which to evaluate the pdf.
-        :type x: ndarray of shape (npoints,) or (npoints, dimension)
-
-        **Output/Returns:**
-
-        :param pdf_values: Value(s) of the pdf at point(s) x.
-        :type pdf_values: ndarray of shape (npoints, )
-        """
-        pass
-
-    def __log_pdf(self, x):
-        """
-        Evaluate the logarithm of the probability density function of a distribution at input points x.
-
-        **Input:**
-
-        :param x: Point(s) at which to evaluate the log-pdf.
-        :type x: ndarray of shape (npoints,) or (npoints, dimension)
-
-        **Output/Returns:**
-
-        :param logpdf_values: Value(s) of the log-pdf at point(s) x.
-        :type logpdf_values: ndarray of shape (npoints, )
-        """
-        pass
-
-    def __cdf(self, x):
-        """
-        Evaluate the cumulative probability function of a distribution at input points x.
-
-        **Input:**
-
-        :param x: Point(s) at which to evaluate the cdf.
-        :type x: ndarray of shape (npoints, dimension)
-
-        **Output/Returns:**
-
-        :param cdf_values: Value(s) of the cdf at point(s) x.
-        :type cdf_values: ndarray of shape (npoints, )
-        """
-        pass
-
-    def __rvs(self, nsamples=1):
-        """
-        Sample iid realizations from the distribution.
-
-        **Input:**
-
-        :param nsamples: An integer providing the desired number of iid samples to be drawn.
-
-                         Default: 1
-        :type nsamples:  int
-
-        **Output/Returns:**
-
-        :param rv_s: Realizations from the distribution
-        :type rv_s: ndarray of shape (nsamples, dimension)
-        """
-        pass
-
-    def __fit(self, x):
-        """
-        Compute the MLE parameters of a distribution from data.
-
-        **Input:**
-
-        :param x: Vector of data x, contains iid samples from the distribution
-        :type x: ndarray of shape (npoints, dimension)
-
-        **Output/Returns:**
-
-        :param params_fit: MLE parameters.
-        :type params_fit: ndarray
-        """
-        pass
-
-    def __moments(self):
-        """
-        Compute marginal moments (mean, variance, skewness, kurtosis).
-
-        **Input:**
-
-        None
-
-        **Output/Returns:**
-
-        :param mean: mean values
-        :type mean: list
-
-        :param var: variances
-        :type var: list
-
-        :param skew: skewness values
-        :type skew: list
-
-        :param kurt: kurtosis values
-        :type kurt: list
-        """
-        pass
-
-    @staticmethod
-    def check_x_dimension(x, d=None):
-        """
-        Check the dimension of input x - must be an ndarray of shape (npoints, d)
-        """
-        x = np.array(x)
-        if len(x.shape) != 2:
-            raise ValueError('Wrong dimension in x.')
-        if (d is not None) and (x.shape[1] != d):
-            raise ValueError('Wrong dimension in x.')
-        return x
-
-
-class MVNormal(DistributionContinuousND):
-
-    def __init__(self, params):
-        if len(params) != 2:
-            raise ValueError('The multivariate normal has two parameters, mean and covariance.')
-        self.params = params
-        super().__init__()
-
-    def pdf(self, x):
-        pdf_val = stats.multivariate_normal.pdf(x=x, mean=self.params[0], cov=self.params[1])
-        return np.atleast_1d(pdf_val)
-
-    def log_pdf(self, x):
-        logpdf_val = stats.multivariate_normal.logpdf(x=x, mean=self.params[0], cov=self.params[1])
-        return np.atleast_1d(logpdf_val)
-
-    def rvs(self, nsamples):
-        if not (isinstance(nsamples, int) and nsamples >= 1):
-            raise ValueError('Input nsamples must be an integer > 0.')
-        return stats.multivariate_normal.rvs(
-            size=nsamples, mean=self.params[0], cov=self.params[1]).reshape((nsamples, -1))
-
-    def fit(self, x):
-        mle_mu = np.mean(x, axis=0)
-        mle_cov = np.cov(x, rowvar=False, bias=True)
-        return [mle_mu, mle_cov]
-
-
-class JointInd(DistributionContinuousND):
-    """
-    Define a joint distribution from its independent marginals.
-
-    Such a multivariate distribution possesses the following methods, on condition that all its univariate marginals
-    also possess them: pdf, log_pdf, cdf, rvs, fit, moments.
-
-    **Inputs:**
-
-    :param marginals: marginal distributions
-    :type marginals: list of DistributionContinuous1D objects
-    """
-    def __init__(self, marginals):
-        super().__init__()
-
-        # Check and save the marginals
-        if not (isinstance(marginals, list) and all(isinstance(d, DistributionContinuous1D) for d in marginals)):
-            raise ValueError('Input marginals must be a list of Distribution1d objects.')
-        self.marginals = marginals
-
-        # If all marginals have a method, the joint has it to
-        if all(hasattr(m, 'pdf') for m in self.marginals):
-            def joint_pdf(dist, x):
-                x = dist.check_x_dimension(x)
-                # Compute pdf of independent marginals
-                pdf_val = np.prod(np.array([m.pdf(x[:, i]) for i, m in enumerate(dist.marginals)]), axis=0)
-                return pdf_val
-            self.pdf = MethodType(joint_pdf, self)
-
-        if all(hasattr(m, 'log_pdf') for m in self.marginals):
-            def joint_log_pdf(dist, x):
-                x = dist.check_x_dimension(x)
-                # Compute log-pdf of independent marginals
-                logpdf_val = np.sum(np.array([m.log_pdf(x[:, i]) for i, m in enumerate(dist.marginals)]), axis=0)
-                return logpdf_val
-            self.log_pdf = MethodType(joint_log_pdf, self)
-
-        if all(hasattr(m, 'cdf') for m in self.marginals):
-            def joint_cdf(dist, x):
-                x = dist.check_x_dimension(x)
-                # Compute cdf of independent marginals
-                cdf_val = np.prod(np.array([m.cdf(x[:, i]) for i, m in enumerate(dist.marginals)]), axis=0)
-                return cdf_val
-            self.cdf = MethodType(joint_cdf, self)
-
-        if all(hasattr(m, 'rvs') for m in self.marginals):
-            def joint_rvs(dist, nsamples=1):
-                # Go through all marginals
-                rv_s = np.zeros((nsamples, len(dist.marginals)))
-                for i, m in enumerate(dist.marginals):
-                    rv_s[:, i] = m.rvs(nsamples=nsamples).reshape((-1,))
-                return rv_s
-            self.rvs = MethodType(joint_rvs, self)
-
-        if all(hasattr(m, 'fit') for m in self.marginals):
-            def joint_fit(dist, x):
-                x = dist.check_x_dimension(x)
-                # Go through all marginals
-                params = []
-                for i, m in enumerate(dist.marginals):
-                    params.append(m.fit(x=x[:, i]))
-                return params
-            self.fit = MethodType(joint_fit, self)
-
-        if all(hasattr(m, 'moments') for m in self.marginals):
-            def joint_moments(dist):
-                # Go through all marginals
-                mean, var, skew, kurt = [], [], [], []
-                for i, m in enumerate(dist.marginals):
-                    moments_i = m.moments()
-                    mean.append(moments_i[0])
-                    var.append(moments_i[1])
-                    skew.append(moments_i[2])
-                    kurt.append(moments_i[3])
-                return mean, var, skew, kurt
-            self.moments = MethodType(joint_moments, self)
-
-
-class JointCopula(DistributionContinuousND):
-    """
-    Define a joint distribution from a list of marginals, potentially with a copula to introduce dependency.
-
-    Such a multivariate distribution possesses a cdf method, and potentially a pdf and log_pdf method if the copula
-    allows for it.
-
-    **Inputs:**
-
-    :param marginals: marginal distributions
-    :type marginals: list of DistributionContinuous1D objects
-
-    :param copula: copula
-    :type copula: object of class Copula
-    """
-    def __init__(self, marginals, copula):
-        super().__init__()
-
-        # Check and save the marginals
-        if not (isinstance(marginals, list) and all(isinstance(d, DistributionContinuous1D) for d in marginals)):
-            raise ValueError('Input marginals must be a list of Distribution objects.')
-        self.marginals = marginals
-
-        # Check the copula. Also, all the marginals should have a cdf method
-        if not isinstance(copula, Copula):
-            raise ValueError('The input copula should be a Copula object.')
-        if not all(hasattr(m, 'cdf') for m in self.marginals):
-            raise ValueError('All the marginals should have a cdf method in order to define a joint with copula.')
-        self.copula = copula
-
-        # Check if methods should exist, if yes define them bound them to the object
-        if hasattr(self.copula, 'evaluate_cdf'):
-            def joint_cdf(dist, x):
-                x = dist.check_x_dimension(x)
-                # Compute cdf of independent marginals
-                unif = np.array([m.cdf(x[:, i]) for i, m in enumerate(dist.marginals)]).T
-                # Compute copula
-                cdf_val = dist.copula.evaluate_cdf(unif=unif)
-                return cdf_val
-            self.cdf = MethodType(joint_cdf, self)
-
-        if all(hasattr(m, 'pdf') for m in self.marginals) and hasattr(self.copula, 'evaluate_pdf'):
-            def joint_pdf(dist, x):
-                x = dist.check_x_dimension(x)
-                # Compute pdf of independent marginals
-                pdf_val = np.prod(np.array([m.pdf(x[:, i]) for i, m in enumerate(dist.marginals)]), axis=0)
-                # Add copula term
-                unif = np.array([m.cdf(x[:, i]) for i, m in enumerate(dist.marginals)]).T
-                c_ = dist.copula.evaluate_pdf(unif=unif)
-                return c_ * pdf_val
-            self.pdf = MethodType(joint_pdf, self)
-
-        if all(hasattr(m, 'log_pdf') for m in self.marginals) and hasattr(self.copula, 'evaluate_pdf'):
-            def joint_log_pdf(dist, x):
-                x = dist.check_x_dimension(x)
-                # Compute pdf of independent marginals
-                logpdf_val = np.sum(np.array([m.log_pdf(x[:, i]) for i, m in enumerate(dist.marginals)]), axis=0)
-                # Add copula term
-                unif = np.array([m.cdf(x[:, i]) for i, m in enumerate(dist.marginals)]).T
-                c_ = dist.copula.evaluate_pdf(unif=unif)
-                return np.log(c_) + logpdf_val
-            self.log_pdf = MethodType(joint_log_pdf, self)
-
-
-########################################################################################################################
-#        Copulas
-########################################################################################################################
-
-class Copula:
-    """
-    Define a copula for a multivariate distribution whose dependence structure is defined with a copula.
-
-    This class is used in support of the main Distribution class. The following copula are supported: Gumbel.
-
-    **Input:**
-
-    :param copula_params: parameters of the copula
-    :type copula_params: list
-    """
-
-    def __init__(self, copula_params=None):
-        self.copula_params = copula_params
-
-    def evaluate_cdf(self, unif):
-        """
-        Compute the copula cdf C(u1, u2, ..., ud) for a d-variate uniform distribution.
-
-        For a generic multivariate distribution with marginals F1, ...Fd, the joint cdf is computed as
-        F(x1, ..., xd) = C(F1(x1), ..., Fd(xd)), thus one must first evaluate the marginals cdf, then evaluate the
-        copula cdf.
-
-        **Input:**
-
-        :param unif: Points (uniformly distributed) at which to evaluate the copula cdf.
-        :type unif: ndarray of shape (npoints, dimension)
-
-        **Output/Returns**
-
-        :param cdf_val: Copula cdf
-        :type cdf_val: ndarray of shape (npoints, )
-        """
-        return np.prod(unif, axis=1)
-
-    def evaluate_pdf(self, unif):
-        """
-        Compute the copula pdf term C_ for a d-variate uniform distribution.
-
-        For a generic multivariate distribution with marginals pdfs f1, ..., fd, the joint pdf is computed as
-        f(x1, ..., xd) = C_ * f1(x1) * ... * fd(xd). Thus one must first evaluate the marginals cdf and copula term C_,
-        them multiply it by the marginal pdfs.
-
-        **Input:**
-
-        :param unif: Points (uniformly distributed) at which to evaluate the copula pdf term C_.
-        :type unif: ndarray of shape (npoints, dimension)
-
-        **Output/Returns**
-
-        :param cdf_val: Copula pdf
-        :type cdf_val: ndarray of shape (npoints, )
-        """
-        return np.ones(unif.shape[0])
-
-
-class Gumbel(Copula):
-    """
-    Gumbel copula
-    """
-    def __init__(self, copula_params):
-        # Check the input copula_params
-        if isinstance(copula_params, (float, int)):
-            copula_params = [copula_params]
-        if not (isinstance(copula_params, (list, tuple)) and len(copula_params) == 1):
-            raise ValueError('Input copula_params for Gumbel must be a float or list of length 1.')
-        if copula_params[0] < 1:
-            raise ValueError('The parameter for Gumbel copula must be defined in [1, +oo)')
-        super().__init__(copula_params=copula_params)
-
-    def evaluate_cdf(self, unif):
-        if unif.shape[1] > 2:
-            raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
-        if self.copula_params[0] == 1:
-            return np.prod(unif, axis=1)
-
-        u = unif[:, 0]
-        v = unif[:, 1]
-        theta = self.copula_params[0]
-        cdf_val = np.exp(-((-np.log(u)) ** theta + (-np.log(v)) ** theta) ** (1 / theta))
-
-        return cdf_val
-
-    def evaluate_pdf(self, unif):
-        if unif.shape[1] > 2:
-            raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
-        if self.copula_params[0] == 1:
-            return np.ones(unif.shape[0])
-
-        u = unif[:, 0]
-        v = unif[:, 1]
-        theta = self.copula_params[0]
-        c = np.exp(-((-np.log(u)) ** theta + (-np.log(v)) ** theta) ** (1 / theta))
-
-        pdf_val = c * 1 / u * 1 / v * ((-np.log(u)) ** theta + (-np.log(v)) ** theta) ** (-2 + 2 / theta) \
-             * (np.log(u) * np.log(v)) ** (theta - 1) * \
-             (1 + (theta - 1) * ((-np.log(u)) ** theta + (-np.log(v)) ** theta) ** (-1 / theta))
-        return pdf_val
-
-
-class Clayton(Copula):
-    """
-    Clayton copula
-    """
-    def __init__(self, copula_params):
-        # Check the input copula_params
-        if isinstance(copula_params, (float, int)):
-            copula_params = [copula_params]
-        if not (isinstance(copula_params, (list, tuple)) and len(copula_params) == 1):
-            raise ValueError('Input copula_params for Clayton must be a float or list of length 1.')
-        if copula_params[0] < -1 or copula_params[0] == 0.:
-            raise ValueError('The parameter for Clayton copula must be defined in [-1, +oo)\{0}')
-        super().__init__(copula_params=copula_params)
-
-    def evaluate_cdf(self, unif):
-        if unif.shape[1] > 2:
-            raise ValueError('Maximum dimension for the Clayton Copula is 2.')
-        if self.copula_params[0] == 1:
-            return np.prod(unif, axis=1)
-
-        u = unif[:, 0]
-        v = unif[:, 1]
-        theta = self.copula_params[0]
-        cdf_val = (np.maximum(u ** (-theta) + v ** (-theta) - 1., 0.)) ** (-1. / theta)
-
-        return cdf_val
-
-
-class Frank(Copula):
-    """
-    Frank copula
-    """
-    def __init__(self, copula_params):
-        # Check the input copula_params
-        if isinstance(copula_params, (float, int)):
-            copula_params = [copula_params]
-        if not (isinstance(copula_params, (list, tuple)) and len(copula_params) == 1):
-            raise ValueError('Input copula_params for Frank must be a float or list of length 1.')
-        if copula_params[0] == 0.:
-            raise ValueError('The parameter for Frank copula must be defined in R\{0}')
-        super().__init__(copula_params=copula_params)
-
-    def evaluate_cdf(self, unif):
-        if unif.shape[1] > 2:
-            raise ValueError('Maximum dimension for the Clayton Copula is 2.')
-        if self.copula_params[0] == 1:
-            return np.prod(unif, axis=1)
-
-        u = unif[:, 0]
-        v = unif[:, 1]
-        theta = self.copula_params[0]
-        tmp_ratio = (np.exp(-theta * u) - 1.) * (np.exp(-theta * v) - 1.) / (np.exp(-theta) - 1.)
-        cdf_val = -1. / theta * np.log(1. + tmp_ratio)
-
-        return cdf_val
+    def __init__(self, a, b, loc=0, scale=1.):
+        super().__init__(a=a, b=b, loc=loc, scale=scale)
+        self.scipy_name = stats.truncnorm
+        self.ordered_params = ['a', 'b', 'loc', 'scale']
 
 
 ########################################################################################################################
 #        Univariate Discrete Distributions
 ########################################################################################################################
 
-class DistributionDiscrete1D:
+class DistributionDiscrete1D(Distribution):
     """
-    Define a 1-dimensional probability distribution and its associated methods:
-    - pmf
-    - log_pmf
-    - cdf
-    - icdf
-    - rvs
-    - moments
+    Define a 1-dimensional probability distribution and its associated methods.
 
     **Authors:**
 
@@ -1006,8 +424,9 @@ class DistributionDiscrete1D:
 
     Last Modified: 4/23/20 by Audrey Olivier
     """
-    def __init__(self):
-        pass
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.parameters = kwargs
 
     def __pmf(self, x):
         """
@@ -1128,91 +547,82 @@ class DistributionDiscrete1D:
 
 class ScipyDiscrete(DistributionDiscrete1D):
 
-    def __init__(self, params):
-        super().__init__()
-        self.params = params
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.scipy_name = stats.rv_discrete
+        self.ordered_params = ['loc', 'scale']
 
-    def pmf(self, x):
+    def pdf(self, x):
         x = self.check_x_dimension(x)
-        return self.get_scipy_class().pmf(x=x, **self.get_scipy_params(self.params))
+        return self.scipy_name.pmf(x=x, **self.parameters)
 
-    def log_pmf(self, x):
+    def log_pdf(self, x):
         x = self.check_x_dimension(x)
-        return self.get_scipy_class().logpmf(x=x, **self.get_scipy_params(self.params))
+        return self.scipy_name.logpmf(x=x, **self.parameters)
 
     def cdf(self, x):
         x = self.check_x_dimension(x)
-        return self.get_scipy_class().cdf(x=x, **self.get_scipy_params(self.params))
+        return self.scipy_name.cdf(x=x, **self.parameters)
 
     def icdf(self, x):
         x = self.check_x_dimension(x)
-        return self.get_scipy_class().ppf(x=x, **self.get_scipy_params(self.params))
+        return self.scipy_name.ppf(x=x, **self.parameters)
 
     def rvs(self, nsamples):
         if not isinstance(nsamples, int) and nsamples >= 1:
             raise ValueError('Input nsamples must be an integer strictly greater than 0.')
-        tmp_rvs = self.get_scipy_class().rvs(size=nsamples, **self.get_scipy_params(self.params))
+        tmp_rvs = self.scipy_name.rvs(size=nsamples, **self.parameters)
         return tmp_rvs.reshape((-1, 1))
 
-    def fit(self, x):
-        x = self.check_x_dimension(x)
-        return stats.lognorm.fit(data=x)
-
     def moments(self):
-        return stats.lognorm.stats(moments='mvsk', **self.get_scipy_params(self.params))
+        return self.scipy_name.stats(moments='mvsk', **self.parameters)
 
-    @staticmethod
-    def get_scipy_class():
-        return stats.rv_discrete
-
-    @staticmethod
-    def get_scipy_params(params):
-        return {'loc': params[0], 'scale': params[1]}
+    def update_parameters(self, params, fixed_params=None):
+        if fixed_params is None:
+            fixed_params = {}
+        if (len(np.array(params).shape) != 1) or (len(params) + len(fixed_params) != len(self.parameters)):
+            raise ValueError('Incorrect number of parameters.')
+        cnt_params = 0
+        for key in self.ordered_params:
+            if key in fixed_params.keys():
+                self.parameters[key] = fixed_params[key]
+            else:
+                self.parameters[key] = params[cnt_params]
+                cnt_params += 1
 
 
 class Binomial(ScipyDiscrete):
     """
     Binomial distribution, params are [n, p]
     """
-    def __init__(self, params):
-        if len(params) != 2:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 2 parameters: n, p.')
-        super().__init__(params=params)
-
-    @staticmethod
-    def get_scipy_class():
-        return stats.binom
-
-    @staticmethod
-    def get_scipy_params(params):
-        return {'n': params[0], 'p': params[1]}
+    def __init__(self, n, p):
+        super().__init__(n=n, p=p)
+        self.scipy_name = stats.binom
+        self.ordered_params = ['n', 'p']
 
 
 class Poisson(ScipyDiscrete):
     """
     Poisson distribution, params are [mu, loc]
     """
-    def __init__(self, params):
-        if len(params) != 2:
-            raise ValueError('The ' + self.__class__.__name__ + ' distribution has 2 parameters: mu, loc.')
-        super().__init__(params=params)
-
-    @staticmethod
-    def get_scipy_class():
-        return stats.uniform
+    def __init__(self, mu, loc=0.):
+        super().__init__(mu=mu, loc=loc)
+        self.scipy_name = stats.poisson
+        self.ordered_params = ['mu', 'loc']
 
 
 ########################################################################################################################
-#        Multivariate Discrete Distributions
+#        Multivariate Continuous Distributions
 ########################################################################################################################
 
-class DistributionDiscreteND:
+class DistributionND(Distribution):
     """
-    Define a 1-dimensional probability distribution and its associated methods:
-    - pmf
-    - log_pmf
-    - cdf
-    - rvs
+    Define a multivariate probability distribution and its associated methods.
+
+    A multivariate distribution can be defined in various ways:
+    - via direct sub-classing, see for instance the multivariate normal,
+    - via a list of independent marginals, each of them being of class DistributionContinuous1D,
+    - via a list of marginals and a copula (of class Copula) to account for dependency between dimensions.
 
     **Authors:**
 
@@ -1220,7 +630,40 @@ class DistributionDiscreteND:
 
     Last Modified: 4/23/20 by Audrey Olivier
     """
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.parameters = kwargs
+
+    def __pdf(self, x):
+        """
+        Evaluate the probability density function of a distribution at input points x.
+
+        **Input:**
+
+        :param x: Point(s) at which to evaluate the pdf.
+        :type x: ndarray of shape (npoints,) or (npoints, dimension)
+
+        **Output/Returns:**
+
+        :param pdf_values: Value(s) of the pdf at point(s) x.
+        :type pdf_values: ndarray of shape (npoints, )
+        """
+        pass
+
+    def __log_pdf(self, x):
+        """
+        Evaluate the logarithm of the probability density function of a distribution at input points x.
+
+        **Input:**
+
+        :param x: Point(s) at which to evaluate the log-pdf.
+        :type x: ndarray of shape (npoints,) or (npoints, dimension)
+
+        **Output/Returns:**
+
+        :param logpdf_values: Value(s) of the log-pdf at point(s) x.
+        :type logpdf_values: ndarray of shape (npoints, )
+        """
         pass
 
     def __pmf(self, x):
@@ -1230,11 +673,11 @@ class DistributionDiscreteND:
         **Input:**
 
         :param x: Point(s) at which to evaluate the pmf.
-        :type x: ndarray of shape (npoints, dimension)
+        :type x: ndarray of shape (npoints,) or (npoints, dimension)
 
         **Output/Returns:**
 
-        :param pdf_values: Value(s) of the pmf at point(s) x.
+        :param pdf_values: Value(s) of the pdf at point(s) x.
         :type pdf_values: ndarray of shape (npoints, )
         """
         pass
@@ -1246,7 +689,7 @@ class DistributionDiscreteND:
         **Input:**
 
         :param x: Point(s) at which to evaluate the log-pmf.
-        :type x: ndarray of shape (npoints, dimension)
+        :type x: ndarray of shape (npoints,) or (npoints, dimension)
 
         **Output/Returns:**
 
@@ -1284,13 +727,89 @@ class DistributionDiscreteND:
 
         **Output/Returns:**
 
-        :return rv_s: Realizations from the distribution
-        :rtype rv_s: ndarray of shape (nsamples, dimension)
+        :param rv_s: Realizations from the distribution
+        :type rv_s: ndarray of shape (nsamples, dimension)
         """
         pass
 
+    def __mle(self, x):
+        """
+        Compute the MLE parameters of a distribution from data.
 
-class Multinomial(DistributionDiscreteND):
+        **Input:**
+
+        :param x: Vector of data x, contains iid samples from the distribution
+        :type x: ndarray of shape (npoints, dimension)
+
+        **Output/Returns:**
+
+        :param params_fit: MLE parameters.
+        :type params_fit: ndarray
+        """
+        pass
+
+    def __moments(self):
+        """
+        Compute moments (mean, variance, possibly skewness and kurtosis).
+
+        **Input:**
+
+        None
+
+        **Output/Returns:**
+
+        :param mean: mean values
+        :type mean: list
+
+        :param var: variances
+        :type var: list
+
+        :param skew: skewness values
+        :type skew: list
+
+        :param kurt: kurtosis values
+        :type kurt: list
+        """
+        pass
+
+    @staticmethod
+    def check_x_dimension(x, d=None):
+        """
+        Check the dimension of input x - must be an ndarray of shape (npoints, d)
+        """
+        x = np.array(x)
+        if len(x.shape) != 2:
+            raise ValueError('Wrong dimension in x.')
+        if (d is not None) and (x.shape[1] != d):
+            raise ValueError('Wrong dimension in x.')
+        return x
+
+
+class MVNormal(DistributionND):
+
+    def __init__(self, mean, cov=1.):
+        super().__init__(mean=mean, cov=cov)
+
+    def pdf(self, x):
+        pdf_val = stats.multivariate_normal.pdf(x=x, **self.parameters)
+        return np.atleast_1d(pdf_val)
+
+    def log_pdf(self, x):
+        logpdf_val = stats.multivariate_normal.logpdf(x=x, **self.parameters)
+        return np.atleast_1d(logpdf_val)
+
+    def rvs(self, nsamples):
+        if not (isinstance(nsamples, int) and nsamples >= 1):
+            raise ValueError('Input nsamples must be an integer > 0.')
+        return stats.multivariate_normal.rvs(size=nsamples, **self.parameters).reshape((nsamples, -1))
+
+    def mle(self, x):
+        mle_mu = np.mean(x, axis=0)
+        mle_cov = np.cov(x, rowvar=False, bias=True)
+        return [mle_mu, mle_cov]
+
+
+class Multinomial(DistributionND):
     """
     Multinomial distribution, parameters are n (integer) and p (array-like).
     """
@@ -1313,6 +832,372 @@ class Multinomial(DistributionDiscreteND):
             raise ValueError('Input nsamples must be an integer > 0.')
         return stats.multinomial.rvs(
             size=nsamples, n=self.params[0], p=self.params[1]).reshape((nsamples, -1))
+
+
+class JointInd(DistributionND):
+    """
+    Define a joint distribution from its independent marginals.
+
+    Such a multivariate distribution possesses the following methods, on condition that all its univariate marginals
+    also possess them: pdf, log_pdf, cdf, rvs, fit, moments.
+
+    **Inputs:**
+
+    :param marginals: marginal distributions
+    :type marginals: list of DistributionContinuous1D objects
+    """
+    def __init__(self, marginals):
+        super().__init__()
+
+        # Check and save the marginals
+        if not (isinstance(marginals, list) and all(isinstance(d, (DistributionContinuous1D, DistributionDiscrete1D))
+                                                    for d in marginals)):
+            raise ValueError('Input marginals must be a list of Distribution1d objects.')
+        self.marginals = marginals
+
+        # If all marginals have a method, the joint has it to
+        if all(hasattr(m, 'pdf') or hasattr(m, 'pmf') for m in self.marginals):
+            def joint_pdf(dist, x):
+                x = dist.check_x_dimension(x)
+                # Compute pdf of independent marginals
+                pdf_val = np.ones((x.shape[0], ))
+                for i in range(len(self.marginals)):
+                    if hasattr(self.marginals[i], 'pdf'):
+                        pdf_val *= marginals[i].pdf(x[:, i])
+                    else:
+                        pdf_val *= marginals[i].pmf(x[:, i])
+                return pdf_val
+            if any(hasattr(m, 'pdf') for m in self.marginals):
+                self.pdf = MethodType(joint_pdf, self)
+            else:
+                self.pmf = MethodType(joint_pdf, self)
+
+        if all(hasattr(m, 'log_pdf') or hasattr(m, 'log_pmf') for m in self.marginals):
+            def joint_log_pdf(dist, x):
+                x = dist.check_x_dimension(x)
+                # Compute pdf of independent marginals
+                pdf_val = np.zeros((x.shape[0],))
+                for i in range(len(self.marginals)):
+                    if hasattr(self.marginals[i], 'log_pdf'):
+                        pdf_val += marginals[i].log_pdf(x[:, i])
+                    else:
+                        pdf_val += marginals[i].log_pmf(x[:, i])
+                return pdf_val
+            if any(hasattr(m, 'log_pdf') for m in self.marginals):
+                self.log_pdf = MethodType(joint_log_pdf, self)
+            else:
+                self.log_pmf = MethodType(joint_log_pdf, self)
+
+        if all(hasattr(m, 'cdf') for m in self.marginals):
+            def joint_cdf(dist, x):
+                x = dist.check_x_dimension(x)
+                # Compute cdf of independent marginals
+                cdf_val = np.prod(np.array([m.cdf(x[:, i]) for i, m in enumerate(dist.marginals)]), axis=0)
+                return cdf_val
+            self.cdf = MethodType(joint_cdf, self)
+
+        if all(hasattr(m, 'rvs') for m in self.marginals):
+            def joint_rvs(dist, nsamples=1):
+                # Go through all marginals
+                rv_s = np.zeros((nsamples, len(dist.marginals)))
+                for i, m in enumerate(dist.marginals):
+                    rv_s[:, i] = m.rvs(nsamples=nsamples).reshape((-1,))
+                return rv_s
+            self.rvs = MethodType(joint_rvs, self)
+
+        if all(hasattr(m, 'moments') for m in self.marginals):
+            def joint_moments(dist):
+                # Go through all marginals
+                mean, var, skew, kurt = [], [], [], []
+                for i, m in enumerate(dist.marginals):
+                    moments_i = m.moments()
+                    mean.append(moments_i[0])
+                    var.append(moments_i[1])
+                    skew.append(moments_i[2])
+                    kurt.append(moments_i[3])
+                return mean, var, skew, kurt
+            self.moments = MethodType(joint_moments, self)
+
+        if all(hasattr(m, 'update_parameters') for m in self.marginals):
+            def joint_update_parameters(dist, params, fixed_params=None):
+                if fixed_params is None:
+                    fixed_params = [{}] * len(self.marginals)
+                if not isinstance(fixed_params, (list, tuple)) or len(fixed_params) != len(self.marginals):
+                    raise ValueError
+                cnt_params = 0
+                for m, fixed_p in zip(dist.marginals, fixed_params):
+                    n_free = len(m.parameters) - len(fixed_p)
+                    m.update_parameters(params=np.atleast_1d(params[cnt_params:cnt_params+n_free]),
+                                        fixed_params=fixed_p)
+                    cnt_params += n_free
+            self.update_parameters = MethodType(joint_update_parameters, self)
+
+
+class JointCopula(DistributionND):
+    """
+    Define a joint distribution from a list of marginals, potentially with a copula to introduce dependency.
+
+    Such a multivariate distribution possesses a cdf method, and potentially a pdf and log_pdf method if the copula
+    allows for it.
+
+    **Inputs:**
+
+    :param marginals: marginal distributions
+    :type marginals: list of DistributionContinuous1D objects
+
+    :param copula: copula
+    :type copula: object of class Copula
+    """
+    def __init__(self, marginals, copula):
+        super().__init__()
+
+        # Check and save the marginals
+        #TODO: Consider copulas for non-continuous distributions with evaluate_pmf?
+        self.marginals = marginals
+        if not (isinstance(self.marginals, list)
+                and all(isinstance(d, (DistributionContinuous1D, DistributionDiscrete1D)) for d in self.marginals)):
+            raise ValueError('Input marginals must be a list of 1d continuous Distribution objects.')
+
+        # Check the copula. Also, all the marginals should have a cdf method
+        self.copula = copula
+        if not isinstance(self.copula, Copula):
+            raise ValueError('The input copula should be a Copula object.')
+        if not all(hasattr(m, 'cdf') for m in self.marginals):
+            raise ValueError('All the marginals should have a cdf method in order to define a joint with copula.')
+        self.copula.check_marginals(marginals=self.marginals)
+
+        # Check if methods should exist, if yes define them bound them to the object
+        if hasattr(self.copula, 'evaluate_cdf'):
+            def joint_cdf(dist, x):
+                x = dist.check_x_dimension(x)
+                # Compute cdf of independent marginals
+                unif = np.array([m.cdf(x[:, i]) for i, m in enumerate(dist.marginals)]).T
+                # Compute copula
+                cdf_val = dist.copula.evaluate_cdf(unif=unif)
+                return cdf_val
+            self.cdf = MethodType(joint_cdf, self)
+
+        if all(hasattr(m, 'pdf') for m in self.marginals) and hasattr(self.copula, 'evaluate_pdf'):
+            def joint_pdf(dist, x):
+                x = dist.check_x_dimension(x)
+                # Compute pdf of independent marginals
+                pdf_val = np.prod(np.array([m.pdf(x[:, i]) for i, m in enumerate(dist.marginals)]), axis=0)
+                # Add copula term
+                unif = np.array([m.cdf(x[:, i]) for i, m in enumerate(dist.marginals)]).T
+                c_ = dist.copula.evaluate_pdf(unif=unif)
+                return c_ * pdf_val
+            self.pdf = MethodType(joint_pdf, self)
+
+        if all(hasattr(m, 'log_pdf') for m in self.marginals) and hasattr(self.copula, 'evaluate_pdf'):
+            def joint_log_pdf(dist, x):
+                x = dist.check_x_dimension(x)
+                # Compute pdf of independent marginals
+                logpdf_val = np.sum(np.array([m.log_pdf(x[:, i]) for i, m in enumerate(dist.marginals)]), axis=0)
+                # Add copula term
+                unif = np.array([m.cdf(x[:, i]) for i, m in enumerate(dist.marginals)]).T
+                c_ = dist.copula.evaluate_pdf(unif=unif)
+                return np.log(c_) + logpdf_val
+            self.log_pdf = MethodType(joint_log_pdf, self)
+
+        if all(hasattr(m, 'update_parameters') for m in self.marginals + [self.copula, ]):
+            def joint_update_parameters(dist, params, fixed_params=None):
+                if fixed_params is None:
+                    fixed_params = [{}] * (len(self.marginals) + 1)
+                if not isinstance(fixed_params, (list, tuple)) or len(fixed_params) != len(self.marginals) + 1:
+                    raise ValueError
+                cnt_params = 0
+                for m, fixed_p in zip(dist.marginals + [dist.copula, ], fixed_params):
+                    n_free = len(m.parameters) - len(fixed_p)
+                    m.update_parameters(params=np.atleast_1d(params[cnt_params:cnt_params+n_free]),
+                                        fixed_params=fixed_p)
+                    cnt_params += n_free
+            self.update_parameters = MethodType(joint_update_parameters, self)
+
+
+########################################################################################################################
+#        Copulas
+########################################################################################################################
+
+class Copula:
+    """
+    Define a copula for a multivariate distribution whose dependence structure is defined with a copula.
+
+    This class is used in support of the main Distribution class. The following copula are supported: Gumbel.
+
+    **Input:**
+
+    :param copula_params: parameters of the copula
+    :type copula_params: list
+    """
+
+    def __init__(self, **kwargs):
+        self.parameters = kwargs
+
+    def __evaluate_cdf(self, unif):
+        """
+        Compute the copula cdf C(u1, u2, ..., ud) for a d-variate uniform distribution.
+
+        For a generic multivariate distribution with marginals F1, ...Fd, the joint cdf is computed as
+        F(x1, ..., xd) = C(F1(x1), ..., Fd(xd)), thus one must first evaluate the marginals cdf, then evaluate the
+        copula cdf.
+
+        **Input:**
+
+        :param unif: Points (uniformly distributed) at which to evaluate the copula cdf.
+        :type unif: ndarray of shape (npoints, dimension)
+
+        **Output/Returns**
+
+        :param cdf_val: Copula cdf
+        :type cdf_val: ndarray of shape (npoints, )
+        """
+        return np.prod(unif, axis=1)
+
+    def __evaluate_pdf(self, unif):
+        """
+        Compute the copula pdf term C_ for a d-variate uniform distribution.
+
+        For a generic multivariate distribution with marginals pdfs f1, ..., fd, the joint pdf is computed as
+        f(x1, ..., xd) = C_ * f1(x1) * ... * fd(xd). Thus one must first evaluate the marginals cdf and copula term C_,
+        them multiply it by the marginal pdfs.
+
+        **Input:**
+
+        :param unif: Points (uniformly distributed) at which to evaluate the copula pdf term C_.
+        :type unif: ndarray of shape (npoints, dimension)
+
+        **Output/Returns**
+
+        :param cdf_val: Copula pdf
+        :type cdf_val: ndarray of shape (npoints, )
+        """
+        return np.ones(unif.shape[0])
+
+    def check_marginals(self, marginals):
+        pass
+
+
+class Gumbel(Copula):
+    """
+    Gumbel copula
+    """
+    def __init__(self, theta):
+        # Check the input copula_params
+        if theta is not None and ((not isinstance(theta, (float, int))) or (theta < 1)):
+            raise ValueError('Input theta should be a float in [1, +oo).')
+        super().__init__(theta=theta)
+
+    def evaluate_cdf(self, unif):
+        if unif.shape[1] > 2:
+            raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
+        if self.parameters['theta'] == 1:
+            return np.prod(unif, axis=1)
+
+        u = unif[:, 0]
+        v = unif[:, 1]
+        theta = self.parameters['theta']
+        cdf_val = np.exp(-((-np.log(u)) ** theta + (-np.log(v)) ** theta) ** (1 / theta))
+
+        return cdf_val
+
+    def evaluate_pdf(self, unif):
+        if unif.shape[1] > 2:
+            raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
+        if self.parameters['theta'] == 1:
+            return np.ones(unif.shape[0])
+
+        u = unif[:, 0]
+        v = unif[:, 1]
+        theta = self.parameters['theta']
+        c = np.exp(-((-np.log(u)) ** theta + (-np.log(v)) ** theta) ** (1 / theta))
+
+        pdf_val = c * 1 / u * 1 / v * ((-np.log(u)) ** theta + (-np.log(v)) ** theta) ** (-2 + 2 / theta) \
+             * (np.log(u) * np.log(v)) ** (theta - 1) * \
+             (1 + (theta - 1) * ((-np.log(u)) ** theta + (-np.log(v)) ** theta) ** (-1 / theta))
+        return pdf_val
+
+    def check_marginals(self, marginals):
+        if len(marginals) != 2:
+            raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
+        if not all(isinstance(m, DistributionContinuous1D) for m in marginals):
+            raise ValueError('Marginals should be 1d continuous distributions.')
+
+    def update_parameters(self, params, **fixed_params):
+        if 'theta' in fixed_params.keys():
+            self.parameters['theta'] = fixed_params['theta']
+        else:
+            self.parameters['theta'] = params[0]
+
+
+class Clayton(Copula):
+    """
+    Clayton copula
+    """
+    def __init__(self, theta):
+        # Check the input copula_params
+        if theta is not None and ((not isinstance(theta, (float, int))) or (theta < -1 or theta == 0.)):
+            raise ValueError('Input theta should be a float in [-1, +oo)\{0}.')
+        super().__init__(theta=theta)
+
+    def evaluate_cdf(self, unif):
+        if unif.shape[1] > 2:
+            raise ValueError('Maximum dimension for the Clayton Copula is 2.')
+        if self.parameters['theta'] == 1:
+            return np.prod(unif, axis=1)
+
+        u = unif[:, 0]
+        v = unif[:, 1]
+        theta = self.parameters['theta']
+        cdf_val = (np.maximum(u ** (-theta) + v ** (-theta) - 1., 0.)) ** (-1. / theta)
+        return cdf_val
+
+    def check_marginals(self, marginals):
+        if len(marginals) != 2:
+            raise ValueError('Maximum dimension for the Clayton Copula is 2.')
+        if not all(isinstance(m, DistributionContinuous1D) for m in marginals):
+            raise ValueError('Marginals should be 1d continuous distributions.')
+
+    def update_parameters(self, params, **fixed_params):
+        if 'theta' in fixed_params.keys():
+            self.parameters['theta'] = fixed_params['theta']
+        else:
+            self.parameters['theta'] = params[0]
+
+
+class Frank(Copula):
+    """
+    Frank copula
+    """
+    def __init__(self, theta):
+        # Check the input copula_params
+        if theta is not None and ((not isinstance(theta, (float, int))) or (theta == 0.)):
+            raise ValueError('Input theta should be a float in R\{0}.')
+        super().__init__(theta=theta)
+
+    def evaluate_cdf(self, unif):
+        if unif.shape[1] > 2:
+            raise ValueError('Maximum dimension for the Clayton Copula is 2.')
+        if self.parameters['theta'] == 1:
+            return np.prod(unif, axis=1)
+
+        u = unif[:, 0]
+        v = unif[:, 1]
+        theta = self.parameters['theta']
+        tmp_ratio = (np.exp(-theta * u) - 1.) * (np.exp(-theta * v) - 1.) / (np.exp(-theta) - 1.)
+        cdf_val = -1. / theta * np.log(1. + tmp_ratio)
+        return cdf_val
+
+    def check_marginals(self, marginals):
+        if len(marginals) != 2:
+            raise ValueError('Maximum dimension for the Frank Copula is 2.')
+        if not all(isinstance(m, DistributionContinuous1D) for m in marginals):
+            raise ValueError('Marginals should be 1d continuous distributions.')
+
+    def update_parameters(self, params, **fixed_params):
+        if 'theta' in fixed_params.keys():
+            self.parameters['theta'] = fixed_params['theta']
+        else:
+            self.parameters['theta'] = params[0]
 
 
 ########################################################################################################################
