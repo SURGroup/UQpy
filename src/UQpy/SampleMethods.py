@@ -182,6 +182,7 @@ class LHS:
                                         2. 'centered' - points only at the centre \n
                                         3. 'maximin' - maximising the minimum distance between points \n
                                         4. 'correlate' - minimizing the correlation between the points \n
+
                                   Default: 'random'
             :type lhs_criterion: str
 
@@ -264,6 +265,8 @@ class LHS:
             return self._max_min(a, b)
         elif self.lhs_criterion == 'correlate':
             return self._correlate(a, b)
+
+
 
     def _random(self, a, b):
         u = np.random.rand(self.nsamples, self.dimension)

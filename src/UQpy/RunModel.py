@@ -51,10 +51,11 @@ class RunModel:
     **Input:**
 
     :param samples: Samples to be passed as inputs to the model. Samples can be passed either as an ndarray or a list.
-                    If an ndarray is passed, each row of the ndarray contains one set of samples required for one
-                    execution of the model. (The first dimension of the ndarray is considered to be the number of rows.)
-                    If a list is passed, each item of the list contains one set of samples required for one execution of
-                    the model.
+                    If an ndarray is passed, the first dimension of the array must correspond to the number of samples
+                    at which to execute the model and the second dimension must correspond to the number of variables,
+                    or dimension . If a list is passed, each item of the list contains one set of samples required for
+                    one execution of the model. In either case, number of samples = len(samples) and
+                    dimension = len(samples[0]). If this is not the case, RunModel will not accept the samples.
     :type samples: ndarray or list
 
     :param model_script: The filename (with extension) of the Python script which contains commands to execute the
@@ -158,6 +159,10 @@ class RunModel:
                    of Python models.
     :type kwargs: dictionary
 
+    :param separator: A string used to delimit values when printing arrays to input files. Default = ', '
+
+    type separator: str
+
     **Attributes**
 
     :param RunModel.qoi_list: A list containing the output quantities of interest extracted from the model output files
@@ -165,10 +170,10 @@ class RunModel:
                               of this list contains the quantity of interest from the associated simulation.
     :type RunModel.qoi_list: list
 
-    :param RunModel.samples: Internally, RunModel converts samples into a list of numpy arrays where each sample (i.e.
-                             item in sample list) is a ndarray. RunModel then passes each sample to the model as an
-                             ndarray.
-    :type RunModel.samples: list of ndarrays
+    :param RunModel.samples: Internally, RunModel converts samples into a numpy array with at least two dimension where
+                             each row (first dimension of the array) of the list corresponds to a single sample to be
+                             executed by the model is a ndarray.
+    :type RunModel.samples: ndarray
 
     **Authors:**
 
@@ -179,8 +184,8 @@ class RunModel:
 
     def __init__(self, samples=None, model_script=None, model_object_name=None,
                  input_template=None, var_names=None, output_script=None, output_object_name=None,
-                 ntasks=1, cores_per_task=1, nodes=1, resume=False, verbose=False, model_dir=None,
-                 cluster=False, fmt=None, **kwargs):
+                 ntasks=1, cores_per_task=1, nodes=1, resume=False, verbose=False, model_dir='Model_Runs',
+                 cluster=False, fmt=None, separator=', ', **kwargs):
 
         # Check the platform and build appropriate call to Python
         if platform.system() in ['Windows']:
@@ -194,6 +199,7 @@ class RunModel:
         self.verbose = verbose
 
         # Format option
+        self.separator = separator
         self.fmt = fmt
         if self.fmt is None:
             pass
@@ -209,29 +215,25 @@ class RunModel:
         # Input related
         self.input_template = input_template
         self.var_names = var_names
+        self.n_vars = 0
+
         # Check if var_names is a list of strings
         if self.var_names is not None:
-            if self._is_list_of_strings(self.var_names):
-                self.n_vars = len(self.var_names)
-            else:
+            if not self._is_list_of_strings(self.var_names):
                 raise ValueError("Variable names should be passed as a list of strings.")
-        elif self.input_template is not None:
-            # If var_names is not passed and there is an input template, create default variable names
-            self.n_vars = len(samples[0])
-            self.var_names = []
-            for i in range(self.n_vars):
-                self.var_names.append('x%d' % i)
 
         # Model related
         self.model_dir = model_dir
         current_dir = os.getcwd()
         self.return_dir = current_dir
 
-        # Create a list of all of the files and directories in the working directory
+        # Create a list of all of the files and directories in the working directory. Do not include any other
+        # directories containing the same name as model_dir
         model_files = []
         for f_name in os.listdir(current_dir):
             path = os.path.join(current_dir, f_name)
-            model_files.append(path)
+            if model_dir not in path:
+                model_files.append(path)
         self.model_files = model_files
 
         if self.model_dir is not None:
@@ -282,16 +284,16 @@ class RunModel:
         # If running on cluster or not
         self.cluster = cluster
 
-        # TODO: Check if samples are provided
+        # Initialize sample related variables
         self.samples = []
         self.qoi_list = []
-        # TODO: nexist and nsim ?
         self.nexist = 0
         self.nsim = 0
+
+        # Check if samples are provided.
         if samples is None:
             if self.verbose:
                 print("No samples. Creating the object alone.")
-            # self.nsim = 0
         elif isinstance(samples, (list, np.ndarray)):
             self.run(samples)
         else:
@@ -325,33 +327,47 @@ class RunModel:
         :type append_samples: Boolean
         """
 
+        # Ensure the input samples have the correct structure
+        # --> If a list is provided, convert to at least 2d ndarray. dim1 = nsim, dim2 = n_vars
+        # --> If 1D array/list is provided, convert it to a 2d array. dim1 = 1, dim2 = n_vars
+        # --> If samples cannot be converted to an array, this will fail.
+        samples = np.atleast_2d(samples)
+
         # No of simulations to be performed
         self.nsim = len(samples)
 
-        # If append_samples is False, a new set of samples is created, the previous ones are deleted !!!!!
-        # TODO: define a method to clear all samples and qoi, since they are no longer required
-        # TODO: Dont change the master list everytime, run the execution with local variables and then add or replace
-        #  based on append samples parameter
+        # Number of variables
+        self.n_vars = len(samples[0])
+
+        # If append_samples is False, a new set of samples is created, the previous ones are deleted!
         if not append_samples:
             self.samples = []
+            self.qoi_list = []
 
         # Check if samples already exist, if yes append new samples to old ones
         if not self.samples:  # There are currently no samples
+
+            # If there are no samples, check to ensure that len(var_names) = n_vars
+            if self.input_template is not None:
+                if self.var_names is not None:
+                    # Check to see if self.var_names has the correct length
+                    if len(self.var_names) != self.n_vars:
+                        raise ValueError("var_names must have the same length as the number of variables (i.e. "
+                                         "len(var_names) = len(samples[0]).")
+                else:
+                    # If var_names is not passed and there is an input template, create default variable names
+                    self.var_names = []
+                    for i in range(self.n_vars):
+                        self.var_names.append('x%d' % i)
+
             self.nexist = 0
+            self.samples = samples
             self.qoi_list = [None] * self.nsim
-            if type(samples) == list:
-                self.samples = samples
-            else:
-                self.samples = list(samples)
+
         else:  # Samples already exist in the RunModel object, append new ones
             self.nexist = len(self.samples)
             self.qoi_list.extend([None] * self.nsim)
-            # TODO: Convert everything in to either lists or np.array from the begining ?
-            if type(samples) == list:
-                self.samples.extend(samples)
-            else:
-                sample_list = list(samples)
-                self.samples.extend(sample_list)
+            self.samples = np.vstack(self.samples, samples)
 
         # Check if there is a template input file or not and execute the appropriate function
         if self.input_template is not None:  # If there is a template input file
@@ -395,8 +411,8 @@ class RunModel:
         Perform serial execution of the model when there is a template input file
 
         This function loops over the number of simulations, executing the model once per loop. In each loop, the
-        function creates a directory for each model run, copies files to model run directory,
-        changes current working directory to model run directory, calls the input function, executes the model,
+        function creates a directory for each model run, copies files to the model run directory,
+        changes the current working directory to the model run directory, calls the input function, executes the model,
         calls the output function, removes the copied files and folders, and returns to the previous directory.
         """
         if self.verbose:
@@ -500,8 +516,6 @@ class RunModel:
             print('\nPerforming serial execution of the model without template input.\n')
 
         # Run python model
-        # TODO: remove exec statement
-        exec('from ' + self.model_script[:-3] + ' import ' + self.model_object_name)
         for i in range(self.nexist, self.nexist + self.nsim):
             sample_to_send = self.samples[i]
             model_object = getattr(self.python_model, self.model_object_name)
@@ -522,7 +536,7 @@ class RunModel:
         This function imports the model object from the model script, and executes the model in parallel by passing the
         samples along with keyword arguments, if any, as inputs to the model object.
         """
-        # TODO: understand this function
+
         if self.verbose:
             print('\nPerforming parallel execution of the model without template input.\n')
         import multiprocessing
@@ -531,14 +545,13 @@ class RunModel:
         sample = []
         pool = multiprocessing.Pool(processes=self.ntasks)
         for i in range(self.nsim):
-            # TODO: same problem as above - samples can be of any shape
             sample_to_send = np.atleast_2d(self.samples[i + self.nexist])
             if len(self.python_kwargs) == 0:
                 sample.append([self.model_script, self.model_object_name, sample_to_send])
             else:
                 sample.append([self.model_script, self.model_object_name, sample_to_send, self.python_kwargs])
 
-        results = pool.starmap(Utilities.run_parallel_python, sample) # TODO: Does Utilities have run_parallel_python ?
+        results = pool.starmap(Utilities.run_parallel_python, sample)
 
         for i in range(self.nsim):
             if self.model_is_class:
@@ -558,10 +571,9 @@ class RunModel:
         :param index: The simulation number
         :type index: int
         """
-        self.new_text = self._find_and_replace_var_names_with_values(index=index + self.nexist)
+        self.new_text = self._find_and_replace_var_names_with_values(index=index)
         # Write the new text to the input file
-        self._create_input_files(file_name=self.input_template, num=index+self.nexist, text=self.new_text,
-                                 new_folder='InputFiles')
+        self._create_input_files(file_name=self.input_template, num=index, text=self.new_text, new_folder='InputFiles')
 
     def _execute_serial(self, index):
         """
@@ -620,7 +632,7 @@ class RunModel:
         :param timestamp: Timestamp which is appended to the name of the input file
         :type timestamp: str
         """
-        # TODO: generalize run_string and parallel_string for any cluster
+        # TODO: LOHIT - Generalize run_string and parallel_string for any cluster
         # Check if logs folder exists, if not, create it
         if not os.path.exists("logs"):
             os.makedirs("logs")
@@ -654,7 +666,7 @@ class RunModel:
         :param index: The simulation number
         :type index: int
         """
-        # TODO: parallelize output processing
+
         self._output_serial(index)
 
     ####################################################################################################################
@@ -707,17 +719,13 @@ class RunModel:
         :param index: The sample number
         :type index: int
         """
-        # TODO: deal with cases which have both var1 and var11 - DONE
-        # TODO: Aakash - Update formatting specifications here - DONE
-        # TODO: Aakash - Check writing only specific components & build an example
-        # TODO: use array2string instead of loops
+
         template_text = self.template_text
         var_names = self.var_names
-        samples = self.samples[index+self.nexist]
+        samples = self.samples[index]
 
         new_text = template_text
-        # TODO: use self.nvar instead of len(var_names)
-        for j in range(len(var_names)):
+        for j in range(self.n_vars):
             string_regex = re.compile(r"<" + var_names[j] + r".*?>")
             count = 0
             for string in string_regex.findall(template_text):
@@ -732,13 +740,14 @@ class RunModel:
                         raise IndexError("{0}".format(err))
 
                     if isinstance(temp, collections.Iterable):
+                        # If it is iterable, flatten and write as text file with designated separator
                         temp = np.array(temp).flatten()
                         to_add = ''
                         for i in range(len(temp) - 1):
                             if self.fmt is None:
-                                to_add += str(temp[i]) + ', '
+                                to_add += str(temp[i]) + self.separator
                             else:
-                                to_add += self.fmt.format(temp[i]) + ', '
+                                to_add += self.fmt.format(temp[i]) + self.separator
                         if self.fmt is None:
                             to_add += str(temp[-1])
                         else:
@@ -771,7 +780,8 @@ class RunModel:
         :param list_of_strings: A list whose entries should be checked to see if they are strings
         :type list_of_strings: list
         """
-        return bool(list_of_strings) and isinstance(list_of_strings, list) and all(isinstance(element, str) for element in list_of_strings)
+        return bool(list_of_strings) and isinstance(list_of_strings, list) and all(isinstance(element, str) for element
+                                                                                   in list_of_strings)
 
     def _check_python_model(self):
         """
