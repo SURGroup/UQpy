@@ -108,7 +108,7 @@ class InferenceModel:
     """
 
     def __init__(self, nparams, run_model_object=None, log_likelihood=None, distribution_object=None, name='',
-                 error_covariance=1.0, prior=None, verbose=False, fixed_params=None, **kwargs_likelihood
+                 error_covariance=1.0, prior=None, verbose=False, **kwargs_likelihood
                  ):
 
         # Initialize some parameters
@@ -142,7 +142,10 @@ class InferenceModel:
                 if not hasattr(self.distribution_object, 'pdf'):
                     raise AttributeError('distribution_object should have a log_pdf or pdf method')
                 self.distribution_object.log_pdf = lambda x: np.log(self.distribution_object.pdf(x))
-            self.fixed_params = fixed_params
+            init_params = self.distribution_object.get_params()
+            self.list_params = [key for key in self.distribution_object.order_params if init_params[key] is None]
+            # Check which parameters need to be updated
+
             #if self.name == '':
             #    self.name = distribution_object.dist_name
 
@@ -217,7 +220,8 @@ class InferenceModel:
         else:
             log_like_values = []
             for params_ in params:
-                self.distribution_object.update_parameters(params=params_, fixed_params=self.fixed_params)
+                #self.distribution_object.update_parameters(params=params_, list_params=self.list_params)
+                self.distribution_object.update_params(**dict(zip(self.list_params, params_)))
                 log_like_values.append(np.sum(self.distribution_object.log_pdf(x=data)))
             log_like_values = np.array(log_like_values)
 
