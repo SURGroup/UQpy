@@ -1,0 +1,630 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Distributions &#8212; UQpy v3.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="News" href="news.html" />
+    <link rel="prev" title="Simulations" href="runmodel.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+              <div class="related top">
+                &nbsp;
+  <nav id="rellinks">
+    <ul>
+        <li>
+          &larr;
+          <a href="runmodel.html" title="Previous document">Simulations</a>
+        </li>
+        <li>
+          <a href="news.html" title="Next document">News</a>
+          &rarr;
+        </li>
+    </ul>
+  </nav>
+              </div>
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="distributions">
+<span id="id1"></span><h1>Distributions<a class="headerlink" href="#distributions" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-UQpy.Distributions"></span><p>This module contains functionality for all the probability distributions supported in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>. The <code class="docutils literal notranslate"><span class="pre">Distributions</span></code>
+module is  used  to  define  probability  distribution  objects.   These  objects  possess various  methods  that  allow
+the user  to:  compute  the  probability  density  function <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, the cumulative  distribution  function <code class="docutils literal notranslate"><span class="pre">cdf</span></code>, the
+logarithm of the pdf <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, return the moments, draw independent samples <code class="docutils literal notranslate"><span class="pre">rvs</span></code> and fit the parameters of the
+model from data <code class="docutils literal notranslate"><span class="pre">fit</span></code>.  Each of these methods are designed to be consistent with the <code class="docutils literal notranslate"><span class="pre">scipy.stats</span></code> package to ensure
+compatibility with common Python standards.</p>
+<p>The module currently contains the following classes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Distribution</span></code>: Parent class for all distribution classes supported in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DistributionContinuous1D</span></code>: Defines a 1-dimensional continuous probability distribution in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DistributionDiscrete1D</span></code>: Defines a 1-dimensional discrete probability distribution in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DistributionND</span></code>: Defines a multivariate probability distribution in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Copula</span></code>: Defines a copula for modeling dependence in multivariate distributions.</p></li>
+</ul>
+<p>Example Usage:</p>
+<p>To instantiate a <em>univariate lognormal</em> distribution:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Lognormal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">Lognormal</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+<span class="go">    {&#39;s&#39;: 1, &#39;loc&#39;: 0, &#39;scale&#39;: 148.4131591025766}</span>
+</pre></div>
+</div>
+<p>To create values from its <em>probability density function (pdf)</em>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">    # Input x must be a 2D array (nsamples, dimension)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">    array([0.0044, 0.0042, 0.0037])</span>
+</pre></div>
+</div>
+<p>The <em>mean</em>, <em>standard deviation</em>, <em>skewness</em>, and <em>kurtosis</em> of the distribution are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">moments_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="s1">&#39;variance&#39;</span><span class="p">,</span> <span class="s1">&#39;skewness&#39;</span><span class="p">,</span> <span class="s1">&#39;kurtosis&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">moments</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Moments with inherited parameters:&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">moment</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">moments_list</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="n">moment</span><span class="o">+</span><span class="s1">&#39; = </span><span class="si">{0:.2f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+<span class="go">    Moments with inherited parameters:</span>
+<span class="go">    mean = 344.69</span>
+<span class="go">    variance = 102880.65</span>
+<span class="go">    skewness = 6.18</span>
+<span class="go">    kurtosis = 110.94</span>
+</pre></div>
+</div>
+<p>Notice that, when calling the <code class="docutils literal notranslate"><span class="pre">moments</span></code> method, the parameters are inherited from the class if they are not specified.
+If  the parameters are specified, then they overwrite the parameters in the defined class.</p>
+<p>To generate 5 random samples from the lognormal distribution.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span> <span class="c1"># To reproduce results</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">    array([[ 50.117], [402.359], [196.956], [ 32.908], [ 83.213]])</span>
+</pre></div>
+</div>
+<p>Notice that when calling the rvs method, the number of samples must be specified.  Again, the parameters can be
+inherited from the Distribution object or overwritten.</p>
+<p>In addition, we can update its parameters with the need to instantiate a new object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span><span class="o">.</span><span class="n">update_parameters</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">5</span><span class="p">)])</span>
+</pre></div>
+</div>
+<div class="section" id="distribution-parent-class">
+<h2>Distribution Parent Class<a class="headerlink" href="#distribution-parent-class" title="Permalink to this headline">¶</a></h2>
+<p>In <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>, the <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> class is the parent class to all probability distributions. It consists of a suite of <code class="docutils literal notranslate"><span class="pre">scipy</span></code>-based methods for generating realizations from the distribution and estimating: the probability density function and its logarithm, the cumulative distribution function and its inverse, the moments and the maximum likelihood <code class="docutils literal notranslate"><span class="pre">mle</span></code>.</p>
+<dl class="class">
+<dt id="UQpy.Distributions.Distribution">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Distribution</code><a class="reference internal" href="_modules/UQpy/Distributions.html#Distribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Distribution" title="Permalink to this definition">¶</a></dt>
+<dd><p>A parent class to all probability distributions</p>
+<dl>
+<dt><strong>cdf(x)</strong></dt><dd><blockquote>
+<div><p>Evaluate the cumulative probability function of a distribution.</p>
+</div></blockquote>
+<p><strong>Input:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>x (np.ndarray):</dt><dd><p>Point(s) at which to evaluate the <em>cdf</em>. <code class="docutils literal notranslate"><span class="pre">x.shape</span></code> must
+be of shape <code class="docutils literal notranslate"><span class="pre">(npoints,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(npoints,</span> <span class="pre">1)</span></code>.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>(ndarray):</dt><dd><p>Evaluated distribution function values.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd>
+</dl>
+<dl class="method">
+<dt id="UQpy.Distributions.Distribution._Distribution__cdf">
+<code class="sig-name descname">_Distribution__cdf</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#UQpy.Distributions.Distribution._Distribution__cdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cumulative distribution function.</p>
+<p>Evaluate the cumulative probability function of a distribution.</p>
+<p><strong>Input:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>x (np.ndarray):</dt><dd><p>Point(s) at which to evaluate the <em>cdf</em>. <code class="docutils literal notranslate"><span class="pre">x.shape</span></code> must
+be of shape <code class="docutils literal notranslate"><span class="pre">(npoints,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(npoints,</span> <span class="pre">1)</span></code>.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>(ndarray):</dt><dd><p>Evaluated distribution function values.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Distributions.Distribution._Distribution__icdf">
+<code class="sig-name descname">_Distribution__icdf</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#UQpy.Distributions.Distribution._Distribution__icdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse cumulative distribution function.</p>
+<p>Evaluate the inverse of the cumulative probability function of a distribution.</p>
+<p><strong>Input:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>x (np.ndarray):</dt><dd><p>Point(s) at which to evaluate the <em>icdf</em>. <code class="docutils literal notranslate"><span class="pre">x.shape</span></code> must
+be of shape <code class="docutils literal notranslate"><span class="pre">(npoints,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(npoints,</span> <span class="pre">1)</span></code>.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>(ndarray):</dt><dd><p>Evaluated  logarithmnic density function values.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Distributions.Distribution._Distribution__log_pdf">
+<code class="sig-name descname">_Distribution__log_pdf</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#UQpy.Distributions.Distribution._Distribution__log_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logarithm of the probability density function (Continuous).</p>
+<p>Evaluate the logarithm of the probability density function of a continuous distribution.</p>
+<p><strong>Input:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>x (np.ndarray):</dt><dd><p>Point(s) at which to evaluate the <em>logpdf</em>. <code class="docutils literal notranslate"><span class="pre">x.shape</span></code> must
+be of shape <code class="docutils literal notranslate"><span class="pre">(npoints,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(npoints,</span> <span class="pre">1)</span></code>.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>(ndarray):</dt><dd><p>Evaluated  logarithmnic density function values.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Distributions.Distribution._Distribution__log_pmf">
+<code class="sig-name descname">_Distribution__log_pmf</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#UQpy.Distributions.Distribution._Distribution__log_pmf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logarithm of probability mass function (Discrete).</p>
+<p>Evaluate the logarithm of the probability mass function of a discrete distribution.</p>
+<p><strong>Input:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>x (np.ndarray):</dt><dd><p>Point(s) at which to evaluate the <em>logpmf</em>. <code class="docutils literal notranslate"><span class="pre">x.shape</span></code> must
+be of shape <code class="docutils literal notranslate"><span class="pre">(npoints,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(npoints,</span> <span class="pre">1)</span></code>.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>(ndarray):</dt><dd><p>Evaluated  logarithmnic mass function values.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Distributions.Distribution._Distribution__mle">
+<code class="sig-name descname">_Distribution__mle</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#UQpy.Distributions.Distribution._Distribution__mle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum Likelihood Estimation (MLE).</p>
+<p>Compute the MLE parameters of a distribution from data.</p>
+<p><strong>Input:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>x (ndarray):</dt><dd><p>Array of iid samples from the distribution with shape <code class="docutils literal notranslate"><span class="pre">(npoints,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(npoints,</span> <span class="pre">1)</span></code>.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>(ndarray):</dt><dd><p>MLE parameters.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Distributions.Distribution._Distribution__moments">
+<code class="sig-name descname">_Distribution__moments</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UQpy.Distributions.Distribution._Distribution__moments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Moments of a distribution.</p>
+<p>Compute the moments (mean, variance, skewness, kurtosis).</p>
+<p><strong>Input:</strong></p>
+<blockquote>
+<div><p>None</p>
+</div></blockquote>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>(ndarray):<code class="docutils literal notranslate"><span class="pre">mean</span></code> (float): mean value, <code class="docutils literal notranslate"><span class="pre">var</span></code> (float):  variance,</dt><dd><p><code class="docutils literal notranslate"><span class="pre">skew</span></code> (float): skewness, <code class="docutils literal notranslate"><span class="pre">kurt</span></code> (float): kyrtosis.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Distributions.Distribution._Distribution__pdf">
+<code class="sig-name descname">_Distribution__pdf</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#UQpy.Distributions.Distribution._Distribution__pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Probability density function (Continuous).</p>
+<p>Evaluate the probability density function of a continuous distribution.</p>
+<p><strong>Input:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>x (np.ndarray):</dt><dd><p>Point(s) at which to evaluate the <em>pdf</em>. <code class="docutils literal notranslate"><span class="pre">x.shape</span></code> must
+be of shape <code class="docutils literal notranslate"><span class="pre">(npoints,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(npoints,</span> <span class="pre">1)</span></code>.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>(ndarray):</dt><dd><p>Evaluated  density function values.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Distributions.Distribution._Distribution__pmf">
+<code class="sig-name descname">_Distribution__pmf</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#UQpy.Distributions.Distribution._Distribution__pmf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Probability mass function (Discrete).</p>
+<p>Evaluate the probability mass function of a discrete distribution.</p>
+<p><strong>Input:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>x (np.ndarray):</dt><dd><p>Point(s) at which to evaluate the <em>pmf</em>. <code class="docutils literal notranslate"><span class="pre">x.shape</span></code> must
+be of shape <code class="docutils literal notranslate"><span class="pre">(npoints,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(npoints,</span> <span class="pre">1)</span></code>.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>(ndarray):</dt><dd><p>Evaluated  probability mass function function values of shape <code class="docutils literal notranslate"><span class="pre">(npoints,)</span></code>.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Distributions.Distribution._Distribution__rvs">
+<code class="sig-name descname">_Distribution__rvs</code><span class="sig-paren">(</span><em class="sig-param">nsamples=1</em><span class="sig-paren">)</span><a class="headerlink" href="#UQpy.Distributions.Distribution._Distribution__rvs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw pseudo-random samples.</p>
+<p>Generate independent and identical distributed (iid) realizations from the distribution.</p>
+<p><strong>Input:</strong></p>
+<blockquote>
+<div><dl>
+<dt>nsamples (integer):</dt><dd><p>Number of iid samples to draw from the distribution.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Default:</span> <span class="pre">1</span></code></p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>(ndarray):</dt><dd><p>Realizations from the distribution with shape <code class="docutils literal notranslate"><span class="pre">(nsamples,</span> <span class="pre">1)</span></code>.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Distributions.Distribution.check_x_dimension">
+<em class="property">static </em><code class="sig-name descname">check_x_dimension</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Distribution.check_x_dimension"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Distribution.check_x_dimension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the dimension.</p>
+<p>Help function that check the dimension of x - must be an ndarray of shape <code class="docutils literal notranslate"><span class="pre">(npoints,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(npoints,</span> <span class="pre">1)</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Distributions.Distribution.check_x_dimension_mv">
+<em class="property">static </em><code class="sig-name descname">check_x_dimension_mv</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">d=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Distribution.check_x_dimension_mv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Distribution.check_x_dimension_mv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the dimension of input x - must be an ndarray of shape (npoints, d)</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="sub-classing-distribution">
+<h3>Sub-classing <code class="docutils literal notranslate"><span class="pre">Distribution</span></code><a class="headerlink" href="#sub-classing-distribution" title="Permalink to this headline">¶</a></h3>
+<dl class="simple">
+<dt>The <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> class is used to define:</dt><dd><ul class="simple">
+<li><p>Continuous Distributions</p></li>
+<li><p>Discrete Distributions</p></li>
+<li><p>Univariate (1D) Distributions</p></li>
+<li><p>Multivariate (ND) Distributions</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="continuous-distributions">
+<h2>Continuous Distributions<a class="headerlink" href="#continuous-distributions" title="Permalink to this headline">¶</a></h2>
+<p>In <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>, the <code class="docutils literal notranslate"><span class="pre">DistributionContinuous1D</span></code> class  is used to define a 1-dimensional continuous probability distribution and its associated methods.</p>
+<dl class="class">
+<dt id="UQpy.Distributions.DistributionContinuous1D">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">DistributionContinuous1D</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#DistributionContinuous1D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.DistributionContinuous1D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define a 1-dimensional continuous probability distribution and its associated methods.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="discrete-distributions">
+<h2>Discrete Distributions<a class="headerlink" href="#discrete-distributions" title="Permalink to this headline">¶</a></h2>
+<p>In <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>, the <code class="docutils literal notranslate"><span class="pre">DistributionDiscrete1D</span></code> class  is used to define a 1-dimensional discrete probability distribution and its associated methods.</p>
+<dl class="class">
+<dt id="UQpy.Distributions.DistributionDiscrete1D">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">DistributionDiscrete1D</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#DistributionDiscrete1D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.DistributionDiscrete1D" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="multivariate-distributions">
+<h2>Multivariate Distributions<a class="headerlink" href="#multivariate-distributions" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>In <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>, the <code class="docutils literal notranslate"><span class="pre">DistributionND</span></code> class is used to define a multivariate distribution. This can be done:</dt><dd><ul class="simple">
+<li><p>via direct sub-classing, see for instance the multivariate normal,</p></li>
+<li><p>via a list of independent marginals, each of them being of class <code class="docutils literal notranslate"><span class="pre">DistributionContinuous1D</span></code>,</p></li>
+<li><p>via a list of marginals and a copula (of class <code class="docutils literal notranslate"><span class="pre">Copula</span></code>) to account for dependency between dimensions.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="class">
+<dt id="UQpy.Distributions.DistributionND">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">DistributionND</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#DistributionND"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.DistributionND" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defining multivariate distributions using <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> can be easily done via this class. For example, if we want to
+define the <code class="docutils literal notranslate"><span class="pre">bivariate</span> <span class="pre">Rosenbrock</span></code> distribution model that it is not part of the available <code class="docutils literal notranslate"><span class="pre">scipy</span></code> distribution
+models we can do it as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">DistributionND</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">rosenbrock</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">20.</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;p&#39;</span><span class="p">:</span> <span class="n">p</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;p&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">log_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>         <span class="k">return</span> <span class="o">-</span><span class="p">(</span><span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;p&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">rosenbrock</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="s1">&#39;pdf&#39;</span><span class="p">))</span>
+<span class="go">    True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="s1">&#39;rvs&#39;</span><span class="p">))</span>
+<span class="go">    False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="copula">
+<h2>Copula<a class="headerlink" href="#copula" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="UQpy.Distributions.Copula">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Copula</code><a class="reference internal" href="_modules/UQpy/Distributions.html#Copula"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Copula" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parent class to all copulas</p>
+<dl class="method">
+<dt id="UQpy.Distributions.Copula._Copula__evaluate_cdf">
+<code class="sig-name descname">_Copula__evaluate_cdf</code><span class="sig-paren">(</span><em class="sig-param">unif</em><span class="sig-paren">)</span><a class="headerlink" href="#UQpy.Distributions.Copula._Copula__evaluate_cdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the copula cdf <code class="docutils literal notranslate"><span class="pre">C(u1,</span> <span class="pre">u2,</span> <span class="pre">...,</span> <span class="pre">ud)</span></code> for a d-variate uniform distribution.</p>
+<p>For a generic multivariate distribution with marginals <code class="docutils literal notranslate"><span class="pre">F1,</span> <span class="pre">...Fd</span></code>, the joint cdf is computed as
+<code class="docutils literal notranslate"><span class="pre">F(x_1,</span> <span class="pre">...,</span> <span class="pre">x_d)</span> <span class="pre">=</span> <span class="pre">C(F_1(x_1),</span> <span class="pre">...,</span> <span class="pre">F_d(x_d))</span></code>. Thus one must first evaluate the marginals cdf, then
+evaluate the copula cdf.</p>
+<p><strong>Input:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>unif (ndarray):</dt><dd><p>Points (uniformly distributed) at which to evaluate the copula <em>cdf</em>. <code class="docutils literal notranslate"><span class="pre">unif.shape</span></code> must
+be  <code class="docutils literal notranslate"><span class="pre">(npoints,</span> <span class="pre">dimension)</span></code> .</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>(ndarray):</dt><dd><p>The values of the copula’s cdf. Is an array of shape <code class="docutils literal notranslate"><span class="pre">(npoints,</span> <span class="pre">)</span></code></p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Distributions.Copula._Copula__evaluate_pdf">
+<code class="sig-name descname">_Copula__evaluate_pdf</code><span class="sig-paren">(</span><em class="sig-param">unif</em><span class="sig-paren">)</span><a class="headerlink" href="#UQpy.Distributions.Copula._Copula__evaluate_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the copula pdf term <code class="docutils literal notranslate"><span class="pre">C_</span></code> for a d-variate uniform distribution.</p>
+<p>For a generic multivariate distribution with marginals pdfs f1, …, fd, the joint pdf is computed as
+<code class="docutils literal notranslate"><span class="pre">f(x1,</span> <span class="pre">...,</span> <span class="pre">xd)</span> <span class="pre">=</span> <span class="pre">C_</span> <span class="pre">*</span> <span class="pre">f1(x1)</span> <span class="pre">*</span> <span class="pre">...</span> <span class="pre">*</span> <span class="pre">fd(xd)</span></code>. Thus one must first evaluate the marginals cdf and copula term
+<code class="docutils literal notranslate"><span class="pre">C_</span></code>, them multiply it by the marginal pdfs.</p>
+<p><strong>Input:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>unif (ndarray):</dt><dd><dl class="simple">
+<dt>Points (uniformly distributed) at which to evaluate the copula <em>pdf</em> term <code class="docutils literal notranslate"><span class="pre">C_</span></code>.</dt><dd><p><code class="docutils literal notranslate"><span class="pre">unif.shape</span></code> must be  <code class="docutils literal notranslate"><span class="pre">(npoints,</span> <span class="pre">dimension)</span></code> .</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>(ndarray):</dt><dd><p>The values of the copula’s pdf. Is an array of shape <code class="docutils literal notranslate"><span class="pre">(npoints,</span> <span class="pre">)</span></code></p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="list-of-distributions">
+<h2>List of Distributions<a class="headerlink" href="#list-of-distributions" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="UQpy.Distributions.Normal">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Normal</code><span class="sig-paren">(</span><em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Normal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Normal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normal distribution.</p>
+<p>Params: [loc, scale]</p>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">    array([0.054, 0.13 , 0.242])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">    array([0.023, 0.067, 0.159])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Genextreme">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Genextreme</code><span class="sig-paren">(</span><em class="sig-param">c</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Genextreme"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Genextreme" title="Permalink to this definition">¶</a></dt>
+<dd><p>Genextreme distribution, params are [c, loc, scale]</p>
+</dd></dl>
+
+</div>
+<div class="section" id="list-of-copula">
+<h2>List of Copula<a class="headerlink" href="#list-of-copula" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>In <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> the <code class="docutils literal notranslate"><span class="pre">Copula</span></code> class can be used to define a multivariate distribution whose dependence structure is defined with a copula. This class is used in support of the main <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> class. The following copula are supported:</dt><dd><ul class="simple">
+<li><p>Gumbel</p></li>
+<li><p>Clayton</p></li>
+<li><p>Frank</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="class">
+<dt id="UQpy.Distributions.Gumbel">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Gumbel</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Gumbel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Gumbel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gumbel copula</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Frank">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Frank</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Frank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Frank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Frank copula</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Clayton">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Clayton</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Clayton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Clayton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clayton copula</p>
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+
+
+          </div>
+              <div class="related bottom">
+                &nbsp;
+  <nav id="rellinks">
+    <ul>
+        <li>
+          &larr;
+          <a href="runmodel.html" title="Previous document">Simulations</a>
+        </li>
+        <li>
+          <a href="news.html" title="Next document">News</a>
+          &rarr;
+        </li>
+    </ul>
+  </nav>
+              </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo2.jpg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Uncertainty quantification with Python </p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=SURG&repo=UQpy&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runmodel.html">Simulations</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Distributions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#distribution-parent-class">Distribution Parent Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#continuous-distributions">Continuous Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#discrete-distributions">Discrete Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multivariate-distributions">Multivariate Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#copula">Copula</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#list-of-distributions">List of Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#list-of-copula">List of Copula</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="news.html">News</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="runmodel.html" title="previous chapter">Simulations</a></li>
+      <li>Next: <a href="news.html" title="next chapter">News</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, SURG, JHU.
+      
+      |
+      <a href="_sources/distributions.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/SURG/UQpy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>
