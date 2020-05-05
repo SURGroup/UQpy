@@ -1,7 +1,7 @@
 
 import numpy as np
 
-domain = np.linspace(0, 10, 50)
+domain = np.linspace(0, 10, 122)
 
 def model_linear(inputs=None):
     inputs = np.array(inputs).reshape((-1,))
