@@ -649,8 +649,8 @@ class RunModel:
             self.srun_string = "srun -N" + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive "
             # self.srun_string = "sbatch -N" + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive "
             self.model_command_string = (
-                    self.parallel_string + self.srun_string + "'(cd run_{1}_" + timestamp + " && " + self.python_command
-                    + " -u " + str(self.model_script) + "' {1})  ::: {0.." + str(self.nsim - 1) + "}")
+                    self.parallel_string + "'(cd run_{1}_" + timestamp + " && " + self.srun_string + " " + self.python_command
+                    + " -u " + str(self.model_script) + " {1})'  ::: {0.." + str(self.nsim - 1) + "}")
         else:  # If running locally
             self.model_command_string = (self.parallel_string + " 'cd run_{1}_" + timestamp + "&& " +
                                          self.python_command + " -u " +
