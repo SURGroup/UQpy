@@ -656,6 +656,7 @@ class RunModel:
                                          self.python_command + " -u " +
                                          str(self.model_script) + "' {1}  ::: {0.." + str(self.nsim - 1) + "}")
 
+        print(self.model_command_string)
         subprocess.run(self.model_command_string, shell=True)
 
     def _output_parallel(self, index):
