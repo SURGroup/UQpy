@@ -203,6 +203,10 @@ class Distribution:
                 raise ValueError('Wrong parameter name.')
             self.params[key] = kwargs[key]
 
+    def get_params(self):
+        return self.params
+
+
 
 class DistributionContinuous1D(Distribution):
     """
@@ -828,6 +832,9 @@ class JointInd(DistributionND):
     """
     def __init__(self, marginals):
         super().__init__()
+        self.order_params = []
+        for i, m in enumerate(marginals):
+            self.order_params.extend([key + '_' + str(i) for key in m.order_params])
 
         # Check and save the marginals
         if not (isinstance(marginals, list) and all(isinstance(d, (DistributionContinuous1D, DistributionDiscrete1D))
@@ -898,13 +905,21 @@ class JointInd(DistributionND):
                 return mean, var, skew, kurt
             self.moments = MethodType(joint_moments, self)
 
-    def update_params(self, params_marginals, indices_marginals=None):
+    def get_params(self):
+        params = {}
+        for i, m in enumerate(self.marginals):
+            params_m = m.get_params()
+            for key, value in params_m.items():
+                params[key + '_' + str(i)] = value
+        return params
+
+    def update_params(self, **kwargs):
         """
         Update the parameters of the marginals (calls the update_params methods of the marginals).
 
         **Inputs:**
 
-            params_marginals(dict or list):
+            new_params(dict or list):
                 New parameters for the marginals, contained in dictionaries such as {'loc': 1.}. If parameters of
                 several marginals are being updated, this should be a list of dictionaries.
 
@@ -913,21 +928,26 @@ class JointInd(DistributionND):
                 updated, this should be a list of integers.
         """
         # Do some checks on inputs
-        if indices_marginals is None:
-            indices_marginals = list(range(len(self.marginals)))
-        if isinstance(params_marginals, dict) and isinstance(indices_marginals, int):
-            params_marginals = [params_marginals, ]
-            indices_marginals = [indices_marginals, ]
-        if any(not isinstance(lst, (list, tuple)) for lst in [params_marginals, indices_marginals]) \
-                or len(params_marginals) != len(indices_marginals):
-            raise ValueError('Inputs params_marginals and indices_marginals should be lists of same length.')
-        if not all(isinstance(d, dict) for d in params_marginals):
-            raise ValueError('Input params_marginals should contain dictionaries of new parameters.')
-        if not all(isinstance(d, int) for d in indices_marginals):
-            raise ValueError('Input indices_marginals should contain integers (indices pointing to marginals).')
+        #if indices_marginals is None:
+        #    indices_marginals = list(range(len(self.marginals)))
+        #if isinstance(params_marginals, dict) and isinstance(indices_marginals, int):
+        #    params_marginals = [params_marginals, ]
+        #    indices_marginals = [indices_marginals, ]
+        #if any(not isinstance(lst, (list, tuple)) for lst in [params_marginals, indices_marginals]) \
+        #        or len(params_marginals) != len(indices_marginals):
+        #    raise ValueError('Inputs params_marginals and indices_marginals should be lists of same length.')
+        #if not all(isinstance(d, dict) for d in params_marginals):
+        #    raise ValueError('Input params_marginals should contain dictionaries of new parameters.')
+        #if not all(isinstance(d, int) for d in indices_marginals):
+        #    raise ValueError('Input indices_marginals should contain integers (indices pointing to marginals).')
         # Update the parameters of the marginals
-        for index, new_params in zip(indices_marginals, params_marginals):
-            self.marginals[index].update_params(**new_params)
+        #for m, new_params_m in zip(self.marginals, new_params):
+        #    m.update_params(new_params=new_params_m)
+        #TODO: can optimize this function
+        for i, m in enumerate(self.marginals):
+            for key in m.get_params().keys():
+                if key + '_' + str(i) in kwargs.keys():
+                    m.params[key] = kwargs[key + '_' + str(i)]
 
 
 class JointCopula(DistributionND):
@@ -960,6 +980,10 @@ class JointCopula(DistributionND):
     """
     def __init__(self, marginals, copula):
         super().__init__()
+        self.order_params = []
+        for i, m in enumerate(marginals):
+            self.order_params.extend([key + '_' + str(i) for key in m.order_params])
+        self.order_params.extend([key + '_c' for key in copula.order_params])
 
         # Check and save the marginals
         self.marginals = marginals
@@ -1008,7 +1032,16 @@ class JointCopula(DistributionND):
                 return np.log(c_) + logpdf_val
             self.log_pdf = MethodType(joint_log_pdf, self)
 
-    def update_params(self, params_marginals=None, indices_marginals=None, params_copula=None):
+    def get_params(self):
+        params = {}
+        for i, m in enumerate(self.marginals):
+            for key, value in m.get_params().items():
+                params[key + '_' + str(i)] = value
+        for key, value in self.copula.get_params().items():
+            params[key + '_c'] = value
+        return params
+
+    def update_params(self, **kwargs):
         """
         Update the parameters of the marginals and/or copula (calls the update_params methods of the marginals/copula).
 
@@ -1026,28 +1059,13 @@ class JointCopula(DistributionND):
                 New parameters for the copula.
         """
         # Do some checks on inputs
-        if params_marginals is None and params_copula is None:
-            return None
-        if params_marginals is not None:
-            if indices_marginals is None:
-                indices_marginals = list(range(len(self.marginals)))
-            if isinstance(params_marginals, dict) and isinstance(indices_marginals, int):
-                params_marginals = [params_marginals, ]
-                indices_marginals = [indices_marginals, ]
-            if any(not isinstance(lst, (list, tuple)) for lst in [params_marginals, indices_marginals]) \
-                    or len(params_marginals) != len(indices_marginals):
-                raise ValueError('Inputs params_marginals and indices_marginals should be lists of same length.')
-            if not all(isinstance(d, dict) for d in params_marginals):
-                raise ValueError('Input params_marginals should contain dictionaries of new parameters.')
-            if not all(isinstance(d, int) for d in indices_marginals):
-                raise ValueError('Input indices_marginals should contain integers (indices pointing to marginals).')
-            # Update the parameters of the marginals and copula
-            for index, new_params in zip(indices_marginals, params_marginals):
-                self.marginals[index].update_params(**new_params)
-        if params_copula is not None:
-            if not isinstance(params_copula, dict):
-                raise ValueError('Input params_copula should be None or a dictionary.')
-            self.copula.update_params(**params_copula)
+        for i, m in enumerate(self.marginals):
+            for key in m.get_params().keys():
+                if key + '_' + str(i) in kwargs.keys():
+                    self.marginals[i].params[key] = kwargs[key + '_' + str(i)]
+        for key in self.copula.get_params().keys():
+            if key + '_c' in kwargs.keys():
+                self.copula.params[key] = kwargs[key + '_c']
 
 
 ########################################################################################################################
@@ -1134,6 +1152,9 @@ class Copula:
                 No outputs, this code raises Errors if necessary.
         """
         pass
+
+    def get_params(self):
+        return self.params
 
     def update_params(self, **kwargs):
         for key in kwargs.keys():
