@@ -642,7 +642,7 @@ class RunModel:
                 os.remove("logs/runtask.log")
             except OSError:
                 pass
-        self.parallel_string = "parallel --delay 0.2 --joblog logs/runtask.log --resume -j " + str(self.ntasks)
+        self.parallel_string = "parallel --delay 0.2 --joblog logs/runtask.log --resume -j " + str(self.ntasks) + " "
 
         # If running on MARCC cluster
         if self.cluster:
