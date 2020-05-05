@@ -646,8 +646,8 @@ class RunModel:
 
         # If running on MARCC cluster
         if self.cluster:
-            self.srun_string = "srun -N " + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive "
-            # self.srun_string = "sbatch -N" + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive "
+            # self.srun_string = "srun -N " + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive "
+            self.srun_string = "sbatch -N" + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive "
             self.model_command_string = (
                     self.parallel_string + self.srun_string + "'cd run_{1}_" + timestamp + " && " + self.python_command
                     + " -u " + str(self.model_script) + "' {1}  ::: {0.." + str(self.nsim - 1) + "}")
