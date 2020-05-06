@@ -184,8 +184,8 @@ class RunModel:
 
     def __init__(self, samples=None, model_script=None, model_object_name=None,
                  input_template=None, var_names=None, output_script=None, output_object_name=None,
-                 ntasks=1, cores_per_task=1, nodes=1, resume=False, verbose=False, model_dir='Model_Runs',
-                 cluster=False, fmt=None, separator=', ', **kwargs):
+                 ntasks=1, cores_per_task=1, nodes=1, nodes_per_task=1, resume=False, verbose=False,
+                 model_dir='Model_Runs', cluster=False, fmt=None, separator=', ', **kwargs):
 
         # Check the platform and build appropriate call to Python
         if platform.system() in ['Windows']:
@@ -277,6 +277,8 @@ class RunModel:
         self.cores_per_task = cores_per_task
         # Number of nodes
         self.nodes = nodes
+        # Number of nodes per task
+        self.nodes_per_task = nodes_per_task
         self.template_text = ''
         self.output_module = None
         self.python_model = None
@@ -491,10 +493,8 @@ class RunModel:
             os.chdir(os.path.join(current_dir, work_dir))
 
             # Run output processing function
-            # TODO: Remove _output_parallel
             if self.output_script is not None:
-                # self._output_parallel(i)
-                self.output_serial(i)
+                self._output_serial(i)
 
             # Remove the copied files and folders
             for file_name in self.model_files:
@@ -651,11 +651,11 @@ class RunModel:
 
         # If running on MARCC cluster
         if self.cluster:
-            self.srun_string = "srun -N" + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive "
-            # self.srun_string = "sbatch -N" + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive "
-            self.model_command_string = (
-                    self.parallel_string + "'(cd run_{1}_" + timestamp + " && " + self.srun_string + " " + self.python_command
-                    + " -u " + str(self.model_script) + " {1})'  ::: {0.." + str(self.nsim - 1) + "}")
+            self.srun_string = "srun -N" + str(self.nodes) + " -n" + str(self.nodes_per_task) + " -c" \
+                               + str(self.cores_per_task) + " --exclusive "
+            self.model_command_string = (self.parallel_string + "'(cd run_{1}_" + timestamp + " && " + self.srun_string
+                                         + " " + self.python_command + " -u " + str(self.model_script) +
+                                         " {1})'  ::: {0.." + str(self.nsim - 1) + "}")
         else:  # If running locally
             self.model_command_string = (self.parallel_string + " 'cd run_{1}_" + timestamp + "&& " +
                                          self.python_command + " -u " +
