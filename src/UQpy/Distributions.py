@@ -207,7 +207,6 @@ class Distribution:
         return self.params
 
 
-
 class DistributionContinuous1D(Distribution):
     """
     Parent class for univariate continuous probability distributions.
@@ -252,7 +251,7 @@ class DistributionContinuous1D(Distribution):
         self.cdf = lambda x: scipy_name.cdf(x=self._check_x_dimension(x), **self.params)
         self.pdf = lambda x: scipy_name.pdf(x=self._check_x_dimension(x), **self.params)
         self.log_pdf = lambda x: scipy_name.logpdf(x=self._check_x_dimension(x), **self.params)
-        self.icdf = lambda x: scipy_name.ppf(x=self._check_x_dimension(x), **self.params)
+        self.icdf = lambda x: scipy_name.ppf(q=self._check_x_dimension(x), **self.params)
         self.moments = lambda: scipy_name.stats(moments='mvsk', **self.params)
         self.rvs = lambda nsamples, random_state=None: scipy_name.rvs(
             size=nsamples, random_state=random_state, **self.params).reshape((nsamples, 1))
@@ -648,7 +647,7 @@ class DistributionDiscrete1D(Distribution):
         self.cdf = lambda x: scipy_name.cdf(x=self._check_x_dimension(x), **self.params)
         self.pmf = lambda x: scipy_name.pmf(x=self._check_x_dimension(x), **self.params)
         self.log_pmf = lambda x: scipy_name.logpmf(x=self._check_x_dimension(x), **self.params)
-        self.icdf = lambda x: scipy_name.ppf(x=self._check_x_dimension(x), **self.params)
+        self.icdf = lambda x: scipy_name.ppf(q=self._check_x_dimension(x), **self.params)
         self.moments = lambda: scipy_name.stats(moments='mvsk', **self.params)
         self.rvs = lambda nsamples, random_state=None: scipy_name.rvs(
             size=nsamples, random_state=random_state, **self.params).reshape((nsamples, 1))
