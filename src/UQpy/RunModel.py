@@ -491,7 +491,10 @@ class RunModel:
             os.chdir(os.path.join(current_dir, work_dir))
 
             # Run output processing function
-            self._output_parallel(i)
+            # TODO: Remove _output_parallel
+            if self.output_script is not None:
+                # self._output_parallel(i)
+                self.output_serial(i)
 
             # Remove the copied files and folders
             for file_name in self.model_files:
@@ -597,8 +600,10 @@ class RunModel:
         :type index: int
         """
         # Run output module
-        exec('from ' + self.output_script[:-3] + ' import ' + self.output_object_name)
-        self.model_output = eval(self.output_object_name + '(index)')
+        self.output_module = __import__(self.output_script[:-3])
+        output_object = getattr(self.output_module, self.output_object_name)
+        self.model_output = output_object(index)
+
         if self.output_is_class:
             self.qoi_list[index] = self.model_output.qoi
         else:
@@ -659,17 +664,6 @@ class RunModel:
         print(self.model_command_string)
         subprocess.run(self.model_command_string, shell=True)
 
-    def _output_parallel(self, index):
-        """
-        Extract output from parallel execution
-
-        ** Input: **
-
-        :param index: The simulation number
-        :type index: int
-        """
-
-        self._output_serial(index)
 
     ####################################################################################################################
     # Helper functions
