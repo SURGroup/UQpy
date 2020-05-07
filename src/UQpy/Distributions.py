@@ -377,6 +377,7 @@ class ChiSquare(DistributionContinuous1D):
             location parameter
         scale (float):
             scale parameter
+
     ChiSquare(c, loc, scale).pdf(x) is identical to ChiSquare(c).pdf(y) / scale with y=(x-loc)/scale
 
     The following methods are available for ChiSquare: *cdf, pdf, log_pdf, icdf, rvs, moments*.
