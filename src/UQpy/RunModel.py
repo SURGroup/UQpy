@@ -453,7 +453,7 @@ class RunModel:
             os.chdir(self.return_dir)
 
             if self.verbose:
-                print('UQpy: Model evluation ' + str(i) + 'complete.')
+                print('UQpy: Model evaluation ' + str(i) + 'complete.')
 
         if self.verbose:
             print('\nUQpy: Serial execution of the third-party model complete.\n')
@@ -462,16 +462,16 @@ class RunModel:
 
     def _parallel_execution(self):
         """
-        Execute the model in parallel when there is a template input file
+        Execute a third-party model in parallel
 
         This function calls the input function and generates input files for all the samples, then creates a directory
-        for each model run, copies files to model run directory, executes the model in parallel, collects output,
+        for each model run, copies files to the model run directory, executes the model in parallel, collects output,
         removes the copied files and folders.
         """
         if self.verbose:
-            print('\nPerforming parallel execution of the model with template input.\n')
+            print('\nUQpy: Performing parallel execution of the third-party model.\n')
             # Call the input function
-            print('\nCreating inputs in parallel execution of the model with template input.\n')
+            print('\nUQpy: Creating inputs for parallel execution of the third-party model.\n')
 
         ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%p")
 
@@ -484,22 +484,23 @@ class RunModel:
 
         # Execute the model
         if self.verbose:
-            print('\nExecuting the model in parallel with template input.\n')
+            print('\nUQpy: Executing the third-party model in parallel.\n')
 
         self._execute_parallel(ts)
 
         # Call the output function
         if self.verbose:
-            print('\nCollecting outputs in parallel execution of the model with template input.\n')
+            print('\nUQpy: Collecting outputs from parallel execution of the third-party model.\n')
 
         current_dir = os.getcwd()
-        for i in range(self.nsim):
+        for i in range(self.nexist, self.nexist + self.nsim):
             # Change current working directory to model run directory
             work_dir = os.path.join(os.getcwd(), "run_" + str(i) + '_' + ts)
             os.chdir(os.path.join(current_dir, work_dir))
 
             # Run output processing function
             if self.output_script is not None:
+                print('\nUQpy: Processing output from parallel execution of the third-party model.\n')
                 self._output_serial(i)
 
             # Remove the copied files and folders
@@ -507,6 +508,9 @@ class RunModel:
 
             # Change back to the upper directory
             os.chdir(os.path.join(work_dir, current_dir))
+
+        if self.verbose:
+            print('\nUQpy: Parallel execution of the third-party model complete.\n')
 
     ####################################################################################################################
     def _serial_python_execution(self):
@@ -640,7 +644,7 @@ class RunModel:
             self._create_input_files(file_name=self.input_template, num=i+self.nexist, text=new_text,
                                      new_folder=folder_to_write)
         if self.verbose:
-            print('Created ' + str(self.nsim) + ' input files in the directory ./InputFiles. \n')
+            print('UQpy: Created ' + str(self.nsim) + ' input files in the directory ./InputFiles. \n')
 
     def _execute_parallel(self, timestamp):
         """
@@ -651,7 +655,7 @@ class RunModel:
         :param timestamp: Timestamp which is appended to the name of the input file
         :type timestamp: str
         """
-        # TODO: LOHIT - Generalize run_string and parallel_string for any cluster
+        # TODO: Generalize run_string and parallel_string for any cluster
         # Check if logs folder exists, if not, create it
         if not os.path.exists("logs"):
             os.makedirs("logs")
@@ -663,16 +667,18 @@ class RunModel:
                 pass
         self.parallel_string = "parallel --delay 0.2 --joblog logs/runtask.log --resume -j " + str(self.ntasks) + " "
 
-        # If running on MARCC cluster
+        # If running on SLURM cluster
         if self.cluster:
             self.srun_string = "srun -N" + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive "
             self.model_command_string = (self.parallel_string + "'(cd run_{1}_" + timestamp + " && " + self.srun_string
                                          + " " + self.python_command + " -u " + str(self.model_script) +
-                                         " {1})'  ::: {0.." + str(self.nsim - 1) + "}")
+                                         " {1})'  ::: {" + str(self.nexist) + ".." +
+                                         str(self.nexist + self.nsim - 1) + "}")
         else:  # If running locally
             self.model_command_string = (self.parallel_string + " 'cd run_{1}_" + timestamp + "&& " +
                                          self.python_command + " -u " +
-                                         str(self.model_script) + "' {1}  ::: {0.." + str(self.nsim - 1) + "}")
+                                         str(self.model_script) + "' {1}  ::: {" + str(self.nexist) + ".." +
+                                         str(self.nexist + self.nsim - 1) + "}")
 
         print(self.model_command_string)
         subprocess.run(self.model_command_string, shell=True)
