@@ -16,15 +16,19 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 """
-RunModel is the core module for UQpy to execute computational models
+``RunModel`` is the core module for ``UQpy`` to execute computational models
 
-RunModel contains a single class, also called RunModel that is used to execute computational models at specified sample
-points. RunModel may be used to execute Python models or third-party software models and is capable of running models
-serially or in parallel on both local machines or HPC clusters.
+``RunModel`` contains a single class, also called ``RunModel`` that is used to execute computational models at specified
+sample points. ``RunModel`` may be used to execute Python models or third-party software models and is capable of
+running models serially or in parallel on both local machines or HPC clusters.
 
 The module currently contains the following classes:
 
 * RunModel - Class for execution of a computational model
+
+The ``RunModel`` class is imported into the Python environment as follows::
+
+	>>> from UQpy.RunModel import RunModel
 """
 
 import os
@@ -185,7 +189,7 @@ class RunModel:
     def __init__(self, samples=None, model_script=None, model_object_name=None,
                  input_template=None, var_names=None, output_script=None, output_object_name=None,
                  ntasks=1, cores_per_task=1, nodes=1, resume=False, verbose=False, model_dir='Model_Runs',
-                 cluster=False, fmt=None, separator=', ', **kwargs):
+                 cluster=False, fmt=None, separator=', ', vec=True, **kwargs):
 
         # Check the platform and build appropriate call to Python
         if platform.system() in ['Windows']:
@@ -197,6 +201,9 @@ class RunModel:
 
         # Verbose option
         self.verbose = verbose
+
+        # Vectorized computation
+        self.vec = vec
 
         # Format option
         self.separator = separator
@@ -508,45 +515,52 @@ class RunModel:
     ####################################################################################################################
     def _serial_python_execution(self):
         """
-        Execute the python model in serial when there is no template input file
+        Execute a python model in serial
 
-        This function imports the model object from the model script, and executes the model in series by passing the
-        corresponding sample along with keyword arguments, if any, as inputs to the model object.
+        This function imports the model_object from the model_script, and executes the model in series by passing the
+        corresponding sample/samples along with keyword arguments, if any, as inputs to the model object.
         """
         if self.verbose:
-            print('\nPerforming serial execution of the model without template input.\n')
+            print('\nUQpy: Performing serial execution of a Python model.\n')
 
+        model_object = getattr(self.python_model, self.model_object_name)
         # Run python model
-        for i in range(self.nexist, self.nexist + self.nsim):
-            sample_to_send = self.samples[i]
-            model_object = getattr(self.python_model, self.model_object_name)
-            if len(self.python_kwargs) == 0:
-                self.model_output = model_object(sample_to_send)
-            else:
-                self.model_output = model_object(sample_to_send, **self.python_kwargs)
-            if self.model_is_class:
-                self.qoi_list[i] = self.model_output.qoi
-            else:
-                self.qoi_list[i] = self.model_output
+        if self.vec:
+            # If the Python model is vectorized to accept many samples.
+            self.model_output = model_object(self.samples[self.nexist:self.nexist + self.nsim], **self.python_kwargs)
+            self.qoi_list = list(self.model_output.qoi)
+        else:
+            # If the Python model is not vectorized and accepts only a single sample.
+            for i in range(self.nexist, self.nexist + self.nsim):
+                sample_to_send = self.samples[i]
+
+                if len(self.python_kwargs) == 0:
+                    self.model_output = model_object(sample_to_send)
+                else:
+                    self.model_output = model_object(sample_to_send, **self.python_kwargs)
+                if self.model_is_class:
+                    self.qoi_list[i] = self.model_output.qoi
+                else:
+                    self.qoi_list[i] = self.model_output
 
     ####################################################################################################################
     def _parallel_python_execution(self):
         """
-        Execute the python model in parallel when there is no template input file
+        Execute a python model in parallel
 
         This function imports the model object from the model script, and executes the model in parallel by passing the
         samples along with keyword arguments, if any, as inputs to the model object.
         """
 
         if self.verbose:
-            print('\nPerforming parallel execution of the model without template input.\n')
+            print('\nUQpy: Performing parallel execution of the model without template input.\n')
         import multiprocessing
         import UQpy.Utilities as Utilities
 
         sample = []
         pool = multiprocessing.Pool(processes=self.ntasks)
-        for i in range(self.nsim):
-            sample_to_send = np.atleast_2d(self.samples[i + self.nexist])
+        for i in range(self.nexist, self.nexist + self.nsim):
+            sample_to_send = np.atleast_2d(self.samples[i])
             if len(self.python_kwargs) == 0:
                 sample.append([self.model_script, self.model_object_name, sample_to_send])
             else:
