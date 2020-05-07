@@ -415,7 +415,7 @@ class RunModel:
 
     def _serial_execution(self):
         """
-        Perform serial execution of the model when there is a template input file
+        Perform serial execution of a third-party model using a template input file
 
         This function loops over the number of simulations, executing the model once per loop. In each loop, the
         function creates a directory for each model run, copies files to the model run directory,
@@ -423,7 +423,7 @@ class RunModel:
         calls the output function, removes the copied files and folders, and returns to the previous directory.
         """
         if self.verbose:
-            print('\nPerforming serial execution of the model with template input.\n')
+            print('\nUQpy: Performing serial execution of the third-party model.\n')
 
         # Loop over the number of simulations, executing the model once per loop
         ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%p")
@@ -447,15 +447,16 @@ class RunModel:
                 self._output_serial(i)
 
             # Remove the copied files and folders
-            for file_name in self.model_files:
-                full_file_name = os.path.join(work_dir, os.path.basename(file_name))
-                if not os.path.isdir(full_file_name):
-                    os.remove(full_file_name)
-                else:
-                    shutil.rmtree(full_file_name)
+            self._remove_copied_files(work_dir)
 
             # Return to the previous directory
             os.chdir(self.return_dir)
+
+            if self.verbose:
+                print('UQpy: Model evluation ' + str(i) + 'complete.')
+
+        if self.verbose:
+            print('\nUQpy: Serial execution of the third-party model complete.\n')
 
     ####################################################################################################################
 
@@ -502,12 +503,7 @@ class RunModel:
                 self._output_serial(i)
 
             # Remove the copied files and folders
-            for file_name in self.model_files:
-                full_file_name = os.path.join(work_dir, os.path.basename(file_name))
-                if not os.path.isdir(full_file_name):
-                    os.remove(full_file_name)
-                else:
-                    shutil.rmtree(full_file_name)
+            self._remove_copied_files(work_dir)
 
             # Change back to the upper directory
             os.chdir(os.path.join(work_dir, current_dir))
@@ -543,6 +539,9 @@ class RunModel:
                 else:
                     self.qoi_list[i] = self.model_output
 
+        if self.verbose:
+            print('\nUQpy: Serial execution of the python model complete.\n')
+
     ####################################################################################################################
     def _parallel_python_execution(self):
         """
@@ -575,6 +574,9 @@ class RunModel:
                 self.qoi_list[i + self.nexist] = results[i]
 
         pool.close()
+
+        if self.verbose:
+            print('\nUQpy: Parallel execution of the python model complete.\n')
 
     ####################################################################################################################
     def _input_serial(self, index):
@@ -675,9 +677,9 @@ class RunModel:
         print(self.model_command_string)
         subprocess.run(self.model_command_string, shell=True)
 
-
     ####################################################################################################################
     # Helper functions
+
     @staticmethod
     def _create_input_files(file_name, num, text, new_folder='InputFiles'):
         """
@@ -685,13 +687,13 @@ class RunModel:
 
         ** Input: **
 
-        :param file_name: Name of index file
+        :param file_name: Name of input file
         :type file_name: str
 
         :param num: The simulation number
         :type num: int
 
-        :param text: Content of input file
+        :param text: Contents of the input file
         :type text: str
 
         :param new_folder: Name of directory where the created input files are placed
@@ -712,16 +714,6 @@ class RunModel:
         Replace placeholders containing variable names in template input text with sample values.
 
         ** Input: **
-
-        :param var_names: Name of the probabilistic input variables.
-        :type var_names: list of str
-
-        :param samples: Samples values of the input variables.
-        :type samples: ndarray
-
-        :param template_text: Text in the template input file, with placeholders where the sample values of the input
-                              variables need to be placed.
-        :type template_text: str
 
         :param index: The sample number
         :type index: int
@@ -771,11 +763,30 @@ class RunModel:
                 if index == 0:
                     if count > 1:
                         print(
-                            "Found " + str(count) + " instances of variable: '" + var_names[j] + "' in the input file.")
+                            "UQpy: Found " + str(count) + " instances of variable: '" + var_names[j] +
+                            "' in the input file.")
                     else:
                         print(
-                            "Found " + str(count) + " instance of variable: '" + var_names[j] + "' in the input file.")
+                            "UQpy: Found " + str(count) + " instance of variable: '" + var_names[j] +
+                            "' in the input file.")
         return new_text
+
+    def _remove_copied_files(self, work_dir):
+        """
+        Remove the copied files from each run directory to avoid having many redundant files.
+
+        ** Input: **
+
+        :param work_dir: The working directory of the current run.
+        :type work_dir: str
+        """
+
+        for file_name in self.model_files:
+            full_file_name = os.path.join(work_dir, os.path.basename(file_name))
+            if not os.path.isdir(full_file_name):
+                os.remove(full_file_name)
+            else:
+                shutil.rmtree(full_file_name)
 
     @staticmethod
     def _is_list_of_strings(list_of_strings):
