@@ -2595,9 +2595,9 @@ class MCMC:
                  seed=None, nburn=0, jump=1, save_log_pdf=False, verbose=False, concat_chains=True):
 
         if not (isinstance(nburn, int) and nburn >= 0):
-            raise TypeError('nburn should be an integer >= 0')
+            raise TypeError('UQpy: nburn should be an integer >= 0')
         if not (isinstance(jump, int) and jump >= 1):
-            raise TypeError('jump should be an integer >= 1')
+            raise TypeError('UQpy: jump should be an integer >= 1')
         self.nburn, self.jump = nburn, jump
         self.seed, self.dimension = self._preprocess_seed(seed=seed, dim=dimension)    # check type and assign default [0.s]
         self.nchains = self.seed.shape[0]
@@ -2640,13 +2640,13 @@ class MCMC:
             nchains=self.nchains, nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
         if self.verbose:
-            print('Running MCMC...')
+            print('UQpy: Running MCMC...')
 
         # Run nsims iterations of the MCMC algorithm, starting at current_state
         self.run_iterations(nsims, current_state)
 
         if self.verbose:
-            print('MCMC run successfully !')
+            print('UQpy: MCMC run successfully !')
 
         # Concatenate chains maybe
         if self.concat_chains:
@@ -2723,14 +2723,14 @@ class MCMC:
         """
         if ((nsamples is not None) and (nsamples_per_chain is not None)) or (
                 nsamples is None and nsamples_per_chain is None):
-            raise ValueError('Either nsamples or nsamples_per_chain must be provided (not both)')
+            raise ValueError('UQpy: Either nsamples or nsamples_per_chain must be provided (not both)')
         if nsamples is not None:
             if not (isinstance(nsamples, int) and nsamples >= 0):
-                raise TypeError('nsamples must be an integer >= 0.')
+                raise TypeError('UQpy: nsamples must be an integer >= 0.')
             nsamples_per_chain = nsamples // nchains
         else:
             if not (isinstance(nsamples_per_chain, int) and nsamples_per_chain >= 0):
-                raise TypeError('nsamples_per_chain must be an integer >= 0.')
+                raise TypeError('UQpy: nsamples_per_chain must be an integer >= 0.')
 
         if self.samples is None:    # very first call of run, set current_state as the seed and initialize self.samples
             self.samples = np.zeros((nsamples_per_chain, self.nchains, self.dimension))
@@ -2843,13 +2843,13 @@ class MCMC:
                 if args is None:
                     args = [()] * len(log_pdf)
                 if not (isinstance(args, list) and len(args) == len(log_pdf)):
-                    raise ValueError('When log_pdf_target is a list, args should be a list (of tuples) of same length.')
+                    raise ValueError('UQpy: When log_pdf_target is a list, args should be a list (of tuples) of same length.')
                 evaluate_log_pdf_marginals = list(map(lambda i: lambda x: log_pdf[i](x, *args[i]), range(len(log_pdf))))
                 #evaluate_log_pdf_marginals = [partial(log_pdf_, *args_) for (log_pdf_, args_) in zip(log_pdf, args)]
                 evaluate_log_pdf = (lambda x: np.sum(
                     [log_pdf[i](x[:, i, np.newaxis], *args[i]) for i in range(len(log_pdf))]))
             else:
-                raise TypeError('log_pdf_target must be a callable or list of callables')
+                raise TypeError('UQpy: log_pdf_target must be a callable or list of callables')
         # pdf is provided
         elif pdf is not None:
             if callable(pdf):
@@ -2861,7 +2861,7 @@ class MCMC:
                 if args is None:
                     args = [()] * len(pdf)
                 if not (isinstance(args, (list, tuple)) and len(args) == len(pdf)):
-                    raise ValueError('When pdf_target is given as a list, args should also be a list of same length.')
+                    raise ValueError('UQpy: When pdf_target is given as a list, args should also be a list of same length.')
                 evaluate_log_pdf_marginals = list(
                     map(lambda i: lambda x: np.log(np.maximum(pdf[i](x, *args[i]),
                                                               10 ** (-320) * np.ones((x.shape[0],)))),
@@ -2872,9 +2872,9 @@ class MCMC:
                      for i in range(len(log_pdf))]))
                 #evaluate_log_pdf = None
             else:
-                raise TypeError('pdf_target must be a callable or list of callables')
+                raise TypeError('UQpy: pdf_target must be a callable or list of callables')
         else:
-            raise ValueError('log_pdf_target or pdf_target should be provided.')
+            raise ValueError('UQpy: log_pdf_target or pdf_target should be provided.')
         return evaluate_log_pdf, evaluate_log_pdf_marginals
 
     @staticmethod
@@ -2900,16 +2900,16 @@ class MCMC:
         """
         if seed is None:
             if dim is None:
-                raise ValueError('One of inputs seed or dimension must be provided.')
+                raise ValueError('UQpy: One of inputs seed or dimension must be provided.')
             seed = np.zeros((1, dim))
         else:
             seed = np.atleast_1d(seed)
             if len(seed.shape) == 1:
                 seed = np.reshape(seed, (1, -1))
             elif len(seed.shape) > 2:
-                raise ValueError('Input seed should be an array of shape (dimension, ) or (nchains, dimension).')
+                raise ValueError('UQpy: Input seed should be an array of shape (dimension, ) or (nchains, dimension).')
             if dim is not None and seed.shape[1] != dim:
-                raise ValueError('Wrong dimensions between seed and dimension.')
+                raise ValueError('UQpy: Wrong dimensions between seed and dimension.')
             dim = seed.shape[1]
         return seed, dim
 
@@ -2934,12 +2934,12 @@ class MCMC:
 
         """
         if not isinstance(proposal, Distribution):
-            raise TypeError('proposal should be a Distribution object')
+            raise TypeError('UQpy: Proposal should be a Distribution object')
         if not hasattr(proposal, 'rvs'):
-            raise AttributeError('The proposal should have an rvs method')
+            raise AttributeError('UQpy: The proposal should have an rvs method')
         if not hasattr(proposal, 'log_pdf'):
             if not hasattr(proposal, 'pdf'):
-                raise AttributeError('The proposal should have a log_pdf or pdf method')
+                raise AttributeError('UQpy: The proposal should have a log_pdf or pdf method')
             proposal.log_pdf = lambda x: np.log(np.maximum(proposal.pdf(x), 10 ** (-320) * np.ones((x.shape[0],))))
 
 
@@ -2950,7 +2950,7 @@ class MH(MCMC):
     """
     Metropolis-Hastings algorithm
 
-    **Inputs:**
+    **Algorithm-specific inputs:**
 
     * proposal (Distribution object):
         proposal distribution
@@ -2959,6 +2959,7 @@ class MH(MCMC):
     * proposal_is_symmetric (bool):
         indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
         Default: False
+
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
@@ -2975,7 +2976,7 @@ class MH(MCMC):
 
         if self.proposal is None:
             if self.dimension is None:
-                raise ValueError('Either input proposal or dimension must be provided.')
+                raise ValueError('UQpy: Either input proposal or dimension must be provided.')
             from UQpy.Distributions import JointInd, Normal
             self.proposal = JointInd([Normal()] * self.dimension)
             self.proposal_is_symmetric = True
@@ -2983,7 +2984,7 @@ class MH(MCMC):
             self._check_methods_proposal(self.proposal)
 
         if self.verbose:
-            print('Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
+            print('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
 
         # If nsamples is provided, run the algorithm
         if (nsamples is not None) or (nsamples_per_chain is not None):
@@ -3058,7 +3059,7 @@ class MMH(MCMC):
     * S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
        Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
 
-    **Inputs:**
+    **Algorithm-specific inputs:**
 
     * proposal (Distribution object or list):
         proposal distribution(s) in dimension 1
@@ -3067,6 +3068,7 @@ class MMH(MCMC):
     * proposal_is_symmetric (bool or list):
         indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
         Default: False, set to True if default proposal is used
+
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
@@ -3089,22 +3091,22 @@ class MMH(MCMC):
         else:
             # only one Distribution is provided, check it and transform it to a list
             if not isinstance(self.proposal, list):
-                self.proposal = self._check_methods_proposal(self.proposal)
+                self._check_methods_proposal(self.proposal)
                 self.proposal = [self.proposal] * self.dimension
             else:  # a list of proposals is provided
                 if len(self.proposal) != self.dimension:
-                    raise ValueError('proposal given as a list should be of length dimension')
-                self.proposal = [self._check_methods_proposal(p) for p in self.proposal]
+                    raise ValueError('UQpy: Proposal given as a list should be of length dimension')
+                [self._check_methods_proposal(p) for p in self.proposal]
 
         # check the symmetry of proposal, assign False as default
         if isinstance(self.proposal_is_symmetric, bool):
             self.proposal_is_symmetric = [self.proposal_is_symmetric, ] * self.dimension
         elif not (isinstance(self.proposal_is_symmetric, list) and
                   all(isinstance(b_, bool) for b_ in self.proposal_is_symmetric)):
-            raise TypeError('MMH: proposal_is_symmetric should be a (list of) boolean(s)')
+            raise TypeError('UQpy: Proposal_is_symmetric should be a (list of) boolean(s)')
 
         if self.verbose:
-            print('Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
+            print('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
 
         # If nsamples is provided, run the algorithm
         if (nsamples is not None) or (nsamples_per_chain is not None):
@@ -3219,11 +3221,13 @@ class Stretch(MCMC):
     * Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. "emcee: The MCMC Hammer". Publications
        of the Astronomical Society of the Pacific, 125(925):306–312,2013.
 
-    **Inputs:**
+    **Algorithm-specific inputs:**
 
     * scale (float):
         scale parameter
+
         Default: 2.
+
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
@@ -3235,15 +3239,15 @@ class Stretch(MCMC):
 
         # Check nchains = ensemble size for the Stretch algorithm
         if self.nchains < 2:
-            raise ValueError('For the Stretch algorithm, a seed must be provided with at least two samples.')
+            raise ValueError('UQpy: For the Stretch algorithm, a seed must be provided with at least two samples.')
 
         # Check Stretch algorithm inputs: proposal_type and proposal_scale
         self.scale = scale
         if not isinstance(self.scale, float):
-            raise TypeError('Input scale must be of type float.')
+            raise TypeError('UQpy: Input scale must be of type float.')
 
         if self.verbose:
-            print('Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
+            print('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
 
         # If nsamples is provided, run the algorithm
         if (nsamples is not None) or (nsamples_per_chain is not None):
@@ -3324,7 +3328,7 @@ class DRAM(MCMC):
     * Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive MCMC". Statistics
        and Computing, 16(4):339–354, 2006.
 
-    **Inputs:**
+    **Algorithm-specific inputs:**
 
     * initial_cov (ndarray):
         initial covariance for the gaussian proposal distribution
@@ -3345,6 +3349,7 @@ class DRAM(MCMC):
     * save_cov (bool):
         if True, updated covariance is saved in attribute adaptive_covariance
         Default: False
+
     """
 
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
@@ -3361,7 +3366,7 @@ class DRAM(MCMC):
             self.initial_covariance = np.eye(self.dimension)
         elif not (isinstance(self.initial_covariance, np.ndarray)
                   and self.initial_covariance == (self.dimension, self.dimension)):
-            raise TypeError('Input initial_covariance should be a 2D ndarray of shape (dimension, dimension)')
+            raise TypeError('UQpy: Input initial_covariance should be a 2D ndarray of shape (dimension, dimension)')
 
         self.k0 = k0
         self.sp = sp
@@ -3369,7 +3374,7 @@ class DRAM(MCMC):
             self.sp = 2.38 ** 2 / self.dimension
         self.gamma_2 = gamma_2
         self.save_covariance = save_covariance
-        for key, typ in zip(['k0', 'sp', 'gamma_2', 'save_cov'], [int, float, float, bool]):
+        for key, typ in zip(['k0', 'sp', 'gamma_2', 'save_covariance'], [int, float, float, bool]):
             if not isinstance(getattr(self, key), typ):
                 raise TypeError('Input ' + key + ' must be of type ' + typ.__name__)
 
@@ -3377,7 +3382,7 @@ class DRAM(MCMC):
             self.adaptive_covariance = [self.initial_covariance, ]
 
         if self.verbose:
-            print('Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
+            print('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
 
         # If nsamples is provided, run the algorithm
         if (nsamples is not None) or (nsamples_per_chain is not None):
@@ -3491,7 +3496,7 @@ class DREAM(MCMC):
     * J.A. Vrugt. "Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and MATLAB
        implementation". Environmental Modelling & Software, 75:273–316, 2016.
 
-    **Inputs:**
+    **Algorithm-specific inputs:**
 
     * delta (int):
         jump rate
@@ -3520,6 +3525,7 @@ class DREAM(MCMC):
     * check_chains (tuple):
         (iter_max, rate) governs discarding of outlier chains (discard every rate iterations if iter<iter_max)
         Default: (-1, 1), i.e., no check on outlier chains
+
     """
 
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
@@ -3532,7 +3538,7 @@ class DREAM(MCMC):
 
         # Check nb of chains
         if self.nchains < 2:
-            raise ValueError('For the DREAM algorithm, a seed must be provided with at least two samples.')
+            raise ValueError('UQpy: For the DREAM algorithm, a seed must be provided with at least two samples.')
 
         # Check user-specific algorithms
         self.delta = delta
@@ -3554,7 +3560,7 @@ class DREAM(MCMC):
                 raise TypeError('Inputs ' + key + ' must be a tuple of 2 integers.')
 
         if self.verbose:
-            print('Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
+            print('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
 
         # If nsamples is provided, run the algorithm
         if (nsamples is not None) or (nsamples_per_chain is not None):
@@ -3589,7 +3595,7 @@ class DREAM(MCMC):
 
             draw = np.argsort(np.random.rand(self.nchains - 1, self.nchains), axis=0)
             dX = np.zeros_like(current_state)
-            lmda = np.random.uniform(low=-c, high=c, size=(self.nchains,))
+            lmda = np.random.uniform(low=-self.c, high=self.c, size=(self.nchains,))
             std_x_tmp = np.std(current_state, axis=0)
 
             D = np.random.choice(self.delta, size=(self.nchains,), replace=True)
