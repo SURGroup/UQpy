@@ -195,15 +195,23 @@ class Distribution:
 
         **Input:**
 
-                kwargs (keyword arguments):
+                keyword arguments:
                         Parameters to be updated
         """
         for key in kwargs.keys():
-            if key not in self.params.keys():
+            if key not in self.get_params().keys():
                 raise ValueError('Wrong parameter name.')
             self.params[key] = kwargs[key]
 
     def get_params(self):
+        """
+        Return the parameters of the distribution object.
+
+        **Output/Returns:**
+
+                (dict):
+                        Parameters of the distribution.
+        """
         return self.params
 
 
@@ -364,13 +372,12 @@ class ChiSquare(DistributionContinuous1D):
     **Inputs:**
 
         df (float):
-                shape parameter (degrees of freedom)
+            shape parameter (degrees of freedom)
         loc (float):
-                location parameter
+            location parameter
         scale (float):
-                scale parameter
-
-        ChiSquare(c, loc, scale).pdf(x) is identical to ChiSquare(c).pdf(y) / scale with y=(x-loc)/scale
+            scale parameter
+    ChiSquare(c, loc, scale).pdf(x) is identical to ChiSquare(c).pdf(y) / scale with y=(x-loc)/scale
 
     The following methods are available for ChiSquare: *cdf, pdf, log_pdf, icdf, rvs, moments*.
     """
@@ -807,6 +814,19 @@ class JointInd(DistributionND):
     """
     Define a joint distribution from its independent marginals.
 
+    **Inputs:**
+
+        marginals (list):
+                list of *DistributionContinuous1D* or *DistributionDiscrete1D* objects that define the marginals.
+
+    Such a multivariate distribution possesses the following methods, on condition that all its univariate marginals
+    also possess them: *pdf, log_pdf, cdf, rvs, fit, moments*, along with the *update_params* method.
+
+    The parameters of the distribution are only stored as attributes of the marginal objects. However, the
+    *get_params* and *update_params* method can still be used for the joint. Note that for this puspose each parameter
+    of the joint is assigned a unique string identifier as key_index - where key is the parameter name and index the
+    index of the marginal (e.g., location parameter of the 2nd marginal is identified as loc_1).
+
     >>> from UQpy.Distributions import Normal, Lognormal, JointInd
     >>> marginals = [Normal(loc=2., scale=2.), Lognormal(s=1., loc=0., scale=np.exp(5))]
     >>> dist = JointInd(marginals=marginals)
@@ -816,17 +836,9 @@ class JointInd(DistributionND):
      [ 2.56595700e+00  1.96955635e+02]]
     >>> print([m.params for m in marginals])
     [{'loc': 2.0, 'scale': 2.0}, {'s': 1.0, 'loc': 0.0, 'scale': 148.4131591025766}]
-    >>> dist.update_params(params_marginals={'loc': 1.}, indices_marginals=1)
+    >>> dist.update_params(loc_1=1.)
     >>> print([m.params for m in marginals])
     [{'loc': 2.0, 'scale': 2.0}, {'s': 1.0, 'loc': 1.0, 'scale': 148.4131591025766}]
-
-    **Inputs:**
-
-        marginals (list):
-                list of *DistributionContinuous1D* or *DistributionDiscrete1D* objects that define the marginals.
-
-    Such a multivariate distribution possesses the following methods, on condition that all its univariate marginals
-    also possess them: *pdf, log_pdf, cdf, rvs, fit, moments*, along with the *update_params* method.
 
     """
     def __init__(self, marginals):
@@ -905,6 +917,14 @@ class JointInd(DistributionND):
             self.moments = MethodType(joint_moments, self)
 
     def get_params(self):
+        """
+        Return the parameters of the joint distribution.
+
+        **Output/Returns:**
+
+                (dict):
+                        Parameters of the distribution.
+        """
         params = {}
         for i, m in enumerate(self.marginals):
             params_m = m.get_params()
@@ -914,56 +934,27 @@ class JointInd(DistributionND):
 
     def update_params(self, **kwargs):
         """
-        Update the parameters of the marginals (calls the update_params methods of the marginals).
+        Update the parameters of the marginals.
 
-        **Inputs:**
+        **Input:**
 
-            new_params(dict or list):
-                New parameters for the marginals, contained in dictionaries such as {'loc': 1.}. If parameters of
-                several marginals are being updated, this should be a list of dictionaries.
-
-            indices_marginals(int or list):
-                Index of marginal(s) whose parameters are being updated. If parameters of several marginals are being
-                updated, this should be a list of integers.
+                keyword arguments:
+                        Parameters to be updated
         """
-        # Do some checks on inputs
-        #if indices_marginals is None:
-        #    indices_marginals = list(range(len(self.marginals)))
-        #if isinstance(params_marginals, dict) and isinstance(indices_marginals, int):
-        #    params_marginals = [params_marginals, ]
-        #    indices_marginals = [indices_marginals, ]
-        #if any(not isinstance(lst, (list, tuple)) for lst in [params_marginals, indices_marginals]) \
-        #        or len(params_marginals) != len(indices_marginals):
-        #    raise ValueError('Inputs params_marginals and indices_marginals should be lists of same length.')
-        #if not all(isinstance(d, dict) for d in params_marginals):
-        #    raise ValueError('Input params_marginals should contain dictionaries of new parameters.')
-        #if not all(isinstance(d, int) for d in indices_marginals):
-        #    raise ValueError('Input indices_marginals should contain integers (indices pointing to marginals).')
-        # Update the parameters of the marginals
-        #for m, new_params_m in zip(self.marginals, new_params):
-        #    m.update_params(new_params=new_params_m)
-        #TODO: can optimize this function
-        for i, m in enumerate(self.marginals):
-            for key in m.get_params().keys():
-                if key + '_' + str(i) in kwargs.keys():
-                    m.params[key] = kwargs[key + '_' + str(i)]
+        # check arguments
+        all_keys = self.get_params().keys()
+        # update the marginal parameters
+        for key_indexed, value in kwargs.items():
+            if key_indexed not in all_keys:
+                raise ValueError('Unrecognized keyword argument ' + key_indexed)
+            key_split = key_indexed.split('_')
+            key, index = '_'.join(key_split[:-1]), int(key_split[-1])
+            self.marginals[index].params[key] = value
 
 
 class JointCopula(DistributionND):
     """
     Define a joint distribution from a list of marginals and a copula to introduce dependency.
-
-    >>> from UQpy.Distributions import JointCopula, Normal, Gumbel
-    >>> marginals = [Normal(loc=0., scale=1), Normal(loc=0., scale=1)]
-    >>> copula = Gumbel(theta=3.)
-    >>> dist = JointCopula(marginals=marginals, copula=copula)
-    >>> print(hasattr(dist, 'rvs'))
-    False
-    >>> print(dist.copula.params)
-    {'theta': 3.0}
-    >>> dist.update_params(params_copula={'theta': 2.})
-    >>> print(dist.copula.params)
-    {'theta': 2.0}
 
     **Inputs:**
 
@@ -976,6 +967,24 @@ class JointCopula(DistributionND):
     Such a multivariate distribution may possess a *cdf, pdf* and *log_pdf* methods if the copula allows for it (i.e.,
     if the copula possesses the necessary *evaluate_cdf* and *evaluate_pdf* methods).
 
+    The parameters of the distribution are only stored as attributes of the marginals/copula objects. However, the
+    *get_params* and *update_params* method can still be used for the joint. Note that each parameter of the joint is
+    assigned a unique string identifier as key_index - where key is the parameter name and index the index of the
+    marginal (e.g., location parameter of the 2nd marginal is identified as loc_1); and key_c for copula parameters.
+
+    >>> from UQpy.Distributions import JointCopula, Normal, Gumbel
+    >>> marginals = [Normal(loc=0., scale=1), Normal(loc=0., scale=1)]
+    >>> copula = Gumbel(theta=3.)
+    >>> dist = JointCopula(marginals=marginals, copula=copula)
+    >>> print(dist.get_params())
+    {'loc_0': 0., 'scale_0': 1., 'loc_1': 0., 'scale_1': 1., 'theta_c': 3.}
+    >>> print(hasattr(dist, 'rvs'))
+    False
+    >>> print(dist.copula.params)
+    {'theta': 3.0}
+    >>> dist.update_params(theta_c=2.)
+    >>> print(dist.copula.params)
+    {'theta': 2.0}
     """
     def __init__(self, marginals, copula):
         super().__init__()
@@ -1032,6 +1041,14 @@ class JointCopula(DistributionND):
             self.log_pdf = MethodType(joint_log_pdf, self)
 
     def get_params(self):
+        """
+        Return the parameters of the joint distribution.
+
+        **Output/Returns:**
+
+                (dict):
+                        Parameters of the distribution.
+        """
         params = {}
         for i, m in enumerate(self.marginals):
             for key, value in m.get_params().items():
@@ -1042,29 +1059,25 @@ class JointCopula(DistributionND):
 
     def update_params(self, **kwargs):
         """
-        Update the parameters of the marginals and/or copula (calls the update_params methods of the marginals/copula).
+        Update the parameters of the marginals and/or copula.
 
-        **Inputs:**
+        **Input:**
 
-            params_marginals(dict or list):
-                New parameters for the marginals, contained in dictionaries such as {'loc': 1.}. If parameters of
-                several marginals are being updated, this should be a list of dictionaries.
-
-            indices_marginals(int or list):
-                Index of marginal(s) whose parameters are being updated. If parameters of several marginals are being
-                updated, this should be a list of integers.
-
-            params_copula(dict):
-                New parameters for the copula.
+                keyword arguments:
+                        Parameters to be updated
         """
-        # Do some checks on inputs
-        for i, m in enumerate(self.marginals):
-            for key in m.get_params().keys():
-                if key + '_' + str(i) in kwargs.keys():
-                    self.marginals[i].params[key] = kwargs[key + '_' + str(i)]
-        for key in self.copula.get_params().keys():
-            if key + '_c' in kwargs.keys():
-                self.copula.params[key] = kwargs[key + '_c']
+        # check arguments
+        all_keys = self.get_params().keys()
+        # update the marginal parameters
+        for key_indexed, value in kwargs.items():
+            if key_indexed not in all_keys:
+                raise ValueError('Unrecognized keyword argument ' + key_indexed)
+            key_split = key_indexed.split('_')
+            key, index = '_'.join(key_split[:-1]), key_split[-1]
+            if index == 'c':
+                self.copula.params[key] = value
+            else:
+                self.marginals[int(index)].params[key] = value
 
 
 ########################################################################################################################
