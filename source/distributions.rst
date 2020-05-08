@@ -8,33 +8,32 @@ module is  used  to  define  probability  distribution  objects.   These  object
 the user  to:  compute  the  probability  density/mass  function ``pdf/pmf``, the cumulative  distribution  function ``cdf``, the
 logarithm of the pdf ``log_pdf/log_pmf``, return the moments ``moments``, draw independent samples ``rvs`` and compute the maximum likelihood estimate of the parameters from data ``mle``.
 
-The module currently contains the following classes:
+The module contains the following parent classes - probability distributions are defined via sub-classing those parent classes:
 
-- ``Distribution``: Parent class for all distribution classes supported in ``UQpy``.
-- ``DistributionContinuous1D``: Defines a 1-dimensional continuous probability distribution in ``UQpy``.
-- ``DistributionDiscrete1D``: Defines a 1-dimensional discrete probability distribution in ``UQpy``.
-- ``DistributionND``: Defines a multivariate probability distribution in ``UQpy``.
-- ``Copula``: Defines a copula for modeling dependence in multivariate distributions.
-
+- ``Distribution``: Parent class to all distributions.
+- ``DistributionContinuous1D``: Parent class to 1-dimensional continuous probability distributions.
+- ``DistributionDiscrete1D``: Parent class to 1-dimensional discrete probability distributions.
+- ``DistributionND``: Parent class to multivariate probability distributions.
+- ``Copula``: Parent class to copula to model dependency between marginals.
 
 Parent Distribution Class
 ----------------------------------
 
-In ``UQpy``, the ``Distribution`` class is the parent class to all probability distributions. Any distribution may possess one or several of the methods described below.
+In ``UQpy``, the ``Distribution`` class is the parent class to all probability distributions. Any distribution possesses a `get_params` and `update_params` methods, along with one or several of the other methods described below:
 
 .. autoclass:: UQpy.Distributions.Distribution
 	:members:
 	
 Any distribution further inherits from one of the following classes:
 
-- ``DistributionContinuous1D``: Defines a 1-dimensional continuous probability distribution in ``UQpy``.
-- ``DistributionDiscrete1D``: Defines a 1-dimensional discrete probability distribution in ``UQpy``.
-- ``DistributionND``: Defines a multivariate probability distribution in ``UQpy``.
+- ``DistributionContinuous1D``: Parent class to 1-dimensional continuous probability distributions.
+- ``DistributionDiscrete1D``: Parent class to 1-dimensional discrete probability distributions.
+- ``DistributionND``: Parent class to multivariate probability distributions.
 	
 1D Continuous Distributions
 ---------------------------------------
 
-In ``UQpy``, univariate continuous distributions are defined via the ``DistributionContinuous1D`` class:
+In ``UQpy``, univariate continuous distributions inherit from the ``DistributionContinuous1D`` class:
 
 .. autoclass:: UQpy.Distributions.DistributionContinuous1D
     :members: 
@@ -42,7 +41,7 @@ In ``UQpy``, univariate continuous distributions are defined via the ``Distribut
 1D Discrete Distributions
 ----------------------------------
 
-In ``UQpy``, univariate discrete distributions are defined via the ``DistributionDiscrete1D`` class:
+In ``UQpy``, univariate discrete distributions inherit from the ``DistributionDiscrete1D`` class:
 
 .. autoclass:: UQpy.Distributions.DistributionDiscrete1D
     :members: 
@@ -50,7 +49,7 @@ In ``UQpy``, univariate discrete distributions are defined via the ``Distributio
 Multivariate Distributions
 ----------------------------------
 
-In ``UQpy``, multivariate distributions are defined via the ``DistributionND`` class:
+In ``UQpy``, multivariate distributions inherit from the ``DistributionND`` class:
 
 .. autoclass:: UQpy.Distributions.DistributionND
 
@@ -60,13 +59,11 @@ Joint from independent marginals
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: UQpy.Distributions.JointInd
-    :members: 	
 
 Joint from marginals and copula
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: UQpy.Distributions.JointCopula
-    :members: 	
+.. autoclass:: UQpy.Distributions.JointCopula	
 
 
 Copula
@@ -144,8 +141,7 @@ List of Copula
 User-defined Distributions and Copula
 ---------------------------------------------------
 
-Defining custom distributions in ``UQpy`` can be done by sub-classing the appropriate parent class. For example, to define the ``bivariate Rosenbrock`` distribution model that it is not part of the available ``scipy`` distribution
-models one can do:
+Defining custom distributions in ``UQpy`` can be done by sub-classing the appropriate parent class. For example, to define the ``bivariate Rosenbrock`` distribution model that it is not part of the available ``scipy`` distribution models one can do:
 
     >>> from UQpy.Distributions import DistributionND
     >>> class Rosenbrock(DistributionND):
