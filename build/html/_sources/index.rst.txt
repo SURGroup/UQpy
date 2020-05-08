@@ -17,13 +17,9 @@ Table of contents
    installation
    runmodel
    distributions
+   samplemethods
    news
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-.. image:: _static/JHU_logo.jpg
-  :width: 200
-  :alt: Alternative text
-  :align: right

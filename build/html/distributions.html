@@ -14,7 +14,7 @@
     <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="News" href="news.html" />
+    <link rel="next" title="SampleMethods" href="samplemethods.html" />
     <link rel="prev" title="Simulations" href="runmodel.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -343,12 +343,12 @@ If a given moment cannot be computed, None is returned in its place.</p>
 also possess them: <em>pdf, log_pdf, cdf, rvs, fit, moments</em>, along with the <em>update_params</em> method.</p>
 <dl class="method">
 <dt id="UQpy.Distributions.JointInd.update_params">
-<code class="sig-name descname">update_params</code><span class="sig-paren">(</span><em class="sig-param">params_marginals</em>, <em class="sig-param">indices_marginals=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#JointInd.update_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.JointInd.update_params" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update_params</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#JointInd.update_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.JointInd.update_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the parameters of the marginals (calls the update_params methods of the marginals).</p>
 <p><strong>Inputs:</strong></p>
 <blockquote>
 <div><dl class="simple">
-<dt>params_marginals(dict or list):</dt><dd><p>New parameters for the marginals, contained in dictionaries such as {‘loc’: 1.}. If parameters of
+<dt>new_params(dict or list):</dt><dd><p>New parameters for the marginals, contained in dictionaries such as {‘loc’: 1.}. If parameters of
 several marginals are being updated, this should be a list of dictionaries.</p>
 </dd>
 <dt>indices_marginals(int or list):</dt><dd><p>Index of marginal(s) whose parameters are being updated. If parameters of several marginals are being
@@ -393,7 +393,7 @@ updated, this should be a list of integers.</p>
 if the copula possesses the necessary <em>evaluate_cdf</em> and <em>evaluate_pdf</em> methods).</p>
 <dl class="method">
 <dt id="UQpy.Distributions.JointCopula.update_params">
-<code class="sig-name descname">update_params</code><span class="sig-paren">(</span><em class="sig-param">params_marginals=None</em>, <em class="sig-param">indices_marginals=None</em>, <em class="sig-param">params_copula=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#JointCopula.update_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.JointCopula.update_params" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update_params</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#JointCopula.update_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.JointCopula.update_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the parameters of the marginals and/or copula (calls the update_params methods of the marginals/copula).</p>
 <p><strong>Inputs:</strong></p>
 <blockquote>
@@ -991,6 +991,7 @@ models one can do:</p>
 <li class="toctree-l2"><a class="reference internal" href="#user-defined-distributions-and-copula">User-defined Distributions and Copula</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="samplemethods.html">SampleMethods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="news.html">News</a></li>
 </ul>
 
@@ -999,7 +1000,7 @@ models one can do:</p>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="runmodel.html" title="previous chapter">Simulations</a></li>
-      <li>Next: <a href="news.html" title="next chapter">News</a></li>
+      <li>Next: <a href="samplemethods.html" title="next chapter">SampleMethods</a></li>
   </ul></li>
 </ul>
 </div>

@@ -35,113 +35,184 @@ import warnings
 
 class MCS:
     """
-        Description:
+    Perform Monte Carlo sampling (MCS) of random variables.
 
-            Perform Monte Carlo sampling (MCS) of independent random variables from a user-specified probability
-            distribution using inverse transform method.
+    **Attribute:**
 
-        Input:
-            :param dist_name: A string or string list containing the names of the distributions of the random variables.
-            Distribution names must match those in the Distributions module.
-            If the distribution does not match one from the Distributions module, the user must provide a custom
-            distribution file with name dist_name.py. See documentation for the Distributions module. The length of the
-            list must equal the dimension of the random vector.
-            :type dist_name: string or string list
+    **Input:**
+        dist_object (object or list of objects):
+                        List of ``Distribution`` objects corresponding to each random variable.
 
-            :param dist_params: Parameters of the distribution.
-            Parameters for each random variable are defined as ndarrays.
-            Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
-            dist_name[i]. Relevant parameters for each distribution can be found in the documentation for the
-            Distributions module.
-            :type dist_params: ndarray or list
+        nsamples (int):
+                     Number of samples to be drawn from each distribution.
 
-            :param nsamples: Number of samples to generate.
-            No Default Value: nsamples must be prescribed.
-            :type nsamples: int
+        var_names (str or list of str):
+                     List of strings defining the names of the random variables. It is required in some cases where
+                      the ``MCS`` class is invoked with ``RunModel`` class.
 
-            :param var_names: names of variables
-            :type var_names: list of strings
+        random_state (int or list of int):
+                        List of integers corresponding to the random seeds that are used to initialize the *Mersenne
+                        Twister* pseudo-random number generator.
 
-            :param verbose: A boolean declaring whether to write text to the terminal.
-            :type verbose: bool
+        verbose (Boolean):
+                        A boolean declaring whether to write text to the terminal.
 
-        Output:
-            :return: MCS.samples: Set of generated samples
-            :rtype: MCS.samples: ndarray of dimension (nsamples, ndim)
+                        Default value: False
 
-            :return: MCS.samplesU01: If the Distribution object has a .cdf method, MCS also returns the samples in the
-            Uniform(0,1) hypercube.
-            :rtype: MCS.samplesU01: ndarray of dimension(nsamples, ndim)
+    **Output/Returns:**
+
+        samples (list):
+                        List of generated samples.  The size of samples is defined as
+                         ``len(samples)=nsamples`` and ``len(samples[i]) = len(dist_object)``.
+
+        samplesU01 (list):
+                        If the ``Distribution`` object has a ``cdf`` method, MCS also returns the samples in the
+                        Uniform(0,1) hypercube using the methof ``transform_u01``.
 
     """
 
-    # Authors: Dimitris G.Giovanis
-    # Last Modified: 11/25/2019 by Michael D. Shields
+    def __init__(self, dist_object=None, nsamples=None, var_names=None, random_state=None, verbose=False):
 
-    def __init__(self, dist_name=None, dist_params=None, nsamples=None, var_names=None, verbose=False):
+        # Check if a Distribution object is provided.
+        if (dist_object is None) and (not dist_object):
+            raise ValueError('UQpy: The attribute dist_object is missing.')
+        else:
+            if isinstance(dist_object, list):
+                for i in range(len(dist_object)):
+                    if not isinstance(dist_object[i], Distribution):
+                        raise TypeError('UQpy: A UQpy.Distribution object must be provided.')
+                if random_state is not None:
+                    if isinstance(random_state, int) or len(dist_object) != len(random_state):
+                        raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
+                    self.random_state = random_state
+                else:
+                    self.random_state = [random_state]*len(dist_object)
+                self.dist_object = dist_object
+            else:
+                if not isinstance(dist_object, Distribution):
+                    raise TypeError('UQpy: A UQpy.Distribution object must be provided.')
+                else:
+                    self.dist_object = [dist_object]
+                if random_state is not None:
+                    if not isinstance(random_state, int):
+                        raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
+                    else:
+                        self.random_state = [random_state]
 
-        # No need to do other checks as they will be done within Distributions.py
-        self.dist_name = dist_name
-        self.dist_params = dist_params
-        self.var_names = var_names
-        self.verbose = verbose
-        self.nsamples = nsamples
-        if self.verbose:
-            print('UQpy: MCS object created.')
+        # Check if a names for the random variables are provided.
+        if var_names is not None:
+            self.var_names = var_names
+            if len(self.var_names) != len(self.dist_object):
+                raise ValueError('UQpy: Incompatible number of Distributions and variable names.')
 
+        # Instantiate the output attributes.
         self.samples = None
         self.samplesU01 = None
 
-        if nsamples is not None:
-            self.sample(nsamples)
+        # Set printing options
+        self.verbose = verbose
 
-    def sample(self, nsamples):
-        self.nsamples = nsamples
+        # ==============================================================================================================
+        #                                       Run Monte Carlo sampling
+        self.run(nsamples, self.random_state)
+
+    def run(self, nsamples, random_state=None):
+        """
+        The ``run`` method of the ``MCS`` class can be invoked many times and the generated samples are appended to the
+        existing samples. For example, to the 5 samples in object ``x1`` we can add two more by running
+
+        >>> print(x1)
+            <UQpy.SampleMethods.MCS object at 0x1a148ba85>
+        >>> x1.run(nsamples=2, random_state=[123, 567])
+        >>> print(x1.samples)
+            [array([[1.62434536],
+            [0.05056171]]), array([[-0.61175641],
+            [ 0.49995133]]), array([[-0.52817175],
+            [-0.99590893]]), array([[-1.07296862],
+            [ 0.69359851]]), array([[ 0.86540763],
+            [-0.41830152]]), array([[-1.0856306 ],
+            [ 0.21326612]]), array([[ 0.99734545],
+            [-0.09189941]])]
+
+        The total number of samples is now
+
+        >>> print(x1.nsamples)
+            7
+        """
+        # Check if a random_state is provided.
+        if random_state is None:
+            random_state = self.random_state
+        else:
+            if isinstance(self.dist_object, list):
+                if isinstance(random_state, int) or len(self.dist_object) != len(random_state):
+                    raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
+            else:
+                if not isinstance(random_state, int):
+                    raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
+
         if nsamples is None:
-            raise ValueError('UQpy error: nsamples must be defined.')
+            raise ValueError('UQpy: Number of samples must be defined.')
         if not isinstance(nsamples, int):
-            raise ValueError('UQpy error: nsamples must be integer valued.')
+            nsamples = int(nsamples)
 
         if self.verbose:
-            print('UQpy: Running Monte Carlo Sampling...')
+            print('UQpy: Running Monte Carlo Sampling.')
 
-        samples_new = Distribution(dist_name=self.dist_name).rvs(params=self.dist_params, nsamples=nsamples)
-
-        # Shape the arrays as (1,n) if nsamples=1, and (n,1) if nsamples=n
-        if len(samples_new.shape) == 1:
-            if self.nsamples == 1:
-                samples_new = samples_new.reshape((1, -1))
+        temp_samples = list()
+        for i in range(len(self.dist_object)):
+            if hasattr(self.dist_object[i], 'rvs'):
+                temp_samples.append(self.dist_object[i].rvs(nsamples=nsamples, random_state=random_state[i]))
             else:
-                samples_new = samples_new.reshape((-1, 1))
+                ValueError('UQpy: rvs method is missing.')
 
-        # If self.samples already has existing samples,
-        # append the new samples to the existing attribute.
+        x = list()
+        for j in range(nsamples):
+            y = list()
+            for k in range(len(self.dist_object)):
+                y.append(temp_samples[k][j])
+            x.append(np.array(y))
+
         if self.samples is None:
-            self.samples = samples_new
+            self.samples = x
         else:
-            self.samples = np.concatenate([self.samples, samples_new], axis=0)
-
-        att = (hasattr(Distribution(dist_name=self.dist_name[i]), 'cdf') for i in range(samples_new.shape[1]))
-        if all(att):
-            samples_u01_new = np.zeros_like(samples_new)
-            for i in range(samples_new.shape[1]):
-                samples_u01_new[:, i] = Distribution(dist_name=self.dist_name[i]).cdf(
-                    x=np.atleast_2d(samples_new[:, i]).T, params=self.dist_params[i])
-            if len(samples_u01_new.shape) == 1:
-                if self.nsamples == 1:
-                    samples_u01_new = samples_u01_new.reshape((1, -1))
-                else:
-                    samples_u01_new = samples_u01_new.reshape((-1, 1))
-
-            # If self.samplesU01 already has existing samplesU01,
-            # append the new samples to the existing attribute.
-            if self.samplesU01 is None:
-                self.samplesU01 = samples_u01_new
-            else:
-                self.samplesU01 = np.concatenate([self.samplesU01, samples_u01_new], axis=0)
+            # If self.samples already has existing samples, append the new samples to the existing attribute.
+            self.samples = self.samples + x
+        self.nsamples = len(self.samples)
 
         if self.verbose:
             print('UQpy: Monte Carlo Sampling Complete.')
+
+    def transform_u01(self):
+        """
+        The ``transform_u01`` method of the ``MCS`` is used to transform samples from the parameter space to the
+        Uniform [0, 1] space.
+
+        >>> print(x1)
+            <UQpy.SampleMethods.MCS object at 0x1a18c03450>
+        >>> x1.transform_u01()
+        >>> print(x1.samplesU01)
+            [array([[0.94784894],
+            [0.52016261]]), array([[0.27034947],
+            [0.69144533]]), array([[0.29869007],
+            [0.1596472 ]]), array([[0.1416426 ],
+            [0.75603299]]), array([[0.80659245],
+            [0.33786334]]), array([[0.13882123],
+            [0.5844403 ]]), array([[0.84070157],
+            [0.46338898]])]
+        """
+        temp_samples_u01 = [None] * self.nsamples
+        for i in range(self.nsamples):
+            z = self.samples[i][:]
+            y = [None] * 2
+            for j in range(2):
+                if hasattr(self.dist_object[j], 'cdf'):
+                    zi = self.dist_object[j].cdf(z[j])
+                else:
+                    ValueError('UQpy: All Distributions must have a cdf method.')
+                y[j] = zi
+            temp_samples_u01[i] = np.array(y)
+            self.samplesU01 = temp_samples_u01
+
 
 ########################################################################################################################
 ########################################################################################################################
@@ -210,30 +281,53 @@ class LHS:
 
     """
 
-    # Created by: Lohit Vandanapu
-    # Last modified: 6/20/2018 by Dimitris G. Giovanis
-
-    def __init__(self, dist_name=None, dist_params=None, lhs_criterion='random', lhs_metric='euclidean',
+    def __init__(self, dist_object=None, lhs_criterion='R', lhs_metric='euclidean',
                  lhs_iter=100, var_names=None, nsamples=None, verbose=False):
 
+        # Check if a Distribution object is provided.
+        if (dist_object is None) and (not dist_object):
+            raise ValueError('UQpy error: A Distribution object must be provided.')
+        else:
+            self.dist_object = dist_object
+
+        # Check if a names for the random variables are provided.
+        if var_names is not None:
+            self.var_names = var_names
+
+        if nsamples is None:
+            raise ValueError('UQpy error: Number of samples (nsamples) must be defined.')
+        if not isinstance(nsamples, int):
+            self.nsamples = int(nsamples)
+
         self.nsamples = nsamples
-        self.dist_name = dist_name
-        self.dist_params = dist_params
-        self.dimension = len(self.dist_name)
         self.lhs_criterion = lhs_criterion
         self.lhs_metric = lhs_metric
-        self.lhs_iter = lhs_iter
-        self.init_lhs()
-        self.var_names = var_names
         self.verbose = verbose
 
-        self.distribution = [None] * self.dimension
-        for i in range(self.dimension):
-            self.distribution[i] = Distribution(dist_name=self.dist_name[i])
+        if self.lhs_criterion not in ['R', 'Cnt', 'M', 'C']:
+            raise NotImplementedError("Exit code: Supported lhs criteria: 'random (R)', 'centered (Cnt)', "
+                                      "'maximin (M)', " "'correlate (C)'.")
 
-        self.samplesU01, self.samples = self.run_lhs()
+        if self.lhs_metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
+                                   'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis',
+                                   'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean',
+                                   'sokalmichener', 'sokalsneath', 'sqeuclidean']:
 
-    def run_lhs(self):
+            raise NotImplementedError("Exit code: Supported lhs distances: 'braycurtis', 'canberra', 'chebyshev', "
+                                      "'cityblock'," " 'correlation', 'cosine','dice', 'euclidean', 'hamming', "
+                                      "'jaccard', " "'kulsinski', 'mahalanobis', 'matching', 'minkowski', "
+                                      "'rogerstanimoto'," "'russellrao', 'seuclidean','sokalmichener', 'sokalsneath', "
+                                      "'sqeuclidean'.")
+
+        if self.lhs_criterion in ['M', 'C']:
+            if lhs_iter == 0 or lhs_iter is None:
+                raise ValueError('UQpy error: The number of iterations needs to be greater than zero.')
+            else:
+                self.lhs_iter = int(self.lhs_iter)
+
+        self.samplesU01, self.samples = self.run()
+
+    def run(self):
 
         if self.verbose:
             print('UQpy: Running Latin Hypercube Sampling...')
@@ -242,37 +336,32 @@ class LHS:
         a = cut[:self.nsamples]
         b = cut[1:self.nsamples + 1]
 
-        samples = self._samples(a, b)
+        if self.lhs_criterion == 'R':
+            samples = self._random(a, b)
+        elif self.lhs_criterion == 'Cnt':
+            samples = self._centered(a, b)
+        elif self.lhs_criterion == 'M':
+            samples = self._max_min(a, b)
+        elif self.lhs_criterion == 'C':
+            samples = self._correlate(a, b)
 
         samples_u_to_x = np.zeros_like(samples)
-        for j in range(samples.shape[1]):
-            i_cdf = self.distribution[j].icdf
-            samples_u_to_x[:, j] = i_cdf(np.atleast_2d(samples[:, j]).T, self.dist_params[j])
+        for j in range(len(self.dist_object)):
+            samples_u_to_x[:, j] = self.dist_object[j].icdf(np.atleast_2d(samples[:, j]).T)
 
         if self.verbose:
-            print('Successful execution of LHS design..')
+            print('UQpy: Latin hypercube Sampling Complete.')
 
         return samples, samples_u_to_x
 
-    def _samples(self, a, b):
-
-        if self.lhs_criterion == 'random':
-            return self._random(a, b)
-        elif self.lhs_criterion == 'centered':
-            return self._centered(a, b)
-        elif self.lhs_criterion == 'maximin':
-            return self._max_min(a, b)
-        elif self.lhs_criterion == 'correlate':
-            return self._correlate(a, b)
-
     def _random(self, a, b):
-        u = np.random.rand(self.nsamples, self.dimension)
+        u = np.random.rand(self.nsamples, len(self.dist_object))
         samples = np.zeros_like(u)
 
-        for i in range(self.dimension):
+        for i in range(len(self.dist_object)):
             samples[:, i] = u[:, i] * (b - a) + a
 
-        for j in range(self.dimension):
+        for j in range(len(self.dist_object)):
             order = np.random.permutation(self.nsamples)
             samples[:, j] = samples[order, j]
 
@@ -280,10 +369,10 @@ class LHS:
 
     def _centered(self, a, b):
 
-        samples = np.zeros([self.nsamples, self.dimension])
+        samples = np.zeros([self.nsamples, len(self.dist_object)])
         centers = (a + b) / 2
 
-        for i in range(self.dimension):
+        for i in range(len(self.dist_object)):
             samples[:, i] = np.random.permutation(centers)
 
         return samples
@@ -321,62 +410,6 @@ class LHS:
             print('Achieved minimum correlation of ', min_corr)
 
         return samples
-
-    ################################################################################################################
-    # Latin hypercube checks.
-    # Necessary parameters:  1. Probability distribution, 2. Probability distribution parameters
-    # Optional: number of samples (default 100), criterion, metric, iterations
-
-    def init_lhs(self):
-
-        # Ensure that the number of samples is defined
-        if self.nsamples is None:
-            raise NotImplementedError("Exit code: Number of samples not defined.")
-
-        # Check the dimension
-        if self.dimension is None:
-            self.dimension = len(self.dist_name)
-
-        # Ensure that distribution parameters are assigned
-        if self.dist_params is None:
-            raise NotImplementedError("Exit code: Distribution parameters not defined.")
-
-        # Check dist_params
-        if type(self.dist_params).__name__ != 'list':
-            self.dist_params = [self.dist_params]
-        if len(self.dist_params) == 1 and self.dimension != 1:
-            self.dist_params = self.dist_params * self.dimension
-        elif len(self.dist_params) != self.dimension:
-            raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension.")
-
-        # Check for dimensional consistency
-        if len(self.dist_name) != len(self.dist_params):
-            raise NotImplementedError("Exit code: Incompatible dimensions.")
-
-        if self.lhs_criterion is None:
-            self.lhs_criterion = 'random'
-        else:
-            if self.lhs_criterion not in ['random', 'centered', 'maximin', 'correlate']:
-                raise NotImplementedError("Exit code: Supported lhs criteria: 'random', 'centered', 'maximin', "
-                                          "'correlate'.")
-
-        if self.lhs_metric is None:
-            self.lhs_metric = 'euclidean'
-        else:
-            if self.lhs_metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
-                                       'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis',
-                                       'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean',
-                                       'sokalmichener', 'sokalsneath', 'sqeuclidean']:
-                raise NotImplementedError("Exit code: Supported lhs distances: 'braycurtis', 'canberra', 'chebyshev', "
-                                          "'cityblock',"
-                                          " 'correlation', 'cosine','dice', 'euclidean', 'hamming', 'jaccard', "
-                                          "'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto',"
-                                          "'russellrao', 'seuclidean','sokalmichener', 'sokalsneath', 'sqeuclidean'.")
-
-        if self.lhs_iter is None or self.lhs_iter == 0:
-            self.lhs_iter = 1000
-        elif self.lhs_iter is not None:
-            self.lhs_iter = int(self.lhs_iter)
 
 
 ########################################################################################################################
@@ -1695,7 +1728,7 @@ class AKMCS:
                 self.run_model_object.qoi_list = []
 
             if self.verbose:
-                print('UQpy: AKMCS - Running the provided sample set using RunModel.')
+                print('UQpy: AKq     - Running the provided sample set using RunModel.')
 
             self.run_model_object.run(samples=samples, append_samples=append_samples)
 
