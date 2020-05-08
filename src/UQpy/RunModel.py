@@ -181,8 +181,6 @@ class RunModel:
         saved.  A new directory is created by ``RunModel`` within the current directory whose name is `model_dir`
         appended with a timestamp.
 
-        `model_dir` is not usedf in the Python model workflow.
-
     * **fmt** (`str`)
         If the `template_input` requires variables to be written in specific format, this format can be specified here.
 
