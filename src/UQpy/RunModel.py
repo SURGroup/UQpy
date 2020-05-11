@@ -328,6 +328,7 @@ class RunModel:
 
             # Change current working directory to model run directory
             os.chdir(os.path.join(current_dir, work_dir))
+            print(os.getcwd())
 
         # Check if the model script is a python script
         model_extension = pathlib.Path(model_script).suffix
@@ -733,6 +734,9 @@ class RunModel:
         :param timestamp: Timestamp which is appended to the name of the input file
         :type timestamp: str
         """
+
+        print(os.getcwd())
+
         # TODO: Generalize run_string and parallel_string for any cluster
         # Check if logs folder exists, if not, create it
         if not os.path.exists("logs"):
