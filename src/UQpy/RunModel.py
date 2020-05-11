@@ -328,7 +328,7 @@ class RunModel:
 
             # Change current working directory to model run directory
             os.chdir(os.path.join(current_dir, work_dir))
-            print(os.getcwd())
+            print(['1' + os.getcwd()])
 
         # Check if the model script is a python script
         model_extension = pathlib.Path(model_script).suffix
@@ -673,6 +673,7 @@ class RunModel:
         """
         self.new_text = self._find_and_replace_var_names_with_values(index=index)
         # Write the new text to the input file
+        print(['2' + os.getcwd()])
         self._create_input_files(file_name=self.input_template, num=index, text=self.new_text, new_folder='InputFiles')
 
     def _execute_serial(self, index):
@@ -720,6 +721,7 @@ class RunModel:
             new_text = self._find_and_replace_var_names_with_values(index=i + self.nexist)
             folder_to_write = 'run_' + str(i+self.nexist) + '_' + timestamp + '/InputFiles'
             # Write the new text to the input file
+            print(['3.' + os.getcwd()])
             self._create_input_files(file_name=self.input_template, num=i+self.nexist, text=new_text,
                                      new_folder=folder_to_write)
         if self.verbose:
@@ -790,6 +792,7 @@ class RunModel:
         """
         if not os.path.exists(new_folder):
             os.makedirs(new_folder)
+        print(['4.' + os.getcwd()])
         base_name = os.path.splitext(os.path.basename(file_name))
         new_name = os.path.join(new_folder, base_name[0] + "_" + str(num) + base_name[1])
         with open(new_name, 'w') as f:
