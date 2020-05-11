@@ -753,7 +753,7 @@ class RunModel:
                                          " {1})'  ::: {" + str(self.nexist) + ".." +
                                          str(self.nexist + self.nsim - 1) + "}")
         else:  # If running locally
-            self.model_command_string = (self.parallel_string + " 'cd run_{1}_" + timestamp + "&& " +
+            self.model_command_string = (self.parallel_string + " 'cd run_{1}_" + timestamp + " && " +
                                          self.python_command + " -u " +
                                          str(self.model_script) + "' {1}  ::: {" + str(self.nexist) + ".." +
                                          str(self.nexist + self.nsim - 1) + "}")
