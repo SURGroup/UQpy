@@ -1,8 +1,6 @@
-x = zeros(3,1);
-x(1) = <var1>;
-x(2) = <var2>;
-x(3) = <var3>;
-output = sum(x);
+x = <x0>;
+y = [<x1[0]>; <x1[1]>; <x1[2]>];
+output = x*det(y);
 if ~ exist('OutputFiles', 'dir')
 status = mkdir('OutputFiles');
 end

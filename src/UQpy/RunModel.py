@@ -574,7 +574,8 @@ class RunModel:
 
             # Run output processing function
             if self.output_script is not None:
-                print('\nUQpy: Processing output from parallel execution of the third-party model.\n')
+                if self.verbose:
+                    print('\nUQpy: Processing output from parallel execution of the third-party model.\n')
                 self._output_serial(i)
 
             # Remove the copied files and folders
@@ -602,7 +603,10 @@ class RunModel:
         if self.vec:
             # If the Python model is vectorized to accept many samples.
             self.model_output = model_object(self.samples[self.nexist:self.nexist + self.nsim], **self.python_kwargs)
-            self.qoi_list = list(self.model_output.qoi)
+            if self.model_is_class:
+                self.qoi_list = list(self.model_output.qoi)
+            else:
+                self.qoi_list = list(self.model_output)
         else:
             # If the Python model is not vectorized and accepts only a single sample.
             for i in range(self.nexist, self.nexist + self.nsim):
@@ -754,7 +758,6 @@ class RunModel:
                                          str(self.model_script) + "' {1}  ::: {" + str(self.nexist) + ".." +
                                          str(self.nexist + self.nsim - 1) + "}")
 
-        print(self.model_command_string)
         subprocess.run(self.model_command_string, shell=True)
 
     ####################################################################################################################
