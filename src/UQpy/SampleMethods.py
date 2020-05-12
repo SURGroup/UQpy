@@ -2573,14 +2573,15 @@ class MCMC_old:
 
 class MCMC:
     """
-    Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
+    Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo
+    ([1]_, [2]_).
 
     This is the parent class to all MCMC algorithms.
 
     **References:**
 
-    * Gelman et al., "Bayesian data analysis", Chapman and Hall/CRC, 2013
-    * R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
+    .. [1] Gelman et al., "Bayesian data analysis", Chapman and Hall/CRC, 2013
+    .. [2] R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
 
     **Inputs:**
 
@@ -2631,9 +2632,20 @@ class MCMC:
     * **log_pdf_values** (`ndarray`)
         Values of the log pdf for the accepted samples, `ndarray` of shape (nchains * nsamples,) or (nsamples, nchains)
 
-    * **acceptance_rate** (`list`)
-        Acceptance ratio of the MCMC chains, computed separately for each chain
+    * **nsamples** (`list`)
+        Total number of samples; it is updated during iterations as new samples as saved.
 
+    * **nsamples_per_chain** (`list`)
+        Total number of samples per chain; it is updated during iterations as new samples as saved.
+
+    * **niterations** (`list`)
+        Total number of iterations, updated on-the-fly as the algorithm proceeds. It is related to number of samples as
+        niterations=nburn+jump*nsamples_per_chain.
+
+    * **acceptance_rate** (`list`)
+        Acceptance ratio of the MCMC chains, computed separately for each chain.
+
+    **Methods:**
     """
     # Last Modified: 10/05/20 by Audrey Olivier
 
@@ -2663,6 +2675,8 @@ class MCMC:
         self.samples = None
         self.log_pdf_values = None
         self.acceptance_rate = [0.] * self.nchains
+        self.nsamples, self.nsamples_per_chain = 0, 0
+        self.niterations = 0  # total nb of iterations, grows if you call run several times
 
     def run(self, nsamples=None, nsamples_per_chain=None):
         """
@@ -2677,19 +2691,33 @@ class MCMC:
             Number of samples to generate.
 
         * **nsamples_per_chain** (`int`)
-            Number of samples to generate per chain - prevails over `nsamples` if both are provided.
+            Number of samples to generate per chain.
+
+        Either nsamples or nsamples_per_chain must be provided (not both). Not that if nsamples is not a multiple of
+        nchains, nsamples is set to the next integer that is a multiple of nchains.
 
         """
-
         # Initialize the runs: allocate space for the new samples and log pdf values
-        nsims, current_state = self._initialize_samples(
-            nchains=self.nchains, nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
+        final_nsamples, final_nsamples_per_chain, current_state, current_log_pdf = self._initialize_samples(
+            nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
         if self.verbose:
             print('UQpy: Running MCMC...')
 
         # Run nsims iterations of the MCMC algorithm, starting at current_state
-        self.run_iterations(nsims, current_state)
+        while self.nsamples_per_chain < final_nsamples_per_chain:
+            # update the total number of iterations
+            self.niterations += 1
+            # run iteration
+            current_state, current_log_pdf = self.run_one_iteration(current_state, current_log_pdf)
+            # Update the chain, only if burn-in is over and the sample is not being jumped over
+            # also increase the current number of samples and samples_per_chain
+            if self.niterations > self.nburn and (self.niterations - self.nburn) % self.jump == 0:
+                self.samples[self.nsamples_per_chain, :, :] = current_state.copy()
+                if self.save_log_pdf:
+                    self.log_pdf_values[self.nsamples_per_chain, :] = current_log_pdf.copy()
+                self.nsamples_per_chain += 1
+                self.nsamples += self.nchains
 
         if self.verbose:
             print('UQpy: MCMC run successfully !')
@@ -2698,23 +2726,31 @@ class MCMC:
         if self.concat_chains:
             self._concatenate_chains()
 
-    def run_iterations(self, nsims, current_state):
+    def run_one_iteration(self, current_state, current_log_pdf):
         """
-        Run nsims iterations of the MCMC algorithm, starting at current_state.
+        Run one iteration of the MCMC algorithm, starting at current_state.
 
-        This method is over-written for each different MCMC algorithm. It must save the samples / log_pdf in attribute
-        samples and log_pdf_values, and compute the acceptance ratio of the chains.
+        This method is over-written for each different MCMC algorithm. It must return the new state and associated
+        log-pdf, which will be passed as inputs to the `run_one_iteration` method at the next iteration.
 
         **Inputs:**
-
-        * **nsims** (`int`):
-            Number of iterations to perform.
 
         * **current_state** (`ndarray`):
             Current state of the chain(s), `ndarray` of shape ``(nchains, dimension)``.
 
+        * **current_log_pdf** (`ndarray`):
+            Log-pdf of the current state of the chain(s), `ndarray` of shape ``(nchains, )``.
+
+        **Outputs/Returns:**
+
+        * **new_state** (`ndarray`):
+            New state of the chain(s), `ndarray` of shape ``(nchains, dimension)``.
+
+        * **new_log_pdf** (`ndarray`):
+            Log-pdf of the new state of the chain(s), `ndarray` of shape ``(nchains, )``.
+
         """
-        pass
+        return [], []
 
     ####################################################################################################################
     # Helper functions that can be used by all algorithms
@@ -2751,7 +2787,7 @@ class MCMC:
             self.log_pdf_values = self.log_pdf_values.reshape((-1, self.nchains), order='C')
         return None
 
-    def _initialize_samples(self, nchains, nsamples, nsamples_per_chain):
+    def _initialize_samples(self, nsamples, nsamples_per_chain):
         """
         Initialize necessary attributes and variables before running the chain forward.
 
@@ -2774,13 +2810,15 @@ class MCMC:
         if ((nsamples is not None) and (nsamples_per_chain is not None)) or (
                 nsamples is None and nsamples_per_chain is None):
             raise ValueError('UQpy: Either nsamples or nsamples_per_chain must be provided (not both)')
-        if nsamples is not None:
-            if not (isinstance(nsamples, int) and nsamples >= 0):
-                raise TypeError('UQpy: nsamples must be an integer >= 0.')
-            nsamples_per_chain = nsamples // nchains
-        else:
+        if nsamples_per_chain is not None:
             if not (isinstance(nsamples_per_chain, int) and nsamples_per_chain >= 0):
                 raise TypeError('UQpy: nsamples_per_chain must be an integer >= 0.')
+            nsamples = int(nsamples_per_chain * self.nchains)
+        else:
+            if not (isinstance(nsamples, int) and nsamples >= 0):
+                raise TypeError('UQpy: nsamples must be an integer >= 0.')
+            nsamples_per_chain = int(np.ceil(nsamples / self.nchains))
+            nsamples = int(nsamples_per_chain * self.nchains)
 
         if self.samples is None:    # very first call of run, set current_state as the seed and initialize self.samples
             self.samples = np.zeros((nsamples_per_chain, self.nchains, self.dimension))
@@ -2788,49 +2826,29 @@ class MCMC:
                 self.log_pdf_values = np.zeros((nsamples_per_chain, self.nchains))
             current_state = np.zeros_like(self.seed)
             np.copyto(current_state, self.seed)
-            if self.nburn == 0:    # save the seed
+            current_log_pdf = self.evaluate_log_target(current_state)
+            if self.nburn == 0:    # if nburn is 0, save the seed, run one iteration less 
                 self.samples[0, :, :] = current_state
                 if self.save_log_pdf:
-                    self.log_pdf_values[0, :] = self.evaluate_log_target(current_state)
-                self.current_sample_index = 1
-                self.total_iterations = 1  # total nb of iterations, grows if you call run several times
-                nsims = self.jump * nsamples_per_chain - 1
-            else:
-                self.current_sample_index = 0
-                self.total_iterations = 0  # total nb of iterations, grows if you call run several times
-                nsims = self.nburn + self.jump * nsamples_per_chain
+                    self.log_pdf_values[0, :] = current_log_pdf
+                self.nsamples_per_chain += 1
+                self.nsamples += self.nchains
+                #nsims = self.jump * nsamples_per_chain - 1
+            #else:
+                #nsims = self.nburn + self.jump * nsamples_per_chain
 
         else:    # fetch previous samples to start the new run, current state is last saved sample
             if len(self.samples.shape) == 2:   # the chains were previously concatenated
                 self._unconcatenate_chains()
             current_state = self.samples[-1]
+            current_log_pdf = self.evaluate_log_target(current_state)
             self.samples = np.concatenate(
                 [self.samples, np.zeros((nsamples_per_chain, self.nchains, self.dimension))], axis=0)
             if self.save_log_pdf:
                 self.log_pdf_values = np.concatenate(
                     [self.log_pdf_values, np.zeros((nsamples_per_chain, self.nchains))], axis=0)
-            nsims = self.jump * nsamples_per_chain
-        return nsims, current_state
-
-    def _update_samples(self, current_state, current_log_pdf):
-        """
-        Save current state.
-
-        Utility function that saves the current state and it log pdf value to attributes samples and log_pdf_values.
-        Only saved if burn-in period is over and this state is not to be 'jumped'.
-
-        **Inputs:**
-
-        * current_state (ndarray of shape (nchains, dim)): Current state of the chain to start from.
-        * current_log_pdf (ndarray of shape (nchains, )): Log pdf of current state
-
-        """
-        # Update the chain, only if burn-in is over and the sample is not being jumped over
-        if self.total_iterations >= self.nburn and (self.total_iterations-self.nburn) % self.jump == 0:
-            self.samples[self.current_sample_index, :, :] = current_state
-            if self.save_log_pdf:
-                self.log_pdf_values[self.current_sample_index, :] = current_log_pdf
-            self.current_sample_index += 1
+            #nsims = self.jump * nsamples_per_chain
+        return nsamples, nsamples_per_chain, current_state, current_log_pdf
 
     def _update_acceptance_rate(self, new_accept=None):
         """
@@ -2844,7 +2862,7 @@ class MCMC:
           separately).
 
         """
-        self.acceptance_rate = [na / (self.total_iterations+1) + self.total_iterations / (self.total_iterations+1) * a
+        self.acceptance_rate = [na / self.niterations + (self.niterations - 1) / self.niterations * a
                                 for (na, a) in zip(new_accept, self.acceptance_rate)]
 
     @staticmethod
@@ -2870,7 +2888,6 @@ class MCMC:
         * evaluate_log_pdf_marginals (list of callables): List of callables to compute the log pdf of the marginals
 
         """
-
         # log_pdf is provided
         if log_pdf is not None:
             if callable(log_pdf):
@@ -2882,7 +2899,8 @@ class MCMC:
                 if args is None:
                     args = [()] * len(log_pdf)
                 if not (isinstance(args, list) and len(args) == len(log_pdf)):
-                    raise ValueError('UQpy: When log_pdf_target is a list, args should be a list (of tuples) of same length.')
+                    raise ValueError('UQpy: When log_pdf_target is a list, args should be a list (of tuples) of same '
+                                     'length.')
                 evaluate_log_pdf_marginals = list(map(lambda i: lambda x: log_pdf[i](x, *args[i]), range(len(log_pdf))))
                 #evaluate_log_pdf_marginals = [partial(log_pdf_, *args_) for (log_pdf_, args_) in zip(log_pdf, args)]
                 evaluate_log_pdf = (lambda x: np.sum(
@@ -2978,6 +2996,7 @@ class MCMC:
 
 class MH(MCMC):
     """
+
     Metropolis-Hastings algorithm
 
     **Algorithm-specific inputs:**
@@ -3019,53 +3038,44 @@ class MH(MCMC):
         if (nsamples is not None) or (nsamples_per_chain is not None):
             self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
-    def run_iterations(self, nsims, current_state):
+    def run_one_iteration(self, current_state, current_log_pdf):
         """
-        Run nsims iterations of the MCMC chain for MH algorithm, starting at current state - see ``MCMC`` class.
+        Run one iteration of the MCMC chain for MH algorithm, starting at current state - see ``MCMC`` class.
         """
-        current_log_pdf = self.evaluate_log_target(current_state)
+        # Sample candidate
+        candidate = current_state + self.proposal.rvs(nsamples=self.nchains)
 
-        # Loop over the samples
-        for iter_nb in range(nsims):
+        # Compute log_pdf_target of candidate sample
+        log_p_candidate = self.evaluate_log_target(candidate)
 
-            # Sample candidate
-            candidate = current_state + self.proposal.rvs(nsamples=self.nchains)
+        # Compute acceptance ratio
+        if self.proposal_is_symmetric:  # proposal is symmetric
+            log_ratios = log_p_candidate - current_log_pdf
+        else:  # If the proposal is non-symmetric, one needs to account for it in computing acceptance ratio
+            log_proposal_ratio = self.proposal.log_pdf(candidate - current_state) - \
+                                 self.proposal.log_pdf(current_state - candidate)
+            log_ratios = log_p_candidate - current_log_pdf - log_proposal_ratio
 
-            # Compute log_pdf_target of candidate sample
-            log_p_candidate = self.evaluate_log_target(candidate)
+        # Compare candidate with current sample and decide or not to keep the candidate (loop over nc chains)
+        accept_vec = np.zeros((self.nchains,))  # this vector will be used to compute accept_ratio of each chain
+        for nc, (cand, log_p_cand, r_) in enumerate(zip(candidate, log_p_candidate, log_ratios)):
+            accept = np.log(np.random.random()) < r_
+            if accept:
+                current_state[nc, :] = cand
+                current_log_pdf[nc] = log_p_cand
+                accept_vec[nc] = 1.
+        # Update the acceptance rate
+        self._update_acceptance_rate(accept_vec)
 
-            # Compute acceptance ratio
-            if self.proposal_is_symmetric:  # proposal is symmetric
-                log_ratios = log_p_candidate - current_log_pdf
-            else:  # If the proposal is non-symmetric, one needs to account for it in computing acceptance ratio
-                log_proposal_ratio = self.proposal.log_pdf(candidate - current_state) - \
-                                     self.proposal.log_pdf(current_state - candidate)
-                log_ratios = log_p_candidate - current_log_pdf - log_proposal_ratio
-
-            # Compare candidate with current sample and decide or not to keep the candidate (loop over nc chains)
-            accept_vec = np.zeros((self.nchains,))  # this vector will be used to compute accept_ratio of each chain
-            for nc, (cand, log_p_cand, r_) in enumerate(zip(candidate, log_p_candidate, log_ratios)):
-                accept = np.log(np.random.random()) < r_
-                if accept:
-                    current_state[nc, :] = cand
-                    current_log_pdf[nc] = log_p_cand
-                    accept_vec[nc] = 1.
-
-            # Save the current state if needed, update acceptance rate
-            self._update_samples(current_state, current_log_pdf)
-            # Update the acceptance rate
-            self._update_acceptance_rate(accept_vec)
-            # update the total number of iterations
-            self.total_iterations += 1
-        # End of nsims iterations of MH algorithm
+        return current_state, current_log_pdf
 
 
 ####################################################################################################################
 
-
 class MMH(MCMC):
     """
-    Modified Metropolis-Hastings algorithm
+
+    Modified Metropolis-Hastings algorithm, [3]_
 
     In this algorithm, candidate samples are drawn separately in each dimension, thus the proposal consists in a list
     of 1d distributions. The target pdf can be given as a joint pdf or a list of marginal pdfs in all dimensions. This
@@ -3073,8 +3083,8 @@ class MMH(MCMC):
 
     **References:**
 
-    * S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
-       Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+    .. [3] S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
+           Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
 
     **Algorithm-specific inputs:**
 
@@ -3121,6 +3131,13 @@ class MMH(MCMC):
                   all(isinstance(b_, bool) for b_ in self.proposal_is_symmetric)):
             raise TypeError('UQpy: Proposal_is_symmetric should be a (list of) boolean(s)')
 
+        # check with algo type is used
+        if self.evaluate_log_target_marginals is not None:
+            self.target_type = 'marginals'
+            self.current_log_pdf_marginals = None
+        else:
+            self.target_type = 'joint'
+
         if self.verbose:
             print('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
 
@@ -3128,102 +3145,89 @@ class MMH(MCMC):
         if (nsamples is not None) or (nsamples_per_chain is not None):
             self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
-    def run_iterations(self, nsims, current_state):
+    def run_one_iteration(self, current_state, current_log_pdf):
         """
-        Run nsims iterations of the MCMC chain for MMH algorithm, starting at current state - see ``MCMC`` class.
+        Run one iteration of the MCMC chain for MMH algorithm, starting at current state - see ``MCMC`` class.
         """
         # The target pdf is provided via its marginals
-        if self.evaluate_log_target_marginals is not None:
+        accept_vec = np.zeros((self.nchains, ))
+        if self.target_type == 'marginals':
             # Evaluate the current log_pdf
-            current_log_p_marginals = [self.evaluate_log_target_marginals[j](current_state[:, j, np.newaxis])
-                                       for j in range(self.dimension)]
-            for iter_nb in range(nsims):
-                # Sample candidate (independently in each dimension)
-                accept_vec = np.zeros((self.nchains,))
-                for j in range(self.dimension):
-                    candidate_j = current_state[:, j, np.newaxis] + self.proposal[j].rvs(nsamples=self.nchains)
+            if self.current_log_pdf_marginals is None:
+                self.current_log_pdf_marginals = [self.evaluate_log_target_marginals[j](current_state[:, j, np.newaxis])
+                                                  for j in range(self.dimension)]
 
-                    # Compute log_pdf_target of candidate sample
-                    log_p_candidate_j = self.evaluate_log_target_marginals[j](candidate_j)
+            # Sample candidate (independently in each dimension)
+            for j in range(self.dimension):
+                candidate_j = current_state[:, j, np.newaxis] + self.proposal[j].rvs(nsamples=self.nchains)
 
-                    # Compute acceptance ratio
-                    if self.proposal_is_symmetric[j]:  # proposal is symmetric
-                        log_ratios = log_p_candidate_j - current_log_p_marginals[j]
-                    else:  # If the proposal is non-symmetric, one needs to account for it in computing acceptance ratio
-                        log_prop_j = self.proposal[j].log_pdf
-                        log_proposal_ratio = log_prop_j(candidate_j - current_state[:, j, np.newaxis]) - \
-                                             log_prop_j(current_state[:, j, np.newaxis] - candidate_j)
-                        log_ratios = log_p_candidate_j - current_log_p_marginals[j] - log_proposal_ratio
+                # Compute log_pdf_target of candidate sample
+                log_p_candidate_j = self.evaluate_log_target_marginals[j](candidate_j)
 
-                    # Compare candidate with current sample and decide or not to keep the candidate
-                    for nc, (cand, log_p_cand, r_) in enumerate(
-                            zip(candidate_j, log_p_candidate_j, log_ratios)):
-                        accept = np.log(np.random.random()) < r_
-                        if accept:
-                            current_state[nc, j] = cand
-                            current_log_p_marginals[j][nc] = log_p_cand
-                            accept_vec[nc] += 1. / self.dimension
+                # Compute acceptance ratio
+                if self.proposal_is_symmetric[j]:  # proposal is symmetric
+                    log_ratios = log_p_candidate_j - self.current_log_pdf_marginals[j]
+                else:  # If the proposal is non-symmetric, one needs to account for it in computing acceptance ratio
+                    log_prop_j = self.proposal[j].log_pdf
+                    log_proposal_ratio = log_prop_j(candidate_j - current_state[:, j, np.newaxis]) - \
+                                         log_prop_j(current_state[:, j, np.newaxis] - candidate_j)
+                    log_ratios = log_p_candidate_j - self.current_log_pdf_marginals[j] - log_proposal_ratio
 
-                # Save the current state if needed, update acceptance rate
-                self._update_samples(current_state, np.sum(np.array(current_log_p_marginals), axis=0))
-                # Update the acceptance rate
-                self._update_acceptance_rate(accept_vec)
-                # update the total number of iterations
-                self.total_iterations += 1
+                # Compare candidate with current sample and decide or not to keep the candidate
+                for nc, (cand, log_p_cand, r_) in enumerate(
+                        zip(candidate_j, log_p_candidate_j, log_ratios)):
+                    accept = np.log(np.random.random()) < r_
+                    if accept:
+                        current_state[nc, j] = cand
+                        self.current_log_pdf_marginals[j][nc] = log_p_cand
+                        current_log_pdf = np.sum(self.current_log_pdf_marginals)
+                        accept_vec[nc] += 1. / self.dimension
 
         # The target pdf is provided as a joint pdf
         else:
-            current_log_pdf = self.evaluate_log_target(current_state)
-            for iter_nb in range(nsims):
+            current_log_pdf_marginals = ()
+            candidate = np.copy(current_state)
+            for j in range(self.dimension):
+                candidate_j = current_state[:, j, np.newaxis] + self.proposal[j].rvs(nsamples=self.nchains)
+                candidate[:, j] = candidate_j[:, 0]
 
-                accept_vec = np.zeros((self.nchains,))
-                candidate = np.copy(current_state)
-                for j in range(self.dimension):
-                    candidate_j = current_state[:, j, np.newaxis] + self.proposal[j].rvs(nsamples=self.nchains)
-                    candidate[:, j] = candidate_j[:, 0]
+                # Compute log_pdf_target of candidate sample
+                log_p_candidate = self.evaluate_log_target(candidate)
 
-                    # Compute log_pdf_target of candidate sample
-                    log_p_candidate = self.evaluate_log_target(candidate)
-
-                    # Compare candidate with current sample and decide or not to keep the candidate
-                    if self.proposal_is_symmetric[j]:  # proposal is symmetric
-                        log_ratios = log_p_candidate - current_log_pdf
-                    else:  # If the proposal is non-symmetric, one needs to account for it in computing acceptance ratio
-                        log_prop_j = self.proposal[j].log_pdf
-                        log_proposal_ratio = log_prop_j(candidate_j - current_state[:, j, np.newaxis]) - \
-                                             log_prop_j(current_state[:, j, np.newaxis] - candidate_j)
-                        log_ratios = log_p_candidate - current_log_pdf - log_proposal_ratio
-                    for nc, (cand, log_p_cand, r_) in enumerate(zip(candidate_j, log_p_candidate, log_ratios)):
-                        accept = np.log(np.random.random()) < r_
-                        if accept:
-                            current_state[nc, j] = cand
-                            current_log_pdf[nc] = log_p_cand
-                            accept_vec[nc] += 1. / self.dimension
-                        else:
-                            candidate[:, j] = current_state[:, j]
-
-                # Save the current state if needed, update acceptance rate
-                self._update_samples(current_state, current_log_pdf)
-                # Update the acceptance rate
-                self._update_acceptance_rate(accept_vec)
-                # update the total number of iterations
-                self.total_iterations += 1
-        return None
-
+                # Compare candidate with current sample and decide or not to keep the candidate
+                if self.proposal_is_symmetric[j]:  # proposal is symmetric
+                    log_ratios = log_p_candidate - current_log_pdf
+                else:  # If the proposal is non-symmetric, one needs to account for it in computing acceptance ratio
+                    log_prop_j = self.proposal[j].log_pdf
+                    log_proposal_ratio = log_prop_j(candidate_j - current_state[:, j, np.newaxis]) - \
+                                         log_prop_j(current_state[:, j, np.newaxis] - candidate_j)
+                    log_ratios = log_p_candidate - current_log_pdf - log_proposal_ratio
+                for nc, (cand, log_p_cand, r_) in enumerate(zip(candidate_j, log_p_candidate, log_ratios)):
+                    accept = np.log(np.random.random()) < r_
+                    if accept:
+                        current_state[nc, j] = cand
+                        current_log_pdf[nc] = log_p_cand
+                        accept_vec[nc] += 1. / self.dimension
+                    else:
+                        candidate[:, j] = current_state[:, j]
+        # Update the acceptance rate
+        self._update_acceptance_rate(accept_vec)
+        return current_state, current_log_pdf
 
 ####################################################################################################################
 
 
 class Stretch(MCMC):
     """
-    Affine-invariant sampler with Stretch moves
+
+    Affine-invariant sampler with Stretch moves, [4]_, [5]_
 
     **References:**
 
-    * J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
-      no. 1, pp. 65–80, 2010.
-    * Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. "emcee: The MCMC Hammer". Publications
-      of the Astronomical Society of the Pacific, 125(925):306–312,2013.
+    .. [4] J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
+           no. 1, pp. 65–80, 2010.
+    .. [5] Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. "emcee: The MCMC Hammer".
+           Publications of the Astronomical Society of the Pacific, 125(925):306–312,2013.
 
     **Algorithm-specific inputs:**
 
@@ -3255,51 +3259,43 @@ class Stretch(MCMC):
         if (nsamples is not None) or (nsamples_per_chain is not None):
             self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
-    def run_iterations(self, nsims, current_state):
+    def run_one_iteration(self, current_state, current_log_pdf):
         """
-        Run nsims iterations of the MCMC chain for Stretch algorithm, starting at current state - see ``MCMC`` class.
+        Run one iteration of the MCMC chain for Stretch algorithm, starting at current state - see ``MCMC`` class.
         """
-        current_log_pdf = self.evaluate_log_target(current_state)
-
         # Start the loop over nsamples - this code uses the parallel version of the stretch algorithm
         all_inds = np.arange(self.nchains)
         inds = all_inds % 2
-        for iter_nb in range(nsims):
+        accept_vec = np.zeros((self.nchains,))
+        # Separate the full ensemble into two sets, use one as a complementary ensemble to the other and vice-versa
+        for split in range(2):
+            S1 = (inds == split)
 
-            accept_vec = np.zeros((self.nchains,))
-            # Separate the full ensemble into two sets, use one as a complementary ensemble to the other and vice-versa
-            for split in range(2):
-                S1 = (inds == split)
+            # Get current and complementary sets
+            sets = [current_state[inds == j, :] for j in range(2)]
+            s, c = sets[split], sets[1 - split]  # current and complementary sets respectively
+            Ns, Nc = len(s), len(c)
 
-                # Get current and complementary sets
-                sets = [current_state[inds == j, :] for j in range(2)]
-                s, c = sets[split], sets[1 - split]  # current and complementary sets respectively
-                Ns, Nc = len(s), len(c)
+            # Sample new state for S1 based on S0 and vice versa
+            zz = ((self.scale - 1.) * np.random.rand(Ns, 1) + 1) ** 2. / self.scale  # sample Z
+            factors = (self.dimension - 1.) * np.log(zz)  # compute log(Z ** (d - 1))
+            rint = np.random.choice(Nc, size=(Ns,), replace=True)  # sample X_{j} from complementary set
+            candidates = c[rint, :] - (c[rint, :] - s) * np.tile(zz, [1, self.dimension])  # new candidates
 
-                # Sample new state for S1 based on S0 and vice versa
-                zz = ((self.scale - 1.) * np.random.rand(Ns, 1) + 1) ** 2. / self.scale  # sample Z
-                factors = (self.dimension - 1.) * np.log(zz)  # compute log(Z ** (d - 1))
-                rint = np.random.choice(Nc, size=(Ns,), replace=True)  # sample X_{j} from complementary set
-                candidates = c[rint, :] - (c[rint, :] - s) * np.tile(zz, [1, self.dimension])  # new candidates
+            # Compute new likelihood, can be done in parallel :)
+            logp_candidates = self.evaluate_log_target(candidates)
 
-                # Compute new likelihood, can be done in parallel :)
-                logp_candidates = self.evaluate_log_target(candidates)
+            # Compute acceptance rate
+            for j, f, lpc, candidate in zip(all_inds[S1], factors, logp_candidates, candidates):
+                accept = np.log(np.random.rand()) < f + lpc - current_log_pdf[j]
+                if accept:
+                    current_state[j] = candidate
+                    current_log_pdf[j] = lpc
+                    accept_vec[j] += 1.
 
-                # Compute acceptance rate
-                for j, f, lpc, candidate in zip(all_inds[S1], factors, logp_candidates, candidates):
-                    accept = np.log(np.random.rand()) < f + lpc - current_log_pdf[j]
-                    if accept:
-                        current_state[j] = candidate
-                        current_log_pdf[j] = lpc
-                        accept_vec[j] += 1.
-
-            # Save the current state if needed, update acceptance rate
-            self._update_samples(current_state, current_log_pdf)
-            # Update the acceptance rate
-            self._update_acceptance_rate(accept_vec)
-            # update the total number of iterations
-            self.total_iterations += 1
-        return None
+        # Update the acceptance rate
+        self._update_acceptance_rate(accept_vec)
+        return current_state, current_log_pdf
 
 
 ####################################################################################################################
@@ -3307,7 +3303,8 @@ class Stretch(MCMC):
 
 class DRAM(MCMC):
     """
-    Delayed Rejection Adaptive Metropolis algorithm
+
+    Delayed Rejection Adaptive Metropolis algorithm, [6]_, [7]_
 
     In this algorithm, the proposal density is Gaussian and its covariance C is being updated from samples as
     C = sp * C_sample where C_sample is the sample covariance. Also, the delayed rejection scheme is applied, i.e,
@@ -3315,9 +3312,9 @@ class DRAM(MCMC):
 
     **References:**
 
-    * Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive MCMC". Statistics
-      and Computing, 16(4):339–354, 2006
-    * R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
+    .. [6] Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive MCMC". Statistics
+           and Computing, 16(4):339–354, 2006
+    .. [7] R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
 
     **Algorithm-specific inputs:**
 
@@ -3364,8 +3361,12 @@ class DRAM(MCMC):
             if not isinstance(getattr(self, key), typ):
                 raise TypeError('Input ' + key + ' must be of type ' + typ.__name__)
 
+        # initialize the sample mean and sample covariance that you need
+        self.current_covariance = np.tile(self.initial_covariance[np.newaxis, ...], (self.nchains, 1, 1))
+        self.sample_mean = np.zeros((self.nchains, self.dimension, ))
+        self.sample_covariance = np.zeros((self.nchains, self.dimension, self.dimension))
         if self.save_covariance:
-            self.adaptive_covariance = [self.initial_covariance, ]
+            self.adaptive_covariance = [self.current_covariance.copy(), ]
 
         if self.verbose:
             print('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
@@ -3374,101 +3375,124 @@ class DRAM(MCMC):
         if (nsamples is not None) or (nsamples_per_chain is not None):
             self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
-    def run_iterations(self, nsims, current_state):
+    def run_one_iteration(self, current_state, current_log_pdf):
         """
-        Run nsims iterations of the MCMC chain for DRAM algorithm, starting at current state - see ``MCMC`` class.
+        Run one iteration of the MCMC chain for DRAM algorithm, starting at current state - see ``MCMC`` class.
         """
         from UQpy.Distributions import MVNormal
-        current_log_pdf = self.evaluate_log_target(current_state)
-
-        # Initialize scale parameter
-        sample_mean = np.zeros((self.dimension, ))
-        sample_covariance = np.zeros((self.dimension, self.dimension))
-        current_covariance = self.initial_covariance
         mvp = MVNormal(mean=np.zeros(self.dimension, ), cov=1.)
-        mvp_DR = MVNormal(mean=np.zeros(self.dimension, ), cov=1.)
 
-        # Loop over the samples
-        for iter_nb in range(nsims):
-            # compute the scale parameter
+        # Sample candidate
+        candidate = np.zeros_like(current_state)
+        for nc, current_cov in enumerate(self.current_covariance):
+            mvp.update_params(cov=current_cov)
+            candidate[nc, :] = current_state[nc, :] + mvp.rvs(nsamples=1).reshape((self.dimension, ))
 
-            # Sample candidate
-            mvp.update_params(cov=current_covariance)
-            candidate = current_state + mvp.rvs(nsamples=self.nchains)
+        # Compute log_pdf_target of candidate sample
+        log_p_candidate = self.evaluate_log_target(candidate)
 
-            # Compute log_pdf_target of candidate sample
-            log_p_candidate = self.evaluate_log_target(candidate)
+        # Compare candidate with current sample and decide or not to keep the candidate (loop over nc chains)
+        accept_vec = np.zeros((self.nchains, ))
+        inds_DR = []   # indices of chains that will undergo delayed rejection
+        for nc, (cand, log_p_cand, log_p_curr) in enumerate(zip(candidate, log_p_candidate, current_log_pdf)):
+            accept = np.log(np.random.random()) < log_p_cand - log_p_curr
+            if accept:
+                current_state[nc, :] = cand
+                current_log_pdf[nc] = log_p_cand
+                accept_vec[nc] += 1.
+            else:    # enter delayed rejection
+                inds_DR.append(nc)    # these indices will enter the delayed rejection part
 
-            # Compare candidate with current sample and decide or not to keep the candidate (loop over nc chains)
-            accept_vec = np.zeros((self.nchains, ))
-            inds_DR = []   # indices of chains that will undergo delayed rejection
-            for nc, (cand, log_p_cand, log_p_curr) in enumerate(zip(candidate, log_p_candidate, current_log_pdf)):
-                accept = np.log(np.random.random()) < log_p_cand - log_p_curr
+        # Delayed rejection
+        if len(inds_DR) > 0:   # performed delayed rejection for some samples
+            current_states_DR = np.zeros((len(inds_DR), self.dimension))
+            candidates_DR = np.zeros((len(inds_DR), self.dimension))
+            candidate2 = np.zeros((len(inds_DR), self.dimension))
+            # Sample other candidates closer to the current one
+            for i, nc in enumerate(inds_DR):
+                current_states_DR[i, :] = current_state[nc, :]
+                candidates_DR[i, :] = candidate[nc, :]
+                mvp.update_params(cov=self.gamma_2 ** 2 * self.current_covariance[nc])
+                candidate2[i, :] = current_states_DR[nc, :] + mvp.rvs(nsamples=1).reshape((self.dimension, ))
+            # Evaluate their log_target
+            log_p_candidate2 = self.evaluate_log_target(candidate2)
+            log_prop_cand_cand2 = mvp.log_pdf(candidates_DR - candidate2)
+            log_prop_cand_curr = mvp.log_pdf(candidates_DR - current_states_DR)
+            # Accept or reject
+            for (nc, cand2, log_p_cand2, J1, J2) in zip(inds_DR, candidate2, log_p_candidate2, log_prop_cand_cand2,
+                                                        log_prop_cand_curr):
+                alpha_cand_cand2 = min(1., np.exp(log_p_candidate[nc] - log_p_cand2))
+                alpha_cand_curr = min(1., np.exp(log_p_candidate[nc] - current_log_pdf[nc]))
+                log_alpha2 = log_p_cand2 - current_log_pdf[nc] + J1 - J2 + \
+                             np.log(max(1. - alpha_cand_cand2, 10 ** (-320))) \
+                             - np.log(max(1. - alpha_cand_curr, 10 ** (-320)))
+                accept = np.log(np.random.random()) < min(0., log_alpha2)
                 if accept:
-                    current_state[nc, :] = cand
-                    current_log_pdf[nc] = log_p_cand
+                    current_state[nc, :] = cand2
+                    current_log_pdf[nc] = log_p_cand2
                     accept_vec[nc] += 1.
-                else:    # enter delayed rejection
-                    inds_DR.append(nc)    # these indices will enter the delayed rejection part
 
-            if len(inds_DR) > 0:   # performed delayed rejection for some samples
-                current_states_DR = np.array([current_state[nc, :] for nc in range(self.nchains) if nc in inds_DR])
-                candidates_DR = np.array([candidate[nc, :] for nc in range(self.nchains) if nc in inds_DR])
+        # Adaptive part: update the covariance
+        for nc in range(self.nchains):
+            # update covariance
+            self.sample_mean[nc], self.sample_covariance[nc] = self._recursive_update_mean_covariance(
+                n=self.niterations, new_sample=current_state[nc, :], previous_mean=self.sample_mean[nc],
+                previous_covariance=self.sample_covariance[nc])
+            if (self.niterations > 1) and (self.niterations % self.k0 == 0):
+                self.current_covariance[nc] = self.sp * self.sample_covariance[nc] + 1e-6 * np.eye(self.dimension)
+        if self.save_covariance and ((self.niterations > 1) and (self.niterations % self.k0 == 0)):
+            self.adaptive_covariance.append(self.current_covariance.copy())
 
-                # Sample other candidates closer to the current one
-                mvp_DR.update_params(cov=self.gamma_2 ** 2 * current_covariance)
-                candidate2 = current_states_DR + mvp_DR.rvs(nsamples=len(inds_DR))
-                # Evaluate their log_target
-                log_p_candidate2 = self.evaluate_log_target(candidate2)
-                log_prop_cand_cand2 = mvp.log_pdf(candidates_DR - candidate2)
-                log_prop_cand_curr = mvp.log_pdf(candidates_DR - current_states_DR)
-                # Accept or reject
-                for (nc, cand2, log_p_cand2, J1, J2) in zip(inds_DR, candidate2, log_p_candidate2, log_prop_cand_cand2,
-                                                            log_prop_cand_curr):
-                    alpha_cand_cand2 = min(1., np.exp(log_p_candidate[nc] - log_p_cand2))
-                    alpha_cand_curr = min(1., np.exp(log_p_candidate[nc] - current_log_pdf[nc]))
-                    log_alpha2 = log_p_cand2 - current_log_pdf[nc] + J1 - J2 + \
-                                 np.log(max(1. - alpha_cand_cand2, 10 ** (-320))) \
-                                 - np.log(max(1. - alpha_cand_curr, 10 ** (-320)))
-                    accept = np.log(np.random.random()) < min(0., log_alpha2)
-                    if accept:
-                        current_state[nc, :] = cand2
-                        current_log_pdf[nc] = log_p_cand2
-                        accept_vec[nc] += 1.
+        # Update the acceptance rate
+        self._update_acceptance_rate(accept_vec)
+        return current_state, current_log_pdf
 
-            # Adaptive part: update the covariance
-            for nc in range(self.nchains):
-                # update covariance
-                sample_mean, sample_covariance = recursive_update_mean_covariance(
-                    n=self.total_iterations + 1, new_sample=current_state[nc, :], previous_mean=sample_mean,
-                    previous_covariance=sample_covariance)
-                if (self.total_iterations + 1) % self.k0 == 0:
-                    current_covariance = self.sp * sample_covariance + 1e-6 * np.eye(self.dimension)
-                    if self.save_covariance:
-                        self.adaptive_covariance.append(current_covariance)
+    @staticmethod
+    def _recursive_update_mean_covariance(n, new_sample, previous_mean, previous_covariance=None):
+        """
+        Iterative formula to compute a new sample mean and covariance based on previous ones and new sample.
 
-            # Save the current state if needed, update acceptance rate
-            self._update_samples(current_state, current_log_pdf)
-            # Update the acceptance rate
-            self._update_acceptance_rate(accept_vec)
-            # update the total number of iterations
-            self.total_iterations += 1
-        return None
+        New covariance is computed only of previous_covariance is provided.
+
+        **Inputs:**
+
+        * n (int): Number of samples used to compute the new mean
+        * new_sample (ndarray (dim, )): new sample
+        * previous_mean (ndarray (dim, )): Previous sample mean, to be updated with new sample value
+        * previous_covariance (ndarray (dim, dim)): Previous sample covariance, to be updated with new sample value
+
+        **Output/Returns:**
+
+        * new_mean (ndarray (dim, )): Updated sample mean
+        * new_covariance (ndarray (dim, dim)): Updated sample covariance
+
+        """
+        new_mean = (n - 1) / n * previous_mean + 1 / n * new_sample
+        if previous_covariance is None:
+            return new_mean
+        dim = new_sample.size
+        if n == 1:
+            new_covariance = np.zeros((dim, dim))
+        else:
+            delta_n = (new_sample - previous_mean).reshape((dim, 1))
+            new_covariance = (n - 2) / (n - 1) * previous_covariance + 1 / n * np.matmul(delta_n, delta_n.T)
+        return new_mean, new_covariance
 
 ####################################################################################################################
 
 
 class DREAM(MCMC):
     """
-    DiffeRential Evolution Adaptive Metropolis algorithm
+
+    DiffeRential Evolution Adaptive Metropolis algorithm, [8]_, [9]_
 
     **References:**
 
-    * J.A. Vrugt et al. "Accelerating Markov chain Monte Carlo simulation by differential evolution with self-adaptive
-       randomized subspace sampling". International Journal of Nonlinear Sciences and Numerical Simulation,
-       10(3):273–290, 2009.[68]
-    * J.A. Vrugt. "Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and MATLAB
-       implementation". Environmental Modelling & Software, 75:273–316, 2016.
+    .. [8] J.A. Vrugt et al. "Accelerating Markov chain Monte Carlo simulation by differential evolution with
+           self-adaptive randomized subspace sampling". International Journal of Nonlinear Sciences and Numerical
+           Simulation, 10(3):273–290, 2009.[68]
+    .. [9] J.A. Vrugt. "Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and
+           MATLAB implementation". Environmental Modelling & Software, 75:273–316, 2016.
 
     **Algorithm-specific inputs:**
 
@@ -3528,6 +3552,10 @@ class DREAM(MCMC):
             if not (isinstance(p, tuple) and len(p) == 2 and all(isinstance(i, (int, float)) for i in p)):
                 raise TypeError('Inputs ' + key + ' must be a tuple of 2 integers.')
 
+        # Initialize a few other variables
+        self.J, self.n_id = np.zeros((self.n_CR,)), np.zeros((self.n_CR,))
+        self.pCR = np.ones((self.n_CR,)) / self.n_CR
+
         if self.verbose:
             print('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
 
@@ -3535,79 +3563,68 @@ class DREAM(MCMC):
         if (nsamples is not None) or (nsamples_per_chain is not None):
             self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
-    def run_iterations(self, nsims, current_state):
+    def run_one_iteration(self, current_state, current_log_pdf):
         """
-        Run nsims iterations of the MCMC chain for DREAM algorithm, starting at current state - see ``MCMC`` class.
+        Run one iteration of the MCMC chain for DREAM algorithm, starting at current state - see ``MCMC`` class.
         """
-        J, n_id = np.zeros((self.n_CR,)), np.zeros((self.n_CR,))
         R = np.array([np.setdiff1d(np.arange(self.nchains), j) for j in range(self.nchains)])
         CR = np.arange(1, self.n_CR + 1) / self.n_CR
-        pCR = np.ones((self.n_CR,)) / self.n_CR
 
-        # Evaluate the current log_pdf and initialize acceptance ratio
-        current_log_pdf = self.evaluate_log_target(current_state)
+        # Dynamic part: evolution of chains
+        draw = np.argsort(np.random.rand(self.nchains - 1, self.nchains), axis=0)
+        dX = np.zeros_like(current_state)
+        lmda = np.random.uniform(low=-self.c, high=self.c, size=(self.nchains,))
+        std_x_tmp = np.std(current_state, axis=0)
 
-        # dynamic part: evolution of chains
-        for iter_nb in range(nsims):
+        D = np.random.choice(self.delta, size=(self.nchains,), replace=True)
+        as_ = [R[j, draw[slice(D[j]), j]] for j in range(self.nchains)]
+        bs_ = [R[j, draw[slice(D[j], 2 * D[j], 1), j]] for j in range(self.nchains)]
+        id = np.random.choice(self.n_CR, size=(self.nchains, ), replace=True, p=self.pCR)
+        z = np.random.rand(self.nchains, self.dimension)
+        A = [np.where(z_j < CR[id_j])[0] for (z_j, id_j) in zip(z, id)]  # subset A of selected dimensions
+        d_star = np.array([len(A_j) for A_j in A])
+        for j in range(self.nchains):
+            if d_star[j] == 0:
+                A[j] = np.array([np.argmin(z[j])])
+                d_star[j] = 1
+        gamma_d = 2.38 / np.sqrt(2 * (D + 1) * d_star)
+        g = [np.random.choice([gamma_d[j], 1], size=1, replace=True, p=[1 - self.p_g, self.p_g])
+             for j in range(self.nchains)]
+        for j in range(self.nchains):
+            for i in A[j]:
+                dX[j, i] = self.c_star * np.random.randn() + \
+                           (1 + lmda[j]) * g[j] * np.sum(current_state[as_[j], i] - current_state[bs_[j], i])
+        candidates = current_state + dX
 
-            draw = np.argsort(np.random.rand(self.nchains - 1, self.nchains), axis=0)
-            dX = np.zeros_like(current_state)
-            lmda = np.random.uniform(low=-self.c, high=self.c, size=(self.nchains,))
-            std_x_tmp = np.std(current_state, axis=0)
+        # Evaluate log likelihood of candidates
+        logp_candidates = self.evaluate_log_target(candidates)
 
-            D = np.random.choice(self.delta, size=(self.nchains,), replace=True)
-            as_ = [R[j, draw[slice(D[j]), j]] for j in range(self.nchains)]
-            bs_ = [R[j, draw[slice(D[j], 2 * D[j], 1), j]] for j in range(self.nchains)]
-            id = np.random.choice(self.n_CR, size=(self.nchains, ), replace=True, p=pCR)
-            z = np.random.rand(self.nchains, self.dimension)
-            A = [np.where(z_j < CR[id_j])[0] for (z_j, id_j) in zip(z, id)]  # subset A of selected dimensions
-            d_star = np.array([len(A_j) for A_j in A])
-            for j in range(self.nchains):
-                if d_star[j] == 0:
-                    A[j] = np.array([np.argmin(z[j])])
-                    d_star[j] = 1
-            gamma_d = 2.38 / np.sqrt(2 * (D + 1) * d_star)
-            g = [np.random.choice([gamma_d[j], 1], size=1, replace=True, p=[1 - self.p_g, self.p_g])
-                 for j in range(self.nchains)]
-            for j in range(self.nchains):
-                for i in A[j]:
-                    dX[j, i] = self.c_star * np.random.randn() + \
-                               (1 + lmda[j]) * g[j] * np.sum(current_state[as_[j], i] - current_state[bs_[j], i])
-            candidates = current_state + dX
+        # Accept or reject
+        accept_vec = np.zeros((self.nchains, ))
+        for nc, (lpc, candidate, log_p_curr) in enumerate(zip(logp_candidates, candidates, current_log_pdf)):
+            accept = np.log(np.random.random()) < lpc - log_p_curr
+            if accept:
+                current_state[nc, :] = candidate
+                current_log_pdf[nc] = lpc
+                accept_vec[nc] = 1.
+            else:
+                dX[nc, :] = 0
+            self.J[id[nc]] = self.J[id[nc]] + np.sum((dX[nc, :] / std_x_tmp) ** 2)
+            self.n_id[id[nc]] += 1
 
-            # Evaluate log likelihood of candidates
-            logp_candidates = self.evaluate_log_target(candidates)
+        # Save the acceptance rate
+        self._update_acceptance_rate(accept_vec)
 
-            # Accept or reject
-            accept_vec = np.zeros((self.nchains, ))
-            for nc, (lpc, candidate, log_p_curr) in enumerate(zip(logp_candidates, candidates, current_log_pdf)):
-                accept = np.log(np.random.random()) < lpc - log_p_curr
-                if accept:
-                    current_state[nc, :] = candidate
-                    current_log_pdf[nc] = lpc
-                    accept_vec[nc] = 1.
-                else:
-                    dX[nc, :] = 0
-                J[id[nc]] = J[id[nc]] + np.sum((dX[nc, :] / std_x_tmp) ** 2)
-                n_id[id[nc]] += 1
+        # update selection cross prob
+        if self.niterations < self.adapt_CR[0] and self.niterations % self.adapt_CR[1] == 0:
+            self.pCR = self.J / self.n_id
+            self.pCR /= sum(self.pCR)
+        # check outlier chains (only if you have saved at least 100 values already)
+        if (self.nsamples >= 100) and (self.niterations < self.check_chains[0]) and \
+                (self.niterations % self.check_chains[1] == 0):
+            self.check_outlier_chains(replace_with_best=True)
 
-            # Save the current state if needed, update acceptance rate
-            self._update_samples(current_state, current_log_pdf)
-            # Update the acceptance rate
-            self._update_acceptance_rate(accept_vec)
-            # update the total number of iterations
-            self.total_iterations += 1
-
-            # update selection cross prob
-            if self.total_iterations < self.adapt_CR[0] and self.total_iterations % self.adapt_CR[1] == 0:
-                pCR = J / n_id
-                pCR /= sum(pCR)
-            # check outlier chains (only if you have saved at least 100 values already)
-            if (self.current_sample_index * self.nchains >= 100) and \
-                    (self.total_iterations < self.check_chains[0]) and \
-                    (self.total_iterations % self.check_chains[1] == 0):
-                self.check_outlier_chains(replace_with_best=True)
-        return None
+        return current_state, current_log_pdf
 
     def check_outlier_chains(self, replace_with_best=False):
         """
@@ -3624,9 +3641,9 @@ class DREAM(MCMC):
 
         """
         if not self.save_log_pdf:
-            raise ValueError('attribute save_log_pdf must be True in order to check outlier chains')
-        start_ = self.current_sample_index // 2
-        avgs_logpdf = np.mean(self.log_pdf_values[start_:], axis=0)
+            raise ValueError('UQpy: Input save_log_pdf must be True in order to check outlier chains')
+        start_ = self.nsamples_per_chain // 2
+        avgs_logpdf = np.mean(self.log_pdf_values[start_:self.nsamples_per_chain], axis=0)
         best_ = np.argmax(avgs_logpdf)
         avg_sorted = np.sort(avgs_logpdf)
         ind1, ind3 = 1 + round(0.25 * self.nchains), 1 + round(0.75 * self.nchains)
@@ -3638,12 +3655,12 @@ class DREAM(MCMC):
             if avgs_logpdf[j] < q1 - 2.0 * qr:
                 outlier_num += 1
                 if replace_with_best:
-                    self.samples[start_:, j, :] = self.samples[start_:, best_, :]
-                    self.log_pdf_values[start_:, j] = self.log_pdf_values[start_:, best_]
+                    self.samples[start_:, j, :] = self.samples[start_:, best_, :].copy()
+                    self.log_pdf_values[start_:, j] = self.log_pdf_values[start_:, best_].copy()
                 else:
-                    print('Chain {} is an outlier chain'.format(j))
+                    print('UQpy: Chain {} is an outlier chain'.format(j))
         if self.verbose and outlier_num > 0:
-            print('Detected {} outlier chains'.format(outlier_num))
+            print('UQpy: Detected {} outlier chains'.format(outlier_num))
 
 
 ########################################################################################################################
@@ -3684,6 +3701,7 @@ class IS:
     * **weights** (`ndarray`):
         importance weights samples, weighted so that they sum up to 1, `ndarray` of shape (nsamples, )
 
+    **Methods:**
     """
     # Last Modified: 10/05/2020 by Audrey Olivier
     def __init__(self, nsamples=None, pdf_target=None, log_pdf_target=None, args_target=None,
