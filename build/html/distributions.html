@@ -12,6 +12,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="SampleMethods" href="samplemethods.html" />
@@ -214,13 +215,26 @@ If a given moment cannot be computed, None is returned in its place.</p>
 </dd>
 </dl>
 <dl class="method">
+<dt id="UQpy.Distributions.Distribution.get_params">
+<code class="sig-name descname">get_params</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Distribution.get_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Distribution.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the parameters of the distribution object.</p>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>(dict):</dt><dd><p>Parameters of the distribution.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
 <dt id="UQpy.Distributions.Distribution.update_params">
 <code class="sig-name descname">update_params</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Distribution.update_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Distribution.update_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the parameters of the distribution object.</p>
 <p><strong>Input:</strong></p>
 <blockquote>
 <div><dl class="simple">
-<dt>kwargs (keyword arguments):</dt><dd><p>Parameters to be updated</p>
+<dt>keyword arguments:</dt><dd><p>Parameters to be updated</p>
 </dd>
 </dl>
 </div></blockquote>
@@ -318,20 +332,6 @@ If a given moment cannot be computed, None is returned in its place.</p>
 <dt id="UQpy.Distributions.JointInd">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">JointInd</code><span class="sig-paren">(</span><em class="sig-param">marginals</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#JointInd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.JointInd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define a joint distribution from its independent marginals.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">Lognormal</span><span class="p">,</span> <span class="n">JointInd</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">marginals</span> <span class="o">=</span> <span class="p">[</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">2.</span><span class="p">),</span> <span class="n">Lognormal</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">5</span><span class="p">))]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">JointInd</span><span class="p">(</span><span class="n">marginals</span><span class="o">=</span><span class="n">marginals</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">))</span>
-<span class="go">[[-1.71261207e-01  5.01174573e+01]</span>
-<span class="go"> [ 3.99469089e+00  4.02359290e+02]</span>
-<span class="go"> [ 2.56595700e+00  1.96955635e+02]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">params</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">marginals</span><span class="p">])</span>
-<span class="go">[{&#39;loc&#39;: 2.0, &#39;scale&#39;: 2.0}, {&#39;s&#39;: 1.0, &#39;loc&#39;: 0.0, &#39;scale&#39;: 148.4131591025766}]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span><span class="o">.</span><span class="n">update_params</span><span class="p">(</span><span class="n">params_marginals</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;loc&#39;</span><span class="p">:</span> <span class="mf">1.</span><span class="p">},</span> <span class="n">indices_marginals</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">params</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">marginals</span><span class="p">])</span>
-<span class="go">[{&#39;loc&#39;: 2.0, &#39;scale&#39;: 2.0}, {&#39;s&#39;: 1.0, &#39;loc&#39;: 1.0, &#39;scale&#39;: 148.4131591025766}]</span>
-</pre></div>
-</div>
 <p><strong>Inputs:</strong></p>
 <blockquote>
 <div><dl class="simple">
@@ -341,18 +341,45 @@ If a given moment cannot be computed, None is returned in its place.</p>
 </div></blockquote>
 <p>Such a multivariate distribution possesses the following methods, on condition that all its univariate marginals
 also possess them: <em>pdf, log_pdf, cdf, rvs, fit, moments</em>, along with the <em>update_params</em> method.</p>
+<p>The parameters of the distribution are only stored as attributes of the marginal objects. However, the
+<em>get_params</em> and <em>update_params</em> method can still be used for the joint. Note that for this puspose each parameter
+of the joint is assigned a unique string identifier as key_index - where key is the parameter name and index the
+index of the marginal (e.g., location parameter of the 2nd marginal is identified as loc_1).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">Lognormal</span><span class="p">,</span> <span class="n">JointInd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">marginals</span> <span class="o">=</span> <span class="p">[</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">2.</span><span class="p">),</span> <span class="n">Lognormal</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">5</span><span class="p">))]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">JointInd</span><span class="p">(</span><span class="n">marginals</span><span class="o">=</span><span class="n">marginals</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">))</span>
+<span class="go">[[-1.71261207e-01  5.01174573e+01]</span>
+<span class="go"> [ 3.99469089e+00  4.02359290e+02]</span>
+<span class="go"> [ 2.56595700e+00  1.96955635e+02]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">params</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">marginals</span><span class="p">])</span>
+<span class="go">[{&#39;loc&#39;: 2.0, &#39;scale&#39;: 2.0}, {&#39;s&#39;: 1.0, &#39;loc&#39;: 0.0, &#39;scale&#39;: 148.4131591025766}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span><span class="o">.</span><span class="n">update_params</span><span class="p">(</span><span class="n">loc_1</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">params</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">marginals</span><span class="p">])</span>
+<span class="go">[{&#39;loc&#39;: 2.0, &#39;scale&#39;: 2.0}, {&#39;s&#39;: 1.0, &#39;loc&#39;: 1.0, &#39;scale&#39;: 148.4131591025766}]</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="UQpy.Distributions.JointInd.get_params">
+<code class="sig-name descname">get_params</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#JointInd.get_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.JointInd.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the parameters of the joint distribution.</p>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>(dict):</dt><dd><p>Parameters of the distribution.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
 <dl class="method">
 <dt id="UQpy.Distributions.JointInd.update_params">
 <code class="sig-name descname">update_params</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#JointInd.update_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.JointInd.update_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update the parameters of the marginals (calls the update_params methods of the marginals).</p>
-<p><strong>Inputs:</strong></p>
+<dd><p>Update the parameters of the marginals.</p>
+<p><strong>Input:</strong></p>
 <blockquote>
 <div><dl class="simple">
-<dt>new_params(dict or list):</dt><dd><p>New parameters for the marginals, contained in dictionaries such as {‘loc’: 1.}. If parameters of
-several marginals are being updated, this should be a list of dictionaries.</p>
-</dd>
-<dt>indices_marginals(int or list):</dt><dd><p>Index of marginal(s) whose parameters are being updated. If parameters of several marginals are being
-updated, this should be a list of integers.</p>
+<dt>keyword arguments:</dt><dd><p>Parameters to be updated</p>
 </dd>
 </dl>
 </div></blockquote>
@@ -367,19 +394,6 @@ updated, this should be a list of integers.</p>
 <dt id="UQpy.Distributions.JointCopula">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">JointCopula</code><span class="sig-paren">(</span><em class="sig-param">marginals</em>, <em class="sig-param">copula</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#JointCopula"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.JointCopula" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define a joint distribution from a list of marginals and a copula to introduce dependency.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">JointCopula</span><span class="p">,</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">Gumbel</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">marginals</span> <span class="o">=</span> <span class="p">[</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">copula</span> <span class="o">=</span> <span class="n">Gumbel</span><span class="p">(</span><span class="n">theta</span><span class="o">=</span><span class="mf">3.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">JointCopula</span><span class="p">(</span><span class="n">marginals</span><span class="o">=</span><span class="n">marginals</span><span class="p">,</span> <span class="n">copula</span><span class="o">=</span><span class="n">copula</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="s1">&#39;rvs&#39;</span><span class="p">))</span>
-<span class="go">False</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">copula</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
-<span class="go">{&#39;theta&#39;: 3.0}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span><span class="o">.</span><span class="n">update_params</span><span class="p">(</span><span class="n">params_copula</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;theta&#39;</span><span class="p">:</span> <span class="mf">2.</span><span class="p">})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">copula</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
-<span class="go">{&#39;theta&#39;: 2.0}</span>
-</pre></div>
-</div>
 <p><strong>Inputs:</strong></p>
 <blockquote>
 <div><dl class="simple">
@@ -391,20 +405,46 @@ updated, this should be a list of integers.</p>
 </div></blockquote>
 <p>Such a multivariate distribution may possess a <em>cdf, pdf</em> and <em>log_pdf</em> methods if the copula allows for it (i.e.,
 if the copula possesses the necessary <em>evaluate_cdf</em> and <em>evaluate_pdf</em> methods).</p>
+<p>The parameters of the distribution are only stored as attributes of the marginals/copula objects. However, the
+<em>get_params</em> and <em>update_params</em> method can still be used for the joint. Note that each parameter of the joint is
+assigned a unique string identifier as key_index - where key is the parameter name and index the index of the
+marginal (e.g., location parameter of the 2nd marginal is identified as loc_1); and key_c for copula parameters.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">JointCopula</span><span class="p">,</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">Gumbel</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">marginals</span> <span class="o">=</span> <span class="p">[</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">copula</span> <span class="o">=</span> <span class="n">Gumbel</span><span class="p">(</span><span class="n">theta</span><span class="o">=</span><span class="mf">3.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">JointCopula</span><span class="p">(</span><span class="n">marginals</span><span class="o">=</span><span class="n">marginals</span><span class="p">,</span> <span class="n">copula</span><span class="o">=</span><span class="n">copula</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">get_params</span><span class="p">())</span>
+<span class="go">{&#39;loc_0&#39;: 0., &#39;scale_0&#39;: 1., &#39;loc_1&#39;: 0., &#39;scale_1&#39;: 1., &#39;theta_c&#39;: 3.}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="s1">&#39;rvs&#39;</span><span class="p">))</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">copula</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+<span class="go">{&#39;theta&#39;: 3.0}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span><span class="o">.</span><span class="n">update_params</span><span class="p">(</span><span class="n">theta_c</span><span class="o">=</span><span class="mf">2.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">copula</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+<span class="go">{&#39;theta&#39;: 2.0}</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="UQpy.Distributions.JointCopula.get_params">
+<code class="sig-name descname">get_params</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#JointCopula.get_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.JointCopula.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the parameters of the joint distribution.</p>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><dl class="simple">
+<dt>(dict):</dt><dd><p>Parameters of the distribution.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
 <dl class="method">
 <dt id="UQpy.Distributions.JointCopula.update_params">
 <code class="sig-name descname">update_params</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#JointCopula.update_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.JointCopula.update_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update the parameters of the marginals and/or copula (calls the update_params methods of the marginals/copula).</p>
-<p><strong>Inputs:</strong></p>
+<dd><p>Update the parameters of the marginals and/or copula.</p>
+<p><strong>Input:</strong></p>
 <blockquote>
 <div><dl class="simple">
-<dt>params_marginals(dict or list):</dt><dd><p>New parameters for the marginals, contained in dictionaries such as {‘loc’: 1.}. If parameters of
-several marginals are being updated, this should be a list of dictionaries.</p>
-</dd>
-<dt>indices_marginals(int or list):</dt><dd><p>Index of marginal(s) whose parameters are being updated. If parameters of several marginals are being
-updated, this should be a list of integers.</p>
-</dd>
-<dt>params_copula(dict):</dt><dd><p>New parameters for the copula.</p>
+<dt>keyword arguments:</dt><dd><p>Parameters to be updated</p>
 </dd>
 </dl>
 </div></blockquote>
@@ -550,8 +590,8 @@ is identical to Beta(a, b).pdf(y) / scale with y=(x-loc)/scale.</p>
 <dt>scale (float):</dt><dd><p>scale parameter</p>
 </dd>
 </dl>
-<p>ChiSquare(c, loc, scale).pdf(x) is identical to ChiSquare(c).pdf(y) / scale with y=(x-loc)/scale</p>
 </div></blockquote>
+<p>ChiSquare(c, loc, scale).pdf(x) is identical to ChiSquare(c).pdf(y) / scale with y=(x-loc)/scale</p>
 <p>The following methods are available for ChiSquare: <em>cdf, pdf, log_pdf, icdf, rvs, moments</em>.</p>
 </dd></dl>
 

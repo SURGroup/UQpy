@@ -35,12 +35,11 @@ For example,  to run MCS  for two independent normally distribution random varia
 >>> print(x1.samples)
     UQpy: Running Monte Carlo Sampling...
     UQpy: Monte Carlo Sampling Complete.
-	[array([[1.62434536],
-	[1.78862847]]), array([[-0.61175641],
-	[ 0.43650985]]), array([[-0.52817175],
-	[ 0.09649747]]), array([[-1.07296862],
-	[-1.8634927 ]]), array([[ 0.86540763],
-	[-0.2773882 ]])]
+	[[ 1.62434536  1.78862847]
+ 	[-0.61175641  0.43650985]
+ 	[-0.52817175  0.09649747]
+	[-1.07296862 -1.8634927 ]
+ 	[ 0.86540763 -0.2773882 ]]
 
 The ``MCS`` class can be used to run MCS for multivariate distributions
 
@@ -48,7 +47,11 @@ The ``MCS`` class can be used to run MCS for multivariate distributions
 >>> dist = MVNormal(mean=[1., 2.], cov=[[4., -0.9], [-0.9, 1.]])
 >>> x2 = MCS(dist_object=[dist], nsamples=5, random_state=123)
 >>> print(x2.samples)
-    [array([[3.38736185, 2.23541269]]), array([[0.08946208, 0.8979547 ]]), array([[2.53138343, 	3.06057229]]), array([[5.72159837, 0.30657467]]), array([[-1.71534735,  1.97285583]])]
+	[[ 3.38736185  2.23541269]
+	[ 0.08946208  0.8979547 ]
+	[ 2.53138343  3.06057229]
+	[ 5.72159837  0.30657467]
+	[-1.71534735  1.97285583]]
 
 Or for a combination of distributions
 
@@ -57,11 +60,11 @@ Or for a combination of distributions
 >>> dist = MVNormal(mean=[1., 2.], cov=[[4., -0.9], [-0.9, 1.]])
 >>> x3 = MCS(dist_object=[dist1, dist], nsamples=5, random_state=[123, None])
 >>> print(x3.samples)
-	[[array([-1.0856306]) array([2.71076423, 0.1045249 ])]
- 	[array([0.99734545]) array([-0.83581846,  2.72645573])]
- 	[array([0.2829785]) array([2.00888019, 1.19372116])]
- 	[array([-1.50629471]) array([-2.92088426,  3.20510339])]
- 	[array([-0.57860025]) array([2.68866374, 3.02856845])]]
+	[[array([-1.0856306]) array([0.21193807, 2.35155014])]
+ 	[array([0.99734545]) array([-1.02985401,  1.83075511])]
+ 	[array([0.2829785]) array([3.09845703, 1.67722522])]
+ 	[array([-1.50629471]) array([2.13964859, 1.22068072])]
+ 	[array([-0.57860025]) array([-1.16164199,  2.21637435])]]
 	 
 In this case the number of  samples will be
 
@@ -75,6 +78,58 @@ and the dimension of the problem is
 .. autoclass:: UQpy.SampleMethods.MCS
 	:members:
 
+
+LHS
+----
+
+``LHS``  class can be used to generate  random  draws  from  specified probability distribution(s) using Latin hypercube sampling, which belongs to the family of stratified sampling techniques. LHS has the advantage that the samples generated are uniformly distributed over each marginal distribution. LHS is perfomed by dividing the the range of each random variable into N bins with equal probability mass, where N is the required number of samples, generating one sample per bin, and then randomly pairing the samples.
+
+``LHS``  class can be imported in a python script using the following command:
+
+>>> from UQpy.SampleMethods import LHS
+
+For example,  to run LHS  for two independent uniformly distribution random variables `U(0, 1)`
+
+>>> from UQpy.Distributions import Normal
+>>> dist1 = Uniform(loc=0., scale=1.)
+>>> dist2 = Uniform(loc=0., scale=1.)
+>>> x1 = LHS(dist_object=[dist1, dist2], nsamples=5,  verbose=True)
+>>> print(x1.samples)
+	UQpy: Running Latin Hypercube sampling...
+	Successful execution of LHS design.
+	[[0.01373095 0.83176942]
+ 	[0.34778514 0.52142516]
+ 	[0.77989405 0.30824438]
+ 	[0.55000767 0.16585118]
+ 	[0.9397917  0.6990165 ]]
+	 
+The ``LHS`` class of ``UQpy`` offers a variaty of methods for a Latin Hypercube Design ('random', 'centered', 'minmax', 'correlate`). However, adding a new method is straightforward. For example, if we want to perform a LHS desing using a new method we can do it easily by providing a function as the `criterion`. The output of this function should be an array at least two-dimension. In the same way, a distance metric can be provided by the user. For example:
+
+	
+>>> from UQpy.Distributions import Uniform
+>>> dist1 = Uniform(loc=0., scale=1.)
+>>> dist2 = Uniform(loc=0., scale=1.)
+
+>>> def new_method():
+>>> samples_in_U_ab = np.atleast_2d(np.array([1., 1.]))
+>>> 	return samples_in_U_ab
+
+>>> def new_distance(y):
+>>> 	return y + 1
+
+>>> x1 = LHS(dist_object=[dist1, dist2], nsamples=5, criterion=new_method, metric=new_distance)
+>>> print(x1.samples)
+	[[1. 1.]
+ 	[1. 1.]
+ 	[1. 1.]
+ 	[1. 1.]
+ 	[1. 1.]]
+
+
+
+
+.. autoclass:: UQpy.SampleMethods.LHS
+	:members:
 	
 MCMC
 ----

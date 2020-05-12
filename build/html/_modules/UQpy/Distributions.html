@@ -12,6 +12,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -228,17 +229,24 @@
 
 <span class="sd">        **Input:**</span>
 
-<span class="sd">                kwargs (keyword arguments):</span>
+<span class="sd">                keyword arguments:</span>
 <span class="sd">                        Parameters to be updated</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Wrong parameter name.&#39;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
 
-    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span></div>
+<div class="viewcode-block" id="Distribution.get_params"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Distribution.get_params">[docs]</a>    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the parameters of the distribution object.</span>
 
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">                (dict):</span>
+<span class="sd">                        Parameters of the distribution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span></div></div>
 
 <div class="viewcode-block" id="DistributionContinuous1D"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.DistributionContinuous1D">[docs]</a><span class="k">class</span> <span class="nc">DistributionContinuous1D</span><span class="p">(</span><span class="n">Distribution</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -397,13 +405,13 @@
 <span class="sd">    **Inputs:**</span>
 
 <span class="sd">        df (float):</span>
-<span class="sd">                shape parameter (degrees of freedom)</span>
+<span class="sd">            shape parameter (degrees of freedom)</span>
 <span class="sd">        loc (float):</span>
-<span class="sd">                location parameter</span>
+<span class="sd">            location parameter</span>
 <span class="sd">        scale (float):</span>
-<span class="sd">                scale parameter</span>
+<span class="sd">            scale parameter</span>
 
-<span class="sd">        ChiSquare(c, loc, scale).pdf(x) is identical to ChiSquare(c).pdf(y) / scale with y=(x-loc)/scale</span>
+<span class="sd">    ChiSquare(c, loc, scale).pdf(x) is identical to ChiSquare(c).pdf(y) / scale with y=(x-loc)/scale</span>
 
 <span class="sd">    The following methods are available for ChiSquare: *cdf, pdf, log_pdf, icdf, rvs, moments*.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -840,6 +848,19 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define a joint distribution from its independent marginals.</span>
 
+<span class="sd">    **Inputs:**</span>
+
+<span class="sd">        marginals (list):</span>
+<span class="sd">                list of *DistributionContinuous1D* or *DistributionDiscrete1D* objects that define the marginals.</span>
+
+<span class="sd">    Such a multivariate distribution possesses the following methods, on condition that all its univariate marginals</span>
+<span class="sd">    also possess them: *pdf, log_pdf, cdf, rvs, fit, moments*, along with the *update_params* method.</span>
+
+<span class="sd">    The parameters of the distribution are only stored as attributes of the marginal objects. However, the</span>
+<span class="sd">    *get_params* and *update_params* method can still be used for the joint. Note that for this puspose each parameter</span>
+<span class="sd">    of the joint is assigned a unique string identifier as key_index - where key is the parameter name and index the</span>
+<span class="sd">    index of the marginal (e.g., location parameter of the 2nd marginal is identified as loc_1).</span>
+
 <span class="sd">    &gt;&gt;&gt; from UQpy.Distributions import Normal, Lognormal, JointInd</span>
 <span class="sd">    &gt;&gt;&gt; marginals = [Normal(loc=2., scale=2.), Lognormal(s=1., loc=0., scale=np.exp(5))]</span>
 <span class="sd">    &gt;&gt;&gt; dist = JointInd(marginals=marginals)</span>
@@ -849,17 +870,9 @@
 <span class="sd">     [ 2.56595700e+00  1.96955635e+02]]</span>
 <span class="sd">    &gt;&gt;&gt; print([m.params for m in marginals])</span>
 <span class="sd">    [{&#39;loc&#39;: 2.0, &#39;scale&#39;: 2.0}, {&#39;s&#39;: 1.0, &#39;loc&#39;: 0.0, &#39;scale&#39;: 148.4131591025766}]</span>
-<span class="sd">    &gt;&gt;&gt; dist.update_params(params_marginals={&#39;loc&#39;: 1.}, indices_marginals=1)</span>
+<span class="sd">    &gt;&gt;&gt; dist.update_params(loc_1=1.)</span>
 <span class="sd">    &gt;&gt;&gt; print([m.params for m in marginals])</span>
 <span class="sd">    [{&#39;loc&#39;: 2.0, &#39;scale&#39;: 2.0}, {&#39;s&#39;: 1.0, &#39;loc&#39;: 1.0, &#39;scale&#39;: 148.4131591025766}]</span>
-
-<span class="sd">    **Inputs:**</span>
-
-<span class="sd">        marginals (list):</span>
-<span class="sd">                list of *DistributionContinuous1D* or *DistributionDiscrete1D* objects that define the marginals.</span>
-
-<span class="sd">    Such a multivariate distribution possesses the following methods, on condition that all its univariate marginals</span>
-<span class="sd">    also possess them: *pdf, log_pdf, cdf, rvs, fit, moments*, along with the *update_params* method.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marginals</span><span class="p">):</span>
@@ -937,66 +950,45 @@
                 <span class="k">return</span> <span class="n">mean</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">skew</span><span class="p">,</span> <span class="n">kurt</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">moments</span> <span class="o">=</span> <span class="n">MethodType</span><span class="p">(</span><span class="n">joint_moments</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="JointInd.get_params"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.JointInd.get_params">[docs]</a>    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the parameters of the joint distribution.</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">                (dict):</span>
+<span class="sd">                        Parameters of the distribution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">marginals</span><span class="p">):</span>
             <span class="n">params_m</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">params_m</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">params</span><span class="p">[</span><span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="o">=</span> <span class="n">value</span>
-        <span class="k">return</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="n">params</span></div>
 
 <div class="viewcode-block" id="JointInd.update_params"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.JointInd.update_params">[docs]</a>    <span class="k">def</span> <span class="nf">update_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Update the parameters of the marginals (calls the update_params methods of the marginals).</span>
+<span class="sd">        Update the parameters of the marginals.</span>
 
-<span class="sd">        **Inputs:**</span>
+<span class="sd">        **Input:**</span>
 
-<span class="sd">            new_params(dict or list):</span>
-<span class="sd">                New parameters for the marginals, contained in dictionaries such as {&#39;loc&#39;: 1.}. If parameters of</span>
-<span class="sd">                several marginals are being updated, this should be a list of dictionaries.</span>
-
-<span class="sd">            indices_marginals(int or list):</span>
-<span class="sd">                Index of marginal(s) whose parameters are being updated. If parameters of several marginals are being</span>
-<span class="sd">                updated, this should be a list of integers.</span>
+<span class="sd">                keyword arguments:</span>
+<span class="sd">                        Parameters to be updated</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Do some checks on inputs</span>
-        <span class="c1">#if indices_marginals is None:</span>
-        <span class="c1">#    indices_marginals = list(range(len(self.marginals)))</span>
-        <span class="c1">#if isinstance(params_marginals, dict) and isinstance(indices_marginals, int):</span>
-        <span class="c1">#    params_marginals = [params_marginals, ]</span>
-        <span class="c1">#    indices_marginals = [indices_marginals, ]</span>
-        <span class="c1">#if any(not isinstance(lst, (list, tuple)) for lst in [params_marginals, indices_marginals]) \</span>
-        <span class="c1">#        or len(params_marginals) != len(indices_marginals):</span>
-        <span class="c1">#    raise ValueError(&#39;Inputs params_marginals and indices_marginals should be lists of same length.&#39;)</span>
-        <span class="c1">#if not all(isinstance(d, dict) for d in params_marginals):</span>
-        <span class="c1">#    raise ValueError(&#39;Input params_marginals should contain dictionaries of new parameters.&#39;)</span>
-        <span class="c1">#if not all(isinstance(d, int) for d in indices_marginals):</span>
-        <span class="c1">#    raise ValueError(&#39;Input indices_marginals should contain integers (indices pointing to marginals).&#39;)</span>
-        <span class="c1"># Update the parameters of the marginals</span>
-        <span class="c1">#for m, new_params_m in zip(self.marginals, new_params):</span>
-        <span class="c1">#    m.update_params(new_params=new_params_m)</span>
-        <span class="c1">#TODO: can optimize this function</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">marginals</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                    <span class="n">m</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span></div></div>
+        <span class="c1"># check arguments</span>
+        <span class="n">all_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="c1"># update the marginal parameters</span>
+        <span class="k">for</span> <span class="n">key_indexed</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key_indexed</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">all_keys</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unrecognized keyword argument &#39;</span> <span class="o">+</span> <span class="n">key_indexed</span><span class="p">)</span>
+            <span class="n">key_split</span> <span class="o">=</span> <span class="n">key_indexed</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+            <span class="n">key</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">key_split</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">key_split</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">marginals</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div></div>
 
 
 <div class="viewcode-block" id="JointCopula"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.JointCopula">[docs]</a><span class="k">class</span> <span class="nc">JointCopula</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define a joint distribution from a list of marginals and a copula to introduce dependency.</span>
-
-<span class="sd">    &gt;&gt;&gt; from UQpy.Distributions import JointCopula, Normal, Gumbel</span>
-<span class="sd">    &gt;&gt;&gt; marginals = [Normal(loc=0., scale=1), Normal(loc=0., scale=1)]</span>
-<span class="sd">    &gt;&gt;&gt; copula = Gumbel(theta=3.)</span>
-<span class="sd">    &gt;&gt;&gt; dist = JointCopula(marginals=marginals, copula=copula)</span>
-<span class="sd">    &gt;&gt;&gt; print(hasattr(dist, &#39;rvs&#39;))</span>
-<span class="sd">    False</span>
-<span class="sd">    &gt;&gt;&gt; print(dist.copula.params)</span>
-<span class="sd">    {&#39;theta&#39;: 3.0}</span>
-<span class="sd">    &gt;&gt;&gt; dist.update_params(params_copula={&#39;theta&#39;: 2.})</span>
-<span class="sd">    &gt;&gt;&gt; print(dist.copula.params)</span>
-<span class="sd">    {&#39;theta&#39;: 2.0}</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -1009,6 +1001,24 @@
 <span class="sd">    Such a multivariate distribution may possess a *cdf, pdf* and *log_pdf* methods if the copula allows for it (i.e.,</span>
 <span class="sd">    if the copula possesses the necessary *evaluate_cdf* and *evaluate_pdf* methods).</span>
 
+<span class="sd">    The parameters of the distribution are only stored as attributes of the marginals/copula objects. However, the</span>
+<span class="sd">    *get_params* and *update_params* method can still be used for the joint. Note that each parameter of the joint is</span>
+<span class="sd">    assigned a unique string identifier as key_index - where key is the parameter name and index the index of the</span>
+<span class="sd">    marginal (e.g., location parameter of the 2nd marginal is identified as loc_1); and key_c for copula parameters.</span>
+
+<span class="sd">    &gt;&gt;&gt; from UQpy.Distributions import JointCopula, Normal, Gumbel</span>
+<span class="sd">    &gt;&gt;&gt; marginals = [Normal(loc=0., scale=1), Normal(loc=0., scale=1)]</span>
+<span class="sd">    &gt;&gt;&gt; copula = Gumbel(theta=3.)</span>
+<span class="sd">    &gt;&gt;&gt; dist = JointCopula(marginals=marginals, copula=copula)</span>
+<span class="sd">    &gt;&gt;&gt; print(dist.get_params())</span>
+<span class="sd">    {&#39;loc_0&#39;: 0., &#39;scale_0&#39;: 1., &#39;loc_1&#39;: 0., &#39;scale_1&#39;: 1., &#39;theta_c&#39;: 3.}</span>
+<span class="sd">    &gt;&gt;&gt; print(hasattr(dist, &#39;rvs&#39;))</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; print(dist.copula.params)</span>
+<span class="sd">    {&#39;theta&#39;: 3.0}</span>
+<span class="sd">    &gt;&gt;&gt; dist.update_params(theta_c=2.)</span>
+<span class="sd">    &gt;&gt;&gt; print(dist.copula.params)</span>
+<span class="sd">    {&#39;theta&#39;: 2.0}</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marginals</span><span class="p">,</span> <span class="n">copula</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -1064,40 +1074,44 @@
                 <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">c_</span><span class="p">)</span> <span class="o">+</span> <span class="n">logpdf_val</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">log_pdf</span> <span class="o">=</span> <span class="n">MethodType</span><span class="p">(</span><span class="n">joint_log_pdf</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="JointCopula.get_params"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.JointCopula.get_params">[docs]</a>    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the parameters of the joint distribution.</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">                (dict):</span>
+<span class="sd">                        Parameters of the distribution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">marginals</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">params</span><span class="p">[</span><span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">copula</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">params</span><span class="p">[</span><span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;_c&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-        <span class="k">return</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="n">params</span></div>
 
 <div class="viewcode-block" id="JointCopula.update_params"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.JointCopula.update_params">[docs]</a>    <span class="k">def</span> <span class="nf">update_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Update the parameters of the marginals and/or copula (calls the update_params methods of the marginals/copula).</span>
+<span class="sd">        Update the parameters of the marginals and/or copula.</span>
 
-<span class="sd">        **Inputs:**</span>
+<span class="sd">        **Input:**</span>
 
-<span class="sd">            params_marginals(dict or list):</span>
-<span class="sd">                New parameters for the marginals, contained in dictionaries such as {&#39;loc&#39;: 1.}. If parameters of</span>
-<span class="sd">                several marginals are being updated, this should be a list of dictionaries.</span>
-
-<span class="sd">            indices_marginals(int or list):</span>
-<span class="sd">                Index of marginal(s) whose parameters are being updated. If parameters of several marginals are being</span>
-<span class="sd">                updated, this should be a list of integers.</span>
-
-<span class="sd">            params_copula(dict):</span>
-<span class="sd">                New parameters for the copula.</span>
+<span class="sd">                keyword arguments:</span>
+<span class="sd">                        Parameters to be updated</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Do some checks on inputs</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">marginals</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">marginals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">copula</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;_c&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">copula</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;_c&#39;</span><span class="p">]</span></div></div>
+        <span class="c1"># check arguments</span>
+        <span class="n">all_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="c1"># update the marginal parameters</span>
+        <span class="k">for</span> <span class="n">key_indexed</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key_indexed</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">all_keys</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unrecognized keyword argument &#39;</span> <span class="o">+</span> <span class="n">key_indexed</span><span class="p">)</span>
+            <span class="n">key_split</span> <span class="o">=</span> <span class="n">key_indexed</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+            <span class="n">key</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">key_split</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">key_split</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="s1">&#39;c&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">copula</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">marginals</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)]</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div></div>
 
 
 <span class="c1">########################################################################################################################</span>
