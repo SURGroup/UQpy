@@ -201,7 +201,7 @@ class MCS:
             elif isinstance(self.dist_object, Distribution):
                 self.samples = np.vstack([self.samples, x])
             else:
-                self.samples = self.samples + np.array(x)
+                self.samples = np.vstack([self.samples, x])
         self.nsamples = len(self.samples)
 
         if self.verbose:
