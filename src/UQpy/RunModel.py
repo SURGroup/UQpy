@@ -51,12 +51,6 @@ class RunModel:
     model and executes it directly. If the model is not in Python, ``RunModel`` must be provided the name of a template
     input file, the name of the Python script that runs the model, and an (optional) output Python script.
 
-    **Authors:**
-
-        B.S. Aakash, Lohit Vandanapu, Michael D. Shields
-
-        Last modified: 5/8/2020 by Michael D. Shields
-
     **Input:**
 
     * **samples** (`ndarray` or `list`)
@@ -252,6 +246,12 @@ class RunModel:
 
     **Methods**
     """
+
+    # Authors:
+    # B.S. Aakash, Lohit Vandanapu, Michael D.Shields
+    #
+    # Last
+    # modified: 5 / 8 / 2020 by Michael D.Shields
 
     def __init__(self, samples=None, model_script=None, model_object_name=None,
                  input_template=None, var_names=None, output_script=None, output_object_name=None, ntasks=1,
