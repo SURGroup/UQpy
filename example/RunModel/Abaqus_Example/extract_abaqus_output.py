@@ -1,4 +1,4 @@
-iport fire
+import fire
 import os
 import numpy as np
 import subprocess
