@@ -822,46 +822,6 @@ def check_input_dims(x):
     return x
 
 
-def recursive_update_mean_covariance(n, new_sample, previous_mean, previous_covariance=None):
-    """
-    Iterative formula to compute a new sample mean and covariance based on previous ones and new sample.
-
-    New covariance is computed only of previous_covariance is provided.
-
-    **Inputs:**
-
-    :param n: Number of samples used to compute the new mean
-    :type n: int
-
-    :param new_sample: new sample
-    :type new_sample: ndarray (dim, )
-
-    :param previous_mean: Previous sample mean, to be updated with new sample value
-    :type previous_mean: ndarray (dim, )
-
-    :param previous_covariance: Previous sample covariance, to be updated with new sample value
-    :type previous_covariance: ndarray (dim, dim)
-
-    **Output/Returns:**
-
-    :param new_mean: Updated sample mean
-    :type new_mean: ndarray (dim, )
-
-    :param new_covariance: Updated sample covariance
-    :type new_covariance: ndarray (dim, dim)
-
-    """
-    new_mean = (n - 1) / n * previous_mean + 1 / n * new_sample
-    if previous_covariance is None:
-        return new_mean
-    dim = new_sample.size
-    if n == 1:
-        new_covariance = np.zeros((dim, dim))
-    else:
-        delta_n = (new_sample - previous_mean).reshape((dim, 1))
-        new_covariance = (n - 2) / (n - 1) * previous_covariance + 1 / n * np.matmul(delta_n, delta_n.T)
-    return new_mean, new_covariance
-
 # Grassmann: svd
 def svd(matrix, value):
     """

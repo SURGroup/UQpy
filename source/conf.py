@@ -10,7 +10,6 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-
 import os
 import sys
 sys.path.insert(0, os.path.abspath('./src/UQpy/'))
@@ -41,9 +40,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'sphinx.ext.autosummary',
-    'sphinx.ext.autosectionlabel',
 ]
-
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -68,7 +65,7 @@ html_theme_options = {
     "github_user": "SURG",
     "github_repo": "UQpy",
     "github_banner": True,
-    "logo": "logo2.jpg",
+    "logo": "logo.jpg",
     "logo_name": False,
     "logo_text_align": "left",
     "description": ("Uncertainty quantification with Python "),

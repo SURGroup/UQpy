@@ -17,6 +17,7 @@ Table of contents
    installation
    runmodel
    distributions
+   samplemethods
    news
 
 * :ref:`genindex`
