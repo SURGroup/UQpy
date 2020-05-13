@@ -40,6 +40,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'sphinx.ext.autosummary',
+    'sphinx.ext.autosectionlabel',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -65,7 +66,7 @@ html_theme_options = {
     "github_user": "SURG",
     "github_repo": "UQpy",
     "github_banner": True,
-    "logo": "logo2.jpg",
+    "logo": "logo.jpg",
     "logo_name": False,
     "logo_text_align": "left",
     "description": ("Uncertainty quantification with Python "),

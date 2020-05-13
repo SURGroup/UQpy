@@ -126,10 +126,9 @@ The ``LHS`` class of ``UQpy`` offers a variaty of methods for a Latin Hypercube 
  	[1. 1.]]
 
 
-
-
 .. autoclass:: UQpy.SampleMethods.LHS
 	:members:
+
 	
 MCMC
 ----

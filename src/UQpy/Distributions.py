@@ -18,12 +18,15 @@
 """
 This module contains functionality for all the distributions supported in UQpy.
 
-The module currently contains the following classes:
+The module currently contains the following parent classes:
 
-- DistributionContinuous1D: Defines a 1-dimensional continuous probability distribution in UQpy.
-- DistributionDiscrete1D: Defines a 1-dimensional discrete probability distribution in UQpy.
-- DistributionND: Defines a multivariate probability distribution in UQpy.
-- Copula: Defines a copula for modeling dependence in multivariate distributions.
+- Distribution: Parent class to all distributions.
+- DistributionContinuous1D: Parent class to 1-dimensional continuous probability distributions.
+- DistributionDiscrete1D: Parent class to 1-dimensional discrete probability distributions.
+- DistributionND: Parent class to multivariate probability distributions.
+- Copula: Parent class to copula to model dependency between marginals.
+
+Probability distributions are defined via sub-classing of the previous parent classes.
 
 """
 
@@ -43,11 +46,14 @@ class Distribution:
     """
     A parent class to all Distribution classes.
 
-    **Attribute:**
+    **Attributes:**
 
-    **parameters**
-        Dictionary containing the parameters of the distribution, if any. These parameters are provided as keyword
-        arguments ``**kwargs`` when creating the object.
+    * **params** (`dict`):
+        Parameters of the distribution. Note: this attribute is not defined for joint distributions defined via their
+        marginals
+
+    * **order_params** (`list`):
+        List of parameter names
 
     **Methods:**
 
@@ -56,14 +62,13 @@ class Distribution:
 
         **Input:**
 
-                x (ndarray):
-                        Point(s) at which to evaluate the *cdf*. ``x.shape`` must be of shape ``(npoints,)`` or
-                        ``(npoints, 1)``.
+        * **x** (`ndarray`):
+            Point(s) at which to evaluate the `cdf`, must be of shape ``(npoints, dimension)``.
 
         **Output/Returns:**
 
-                (ndarray):
-                        Evaluated cdf values, ndarray of shape ``(npoints,)``.
+        * (ndarray):
+            Evaluated cdf values, `ndarray` of shape ``(npoints,)``.
 
     **pdf** *(x)*
         Evaluate the probability density function of a continuous or multivariate mixed continuous-discrete
@@ -71,28 +76,26 @@ class Distribution:
 
         **Input:**
 
-                x (ndarray):
-                        Point(s) at which to evaluate the *pdf*. ``x.shape`` must be of shape ``(npoints,)`` or
-                        ``(npoints, 1)``.
+        * **x** (`ndarray`):
+            Point(s) at which to evaluate the `pdf`, must be of shape ``(npoints, dimension)``.
 
         **Output/Returns:**
 
-                (ndarray):
-                        Evaluated pdf values, ndarray of shape ``(npoints,)``.
+        * (`ndarray`):
+            Evaluated pdf values, `ndarray` of shape ``(npoints,)``.
 
     **pmf** *(x)*
         Evaluate the probability mass function of a discrete distribution.
 
         **Input:**
 
-                x (ndarray):
-                        Point(s) at which to evaluate the *pmf*. ``x.shape`` must be of shape ``(npoints,)`` or
-                        ``(npoints, 1)``.
+        * **x** (`ndarray`):
+            Point(s) at which to evaluate the `pmf`, must be of shape ``(npoints, dimension)``.
 
         **Output/Returns:**
 
-                (ndarray):
-                        Evaluated pmf values, ndarray of shape ``(npoints,)``.
+        * (`ndarray`):
+            Evaluated pmf values, `ndarray` of shape ``(npoints,)``.
 
     **log_pdf** *(x)*
         Evaluate the logarithm of the probability density function of a continuous or multivariate mixed
@@ -100,58 +103,55 @@ class Distribution:
 
         **Input:**
 
-                x (ndarray):
-                        Point(s) at which to evaluate the *log_pdf*. ``x.shape`` must be of shape ``(npoints,)`` or
-                        ``(npoints, 1)``.
+        * **x** (`ndarray`):
+            Point(s) at which to evaluate the `log_pdf`, must be of shape ``(npoints, dimension)``.
 
         **Output/Returns:**
 
-                (ndarray):
-                        Evaluated log-pdf values, ndarray of shape ``(npoints,)``.
+        * (`ndarray`):
+            Evaluated log-pdf values, `ndarray` of shape ``(npoints,)``.
 
     **log_pmf** *(x)*
         Evaluate the logarithm of the probability density function of a discrete distribution.
 
         **Input:**
 
-                x (ndarray):
-                        Point(s) at which to evaluate the *log_pmf*. ``x.shape`` must be of shape ``(npoints,)`` or
-                        ``(npoints, 1)``.
+        * **x** (`ndarray`):
+            Point(s) at which to evaluate the `log_pmf`, must be of shape ``(npoints, dimension)``.
 
         **Output/Returns:**
 
-                (ndarray):
-                        Evaluated log-pmf values, ndarray of shape ``(npoints,)``.
+        * (`ndarray`):
+            Evaluated log-pmf values, `ndarray` of shape ``(npoints,)``.
 
     **icdf** *(x)*
         Evaluate the inverse cumulative probability function for univariate distributions.
 
         **Input:**
 
-                x (ndarray):
-                        Point(s) at which to evaluate the *icdf*. ``x.shape`` must be of shape ``(npoints,)`` or
-                        ``(npoints, 1)``.
+        * **x** (`ndarray`):
+            Point(s) at which to evaluate the `icdf`, must be of shape ``(npoints, dimension)``.
 
         **Output/Returns:**
 
-                (ndarray):
-                        Evaluated icdf values, ndarray of shape ``(npoints,)``.
+        * (`ndarray`):
+            Evaluated icdf values, `ndarray` of shape ``(npoints,)``.
 
     **rvs** *(nsamples=1, random_state=None)*
         Sample independent identically distributed (iid) realizations.
 
         **Inputs:**
 
-                nsamples (int):
-                        Number of iid samples to be drawn.
+        * nsamples (`int`):
+            Number of iid samples to be drawn. Default is 1.
 
-                random_state (int):
-                        Number used to initialize pseudorandom number generator. Default is None.
+        * random_state (`int`):
+            Number used to initialize pseudorandom number generator. Default is None.
 
         **Output/Returns:**
 
-                (ndarray):
-                        Generated iid samples, ndarray of shape (nsamples, 1).
+        * (`ndarray`):
+            Generated iid samples, `ndarray` of shape ``(npoints, dimension)``.
 
     **moments** *()*
         Compute the first four n-th order non-central moments of a distribution.
@@ -162,9 +162,8 @@ class Distribution:
 
         **Output/Returns:**
 
-                (tuple):
-                        ``mean``: mean, ``var``:  covariance, ``skew``: skewness, ``kurt``: kurtosis.
-
+        * (`tuple`):
+            ``mean``: mean, ``var``:  covariance, ``skew``: skewness, ``kurt``: kurtosis.
 
     **mle** *(x)*
         Compute the maximum-likelihood parameters from iid data.
@@ -173,13 +172,14 @@ class Distribution:
 
         **Input:**
 
-                x (ndarray):
-                        Data array, must be of shape ``(npoints,)`` or ``(npoints, 1)``.
+        * **x** (`ndarray`):
+            Data array, must be of shape ``(npoints, dimension)``.
 
         **Output/Returns:**
 
-                (tuple):
-                        Maximum-likelihood estimate of the parameters.
+        * (`dict`):
+            Maximum-likelihood parameter estimates.
+
     """
     def __init__(self, order_params=None, **kwargs):
         self.params = kwargs
@@ -195,8 +195,9 @@ class Distribution:
 
         **Input:**
 
-                keyword arguments:
-                        Parameters to be updated
+        * keyword arguments:
+            Parameters to be updated
+
         """
         for key in kwargs.keys():
             if key not in self.get_params().keys():
@@ -209,8 +210,9 @@ class Distribution:
 
         **Output/Returns:**
 
-                (dict):
-                        Parameters of the distribution.
+        * (`dict`):
+            Parameters of the distribution.
+
         """
         return self.params
 
@@ -269,18 +271,263 @@ class DistributionContinuous1D(Distribution):
 ########################################################################################################################
 
 
+class Beta(DistributionContinuous1D):
+    """
+    Beta distribution
+
+    **Inputs:**
+
+    * **a** (`float`):
+        first shape parameter
+    * **b** (float):
+        second shape parameter
+    * **loc** (`float`):
+        location parameter
+    * **scale** (`float`):
+        scale parameter
+
+    In its standard form (loc=0, scale=1.), the distribution is defined over the interval (0, 1). Use loc and scale to
+    shift the distribution to interval (loc, loc + scale). Specifically, Beta(a, b, loc, scale).pdf(x) is identical to
+    Beta(a, b).pdf(y) / scale with y=(x-loc)/scale.
+
+    The following methods are available for Beta: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    """
+    def __init__(self, a, b, loc=0., scale=1.):
+        super().__init__(a=a, b=b, loc=loc, scale=scale, order_params=('a', 'b', 'loc', 'scale'))
+        self._construct_from_scipy(scipy_name=stats.beta)
+
+
+class Cauchy(DistributionContinuous1D):
+    """
+    Cauchy distribution
+
+    **Inputs:**
+
+    * **loc** (`float`):
+        location parameter
+    * **scale** (`float`):
+        scale parameter
+
+    The following methods are available for Cauchy: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    """
+    def __init__(self, loc=0., scale=1.):
+        super().__init__(ploc=loc, scale=scale, order_params=('loc', 'scale'))
+        self._construct_from_scipy(scipy_name=stats.cauchy)
+
+
+class ChiSquare(DistributionContinuous1D):
+    """
+    Chi-square distribution
+
+    **Inputs:**
+
+    * **df** (`float`):
+        shape parameter (degrees of freedom)
+    * **loc** (`float`):
+        location parameter
+    * **scale** (`float`):
+        scale parameter
+
+    ChiSquare(c, loc, scale).pdf(x) is identical to ChiSquare(c).pdf(y) / scale with y=(x-loc)/scale
+
+    The following methods are available for ChiSquare: *cdf, pdf, log_pdf, icdf, rvs, moments*.
+    """
+    def __init__(self, df, loc=0., scale=1):
+        super().__init__(df=df, loc=loc, scale=scale, order_params=('df', 'loc', 'scale'))
+        self._construct_from_scipy(scipy_name=stats.chi2)
+
+
+class Exponential(DistributionContinuous1D):
+    """
+    Exponential distribution
+
+    **Inputs:**
+
+    * **loc** (`float`):
+        location parameter
+    * **scale** (`float`):
+        scale parameter
+
+    A common parameterization for Exponential is in terms of the rate parameter lambda, which corresponds to using
+    scale = 1 / lambda.
+
+    The following methods are available for Exponential: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    """
+    def __init__(self, loc=0., scale=1.):
+        super().__init__(loc=loc, scale=scale, ordered_params=('loc', 'scale'))
+        self._construct_from_scipy(scipy_name=stats.expon)
+
+
+class Gamma(DistributionContinuous1D):
+    """
+    Gamma distribution
+
+    **Inputs:**
+
+    * **a** (`float`):
+        shape parameter
+    * **loc** (`float`):
+        location parameter
+    * **scale** (`float`):
+        scale parameter
+
+    The following methods are available for Gamma: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    """
+    def __init__(self, a, loc=0., scale=1.):
+        super().__init__(a=a, loc=loc, scale=scale, order_params=('a', 'loc', 'scale'))
+        self._construct_from_scipy(scipy_name=stats.gamma)
+
+
+class Genextreme(DistributionContinuous1D):
+    """
+    Genextreme distribution.
+
+    **Inputs:**
+
+    * **c** (`float`):
+        shape parameter
+    * **loc** (`float`):
+        location parameter
+    * **scale** (`float`):
+        scale parameter
+
+    Genextreme(c, loc, scale).pdf(x) is identical to Genextreme(c).pdf(y) / scale with y=(x-loc)/scale.
+
+    The following methods are available for Genextreme: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    """
+    def __init__(self, c, loc=0., scale=1.):
+        super().__init__(c=c, loc=loc, scale=scale, order_params=('c', 'loc', 'scale'))
+        self._construct_from_scipy(scipy_name=stats.genextreme)
+
+
+class InvGauss(DistributionContinuous1D):
+    """
+    Inverse Gaussian distribution
+
+    **Inputs:**
+
+    * **mu** (`float`):
+        shape parameter
+    * **loc** (`float`):
+        location parameter
+    * **scale** (`float`):
+        scale parameter
+
+    The following methods are available for InvGauss: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    """
+    def __init__(self, mu, loc=0., scale=1.):
+        super().__init__(mu=mu, loc=loc, scale=scale, order_params=('mu', 'loc', 'scale'))
+        self._construct_from_scipy(scipy_name=stats.invgauss)
+
+
+class Laplace(DistributionContinuous1D):
+    """
+    Laplace distribution
+
+    **Inputs:**
+
+    * **loc** (`float`):
+        location parameter
+    * **scale** (`float`):
+        scale parameter
+
+    The following methods are available for Laplace: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    """
+    def __init__(self, loc=0, scale=1):
+        super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
+        self._construct_from_scipy(scipy_name=stats.laplace)
+
+
+class Levy(DistributionContinuous1D):
+    """
+    Levy distribution
+
+    **Inputs:**
+
+    * **loc** (`float`):
+        location parameter
+    * **scale** (`float`):
+        scale parameter
+
+    The following methods are available for Levy: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    """
+    def __init__(self, loc=0, scale=1):
+        super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
+        self._construct_from_scipy(scipy_name=stats.levy)
+
+
+class Logistic(DistributionContinuous1D):
+    """
+    Logistic distribution
+
+    **Inputs:**
+
+    * **loc** (`float`):
+        location parameter
+    * **scale** (`float`):
+        scale parameter
+
+    The following methods are available for Logistic: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    """
+    def __init__(self, loc=0, scale=1):
+        super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
+        self._construct_from_scipy(scipy_name=stats.logistic)
+
+
+class Lognormal(DistributionContinuous1D):
+    """
+    Lognormal distribution
+
+    **Inputs:**
+
+    * **s** (`float`):
+        shape parameter
+    * **loc** (`float`):
+        location parameter
+    * **scale** (`float`):
+        scale parameter
+
+    A common parametrization for a lognormal random variable Y is in terms of the mean, mu, and standard deviation,
+    sigma, of the gaussian random variable X such that exp(X) = Y. This parametrization corresponds to setting
+    s = sigma and scale = exp(mu).
+
+    The following methods are available for Lognormal: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    """
+    def __init__(self, s, loc=0., scale=1.):
+        super().__init__(s=s, loc=loc, scale=scale, order_params=('s', 'loc', 'scale'))
+        self._construct_from_scipy(scipy_name=stats.lognorm)
+
+
+class Maxwell(DistributionContinuous1D):
+    """
+    Maxwell distribution
+
+    **Inputs:**
+
+    * **loc** (`float`):
+        location parameter
+    * **scale** (`float`):
+        scale parameter
+
+    The following methods are available for Maxwell: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    """
+    def __init__(self, loc=0, scale=1):
+        super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
+        self._construct_from_scipy(scipy_name=stats.maxwell)
+
+
 class Normal(DistributionContinuous1D):
     """
     Normal distribution
 
     **Inputs:**
 
-        loc (float):
-            mean
-        scale (float):
-            standard deviation
+    * **loc** (`float`):
+        mean
+    * **scale** (`float`):
+        standard deviation
 
-    The following methods are available for Normal: *cdf, pdf, log_pdf, icdf, rvs, moments, mle*.
+    The following methods are available for Normal: `cdf, pdf, log_pdf, icdf, rvs, moments, mle`.
     """
     def __init__(self, loc=0., scale=1.):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -296,228 +543,20 @@ class Normal(DistributionContinuous1D):
         return {'loc': mle_loc, 'scale': mle_scale}
 
 
-class Uniform(DistributionContinuous1D):
-    """
-    Uniform distribution
-
-    **Inputs:**
-
-        loc (float):
-            lower bound
-        scale (float):
-            range
-
-        Parameters loc and scale define the uniform distribution U[loc, loc + scale], default is U[0, 1].
-
-    The following methods are available for Uniform: *cdf, pdf, log_pdf, icdf, rvs, moments*.
-    """
-    def __init__(self, loc=0., scale=1.):
-        super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
-        self._construct_from_scipy(scipy_name=stats.uniform)
-
-
-class Beta(DistributionContinuous1D):
-    """
-    Beta distribution
-
-    **Inputs:**
-
-        a (float):
-            shape parameter
-        b (float):
-            shape parameter
-        loc (float):
-            lower bound
-        scale (float):
-            range
-
-        In its standard form (loc=0, scale=1.), the distribution is defined over the interval (0, 1). Use loc and scale
-        to shift the distribution to interval (loc, loc + scale). Specifically, Beta(a, b, loc, scale).pdf(x)
-        is identical to Beta(a, b).pdf(y) / scale with y=(x-loc)/scale.
-
-    The following methods are available for Beta: *cdf, pdf, log_pdf, icdf, rvs, moments*.
-    """
-    def __init__(self, a, b, loc=0., scale=1.):
-        super().__init__(a=a, b=b, loc=loc, scale=scale, order_params=('a', 'b', 'loc', 'scale'))
-        self._construct_from_scipy(scipy_name=stats.beta)
-
-
-class Genextreme(DistributionContinuous1D):
-    """
-    Genextreme distribution.
-
-    **Inputs:**
-
-        c (float):
-                shape parameter
-        loc (float):
-                location parameter
-        scale (float):
-                scale parameter
-
-        Genextreme(c, loc, scale).pdf(x) is identical to Genextreme(c).pdf(y) / scale with y=(x-loc)/scale.
-
-    The following methods are available for Genextreme: *cdf, pdf, log_pdf, icdf, rvs, moments*.
-    """
-    def __init__(self, c, loc=0., scale=1.):
-        super().__init__(c=c, loc=loc, scale=scale, order_params=('c', 'loc', 'scale'))
-        self._construct_from_scipy(scipy_name=stats.genextreme)
-
-
-class ChiSquare(DistributionContinuous1D):
-    """
-    Chi-square distribution
-
-    **Inputs:**
-
-        df (float):
-            shape parameter (degrees of freedom)
-        loc (float):
-            location parameter
-        scale (float):
-            scale parameter
-
-    ChiSquare(c, loc, scale).pdf(x) is identical to ChiSquare(c).pdf(y) / scale with y=(x-loc)/scale
-
-    The following methods are available for ChiSquare: *cdf, pdf, log_pdf, icdf, rvs, moments*.
-    """
-    def __init__(self, df, loc=0., scale=1):
-        super().__init__(df=df, loc=loc, scale=scale, order_params=('df', 'loc', 'scale'))
-        self._construct_from_scipy(scipy_name=stats.chi2)
-
-
-class Lognormal(DistributionContinuous1D):
-    """
-    Lognormal distribution
-
-    **Inputs:**
-
-        s (float):
-                shape parameter
-        loc (float):
-                location parameter
-        scale (float):
-                scale parameter
-
-        A common parametrization for a lognormal random variable Y is in terms of the mean, mu, and standard deviation,
-        sigma, of the gaussian random variable X such that exp(X) = Y. This parametrization corresponds to setting
-        s = sigma and scale = exp(mu).
-
-    The following methods are available for Lognormal: *cdf, pdf, log_pdf, icdf, rvs, moments*.
-    """
-    def __init__(self, s, loc=0., scale=1.):
-        super().__init__(s=s, loc=loc, scale=scale, order_params=('s', 'loc', 'scale'))
-        self._construct_from_scipy(scipy_name=stats.lognorm)
-
-
-class Gamma(DistributionContinuous1D):
-    """
-    Gamma distribution
-
-    **Inputs:**
-
-        a (float):
-                shape parameter
-        loc (float):
-                location parameter
-        scale (float):
-                scale parameter
-
-    The following methods are available for Gamma: *cdf, pdf, log_pdf, icdf, rvs, moments*.
-    """
-    def __init__(self, a, loc=0., scale=1.):
-        super().__init__(a=a, loc=loc, scale=scale, order_params=('a', 'loc', 'scale'))
-        self._construct_from_scipy(scipy_name=stats.gamma)
-
-
-class Exponential(DistributionContinuous1D):
-    """
-    Exponential distribution
-
-    **Inputs:**
-
-        loc (float):
-                location parameter
-        scale (float):
-                scale parameter
-
-    The following methods are available for Exponential: *cdf, pdf, log_pdf, icdf, rvs, moments*.
-    """
-    def __init__(self, loc=0., scale=1.):
-        super().__init__(loc=loc, scale=scale, ordered_params=('loc', 'scale'))
-        self._construct_from_scipy(scipy_name=stats.expon)
-
-
-class Cauchy(DistributionContinuous1D):
-    """
-    Cauchy distribution
-
-    **Inputs:**
-
-        loc (float):
-                location parameter
-        scale (float):
-                scale parameter
-
-    The following methods are available for Cauchy: *cdf, pdf, log_pdf, icdf, rvs, moments*.
-    """
-    def __init__(self, loc=0., scale=1.):
-        super().__init__(ploc=loc, scale=scale, order_params=('loc', 'scale'))
-        self._construct_from_scipy(scipy_name=stats.cauchy)
-
-
-class InvGauss(DistributionContinuous1D):
-    """
-    Inverse Gauss distribution
-
-    **Inputs:**
-
-        mu (float):
-                shape parameter
-        loc (float):
-                location parameter
-        scale (float):
-                scale parameter
-
-    The following methods are available for InvGauss: *cdf, pdf, log_pdf, icdf, rvs, moments*.
-    """
-    def __init__(self, mu, loc=0., scale=1.):
-        super().__init__(mu=mu, loc=loc, scale=scale, order_params=('mu', 'loc', 'scale'))
-        self._construct_from_scipy(scipy_name=stats.invgauss)
-
-
-class Logistic(DistributionContinuous1D):
-    """
-    Logistic distribution
-
-    **Inputs:**
-
-        loc (float):
-                location parameter
-        scale (float):
-                scale parameter
-
-    The following methods are available for Logistic: *cdf, pdf, log_pdf, icdf, rvs, moments*.
-    """
-    def __init__(self, loc=0, scale=1):
-        super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
-        self._construct_from_scipy(scipy_name=stats.logistic)
-
-
 class Pareto(DistributionContinuous1D):
     """
     Pareto distribution
 
     **Inputs:**
 
-        b (float):
-                shape parameter
-        loc (float):
-                location parameter
-        scale (float):
-                scale parameter
+    * **b** (`float`):
+        shape parameter
+    * **loc** (`float`):
+        location parameter
+    * **scale** (`float`):
+        scale parameter
 
-    The following methods are available for Pareto: *cdf, pdf, log_pdf, icdf, rvs, moments*.
+    The following methods are available for Pareto: `cdf, pdf, log_pdf, icdf, rvs, moments`.
     """
     def __init__(self, b, loc=0., scale=1.):
         super().__init__(b=b, loc=loc, scale=scale, order_params=('b', 'loc', 'scale'))
@@ -530,70 +569,16 @@ class Rayleigh(DistributionContinuous1D):
 
     **Inputs:**
 
-        loc (float):
-                location parameter
-        scale (float):
-                scale parameter
+    * **loc** (`float`):
+        location parameter
+    * **scale** (`float`):
+        scale parameter
 
-    The following methods are available for Rayleigh: *cdf, pdf, log_pdf, icdf, rvs, moments*.
+    The following methods are available for Rayleigh: `cdf, pdf, log_pdf, icdf, rvs, moments`.
     """
     def __init__(self, loc=0, scale=1):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.rayleigh)
-
-
-class Levy(DistributionContinuous1D):
-    """
-    Levy distribution
-
-    **Inputs:**
-
-        loc (float):
-                location parameter
-        scale (float):
-                scale parameter
-
-    The following methods are available for Levy: *cdf, pdf, log_pdf, icdf, rvs, moments*.
-    """
-    def __init__(self, loc=0, scale=1):
-        super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
-        self._construct_from_scipy(scipy_name=stats.levy)
-
-
-class Laplace(DistributionContinuous1D):
-    """
-    Laplace distribution
-
-    **Inputs:**
-
-        loc (float):
-                location parameter
-        scale (float):
-                scale parameter
-
-    The following methods are available for Laplace: *cdf, pdf, log_pdf, icdf, rvs, moments*.
-    """
-    def __init__(self, loc=0, scale=1):
-        super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
-        self._construct_from_scipy(scipy_name=stats.laplace)
-
-
-class Maxwell(DistributionContinuous1D):
-    """
-    Maxwell distribution
-
-    **Inputs:**
-
-        loc (float):
-                location parameter
-        scale (float):
-                scale parameter
-
-    The following methods are available for Maxwell: *cdf, pdf, log_pdf, icdf, rvs, moments*.
-    """
-    def __init__(self, loc=0, scale=1):
-        super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
-        self._construct_from_scipy(scipy_name=stats.maxwell)
 
 
 class TruncNorm(DistributionContinuous1D):
@@ -602,20 +587,42 @@ class TruncNorm(DistributionContinuous1D):
 
     **Inputs:**
 
-        a (float):
-                shape parameter
-        b (float):
-                shape parameter
-        loc (float):
-                location parameter
-        scale (float):
-                scale parameter
+    * **a** (`float`):
+        shape parameter
+    * **b** (`float`):
+        shape parameter
+    * **loc** (`float`):
+        location parameter
+    * **scale** (`float`):
+        scale parameter
 
-    The following methods are available for TruncNorm: *cdf, pdf, log_pdf, icdf, rvs, moments*.
+    The standard form of this distribution (i.e, loc=0., scale=1) is a standard normal truncated to the range [a, b].
+
+    The following methods are available for TruncNorm: `cdf, pdf, log_pdf, icdf, rvs, moments`.
     """
     def __init__(self, a, b, loc=0, scale=1.):
         super().__init__(a=a, b=b, loc=loc, scale=scale, order_params=('a', 'b', 'loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.truncnorm)
+
+
+class Uniform(DistributionContinuous1D):
+    """
+    Uniform distribution
+
+    **Inputs:**
+
+    * **loc** (`float`):
+        lower bound
+    * **scale** (`float`):
+        range
+
+    Parameters loc and scale define the uniform distribution U[loc, loc + scale], default is U[0, 1].
+
+    The following methods are available for Uniform: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    """
+    def __init__(self, loc=0., scale=1.):
+        super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
+        self._construct_from_scipy(scipy_name=stats.uniform)
 
 
 ########################################################################################################################
@@ -625,8 +632,6 @@ class TruncNorm(DistributionContinuous1D):
 class DistributionDiscrete1D(Distribution):
     """
     Parent class for univariate discrete distributions.
-
-    The following code shows how to import some of the existing distributions and calling their methods.
 
     >>> from UQpy.Distributions import Binomial
     >>> dist = Binomial(n=5, p=0.4)
@@ -666,15 +671,17 @@ class Binomial(DistributionDiscrete1D):
 
     **Inputs:**
 
-        n (float):
-            location parameter
-        p (float):
-            scale parameter
+    * **n** (`int`):
+        number of trials, integer >= 0
+    * **p** (`float`):
+        success probability for each trial, real number in [0, 1]
+    * **loc** (`float`):
+        location parameter
 
-    The following methods are available for Binomial: *cdf, pmf, log_pmf, icdf, rvs, moments*.
+    The following methods are available for Binomial: `cdf, pmf, log_pmf, icdf, rvs, moments`.
     """
-    def __init__(self, n, p):
-        super().__init__(n=n, p=p, order_params=('n', 'p'))
+    def __init__(self, n, p, loc=0.):
+        super().__init__(n=n, p=p, loc=loc, order_params=('n', 'p', 'loc'))
         self._construct_from_scipy(scipy_name=stats.binom)
 
 
@@ -684,12 +691,12 @@ class Poisson(DistributionDiscrete1D):
 
     **Inputs:**
 
-        mu (float):
-            shape parameter
-        loc (float):
-            location parameter
+    * **mu** (`float`):
+        shape parameter
+    * **loc** (`float`):
+        location parameter
 
-    The following methods are available for Poisson: *cdf, pmf, log_pmf, icdf, rvs, moments*.
+    The following methods are available for Poisson: `cdf, pmf, log_pmf, icdf, rvs, moments`.
     """
     def __init__(self, mu, loc=0.):
         super().__init__(mu=mu, loc=loc, order_params=('mu', 'loc'))
@@ -737,13 +744,12 @@ class MVNormal(DistributionND):
 
     **Inputs:**
 
-        mean (ndarray):
-            mean vector, ndarray of shape (dimension, )
-        cov (float, ndarray):
-            covariance, float or ndarray of shape (dimension, ) or (dimension, dimension)
-            Default: 1.
+    * **mean** (`ndarray`):
+        mean vector, `ndarray` of shape (dimension, )
+    * **cov** (`float` or `ndarray`):
+        covariance, `float` or `ndarray` of shape (dimension, ) or (dimension, dimension). Default is 1.
 
-    The following methods are available for MVNormal: *pdf, log_pdf, rvs, mle*.
+    The following methods are available for MVNormal: `pdf, log_pdf, rvs, mle`.
     """
     def __init__(self, mean, cov=1.):
         if len(np.array(mean).shape) != 1:
@@ -785,12 +791,12 @@ class Multinomial(DistributionND):
 
     **Inputs:**
 
-        n (int):
-            number of trials
-        p (array):
-            probabilities
+    * **n** (`int`):
+        number of trials
+    * **p** (`array_like`):
+        probability of a trial falling into each category; should sum to 1
 
-    The following methods are available for MVNormal: *pmf, log_pmf, rvs*.
+    The following methods are available for MVNormal: `pmf, log_pmf, rvs`.
     """
     def __init__(self, n, p):
         super().__init__(n=n, p=p)
@@ -816,11 +822,11 @@ class JointInd(DistributionND):
 
     **Inputs:**
 
-        marginals (list):
-                list of *DistributionContinuous1D* or *DistributionDiscrete1D* objects that define the marginals.
+    * **marginals** (`list`):
+        list of ``DistributionContinuous1D`` or ``DistributionDiscrete1D`` objects that define the marginals.
 
     Such a multivariate distribution possesses the following methods, on condition that all its univariate marginals
-    also possess them: *pdf, log_pdf, cdf, rvs, fit, moments*, along with the *update_params* method.
+    also possess them: `pdf, log_pdf, cdf, rvs, fit, moments`.
 
     The parameters of the distribution are only stored as attributes of the marginal objects. However, the
     *get_params* and *update_params* method can still be used for the joint. Note that for this puspose each parameter
@@ -922,8 +928,9 @@ class JointInd(DistributionND):
 
         **Output/Returns:**
 
-                (dict):
-                        Parameters of the distribution.
+        * (`dict`):
+            Parameters of the distribution
+
         """
         params = {}
         for i, m in enumerate(self.marginals):
@@ -938,8 +945,9 @@ class JointInd(DistributionND):
 
         **Input:**
 
-                keyword arguments:
-                        Parameters to be updated
+        * keyword arguments:
+            Parameters to be updated
+
         """
         # check arguments
         all_keys = self.get_params().keys()
@@ -958,17 +966,17 @@ class JointCopula(DistributionND):
 
     **Inputs:**
 
-        marginals (list):
-                list of *DistributionContinuous1D* or *DistributionDiscrete1D* objects that define the marginals.
+    * **marginals** (`list`):
+        `list` of ``DistributionContinuous1D`` or ``DistributionDiscrete1D`` objects that define the marginals
 
-        copula (object):
-                object of class Copula
+    * **copula** (`object`):
+        object of class ``Copula``
 
-    Such a multivariate distribution may possess a *cdf, pdf* and *log_pdf* methods if the copula allows for it (i.e.,
-    if the copula possesses the necessary *evaluate_cdf* and *evaluate_pdf* methods).
+    Such a multivariate distribution may possess a `cdf, pdf` and `log_pdf` methods if the copula allows for it (i.e.,
+    if the copula possesses the necessary `evaluate_cdf` and `evaluate_pdf` methods).
 
     The parameters of the distribution are only stored as attributes of the marginals/copula objects. However, the
-    *get_params* and *update_params* method can still be used for the joint. Note that each parameter of the joint is
+    `get_params` and `update_params` method can still be used for the joint. Note that each parameter of the joint is
     assigned a unique string identifier as key_index - where key is the parameter name and index the index of the
     marginal (e.g., location parameter of the 2nd marginal is identified as loc_1); and key_c for copula parameters.
 
@@ -1046,8 +1054,9 @@ class JointCopula(DistributionND):
 
         **Output/Returns:**
 
-                (dict):
-                        Parameters of the distribution.
+        * (`dict`):
+            Parameters of the distribution.
+
         """
         params = {}
         for i, m in enumerate(self.marginals):
@@ -1063,8 +1072,9 @@ class JointCopula(DistributionND):
 
         **Input:**
 
-                keyword arguments:
-                        Parameters to be updated
+        * keyword arguments:
+            Parameters to be updated
+
         """
         # check arguments
         all_keys = self.get_params().keys()
@@ -1090,10 +1100,13 @@ class Copula:
 
     This class is used in support of the JointCopula distribution class.
 
-    **Attribute:**
+    **Attributes:**
 
-    **parameters**
-        Dictionary containing the parameters of the copula.
+    * **params** (`dict`):
+        Parameters of the copula.
+
+    * **order_params** (`list`):
+        List of parameter names
 
     **Methods:**
 
@@ -1108,14 +1121,14 @@ class Copula:
 
         **Input:**
 
-                unif (ndarray):
-                        Points (uniformly distributed) at which to evaluate the copula cdf, must be of shape
-                        ``(npoints, d)``.
+        * **unif** (`ndarray`):
+            Points (uniformly distributed) at which to evaluate the copula cdf, must be of shape
+            ``(npoints, dimension)``.
 
         **Output/Returns:**
 
-                (tuple):
-                        Values of the cdf, ndarray of shape ``(npoints, )``.
+        * (`tuple`):
+            Values of the cdf, `ndarray` of shape ``(npoints, )``.
 
     **evaluate_pdf** *(unif)*
         Compute the copula pdf term c(u1, u2, ..., ud) for a d-variate uniform distribution.
@@ -1129,14 +1142,15 @@ class Copula:
 
         **Input:**
 
-                unif (ndarray):
-                        Points (uniformly distributed) at which to evaluate the copula pdf, must be of shape
-                        ``(npoints, d)``.
+        * **unif** (`ndarray`):
+            Points (uniformly distributed) at which to evaluate the copula pdf, must be of shape
+            ``(npoints, dimension)``.
 
         **Output/Returns:**
 
-                (tuple):
-                        Values of the copula pdf term, ndarray of shape ``(npoints, )``.
+        * (`tuple`):
+            Values of the copula pdf term, ndarray of shape ``(npoints, )``.
+
     """
     def __init__(self, order_params=None, **kwargs):
         self.params = kwargs
@@ -1155,13 +1169,14 @@ class Copula:
 
         **Input:**
 
-                unif (ndarray):
-                        Points (uniformly distributed) at which to evaluate the copula pdf, must be of shape
-                        ``(npoints, d)``.
+        * **unif** (ndarray):
+            Points (uniformly distributed) at which to evaluate the copula pdf, must be of shape
+            ``(npoints, dimension)``.
 
         **Output/Returns:**
 
-                No outputs, this code raises Errors if necessary.
+        No outputs, this code raises Errors if necessary.
+
         """
         pass
 
@@ -1181,11 +1196,11 @@ class Gumbel(Copula):
 
     **Input:**
 
-            theta (float):
-                    Parameter of the Gumbel copula, real number in [1, +oo).
+    * **theta** (`float`):
+        Parameter of the Gumbel copula, real number in [1, +oo).
 
-    This copula possesses the following methods: *evaluate_cdf, evaluate_pdf* and *check_copula* (the latter checks
-    that ``marginals`` consist of solely 2 continuous distributions).
+    This copula possesses the following methods: `evaluate_cdf, evaluate_pdf` and `check_copula` (the latter checks
+    that `marginals` consist of solely 2 continuous distributions).
     """
     def __init__(self, theta):
         # Check the input copula_params
@@ -1238,11 +1253,11 @@ class Clayton(Copula):
 
     **Input:**
 
-            theta (float):
-                    Parameter of the copula, real number in [-1, +oo)\{0}.
+    * **theta** (`float`):
+        Parameter of the copula, real number in [-1, +oo)\{0}.
 
-    This copula possesses the following methods: *evaluate_cdf* and *check_copula* (the latter checks
-    that ``marginals`` consist of solely 2 continuous distributions).
+    This copula possesses the following methods: `evaluate_cdf` and `check_copula` (the latter checks
+    that `marginals` consist of solely 2 continuous distributions).
     """
     def __init__(self, theta):
         # Check the input copula_params
@@ -1275,11 +1290,11 @@ class Frank(Copula):
 
     **Input:**
 
-            theta (float):
-                    Parameter of the copula, real number in R\{0}.
+    * **theta** (`float`):
+        Parameter of the copula, real number in R\{0}.
 
-    This copula possesses the following methods: *evaluate_cdf* and *check_copula* (the latter checks
-    that ``marginals`` consist of solely 2 continuous distributions).
+    This copula possesses the following methods: `evaluate_cdf` and `check_copula` (the latter checks
+    that `marginals` consist of solely 2 continuous distributions).
     """
     def __init__(self, theta):
         # Check the input copula_params
