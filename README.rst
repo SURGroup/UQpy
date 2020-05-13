@@ -72,7 +72,7 @@ Website:
 
 
 .. |logo| image:: logo.jpg
-    :width: 50
+    :scale: 50 %
     :target: https://gihub.com/SURGroup/UQpy
     
     
