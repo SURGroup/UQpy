@@ -73,7 +73,7 @@ Website:
 
 .. |logo| image:: logo.jpg
     :target: https://gihub.com/SURGroup/UQpy
-    :width: 200
+    :width: 100
     
     
 .. image:: https://mybinder.org/badge_logo.svg
