@@ -18,6 +18,7 @@ Table of contents
    runmodel
    distributions
    samplemethods
+   inference
    news
 
 * :ref:`genindex`
