@@ -165,14 +165,15 @@ class Distribution:
         * (`tuple`):
             ``mean``: mean, ``var``:  covariance, ``skew``: skewness, ``kurt``: kurtosis.
 
-    **mle** *(x)*
+    **mle** *(data)*
         Compute the maximum-likelihood parameters from iid data.
 
-        This method only exists for distributions for which the mle can be computed analytically.
+        It computes the mle analytically if possible. For univariate continuous distributions, it leverages the fit
+        method of the scipy.stats package.
 
         **Input:**
 
-        * **x** (`ndarray`):
+        * **data** (`ndarray`):
             Data array, must be of shape ``(npoints, dimension)``.
 
         **Output/Returns:**
@@ -239,9 +240,9 @@ class DistributionContinuous1D(Distribution):
         {'loc': 0.0, 'scale': 2.0}
 
     >>> from UQpy.Distributions import Normal
-    >>> print(Normal(loc=None, scale=None).mle(x=[-4, 2, 2, 1]))
+    >>> print(Normal(loc=None, scale=None).mle(data=[-4, 2, 2, 1]))
         {'loc': 0.25, 'scale': 2.48746859276655}
-    >>> print(Normal(loc=0., scale=None).mle(x=[-4, 2, 2, 1]))
+    >>> print(Normal(loc=0., scale=None).mle(data=[-4, 2, 2, 1]))
         {'loc': 0.0, 'scale': 2.5}
     """
     def __init__(self, **kwargs):
@@ -265,6 +266,16 @@ class DistributionContinuous1D(Distribution):
         self.moments = lambda: scipy_name.stats(moments='mvsk', **self.params)
         self.rvs = lambda nsamples, random_state=None: scipy_name.rvs(
             size=nsamples, random_state=random_state, **self.params).reshape((nsamples, 1))
+
+        def tmp_mle(dist, data):
+            data = self._check_x_dimension(data)
+            fixed_params = {}
+            for key, value in dist.params.items():
+                if value is not None:
+                    fixed_params['f' + key] = value
+            params_fitted = scipy_name.fit(data=data, **fixed_params)
+            return dict(zip(dist.order_params, params_fitted))
+        self.mle = lambda data: tmp_mle(self, data)
 
 
 ########################################################################################################################
@@ -355,7 +366,7 @@ class Exponential(DistributionContinuous1D):
     The following methods are available for Exponential: `cdf, pdf, log_pdf, icdf, rvs, moments`.
     """
     def __init__(self, loc=0., scale=1.):
-        super().__init__(loc=loc, scale=scale, ordered_params=('loc', 'scale'))
+        super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.expon)
 
 
@@ -827,7 +838,7 @@ class JointInd(DistributionND):
         list of ``DistributionContinuous1D`` or ``DistributionDiscrete1D`` objects that define the marginals.
 
     Such a multivariate distribution possesses the following methods, on condition that all its univariate marginals
-    also possess them: `pdf, log_pdf, cdf, rvs, fit, moments`.
+    also possess them: `pdf, log_pdf, cdf, rvs, mle, moments`.
 
     The parameters of the distribution are only stored as attributes of the marginal objects. However, the
     *get_params* and *update_params* method can still be used for the joint. Note that for this puspose each parameter
@@ -909,6 +920,17 @@ class JointInd(DistributionND):
                     rv_s[:, i] = m.rvs(nsamples=nsamples, random_state=random_state).reshape((-1,))
                 return rv_s
             self.rvs = MethodType(joint_rvs, self)
+
+        if all(hasattr(m, 'mle') for m in self.marginals):
+            def joint_mle(dist, data):
+                data = dist._check_x_dimension(data)
+                # Compute ml estimates of independent marginal parameters
+                mle_all = {}
+                for i, m in enumerate(dist.marginals):
+                    mle_i = m.mle(data[:, i])
+                    mle_all.update({key+'_'+str(i): val for key, val in mle_i.items()})
+                return mle_all
+            self.mle = MethodType(joint_mle, self)
 
         if all(hasattr(m, 'moments') for m in self.marginals):
             def joint_moments(dist):
