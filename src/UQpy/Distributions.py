@@ -216,7 +216,6 @@ class Distribution:
         """
         return self.params
 
-
 class DistributionContinuous1D(Distribution):
     """
     Parent class for univariate continuous probability distributions.
