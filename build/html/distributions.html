@@ -216,13 +216,12 @@ If a given moment cannot be computed, None is returned in its place.</p>
 </li>
 </ul>
 </dd>
-<dt><strong>mle</strong> <em>(data)</em></dt><dd><p>Compute the maximum-likelihood parameters from iid data.</p>
-<p>It computes the mle analytically if possible. For univariate continuous distributions, it leverages the fit
-method of the scipy.stats package.</p>
+<dt><strong>mle</strong> <em>(x)</em></dt><dd><p>Compute the maximum-likelihood parameters from iid data.</p>
+<p>This method only exists for distributions for which the mle can be computed analytically.</p>
 <p><strong>Input:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>data</strong> (<cite>ndarray</cite>):</dt><dd><p>Data array, must be of shape <code class="docutils literal notranslate"><span class="pre">(npoints,</span> <span class="pre">dimension)</span></code>.</p>
+<dt><strong>x</strong> (<cite>ndarray</cite>):</dt><dd><p>Data array, must be of shape <code class="docutils literal notranslate"><span class="pre">(npoints,</span> <span class="pre">dimension)</span></code>.</p>
 </dd>
 </dl>
 </li>
@@ -299,9 +298,9 @@ method of the scipy.stats package.</p>
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">mle</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">mle</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
 <span class="go">    {&#39;loc&#39;: 0.25, &#39;scale&#39;: 2.48746859276655}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">mle</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">mle</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
 <span class="go">    {&#39;loc&#39;: 0.0, &#39;scale&#39;: 2.5}</span>
 </pre></div>
 </div>
@@ -365,7 +364,7 @@ method of the scipy.stats package.</p>
 </li>
 </ul>
 <p>Such a multivariate distribution possesses the following methods, on condition that all its univariate marginals
-also possess them: <cite>pdf, log_pdf, cdf, rvs, mle, moments</cite>.</p>
+also possess them: <cite>pdf, log_pdf, cdf, rvs, fit, moments</cite>.</p>
 <p>The parameters of the distribution are only stored as attributes of the marginal objects. However, the
 <em>get_params</em> and <em>update_params</em> method can still be used for the joint. Note that for this puspose each parameter
 of the joint is assigned a unique string identifier as key_index - where key is the parameter name and index the
@@ -1143,7 +1142,12 @@ that <cite>marginals</cite> consist of solely 2 continuous distributions).</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="samplemethods.html">SampleMethods</a></li>
-<li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transformations.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stochastic_process.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="surrogates.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reliability.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">Dimension reduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="news.html">News</a></li>
 </ul>
 
