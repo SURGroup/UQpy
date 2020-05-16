@@ -147,7 +147,8 @@ def compute_Delaunay_centroid_volume(vertices):
 
     return centroid, volume
 
-def correlation_distortion(marginal, params, rho_norm):
+
+def correlation_distortion(marginal, rho_norm):
 
     """
         Description:
@@ -194,32 +195,55 @@ def correlation_distortion(marginal, params, rho_norm):
     rho = np.ones_like(rho_norm)
 
     print('UQpy: Computing Nataf correlation distortion...')
-    for i in range(len(marginal)):
-        i_cdf_i = marginal[i].icdf
-        moments_i = marginal[i].moments
-        mi = moments_i(params[i])
-        if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
-            raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+    from UQpy.Distributions import JointInd, DistributionContinuous1D
+    if isinstance(marginal, JointInd):
+        if all(hasattr(m, 'moments') for m in marginal.marginals) and \
+                all(hasattr(m, 'icdf') for m in marginal.marginals):
+            for i in range(len(marginal.marginals)):
+                i_cdf_i = marginal.marginals[i].icdf
+                mi = marginal.marginals[i].moments()
+                if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
+                    raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+                for j in range(i + 1, len(marginal.marginals)):
+                    i_cdf_j = marginal.marginals[j].icdf
+                    mj = marginal.marginals[j].moments()
+                    if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
+                        raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
 
-        for j in range(i + 1, len(marginal)):
-            i_cdf_j = marginal[j].icdf
-            moments_j = marginal[j].moments
-            mj = moments_j(params[j])
-            if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
-                raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+                    tmp_f_xi = ((i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T) - mj[0]) / np.sqrt(mj[1]))
+                    tmp_f_eta = ((i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T) - mi[0]) / np.sqrt(mi[1]))
+                    coef = tmp_f_xi * tmp_f_eta * w2d
 
-            tmp_f_xi = ((i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T, params[j]) - mj[0]) / np.sqrt(mj[1]))
-            tmp_f_eta = ((i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T, params[i]) - mi[0]) / np.sqrt(mi[1]))
-            coef = tmp_f_xi * tmp_f_eta * w2d
+                    rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
+                    rho[j, i] = rho[i, j]
 
-            rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
-            rho[j, i] = rho[i, j]
+    elif isinstance(marginal, list):
+        if all(hasattr(m, 'moments') for m in marginal) and \
+                all(hasattr(m, 'icdf') for m in marginal):
+            for i in range(len(marginal)):
+                i_cdf_i = marginal[i].icdf
+                mi = marginal[i].moments()
+                if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
+                    raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+
+                for j in range(i + 1, len(marginal)):
+                    i_cdf_j = marginal[j].icdf
+                    mj = marginal[j].moments()
+                    if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
+                        raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+
+                    tmp_f_xi = ((i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T) - mj[0]) / np.sqrt(mj[1]))
+                    tmp_f_eta = ((i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T) - mi[0]) / np.sqrt(mi[1]))
+                    coef = tmp_f_xi * tmp_f_eta * w2d
+
+                    rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
+                    rho[j, i] = rho[i, j]
 
     print('UQpy: Done.')
     return rho
 
 
-def itam(marginal, params, corr, beta, thresh1, thresh2):
+def itam(marginal, corr, beta, thresh1, thresh2):
 
     """
         Description:
@@ -274,7 +298,7 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
     print("UQpy: Initializing Iterative Translation Approximation Method (ITAM)")
     while iter_ < max_iter and error1 > thresh1 and abs(error1-error0)/error0 > thresh2:
         error0 = error1
-        corr0 = correlation_distortion(marginal, params, corr_norm0)
+        corr0 = correlation_distortion(marginal, corr_norm0)
         error1 = np.linalg.norm(corr - corr0)
 
         max_ratio = np.amax(np.ones((len(corr), len(corr))) / abs(corr_norm0))

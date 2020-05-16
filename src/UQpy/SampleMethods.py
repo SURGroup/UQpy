@@ -77,46 +77,41 @@ class MCS:
 
     def __init__(self, dist_object, nsamples=None,  random_state=None, verbose=False):
 
-        # Check if a Distribution object is provided.
-        if not dist_object:
-            raise ValueError('UQpy: A Distribution object is required.')
-        else:
-            if isinstance(dist_object, list):
-                add_continuous_1d = 0
-                add_continuous_nd = 0
-                for i in range(len(dist_object)):
-                    if not isinstance(dist_object[i], Distribution):
-                        raise TypeError('UQpy: A UQpy.Distribution object must be provided.')
-                    if isinstance(dist_object[i], DistributionContinuous1D):
-                        add_continuous_1d = add_continuous_1d + 1
-                    elif isinstance(dist_object[i], DistributionND):
-                        add_continuous_nd = add_continuous_nd + 1
-                if add_continuous_1d == len(dist_object):
-                    self.list = False
-                    self.array = True
-                else:
-                    self.list = True
-                    self.array = False
-
-                if random_state is not None:
-                    if isinstance(random_state, int) or len(dist_object) != len(random_state):
-                        raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
-                    self.random_state = random_state
-                else:
-                    self.random_state = [random_state]*len(dist_object)
-                self.dist_object = dist_object
-            else:
-                if not isinstance(dist_object, Distribution):
+        if isinstance(dist_object, list):
+            add_continuous_1d = 0
+            add_continuous_nd = 0
+            for i in range(len(dist_object)):
+                if not isinstance(dist_object[i], Distribution):
                     raise TypeError('UQpy: A UQpy.Distribution object must be provided.')
-                else:
-                    self.dist_object = dist_object
-                    self.list = False
-                    self.array = True
-                if random_state is not None:
-                    if not isinstance(random_state, int):
-                        raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
-                    else:
-                        self.random_state = random_state
+                if isinstance(dist_object[i], DistributionContinuous1D):
+                    add_continuous_1d = add_continuous_1d + 1
+                elif isinstance(dist_object[i], DistributionND):
+                    add_continuous_nd = add_continuous_nd + 1
+            if add_continuous_1d == len(dist_object):
+                self.list = False
+                self.array = True
+            else:
+                self.list = True
+                self.array = False
+
+            if random_state is not None:
+                if isinstance(random_state, int) or len(dist_object) != len(random_state):
+                    raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
+                self.random_state = random_state
+            else:
+                self.random_state = [random_state]*len(dist_object)
+            self.dist_object = dist_object
+        else:
+            if not isinstance(dist_object, Distribution):
+                raise TypeError('UQpy: A UQpy.Distribution object must be provided.')
+            else:
+                self.dist_object = dist_object
+                self.list = False
+                self.array = True
+            if random_state is not None:
+                if not isinstance(random_state, int):
+                    raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
+            self.random_state = random_state
 
         # Instantiate the output attributes.
         self.samples = None
@@ -128,7 +123,7 @@ class MCS:
         # ==============================================================================================================
         #                                       Run Monte Carlo sampling
         if nsamples is not None:
-            self.run(nsamples=self.nsamples)
+            self.run(nsamples=self.nsamples, random_state=self.random_state)
 
     def run(self, nsamples, random_state=None):
         """
