@@ -147,7 +147,7 @@ The transition probability :math:`Q` is chosen by the user (see input `proposal`
 .. image:: _static/SampleMethods_MCMC_samples.png
    :scale: 40 %
    :alt: IS weighted samples
-   :align: center
+   :align: left
 
 Finally, samples from the target distribution will be generated only when the chain has converged to its stationary distribution, after a so-called burn-in period. Thus the user would often reject the first few samples (see input `nburn`). Also, the chain yields correlated samples; thus to obtain i.i.d. samples from the target distribution, the user should keep only one out of n samples (see input `jump`). This means that the code will perform in total nburn + jump * N evaluations of the target pdf to yield N i.i.d. samples from the target distribution (for the MH algorithm with a single chain).
 
@@ -194,7 +194,7 @@ If :math:`p` is only known up to a constant, i.e., one can only evaluate :math:`
 .. image:: _static/SampleMethods_IS_samples.png
    :scale: 40 %
    :alt: IS weighted samples
-   :align: center
+   :align: left
    
    
 .. autoclass:: UQpy.SampleMethods.IS

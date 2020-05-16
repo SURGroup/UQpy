@@ -18,13 +18,7 @@ Table of contents
    runmodel
    distributions
    samplemethods
-   transformations
-   stochastic_process
-   surrogates
-   reliability
    inference
-   dimension_reduction
-   utilities
    news
 
 * :ref:`genindex`
