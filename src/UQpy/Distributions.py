@@ -217,6 +217,7 @@ class Distribution:
         """
         return self.params
 
+
 class DistributionContinuous1D(Distribution):
     """
     Parent class for univariate continuous probability distributions.
@@ -389,9 +390,9 @@ class Gamma(DistributionContinuous1D):
         self._construct_from_scipy(scipy_name=stats.gamma)
 
 
-class Genextreme(DistributionContinuous1D):
+class GenExtreme(DistributionContinuous1D):
     """
-    Genextreme distribution.
+    Generalized Extreme Value distribution.
 
     **Inputs:**
 
@@ -511,7 +512,7 @@ class Lognormal(DistributionContinuous1D):
 
 class Maxwell(DistributionContinuous1D):
     """
-    Maxwell distribution
+    Maxwell-Boltzmann distribution
 
     **Inputs:**
 
