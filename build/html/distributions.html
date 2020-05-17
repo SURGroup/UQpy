@@ -216,7 +216,7 @@ If a given moment cannot be computed, None is returned in its place.</p>
 </li>
 </ul>
 </dd>
-<dt><strong>mle</strong> <em>(data)</em></dt><dd><p>Compute the maximum-likelihood parameters from iid data.</p>
+<dt><strong>fit</strong> <em>(data)</em></dt><dd><p>Compute the maximum-likelihood parameters from iid data.</p>
 <p>It computes the mle analytically if possible. For univariate continuous distributions, it leverages the fit
 method of the scipy.stats package.</p>
 <p><strong>Input:</strong></p>
@@ -299,9 +299,9 @@ method of the scipy.stats package.</p>
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">mle</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
 <span class="go">    {&#39;loc&#39;: 0.25, &#39;scale&#39;: 2.48746859276655}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">mle</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
 <span class="go">    {&#39;loc&#39;: 0.0, &#39;scale&#39;: 2.5}</span>
 </pre></div>
 </div>
@@ -365,7 +365,7 @@ method of the scipy.stats package.</p>
 </li>
 </ul>
 <p>Such a multivariate distribution possesses the following methods, on condition that all its univariate marginals
-also possess them: <cite>pdf, log_pdf, cdf, rvs, mle, moments</cite>.</p>
+also possess them: <cite>pdf, log_pdf, cdf, rvs, fit, moments</cite>.</p>
 <p>The parameters of the distribution are only stored as attributes of the marginal objects. However, the
 <em>get_params</em> and <em>update_params</em> method can still be used for the joint. Note that for this puspose each parameter
 of the joint is assigned a unique string identifier as key_index - where key is the parameter name and index the
@@ -555,7 +555,7 @@ would check that marginals is of length 2 and continuous, and raise an error if 
 <p>In its standard form (loc=0, scale=1.), the distribution is defined over the interval (0, 1). Use loc and scale to
 shift the distribution to interval (loc, loc + scale). Specifically, Beta(a, b, loc, scale).pdf(x) is identical to
 Beta(a, b).pdf(y) / scale with y=(x-loc)/scale.</p>
-<p>The following methods are available for Beta: <cite>cdf, pdf, log_pdf, icdf, rvs, moments</cite>.</p>
+<p>The following methods are available for Beta: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -575,7 +575,7 @@ Beta(a, b).pdf(y) / scale with y=(x-loc)/scale.</p>
 </dl>
 </li>
 </ul>
-<p>The following methods are available for Cauchy: <cite>cdf, pdf, log_pdf, icdf, rvs, moments</cite>.</p>
+<p>The following methods are available for Cauchy: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -601,7 +601,7 @@ Beta(a, b).pdf(y) / scale with y=(x-loc)/scale.</p>
 </li>
 </ul>
 <p>ChiSquare(c, loc, scale).pdf(x) is identical to ChiSquare(c).pdf(y) / scale with y=(x-loc)/scale</p>
-<p>The following methods are available for ChiSquare: <em>cdf, pdf, log_pdf, icdf, rvs, moments</em>.</p>
+<p>The following methods are available for ChiSquare: <em>cdf, pdf, log_pdf, icdf, rvs, moments, fit</em>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -623,7 +623,7 @@ Beta(a, b).pdf(y) / scale with y=(x-loc)/scale.</p>
 </ul>
 <p>A common parameterization for Exponential is in terms of the rate parameter lambda, which corresponds to using
 scale = 1 / lambda.</p>
-<p>The following methods are available for Exponential: <cite>cdf, pdf, log_pdf, icdf, rvs, moments</cite>.</p>
+<p>The following methods are available for Exponential: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -648,33 +648,7 @@ scale = 1 / lambda.</p>
 </dl>
 </li>
 </ul>
-<p>The following methods are available for Gamma: <cite>cdf, pdf, log_pdf, icdf, rvs, moments</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.Genextreme">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Genextreme</code><span class="sig-paren">(</span><em class="sig-param">c</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Genextreme"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Genextreme" title="Permalink to this definition">¶</a></dt>
-<dd><p>Genextreme distribution.</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>c</strong> (<cite>float</cite>):</dt><dd><p>shape parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>Genextreme(c, loc, scale).pdf(x) is identical to Genextreme(c).pdf(y) / scale with y=(x-loc)/scale.</p>
-<p>The following methods are available for Genextreme: <cite>cdf, pdf, log_pdf, icdf, rvs, moments</cite>.</p>
+<p>The following methods are available for Gamma: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -699,7 +673,7 @@ scale = 1 / lambda.</p>
 </dl>
 </li>
 </ul>
-<p>The following methods are available for InvGauss: <cite>cdf, pdf, log_pdf, icdf, rvs, moments</cite>.</p>
+<p>The following methods are available for InvGauss: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -719,7 +693,7 @@ scale = 1 / lambda.</p>
 </dl>
 </li>
 </ul>
-<p>The following methods are available for Laplace: <cite>cdf, pdf, log_pdf, icdf, rvs, moments</cite>.</p>
+<p>The following methods are available for Laplace: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -739,7 +713,7 @@ scale = 1 / lambda.</p>
 </dl>
 </li>
 </ul>
-<p>The following methods are available for Levy: <cite>cdf, pdf, log_pdf, icdf, rvs, moments</cite>.</p>
+<p>The following methods are available for Levy: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -759,7 +733,7 @@ scale = 1 / lambda.</p>
 </dl>
 </li>
 </ul>
-<p>The following methods are available for Logistic: <cite>cdf, pdf, log_pdf, icdf, rvs, moments</cite>.</p>
+<p>The following methods are available for Logistic: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -787,13 +761,13 @@ scale = 1 / lambda.</p>
 <p>A common parametrization for a lognormal random variable Y is in terms of the mean, mu, and standard deviation,
 sigma, of the gaussian random variable X such that exp(X) = Y. This parametrization corresponds to setting
 s = sigma and scale = exp(mu).</p>
-<p>The following methods are available for Lognormal: <cite>cdf, pdf, log_pdf, icdf, rvs, moments</cite>.</p>
+<p>The following methods are available for Lognormal: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="UQpy.Distributions.Maxwell">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Maxwell</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Maxwell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Maxwell" title="Permalink to this definition">¶</a></dt>
-<dd><p>Maxwell distribution</p>
+<dd><p>Maxwell-Boltzmann distribution</p>
 <p><strong>Inputs:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
@@ -807,7 +781,7 @@ s = sigma and scale = exp(mu).</p>
 </dl>
 </li>
 </ul>
-<p>The following methods are available for Maxwell: <cite>cdf, pdf, log_pdf, icdf, rvs, moments</cite>.</p>
+<p>The following methods are available for Maxwell: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -827,7 +801,7 @@ s = sigma and scale = exp(mu).</p>
 </dl>
 </li>
 </ul>
-<p>The following methods are available for Normal: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, mle</cite>.</p>
+<p>The following methods are available for Normal: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -852,7 +826,7 @@ s = sigma and scale = exp(mu).</p>
 </dl>
 </li>
 </ul>
-<p>The following methods are available for Pareto: <cite>cdf, pdf, log_pdf, icdf, rvs, moments</cite>.</p>
+<p>The following methods are available for Pareto: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -872,7 +846,7 @@ s = sigma and scale = exp(mu).</p>
 </dl>
 </li>
 </ul>
-<p>The following methods are available for Rayleigh: <cite>cdf, pdf, log_pdf, icdf, rvs, moments</cite>.</p>
+<p>The following methods are available for Rayleigh: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -903,7 +877,7 @@ s = sigma and scale = exp(mu).</p>
 </li>
 </ul>
 <p>The standard form of this distribution (i.e, loc=0., scale=1) is a standard normal truncated to the range [a, b].</p>
-<p>The following methods are available for TruncNorm: <cite>cdf, pdf, log_pdf, icdf, rvs, moments</cite>.</p>
+<p>The following methods are available for TruncNorm: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -924,7 +898,7 @@ s = sigma and scale = exp(mu).</p>
 </li>
 </ul>
 <p>Parameters loc and scale define the uniform distribution U[loc, loc + scale], default is U[0, 1].</p>
-<p>The following methods are available for Uniform: <cite>cdf, pdf, log_pdf, icdf, rvs, moments</cite>.</p>
+<p>The following methods are available for Uniform: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
 </dd></dl>
 
 </div>
@@ -1015,7 +989,7 @@ s = sigma and scale = exp(mu).</p>
 </dl>
 </li>
 </ul>
-<p>The following methods are available for MVNormal: <cite>pdf, log_pdf, rvs, mle</cite>.</p>
+<p>The following methods are available for MVNormal: <cite>pdf, log_pdf, rvs, fit</cite>.</p>
 </dd></dl>
 
 </div>

@@ -199,7 +199,7 @@
 <span class="sd">        * (`tuple`):</span>
 <span class="sd">            ``mean``: mean, ``var``:  covariance, ``skew``: skewness, ``kurt``: kurtosis.</span>
 
-<span class="sd">    **mle** *(data)*</span>
+<span class="sd">    **fit** *(data)*</span>
 <span class="sd">        Compute the maximum-likelihood parameters from iid data.</span>
 
 <span class="sd">        It computes the mle analytically if possible. For univariate continuous distributions, it leverages the fit</span>
@@ -251,6 +251,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span></div></div>
 
+
 <div class="viewcode-block" id="DistributionContinuous1D"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.DistributionContinuous1D">[docs]</a><span class="k">class</span> <span class="nc">DistributionContinuous1D</span><span class="p">(</span><span class="n">Distribution</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parent class for univariate continuous probability distributions.</span>
@@ -273,9 +274,9 @@
 <span class="sd">        {&#39;loc&#39;: 0.0, &#39;scale&#39;: 2.0}</span>
 
 <span class="sd">    &gt;&gt;&gt; from UQpy.Distributions import Normal</span>
-<span class="sd">    &gt;&gt;&gt; print(Normal(loc=None, scale=None).mle(data=[-4, 2, 2, 1]))</span>
+<span class="sd">    &gt;&gt;&gt; print(Normal(loc=None, scale=None).fit(data=[-4, 2, 2, 1]))</span>
 <span class="sd">        {&#39;loc&#39;: 0.25, &#39;scale&#39;: 2.48746859276655}</span>
-<span class="sd">    &gt;&gt;&gt; print(Normal(loc=0., scale=None).mle(data=[-4, 2, 2, 1]))</span>
+<span class="sd">    &gt;&gt;&gt; print(Normal(loc=0., scale=None).fit(data=[-4, 2, 2, 1]))</span>
 <span class="sd">        {&#39;loc&#39;: 0.0, &#39;scale&#39;: 2.5}</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -300,7 +301,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">rvs</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">:</span> <span class="n">scipy_name</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
             <span class="n">size</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nsamples</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 
-        <span class="k">def</span> <span class="nf">tmp_mle</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">tmp_fit</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_x_dimension</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
             <span class="n">fixed_params</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dist</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -308,7 +309,7 @@
                     <span class="n">fixed_params</span><span class="p">[</span><span class="s1">&#39;f&#39;</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
             <span class="n">params_fitted</span> <span class="o">=</span> <span class="n">scipy_name</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">fixed_params</span><span class="p">)</span>
             <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">order_params</span><span class="p">,</span> <span class="n">params_fitted</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mle</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">tmp_mle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">tmp_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
 
 
 <span class="c1">########################################################################################################################</span>
@@ -335,7 +336,7 @@
 <span class="sd">    shift the distribution to interval (loc, loc + scale). Specifically, Beta(a, b, loc, scale).pdf(x) is identical to</span>
 <span class="sd">    Beta(a, b).pdf(y) / scale with y=(x-loc)/scale.</span>
 
-<span class="sd">    The following methods are available for Beta: `cdf, pdf, log_pdf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for Beta: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -353,7 +354,7 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Cauchy: `cdf, pdf, log_pdf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for Cauchy: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">ploc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -375,7 +376,7 @@
 
 <span class="sd">    ChiSquare(c, loc, scale).pdf(x) is identical to ChiSquare(c).pdf(y) / scale with y=(x-loc)/scale</span>
 
-<span class="sd">    The following methods are available for ChiSquare: *cdf, pdf, log_pdf, icdf, rvs, moments*.</span>
+<span class="sd">    The following methods are available for ChiSquare: *cdf, pdf, log_pdf, icdf, rvs, moments, fit*.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;df&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -396,7 +397,7 @@
 <span class="sd">    A common parameterization for Exponential is in terms of the rate parameter lambda, which corresponds to using</span>
 <span class="sd">    scale = 1 / lambda.</span>
 
-<span class="sd">    The following methods are available for Exponential: `cdf, pdf, log_pdf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for Exponential: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -416,16 +417,16 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Gamma: `cdf, pdf, log_pdf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for Gamma: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Genextreme"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Genextreme">[docs]</a><span class="k">class</span> <span class="nc">Genextreme</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">GenExtreme</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Genextreme distribution.</span>
+<span class="sd">    Generalized Extreme Value distribution.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -438,11 +439,11 @@
 
 <span class="sd">    Genextreme(c, loc, scale).pdf(x) is identical to Genextreme(c).pdf(y) / scale with y=(x-loc)/scale.</span>
 
-<span class="sd">    The following methods are available for Genextreme: `cdf, pdf, log_pdf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for Genextreme: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">genextreme</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">genextreme</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="InvGauss"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.InvGauss">[docs]</a><span class="k">class</span> <span class="nc">InvGauss</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
@@ -458,7 +459,7 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for InvGauss: `cdf, pdf, log_pdf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for InvGauss: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -476,7 +477,7 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Laplace: `cdf, pdf, log_pdf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for Laplace: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -494,7 +495,7 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Levy: `cdf, pdf, log_pdf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for Levy: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -512,7 +513,7 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Logistic: `cdf, pdf, log_pdf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for Logistic: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -536,7 +537,7 @@
 <span class="sd">    sigma, of the gaussian random variable X such that exp(X) = Y. This parametrization corresponds to setting</span>
 <span class="sd">    s = sigma and scale = exp(mu).</span>
 
-<span class="sd">    The following methods are available for Lognormal: `cdf, pdf, log_pdf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for Lognormal: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">s</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -545,7 +546,7 @@
 
 <div class="viewcode-block" id="Maxwell"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Maxwell">[docs]</a><span class="k">class</span> <span class="nc">Maxwell</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Maxwell distribution</span>
+<span class="sd">    Maxwell-Boltzmann distribution</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -554,7 +555,7 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Maxwell: `cdf, pdf, log_pdf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for Maxwell: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -572,13 +573,13 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        standard deviation</span>
 
-<span class="sd">    The following methods are available for Normal: `cdf, pdf, log_pdf, icdf, rvs, moments, mle`.</span>
+<span class="sd">    The following methods are available for Normal: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">mle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_x_dimension</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">mle_loc</span><span class="p">,</span> <span class="n">mle_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;loc&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;scale&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">mle_loc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -601,7 +602,7 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Pareto: `cdf, pdf, log_pdf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for Pareto: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -619,7 +620,7 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Rayleigh: `cdf, pdf, log_pdf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for Rayleigh: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -643,7 +644,7 @@
 
 <span class="sd">    The standard form of this distribution (i.e, loc=0., scale=1) is a standard normal truncated to the range [a, b].</span>
 
-<span class="sd">    The following methods are available for TruncNorm: `cdf, pdf, log_pdf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for TruncNorm: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -663,7 +664,7 @@
 
 <span class="sd">    Parameters loc and scale define the uniform distribution U[loc, loc + scale], default is U[0, 1].</span>
 
-<span class="sd">    The following methods are available for Uniform: `cdf, pdf, log_pdf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for Uniform: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -794,7 +795,7 @@
 <span class="sd">    * **cov** (`float` or `ndarray`):</span>
 <span class="sd">        covariance, `float` or `ndarray` of shape (dimension, ) or (dimension, dimension). Default is 1.</span>
 
-<span class="sd">    The following methods are available for MVNormal: `pdf, log_pdf, rvs, mle`.</span>
+<span class="sd">    The following methods are available for MVNormal: `pdf, log_pdf, rvs, fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
@@ -820,7 +821,7 @@
         <span class="k">return</span> <span class="n">stats</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
             <span class="n">size</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nsamples</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">mle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="n">mle_mu</span><span class="p">,</span> <span class="n">mle_cov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;cov&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">mle_mu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">mle_mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -871,7 +872,7 @@
 <span class="sd">        list of ``DistributionContinuous1D`` or ``DistributionDiscrete1D`` objects that define the marginals.</span>
 
 <span class="sd">    Such a multivariate distribution possesses the following methods, on condition that all its univariate marginals</span>
-<span class="sd">    also possess them: `pdf, log_pdf, cdf, rvs, mle, moments`.</span>
+<span class="sd">    also possess them: `pdf, log_pdf, cdf, rvs, fit, moments`.</span>
 
 <span class="sd">    The parameters of the distribution are only stored as attributes of the marginal objects. However, the</span>
 <span class="sd">    *get_params* and *update_params* method can still be used for the joint. Note that for this puspose each parameter</span>
@@ -954,16 +955,16 @@
                 <span class="k">return</span> <span class="n">rv_s</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">rvs</span> <span class="o">=</span> <span class="n">MethodType</span><span class="p">(</span><span class="n">joint_rvs</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;mle&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">marginals</span><span class="p">):</span>
-            <span class="k">def</span> <span class="nf">joint_mle</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;fit&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">marginals</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">joint_fit</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
                 <span class="n">data</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">_check_x_dimension</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
                 <span class="c1"># Compute ml estimates of independent marginal parameters</span>
                 <span class="n">mle_all</span> <span class="o">=</span> <span class="p">{}</span>
                 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">marginals</span><span class="p">):</span>
-                    <span class="n">mle_i</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">mle</span><span class="p">(</span><span class="n">data</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span>
+                    <span class="n">mle_i</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span>
                     <span class="n">mle_all</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">mle_i</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
                 <span class="k">return</span> <span class="n">mle_all</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mle</span> <span class="o">=</span> <span class="n">MethodType</span><span class="p">(</span><span class="n">joint_mle</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fit</span> <span class="o">=</span> <span class="n">MethodType</span><span class="p">(</span><span class="n">joint_fit</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;moments&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">marginals</span><span class="p">):</span>
             <span class="k">def</span> <span class="nf">joint_moments</span><span class="p">(</span><span class="n">dist</span><span class="p">):</span>
