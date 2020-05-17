@@ -1,23 +1,34 @@
-def example1(samples):
+import numpy as np
+
+def example1(samples=None):
 
     # g(X) = R - S
-    R = samples[0]
-    S = samples[1]
-    return R-S
+    g = np.zeros(samples.shape[0])
+    for i in range(samples.shape[0]):         
+        R = samples[i, 0]
+        S = samples[i, 1]
+        g[i] = R - S
+    return g
     
 
-def example2(samples):
+def example2(samples=None):
     import numpy as np
     d = 2
     beta = 3.0902
-    u = -1/np.sqrt(d) * (samples[0] + samples[1]) + beta
-    return u
+    g = np.zeros(samples.shape[0])
+    for i in range(samples.shape[0]):
+        g[i] = -1/np.sqrt(d) * (samples[i, 0] + samples[i, 1]) + beta
+    return g
 
 
-def example3(samples):
-    u = 6.2*samples[0] - samples[1]*samples[2]**2
-    return u
+def example3(samples=None):
+    g = np.zeros(samples.shape[0])
+    for i in range(samples.shape[0]):
+        g[i] = 6.2*samples[i, 0] - samples[i, 1]*samples[i, 2]**2
+    return g
     
-def example4(samples):
-    u = samples[0]*samples[1] - 80
-    return u
+def example4(samples=None):
+    g = np.zeros(samples.shape[0])
+    for i in range(samples.shape[0]):
+        g[i] = samples[i, 0]*samples[i, 1] - 80
+    return g
