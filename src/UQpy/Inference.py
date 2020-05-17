@@ -384,13 +384,13 @@ class MLEstimation:
             print('UQpy: Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name)
 
         # Case 3: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization below.
-        if (self.inference_model.dist_object is not None) and hasattr(self.inference_model.dist_object, 'mle'):
+        if (self.inference_model.dist_object is not None) and hasattr(self.inference_model.dist_object, 'fit'):
             if not (isinstance(iter_optim, int) and iter_optim >= 1):
                 raise ValueError('iter_optim should be an integer >= 1.')
             for _ in range(iter_optim):
                 self.inference_model.dist_object.update_params(
                     **{key: None for key in self.inference_model.list_params})
-                mle_dict = self.inference_model.dist_object.mle(data=self.data)
+                mle_dict = self.inference_model.dist_object.fit(data=self.data)
                 mle_tmp = np.array([mle_dict[key] for key in self.inference_model.list_params])
                 max_log_like_tmp = self.inference_model.evaluate_log_likelihood(
                     params=mle_tmp[np.newaxis, :], data=self.data)[0]

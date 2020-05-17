@@ -165,7 +165,7 @@ class Distribution:
         * (`tuple`):
             ``mean``: mean, ``var``:  covariance, ``skew``: skewness, ``kurt``: kurtosis.
 
-    **mle** *(data)*
+    **fit** *(data)*
         Compute the maximum-likelihood parameters from iid data.
 
         It computes the mle analytically if possible. For univariate continuous distributions, it leverages the fit
@@ -240,9 +240,9 @@ class DistributionContinuous1D(Distribution):
         {'loc': 0.0, 'scale': 2.0}
 
     >>> from UQpy.Distributions import Normal
-    >>> print(Normal(loc=None, scale=None).mle(data=[-4, 2, 2, 1]))
+    >>> print(Normal(loc=None, scale=None).fit(data=[-4, 2, 2, 1]))
         {'loc': 0.25, 'scale': 2.48746859276655}
-    >>> print(Normal(loc=0., scale=None).mle(data=[-4, 2, 2, 1]))
+    >>> print(Normal(loc=0., scale=None).fit(data=[-4, 2, 2, 1]))
         {'loc': 0.0, 'scale': 2.5}
     """
     def __init__(self, **kwargs):
@@ -267,7 +267,7 @@ class DistributionContinuous1D(Distribution):
         self.rvs = lambda nsamples, random_state=None: scipy_name.rvs(
             size=nsamples, random_state=random_state, **self.params).reshape((nsamples, 1))
 
-        def tmp_mle(dist, data):
+        def tmp_fit(dist, data):
             data = self._check_x_dimension(data)
             fixed_params = {}
             for key, value in dist.params.items():
@@ -275,7 +275,7 @@ class DistributionContinuous1D(Distribution):
                     fixed_params['f' + key] = value
             params_fitted = scipy_name.fit(data=data, **fixed_params)
             return dict(zip(dist.order_params, params_fitted))
-        self.mle = lambda data: tmp_mle(self, data)
+        self.fit = lambda data: tmp_fit(self, data)
 
 
 ########################################################################################################################
@@ -302,7 +302,7 @@ class Beta(DistributionContinuous1D):
     shift the distribution to interval (loc, loc + scale). Specifically, Beta(a, b, loc, scale).pdf(x) is identical to
     Beta(a, b).pdf(y) / scale with y=(x-loc)/scale.
 
-    The following methods are available for Beta: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    The following methods are available for Beta: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, a, b, loc=0., scale=1.):
         super().__init__(a=a, b=b, loc=loc, scale=scale, order_params=('a', 'b', 'loc', 'scale'))
@@ -320,7 +320,7 @@ class Cauchy(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Cauchy: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    The following methods are available for Cauchy: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, loc=0., scale=1.):
         super().__init__(ploc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -342,7 +342,7 @@ class ChiSquare(DistributionContinuous1D):
 
     ChiSquare(c, loc, scale).pdf(x) is identical to ChiSquare(c).pdf(y) / scale with y=(x-loc)/scale
 
-    The following methods are available for ChiSquare: *cdf, pdf, log_pdf, icdf, rvs, moments*.
+    The following methods are available for ChiSquare: *cdf, pdf, log_pdf, icdf, rvs, moments, fit*.
     """
     def __init__(self, df, loc=0., scale=1):
         super().__init__(df=df, loc=loc, scale=scale, order_params=('df', 'loc', 'scale'))
@@ -363,7 +363,7 @@ class Exponential(DistributionContinuous1D):
     A common parameterization for Exponential is in terms of the rate parameter lambda, which corresponds to using
     scale = 1 / lambda.
 
-    The following methods are available for Exponential: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    The following methods are available for Exponential: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, loc=0., scale=1.):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -383,7 +383,7 @@ class Gamma(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Gamma: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    The following methods are available for Gamma: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, a, loc=0., scale=1.):
         super().__init__(a=a, loc=loc, scale=scale, order_params=('a', 'loc', 'scale'))
@@ -405,7 +405,7 @@ class GenExtreme(DistributionContinuous1D):
 
     Genextreme(c, loc, scale).pdf(x) is identical to Genextreme(c).pdf(y) / scale with y=(x-loc)/scale.
 
-    The following methods are available for Genextreme: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    The following methods are available for Genextreme: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, c, loc=0., scale=1.):
         super().__init__(c=c, loc=loc, scale=scale, order_params=('c', 'loc', 'scale'))
@@ -425,7 +425,7 @@ class InvGauss(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for InvGauss: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    The following methods are available for InvGauss: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, mu, loc=0., scale=1.):
         super().__init__(mu=mu, loc=loc, scale=scale, order_params=('mu', 'loc', 'scale'))
@@ -443,7 +443,7 @@ class Laplace(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Laplace: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    The following methods are available for Laplace: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, loc=0, scale=1):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -461,7 +461,7 @@ class Levy(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Levy: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    The following methods are available for Levy: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, loc=0, scale=1):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -479,7 +479,7 @@ class Logistic(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Logistic: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    The following methods are available for Logistic: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, loc=0, scale=1):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -503,7 +503,7 @@ class Lognormal(DistributionContinuous1D):
     sigma, of the gaussian random variable X such that exp(X) = Y. This parametrization corresponds to setting
     s = sigma and scale = exp(mu).
 
-    The following methods are available for Lognormal: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    The following methods are available for Lognormal: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, s, loc=0., scale=1.):
         super().__init__(s=s, loc=loc, scale=scale, order_params=('s', 'loc', 'scale'))
@@ -521,7 +521,7 @@ class Maxwell(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Maxwell: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    The following methods are available for Maxwell: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, loc=0, scale=1):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -539,13 +539,13 @@ class Normal(DistributionContinuous1D):
     * **scale** (`float`):
         standard deviation
 
-    The following methods are available for Normal: `cdf, pdf, log_pdf, icdf, rvs, moments, mle`.
+    The following methods are available for Normal: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, loc=0., scale=1.):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.norm)
 
-    def mle(self, x):
+    def fit(self, x):
         x = self._check_x_dimension(x)
         mle_loc, mle_scale = self.params['loc'], self.params['scale']
         if mle_loc is None:
@@ -568,7 +568,7 @@ class Pareto(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Pareto: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    The following methods are available for Pareto: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, b, loc=0., scale=1.):
         super().__init__(b=b, loc=loc, scale=scale, order_params=('b', 'loc', 'scale'))
@@ -586,7 +586,7 @@ class Rayleigh(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Rayleigh: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    The following methods are available for Rayleigh: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, loc=0, scale=1):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -610,7 +610,7 @@ class TruncNorm(DistributionContinuous1D):
 
     The standard form of this distribution (i.e, loc=0., scale=1) is a standard normal truncated to the range [a, b].
 
-    The following methods are available for TruncNorm: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    The following methods are available for TruncNorm: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, a, b, loc=0, scale=1.):
         super().__init__(a=a, b=b, loc=loc, scale=scale, order_params=('a', 'b', 'loc', 'scale'))
@@ -630,7 +630,7 @@ class Uniform(DistributionContinuous1D):
 
     Parameters loc and scale define the uniform distribution U[loc, loc + scale], default is U[0, 1].
 
-    The following methods are available for Uniform: `cdf, pdf, log_pdf, icdf, rvs, moments`.
+    The following methods are available for Uniform: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
     """
     def __init__(self, loc=0., scale=1.):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -761,7 +761,7 @@ class MVNormal(DistributionND):
     * **cov** (`float` or `ndarray`):
         covariance, `float` or `ndarray` of shape (dimension, ) or (dimension, dimension). Default is 1.
 
-    The following methods are available for MVNormal: `pdf, log_pdf, rvs, mle`.
+    The following methods are available for MVNormal: `pdf, log_pdf, rvs, fit`.
     """
     def __init__(self, mean, cov=1.):
         if len(np.array(mean).shape) != 1:
@@ -787,7 +787,7 @@ class MVNormal(DistributionND):
         return stats.multivariate_normal.rvs(
             size=nsamples, random_state=random_state, **self.params).reshape((nsamples, -1))
 
-    def mle(self, x):
+    def fit(self, x):
         mle_mu, mle_cov = self.params['mean'], self.params['cov']
         if mle_mu is None:
             mle_mu = np.mean(x, axis=0)
@@ -838,7 +838,7 @@ class JointInd(DistributionND):
         list of ``DistributionContinuous1D`` or ``DistributionDiscrete1D`` objects that define the marginals.
 
     Such a multivariate distribution possesses the following methods, on condition that all its univariate marginals
-    also possess them: `pdf, log_pdf, cdf, rvs, mle, moments`.
+    also possess them: `pdf, log_pdf, cdf, rvs, fit, moments`.
 
     The parameters of the distribution are only stored as attributes of the marginal objects. However, the
     *get_params* and *update_params* method can still be used for the joint. Note that for this puspose each parameter
@@ -921,16 +921,16 @@ class JointInd(DistributionND):
                 return rv_s
             self.rvs = MethodType(joint_rvs, self)
 
-        if all(hasattr(m, 'mle') for m in self.marginals):
-            def joint_mle(dist, data):
+        if all(hasattr(m, 'fit') for m in self.marginals):
+            def joint_fit(dist, data):
                 data = dist._check_x_dimension(data)
                 # Compute ml estimates of independent marginal parameters
                 mle_all = {}
                 for i, m in enumerate(dist.marginals):
-                    mle_i = m.mle(data[:, i])
+                    mle_i = m.fit(data[:, i])
                     mle_all.update({key+'_'+str(i): val for key, val in mle_i.items()})
                 return mle_all
-            self.mle = MethodType(joint_mle, self)
+            self.fit = MethodType(joint_fit, self)
 
         if all(hasattr(m, 'moments') for m in self.marginals):
             def joint_moments(dist):
