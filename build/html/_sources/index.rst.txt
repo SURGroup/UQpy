@@ -22,6 +22,7 @@ Table of contents
    stochastic_process
    surrogates
    reliability
+   inference
    dimension_reduction
    utilities
    news
