@@ -2749,7 +2749,8 @@ class MCMC:
     Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo
     ([1]_, [2]_).
 
-    This is the parent class to all MCMC algorithms.
+    This is the base class for all MCMC algorithms. This base class only provides the framework for MCMC and cannot be
+    used directly for sampling. Sampling is done by calling a subclass - see example in class ``MH``.
 
     **References:**
 
@@ -2763,24 +2764,35 @@ class MCMC:
 
     * **pdf_target** ((`list` of) callables):
         Target density function from which to draw random samples. Either `pdf_target` or `log_pdf_target` must be
-        provided (the latter should be preferred).
+        provided (the latter should be preferred for better numerical stability).
+
+        If `pdf_target` is a callable, it refers to the joint pdf to sample from, it must take at least one input `x`,
+        the point(s) where to evaluate the pdf. Within MCMC the target is evaluated as:
+
+        `p(x) = pdf_target(x, *args_target)`
+
+        where `x` is a ndarray of shape (npoints, dimension) and `args_target` are additional positional arguments that
+        are provided to MCMC via its `args_target` input.
+
+        If `pdf_target` is a list of callables, it refers to independent marginals to sample from, marginal in dimension
+        `j` is evaluated as:
+
+        `p_j(xj) = pdf_target[j](xj, *args_target[j])`
+
+        where `x` is a ndarray of shape (npoints, dimension)
 
     * **log_pdf_target** ((`list` of) callables):
         Logarithm of the target density function from which to draw random samples. Either `pdf_target` or
-        `log_pdf_target` must be provided (the latter should be preferred).
+        `log_pdf_target` must be provided (the latter should be preferred for better numerical stability).
 
-    * **args_target** (`tuple`):
-        Positional arguments of the pdf / log-pdf target function.
+        Same comments as for input `pdf_target`.
 
-    * **nsamples** (`int`):
-        Number of samples to generate. If not None, the `run` method is called when the object is created.
-
-    * **nsamples_per_chain** (`int`):
-        Number of samples to generate per chain. If not None, the `run` method is called when the object is created.
+    * **args_target** ((`list` of) `tuple`):
+        Positional arguments of the pdf / log-pdf target function. See `pdf_target`
 
     * **jump** (`int`):
-        Thinning parameter - only one out of jump samples are stored, used to reduce correlation between samples.
-        Default is 1 (no thinning).
+        Thinning parameter, used to reduce correlation between samples. Setting `jump=n` corresponds to	skipping `n-1`
+        states between accepted states of the chain. Default is 1 (no thinning).
 
     * **nburn** (`int`):
         Length of burn-in - i.e., number of samples at the beginning of the chain to discard (note: no thinning during
@@ -2795,6 +2807,14 @@ class MCMC:
     * **concat_chains** (`bool`):
         Boolean that indicates whether to concatenate the chains after a run, i.e., samples are stored as an `ndarray`
         of shape (nsamples * nchains, dimension) if True, (nsamples, nchains, dimension) if False. Default: True
+
+    * **nsamples** (`int`):
+        Number of samples to generate - see `run` method. If not None, the `run` method is called when the object is
+        created. Default: None
+
+    * **nsamples_per_chain** (`int`):
+        Number of samples to generate per chain - see `run` method. If not None, the `run` method is called when the
+        object is created. Default: None
 
     **Attributes:**
 
@@ -2830,8 +2850,8 @@ class MCMC:
         if not (isinstance(jump, int) and jump >= 1):
             raise TypeError('UQpy: jump should be an integer >= 1')
         self.nburn, self.jump = nburn, jump
-        self.seed, self.dimension = self._preprocess_seed(seed=seed, dim=dimension)    # check type and assign default [0.s]
-        self.nchains = self.seed.shape[0]
+        self.seed = self._preprocess_seed(seed=seed, dim=dimension)    # check type and assign default [0.s]
+        self.nchains, self.dimension = self.seed.shape
 
         # Check target pdf
         self.evaluate_log_target, self.evaluate_log_target_marginals = self._preprocess_target(
@@ -2855,8 +2875,8 @@ class MCMC:
         """
         Run the MCMC chain.
 
-        This function samples from the MCMC chains and append samples to existing ones (if any). This method calls the
-        run_iterations method that is specific to each algorithm.
+        This function samples from the MCMC chains and append samples to existing ones (if any). This method leverages
+        the run_iterations method that is specific to each algorithm.
 
         **Inputs:**
 
@@ -2994,6 +3014,7 @@ class MCMC:
             nsamples = int(nsamples_per_chain * self.nchains)
 
         if self.samples is None:    # very first call of run, set current_state as the seed and initialize self.samples
+            print(nsamples_per_chain, self.nchains, self.dimension)
             self.samples = np.zeros((nsamples_per_chain, self.nchains, self.dimension))
             if self.save_log_pdf:
                 self.log_pdf_values = np.zeros((nsamples_per_chain, self.nchains))
@@ -3137,8 +3158,7 @@ class MCMC:
                 raise ValueError('UQpy: Input seed should be an array of shape (dimension, ) or (nchains, dimension).')
             if dim is not None and seed.shape[1] != dim:
                 raise ValueError('UQpy: Wrong dimensions between seed and dimension.')
-            dim = seed.shape[1]
-        return seed, dim
+        return seed
 
     @staticmethod
     def _check_methods_proposal(proposal):
@@ -3169,13 +3189,19 @@ class MCMC:
 
 class MH(MCMC):
     """
-
     Metropolis-Hastings algorithm
+
+    >>> from UQpy.Distributions import Normal, Gumbel, JointCopula
+    >>> dist_true = JointCopula(marginals=[Normal(), Normal()], copula=Gumbel(theta=2.))
+    >>> proposal = JointInd(marginals=[Normal(scale=0.2), Normal(scale=0.2)])
+    >>> sampler = MH(log_pdf_target=dist_true.log_pdf, nsamples=500, proposal=proposal, seed=[0., 0.])
+    >>> print(sampler.samples.shape)
+    (500, 2)
 
     **Algorithm-specific inputs:**
 
     * **proposal** (``Distribution`` object):
-        Proposal distribution. Default: standard multivariate normal
+        Proposal distribution, must have a log_pdf/pdf and rvs method. Default: standard multivariate normal
 
     * **proposal_is_symmetric** (`bool`):
         indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
@@ -3193,7 +3219,6 @@ class MH(MCMC):
         # Initialize algorithm specific inputs
         self.proposal = proposal
         self.proposal_is_symmetric = proposal_is_symmetric
-        self.dimension = dimension
 
         if self.proposal is None:
             if self.dimension is None:
@@ -3262,7 +3287,7 @@ class MMH(MCMC):
     **Algorithm-specific inputs:**
 
     * **proposal** ((`list` of) ``Distribution`` object(s)):
-        Proposal distribution(s) in dimension 1. Default: standard normal
+        Proposal distribution(s) in dimension 1, must have a log_pdf/pdf and rvs method. Default: standard normal
 
     * **proposal_is_symmetric** ((`list` of) `bool`):
         indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
@@ -3845,6 +3870,15 @@ class IS:
     """
     Sample from a user-defined target density using importance sampling.
 
+    >>> from UQpy.Distributions import Normal, Gumbel, JointCopula
+    >>> dist_true = JointCopula(marginals=[Normal(), Normal()], copula=Gumbel(theta=2.))
+    >>> proposal = JointInd(marginals=[Normal(), Normal()])
+    >>> sampler = IS(log_pdf_target=dist_true.log_pdf, nsamples=500, proposal=proposal)
+    >>> print(sampler.samples.shape)
+    (500, 2)
+    >>> print(sampler.weights.shape)
+    (500,)
+
     **Inputs:**
 
     * **proposal** (``Distribution`` object):
@@ -3861,7 +3895,8 @@ class IS:
         Positional arguments of the target log_pdf / pdf callable
 
     * **nsamples** (`int`):
-        Number of samples to generate
+        Number of samples to generate - see `run` method. If not None, the `run` method is called when the object is
+        created. Default is None.
 
     **Attributes:**
 
@@ -3869,10 +3904,10 @@ class IS:
         Set of samples, `ndarray` of shape (nsamples, dim)
 
     * **unnormalized_log_weights** (`ndarray`)
-        unnormalized log weights, i.e., log_w(x) = log_target(x) - log_proposal(x), `ndarray` of shape (nsamples, )
+        Unnormalized log weights, i.e., log_w(x) = log_target(x) - log_proposal(x), `ndarray` of shape (nsamples, )
 
     * **weights** (`ndarray`):
-        importance weights samples, weighted so that they sum up to 1, `ndarray` of shape (nsamples, )
+        Importance weights, weighted so that they sum up to 1, `ndarray` of shape (nsamples, )
 
     **Methods:**
     """
@@ -3910,8 +3945,7 @@ class IS:
 
         This function samples from the proposal and append samples to existing ones (if any). It then weights the 
         samples as log_w_unnormalized) = log(target)-log(proposal). This function updates the output attributes 
-        samples, unnormalized_log_weights and weights. If nsamples is provided when creating the object, this method is 
-        directly called in init.
+        samples, unnormalized_log_weights and weights.
 
         **Inputs:**
 
