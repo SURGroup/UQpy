@@ -1,0 +1,1169 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>SampleMethods &#8212; UQpy v3.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Transformations" href="transformations.html" />
+    <link rel="prev" title="Distributions" href="distributions.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="samplemethods">
+<span id="id1"></span><h1>SampleMethods<a class="headerlink" href="#samplemethods" title="Permalink to this headline">¶</a></h1>
+<p>This module contains functionality for all the sampling methods supported in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.
+The module currently contains the following classes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">MCS</span></code>: Class to perform Monte Carlo sampling using <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LHS</span></code>: Class to perform Latin hypercube sampling using <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MCMC</span></code>: Class to perform sampling using Markov chains using <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IS</span></code>: Class to perform Importance sampling using <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p></li>
+</ul>
+<div class="section" id="mcs">
+<h2>MCS<a class="headerlink" href="#mcs" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">MCS</span></code>  class can be used to generate  random  draws  from  specified probability distribution(s).  The <code class="docutils literal notranslate"><span class="pre">MCS</span></code>
+class utilizes the <code class="docutils literal notranslate"><span class="pre">Distributions</span></code> class to define probability distributions.  The advantage of using the <code class="docutils literal notranslate"><span class="pre">MCS</span></code>
+class for <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> operations, as opposed to simply generating samples with the <code class="docutils literal notranslate"><span class="pre">scipy.stats</span></code> package, is that it
+allows building an object  containing  the  samples,  their  distributions  and variable names for integration with
+other <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> modules.</p>
+<p><code class="docutils literal notranslate"><span class="pre">MCS</span></code>  class can be imported in a python script using the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">MCS</span>
+</pre></div>
+</div>
+<p>For example,  to run MCS  for two independent normally distribution random variables <cite>N(1,1)</cite> and <cite>N(0,1)</cite></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x1</span> <span class="o">=</span> <span class="n">MCS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+<span class="go">    UQpy: Running Monte Carlo Sampling...</span>
+<span class="go">    UQpy: Monte Carlo Sampling Complete.</span>
+<span class="go">        [[ 1.62434536  1.78862847]</span>
+<span class="go">        [-0.61175641  0.43650985]</span>
+<span class="go">        [-0.52817175  0.09649747]</span>
+<span class="go">        [-1.07296862 -1.8634927 ]</span>
+<span class="go">        [ 0.86540763 -0.2773882 ]]</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">MCS</span></code> class can be used to run MCS for multivariate distributions</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">MVNormal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">MVNormal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">],</span> <span class="n">cov</span><span class="o">=</span><span class="p">[[</span><span class="mf">4.</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.9</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x2</span> <span class="o">=</span> <span class="n">MCS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x2</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+<span class="go">        [[ 3.38736185  2.23541269]</span>
+<span class="go">        [ 0.08946208  0.8979547 ]</span>
+<span class="go">        [ 2.53138343  3.06057229]</span>
+<span class="go">        [ 5.72159837  0.30657467]</span>
+<span class="go">        [-1.71534735  1.97285583]]</span>
+</pre></div>
+</div>
+<p>Or for a combination of distributions</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">MVNormal</span><span class="p">,</span> <span class="n">Normal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">MVNormal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">],</span> <span class="n">cov</span><span class="o">=</span><span class="p">[[</span><span class="mf">4.</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.9</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x3</span> <span class="o">=</span> <span class="n">MCS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="p">[</span><span class="mi">123</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x3</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+<span class="go">        [[array([-1.0856306]) array([0.21193807, 2.35155014])]</span>
+<span class="go">        [array([0.99734545]) array([-1.02985401,  1.83075511])]</span>
+<span class="go">        [array([0.2829785]) array([3.09845703, 1.67722522])]</span>
+<span class="go">        [array([-1.50629471]) array([2.13964859, 1.22068072])]</span>
+<span class="go">        [array([-0.57860025]) array([-1.16164199,  2.21637435])]]</span>
+</pre></div>
+</div>
+<p>In this case the number of  samples will be</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x3</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+<span class="go">    5</span>
+<span class="go">and the dimension of the problem is</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x3</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+<span class="go">    2</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="UQpy.SampleMethods.MCS">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MCS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform Monte Carlo sampling (MCS) of random variables.</p>
+<p><strong>Attributes:</strong></p>
+<p><strong>Input:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>dist_object</strong> ((list of) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>Probability distribution of each random variable. Must be an object of type <code class="docutils literal notranslate"><span class="pre">Distribution</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be drawn from each distribution.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>random_state</strong> ((list of) <cite>int(s)</cite>):</dt><dd><p>The random seed to initialize the <em>Mersenne Twister</em> pseudo-random number generator.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>verbose</strong> (Boolean):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
+<p>Default value: False</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>samples</strong> (<cite>ndarray</cite> or <cite>list</cite>):</dt><dd><p>Generated samples. If a list of <code class="docutils literal notranslate"><span class="pre">DistributionContinuous1D</span></code>, <code class="docutils literal notranslate"><span class="pre">DistributionContinuous1D</span></code>
+objects is provided then <strong>samples</strong> is an array with
+<code class="docutils literal notranslate"><span class="pre">samples.shape=(nsamples,</span> <span class="pre">len(dist_object))</span></code>. If  <code class="docutils literal notranslate"><span class="pre">DistributionContinuous1D</span></code> object is
+provided then <strong>samples</strong> is an array with <code class="docutils literal notranslate"><span class="pre">samples.shape=(nsamples,</span> <span class="pre">1)</span></code>. If a
+<code class="docutils literal notranslate"><span class="pre">DistributionContinuousND</span></code> object is provided then <strong>samples</strong> is an array with
+<code class="docutils literal notranslate"><span class="pre">samples.shape=(nsamples,</span> <span class="pre">ND)</span></code>. If a list of <code class="docutils literal notranslate"><span class="pre">DistributionContinuous1D</span></code>,
+<code class="docutils literal notranslate"><span class="pre">DistributionContinuousND</span></code> is provided then <strong>samples</strong> is a list with
+<code class="docutils literal notranslate"><span class="pre">len(samples)=nsamples</span></code> and <code class="docutils literal notranslate"><span class="pre">len(samples[i])</span> <span class="pre">=</span> <span class="pre">len(dist_object)</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>samplesU01</strong> (<cite>ndarray</cite> (<cite>list</cite>)):</dt><dd><p>If the <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object has a <code class="docutils literal notranslate"><span class="pre">cdf</span></code> method, MCS also returns the samples in the
+Uniform(0,1) hypercube using the method <code class="docutils literal notranslate"><span class="pre">transform_u01</span></code>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods</strong></p>
+<dl class="method">
+<dt id="UQpy.SampleMethods.MCS.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCS.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCS.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">MCS</span></code> class can be invoked many times and the generated samples are appended to the
+existing samples. For example, to the 5 samples in object <code class="docutils literal notranslate"><span class="pre">x1</span></code> we can add two more by running</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
+<span class="go">    &lt;UQpy.SampleMethods.MCS object at 0x1a148ba85&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x1</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="p">[</span><span class="mi">123</span><span class="p">,</span> <span class="mi">567</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+<span class="go">    [[ 1.62434536  1.78862847]</span>
+<span class="go">     [-0.61175641  0.43650985]</span>
+<span class="go">     [-0.52817175  0.09649747]</span>
+<span class="go">     [-1.07296862 -1.8634927 ]</span>
+<span class="go">     [ 0.86540763 -0.2773882 ]</span>
+<span class="go">     [ 1.62434536  1.78862847]</span>
+<span class="go">     [-0.61175641  0.43650985]]</span>
+</pre></div>
+</div>
+<p>The total number of samples is now</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
+<span class="go">    7</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.SampleMethods.MCS.transform_u01">
+<code class="sig-name descname">transform_u01</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCS.transform_u01"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCS.transform_u01" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">transform_u01</span></code> method of the <code class="docutils literal notranslate"><span class="pre">MCS</span></code> is used to transform samples from the parameter space to the
+Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> objects need to have a <code class="docutils literal notranslate"><span class="pre">cdf</span></code> method.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
+<span class="go">    &lt;UQpy.SampleMethods.MCS object at 0x1a18c03450&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x1</span><span class="o">.</span><span class="n">transform_u01</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">samplesU01</span><span class="p">)</span>
+<span class="go">    [[0.94784894 0.96316267]</span>
+<span class="go">     [0.27034947 0.66876657]</span>
+<span class="go">     [0.29869007 0.53843726]</span>
+<span class="go">     [0.1416426  0.03119649]</span>
+<span class="go">     [0.80659245 0.39074102]</span>
+<span class="go">     [0.94784894 0.96316267]</span>
+<span class="go">     [0.27034947 0.66876657]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="lhs">
+<h2>LHS<a class="headerlink" href="#lhs" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">LHS</span></code>  class can be used to generate  random  draws  from  specified probability distribution(s) using Latin hypercube sampling, which belongs to the family of stratified sampling techniques. LHS has the advantage that the samples generated are uniformly distributed over each marginal distribution. LHS is perfomed by dividing the the range of each random variable into N bins with equal probability mass, where N is the required number of samples, generating one sample per bin, and then randomly pairing the samples.</p>
+<p><code class="docutils literal notranslate"><span class="pre">LHS</span></code>  class can be imported in a python script using the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">LHS</span>
+</pre></div>
+</div>
+<p>For example,  to run LHS  for two independent uniformly distribution random variables <cite>U(0, 1)</cite></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x1</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>  <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+<span class="go">        UQpy: Running Latin Hypercube sampling...</span>
+<span class="go">        Successful execution of LHS design.</span>
+<span class="go">        [[0.01373095 0.83176942]</span>
+<span class="go">        [0.34778514 0.52142516]</span>
+<span class="go">        [0.77989405 0.30824438]</span>
+<span class="go">        [0.55000767 0.16585118]</span>
+<span class="go">        [0.9397917  0.6990165 ]]</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">LHS</span></code> class of <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> offers a variaty of methods for a Latin Hypercube Design (‘random’, ‘centered’, ‘minmax’, ‘correlate`). However, adding a new method is straightforward. For example, if we want to perform a LHS desing using a new method we can do it easily by providing a function as the <cite>criterion</cite>. The output of this function should be an array at least two-dimension. In the same way, a distance metric can be provided by the user. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">new_method</span><span class="p">():</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">samples_in_U_ab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">samples_in_U_ab</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">new_distance</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x1</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="n">new_method</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">new_distance</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+<span class="go">        [[1. 1.]</span>
+<span class="go">        [1. 1.]</span>
+<span class="go">        [1. 1.]</span>
+<span class="go">        [1. 1.]</span>
+<span class="go">        [1. 1.]]</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="UQpy.SampleMethods.LHS">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">LHS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">nsamples</em>, <em class="sig-param">criterion='random'</em>, <em class="sig-param">metric='euclidean'</em>, <em class="sig-param">iterations=100</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform Latin hypercube sampling (MCS) of random variables.</p>
+<p><strong>Attributes:</strong></p>
+<p><strong>Input:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>dist_object</strong> ((list of) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>List of <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> objects corresponding to each random variable.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be drawn from each distribution.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>criterion</strong> (<cite>str</cite> or <cite>callable</cite>):</dt><dd><dl class="simple">
+<dt>The criterion for generating sample points</dt><dd><dl class="simple">
+<dt>Options:</dt><dd><ol class="arabic simple">
+<li><p>‘random’ - completely random.</p></li>
+<li><p>centered’ - points only at the centre.</p></li>
+<li><p>‘maximin - maximizing the minimum distance between points.</p></li>
+<li><p>‘correlate’ - minimizing the correlation between the points.</p></li>
+<li><p><cite>callable</cite> - User-defined method.</p></li>
+</ol>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>Default: ‘random’</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>metric</strong> (<cite>str</cite> or <cite>callable</cite>):</dt><dd><dl>
+<dt>The distance metric to use.</dt><dd><dl class="simple">
+<dt>Options:</dt><dd><p>1. <cite>str</cite> - Available options are: <cite>braycurtis</cite>, <cite>canberra</cite>, <cite>chebyshev</cite>, <cite>cityblock</cite>,
+<cite>correlation</cite>, <cite>cosine</cite>, <cite>dice</cite>, <cite>euclidean</cite>, <cite>hamming</cite>, <cite>jaccard</cite>, <cite>jensenshannon</cite>,
+<cite>kulsinski</cite>, <cite>mahalanobis</cite>, <cite>matching</cite>, <cite>minkowski</cite>, <cite>rogerstanimoto</cite>, <cite>russellrao</cite>,
+<cite>seuclidean</cite>, <cite>sokalmichener</cite>, <cite>sokalsneath</cite>, <cite>sqeuclidean</cite>, <cite>yule</cite>.</p>
+</dd>
+</dl>
+<ol class="arabic simple" start="2">
+<li><p>User-defined function.</p></li>
+</ol>
+</dd>
+</dl>
+<p>Default: <cite>euclidean</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>iterations</strong> (<cite>int</cite>):</dt><dd><p>The number of iteration to run. Required only for <code class="docutils literal notranslate"><span class="pre">maximin</span></code> and <code class="docutils literal notranslate"><span class="pre">correlate</span></code> criterion.</p>
+<p>Default: 100.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>verbose</strong> (<cite>Boolean</cite>):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
+<p>Default value: False</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the generated samples.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods</strong></p>
+<p>The LHS class supports the following LHS design methods:</p>
+<dl class="method">
+<dt id="UQpy.SampleMethods.LHS.centered">
+<code class="sig-name descname">centered</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.centered"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.centered" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Latin hypercube design based on sampling the centers of the bins.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">LHS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="go">Run LHS with the ``centered`` method:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;correlate&#39;</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+<span class="go">UQpy: Running Latin Hypercube sampling...</span>
+<span class="go">Successful execution of LHS design.</span>
+<span class="go">[[-1.28155157  0.71844843]</span>
+<span class="go"> [ 0.52440051  2.52440051]</span>
+<span class="go"> [ 1.28155157  2.        ]</span>
+<span class="go"> [ 0.          3.28155157]</span>
+<span class="go"> [-0.52440051  1.47559949]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.SampleMethods.LHS.correlate">
+<code class="sig-name descname">correlate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.correlate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.correlate" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Latin hypercube design based on minimizing the pairwise correlations.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">LHS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="go">Run LHS with the ``correlate`` method:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;correlate&#39;</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+<span class="go">UQpy: Running Latin Hypercube sampling...</span>
+<span class="go">UQpy: Achieved minimum correlation of  0.00019327853813977584</span>
+<span class="go">Successful execution of LHS design.</span>
+<span class="go">[[0.22585805 0.87167809]</span>
+<span class="go"> [0.12410009 0.0665815 ]</span>
+<span class="go"> [0.50548145 0.78194119]</span>
+<span class="go"> [0.903594   0.43153321]</span>
+<span class="go"> [0.73471617 0.35147028]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.SampleMethods.LHS.max_min">
+<code class="sig-name descname">max_min</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.max_min"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.max_min" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Latin hypercube design based on maximizing the inter-site distances.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">LHS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="go">Run LHS with the ``max_min`` method:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;correlate&#39;</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+<span class="go">UQpy: Running Latin Hypercube sampling...</span>
+<span class="go">UQpy: Achieved max_min distance of  0.44043282285181284</span>
+<span class="go">Successful execution of LHS design.</span>
+<span class="go">[[0.33874957 0.31460038]</span>
+<span class="go"> [0.91109051 0.44301033]</span>
+<span class="go"> [0.059657   0.77562892]</span>
+<span class="go"> [0.67762949 0.03327944]</span>
+<span class="go"> [0.59516606 0.90984061]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.SampleMethods.LHS.random">
+<code class="sig-name descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.random"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.random" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Latin hypercube design based on sampling randomly inside each bin.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">LHS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">2.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="go">Run LHS with the ``random`` method:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;correlate&#39;</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+<span class="go">UQpy: Running Latin Hypercube sampling...</span>
+<span class="go">UQpy: Achieved max_min distance of  0.44043282285181284</span>
+<span class="go">Successful execution of LHS design.</span>
+<span class="go">[[3.75621818 0.97949371]</span>
+<span class="go"> [4.85220593 0.37270871]</span>
+<span class="go"> [3.1521886  0.4610569 ]</span>
+<span class="go"> [4.41441601 0.10184899]</span>
+<span class="go"> [3.89444322 0.6775048 ]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.SampleMethods.LHS.transform_u01">
+<code class="sig-name descname">transform_u01</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.transform_u01"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.transform_u01" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">transform_u01</span></code> method of the <code class="docutils literal notranslate"><span class="pre">LHS</span></code> is used to transform samples from the parameter space to the
+Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> objects need to have a <code class="docutils literal notranslate"><span class="pre">cdf</span></code> method.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">LHS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="go">Run LHS with the ``correlate`` method:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;centered&#39;</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+<span class="go">UQpy: Running Latin Hypercube sampling...</span>
+<span class="go">Successful execution of LHS design.</span>
+<span class="go">[[0.1        1.47559949]</span>
+<span class="go"> [0.3        2.52440051]</span>
+<span class="go"> [0.9        0.71844843]</span>
+<span class="go"> [0.5        2.        ]</span>
+<span class="go"> [0.7        3.28155157]]</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">transform_u01</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samplesU01</span><span class="p">)</span>
+<span class="go">[[0.1        0.02871656]</span>
+<span class="go">[0.3        0.04456546]</span>
+<span class="go">[0.7        0.09680048]</span>
+<span class="go">[0.5        0.0668072 ]</span>
+<span class="go">[0.9        0.13566606]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="mcmc">
+<h2>MCMC<a class="headerlink" href="#mcmc" title="Permalink to this headline">¶</a></h2>
+<p>The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution <span class="math notranslate nohighlight">\(p(x)=\frac{\tilde{p}(x)}{Z}\)</span>, where <span class="math notranslate nohighlight">\(\tilde{p}(x)\)</span> is known but <span class="math notranslate nohighlight">\(Z\)</span> is hard to compute (this will often be the case when using Bayes’ theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method, see e.g. (<a class="footnote-reference brackets" href="#id4" id="id2">1</a>, <a class="footnote-reference brackets" href="#id5" id="id3">2</a>). More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution <span class="math notranslate nohighlight">\(p(x)\)</span>.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:</p>
+<ul class="simple">
+<li><p>initialize with a seed sample <span class="math notranslate nohighlight">\(x_{0}\)</span></p></li>
+<li><dl class="simple">
+<dt>walk the chain: for <span class="math notranslate nohighlight">\(k=0,...\)</span> do:</dt><dd><ul>
+<li><p>sample candidate <span class="math notranslate nohighlight">\(x^{\star} \sim Q(\cdot \vert x_{k})\)</span> for a given Markov transition probability <span class="math notranslate nohighlight">\(Q\)</span></p></li>
+<li><p>accept candidate (set <span class="math notranslate nohighlight">\(x_{k+1}=x^{\star}\)</span>) with probability <span class="math notranslate nohighlight">\(\alpha(x^{\star} \vert x_{k})\)</span>, otherwise propagate last sample <span class="math notranslate nohighlight">\(x_{k+1}=x_{k}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="math notranslate nohighlight">
+\[\alpha(x^{\star} \vert x_{k}):= \min \left\{ \frac{\tilde{p}(x^{\star})}{\tilde{p}(x)}\cdot \frac{Q(x \vert x^{\star})}{Q(x^{\star} \vert x)}, 1 \right\}\]</div>
+<p>The transition probability <span class="math notranslate nohighlight">\(Q\)</span> is chosen by the user (see input <cite>proposal</cite> of the MH algorithm, and careful attention must be given to that choice as it plays a major role in the accuracy and efficiency of the algorithm. The following figure shows samples accepted (blue) and rejected (red) when trying to sample from a 2d Gaussian distribution using MH, for different scale parameters of the proposal distribution. If the scale is too small, the space is not well explored; if the scale is too large, many candidate samples will be rejected, yielding a very inefficient algorithm. As a rule of thumb, an acceptance rate of 10%-50% could be targeted (see <cite>Diagnostics</cite> in the <cite>Utilities</cite> module).</p>
+<a class="reference internal image-reference" href="_images/SampleMethods_MCMC_samples.png"><img alt="IS weighted samples" class="align-center" src="_images/SampleMethods_MCMC_samples.png" style="width: 740.8000000000001px; height: 256.0px;" /></a>
+<p>Finally, samples from the target distribution will be generated only when the chain has converged to its stationary distribution, after a so-called burn-in period. Thus the user would often reject the first few samples (see input <cite>nburn</cite>). Also, the chain yields correlated samples; thus to obtain i.i.d. samples from the target distribution, the user should keep only one out of n samples (see input <cite>jump</cite>). This means that the code will perform in total nburn + jump * N evaluations of the target pdf to yield N i.i.d. samples from the target distribution (for the MH algorithm with a single chain).</p>
+<p>The parent class for all MCMC algorithms is the <code class="docutils literal notranslate"><span class="pre">MCMC</span> <span class="pre">class</span></code>, which defines the inputs that are common to all MCMC algorithms, along with the <em>run</em> method that is being called to run the chain. Any given MCMC algorithm is a sub-class of MCMC that overwrites the main <em>run_one_iteration</em> method.</p>
+<dl class="class">
+<dt id="UQpy.SampleMethods.MCMC">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MCMC</code><span class="sig-paren">(</span><em class="sig-param">dimension=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCMC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCMC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.</p>
+<p>This is the base class for all MCMC algorithms. This base class only provides the framework for MCMC and cannot be
+used directly for sampling. Sampling is done by calling a subclass - see example in class <code class="docutils literal notranslate"><span class="pre">MH</span></code>.</p>
+<p><strong>References:</strong></p>
+<ul class="simple">
+<li><p>Gelman et al., “Bayesian data analysis”, Chapman and Hall/CRC, 2013</p></li>
+<li><p>R.C. Smith, “Uncertainty Quantification - Theory, Implementation and Applications”, CS&amp;E, 2014</p></li>
+</ul>
+<p><strong>Inputs:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>dimension</strong> (<cite>int</cite>):</dt><dd><p>A scalar value defining the dimension of target density function. Either dimension or seed must be provided.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>pdf_target</strong> ((<cite>list</cite> of) callables):</dt><dd><p>Target density function from which to draw random samples. Either <cite>pdf_target</cite> or <cite>log_pdf_target</cite> must be
+provided (the latter should be preferred for better numerical stability).</p>
+<p>If <cite>pdf_target</cite> is a callable, it refers to the joint pdf to sample from, it must take at least one input <cite>x</cite>,
+the point(s) where to evaluate the pdf. Within MCMC the target is evaluated as:</p>
+<p><cite>p(x) = pdf_target(x, *args_target)</cite></p>
+<p>where <cite>x</cite> is a ndarray of shape (npoints, dimension) and <cite>args_target</cite> are additional positional arguments that
+are provided to MCMC via its <cite>args_target</cite> input.</p>
+<p>If <cite>pdf_target</cite> is a list of callables, it refers to independent marginals to sample from, marginal in dimension
+<cite>j</cite> is evaluated as:</p>
+<p><cite>p_j(xj) = pdf_target[j](xj, *args_target[j])</cite></p>
+<p>where <cite>x</cite> is a ndarray of shape (npoints, dimension)</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>log_pdf_target</strong> ((<cite>list</cite> of) callables):</dt><dd><p>Logarithm of the target density function from which to draw random samples. Either <cite>pdf_target</cite> or
+<cite>log_pdf_target</cite> must be provided (the latter should be preferred for better numerical stability).</p>
+<p>Same comments as for input <cite>pdf_target</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>args_target</strong> ((<cite>list</cite> of) <cite>tuple</cite>):</dt><dd><p>Positional arguments of the pdf / log-pdf target function. See <cite>pdf_target</cite></p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>jump</strong> (<cite>int</cite>):</dt><dd><p>Thinning parameter, used to reduce correlation between samples. Setting <cite>jump=n</cite> corresponds to skipping <cite>n-1</cite>
+states between accepted states of the chain. Default is 1 (no thinning).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nburn</strong> (<cite>int</cite>):</dt><dd><p>Length of burn-in - i.e., number of samples at the beginning of the chain to discard (note: no thinning during
+burn-in). Default is 0, no burn-in.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>seed</strong> (<cite>ndarray</cite>):</dt><dd><p>Seed of the Markov chain(s), shape <code class="docutils literal notranslate"><span class="pre">(nchains,</span> <span class="pre">dimension)</span></code>. Default: zeros(1 x dimension).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>save_log_pdf</strong> (<cite>bool</cite>):</dt><dd><p>Boolean that indicates whether to save log-pdf values along with the samples. Default: False</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>concat_chains</strong> (<cite>bool</cite>):</dt><dd><p>Boolean that indicates whether to concatenate the chains after a run, i.e., samples are stored as an <cite>ndarray</cite>
+of shape (nsamples * nchains, dimension) if True, (nsamples, nchains, dimension) if False. Default: True</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to generate - see <cite>run</cite> method. If not None, the <cite>run</cite> method is called when the object is
+created. Default: None</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nsamples_per_chain</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to generate per chain - see <cite>run</cite> method. If not None, the <cite>run</cite> method is called when the
+object is created. Default: None</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>random_state (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>verbose</strong> (<cite>boolean</cite>)</dt><dd><p>Set <code class="docutils literal notranslate"><span class="pre">verbose</span> <span class="pre">=</span> <span class="pre">True</span></code> to print status messages to the terminal during execution.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Attributes:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>samples</strong> (<cite>ndarray</cite>)</dt><dd><p>Set of MCMC samples following the target distribution, <cite>ndarray</cite> of shape (nsamples * nchains, dimension) or
+(nsamples, nchains, dimension) (see input <cite>concat_chains</cite>).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>log_pdf_values</strong> (<cite>ndarray</cite>)</dt><dd><p>Values of the log pdf for the accepted samples, <cite>ndarray</cite> of shape (nchains * nsamples,) or (nsamples, nchains)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nsamples</strong> (<cite>list</cite>)</dt><dd><p>Total number of samples; it is updated during iterations as new samples as saved.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nsamples_per_chain</strong> (<cite>list</cite>)</dt><dd><p>Total number of samples per chain; it is updated during iterations as new samples as saved.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>niterations</strong> (<cite>list</cite>)</dt><dd><p>Total number of iterations, updated on-the-fly as the algorithm proceeds. It is related to number of samples as
+niterations=nburn+jump*nsamples_per_chain.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>acceptance_rate</strong> (<cite>list</cite>)</dt><dd><p>Acceptance ratio of the MCMC chains, computed separately for each chain.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<dl class="method">
+<dt id="UQpy.SampleMethods.MCMC.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCMC.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCMC.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the MCMC chain.</p>
+<p>This function samples from the MCMC chains and append samples to existing ones (if any). This method leverages
+the run_iterations method that is specific to each algorithm.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to generate.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nsamples_per_chain</strong> (<cite>int</cite>)</dt><dd><p>Number of samples to generate per chain.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Either nsamples or nsamples_per_chain must be provided (not both). Not that if nsamples is not a multiple of
+nchains, nsamples is set to the next integer that is a multiple of nchains.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.SampleMethods.MCMC.run_one_iteration">
+<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param">current_state</em>, <em class="sig-param">current_log_pdf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCMC.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCMC.run_one_iteration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run one iteration of the MCMC algorithm, starting at current_state.</p>
+<p>This method is over-written for each different MCMC algorithm. It must return the new state and associated
+log-pdf, which will be passed as inputs to the <cite>run_one_iteration</cite> method at the next iteration.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>current_state</strong> (<cite>ndarray</cite>):</dt><dd><p>Current state of the chain(s), <cite>ndarray</cite> of shape <code class="docutils literal notranslate"><span class="pre">(nchains,</span> <span class="pre">dimension)</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>current_log_pdf</strong> (<cite>ndarray</cite>):</dt><dd><p>Log-pdf of the current state of the chain(s), <cite>ndarray</cite> of shape <code class="docutils literal notranslate"><span class="pre">(nchains,</span> <span class="pre">)</span></code>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Outputs/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>new_state</strong> (<cite>ndarray</cite>):</dt><dd><p>New state of the chain(s), <cite>ndarray</cite> of shape <code class="docutils literal notranslate"><span class="pre">(nchains,</span> <span class="pre">dimension)</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>new_log_pdf</strong> (<cite>ndarray</cite>):</dt><dd><p>Log-pdf of the new state of the chain(s), <cite>ndarray</cite> of shape <code class="docutils literal notranslate"><span class="pre">(nchains,</span> <span class="pre">)</span></code>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="mh">
+<h3>MH<a class="headerlink" href="#mh" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.SampleMethods.MH">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MH</code><span class="sig-paren">(</span><em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">dimension=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">proposal=None</em>, <em class="sig-param">proposal_is_symmetric=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MH" title="Permalink to this definition">¶</a></dt>
+<dd><p>Metropolis-Hastings algorithm</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">Gumbel</span><span class="p">,</span> <span class="n">JointCopula</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist_true</span> <span class="o">=</span> <span class="n">JointCopula</span><span class="p">(</span><span class="n">marginals</span><span class="o">=</span><span class="p">[</span><span class="n">Normal</span><span class="p">(),</span> <span class="n">Normal</span><span class="p">()],</span> <span class="n">copula</span><span class="o">=</span><span class="n">Gumbel</span><span class="p">(</span><span class="n">theta</span><span class="o">=</span><span class="mf">2.</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proposal</span> <span class="o">=</span> <span class="n">JointInd</span><span class="p">(</span><span class="n">marginals</span><span class="o">=</span><span class="p">[</span><span class="n">Normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.2</span><span class="p">),</span> <span class="n">Normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sampler</span> <span class="o">=</span> <span class="n">MH</span><span class="p">(</span><span class="n">log_pdf_target</span><span class="o">=</span><span class="n">dist_true</span><span class="o">.</span><span class="n">log_pdf</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">proposal</span><span class="o">=</span><span class="n">proposal</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(500, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">:],</span> <span class="mi">4</span><span class="p">))</span>
+<span class="go">[[-0.1966  0.1831]</span>
+<span class="go"> [-0.2325  0.2526]</span>
+<span class="go"> [ 0.2104  0.0748]</span>
+<span class="go"> [ 0.0091  0.1651]</span>
+<span class="go"> [ 0.1693  0.2409]]</span>
+</pre></div>
+</div>
+<p><strong>Algorithm-specific inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>proposal</strong> (<code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object):</dt><dd><p>Proposal distribution, must have a log_pdf/pdf and rvs method. Default: standard multivariate normal</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>proposal_is_symmetric</strong> (<cite>bool</cite>):</dt><dd><p>indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
+Default: False</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<dl class="method">
+<dt id="UQpy.SampleMethods.MH.run_one_iteration">
+<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param">current_state</em>, <em class="sig-param">current_log_pdf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MH.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MH.run_one_iteration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run one iteration of the MCMC chain for MH algorithm, starting at current state - see <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> class.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="mmh">
+<h3>MMH<a class="headerlink" href="#mmh" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.SampleMethods.MMH">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MMH</code><span class="sig-paren">(</span><em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">dimension=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">proposal=None</em>, <em class="sig-param">proposal_is_symmetric=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MMH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MMH" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modified Metropolis-Hastings algorithm.</p>
+<p>In this algorithm, candidate samples are drawn separately in each dimension, thus the proposal consists in a list
+of 1d distributions. The target pdf can be given as a joint pdf or a list of marginal pdfs in all dimensions. This
+will trigger two different algorithms.</p>
+<p><strong>References:</strong></p>
+<ul class="simple">
+<li><p>S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
+Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.</p></li>
+</ul>
+<p><strong>Algorithm-specific inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>proposal</strong> ((<cite>list</cite> of) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>Proposal distribution(s) in dimension 1, must have a log_pdf/pdf and rvs method. Default: standard normal</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>proposal_is_symmetric</strong> ((<cite>list</cite> of) <cite>bool</cite>):</dt><dd><p>indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
+Default: False, set to True if default proposal is used</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<dl class="method">
+<dt id="UQpy.SampleMethods.MMH.run_one_iteration">
+<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param">current_state</em>, <em class="sig-param">current_log_pdf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MMH.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MMH.run_one_iteration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run one iteration of the MCMC chain for MMH algorithm, starting at current state - see <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> class.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="stretch">
+<h3>Stretch<a class="headerlink" href="#stretch" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.SampleMethods.Stretch">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">Stretch</code><span class="sig-paren">(</span><em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">dimension=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">scale=2.0</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Stretch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Stretch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Affine-invariant sampler with Stretch moves, parallel implementation.</p>
+<p><strong>References:</strong></p>
+<ul class="simple">
+<li><p>J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
+no. 1, pp. 65–80, 2010.</p></li>
+<li><p>Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. “emcee: The MCMC Hammer”.
+Publications of the Astronomical Society of the Pacific, 125(925):306–312,2013.</p></li>
+</ul>
+<p><strong>Algorithm-specific inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>Scale parameter. Default: 2.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<dl class="method">
+<dt id="UQpy.SampleMethods.Stretch.run_one_iteration">
+<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param">current_state</em>, <em class="sig-param">current_log_pdf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Stretch.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Stretch.run_one_iteration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run one iteration of the MCMC chain for Stretch algorithm, starting at current state - see <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> class.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="dram">
+<h3>DRAM<a class="headerlink" href="#dram" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.SampleMethods.DRAM">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">DRAM</code><span class="sig-paren">(</span><em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">dimension=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">initial_covariance=None</em>, <em class="sig-param">k0=100</em>, <em class="sig-param">sp=None</em>, <em class="sig-param">gamma_2=0.2</em>, <em class="sig-param">save_covariance=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DRAM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DRAM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delayed Rejection Adaptive Metropolis algorithm</p>
+<p>In this algorithm, the proposal density is Gaussian and its covariance C is being updated from samples as
+C = sp * C_sample where C_sample is the sample covariance. Also, the delayed rejection scheme is applied, i.e,
+if a candidate is not accepted another one is generated from proposal with covariance gamma_2 ** 2 * C.</p>
+<p><strong>References:</strong></p>
+<ul class="simple">
+<li><p>Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. “DRAM: Efficient adaptive MCMC”. Statistics
+and Computing, 16(4):339–354, 2006</p></li>
+<li><p>R.C. Smith, “Uncertainty Quantification - Theory, Implementation and Applications”, CS&amp;E, 2014</p></li>
+</ul>
+<p><strong>Algorithm-specific inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>initial_cov</strong> (<cite>ndarray</cite>):</dt><dd><p>initial covariance for the gaussian proposal distribution. Default: I(dim)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>k0</strong> (<cite>int</cite>):</dt><dd><p>rate at which covariance is being updated, i.e., every k0 iterations. Default: 100</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>sp</strong> (<cite>float</cite>):</dt><dd><p>scale parameter for covariance updating. Default: 2.38 ** 2 / dim</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>gamma_2</strong> (<cite>float</cite>):</dt><dd><p>scale parameter for delayed rejection. Default: 1 / 5</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>save_cov</strong> (<cite>bool</cite>):</dt><dd><p>if True, updated covariance is saved in attribute adaptive_covariance. Default: False</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<dl class="method">
+<dt id="UQpy.SampleMethods.DRAM.run_one_iteration">
+<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param">current_state</em>, <em class="sig-param">current_log_pdf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DRAM.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DRAM.run_one_iteration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run one iteration of the MCMC chain for DRAM algorithm, starting at current state - see <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> class.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="dream">
+<h3>DREAM<a class="headerlink" href="#dream" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.SampleMethods.DREAM">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">DREAM</code><span class="sig-paren">(</span><em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">dimension=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">delta=3</em>, <em class="sig-param">c=0.1</em>, <em class="sig-param">c_star=1e-06</em>, <em class="sig-param">n_CR=3</em>, <em class="sig-param">p_g=0.2</em>, <em class="sig-param">adapt_CR=(-1</em>, <em class="sig-param">1)</em>, <em class="sig-param">check_chains=(-1</em>, <em class="sig-param">1)</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DREAM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DREAM" title="Permalink to this definition">¶</a></dt>
+<dd><p>DiffeRential Evolution Adaptive Metropolis algorithm</p>
+<p><strong>References:</strong></p>
+<ul class="simple">
+<li><p>J.A. Vrugt et al. “Accelerating Markov chain Monte Carlo simulation by differential evolution with
+self-adaptive randomized subspace sampling”. International Journal of Nonlinear Sciences and Numerical
+Simulation, 10(3):273–290, 2009.[68]</p></li>
+<li><p>J.A. Vrugt. “Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and
+MATLAB implementation”. Environmental Modelling &amp; Software, 75:273–316, 2016.</p></li>
+</ul>
+<p><strong>Algorithm-specific inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>delta</strong> (<cite>int</cite>):</dt><dd><p>jump rate. Default: 3</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>c</strong> (<cite>float</cite>):</dt><dd><p>differential evolution parameter. Default: 0.1</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>c_star</strong> (<cite>float</cite>):</dt><dd><p>differential evolution parameter, should be small compared to width of target. Default: 1e-6</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>n_CR</strong> (<cite>int</cite>):</dt><dd><p>number of crossover probabilities. Default: 3</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>p_g</strong> (<cite>float</cite>):</dt><dd><p>prob(gamma=1). Default: 0.2</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>adapt_CR</strong> (<cite>tuple</cite>):</dt><dd><p>(iter_max, rate) governs adapation of crossover probabilities (adapts every rate iterations if iter&lt;iter_max).
+Default: (-1, 1), i.e., no adaptation</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>check_chains</strong> (<cite>tuple</cite>):</dt><dd><p>(iter_max, rate) governs discarding of outlier chains (discard every rate iterations if iter&lt;iter_max).
+Default: (-1, 1), i.e., no check on outlier chains</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<dl class="method">
+<dt id="UQpy.SampleMethods.DREAM.check_outlier_chains">
+<code class="sig-name descname">check_outlier_chains</code><span class="sig-paren">(</span><em class="sig-param">replace_with_best=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DREAM.check_outlier_chains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DREAM.check_outlier_chains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check outlier chains in DREAM algorithm.</p>
+<p>This function check for outlier chains as part of the DREAM algorithm, potentially replacing outlier chains
+(i.e. the samples and log_pdf_values) with ‘good’ chains. The function does not have any returned output but it
+prints out the number of outlier chains.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>replace_with_best</strong> (<cite>bool</cite>):</dt><dd><p>indicates whether to replace outlier chains with the best (most probable) chain. Default: False</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.SampleMethods.DREAM.run_one_iteration">
+<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param">current_state</em>, <em class="sig-param">current_log_pdf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DREAM.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DREAM.run_one_iteration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run one iteration of the MCMC chain for DREAM algorithm, starting at current state - see <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> class.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="adding-a-new-mcmc">
+<h3>Adding a new MCMC<a class="headerlink" href="#adding-a-new-mcmc" title="Permalink to this headline">¶</a></h3>
+<p>In order to add a new MCMC algorithm, a user must create a subclass of <code class="docutils literal notranslate"><span class="pre">MCMC</span></code>, and overwrite the <em>run_one_iteration</em> method that propagates all the chains forward one iteration. Such a new class may use any number of additional inputs compared to the <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> base class. The reader is encouraged to have a look at the <code class="docutils literal notranslate"><span class="pre">MH</span></code> class and its code to better understand how a particular algorithm should fit the general framework.</p>
+<p>A useful note is that the user has access to a number of useful attributes / utility methods as the algorithm proceeds, such as:</p>
+<ul class="simple">
+<li><p>the attribute <cite>evaluate_log_target</cite> (and possibly <cite>self.evaluate_log_target_marginals</cite> if marginals were provided) is created at initialization. It is a callable that simply evaluates the log-pdf of the target distribution at a given point <cite>x</cite>. It can be called within the code of a new sampler as <cite>log_pdf_value = self.evaluate_log_target(x)</cite>.</p></li>
+<li><p>the <cite>nsamples</cite> and <cite>nsamples_per_chain</cite> attributes indicate the number of samples that have been stored up to the current iteration (i.e., they are updated dynamically as the algorithm proceeds),</p></li>
+<li><p>the <cite>samples</cite> attribute contains all previously stored samples. Cautionary note: <cite>self.samples</cite> also contains trailing zeros, for samples yet to be stored, thus to access all previously stored samples at a given iteration the user must call <cite>self.samples[:self.nsamples_per_chain]</cite>, which will return a (self.nsamples_per_chain, self.nchains, self.dimension) <cite>ndarray</cite>,</p></li>
+<li><p>the <cite>log_pdf_values</cite> attribute contains all previously stored log target values, same cautionary note as above,</p></li>
+<li><p>the <cite>_update_acceptance_rate</cite> method updates the <cite>acceptance_rate</cite> attribute of the sampler, given a  (list of) boolean(s) indicating if the candidate state(s) were accepted at a given iteration,</p></li>
+<li><p>the <cite>_check_methods_proposal</cite> method checks wether a given proposal is adequate (i.e., has <cite>rvs</cite> and <cite>log_pdf</cite>/<cite>pdf</cite> methods).</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="is">
+<h2>IS<a class="headerlink" href="#is" title="Permalink to this headline">¶</a></h2>
+<p>Importance sampling (IS) is based on the idea of concentrating sampling in certain regions of the input space, allowing efficient evaluations of expectations <span class="math notranslate nohighlight">\(E_{ \textbf{x} \sim p} [ f(\textbf{x}) ]\)</span> where <span class="math notranslate nohighlight">\(f( \textbf{x})\)</span> is small outside of a small region of the input space. To this end, a sample <span class="math notranslate nohighlight">\(\textbf{x}\)</span> is drawn from a proposal distribution <span class="math notranslate nohighlight">\(q(\textbf{x})\)</span> and re-weighted to correct for the discrepancy between the sampling distribution <span class="math notranslate nohighlight">\(q\)</span> and the true distribution <span class="math notranslate nohighlight">\(p\)</span>. The weight of the sample is computed as</p>
+<div class="math notranslate nohighlight">
+\[w(\textbf{x}) = \frac{p(\textbf{x})}{q(\textbf{x})}\]</div>
+<p>If <span class="math notranslate nohighlight">\(p\)</span> is only known up to a constant, i.e., one can only evaluate <span class="math notranslate nohighlight">\(\tilde{p}(\textbf{x})\)</span>, where <span class="math notranslate nohighlight">\(p(\textbf{x})=\frac{\tilde{p}(\textbf{x})}{Z}\)</span>, IS can be used by further normalizing the weights (self-normalized IS). The following figure shows the weighted samples obtained when using IS to estimate a 2d Gaussian target distribution <span class="math notranslate nohighlight">\(p\)</span>, sampling from a uniform proposal distribution <span class="math notranslate nohighlight">\(q\)</span>.</p>
+<a class="reference internal image-reference" href="_images/SampleMethods_IS_samples.png"><img alt="IS weighted samples" class="align-center" src="_images/SampleMethods_IS_samples.png" style="width: 220.8px; height: 226.4px;" /></a>
+<dl class="class">
+<dt id="UQpy.SampleMethods.IS">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">IS</code><span class="sig-paren">(</span><em class="sig-param">nsamples=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">proposal=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample from a user-defined target density using importance sampling.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">Gumbel</span><span class="p">,</span> <span class="n">JointCopula</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist_true</span> <span class="o">=</span> <span class="n">JointCopula</span><span class="p">(</span><span class="n">marginals</span><span class="o">=</span><span class="p">[</span><span class="n">Normal</span><span class="p">(),</span> <span class="n">Normal</span><span class="p">()],</span> <span class="n">copula</span><span class="o">=</span><span class="n">Gumbel</span><span class="p">(</span><span class="n">theta</span><span class="o">=</span><span class="mf">2.</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proposal</span> <span class="o">=</span> <span class="n">JointInd</span><span class="p">(</span><span class="n">marginals</span><span class="o">=</span><span class="p">[</span><span class="n">Normal</span><span class="p">(),</span> <span class="n">Normal</span><span class="p">()])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sampler</span> <span class="o">=</span> <span class="n">IS</span><span class="p">(</span><span class="n">log_pdf_target</span><span class="o">=</span><span class="n">dist_true</span><span class="o">.</span><span class="n">log_pdf</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">proposal</span><span class="o">=</span><span class="n">proposal</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(500, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(500,)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">:],</span> <span class="mi">4</span><span class="p">))</span>
+<span class="go">[[ 0.5679  0.6348]</span>
+<span class="go"> [ 0.513   1.0699]</span>
+<span class="go"> [-0.0269 -0.9093]</span>
+<span class="go"> [ 0.3116  0.4703]</span>
+<span class="go"> [-0.1421 -1.1114]]</span>
+</pre></div>
+</div>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>proposal</strong> (<code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object):</dt><dd><p>Proposal to sample from. This Distribution object must have an rvs method and a log_pdf (or pdf) methods</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>log_pdf_target</strong> (callable)</dt><dd><p>Callable that evaluates the target log-pdf. One of log_pdf_target or pdf_target must be specified (the former
+is preferred).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>pdf_target</strong> (callable):</dt><dd><p>Callable that evaluates the target pdf</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>args_target</strong> (<cite>tuple</cite>):</dt><dd><p>Positional arguments of the target log_pdf / pdf callable</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to generate - see <cite>run</cite> method. If not None, the <cite>run</cite> method is called when the object is
+created. Default is None.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>random_state (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>verbose</strong> (<cite>boolean</cite>)</dt><dd><p>Set <code class="docutils literal notranslate"><span class="pre">verbose</span> <span class="pre">=</span> <span class="pre">True</span></code> to print status messages to the terminal during execution.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Attributes:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p>Set of samples, <cite>ndarray</cite> of shape (nsamples, dim)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>unnormalized_log_weights</strong> (<cite>ndarray</cite>)</dt><dd><p>Unnormalized log weights, i.e., log_w(x) = log_target(x) - log_proposal(x), <cite>ndarray</cite> of shape (nsamples, )</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>weights</strong> (<cite>ndarray</cite>):</dt><dd><p>Importance weights, weighted so that they sum up to 1, <cite>ndarray</cite> of shape (nsamples, )</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<dl class="method">
+<dt id="UQpy.SampleMethods.IS.resample">
+<code class="sig-name descname">resample</code><span class="sig-paren">(</span><em class="sig-param">method='multinomial'</em>, <em class="sig-param">nsamples=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS.resample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS.resample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample to get a set of un-weighted samples that represent the target pdf.</p>
+<p>Utility function that create a set of un-weighted samples from a set of weighted samples. Can be useful for
+plotting for instance.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>method</strong> (<cite>str</cite>)</dt><dd><p>Resampling method, as of V3 only multinomial resampling is supported. Default: ‘multinomial’.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nsamples</strong> (<cite>int</cite>)</dt><dd><p>Number of un-weighted samples to generate. Default: None (same number of samples is generated as number of
+existing samples).</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>(<cite>ndarray</cite>)</dt><dd><p>Un-weighted samples that represent the target pdf, <cite>ndarray</cite> of shape (nsamples, dimension)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.SampleMethods.IS.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate and weight samples.</p>
+<p>This function samples from the proposal and append samples to existing ones (if any). It then weights the
+samples as log_w_unnormalized) = log(target)-log(proposal). This function updates the output attributes
+samples, unnormalized_log_weights and weights.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>nsamples</strong> (<cite>int</cite>)</dt><dd><p>Number of weighted samples to generate.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="footnote brackets">
+<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
+<dd><p>Gelman et al., “Bayesian data analysis”, Chapman and Hall/CRC, 2013</p>
+</dd>
+<dt class="label" id="id5"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
+<dd><p>R.C. Smith, “Uncertainty Quantification - Theory, Implementation and Applications”, CS&amp;E, 2014</p>
+</dd>
+</dl>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.jpg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Uncertainty quantification with Python </p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=SURG&repo=UQpy&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runmodel.html">RunModel Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributions.html">Distributions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">SampleMethods</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mcs">MCS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lhs">LHS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mcmc">MCMC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#is">IS</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="transformations.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stochastic_process.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="surrogates.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reliability.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">Dimension reduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="news.html">News</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="distributions.html" title="previous chapter">Distributions</a></li>
+      <li>Next: <a href="transformations.html" title="next chapter">Transformations</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, SURG, JHU.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/samplemethods.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/SURG/UQpy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>
