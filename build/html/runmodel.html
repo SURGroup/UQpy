@@ -7,12 +7,12 @@
     <title>RunModel Module &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Distributions" href="distributions.html" />
@@ -222,7 +222,7 @@ the command line as</p>
 </div>
 <div class="section" id="examples-template-files">
 <h2>Examples &amp; Template Files<a class="headerlink" href="#examples-template-files" title="Permalink to this headline">¶</a></h2>
-<p>In the <cite>example</cite> folder, several examples are provided to run both python models and third-party software models in serial and in parallel. These examples are briefly summarized below.</p>
+<p>In the <cite>example</cite> folder, several examples are provided to run both python models and third-party software models in serial and in parallel. These examples are briefly summarized below. Note that the problems presented are for demonstration purposes and are not necessarily intended to be used for accurate modeling of the problems described. Instead, the primary intention is to show the files that are used in running models with each software package - in particular the <code class="docutils literal notranslate"><span class="pre">model_script</span></code> and <code class="docutils literal notranslate"><span class="pre">input_template</span></code>.</p>
 <p><strong>Python Models</strong></p>
 <p>Several simple mathematical python models are provided in a Jupyter script entitled <cite>Python_Model_with_Heterogeneous_Data.ipynb</cite>. These examples illustrate how to write functions and classes that execute models in python using <code class="docutils literal notranslate"><span class="pre">RunModel</span></code>.  The notebook executes models in serial and in parallel. The models themselves are provided in the python file <cite>python_model.py</cite>.</p>
 <p><strong>Third-Party Models</strong></p>
@@ -256,6 +256,22 @@ the command line as</p>
 <p>Several simple mathematical Matlab models are provided in a Jupyter script entitled <cite>Third-Party_Model_with_Heterogeneous_Data.ipynb</cite>. These examples illustrate how to write variables to a matlab model (<cite>.m</cite>) file using <code class="docutils literal notranslate"><span class="pre">RunModel</span></code>. Several <code class="docutils literal notranslate"><span class="pre">template_input</span></code> and <code class="docutils literal notranslate"><span class="pre">model_script</span></code> files are provided.  The notebook executes models in serial and in parallel.</p>
 <p>These examples do not use HPC resources.</p>
 <p><em>OpenSees Model</em></p>
+<p>The model considers a six-story building with 2 bays in the X-direction and 2 bays in the y-directions. The model has reinforced-concrete rectangular columns and beams. A static pushover analysis is performed. At each story the concrete’s yield strength fc ~Uniform (15000, 25000), the reinforcement steel’s Young’s modulus Es ~Uniform (2.0e8, 0.5e8) and yield strength Fy ~Uniform (450000, 530000) are considered random variables. Thus, the problem has a total of 6*3 = 18 random variables. The horizontal displacement (x-axis) of the top floor is monitored.</p>
+<p>Five Monte Carlo samples are generated and the model is evaluated in parallel over five CPUs on an HPC cluster (specifically MARCC) using the SLURM scheduler. The requisite <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> files are the following:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">model_script</span> <span class="pre">=</span> <span class="pre">opensees_model.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">input_template</span> <span class="pre">=</span> <span class="pre">import_variables.tcl</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output_script</span> <span class="pre">=</span> <span class="pre">process_opensees_output.py</span></code></p></li>
+</ul>
+<p>The other necessary files are the following:</p>
+<ul class="simple">
+<li><p><cite>columndimensions.tcl</cite></p></li>
+<li><p><cite>RCsection.tcl</cite></p></li>
+<li><p><cite>run_opensees_UQpy.py</cite></p></li>
+<li><p><cite>run_OpenSees.sh</cite></p></li>
+<li><p><cite>test.tcl</cite></p></li>
+</ul>
+<p>Note that this example is not intended to represent the accurate pushover analysis a real structure. It is for <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> illustration purposes only.</p>
 </div>
 <div class="section" id="runmodel-class">
 <h2>RunModel Class<a class="headerlink" href="#runmodel-class" title="Permalink to this headline">¶</a></h2>
@@ -583,7 +599,7 @@ existing ones.</p>
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -592,7 +608,7 @@ existing ones.</p>
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
