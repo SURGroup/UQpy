@@ -1058,26 +1058,6 @@ class TaylorSeries:
     .. [2] K. Breitung, “Asymptotic approximations for multinormal integrals”, J. Eng. Mech., ASCE, Vol. 110, no. 3,
        pp: 357–367, 1984.
 
-    """
-
-    def __init__(self, dist_object, model, cov=None, n_iter=100,  tol=1e-3):
-
-        if isinstance(dist_object, list):
-            for i in range(len(dist_object)):
-                if not isinstance(dist_object[i], (DistributionContinuous1D, JointInd)):
-                    raise TypeError('UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be provided.')
-        else:
-            if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
-                raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
-
-        if not isinstance(model, RunModel):
-            raise ValueError('UQpy: A RunModel object is required for the model.')
-
-
-class Form(TaylorSeries):
-    """
-    A class perform the First Order reliability method. This is a an child class of the ``TaylorSeries`` class.
-
     **Inputs:**
 
     * **dist_object** ((list of ) ``Distribution`` object(s)):
@@ -1118,7 +1098,31 @@ class Form(TaylorSeries):
 
          Default: 100
 
-    **Output/Returns:**
+    """
+
+    def __init__(self, dist_object, model, cov=None, n_iter=100,  tol=1e-3):
+
+        if isinstance(dist_object, list):
+            for i in range(len(dist_object)):
+                if not isinstance(dist_object[i], (DistributionContinuous1D, JointInd)):
+                    raise TypeError('UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be provided.')
+        else:
+            if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
+                raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
+
+        if not isinstance(model, RunModel):
+            raise ValueError('UQpy: A RunModel object is required for the model.')
+
+
+class FORM(TaylorSeries):
+    """
+    A class perform the First Order reliability method. This is a an child class of the ``TaylorSeries`` class.
+
+    **Inputs:**
+
+    The same as ``TaylorSeries`` class.
+
+    **Attributes:**
 
     * **Prob_FORM** (`float`):
          First Order probability of failure.
@@ -1488,14 +1492,14 @@ class Form(TaylorSeries):
             return d2u_dij
 
 
-class Sorm(TaylorSeries):
+class SORM(TaylorSeries):
     """
     A class perform the Second Order reliability method. ``Sorm`` class performs  FORM and then corrects the estimated
     FORM probability using second-order information. This is a an child class of the ``TaylorSeries`` class.
 
     **Inputs:**
 
-    The ``Sorm`` class has the same inputs with the ``Form`` class.
+    The ``Sorm`` class has the same inputs with the ``TaylorSeries`` class.
 
     **Output/Returns:**
 
@@ -1512,7 +1516,7 @@ class Sorm(TaylorSeries):
 
         super().__init__(dist_object, model, cov=None, n_iter=100, tol=1e-3)
 
-        obj = Form(dist_object=dist_object, seed=seed, model=model, cov=cov, n_iter=n_iter, tol=tol)
+        obj = FORM(dist_object=dist_object, seed=seed, model=model, cov=cov, n_iter=n_iter, tol=tol)
         self.dimension = obj.dimension
         self.alpha = obj.alpha
         self.DesignPoint_U = obj.DesignPoint_U
@@ -1598,11 +1602,11 @@ class Sorm(TaylorSeries):
         point = np.atleast_2d(point)
         dimension = point.shape[1]
 
-        dg_second = Form.gradient(order='second', point=point.reshape(1, -1),
+        dg_second = FORM.gradient(order='second', point=point.reshape(1, -1),
                                   df_step=df_step, model=model, dist_object=dist_obj,
                                   cov=cov, read_qoi=read_qoi, run_form=run_form)
 
-        dg_mixed = Form.gradient(order='mixed', point=point.reshape(1, -1),
+        dg_mixed = FORM.gradient(order='mixed', point=point.reshape(1, -1),
                                  df_step=df_step, model=model, dist_object=dist_obj,
                                  read_qoi=read_qoi, cov=cov, run_form=run_form)
 
