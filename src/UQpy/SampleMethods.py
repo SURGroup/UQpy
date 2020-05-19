@@ -331,7 +331,7 @@ class LHS:
 
     """
 
-    def __init__(self, dist_object, nsamples, criterion='random', metric='euclidean',
+    def __init__(self, dist_object, nsamples, criterion=None, metric='euclidean',
                  iterations=100,  random_state=None, verbose=False):
 
         # Check if a Distribution object is provided.
@@ -405,57 +405,6 @@ class LHS:
         if self.verbose:
             print('UQpy: Running Latin Hypercube sampling...')
 
-        if self.criterion == 'random':
-            u_ab = self.random()
-        elif self.criterion == 'centered':
-            u_ab = self.centered()
-        elif self.criterion == 'maximin':
-            u_ab = self.max_min()
-        elif self.criterion == 'correlate':
-            u_ab = self.correlate()
-        elif callable(self.criterion):
-            u_ab = self.criterion()
-        else:
-            raise ValueError('UQpy: A valid criterion is required.')
-
-        if isinstance(self.dist_object, list):
-            for j in range(len(self.dist_object)):
-                if hasattr(self.dist_object[j], 'icdf'):
-                    self.samples[:, j] = self.dist_object[j].icdf(np.atleast_2d(u_ab[:, j]).T)
-
-        elif isinstance(self.dist_object, JointInd):
-            if all(hasattr(m, 'icdf') for m in self.dist_object.marginals):
-                for j in range(len(self.dist_object.marginals)):
-                    self.samples[:, j] = self.dist_object.marginals[j].icdf(np.atleast_2d(u_ab[:, j]).T)
-
-        elif isinstance(self.dist_object, DistributionContinuous1D):
-            if hasattr(self.dist_object, 'icdf'):
-                self.samples = self.dist_object.icdf(np.atleast_2d(u_ab.T))
-
-        if self.verbose:
-            print('Successful execution of LHS design.')
-
-    def random(self):
-        """
-        A Latin hypercube design based on sampling randomly inside each bin.
-
-        >>> from UQpy.Distributions import Uniform
-        >>> from UQpy.SampleMethods import LHS
-        >>> dist1 = Uniform(loc=0., scale=1.)
-        >>> dist2 = Uniform(loc=0., scale=1.)
-        Run LHS with the ``random`` method:
-        >>> x = LHS(dist_object=[dist1, dist2], criterion='random', random_state=np.random.RandomState(123),
-        >>>          nsamples=5, verbose=True)
-        >>> print(x.samples)
-        UQpy: Running Latin Hypercube sampling...
-        Successful execution of LHS design.
-        [[0.71026295 0.8784235 ]
-         [0.94389379 0.39615284]
-         [0.44537029 0.53696595]
-         [0.13929384 0.69618638]
-         [0.25722787 0.08462129]]
-        """
-
         cut = np.linspace(0, 1, self.nsamples + 1)
         a = cut[:self.nsamples]
         b = cut[1:self.nsamples + 1]
@@ -466,74 +415,64 @@ class LHS:
             u[:, i] = stats.uniform.rvs(size=self.samples.shape[0], random_state=self.random_state)
             samples[:, i] = u[:, i] * (b - a) + a
 
-        for j in range(self.samples.shape[1]):
-            order = np.random.permutation(self.nsamples)
-            samples[:, j] = samples[order, j]
+        u_lhs = self.random(samples)
 
-        return samples
+        if self.criterion is not None:
+            if self.criterion == 'centered':
+                u_lhs = np.zeros(shape=(self.samples.shape[0], self.samples.shape[1]))
+                for i in range(self.samples.shape[1]):
+                    u_lhs[:, i] = (a + b) / 2
+                u_lhs = self.centered(u_lhs)
+            elif self.criterion == 'maximin':
+                u_lhs = self.max_min(u_lhs)
+            elif self.criterion == 'correlate':
+                u_lhs = self.correlate(u_lhs)
+            elif callable(self.criterion):
+                u_lhs = self.criterion(u_lhs)
+            else:
+                raise ValueError('UQpy: A valid criterion is required.')
 
-    def centered(self):
+        if isinstance(self.dist_object, list):
+            for j in range(len(self.dist_object)):
+                if hasattr(self.dist_object[j], 'icdf'):
+                    self.samples[:, j] = self.dist_object[j].icdf(np.atleast_2d(u_lhs[:, j]).T)
+
+        elif isinstance(self.dist_object, JointInd):
+            if all(hasattr(m, 'icdf') for m in self.dist_object.marginals):
+                for j in range(len(self.dist_object.marginals)):
+                    self.samples[:, j] = self.dist_object.marginals[j].icdf(np.atleast_2d(u_lhs[:, j]).T)
+
+        elif isinstance(self.dist_object, DistributionContinuous1D):
+            if hasattr(self.dist_object, 'icdf'):
+                self.samples = self.dist_object.icdf(np.atleast_2d(u_lhs.T))
+
+        if self.verbose:
+            print('Successful execution of LHS design.')
+
+    def random(self, samples):
         """
-        A Latin hypercube design based on sampling the centers of the bins.
-
-        >>> from UQpy.Distributions import Uniform
-        >>> from UQpy.SampleMethods import LHS
-        >>> dist1 = Uniform(loc=0., scale=1.)
-        >>> dist2 = Uniform(loc=0., scale=1.)
-        Run LHS with the ``centered`` method:
-        >>> x = LHS(dist_object=[dist1, dist2], criterion='centered', random_state=np.random.RandomState(123),
-        >>>         nsamples=5, verbose=True)
-        >>> print(x.samples)
-        UQpy: Running Latin Hypercube sampling...
-        Successful execution of LHS design.
-        [[0.3 0.7]
-         [0.7 0.9]
-         [0.1 0.3]
-         [0.9 0.5]
-         [0.5 0.1]]
+        A Latin hypercube design based on sampling randomly inside each bin.
         """
-        cut = np.linspace(0, 1, self.nsamples + 1)
-        a = cut[:self.nsamples]
-        b = cut[1:self.nsamples + 1]
 
-        samples = np.zeros([self.samples.shape[0], self.samples.shape[1]])
-        centers = (a + b) / 2
+        lhs_samples = np.zeros_like(samples)
+        for j in range(samples.shape[1]):
+            if self.random_state is not None:
+                order = self.random_state.permutation(self.nsamples)
+            else:
+                order = np.random.permutation(self.nsamples)
+            lhs_samples[:, j] = samples[order, j]
 
-        for i in range(self.samples.shape[1]):
-            samples[:, i] = np.random.permutation(centers)
+        return lhs_samples
 
-        return samples
-
-    def max_min(self):
+    def max_min(self, samples):
         """
         A Latin hypercube design based on maximizing the inter-site distances.
-
-        >>> from UQpy.Distributions import Uniform
-        >>> from UQpy.SampleMethods import LHS
-        >>> dist1 = Uniform(loc=0., scale=1.)
-        >>> dist2 = Uniform(loc=0., scale=1.)
-        Run LHS with the ``max_min`` method:
-        >>> x = LHS(dist_object=[dist1, dist2], criterion='maximin', random_state=np.random.RandomState(123),
-        >>>          nsamples=5, verbose=True)
-        >>> print(x.samples)
-        UQpy: Running Latin Hypercube sampling...
-        UQpy: Achieved max_min distance of  0.4406062190580699
-        Successful execution of LHS design.
-        [[0.46990371 0.00812322]
-         [0.65548479 0.40773992]
-         [0.99978368 0.84601799]
-         [0.04775668 0.3291645 ]
-         [0.34095571 0.75204205]]
-
         """
-        cut = np.linspace(0, 1, self.nsamples + 1)
-        a = cut[:self.nsamples]
-        b = cut[1:self.nsamples + 1]
 
         max_min_dist = 0
-        samples = self.random()
-        for _ in range(self.iterations):
-            samples_try = self.random()
+        i = 0
+        while i < self.iterations:
+            samples_try = self.random(samples)
             if isinstance(self.metric, str):
                 d = pdist(samples_try, metric=self.metric)
             elif callable(self.metric):
@@ -541,83 +480,53 @@ class LHS:
 
             if max_min_dist < np.min(d):
                 max_min_dist = np.min(d)
-                samples = copy.deepcopy(samples_try)
+                lhs_samples = copy.deepcopy(samples_try)
+            i = i + 1
 
         if self.verbose:
             print('UQpy: Achieved maximum distance of ', max_min_dist)
 
-        return samples
+        return lhs_samples
 
-    def correlate(self):
+    def correlate(self, samples):
         """
         A Latin hypercube design based on minimizing the pairwise correlations.
-
-        >>> from UQpy.Distributions import Uniform
-        >>> from UQpy.SampleMethods import LHS
-        >>> dist1 = Uniform(loc=0., scale=1.)
-        >>> dist2 = Uniform(loc=0., scale=1.)
-        Run LHS with the ``correlate`` method:
-        >>> x = LHS(dist_object=[dist1, dist2], criterion='correlate', random_state=np.random.RandomState(123),
-        >>>         nsamples=5, verbose=True)
-        >>> print(x.samples)
-        UQpy: Running Latin Hypercube sampling...
-        UQpy: Achieved minimum correlation of  0.041564851956975124
-        Successful execution of LHS design.
-        [[0.62552244 0.46112928]
-         [0.97877307 0.78336976]
-         [0.57030961 0.28521913]
-         [0.0425663  0.90352469]
-         [0.27846081 0.09930159]]
-
         """
-        cut = np.linspace(0, 1, self.nsamples + 1)
-        a = cut[:self.nsamples]
-        b = cut[1:self.nsamples + 1]
 
         min_corr = np.inf
-        samples = self.random()
-        for _ in range(self.iterations):
-            samples_try = self.random()
+        i = 0
+        while i < self.iterations:
+            samples_try = self.random(samples)
             r = np.corrcoef(np.transpose(samples_try))
             np.fill_diagonal(r, 1)
             r1 = r[r != 1]
             if np.max(np.abs(r1)) < min_corr:
                 min_corr = np.max(np.abs(r1))
-                samples = copy.deepcopy(samples_try)
-
+                lhs_samples = copy.deepcopy(samples_try)
+            i = i + 1
         if self.verbose:
             print('UQpy: Achieved minimum correlation of ', min_corr)
 
-        return samples
+        return lhs_samples
+
+    def centered(self, samples):
+        """
+        A Latin hypercube design based on sampling the centers of the bins.
+        """
+
+        lhs_samples = np.zeros([samples.shape[0], samples.shape[1]])
+        for i in range(samples.shape[1]):
+            if self.random_state is not None:
+                lhs_samples[:, i] = self.random_state.permutation(samples[:, i])
+            else:
+                lhs_samples[:, i] = np.random.permutation(samples[:, i])
+
+        return lhs_samples
 
     def transform_u01(self):
         """
         The ``transform_u01`` method of the ``LHS`` is used to transform samples from the parameter space to the
         Uniform [0, 1] space. ``Distribution`` objects need to have a ``cdf`` method.
-
-        >>> from UQpy.Distributions import Uniform
-        >>> from UQpy.SampleMethods import LHS
-        >>> dist1 = Uniform(loc=0., scale=1.)
-        >>> dist2 = Normal(loc=2., scale=1.)
-        Run LHS with the ``correlate`` method:
-        >>> x = LHS(dist_object=[dist1, dist2], criterion='centered', nsamples=5, verbose=True)
-        >>> print(x.samples)
-        UQpy: Running Latin Hypercube sampling...
-        Successful execution of LHS design.
-        [[0.1        1.47559949]
-         [0.3        2.52440051]
-         [0.9        0.71844843]
-         [0.5        2.        ]
-         [0.7        3.28155157]]
-
-         >>> x.transform_u01()
-         >>> print(x.samplesU01)
-         [[0.1        0.02871656]
-         [0.3        0.04456546]
-         [0.7        0.09680048]
-         [0.5        0.0668072 ]
-         [0.9        0.13566606]]
-
         """
 
         if isinstance(self.dist_object, list):
