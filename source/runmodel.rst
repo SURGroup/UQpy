@@ -223,7 +223,7 @@ Often, the working directory will contain an executable software program. This i
 Examples & Template Files
 --------------------------
 
-In the `example` folder, several examples are provided to run both python models and third-party software models in serial and in parallel. These examples are briefly summarized below.
+In the `example` folder, several examples are provided to run both python models and third-party software models in serial and in parallel. These examples are briefly summarized below. Note that the problems presented are for demonstration purposes and are not necessarily intended to be used for accurate modeling of the problems described. Instead, the primary intention is to show the files that are used in running models with each software package - in particular the ``model_script`` and ``input_template``.
 
 **Python Models**
 
@@ -274,6 +274,24 @@ Several simple mathematical Matlab models are provided in a Jupyter script entit
 These examples do not use HPC resources.
 
 *OpenSees Model*
+
+The model considers a six-story building with 2 bays in the X-direction and 2 bays in the y-directions. The model has reinforced-concrete rectangular columns and beams. A static pushover analysis is performed. At each story the concrete’s yield strength fc ~Uniform (15000, 25000), the reinforcement steel’s Young’s modulus Es ~Uniform (2.0e8, 0.5e8) and yield strength Fy ~Uniform (450000, 530000) are considered random variables. Thus, the problem has a total of 6*3 = 18 random variables. The horizontal displacement (x-axis) of the top floor is monitored.
+
+Five Monte Carlo samples are generated and the model is evaluated in parallel over five CPUs on an HPC cluster (specifically MARCC) using the SLURM scheduler. The requisite ``RunModel`` files are the following:
+
+* ``model_script = opensees_model.py``
+* ``input_template = import_variables.tcl``
+* ``output_script = process_opensees_output.py``
+
+The other necessary files are the following:
+
+* `columndimensions.tcl`
+* `RCsection.tcl`
+* `run_opensees_UQpy.py`
+* `run_OpenSees.sh`
+* `test.tcl`
+
+Note that this example is not intended to represent the accurate pushover analysis a real structure. It is for ``UQpy`` illustration purposes only.
 
 
 RunModel Class
