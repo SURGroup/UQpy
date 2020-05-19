@@ -47,15 +47,15 @@ class MCS:
     * **nsamples** (`int`):
                      Number of samples to be drawn from each distribution.
 
-    * **random_state** ((list of) `int(s)`):
-                        The random seed to initialize the *Mersenne Twister* pseudo-random number generator.
+    * random_state (None or `int` or `np.random.RandomState` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
 
     * **verbose** (Boolean):
                         A boolean declaring whether to write text to the terminal.
 
                         Default value: False
 
-    **Output/Returns:**
+    **Attributes:**
 
     * **samples** (`ndarray` or `list`):
                         Generated samples. If a list of ``DistributionContinuous1D``, ``DistributionContinuous1D``
@@ -94,12 +94,12 @@ class MCS:
                 self.list = True
                 self.array = False
 
-            if random_state is not None:
-                if isinstance(random_state, int) or len(dist_object) != len(random_state):
-                    raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
-                self.random_state = random_state
-            else:
-                self.random_state = [random_state]*len(dist_object)
+            self.random_state = random_state
+            if isinstance(self.random_state, int):
+                self.random_state = np.random.RandomState(self.random_state)
+            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
             self.dist_object = dist_object
         else:
             if not isinstance(dist_object, Distribution):
@@ -151,12 +151,10 @@ class MCS:
         if random_state is None:
             random_state = self.random_state
         else:
-            if isinstance(self.dist_object, list):
-                if isinstance(random_state, int) or len(self.dist_object) != len(random_state):
-                    raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
-            else:
-                if not isinstance(random_state, int):
-                    raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
+            if isinstance(random_state, int):
+                random_state = np.random.RandomState(random_state)
+            elif not isinstance(random_state, (type(None), np.random.RandomState)):
+                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if nsamples is None:
             raise ValueError('UQpy: Number of samples must be defined.')
@@ -170,7 +168,7 @@ class MCS:
             temp_samples = list()
             for i in range(len(self.dist_object)):
                 if hasattr(self.dist_object[i], 'rvs'):
-                    temp_samples.append(self.dist_object[i].rvs(nsamples=nsamples, random_state=random_state[i]))
+                    temp_samples.append(self.dist_object[i].rvs(nsamples=nsamples, random_state=random_state))
                 else:
                     ValueError('UQpy: rvs method is missing.')
             x = list()
