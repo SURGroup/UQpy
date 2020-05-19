@@ -2251,511 +2251,17 @@ class AKMCS:
 ########################################################################################################################
 
 
-class MCMC_old:
-    """
-        Description:
-            Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
-            This class generates samples using Metropolis-Hastings(MH), Modified Metropolis-Hastings,
-            or Affine Invariant Ensemble Sampler with stretch moves.
-            References:
-            S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
-                Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
-            J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
-                no. 1, pp. 65–80, 2010.
-        Input:
-            :param dimension: A scalar value defining the dimension of target density function.
-                              Default: 1
-            :type dimension: int
-            :param pdf_proposal_type: Type of proposal density function for MCMC. Only used with algorithm ='MH' or'MMH'
-                            Options:
-                                    'Normal' : Normal proposal density.
-                                    'Uniform' : Uniform proposal density.
-                            Default: 'Uniform'
-                            If dimension > 1 and algorithm = 'MMH', this may be input as a list to assign different
-                            proposal densities to each dimension. Example pdf_proposal_name = ['Normal','Uniform'].
-                            If dimension > 1, algorithm = 'MMH' and this is input as a string, the proposal densities
-                            for all dimensions are set equal to the assigned proposal type.
-            :type pdf_proposal_type: str or str list
-            :param pdf_proposal_scale: Scale of the proposal distribution
-                            If algorithm == 'MH' or 'MMH'
-                                For pdf_proposal_type = 'Uniform'
-                                    Proposal is Uniform in [x-pdf_proposal_scale/2, x+pdf_proposal_scale/2].
-                                For pdf_proposal_type = 'Normal'
-                                    Proposal is Normal with standard deviation equal to pdf_proposal_scale.
-                            If algorithm == 'Stretch'
-                                pdf_proposal_scale sets the scale of the stretch density.
-                                    g(z) = 1/sqrt(z) for z in [1/pdf_proposal_scale, pdf_proposal_scale].
-                            Default value: dimension x 1 list of ones.
-            :type pdf_proposal_scale: float or float list
-                            If dimension > 1, this may be defined as float or float list.
-                                If input as float, pdf_proposal_scale is assigned to all dimensions.
-                                If input as float list, each element is assigned to the corresponding dimension.
-            :param pdf_target: Target density function from which to draw random samples
-                            The target joint probability density must be a function, or list of functions, or a string.
-                            If type == 'str'
-                                The assigned string must refer to a custom pdf defined in the file custom_pdf.py in the
-                                 working directory.
-                            If type == function
-                                The function must be defined in the python script calling MCMC.
-                            If dimension > 1 and pdf_target_type='marginal_pdf', the input to pdf_target is a list of
-                            size [dimensions x 1] where each item of the list defines a marginal pdf.
-                            Default: Multivariate normal distribution having zero mean and unit standard deviation.
-            :type pdf_target: function, function list, or str
-            :param pdf_target_params: Parameters of the target pdf.
-            :type pdf_target_params: list
-            :param algorithm:  Algorithm used to generate random samples.
-                            Options:
-                                'MH': Metropolis Hastings Algorithm
-                                'MMH': Component-wise Modified Metropolis Hastings Algorithm
-                                'Stretch': Affine Invariant Ensemble MCMC with stretch moves
-                            Default: 'MMH'
-            :type algorithm: str
-            :param jump: Number of samples between accepted states of the Markov chain.
-                                Default value: 1 (Accepts every state)
-            :type: jump: int
-            :param nsamples: Number of samples to generate
-                                No Default Value: nsamples must be prescribed
-            :type nsamples: int
-            :param seed: Seed of the Markov chain(s)
-                            For 'MH' and 'MMH', this is a single point, defined as a numpy array of dimension
-                             (1 x dimension).
-                            For 'Stretch', this is a numpy array of dimension N x dimension, where N is the ensemble
-                            size.
-                            Default:
-                                For 'MH' and 'MMH': zeros(1 x dimension)
-                                For 'Stretch': No default, this must be specified.
-            :type seed: float or numpy array
-            :param nburn: Length of burn-in. Number of samples at the beginning of the chain to discard.
-                            This option is only used for the 'MMH' and 'MH' algorithms.
-                            Default: nburn = 0
-            :type nburn: int
-        Output:
-            :return: MCMC.samples: Set of MCMC samples following the target distribution
-            :rtype: MCMC.samples: ndarray
-
-            :return: MCMC.accept_ratio: Acceptance ratio of the MCMC samples
-            :rtype: MCMC.accept_ratio: float
-
-    """
-
-    # Authors: Michael D. Shields, Mohit Chauhan, Dimitris G. Giovanis
-    # Updated: 04/08/2019 by Audrey Olivier
-
-    def __init__(self, dimension=None, pdf_proposal_type=None, pdf_proposal_scale=None,
-                 pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None,
-                 pdf_target_copula_params=None, pdf_target_type='joint_pdf',
-                 algorithm='MH', jump=1, nsamples=None, seed=None, nburn=0,
-                 verbose=False):
-
-        self.pdf_proposal_type = pdf_proposal_type
-        self.pdf_proposal_scale = pdf_proposal_scale
-        self.pdf_target = pdf_target
-        self.log_pdf_target = log_pdf_target
-        self.pdf_target_params = pdf_target_params
-        self.pdf_target_copula = pdf_target_copula
-        self.pdf_target_copula_params = pdf_target_copula_params
-        self.algorithm = algorithm
-        self.jump = jump
-        self.nsamples = nsamples
-        self.dimension = dimension
-        self.seed = seed
-        self.nburn = nburn
-        self.pdf_target_type = pdf_target_type
-        self.init_mcmc()
-        self.verbose = verbose
-        if self.algorithm is 'Stretch':
-            self.ensemble_size = len(self.seed)
-        self.samples, self.accept_ratio = self.run_mcmc()
-
-    def run_mcmc(self):
-        n_accepts, accept_ratio = 0, 0
-
-        # Defining an array to store the generated samples
-        samples = np.zeros([self.nsamples * self.jump + self.nburn, self.dimension])
-
-        ################################################################################################################
-        # Classical Metropolis-Hastings Algorithm with symmetric proposal density
-        if self.algorithm == 'MH':
-            samples[0, :] = self.seed.reshape((-1,))
-            log_pdf_ = self.log_pdf_target
-            log_p_current = log_pdf_(samples[0, :])
-
-            # Loop over the samples
-            for i in range(self.nsamples * self.jump - 1 + self.nburn):
-                if self.pdf_proposal_type[0] == 'Normal':
-                    cholesky_cov = np.diag(self.pdf_proposal_scale)
-                    z_normal = np.random.normal(size=(self.dimension, ))
-                    candidate = samples[i, :] + np.matmul(cholesky_cov, z_normal)
-                    log_p_candidate = log_pdf_(candidate)
-                    log_p_accept = log_p_candidate - log_p_current
-                    accept = np.log(np.random.random()) < log_p_accept
-
-                    if accept:
-                        samples[i + 1, :] = candidate
-                        log_p_current = log_p_candidate
-                        n_accepts += 1
-                    else:
-                        samples[i + 1, :] = samples[i, :]
-
-                elif self.pdf_proposal_type[0] == 'Uniform':
-                    low = -np.array(self.pdf_proposal_scale) / 2
-                    high = np.array(self.pdf_proposal_scale) / 2
-                    candidate = samples[i, :] + np.random.uniform(low=low, high=high, size=(self.dimension, ))
-                    log_p_candidate = log_pdf_(candidate)
-                    log_p_accept = log_p_candidate - log_p_current
-                    accept = np.log(np.random.random()) < log_p_accept
-
-                    if accept:
-                        samples[i + 1, :] = candidate
-                        log_p_current = log_p_candidate
-                        n_accepts += 1
-                    else:
-                        samples[i + 1, :] = samples[i, :]
-            accept_ratio = n_accepts/(self.nsamples * self.jump - 1 + self.nburn)
-
-        ################################################################################################################
-        # Modified Metropolis-Hastings Algorithm with symmetric proposal density
-        elif self.algorithm == 'MMH':
-
-            samples[0, :] = self.seed.reshape((-1,))
-
-            if self.pdf_target_type == 'marginal_pdf':
-                list_log_p_current = []
-                for j in range(self.dimension):
-                    log_pdf_ = self.log_pdf_target[j]
-                    list_log_p_current.append(log_pdf_(samples[0, j]))
-                for i in range(self.nsamples * self.jump - 1 + self.nburn):
-                    for j in range(self.dimension):
-
-                        log_pdf_ = self.log_pdf_target[j]
-
-                        if self.pdf_proposal_type[j] == 'Normal':
-                            candidate = np.random.normal(samples[i, j], self.pdf_proposal_scale[j], size=1)
-                            log_p_candidate = log_pdf_(candidate)
-                            log_p_current = list_log_p_current[j]
-                            log_p_accept = log_p_candidate - log_p_current
-
-                            accept = np.log(np.random.random()) < log_p_accept
-
-                            if accept:
-                                samples[i + 1, j] = candidate
-                                list_log_p_current[j] = log_p_candidate
-                                n_accepts += 1 / self.dimension
-                            else:
-                                samples[i + 1, j] = samples[i, j]
-
-                        elif self.pdf_proposal_type[j] == 'Uniform':
-                            candidate = np.random.uniform(low=samples[i, j] - self.pdf_proposal_scale[j] / 2,
-                                                          high=samples[i, j] + self.pdf_proposal_scale[j] / 2, size=1)
-                            log_p_candidate = log_pdf_(candidate)
-                            log_p_current = list_log_p_current[j]
-                            log_p_accept = log_p_candidate - log_p_current
-
-                            accept = np.log(np.random.random()) < log_p_accept
-
-                            if accept:
-                                samples[i + 1, j] = candidate
-                                list_log_p_current[j] = log_p_candidate
-                                n_accepts += 1 / self.dimension
-                            else:
-                                samples[i + 1, j] = samples[i, j]
-            else:
-                log_pdf_ = self.log_pdf_target
-
-                for i in range(self.nsamples * self.jump - 1 + self.nburn):
-                    candidate = np.copy(samples[i, :])
-                    current = np.copy(samples[i, :])
-                    log_p_current = log_pdf_(samples[i, :])
-                    for j in range(self.dimension):
-                        if self.pdf_proposal_type[j] == 'Normal':
-                            candidate[j] = np.random.normal(samples[i, j], self.pdf_proposal_scale[j])
-
-                        elif self.pdf_proposal_type[j] == 'Uniform':
-                            candidate[j] = np.random.uniform(low=samples[i, j] - self.pdf_proposal_scale[j] / 2,
-                                                             high=samples[i, j] + self.pdf_proposal_scale[j] / 2,
-                                                             size=1)
-
-                        log_p_candidate = log_pdf_(candidate)
-                        log_p_accept = log_p_candidate - log_p_current
-
-                        accept = np.log(np.random.random()) < log_p_accept
-
-                        if accept:
-                            current[j] = candidate[j]
-                            log_p_current = log_p_candidate
-                            n_accepts += 1
-                        else:
-                            candidate[j] = current[j]
-
-                    samples[i + 1, :] = current
-            accept_ratio = n_accepts / (self.nsamples * self.jump - 1 + self.nburn)
-
-        ################################################################################################################
-        # Affine Invariant Ensemble Sampler with stretch moves
-
-        elif self.algorithm == 'Stretch':
-
-            samples[0:self.ensemble_size, :] = self.seed
-            log_pdf_ = self.log_pdf_target
-            # list_log_p_current = [log_pdf_(samples[i, :], self.pdf_target_params) for i in range(self.ensemble_size)]
-
-            for i in range(self.ensemble_size - 1, self.nsamples * self.jump - 1):
-                complementary_ensemble = samples[i - self.ensemble_size + 2:i + 1, :]
-                s0 = random.choice(complementary_ensemble)
-                s = (1 + (self.pdf_proposal_scale[0] - 1) * random.random()) ** 2 / self.pdf_proposal_scale[0]
-                candidate = s0 + s * (samples[i - self.ensemble_size + 1, :] - s0)
-
-                log_p_candidate = log_pdf_(candidate)
-                log_p_current = log_pdf_(samples[i - self.ensemble_size + 1, :])
-                # log_p_current = list_log_p_current[i - self.ensemble_size + 1]
-                log_p_accept = np.log(s ** (self.dimension - 1)) + log_p_candidate - log_p_current
-
-                accept = np.log(np.random.random()) < log_p_accept
-
-                if accept:
-                    samples[i + 1, :] = candidate.reshape((-1, ))
-                    # list_log_p_current.append(log_p_candidate)
-                    n_accepts += 1
-                else:
-                    samples[i + 1, :] = samples[i - self.ensemble_size + 1, :]
-                    # list_log_p_current.append(list_log_p_current[i - self.ensemble_size + 1])
-            accept_ratio = n_accepts / (self.nsamples * self.jump - self.ensemble_size)
-
-        ################################################################################################################
-        # Return the samples
-
-        if self.algorithm is 'MMH' or self.algorithm is 'MH':
-            if self.verbose:
-                print('Successful execution of the MCMC design')
-            return samples[self.nburn:self.nsamples * self.jump + self.nburn:self.jump], accept_ratio
-        else:
-            output = np.zeros((self.nsamples, self.dimension))
-            j = 0
-            for i in range(self.jump * self.ensemble_size - self.ensemble_size, samples.shape[0],
-                           self.jump * self.ensemble_size):
-                output[j:j + self.ensemble_size, :] = samples[i:i + self.ensemble_size, :]
-                j = j + self.ensemble_size
-            return output, accept_ratio
-
-    ####################################################################################################################
-    # Check to ensure consistency of the user input and assign defaults
-    def init_mcmc(self):
-
-        # Check dimension
-        if self.dimension is None:
-            self.dimension = 1
-
-        # Check nsamples
-        if self.nsamples is None:
-            raise NotImplementedError('Exit code: Number of samples not defined.')
-
-        # Check nburn
-        if self.nburn is None:
-            self.nburn = 0
-
-        # Check jump
-        if self.jump is None:
-            self.jump = 1
-        if self.jump == 0:
-            raise ValueError("Exit code: Value of jump must be greater than 0")
-
-        # Check seed
-        if self.algorithm is not 'Stretch':
-            if self.seed is None:
-                self.seed = np.zeros(self.dimension)
-            self.seed = np.array(self.seed)
-            if (len(self.seed.shape) == 1) and (self.seed.shape[0] != self.dimension):
-                raise NotImplementedError("Exit code: Incompatible dimensions in 'seed'.")
-            self.seed = self.seed.reshape((1, -1))
-        else:
-            if self.seed is None or len(self.seed.shape) != 2:
-                raise NotImplementedError("For Stretch algorithm, a seed must be given as a ndarray")
-            if self.seed.shape[1] != self.dimension:
-                raise NotImplementedError("Exit code: Incompatible dimensions in 'seed'.")
-            if self.seed.shape[0] < 3:
-                raise NotImplementedError("Exit code: Ensemble size must be > 2.")
-
-        # Check algorithm
-        if self.algorithm is None:
-            self.algorithm = 'MH'
-        if self.algorithm not in ['MH', 'MMH', 'Stretch']:
-            raise NotImplementedError('Exit code: Unrecognized MCMC algorithm. Supported algorithms: '
-                                      'Metropolis-Hastings (MH), '
-                                      'Modified Metropolis-Hastings (MMH), '
-                                      'Affine Invariant Ensemble with Stretch Moves (Stretch).')
-
-        # Check pdf_proposal_type
-        if self.pdf_proposal_type is None:
-            self.pdf_proposal_type = 'Normal'
-        # If pdf_proposal_type is entered as a string, make it a list
-        if isinstance(self.pdf_proposal_type, str):
-            self.pdf_proposal_type = [self.pdf_proposal_type]
-        for i in self.pdf_proposal_type:
-            if i not in ['Uniform', 'Normal']:
-                raise ValueError('Exit code: Unrecognized type for proposal distribution. Supported distributions: '
-                                 'Uniform, '
-                                 'Normal.')
-        if self.algorithm is 'MH' and len(self.pdf_proposal_type) != 1:
-            raise ValueError('Exit code: MH algorithm can only take one proposal distribution.')
-        elif len(self.pdf_proposal_type) != self.dimension:
-            if len(self.pdf_proposal_type) == 1:
-                self.pdf_proposal_type = self.pdf_proposal_type * self.dimension
-            else:
-                raise NotImplementedError("Exit code: Incompatible dimensions in 'pdf_proposal_type'.")
-
-        # Check pdf_proposal_scale
-        if self.pdf_proposal_scale is None:
-            if self.algorithm == 'Stretch':
-                self.pdf_proposal_scale = 2
-            else:
-                self.pdf_proposal_scale = 1
-        if not isinstance(self.pdf_proposal_scale, list):
-            self.pdf_proposal_scale = [self.pdf_proposal_scale]
-        if len(self.pdf_proposal_scale) != self.dimension:
-            if len(self.pdf_proposal_scale) == 1:
-                self.pdf_proposal_scale = self.pdf_proposal_scale * self.dimension
-            else:
-                raise NotImplementedError("Exit code: Incompatible dimensions in 'pdf_proposal_scale'.")
-
-        # Check log_pdf_target and pdf_target
-        if self.log_pdf_target is None and self.pdf_target is None:
-            raise ValueError('UQpy error: a target function must be provided, in log_pdf_target of pdf_target')
-        if isinstance(self.log_pdf_target, list) and len(self.log_pdf_target) != self.dimension:
-            raise ValueError('UQpy error: inconsistent dimensions.')
-        if isinstance(self.pdf_target, list) and len(self.pdf_target) != self.dimension:
-            raise ValueError('UQpy error: inconsistent dimensions.')
-
-        # Check pdf_target_type
-        if self.pdf_target_type not in ['joint_pdf', 'marginal_pdf']:
-            raise ValueError('pdf_target_type should be "joint_pdf", "marginal_pdf"')
-
-        # Check MMH
-        if self.algorithm is 'MMH':
-            if (self.pdf_target_type == 'marginal_pdf') and (self.pdf_target_copula is not None):
-                raise ValueError('UQpy error: MMH with pdf_target_type="marginal" cannot be used when the'
-                                 'target pdf has a copula, use pdf_target_type="joint" instead')
-
-        # If pdf_target or log_pdf_target are given as lists, they should be of the right dimension
-        if isinstance(self.log_pdf_target, list):
-            if len(self.log_pdf_target) != self.dimension:
-                raise ValueError('log_pdf_target given as a list should have length equal to dimension')
-            if (self.pdf_target_params is not None) and (len(self.log_pdf_target) != len(self.pdf_target_params)):
-                raise ValueError('pdf_target_params should be given as a list of length equal to log_pdf_target')
-        if isinstance(self.pdf_target, list):
-            if len(self.pdf_target) != self.dimension:
-                raise ValueError('pdf_target given as a list should have length equal to dimension')
-            if (self.pdf_target_params is not None) and (len(self.pdf_target) != len(self.pdf_target_params)):
-                raise ValueError('pdf_target_params should be given as a list of length equal to pdf_target')
-
-        # Define a helper function
-        def compute_log_pdf(x, pdf_func, params=None, copula_params=None):
-            kwargs_ = {}
-            if params is not None:
-                kwargs_['params'] = params
-            if copula_params is not None:
-                kwargs_['copula_params'] = copula_params
-            pdf_value = max(pdf_func(x, **kwargs_), 10 ** (-320))
-            return np.log(pdf_value)
-
-        # Either pdf_target or log_pdf_target must be defined
-        if (self.pdf_target is None) and (self.log_pdf_target is None):
-            raise ValueError('The target distribution must be defined, using inputs'
-                             ' log_pdf_target or pdf_target.')
-        # For MMH with pdf_target_type == 'marginals', pdf_target or its log should be lists
-        if (self.algorithm == 'MMH') and (self.pdf_target_type == 'marginal_pdf'):
-            kwargs = [{}]*self.dimension
-            for j in range(self.dimension):
-                if self.pdf_target_params is not None:
-                    kwargs[j]['params'] = self.pdf_target_params[j]
-                if self.pdf_target_copula_params is not None:
-                    kwargs[j]['copula_params'] = self.pdf_target_copula_params[j]
-
-            if self.log_pdf_target is not None:
-                if not isinstance(self.log_pdf_target, list):
-                    raise ValueError('For MMH algo with pdf_target_type="marginal_pdf", '
-                                     'log_pdf_target should be a list')
-                if isinstance(self.log_pdf_target[0], str):
-                    p_js = [Distribution(dist_name=pdf_target_j) for pdf_target_j in self.pdf_target]
-                    try:
-                        [p_j.log_pdf(x=self.seed[0, j], **kwargs[j]) for (j, p_j) in enumerate(p_js)]
-                        self.log_pdf_target = [partial(p_j.log_pdf, **kwargs[j]) for (j, p_j) in enumerate(p_js)]
-                    except AttributeError:
-                        raise AttributeError('log_pdf_target given as a list of strings must point to Distributions '
-                                             'with an existing log_pdf method.')
-                elif callable(self.log_pdf_target[0]):
-                    self.log_pdf_target = [partial(pdf_target_j, **kwargs[j]) for (j, pdf_target_j)
-                                           in enumerate(self.log_pdf_target)]
-                else:
-                    raise ValueError('log_pdf_target must be a list of strings or a list of callables')
-            else:
-                if not isinstance(self.pdf_target, list):
-                    raise ValueError('For MMH algo with pdf_target_type="marginal_pdf", '
-                                     'pdf_target should be a list')
-                if isinstance(self.pdf_target[0], str):
-                    p_js = [Distribution(dist_name=pdf_target_j) for pdf_target_j in self.pdf_target]
-                    try:
-                        [p_j.pdf(x=self.seed[0, j], **kwargs[j]) for (j, p_j) in enumerate(p_js)]
-                        self.log_pdf_target = [partial(compute_log_pdf, pdf_func=p_j.pdf, **kwargs[j])
-                                               for (j, p_j) in enumerate(p_js)]
-                    except AttributeError:
-                        raise AttributeError('pdf_target given as a list of strings must point to Distributions '
-                                             'with an existing pdf method.')
-                elif callable(self.pdf_target[0]):
-                    self.log_pdf_target = [partial(compute_log_pdf, pdf_func=pdf_target_j, **kwargs[j])
-                                           for (j, pdf_target_j) in enumerate(self.pdf_target)]
-                else:
-                    raise ValueError('pdf_target must be a list of strings or a list of callables')
-        else:
-            kwargs = {}
-            if self.pdf_target_params is not None:
-                kwargs['params'] = self.pdf_target_params
-            if self.pdf_target_copula_params is not None:
-                kwargs['copula_params'] = self.pdf_target_copula_params
-
-            if self.log_pdf_target is not None:
-                if isinstance(self.log_pdf_target, str) or (isinstance(self.log_pdf_target, list)
-                                                            and isinstance(self.log_pdf_target[0], str)):
-                    p = Distribution(dist_name=self.log_pdf_target, copula=self.pdf_target_copula)
-                    try:
-                        p.log_pdf(x=self.seed[0, :], **kwargs)
-                        self.log_pdf_target = partial(p.log_pdf, **kwargs)
-                    except AttributeError:
-                        raise AttributeError('log_pdf_target given as a string must point to a Distribution '
-                                             'with an existing log_pdf method.')
-                elif callable(self.log_pdf_target):
-                    self.log_pdf_target = partial(self.log_pdf_target, **kwargs)
-                else:
-                    raise ValueError('For MH and Stretch, log_pdf_target must be a callable function, '
-                                     'a str or list of str')
-            else:
-                if isinstance(self.pdf_target, str) or (isinstance(self.pdf_target, list)
-                                                        and isinstance(self.pdf_target[0], str)):
-                    p = Distribution(dist_name=self.pdf_target, copula=self.pdf_target_copula)
-                    try:
-                        p.pdf(x=self.seed[0, :], **kwargs)
-                        self.log_pdf_target = partial(compute_log_pdf, pdf_func=p.pdf, **kwargs)
-                    except AttributeError:
-                        raise AttributeError('pdf_target given as a string must point to a Distribution '
-                                             'with an existing pdf method.')
-                elif callable(self.pdf_target):
-                    self.log_pdf_target = partial(compute_log_pdf, pdf_func=self.pdf_target, **kwargs)
-                else:
-                    raise ValueError('For MH and Stretch, pdf_target must be a callable function, '
-                                     'a str or list of str')
-
-
 class MCMC:
     """
-    Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo
-    ([1]_, [2]_).
+    Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
 
     This is the base class for all MCMC algorithms. This base class only provides the framework for MCMC and cannot be
     used directly for sampling. Sampling is done by calling a subclass - see example in class ``MH``.
 
     **References:**
 
-    .. [1] Gelman et al., "Bayesian data analysis", Chapman and Hall/CRC, 2013
-    .. [2] R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
+    * Gelman et al., "Bayesian data analysis", Chapman and Hall/CRC, 2013
+    * R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
 
     **Inputs:**
 
@@ -2816,6 +2322,12 @@ class MCMC:
         Number of samples to generate per chain - see `run` method. If not None, the `run` method is called when the
         object is created. Default: None
 
+    * random_state (None or `int` or `np.random.RandomState` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+    * **verbose** (`boolean`)
+        Set ``verbose = True`` to print status messages to the terminal during execution.
+
     **Attributes:**
 
     * **samples** (`ndarray`)
@@ -2842,8 +2354,8 @@ class MCMC:
     """
     # Last Modified: 10/05/20 by Audrey Olivier
 
-    def __init__(self, dimension=None, pdf_target=None, log_pdf_target=None, args_target=None,
-                 seed=None, nburn=0, jump=1, save_log_pdf=False, verbose=False, concat_chains=True):
+    def __init__(self, dimension=None, pdf_target=None, log_pdf_target=None, args_target=None, seed=None, nburn=0,
+                 jump=1, save_log_pdf=False, verbose=False, concat_chains=True, random_state=None):
 
         if not (isinstance(nburn, int) and nburn >= 0):
             raise TypeError('UQpy: nburn should be an integer >= 0')
@@ -2858,6 +2370,11 @@ class MCMC:
             pdf=pdf_target, log_pdf=log_pdf_target, args=args_target)
         self.save_log_pdf = save_log_pdf
         self.concat_chains = concat_chains
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
         self.verbose = verbose
         ##### ADDED MDS 1/21/20
         self.log_pdf_target = log_pdf_target
@@ -3014,7 +2531,6 @@ class MCMC:
             nsamples = int(nsamples_per_chain * self.nchains)
 
         if self.samples is None:    # very first call of run, set current_state as the seed and initialize self.samples
-            print(nsamples_per_chain, self.nchains, self.dimension)
             self.samples = np.zeros((nsamples_per_chain, self.nchains, self.dimension))
             if self.save_log_pdf:
                 self.log_pdf_values = np.zeros((nsamples_per_chain, self.nchains))
@@ -3194,9 +2710,15 @@ class MH(MCMC):
     >>> from UQpy.Distributions import Normal, Gumbel, JointCopula
     >>> dist_true = JointCopula(marginals=[Normal(), Normal()], copula=Gumbel(theta=2.))
     >>> proposal = JointInd(marginals=[Normal(scale=0.2), Normal(scale=0.2)])
-    >>> sampler = MH(log_pdf_target=dist_true.log_pdf, nsamples=500, proposal=proposal, seed=[0., 0.])
+    >>> sampler = MH(log_pdf_target=dist_true.log_pdf, nsamples=500, proposal=proposal, seed=[0., 0.], random_state=123)
     >>> print(sampler.samples.shape)
     (500, 2)
+    >>> print(np.round(sampler.samples[-5:], 4))
+    [[-0.1966  0.1831]
+     [-0.2325  0.2526]
+     [ 0.2104  0.0748]
+     [ 0.0091  0.1651]
+     [ 0.1693  0.2409]]
 
     **Algorithm-specific inputs:**
 
@@ -3207,14 +2729,16 @@ class MH(MCMC):
         indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
         Default: False
 
+    **Methods:**
+
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 proposal=None, proposal_is_symmetric=False, verbose=False):
+                 proposal=None, proposal_is_symmetric=False, verbose=False, random_state=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose)
+                         concat_chains=concat_chains, verbose=verbose, random_state=random_state)
 
         # Initialize algorithm specific inputs
         self.proposal = proposal
@@ -3241,7 +2765,7 @@ class MH(MCMC):
         Run one iteration of the MCMC chain for MH algorithm, starting at current state - see ``MCMC`` class.
         """
         # Sample candidate
-        candidate = current_state + self.proposal.rvs(nsamples=self.nchains)
+        candidate = current_state + self.proposal.rvs(nsamples=self.nchains, random_state=self.random_state)
 
         # Compute log_pdf_target of candidate sample
         log_p_candidate = self.evaluate_log_target(candidate)
@@ -3256,8 +2780,9 @@ class MH(MCMC):
 
         # Compare candidate with current sample and decide or not to keep the candidate (loop over nc chains)
         accept_vec = np.zeros((self.nchains,))  # this vector will be used to compute accept_ratio of each chain
+        unif_rvs = Uniform().rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1,))
         for nc, (cand, log_p_cand, r_) in enumerate(zip(candidate, log_p_candidate, log_ratios)):
-            accept = np.log(np.random.random()) < r_
+            accept = np.log(unif_rvs[nc]) < r_
             if accept:
                 current_state[nc, :] = cand
                 current_log_pdf[nc] = log_p_cand
@@ -3273,7 +2798,7 @@ class MH(MCMC):
 class MMH(MCMC):
     """
 
-    Modified Metropolis-Hastings algorithm, [3]_
+    Modified Metropolis-Hastings algorithm.
 
     In this algorithm, candidate samples are drawn separately in each dimension, thus the proposal consists in a list
     of 1d distributions. The target pdf can be given as a joint pdf or a list of marginal pdfs in all dimensions. This
@@ -3281,8 +2806,8 @@ class MMH(MCMC):
 
     **References:**
 
-    .. [3] S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
-           Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+    * S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
+      Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
 
     **Algorithm-specific inputs:**
 
@@ -3293,14 +2818,16 @@ class MMH(MCMC):
         indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
         Default: False, set to True if default proposal is used
 
+    **Methods:**
+
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 proposal=None, proposal_is_symmetric=False, verbose=False):
+                 proposal=None, proposal_is_symmetric=False, verbose=False, random_state=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose)
+                         concat_chains=concat_chains, verbose=verbose, random_state=random_state)
 
         # If proposal is not provided: set it as a list of standard gaussians
         from UQpy.Distributions import Normal
@@ -3357,7 +2884,8 @@ class MMH(MCMC):
 
             # Sample candidate (independently in each dimension)
             for j in range(self.dimension):
-                candidate_j = current_state[:, j, np.newaxis] + self.proposal[j].rvs(nsamples=self.nchains)
+                candidate_j = current_state[:, j, np.newaxis] + self.proposal[j].rvs(
+                    nsamples=self.nchains, random_state=self.random_state)
 
                 # Compute log_pdf_target of candidate sample
                 log_p_candidate_j = self.evaluate_log_target_marginals[j](candidate_j)
@@ -3372,9 +2900,10 @@ class MMH(MCMC):
                     log_ratios = log_p_candidate_j - self.current_log_pdf_marginals[j] - log_proposal_ratio
 
                 # Compare candidate with current sample and decide or not to keep the candidate
+                unif_rvs = Uniform().rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1,))
                 for nc, (cand, log_p_cand, r_) in enumerate(
                         zip(candidate_j, log_p_candidate_j, log_ratios)):
-                    accept = np.log(np.random.random()) < r_
+                    accept = np.log(unif_rvs[nc]) < r_
                     if accept:
                         current_state[nc, j] = cand
                         self.current_log_pdf_marginals[j][nc] = log_p_cand
@@ -3386,7 +2915,8 @@ class MMH(MCMC):
             current_log_pdf_marginals = ()
             candidate = np.copy(current_state)
             for j in range(self.dimension):
-                candidate_j = current_state[:, j, np.newaxis] + self.proposal[j].rvs(nsamples=self.nchains)
+                candidate_j = current_state[:, j, np.newaxis] + self.proposal[j].rvs(
+                    nsamples=self.nchains, random_state=self.random_state)
                 candidate[:, j] = candidate_j[:, 0]
 
                 # Compute log_pdf_target of candidate sample
@@ -3400,8 +2930,9 @@ class MMH(MCMC):
                     log_proposal_ratio = log_prop_j(candidate_j - current_state[:, j, np.newaxis]) - \
                                          log_prop_j(current_state[:, j, np.newaxis] - candidate_j)
                     log_ratios = log_p_candidate - current_log_pdf - log_proposal_ratio
+                unif_rvs = Uniform().rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1,))
                 for nc, (cand, log_p_cand, r_) in enumerate(zip(candidate_j, log_p_candidate, log_ratios)):
-                    accept = np.log(np.random.random()) < r_
+                    accept = np.log(unif_rvs[nc]) < r_
                     if accept:
                         current_state[nc, j] = cand
                         current_log_pdf[nc] = log_p_cand
@@ -3417,29 +2948,30 @@ class MMH(MCMC):
 
 class Stretch(MCMC):
     """
-
-    Affine-invariant sampler with Stretch moves, [4]_, [5]_
+    Affine-invariant sampler with Stretch moves, parallel implementation.
 
     **References:**
 
-    .. [4] J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
-           no. 1, pp. 65–80, 2010.
-    .. [5] Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. "emcee: The MCMC Hammer".
-           Publications of the Astronomical Society of the Pacific, 125(925):306–312,2013.
+    * J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
+      no. 1, pp. 65–80, 2010.
+    * Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. "emcee: The MCMC Hammer".
+      Publications of the Astronomical Society of the Pacific, 125(925):306–312,2013.
 
     **Algorithm-specific inputs:**
 
     * **scale** (`float`):
         Scale parameter. Default: 2.
 
+    **Methods:**
+
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 scale=2., verbose=False):
+                 scale=2., verbose=False, random_state=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose)
+                         concat_chains=concat_chains, verbose=verbose, random_state=random_state)
 
         # Check nchains = ensemble size for the Stretch algorithm
         if self.nchains < 2:
@@ -3475,17 +3007,21 @@ class Stretch(MCMC):
             Ns, Nc = len(s), len(c)
 
             # Sample new state for S1 based on S0 and vice versa
-            zz = ((self.scale - 1.) * np.random.rand(Ns, 1) + 1) ** 2. / self.scale  # sample Z
+            unif_rvs = Uniform().rvs(nsamples=Ns, random_state=self.random_state)
+            zz = ((self.scale - 1.) * unif_rvs + 1) ** 2. / self.scale  # sample Z
             factors = (self.dimension - 1.) * np.log(zz)  # compute log(Z ** (d - 1))
-            rint = np.random.choice(Nc, size=(Ns,), replace=True)  # sample X_{j} from complementary set
+            #rint = np.random.choice(Nc, size=(Ns,), replace=True)  # sample X_{j} from complementary set
+            multi_rvs = Multinomial(n=1, p=[1. / Nc, ] * Nc).rvs(nsamples=Ns, random_state=self.random_state)
+            rint = np.nonzero(multi_rvs)[1]    # sample X_{j} from complementary set
             candidates = c[rint, :] - (c[rint, :] - s) * np.tile(zz, [1, self.dimension])  # new candidates
 
             # Compute new likelihood, can be done in parallel :)
             logp_candidates = self.evaluate_log_target(candidates)
 
             # Compute acceptance rate
-            for j, f, lpc, candidate in zip(all_inds[S1], factors, logp_candidates, candidates):
-                accept = np.log(np.random.rand()) < f + lpc - current_log_pdf[j]
+            unif_rvs = Uniform().rvs(nsamples=len(all_inds[S1]), random_state=self.random_state).reshape((-1,))
+            for j, f, lpc, candidate, u_rv in zip(all_inds[S1], factors, logp_candidates, candidates, unif_rvs):
+                accept = np.log(u_rv) < f + lpc - current_log_pdf[j]
                 if accept:
                     current_state[j] = candidate
                     current_log_pdf[j] = lpc
@@ -3501,8 +3037,7 @@ class Stretch(MCMC):
 
 class DRAM(MCMC):
     """
-
-    Delayed Rejection Adaptive Metropolis algorithm, [6]_, [7]_
+    Delayed Rejection Adaptive Metropolis algorithm
 
     In this algorithm, the proposal density is Gaussian and its covariance C is being updated from samples as
     C = sp * C_sample where C_sample is the sample covariance. Also, the delayed rejection scheme is applied, i.e,
@@ -3510,9 +3045,9 @@ class DRAM(MCMC):
 
     **References:**
 
-    .. [6] Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive MCMC". Statistics
-           and Computing, 16(4):339–354, 2006
-    .. [7] R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
+    * Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive MCMC". Statistics
+      and Computing, 16(4):339–354, 2006
+    * R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
 
     **Algorithm-specific inputs:**
 
@@ -3531,15 +3066,18 @@ class DRAM(MCMC):
     * **save_cov** (`bool`):
         if True, updated covariance is saved in attribute adaptive_covariance. Default: False
 
+    **Methods:**
+
     """
 
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 initial_covariance=None, k0=100, sp=None, gamma_2=1/5, save_covariance=False, verbose=False):
+                 initial_covariance=None, k0=100, sp=None, gamma_2=1/5, save_covariance=False, verbose=False,
+                 random_state=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose)
+                         concat_chains=concat_chains, verbose=verbose, random_state=random_state)
 
         # Check the initial covariance
         self.initial_covariance = initial_covariance
@@ -3584,7 +3122,8 @@ class DRAM(MCMC):
         candidate = np.zeros_like(current_state)
         for nc, current_cov in enumerate(self.current_covariance):
             mvp.update_params(cov=current_cov)
-            candidate[nc, :] = current_state[nc, :] + mvp.rvs(nsamples=1).reshape((self.dimension, ))
+            candidate[nc, :] = current_state[nc, :] + mvp.rvs(
+                nsamples=1, random_state=self.random_state).reshape((self.dimension, ))
 
         # Compute log_pdf_target of candidate sample
         log_p_candidate = self.evaluate_log_target(candidate)
@@ -3592,8 +3131,9 @@ class DRAM(MCMC):
         # Compare candidate with current sample and decide or not to keep the candidate (loop over nc chains)
         accept_vec = np.zeros((self.nchains, ))
         inds_DR = []   # indices of chains that will undergo delayed rejection
+        unif_rvs = Uniform().rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1,))
         for nc, (cand, log_p_cand, log_p_curr) in enumerate(zip(candidate, log_p_candidate, current_log_pdf)):
-            accept = np.log(np.random.random()) < log_p_cand - log_p_curr
+            accept = np.log(unif_rvs[nc]) < log_p_cand - log_p_curr
             if accept:
                 current_state[nc, :] = cand
                 current_log_pdf[nc] = log_p_cand
@@ -3617,14 +3157,15 @@ class DRAM(MCMC):
             log_prop_cand_cand2 = mvp.log_pdf(candidates_DR - candidate2)
             log_prop_cand_curr = mvp.log_pdf(candidates_DR - current_states_DR)
             # Accept or reject
-            for (nc, cand2, log_p_cand2, J1, J2) in zip(inds_DR, candidate2, log_p_candidate2, log_prop_cand_cand2,
-                                                        log_prop_cand_curr):
+            unif_rvs = Uniform().rvs(nsamples=len(inds_DR), random_state=self.random_state).reshape((-1,))
+            for (nc, cand2, log_p_cand2, J1, J2, u_rv) in zip(inds_DR, candidate2, log_p_candidate2, log_prop_cand_cand2,
+                                                        log_prop_cand_curr, unif_rvs):
                 alpha_cand_cand2 = min(1., np.exp(log_p_candidate[nc] - log_p_cand2))
                 alpha_cand_curr = min(1., np.exp(log_p_candidate[nc] - current_log_pdf[nc]))
                 log_alpha2 = log_p_cand2 - current_log_pdf[nc] + J1 - J2 + \
                              np.log(max(1. - alpha_cand_cand2, 10 ** (-320))) \
                              - np.log(max(1. - alpha_cand_curr, 10 ** (-320)))
-                accept = np.log(np.random.random()) < min(0., log_alpha2)
+                accept = np.log(u_rv) < min(0., log_alpha2)
                 if accept:
                     current_state[nc, :] = cand2
                     current_log_pdf[nc] = log_p_cand2
@@ -3681,16 +3222,15 @@ class DRAM(MCMC):
 
 class DREAM(MCMC):
     """
-
-    DiffeRential Evolution Adaptive Metropolis algorithm, [8]_, [9]_
+    DiffeRential Evolution Adaptive Metropolis algorithm
 
     **References:**
 
-    .. [8] J.A. Vrugt et al. "Accelerating Markov chain Monte Carlo simulation by differential evolution with
-           self-adaptive randomized subspace sampling". International Journal of Nonlinear Sciences and Numerical
-           Simulation, 10(3):273–290, 2009.[68]
-    .. [9] J.A. Vrugt. "Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and
-           MATLAB implementation". Environmental Modelling & Software, 75:273–316, 2016.
+    * J.A. Vrugt et al. "Accelerating Markov chain Monte Carlo simulation by differential evolution with
+      self-adaptive randomized subspace sampling". International Journal of Nonlinear Sciences and Numerical
+      Simulation, 10(3):273–290, 2009.[68]
+    * J.A. Vrugt. "Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and
+      MATLAB implementation". Environmental Modelling & Software, 75:273–316, 2016.
 
     **Algorithm-specific inputs:**
 
@@ -3717,15 +3257,18 @@ class DREAM(MCMC):
         (iter_max, rate) governs discarding of outlier chains (discard every rate iterations if iter<iter_max).
         Default: (-1, 1), i.e., no check on outlier chains
 
+    **Methods:**
+
     """
 
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 delta=3, c=0.1, c_star=1e-6, n_CR=3, p_g=0.2, adapt_CR=(-1, 1), check_chains=(-1, 1), verbose=False):
+                 delta=3, c=0.1, c_star=1e-6, n_CR=3, p_g=0.2, adapt_CR=(-1, 1), check_chains=(-1, 1), verbose=False,
+                 random_state=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose)
+                         concat_chains=concat_chains, verbose=verbose, random_state=random_state)
 
         # Check nb of chains
         if self.nchains < 2:
@@ -3749,13 +3292,15 @@ class DREAM(MCMC):
             p = getattr(self, key)
             if not (isinstance(p, tuple) and len(p) == 2 and all(isinstance(i, (int, float)) for i in p)):
                 raise TypeError('Inputs ' + key + ' must be a tuple of 2 integers.')
+        if (not self.save_log_pdf) and (self.check_chains[0] > 0):
+            raise ValueError('UQpy: Input save_log_pdf must be True in order to check outlier chains')
 
         # Initialize a few other variables
         self.J, self.n_id = np.zeros((self.n_CR,)), np.zeros((self.n_CR,))
         self.pCR = np.ones((self.n_CR,)) / self.n_CR
 
         if self.verbose:
-            print('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
+            print('UQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.\n')
 
         # If nsamples is provided, run the algorithm
         if (nsamples is not None) or (nsamples_per_chain is not None):
@@ -3769,16 +3314,24 @@ class DREAM(MCMC):
         CR = np.arange(1, self.n_CR + 1) / self.n_CR
 
         # Dynamic part: evolution of chains
-        draw = np.argsort(np.random.rand(self.nchains - 1, self.nchains), axis=0)
+        unif_rvs = Uniform().rvs(nsamples=self.nchains * (self.nchains-1),
+                                 random_state=self.random_state).reshape((self.nchains - 1, self.nchains))
+        draw = np.argsort(unif_rvs, axis=0)
         dX = np.zeros_like(current_state)
-        lmda = np.random.uniform(low=-self.c, high=self.c, size=(self.nchains,))
+        lmda = Uniform(scale=2 * self.c).rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1, ))
         std_x_tmp = np.std(current_state, axis=0)
 
-        D = np.random.choice(self.delta, size=(self.nchains,), replace=True)
+        multi_rvs = Multinomial(n=1, p=[1./self.delta, ] * self.delta).rvs(
+            nsamples=self.nchains, random_state=self.random_state)
+        D = np.nonzero(multi_rvs)[1]
+        #D = np.random.choice(self.delta, size=(self.nchains,), replace=True)
         as_ = [R[j, draw[slice(D[j]), j]] for j in range(self.nchains)]
         bs_ = [R[j, draw[slice(D[j], 2 * D[j], 1), j]] for j in range(self.nchains)]
-        id = np.random.choice(self.n_CR, size=(self.nchains, ), replace=True, p=self.pCR)
-        z = np.random.rand(self.nchains, self.dimension)
+        multi_rvs = Multinomial(n=1, p=self.pCR).rvs(nsamples=self.nchains, random_state=self.random_state)
+        id = np.nonzero(multi_rvs)[1]
+        # id = np.random.choice(self.n_CR, size=(self.nchains, ), replace=True, p=self.pCR)
+        z = Uniform().rvs(nsamples=self.nchains * self.dimension,
+                          random_state=self.random_state).reshape((self.nchains, self.dimension))
         A = [np.where(z_j < CR[id_j])[0] for (z_j, id_j) in zip(z, id)]  # subset A of selected dimensions
         d_star = np.array([len(A_j) for A_j in A])
         for j in range(self.nchains):
@@ -3786,11 +3339,15 @@ class DREAM(MCMC):
                 A[j] = np.array([np.argmin(z[j])])
                 d_star[j] = 1
         gamma_d = 2.38 / np.sqrt(2 * (D + 1) * d_star)
-        g = [np.random.choice([gamma_d[j], 1], size=1, replace=True, p=[1 - self.p_g, self.p_g])
-             for j in range(self.nchains)]
+        g = Binomial(n=1, p=self.p_g).rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1, ))
+        g[g == 0] = gamma_d[g == 0]
+        #g = [np.random.choice([gamma_d[j], 1], size=1, replace=True, p=[1 - self.p_g, self.p_g])
+        #     for j in range(self.nchains)]
+        norm_vars = Normal(loc=0., scale=1.).rvs(nsamples=self.nchains ** 2,
+                                                 random_state=self.random_state).reshape((self.nchains, self.nchains))
         for j in range(self.nchains):
             for i in A[j]:
-                dX[j, i] = self.c_star * np.random.randn() + \
+                dX[j, i] = self.c_star * norm_vars[j, i] + \
                            (1 + lmda[j]) * g[j] * np.sum(current_state[as_[j], i] - current_state[bs_[j], i])
         candidates = current_state + dX
 
@@ -3799,8 +3356,9 @@ class DREAM(MCMC):
 
         # Accept or reject
         accept_vec = np.zeros((self.nchains, ))
+        unif_rvs = Uniform().rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1, ))
         for nc, (lpc, candidate, log_p_curr) in enumerate(zip(logp_candidates, candidates, current_log_pdf)):
-            accept = np.log(np.random.random()) < lpc - log_p_curr
+            accept = np.log(unif_rvs[nc]) < lpc - log_p_curr
             if accept:
                 current_state[nc, :] = candidate
                 current_log_pdf[nc] = lpc
@@ -3873,11 +3431,17 @@ class IS:
     >>> from UQpy.Distributions import Normal, Gumbel, JointCopula
     >>> dist_true = JointCopula(marginals=[Normal(), Normal()], copula=Gumbel(theta=2.))
     >>> proposal = JointInd(marginals=[Normal(), Normal()])
-    >>> sampler = IS(log_pdf_target=dist_true.log_pdf, nsamples=500, proposal=proposal)
+    >>> sampler = IS(log_pdf_target=dist_true.log_pdf, nsamples=500, proposal=proposal, random_state=123)
     >>> print(sampler.samples.shape)
     (500, 2)
     >>> print(sampler.weights.shape)
     (500,)
+    >>> print(np.round(sampler.samples[-5:], 4))
+    [[ 0.5679  0.6348]
+     [ 0.513   1.0699]
+     [-0.0269 -0.9093]
+     [ 0.3116  0.4703]
+     [-0.1421 -1.1114]]
 
     **Inputs:**
 
@@ -3898,6 +3462,12 @@ class IS:
         Number of samples to generate - see `run` method. If not None, the `run` method is called when the object is
         created. Default is None.
 
+    * random_state (None or `int` or `np.random.RandomState` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+    * **verbose** (`boolean`)
+        Set ``verbose = True`` to print status messages to the terminal during execution.
+
     **Attributes:**
 
     * **samples** (`ndarray`):
@@ -3913,22 +3483,28 @@ class IS:
     """
     # Last Modified: 10/05/2020 by Audrey Olivier
     def __init__(self, nsamples=None, pdf_target=None, log_pdf_target=None, args_target=None,
-                 proposal=None, verbose=False):
-        self.verbose = verbose
+                 proposal=None, verbose=False, random_state=None):
         # Initialize proposal: it should have an rvs and log pdf or pdf method
         self.proposal = proposal
         if not isinstance(self.proposal, Distribution):
-            raise TypeError('The proposal should be of type Distribution.')
+            raise TypeError('UQpy: The proposal should be of type Distribution.')
         if not hasattr(self.proposal, 'rvs'):
-            raise AttributeError('The proposal should have an rvs method')
+            raise AttributeError('UQpy: The proposal should have an rvs method')
         if not hasattr(self.proposal, 'log_pdf'):
             if not hasattr(self.proposal, 'pdf'):
-                raise AttributeError('The proposal should have a log_pdf or pdf method')
+                raise AttributeError('UQpy: The proposal should have a log_pdf or pdf method')
             self.proposal.log_pdf = lambda x: np.log(np.maximum(self.proposal.pdf(x),
                                                                 10 ** (-320) * np.ones((x.shape[0],))))
 
         # Initialize target
         self.evaluate_log_target = self._preprocess_target(log_pdf=log_pdf_target, pdf=pdf_target, args=args_target)
+
+        self.verbose = verbose
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         # Initialize the samples and weights
         self.samples = None
@@ -3954,9 +3530,9 @@ class IS:
         """
 
         if self.verbose:
-            print('Running Importance Sampling')
+            print('UQpy: Running Importance Sampling...')
         # Sample from proposal
-        new_samples = self.proposal.rvs(nsamples=nsamples)
+        new_samples = self.proposal.rvs(nsamples=nsamples, random_state=self.random_state)
         # Compute un-scaled weights of new samples
         new_log_weights = self.evaluate_log_target(x=new_samples) - self.proposal.log_pdf(x=new_samples)
 
@@ -3974,7 +3550,7 @@ class IS:
         sum_w = np.sum(weights, axis=0)
         self.weights = weights / sum_w
         if self.verbose:
-            print('Importance Sampling performed successfully')
+            print('UQpy: Importance Sampling performed successfully')
 
     def resample(self, method='multinomial', nsamples=None):
         """ 
@@ -4027,7 +3603,7 @@ class IS:
                     args = ()
                 evaluate_log_pdf = (lambda x: log_pdf(x, *args))
             else:
-                raise TypeError('log_pdf_target must be a callable')
+                raise TypeError('UQpy: log_pdf_target must be a callable')
         # pdf is provided
         elif pdf is not None:
             if callable(pdf):
@@ -4035,7 +3611,7 @@ class IS:
                     args = ()
                 evaluate_log_pdf = (lambda x: np.log(np.maximum(pdf(x, *args), 10 ** (-320) * np.ones((x.shape[0],)))))
             else:
-                raise TypeError('pdf_target must be a callable')
+                raise TypeError('UQpy: pdf_target must be a callable')
         else:
-            raise ValueError('log_pdf_target or pdf_target should be provided.')
+            raise ValueError('UQpy: log_pdf_target or pdf_target should be provided.')
         return evaluate_log_pdf

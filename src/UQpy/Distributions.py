@@ -46,14 +46,17 @@ class Distribution:
     """
     A parent class to all Distribution classes.
 
+    All distributions possess attribute `order_params` and methods `get_params`, `update_params`. Some distributions
+    also possess additional methods such as `pdf/pmf, log_pdf/log_pmf, cdf, icdf, rvs, fit, moments`.
+
     **Attributes:**
 
-    * **params** (`dict`):
-        Parameters of the distribution. Note: this attribute is not defined for joint distributions defined via their
-        marginals
-
     * **order_params** (`list`):
-        List of parameter names
+        List of parameter names, useful when parameter values are stored in vectors and must be passed to update_params
+
+    * **params** (`dict`):
+        Parameters of the distribution. Note: this attribute is not defined for certain distributions such as JointInd
+        or JointCopula distributions, the user is advised to use the `get_params` method to access the parameters.
 
     **Methods:**
 
@@ -145,8 +148,8 @@ class Distribution:
         * nsamples (`int`):
             Number of iid samples to be drawn. Default is 1.
 
-        * random_state (`int`):
-            Number used to initialize pseudorandom number generator. Default is None.
+        * random_state (None or `int` or `np.random.RandomState` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
 
         **Output/Returns:**
 

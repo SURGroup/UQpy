@@ -133,7 +133,7 @@ The ``LHS`` class of ``UQpy`` offers a variaty of methods for a Latin Hypercube 
 MCMC
 ----
 
-The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution :math:`p(x)=\frac{\tilde{p}(x)}{Z}`, where :math:`\tilde{p}(x)` is known but :math:`Z` is hard to compute (this will often be the case when using Bayes' theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method. More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution :math:`p(x)`.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:
+The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution :math:`p(x)=\frac{\tilde{p}(x)}{Z}`, where :math:`\tilde{p}(x)` is known but :math:`Z` is hard to compute (this will often be the case when using Bayes' theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method, see e.g. ([1]_, [2]_). More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution :math:`p(x)`.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:
 
 * initialize with a seed sample :math:`x_{0}`
 * walk the chain: for :math:`k=0,...` do:
@@ -160,36 +160,45 @@ MH
 ~~~~~
 
 .. autoclass:: UQpy.SampleMethods.MH
+	:members:
 
 MMH
 ~~~~~
    
 .. autoclass:: UQpy.SampleMethods.MMH
+	:members:
 
 Stretch
 ~~~~~~~~
    
 .. autoclass:: UQpy.SampleMethods.Stretch
+	:members:
 
 DRAM
 ~~~~~~~
    
 .. autoclass:: UQpy.SampleMethods.DRAM
+	:members:
 
 DREAM
 ~~~~~~~
    
 .. autoclass:: UQpy.SampleMethods.DREAM
+	:members:
 
 Adding a new MCMC 
 ~~~~~~~~~~~~~~~~~~~~~
 
 In order to add a new MCMC algorithm, a user must create a subclass of ``MCMC``, and overwrite the *run_one_iteration* method that propagates all the chains forward one iteration. Such a new class may use any number of additional inputs compared to the ``MCMC`` base class. The reader is encouraged to have a look at the ``MH`` class and its code to better understand how a particular algorithm should fit the general framework. 
 
-A useful note is that the user has access to attribute `evaluate_log_target` (and possibly `self.evaluate_log_target_marginals` if marginals were provided) which is a callable that simply evaluates the log-pdf of the target distribution at a given point `x`. It can be called within the code of a new sampler as `log_pdf_value = self.evaluate_log_target(x)`. The user also has access to some utility methods such as
+A useful note is that the user has access to a number of useful attributes / utility methods as the algorithm proceeds, such as:
 
-* the `_update_acceptance_rate` that updates the `acceptance_rate` attribute of the sampler, given a  (list of) boolean(s) indicating if the candidate state(s) were accepted at a given iteration.
-* the `_check_methods_proposal` that checks wether a given proposal is adequate (i.e., has `rvs` and `log_pdf`/`pdf` methods).
+* the attribute `evaluate_log_target` (and possibly `self.evaluate_log_target_marginals` if marginals were provided) is created at initialization. It is a callable that simply evaluates the log-pdf of the target distribution at a given point `x`. It can be called within the code of a new sampler as `log_pdf_value = self.evaluate_log_target(x)`. 
+* the `nsamples` and `nsamples_per_chain` attributes indicate the number of samples that have been stored up to the current iteration (i.e., they are updated dynamically as the algorithm proceeds),
+* the `samples` attribute contains all previously stored samples. Cautionary note: `self.samples` also contains trailing zeros, for samples yet to be stored, thus to access all previously stored samples at a given iteration the user must call `self.samples[:self.nsamples_per_chain]`, which will return a (self.nsamples_per_chain, self.nchains, self.dimension) `ndarray`,
+* the `log_pdf_values` attribute contains all previously stored log target values, same cautionary note as above,
+* the `_update_acceptance_rate` method updates the `acceptance_rate` attribute of the sampler, given a  (list of) boolean(s) indicating if the candidate state(s) were accepted at a given iteration,
+* the `_check_methods_proposal` method checks wether a given proposal is adequate (i.e., has `rvs` and `log_pdf`/`pdf` methods).
 
    
 IS
@@ -209,6 +218,9 @@ If :math:`p` is only known up to a constant, i.e., one can only evaluate :math:`
    
 .. autoclass:: UQpy.SampleMethods.IS
    :members:
+   
+.. [1] Gelman et al., "Bayesian data analysis", Chapman and Hall/CRC, 2013
+.. [2] R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
 
 
 .. toctree::
