@@ -1,9 +1,11 @@
-from UQpy.RunModel import *
-from UQpy.SampleMethods import MCS
-import time
+import glob
 import os
 import pickle
-import glob
+import time
+
+from UQpy.Distributions import Normal, Uniform
+from UQpy.RunModel import *
+from UQpy.SampleMethods import MCS
 
 calling_directory = os.getcwd()
 t = time.time()
@@ -22,12 +24,10 @@ print('Example: Created the model object.')
 # The yield strength is assumed to be normally distributed, with the parameters
 # being: mean = 250 MPa and coefficient of variation of 7%.
 
-########################################################################################################################
-# This will need to be rewritten when MCS is updated.
 # Creating samples using MCS
-x_mcs = MCS(dist_name=['uniform', 'normal'], dist_params=[[50, 400],
-            [2.50e8, 1.75e7]], nsamples=100)
-########################################################################################################################
+d_n = Normal(loc=50, scale=400)
+d_u = Uniform(loc=2.50e8, scale=1.75e7)
+x_mcs = MCS(dist_object=[d_n, d_u], nsamples=100, random_state=[987979, 9487])
 
 # Running simulations using the previously defined model object and samples
 sample_points = x_mcs.samples

@@ -453,7 +453,7 @@ Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pr
 </div>
 <div class="section" id="mcmc">
 <h2>MCMC<a class="headerlink" href="#mcmc" title="Permalink to this headline">¶</a></h2>
-<p>The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution <span class="math notranslate nohighlight">\(p(x)=\frac{\tilde{p}(x)}{Z}\)</span>, where <span class="math notranslate nohighlight">\(\tilde{p}(x)\)</span> is known but $Z$ is hard to compute (this will often be the case when using Bayes’ theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method. More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution <span class="math notranslate nohighlight">\(p(x)\)</span>.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:</p>
+<p>The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution <span class="math notranslate nohighlight">\(p(x)=\frac{\tilde{p}(x)}{Z}\)</span>, where <span class="math notranslate nohighlight">\(\tilde{p}(x)\)</span> is known but <span class="math notranslate nohighlight">\(Z\)</span> is hard to compute (this will often be the case when using Bayes’ theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method. More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution <span class="math notranslate nohighlight">\(p(x)\)</span>.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:</p>
 <ul class="simple">
 <li><p>initialize with a seed sample <span class="math notranslate nohighlight">\(x_{0}\)</span></p></li>
 <li><dl class="simple">
@@ -468,15 +468,16 @@ Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pr
 <div class="math notranslate nohighlight">
 \[\alpha(x^{\star} \vert x_{k}):= \min \left\{ \frac{\tilde{p}(x^{\star})}{\tilde{p}(x)}\cdot \frac{Q(x \vert x^{\star})}{Q(x^{\star} \vert x)}, 1 \right\}\]</div>
 <p>The transition probability <span class="math notranslate nohighlight">\(Q\)</span> is chosen by the user (see input <cite>proposal</cite> of the MH algorithm, and careful attention must be given to that choice as it plays a major role in the accuracy and efficiency of the algorithm. The following figure shows samples accepted (blue) and rejected (red) when trying to sample from a 2d Gaussian distribution using MH, for different scale parameters of the proposal distribution. If the scale is too small, the space is not well explored; if the scale is too large, many candidate samples will be rejected, yielding a very inefficient algorithm. As a rule of thumb, an acceptance rate of 10%-50% could be targeted (see <cite>Diagnostics</cite> in the <cite>Utilities</cite> module).</p>
-<a class="reference internal image-reference" href="_images/MCMC_samples.png"><img alt="IS weighted samples" class="align-center" src="_images/MCMC_samples.png" style="width: 740.8000000000001px; height: 256.0px;" /></a>
+<a class="reference internal image-reference" href="_images/SampleMethods_MCMC_samples.png"><img alt="IS weighted samples" class="align-center" src="_images/SampleMethods_MCMC_samples.png" style="width: 740.8000000000001px; height: 256.0px;" /></a>
 <p>Finally, samples from the target distribution will be generated only when the chain has converged to its stationary distribution, after a so-called burn-in period. Thus the user would often reject the first few samples (see input <cite>nburn</cite>). Also, the chain yields correlated samples; thus to obtain i.i.d. samples from the target distribution, the user should keep only one out of n samples (see input <cite>jump</cite>). This means that the code will perform in total nburn + jump * N evaluations of the target pdf to yield N i.i.d. samples from the target distribution (for the MH algorithm with a single chain).</p>
-<p>The parent class for all MCMC algorithms is the <code class="docutils literal notranslate"><span class="pre">MCMC</span> <span class="pre">class</span></code>, which defines the inputs that are common to all MCMC algorithms, along with the <em>run</em> method that is being called to run the chain. Any given MCMC algorithm is a sub-class of MCMC that overwrites the main <em>run_iterations</em> method.</p>
+<p>The parent class for all MCMC algorithms is the <code class="docutils literal notranslate"><span class="pre">MCMC</span> <span class="pre">class</span></code>, which defines the inputs that are common to all MCMC algorithms, along with the <em>run</em> method that is being called to run the chain. Any given MCMC algorithm is a sub-class of MCMC that overwrites the main <em>run_one_iteration</em> method.</p>
 <dl class="class">
 <dt id="UQpy.SampleMethods.MCMC">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MCMC</code><span class="sig-paren">(</span><em class="sig-param">dimension=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">concat_chains=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCMC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCMC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo
 (<a class="footnote-reference brackets" href="#id4" id="id2">1</a>, <a class="footnote-reference brackets" href="#id5" id="id3">2</a>).</p>
-<p>This is the parent class to all MCMC algorithms.</p>
+<p>This is the base class for all MCMC algorithms. This base class only provides the framework for MCMC and cannot be
+used directly for sampling. Sampling is done by calling a subclass - see example in class <code class="docutils literal notranslate"><span class="pre">MH</span></code>.</p>
 <p><strong>References:</strong></p>
 <dl class="footnote brackets">
 <dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
@@ -487,42 +488,42 @@ Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pr
 </dd>
 </dl>
 <p><strong>Inputs:</strong></p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
 <dt><strong>dimension</strong> (<cite>int</cite>):</dt><dd><p>A scalar value defining the dimension of target density function. Either dimension or seed must be provided.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
+<li><dl>
 <dt><strong>pdf_target</strong> ((<cite>list</cite> of) callables):</dt><dd><p>Target density function from which to draw random samples. Either <cite>pdf_target</cite> or <cite>log_pdf_target</cite> must be
-provided (the latter should be preferred).</p>
+provided (the latter should be preferred for better numerical stability).</p>
+<p>If <cite>pdf_target</cite> is a callable, it refers to the joint pdf to sample from, it must take at least one input <cite>x</cite>,
+the point(s) where to evaluate the pdf. Within MCMC the target is evaluated as:</p>
+<p><cite>p(x) = pdf_target(x, *args_target)</cite></p>
+<p>where <cite>x</cite> is a ndarray of shape (npoints, dimension) and <cite>args_target</cite> are additional positional arguments that
+are provided to MCMC via its <cite>args_target</cite> input.</p>
+<p>If <cite>pdf_target</cite> is a list of callables, it refers to independent marginals to sample from, marginal in dimension
+<cite>j</cite> is evaluated as:</p>
+<p><cite>p_j(xj) = pdf_target[j](xj, *args_target[j])</cite></p>
+<p>where <cite>x</cite> is a ndarray of shape (npoints, dimension)</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
+<li><dl>
 <dt><strong>log_pdf_target</strong> ((<cite>list</cite> of) callables):</dt><dd><p>Logarithm of the target density function from which to draw random samples. Either <cite>pdf_target</cite> or
-<cite>log_pdf_target</cite> must be provided (the latter should be preferred).</p>
+<cite>log_pdf_target</cite> must be provided (the latter should be preferred for better numerical stability).</p>
+<p>Same comments as for input <cite>pdf_target</cite>.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>args_target</strong> (<cite>tuple</cite>):</dt><dd><p>Positional arguments of the pdf / log-pdf target function.</p>
+<dt><strong>args_target</strong> ((<cite>list</cite> of) <cite>tuple</cite>):</dt><dd><p>Positional arguments of the pdf / log-pdf target function. See <cite>pdf_target</cite></p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to generate. If not None, the <cite>run</cite> method is called when the object is created.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nsamples_per_chain</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to generate per chain. If not None, the <cite>run</cite> method is called when the object is created.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>jump</strong> (<cite>int</cite>):</dt><dd><p>Thinning parameter - only one out of jump samples are stored, used to reduce correlation between samples.
-Default is 1 (no thinning).</p>
+<dt><strong>jump</strong> (<cite>int</cite>):</dt><dd><p>Thinning parameter, used to reduce correlation between samples. Setting <cite>jump=n</cite> corresponds to skipping <cite>n-1</cite>
+states between accepted states of the chain. Default is 1 (no thinning).</p>
 </dd>
 </dl>
 </li>
@@ -545,6 +546,18 @@ burn-in). Default is 0, no burn-in.</p>
 <li><dl class="simple">
 <dt><strong>concat_chains</strong> (<cite>bool</cite>):</dt><dd><p>Boolean that indicates whether to concatenate the chains after a run, i.e., samples are stored as an <cite>ndarray</cite>
 of shape (nsamples * nchains, dimension) if True, (nsamples, nchains, dimension) if False. Default: True</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to generate - see <cite>run</cite> method. If not None, the <cite>run</cite> method is called when the object is
+created. Default: None</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nsamples_per_chain</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to generate per chain - see <cite>run</cite> method. If not None, the <cite>run</cite> method is called when the
+object is created. Default: None</p>
 </dd>
 </dl>
 </li>
@@ -589,8 +602,8 @@ niterations=nburn+jump*nsamples_per_chain.</p>
 <dt id="UQpy.SampleMethods.MCMC.run">
 <code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCMC.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCMC.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the MCMC chain.</p>
-<p>This function samples from the MCMC chains and append samples to existing ones (if any). This method calls the
-run_iterations method that is specific to each algorithm.</p>
+<p>This function samples from the MCMC chains and append samples to existing ones (if any). This method leverages
+the run_iterations method that is specific to each algorithm.</p>
 <p><strong>Inputs:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
@@ -650,10 +663,18 @@ log-pdf, which will be passed as inputs to the <cite>run_one_iteration</cite> me
 <dt id="UQpy.SampleMethods.MH">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MH</code><span class="sig-paren">(</span><em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">dimension=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">proposal=None</em>, <em class="sig-param">proposal_is_symmetric=False</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MH" title="Permalink to this definition">¶</a></dt>
 <dd><p>Metropolis-Hastings algorithm</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">Gumbel</span><span class="p">,</span> <span class="n">JointCopula</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist_true</span> <span class="o">=</span> <span class="n">JointCopula</span><span class="p">(</span><span class="n">marginals</span><span class="o">=</span><span class="p">[</span><span class="n">Normal</span><span class="p">(),</span> <span class="n">Normal</span><span class="p">()],</span> <span class="n">copula</span><span class="o">=</span><span class="n">Gumbel</span><span class="p">(</span><span class="n">theta</span><span class="o">=</span><span class="mf">2.</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proposal</span> <span class="o">=</span> <span class="n">JointInd</span><span class="p">(</span><span class="n">marginals</span><span class="o">=</span><span class="p">[</span><span class="n">Normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.2</span><span class="p">),</span> <span class="n">Normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sampler</span> <span class="o">=</span> <span class="n">MH</span><span class="p">(</span><span class="n">log_pdf_target</span><span class="o">=</span><span class="n">dist_true</span><span class="o">.</span><span class="n">log_pdf</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">proposal</span><span class="o">=</span><span class="n">proposal</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(500, 2)</span>
+</pre></div>
+</div>
 <p><strong>Algorithm-specific inputs:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>proposal</strong> (<code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object):</dt><dd><p>Proposal distribution. Default: standard multivariate normal</p>
+<dt><strong>proposal</strong> (<code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object):</dt><dd><p>Proposal distribution, must have a log_pdf/pdf and rvs method. Default: standard multivariate normal</p>
 </dd>
 </dl>
 </li>
@@ -686,7 +707,7 @@ Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.</p>
 <p><strong>Algorithm-specific inputs:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>proposal</strong> ((<cite>list</cite> of) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>Proposal distribution(s) in dimension 1. Default: standard normal</p>
+<dt><strong>proposal</strong> ((<cite>list</cite> of) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>Proposal distribution(s) in dimension 1, must have a log_pdf/pdf and rvs method. Default: standard normal</p>
 </dd>
 </dl>
 </li>
@@ -839,6 +860,15 @@ Default: (-1, 1), i.e., no check on outlier chains</p>
 </dd></dl>
 
 </div>
+<div class="section" id="adding-a-new-mcmc">
+<h3>Adding a new MCMC<a class="headerlink" href="#adding-a-new-mcmc" title="Permalink to this headline">¶</a></h3>
+<p>In order to add a new MCMC algorithm, a user must create a subclass of <code class="docutils literal notranslate"><span class="pre">MCMC</span></code>, and overwrite the <em>run_one_iteration</em> method that propagates all the chains forward one iteration. Such a new class may use any number of additional inputs compared to the <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> base class. The reader is encouraged to have a look at the <code class="docutils literal notranslate"><span class="pre">MH</span></code> class and its code to better understand how a particular algorithm should fit the general framework.</p>
+<p>A useful note is that the user has access to attribute <cite>evaluate_log_target</cite> (and possibly <cite>self.evaluate_log_target_marginals</cite> if marginals were provided) which is a callable that simply evaluates the log-pdf of the target distribution at a given point <cite>x</cite>. It can be called within the code of a new sampler as <cite>log_pdf_value = self.evaluate_log_target(x)</cite>. The user also has access to some utility methods such as</p>
+<ul class="simple">
+<li><p>the <cite>_update_acceptance_rate</cite> that updates the <cite>acceptance_rate</cite> attribute of the sampler, given a  (list of) boolean(s) indicating if the candidate state(s) were accepted at a given iteration.</p></li>
+<li><p>the <cite>_check_methods_proposal</cite> that checks wether a given proposal is adequate (i.e., has <cite>rvs</cite> and <cite>log_pdf</cite>/<cite>pdf</cite> methods).</p></li>
+</ul>
+</div>
 </div>
 <div class="section" id="is">
 <h2>IS<a class="headerlink" href="#is" title="Permalink to this headline">¶</a></h2>
@@ -846,11 +876,21 @@ Default: (-1, 1), i.e., no check on outlier chains</p>
 <div class="math notranslate nohighlight">
 \[w(\textbf{x}) = \frac{p(\textbf{x})}{q(\textbf{x})}\]</div>
 <p>If <span class="math notranslate nohighlight">\(p\)</span> is only known up to a constant, i.e., one can only evaluate <span class="math notranslate nohighlight">\(\tilde{p}(\textbf{x})\)</span>, where <span class="math notranslate nohighlight">\(p(\textbf{x})=\frac{\tilde{p}(\textbf{x})}{Z}\)</span>, IS can be used by further normalizing the weights (self-normalized IS). The following figure shows the weighted samples obtained when using IS to estimate a 2d Gaussian target distribution <span class="math notranslate nohighlight">\(p\)</span>, sampling from a uniform proposal distribution <span class="math notranslate nohighlight">\(q\)</span>.</p>
-<a class="reference internal image-reference" href="_images/IS_samples.png"><img alt="IS weighted samples" class="align-center" src="_images/IS_samples.png" style="width: 220.8px; height: 226.4px;" /></a>
+<a class="reference internal image-reference" href="_images/SampleMethods_IS_samples.png"><img alt="IS weighted samples" class="align-center" src="_images/SampleMethods_IS_samples.png" style="width: 220.8px; height: 226.4px;" /></a>
 <dl class="class">
 <dt id="UQpy.SampleMethods.IS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">IS</code><span class="sig-paren">(</span><em class="sig-param">nsamples=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">proposal=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sample from a user-defined target density using importance sampling.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">Gumbel</span><span class="p">,</span> <span class="n">JointCopula</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist_true</span> <span class="o">=</span> <span class="n">JointCopula</span><span class="p">(</span><span class="n">marginals</span><span class="o">=</span><span class="p">[</span><span class="n">Normal</span><span class="p">(),</span> <span class="n">Normal</span><span class="p">()],</span> <span class="n">copula</span><span class="o">=</span><span class="n">Gumbel</span><span class="p">(</span><span class="n">theta</span><span class="o">=</span><span class="mf">2.</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proposal</span> <span class="o">=</span> <span class="n">JointInd</span><span class="p">(</span><span class="n">marginals</span><span class="o">=</span><span class="p">[</span><span class="n">Normal</span><span class="p">(),</span> <span class="n">Normal</span><span class="p">()])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sampler</span> <span class="o">=</span> <span class="n">IS</span><span class="p">(</span><span class="n">log_pdf_target</span><span class="o">=</span><span class="n">dist_true</span><span class="o">.</span><span class="n">log_pdf</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">proposal</span><span class="o">=</span><span class="n">proposal</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(500, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(500,)</span>
+</pre></div>
+</div>
 <p><strong>Inputs:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
@@ -875,7 +915,8 @@ is preferred).</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to generate</p>
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to generate - see <cite>run</cite> method. If not None, the <cite>run</cite> method is called when the object is
+created. Default is None.</p>
 </dd>
 </dl>
 </li>
@@ -888,12 +929,12 @@ is preferred).</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>unnormalized_log_weights</strong> (<cite>ndarray</cite>)</dt><dd><p>unnormalized log weights, i.e., log_w(x) = log_target(x) - log_proposal(x), <cite>ndarray</cite> of shape (nsamples, )</p>
+<dt><strong>unnormalized_log_weights</strong> (<cite>ndarray</cite>)</dt><dd><p>Unnormalized log weights, i.e., log_w(x) = log_target(x) - log_proposal(x), <cite>ndarray</cite> of shape (nsamples, )</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>weights</strong> (<cite>ndarray</cite>):</dt><dd><p>importance weights samples, weighted so that they sum up to 1, <cite>ndarray</cite> of shape (nsamples, )</p>
+<dt><strong>weights</strong> (<cite>ndarray</cite>):</dt><dd><p>Importance weights, weighted so that they sum up to 1, <cite>ndarray</cite> of shape (nsamples, )</p>
 </dd>
 </dl>
 </li>
@@ -935,8 +976,7 @@ existing samples).</p>
 <dd><p>Generate and weight samples.</p>
 <p>This function samples from the proposal and append samples to existing ones (if any). It then weights the
 samples as log_w_unnormalized) = log(target)-log(proposal). This function updates the output attributes
-samples, unnormalized_log_weights and weights. If nsamples is provided when creating the object, this method is
-directly called in init.</p>
+samples, unnormalized_log_weights and weights.</p>
 <p><strong>Inputs:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
@@ -1000,6 +1040,7 @@ directly called in init.</p>
 <li class="toctree-l1"><a class="reference internal" href="stochastic_process.html">StochasticProcess</a></li>
 <li class="toctree-l1"><a class="reference internal" href="surrogates.html">Surrogates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reliability.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">Dimension reduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="news.html">News</a></li>

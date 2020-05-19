@@ -111,46 +111,41 @@
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
-        <span class="c1"># Check if a Distribution object is provided.</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">dist_object</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: A Distribution object is required.&#39;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="n">add_continuous_1d</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="n">add_continuous_nd</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)):</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">Distribution</span><span class="p">):</span>
-                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A UQpy.Distribution object must be provided.&#39;</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">DistributionContinuous1D</span><span class="p">):</span>
-                        <span class="n">add_continuous_1d</span> <span class="o">=</span> <span class="n">add_continuous_1d</span> <span class="o">+</span> <span class="mi">1</span>
-                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">DistributionND</span><span class="p">):</span>
-                        <span class="n">add_continuous_nd</span> <span class="o">=</span> <span class="n">add_continuous_nd</span> <span class="o">+</span> <span class="mi">1</span>
-                <span class="k">if</span> <span class="n">add_continuous_1d</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">list</span> <span class="o">=</span> <span class="kc">False</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">list</span> <span class="o">=</span> <span class="kc">True</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">False</span>
-
-                <span class="k">if</span> <span class="n">random_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">random_state</span><span class="p">):</span>
-                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Incompatible dimensions between random_state and dist_object.&#39;</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="p">[</span><span class="n">random_state</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="o">=</span> <span class="n">dist_object</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">Distribution</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">add_continuous_1d</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">add_continuous_nd</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">Distribution</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A UQpy.Distribution object must be provided.&#39;</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="o">=</span> <span class="n">dist_object</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">list</span> <span class="o">=</span> <span class="kc">False</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="k">if</span> <span class="n">random_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Incompatible dimensions between random_state and dist_object.&#39;</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">DistributionContinuous1D</span><span class="p">):</span>
+                    <span class="n">add_continuous_1d</span> <span class="o">=</span> <span class="n">add_continuous_1d</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">DistributionND</span><span class="p">):</span>
+                    <span class="n">add_continuous_nd</span> <span class="o">=</span> <span class="n">add_continuous_nd</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">add_continuous_1d</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">list</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">list</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="k">if</span> <span class="n">random_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">random_state</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Incompatible dimensions between random_state and dist_object.&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="p">[</span><span class="n">random_state</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="o">=</span> <span class="n">dist_object</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">Distribution</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A UQpy.Distribution object must be provided.&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="o">=</span> <span class="n">dist_object</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">list</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">random_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Incompatible dimensions between random_state and dist_object.&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
 
         <span class="c1"># Instantiate the output attributes.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="kc">None</span>
@@ -162,7 +157,7 @@
         <span class="c1"># ==============================================================================================================</span>
         <span class="c1">#                                       Run Monte Carlo sampling</span>
         <span class="k">if</span> <span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MCS.run"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MCS.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -2788,7 +2783,8 @@
 <span class="sd">    Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo</span>
 <span class="sd">    ([1]_, [2]_).</span>
 
-<span class="sd">    This is the parent class to all MCMC algorithms.</span>
+<span class="sd">    This is the base class for all MCMC algorithms. This base class only provides the framework for MCMC and cannot be</span>
+<span class="sd">    used directly for sampling. Sampling is done by calling a subclass - see example in class ``MH``.</span>
 
 <span class="sd">    **References:**</span>
 
@@ -2802,24 +2798,35 @@
 
 <span class="sd">    * **pdf_target** ((`list` of) callables):</span>
 <span class="sd">        Target density function from which to draw random samples. Either `pdf_target` or `log_pdf_target` must be</span>
-<span class="sd">        provided (the latter should be preferred).</span>
+<span class="sd">        provided (the latter should be preferred for better numerical stability).</span>
+
+<span class="sd">        If `pdf_target` is a callable, it refers to the joint pdf to sample from, it must take at least one input `x`,</span>
+<span class="sd">        the point(s) where to evaluate the pdf. Within MCMC the target is evaluated as:</span>
+
+<span class="sd">        `p(x) = pdf_target(x, *args_target)`</span>
+
+<span class="sd">        where `x` is a ndarray of shape (npoints, dimension) and `args_target` are additional positional arguments that</span>
+<span class="sd">        are provided to MCMC via its `args_target` input.</span>
+
+<span class="sd">        If `pdf_target` is a list of callables, it refers to independent marginals to sample from, marginal in dimension</span>
+<span class="sd">        `j` is evaluated as:</span>
+
+<span class="sd">        `p_j(xj) = pdf_target[j](xj, *args_target[j])`</span>
+
+<span class="sd">        where `x` is a ndarray of shape (npoints, dimension)</span>
 
 <span class="sd">    * **log_pdf_target** ((`list` of) callables):</span>
 <span class="sd">        Logarithm of the target density function from which to draw random samples. Either `pdf_target` or</span>
-<span class="sd">        `log_pdf_target` must be provided (the latter should be preferred).</span>
+<span class="sd">        `log_pdf_target` must be provided (the latter should be preferred for better numerical stability).</span>
 
-<span class="sd">    * **args_target** (`tuple`):</span>
-<span class="sd">        Positional arguments of the pdf / log-pdf target function.</span>
+<span class="sd">        Same comments as for input `pdf_target`.</span>
 
-<span class="sd">    * **nsamples** (`int`):</span>
-<span class="sd">        Number of samples to generate. If not None, the `run` method is called when the object is created.</span>
-
-<span class="sd">    * **nsamples_per_chain** (`int`):</span>
-<span class="sd">        Number of samples to generate per chain. If not None, the `run` method is called when the object is created.</span>
+<span class="sd">    * **args_target** ((`list` of) `tuple`):</span>
+<span class="sd">        Positional arguments of the pdf / log-pdf target function. See `pdf_target`</span>
 
 <span class="sd">    * **jump** (`int`):</span>
-<span class="sd">        Thinning parameter - only one out of jump samples are stored, used to reduce correlation between samples.</span>
-<span class="sd">        Default is 1 (no thinning).</span>
+<span class="sd">        Thinning parameter, used to reduce correlation between samples. Setting `jump=n` corresponds to	skipping `n-1`</span>
+<span class="sd">        states between accepted states of the chain. Default is 1 (no thinning).</span>
 
 <span class="sd">    * **nburn** (`int`):</span>
 <span class="sd">        Length of burn-in - i.e., number of samples at the beginning of the chain to discard (note: no thinning during</span>
@@ -2834,6 +2841,14 @@
 <span class="sd">    * **concat_chains** (`bool`):</span>
 <span class="sd">        Boolean that indicates whether to concatenate the chains after a run, i.e., samples are stored as an `ndarray`</span>
 <span class="sd">        of shape (nsamples * nchains, dimension) if True, (nsamples, nchains, dimension) if False. Default: True</span>
+
+<span class="sd">    * **nsamples** (`int`):</span>
+<span class="sd">        Number of samples to generate - see `run` method. If not None, the `run` method is called when the object is</span>
+<span class="sd">        created. Default: None</span>
+
+<span class="sd">    * **nsamples_per_chain** (`int`):</span>
+<span class="sd">        Number of samples to generate per chain - see `run` method. If not None, the `run` method is called when the</span>
+<span class="sd">        object is created. Default: None</span>
 
 <span class="sd">    **Attributes:**</span>
 
@@ -2869,8 +2884,8 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">jump</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">jump</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: jump should be an integer &gt;= 1&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nburn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jump</span> <span class="o">=</span> <span class="n">nburn</span><span class="p">,</span> <span class="n">jump</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocess_seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dimension</span><span class="p">)</span>    <span class="c1"># check type and assign default [0.s]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nchains</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocess_seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dimension</span><span class="p">)</span>    <span class="c1"># check type and assign default [0.s]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nchains</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="o">.</span><span class="n">shape</span>
 
         <span class="c1"># Check target pdf</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_log_target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_log_target_marginals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocess_target</span><span class="p">(</span>
@@ -2894,8 +2909,8 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the MCMC chain.</span>
 
-<span class="sd">        This function samples from the MCMC chains and append samples to existing ones (if any). This method calls the</span>
-<span class="sd">        run_iterations method that is specific to each algorithm.</span>
+<span class="sd">        This function samples from the MCMC chains and append samples to existing ones (if any). This method leverages</span>
+<span class="sd">        the run_iterations method that is specific to each algorithm.</span>
 
 <span class="sd">        **Inputs:**</span>
 
@@ -3033,6 +3048,7 @@
             <span class="n">nsamples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nsamples_per_chain</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nchains</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>    <span class="c1"># very first call of run, set current_state as the seed and initialize self.samples</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">nsamples_per_chain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nchains</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nsamples_per_chain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nchains</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">))</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_log_pdf</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">log_pdf_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nsamples_per_chain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nchains</span><span class="p">))</span>
@@ -3176,8 +3192,7 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Input seed should be an array of shape (dimension, ) or (nchains, dimension).&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">dim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">seed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">dim</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Wrong dimensions between seed and dimension.&#39;</span><span class="p">)</span>
-            <span class="n">dim</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">seed</span><span class="p">,</span> <span class="n">dim</span>
+        <span class="k">return</span> <span class="n">seed</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_check_methods_proposal</span><span class="p">(</span><span class="n">proposal</span><span class="p">):</span>
@@ -3208,13 +3223,19 @@
 
 <div class="viewcode-block" id="MH"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MH">[docs]</a><span class="k">class</span> <span class="nc">MH</span><span class="p">(</span><span class="n">MCMC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-
 <span class="sd">    Metropolis-Hastings algorithm</span>
+
+<span class="sd">    &gt;&gt;&gt; from UQpy.Distributions import Normal, Gumbel, JointCopula</span>
+<span class="sd">    &gt;&gt;&gt; dist_true = JointCopula(marginals=[Normal(), Normal()], copula=Gumbel(theta=2.))</span>
+<span class="sd">    &gt;&gt;&gt; proposal = JointInd(marginals=[Normal(scale=0.2), Normal(scale=0.2)])</span>
+<span class="sd">    &gt;&gt;&gt; sampler = MH(log_pdf_target=dist_true.log_pdf, nsamples=500, proposal=proposal, seed=[0., 0.])</span>
+<span class="sd">    &gt;&gt;&gt; print(sampler.samples.shape)</span>
+<span class="sd">    (500, 2)</span>
 
 <span class="sd">    **Algorithm-specific inputs:**</span>
 
 <span class="sd">    * **proposal** (``Distribution`` object):</span>
-<span class="sd">        Proposal distribution. Default: standard multivariate normal</span>
+<span class="sd">        Proposal distribution, must have a log_pdf/pdf and rvs method. Default: standard multivariate normal</span>
 
 <span class="sd">    * **proposal_is_symmetric** (`bool`):</span>
 <span class="sd">        indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha</span>
@@ -3232,7 +3253,6 @@
         <span class="c1"># Initialize algorithm specific inputs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">proposal</span> <span class="o">=</span> <span class="n">proposal</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">proposal_is_symmetric</span> <span class="o">=</span> <span class="n">proposal_is_symmetric</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="n">dimension</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proposal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -3301,7 +3321,7 @@
 <span class="sd">    **Algorithm-specific inputs:**</span>
 
 <span class="sd">    * **proposal** ((`list` of) ``Distribution`` object(s)):</span>
-<span class="sd">        Proposal distribution(s) in dimension 1. Default: standard normal</span>
+<span class="sd">        Proposal distribution(s) in dimension 1, must have a log_pdf/pdf and rvs method. Default: standard normal</span>
 
 <span class="sd">    * **proposal_is_symmetric** ((`list` of) `bool`):</span>
 <span class="sd">        indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha</span>
@@ -3884,6 +3904,15 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sample from a user-defined target density using importance sampling.</span>
 
+<span class="sd">    &gt;&gt;&gt; from UQpy.Distributions import Normal, Gumbel, JointCopula</span>
+<span class="sd">    &gt;&gt;&gt; dist_true = JointCopula(marginals=[Normal(), Normal()], copula=Gumbel(theta=2.))</span>
+<span class="sd">    &gt;&gt;&gt; proposal = JointInd(marginals=[Normal(), Normal()])</span>
+<span class="sd">    &gt;&gt;&gt; sampler = IS(log_pdf_target=dist_true.log_pdf, nsamples=500, proposal=proposal)</span>
+<span class="sd">    &gt;&gt;&gt; print(sampler.samples.shape)</span>
+<span class="sd">    (500, 2)</span>
+<span class="sd">    &gt;&gt;&gt; print(sampler.weights.shape)</span>
+<span class="sd">    (500,)</span>
+
 <span class="sd">    **Inputs:**</span>
 
 <span class="sd">    * **proposal** (``Distribution`` object):</span>
@@ -3900,7 +3929,8 @@
 <span class="sd">        Positional arguments of the target log_pdf / pdf callable</span>
 
 <span class="sd">    * **nsamples** (`int`):</span>
-<span class="sd">        Number of samples to generate</span>
+<span class="sd">        Number of samples to generate - see `run` method. If not None, the `run` method is called when the object is</span>
+<span class="sd">        created. Default is None.</span>
 
 <span class="sd">    **Attributes:**</span>
 
@@ -3908,10 +3938,10 @@
 <span class="sd">        Set of samples, `ndarray` of shape (nsamples, dim)</span>
 
 <span class="sd">    * **unnormalized_log_weights** (`ndarray`)</span>
-<span class="sd">        unnormalized log weights, i.e., log_w(x) = log_target(x) - log_proposal(x), `ndarray` of shape (nsamples, )</span>
+<span class="sd">        Unnormalized log weights, i.e., log_w(x) = log_target(x) - log_proposal(x), `ndarray` of shape (nsamples, )</span>
 
 <span class="sd">    * **weights** (`ndarray`):</span>
-<span class="sd">        importance weights samples, weighted so that they sum up to 1, `ndarray` of shape (nsamples, )</span>
+<span class="sd">        Importance weights, weighted so that they sum up to 1, `ndarray` of shape (nsamples, )</span>
 
 <span class="sd">    **Methods:**</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -3949,8 +3979,7 @@
 
 <span class="sd">        This function samples from the proposal and append samples to existing ones (if any). It then weights the </span>
 <span class="sd">        samples as log_w_unnormalized) = log(target)-log(proposal). This function updates the output attributes </span>
-<span class="sd">        samples, unnormalized_log_weights and weights. If nsamples is provided when creating the object, this method is </span>
-<span class="sd">        directly called in init.</span>
+<span class="sd">        samples, unnormalized_log_weights and weights.</span>
 
 <span class="sd">        **Inputs:**</span>
 
@@ -4085,6 +4114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../stochastic_process.html">StochasticProcess</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../surrogates.html">Surrogates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reliability.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../inference.html">Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dimension_reduction.html">Dimension reduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
