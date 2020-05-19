@@ -206,8 +206,10 @@ possess a prior, an uninformative prior <cite>p(params)=1</cite> is assumed.</p>
 </div>
 <div class="section" id="parameter-estimation">
 <h2>Parameter estimation<a class="headerlink" href="#parameter-estimation" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="maximum-likelihood">
-<h3>Maximum Likelihood<a class="headerlink" href="#maximum-likelihood" title="Permalink to this headline">¶</a></h3>
+<p>Parameter estimation refers to process of estimating the parameter vector of a given model. Depending on the nature of the method, parameter estimation may provide a point estimator or a probability distribution for the parameter vector. <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> supports two different types of parameter estimation: Maximum Likelihood estimation through the <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class and Bayesian parameter estimation through the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class.</p>
+</div>
+<div class="section" id="mlestimation">
+<h2>MLEstimation<a class="headerlink" href="#mlestimation" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class evaluates the maximum likelihood estimate <span class="math notranslate nohighlight">\(\hat{\theta}\)</span> of the model parameters, i.e.</p>
 <div class="math notranslate nohighlight">
 \[\hat{\theta} = \text{argmax}_{\Theta} \quad p(\mathcal{D} \vert \theta)\]</div>
@@ -318,13 +320,13 @@ if an input bounds is provided to the <code class="docutils literal notranslate"
 <p><strong>Note on subclassing MLEstimation</strong></p>
 <p>More generally, the user may want to compute a parameter estimate by minimizing an error function between the data and model outputs. This can be easily done by subclassing the <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class and overwriting the method <cite>_evaluate_func_to_minimize</cite>.</p>
 </div>
-<div class="section" id="bayesian-estimation">
-<h3>Bayesian Estimation<a class="headerlink" href="#bayesian-estimation" title="Permalink to this headline">¶</a></h3>
-<p>Given some data <span class="math notranslate nohighlight">\(\mathcal{D}\)</span>, a parameterized model for the data, and a prior probability density for the model parameters <span class="math notranslate nohighlight">\(p(\theta)\)</span>, the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class is leveraged to draw samples from the posterior pdf of the model parameters using Markov Chain Monte Carlo or Importance Sampling. Via Bayes theorem, the posterior pdf is as follows:</p>
+<div class="section" id="bayesparameterestimation">
+<h2>BayesParameterEstimation<a class="headerlink" href="#bayesparameterestimation" title="Permalink to this headline">¶</a></h2>
+<p>Given some data <span class="math notranslate nohighlight">\(\mathcal{D}\)</span>, a parameterized model for the data, and a prior probability density for the model parameters <span class="math notranslate nohighlight">\(p(\theta)\)</span>, the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class is leveraged to draw samples from the posterior pdf of the model parameters using Markov Chain Monte Carlo or Importance Sampling. Via Bayes theorem, the posterior pdf is defined as follows:</p>
 <div class="math notranslate nohighlight">
 \[p(\theta \vert \mathcal{D}) = \frac{p(\mathcal{D} \vert \theta)p(\theta)}{p(\mathcal{D})}\]</div>
 <p>Note that if no prior is defined in the model, the prior pdf is chosen as uninformative, i.e., <span class="math notranslate nohighlight">\(p(\theta) = 1\)</span> (cautionary note, this is an improper prior).</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> leverages the <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> or <code class="docutils literal notranslate"><span class="pre">IS</span></code> classes of the <code class="docutils literal notranslate"><span class="pre">SampleMethods</span></code> module of UQpy. When creating a <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> object, an object of class <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> or <code class="docutils literal notranslate"><span class="pre">IS</span></code> is created and saved as an attribute <cite>sampler</cite>. The <cite>run</cite> method of the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class then calls the <cite>run</cite> method of that sampler, thus the user can add samples as they wish by calling the <cite>run</cite> method several times.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> leverages the <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> or <code class="docutils literal notranslate"><span class="pre">IS</span></code> classes of the <code class="docutils literal notranslate"><span class="pre">SampleMethods</span></code> module of <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>. When creating a <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> object, an object of class <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> or <code class="docutils literal notranslate"><span class="pre">IS</span></code> is created and saved as an attribute <cite>sampler</cite>. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class then calls the <code class="docutils literal notranslate"><span class="pre">run</span></code> method of that sampler, thus the user can add samples as they wish by calling the <code class="docutils literal notranslate"><span class="pre">run</span></code> method several times.</p>
 <dl class="class">
 <dt id="UQpy.Inference.BayesParameterEstimation">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">BayesParameterEstimation</code><span class="sig-paren">(</span><em class="sig-param">inference_model</em>, <em class="sig-param">data</em>, <em class="sig-param">sampling_class=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">nchains=1</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">**kwargs_sampler</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#BayesParameterEstimation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.BayesParameterEstimation" title="Permalink to this definition">¶</a></dt>
@@ -417,13 +419,13 @@ distribution.</p>
 </dd></dl>
 
 </div>
-</div>
 <div class="section" id="model-selection">
 <h2>Model Selection<a class="headerlink" href="#model-selection" title="Permalink to this headline">¶</a></h2>
 <p>Model selection refers to the task of selecting a statistical model from a set of candidate models, given some data. A good model is one that is capable of explaining the data well. Given models of the same explanatory power, the simplest model should be chosen (Occam’s razor).</p>
-<div class="section" id="information-theoretic-criteria">
-<h3>Information theoretic criteria<a class="headerlink" href="#information-theoretic-criteria" title="Permalink to this headline">¶</a></h3>
-<p>Several simple information theoretic criteria can be used to compute a model’s quality and perform model selection <a class="footnote-reference brackets" href="#id6" id="id3">2</a>. <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> implements three criteria:</p>
+</div>
+<div class="section" id="infomodelselection">
+<h2>InfoModelSelection<a class="headerlink" href="#infomodelselection" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">InfoModelSelection</span></code> class employs information-theoretic criteria for model selection. Several simple information theoretic criteria can be used to compute a model’s quality and perform model selection <a class="footnote-reference brackets" href="#id6" id="id3">2</a>. <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> implements three criteria:</p>
 <ul class="simple">
 <li><p>Bayesian information criterion,  <span class="math notranslate nohighlight">\(BIC = \ln(n) k - 2 \ln(\hat{L})\)</span></p></li>
 <li><p>Akaike information criterion, <span class="math notranslate nohighlight">\(AIC = 2 k - 2 \ln (\hat{L})\)</span></p></li>
@@ -549,8 +551,8 @@ stand-alone function that is provided to help the user to easily visualize which
 </dd></dl>
 
 </div>
-<div class="section" id="bayesian-model-selection">
-<h3>Bayesian Model Selection<a class="headerlink" href="#bayesian-model-selection" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="bayesmodelselection">
+<h2>BayesModelSelection<a class="headerlink" href="#bayesmodelselection" title="Permalink to this headline">¶</a></h2>
 <p>In the Bayesian approach to model selection, the posterior probability of each model is computed as</p>
 <div class="math notranslate nohighlight">
 \[P(m_{i} \vert \mathcal{D}) = \frac{p(\mathcal{D} \vert m_{i})P(m_{i})}{\sum_{j} p(\mathcal{D} \vert m_{j})P(m_{j})}\]</div>
@@ -560,7 +562,7 @@ stand-alone function that is provided to help the user to easily visualize which
 <p>Currently, calculation of the evidence is performed using the method of the harmonic mean <a class="footnote-reference brackets" href="#id7" id="id4">3</a>:</p>
 <div class="math notranslate nohighlight">
 \[p(\mathcal{D} \vert m_{i}) = \left[ \frac{1}{B} \sum_{b=1}^{B} \frac{1}{p(\mathcal{D} \vert m_{i}, \theta_{b})} \right]^{-1}\]</div>
-<p>where <span class="math notranslate nohighlight">\(\theta_{1,\cdots,B}\)</span> are samples from the posterior pdf of <span class="math notranslate nohighlight">\(\theta\)</span>. In UQpy, these samples are obtained via the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class. However, note that this method is known to yield evidence estimates with large variance. Future releases of UQpy will include more robust methods for computation of model evidences. Also, it is known that results of such Bayesian model selection procedure usually highly depends on the choice of prior for the parameters of the competing models, thus the user should carefully define such priors when creating instances of the <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code> class.</p>
+<p>where <span class="math notranslate nohighlight">\(\theta_{1,\cdots,B}\)</span> are samples from the posterior pdf of <span class="math notranslate nohighlight">\(\theta\)</span>. In UQpy, these samples are obtained via the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class. However, note that this method is known to yield evidence estimates with large variance. Future releases of <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> will include more robust methods for computation of model evidences. Also, it is known that results of such Bayesian model selection procedure usually highly depends on the choice of prior for the parameters of the competing models, thus the user should carefully define such priors when creating instances of the <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code> class.</p>
 <dl class="class">
 <dt id="UQpy.Inference.BayesModelSelection">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">BayesModelSelection</code><span class="sig-paren">(</span><em class="sig-param">candidate_models</em>, <em class="sig-param">data</em>, <em class="sig-param">prior_probabilities=None</em>, <em class="sig-param">method_evidence_computation='harmonic_mean'</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#BayesModelSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.BayesModelSelection" title="Permalink to this definition">¶</a></dt>
@@ -687,7 +689,6 @@ is provided to help the user to easily visualize which model is the best.</p>
 </div>
 </div>
 </div>
-</div>
 
 
           </div>
@@ -732,7 +733,11 @@ is provided to help the user to easily visualize which model is the best.</p>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Inference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#inferencemodel">InferenceModel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#parameter-estimation">Parameter estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mlestimation">MLEstimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bayesparameterestimation">BayesParameterEstimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#model-selection">Model Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#infomodelselection">InfoModelSelection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bayesmodelselection">BayesModelSelection</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">Dimension reduction</a></li>
