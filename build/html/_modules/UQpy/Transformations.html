@@ -1,0 +1,604 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>UQpy.Transformations &#8212; UQpy v3.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for UQpy.Transformations</h1><div class="highlight"><pre>
+<span></span><span class="c1"># UQpy is distributed under the MIT license.</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (C) 2018  -- Michael D. Shields</span>
+<span class="c1">#</span>
+<span class="c1"># Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated</span>
+<span class="c1"># documentation files (the &quot;Software&quot;), to deal in the Software without restriction, including without limitation the</span>
+<span class="c1"># rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit</span>
+<span class="c1"># persons to whom the Software is furnished to do so, subject to the following conditions:</span>
+<span class="c1">#</span>
+<span class="c1"># The above copyright notice and this permission notice shall be included in all copies or substantial portions of the</span>
+<span class="c1"># Software.</span>
+<span class="c1">#</span>
+<span class="c1"># THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE</span>
+<span class="c1"># WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR</span>
+<span class="c1"># COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR</span>
+<span class="c1"># OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</span>
+
+
+<span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="o">*</span>
+
+
+<div class="viewcode-block" id="Nataf"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf">[docs]</a><span class="k">class</span> <span class="nc">Nataf</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transform random variables  using the `Nataf` transformation  and  calculate  the  correlation  distortion.</span>
+<span class="sd">    ([1]_, [2]_).</span>
+
+<span class="sd">    This is the parent class to all Nataf algorithms.</span>
+
+<span class="sd">    **References:**</span>
+
+<span class="sd">    .. [1] A. Nataf, “Determination des distributions dont les marges sont donnees”, C. R. Acad. Sci.</span>
+<span class="sd">       vol. 225, pp. 42-43, Paris, 1962.</span>
+<span class="sd">    .. [2] R. Lebrun and A. Dutfoy, “An innovating analysis of the Nataf transformation from the copula viewpoint”,</span>
+<span class="sd">       Prob. Eng. Mech.,  vol. 24, pp. 312-320, 2009.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">,</span> <span class="n">JointInd</span><span class="p">)):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be provided.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">,</span> <span class="n">JointInd</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Forward"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Forward">[docs]</a><span class="k">class</span> <span class="nc">Forward</span><span class="p">(</span><span class="n">Nataf</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class perform the Nataf transformation, i.e. transform arbitrarily distributed random variables</span>
+<span class="sd">    to independent standard normal variables. This is a an child class of the ``Nataf`` class.</span>
+
+<span class="sd">    **Inputs:**</span>
+
+<span class="sd">    * **samples** (`ndarray`):</span>
+<span class="sd">            Random vector of shape ``(nsamples, dimension)`` with prescribed probability distribution, with</span>
+<span class="sd">            ``(nsamples, dimension) = samples.shape``.</span>
+
+<span class="sd">    * **dist_object** ((list of ) ``Distribution`` object(s)):</span>
+<span class="sd">                    Probability distribution of each random variable. Must be an object of type</span>
+<span class="sd">                    ``DistributionContinuous1D`` or ``JointInd``.</span>
+
+<span class="sd">    * **cov** (`ndarray`):</span>
+<span class="sd">        The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .</span>
+
+<span class="sd">        Default: The ``identity`` matrix.</span>
+
+<span class="sd">    * **itam_error1** (`float`):</span>
+<span class="sd">        A threshold value the `ITAM` method (see ``Utilities`` module).</span>
+
+<span class="sd">        Default: 0.001</span>
+
+<span class="sd">    * **itam_error2** (`float`):</span>
+<span class="sd">        A threshold value the `ITAM` method (see ``Utilities`` module).</span>
+
+<span class="sd">        Default: 0.01</span>
+
+<span class="sd">    * **beta** (`float`):</span>
+<span class="sd">        A variable selected to optimize convergence speed and desired accuracy of the ITAM method (see</span>
+<span class="sd">        ``Utilities`` module).</span>
+
+<span class="sd">        Default: 1.0</span>
+
+<span class="sd">    **Output/Returns:**</span>
+
+<span class="sd">    * **U** (`ndarray`):</span>
+<span class="sd">        Independent standard normal vector of shape ``(nsamples, dimension)``.</span>
+
+<span class="sd">    * **Cz** (`ndarray`):</span>
+<span class="sd">        Distorted correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal vector **Z**.</span>
+
+<span class="sd">    * **Jxu** (`ndarray`):</span>
+<span class="sd">        The jacobian of the transformation of shape ``(dimension, dimension)`` (if asked).</span>
+
+<span class="sd">    **Methods:**</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">itam_error1</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
+                 <span class="n">itam_error2</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">itam_error1</span> <span class="o">=</span> <span class="n">itam_error1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">itam_error2</span> <span class="o">=</span> <span class="n">itam_error2</span>
+
+        <span class="k">if</span> <span class="n">samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cov</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Warning</span><span class="p">(</span><span class="s1">&#39;UQpy: No action is performed.&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Cz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">distortion_x_to_z</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">itam_error1</span><span class="p">,</span> <span class="n">itam_error2</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cov</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">C_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_x_to_z</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">Jxu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Cz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">distortion_x_to_z</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">itam_error1</span><span class="p">,</span> <span class="n">itam_error2</span><span class="p">)</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_x_to_z</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">Correlate</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cz</span><span class="p">)</span><span class="o">.</span><span class="n">z</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">u</span> <span class="o">=</span> <span class="n">Uncorrelate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cz</span><span class="p">)</span><span class="o">.</span><span class="n">u</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">Jxu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jacobian_x_u</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cz</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Forward.distortion_x_to_z"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Forward.distortion_x_to_z">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">distortion_x_to_z</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">itam_error1</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">itam_error2</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is a method to calculate the correlation matrix :math:`\mathbf{C_Z}` of the standard normal random vector</span>
+<span class="sd">        :math:`\mathbf{z}`  given the correlation matrix :math:`\mathbf{C_x}` of the random vector :math:`\mathbf{x}`</span>
+<span class="sd">        using the `ITAM` method (see ``Utilities`` class).</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **dist_object** ((list of ) ``Distribution`` object(s)):</span>
+<span class="sd">                Probability distribution of each random variable. Must be an object of type</span>
+<span class="sd">                ``DistributionContinuous1D`` or ``JointInd``.</span>
+
+<span class="sd">        * **cov** (`ndarray`):</span>
+<span class="sd">            The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .</span>
+
+<span class="sd">            Default: The ``identity`` matrix.</span>
+
+<span class="sd">        * **itam_error1** (`float`):</span>
+<span class="sd">            A threshold value the `ITAM` method (see ``Utilities`` module).</span>
+
+<span class="sd">            Default: 0.001</span>
+
+<span class="sd">        * **itam_error2** (`float`):</span>
+<span class="sd">            A threshold value the `ITAM` method (see ``Utilities`` module).</span>
+
+<span class="sd">            Default: 0.01</span>
+
+<span class="sd">        * **beta** (`float`):</span>
+<span class="sd">            A variable selected to optimize convergence speed and desired accuracy of the ITAM method (see</span>
+<span class="sd">            ``Utilities`` module).</span>
+
+<span class="sd">            Default: 1.0</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        * **cov_distorted** (`ndarray`):</span>
+<span class="sd">            Distorted correlation matrix (:math:`\mathbf{C_z}`) of the standard normal vector **Z**.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">UQpy.Utilities</span> <span class="k">import</span> <span class="n">itam</span>
+        <span class="n">cov_distorted</span> <span class="o">=</span> <span class="n">itam</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">itam_error1</span><span class="p">,</span> <span class="n">itam_error2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cov_distorted</span></div>
+
+<div class="viewcode-block" id="Forward.transform_x_to_z"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Forward.transform_x_to_z">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">transform_x_to_z</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is a method to transform a vector :math:`\mathbf{x}` of  samples with marginal distributions</span>
+<span class="sd">        :math:`f_i(x_i)` and cumulative distributions :math:`F_i(x_i)` to a vector :math:`\mathbf{z}` of standard normal</span>
+<span class="sd">        samples  according to: :math:`Z_{i}=\Phi^{-1}(F_i(X_{i}))`, where :math:`\Phi` is the cumulative</span>
+<span class="sd">        distribution function of a standard  normal variable.</span>
+
+<span class="sd">        This is a static method, part of the ``Nataf`` class.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **x** (`ndarray`):</span>
+<span class="sd">            Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.</span>
+
+<span class="sd">        * **dist_object** ((list of) ``Distribution`` object(s)):</span>
+<span class="sd">                    Probability distribution of each random variable. Must be an object of type</span>
+<span class="sd">                    ``DistributionContinuous1D`` or ``JointInd``.</span>
+<span class="sd">        **Outputs:**</span>
+
+<span class="sd">        * **z** (`ndarray`):</span>
+<span class="sd">            Standard normal random vector of shape ``(nsamples, dimension)``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">JointInd</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;cdf&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">dist_object</span><span class="o">.</span><span class="n">marginals</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="o">.</span><span class="n">marginals</span><span class="p">)):</span>
+                    <span class="n">z</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">dist_object</span><span class="o">.</span><span class="n">marginals</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">DistributionContinuous1D</span><span class="p">):</span>
+            <span class="n">f_i</span> <span class="o">=</span> <span class="n">dist_object</span><span class="o">.</span><span class="n">cdf</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">f_i</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="n">f_i</span> <span class="o">=</span> <span class="n">dist_object</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">cdf</span>
+                <span class="n">z</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">f_i</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">z</span></div>
+
+<div class="viewcode-block" id="Forward.jacobian_x_u"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Forward.jacobian_x_u">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">jacobian_x_u</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">cov</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is a method to calculate the jacobian of the transformation :math:`\mathbf{J}_{\mathbf{xu}}`.</span>
+
+<span class="sd">        This is a static method, part of the ``Nataf`` class.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **u** (`ndarray`):</span>
+<span class="sd">            Standard normal vector of shape ``(nsamples, dimension)``.</span>
+
+<span class="sd">        * **x** (`ndarray`):</span>
+<span class="sd">            Random vector of shape ``(nsamples, dimension)``.</span>
+
+<span class="sd">        * **dist_object** ((list of) ``Distribution`` object(s)):</span>
+<span class="sd">                    Probability distribution of each random variable. Must be an object of type</span>
+<span class="sd">                    ``DistributionContinuous1D`` or ``JointInd``.</span>
+
+<span class="sd">        * **cov** (`ndarray`):</span>
+<span class="sd">        The covariance  matrix of shape ``(dimension, dimension)``.</span>
+
+<span class="sd">        **Outputs:**</span>
+
+<span class="sd">        * **jacobian_x_to_u** (`ndarray`):</span>
+<span class="sd">            Matrix of shape ``(dimension, dimension)``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">cholesky</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">cholesky</span><span class="p">(</span><span class="n">cov</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="n">jacobian_x_to_u</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">m</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]])</span>
+                <span class="n">zi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">z</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]])</span>
+                <span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">zi</span><span class="p">)</span> <span class="o">/</span> <span class="n">dist_object</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
+            <span class="n">jacobian_x_to_u</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">jacobian_x_to_u</span></div></div>
+
+
+<div class="viewcode-block" id="Inverse"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Inverse">[docs]</a><span class="k">class</span> <span class="nc">Inverse</span><span class="p">(</span><span class="n">Nataf</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class perform the inverse Nataf transformation, i.e. transform independent standard normal variables to</span>
+<span class="sd">    arbitrarily distributed random variables. This is a an child class of the ``Nataf`` class.</span>
+
+<span class="sd">    **Inputs:**</span>
+
+<span class="sd">    * **samples** (`ndarray``):</span>
+<span class="sd">        Uncorrelated standard normal vector of shape ``(nsamples, dimension)`` with</span>
+<span class="sd">        ``(nsamples, dimension) = samples.shape``.</span>
+
+<span class="sd">    * **dist_object** ((list of) ``Distribution`` object(s)):</span>
+<span class="sd">            Probability distribution of each random variable. Must be an object of type</span>
+<span class="sd">                    ``DistributionContinuous1D`` or ``JointInd``.</span>
+
+<span class="sd">    * **cov** (`ndarray`):</span>
+<span class="sd">        The covariance  matrix of shape ``(dimension, dimension)`` (Optional) .</span>
+
+<span class="sd">        Default: The ``identity`` matrix.</span>
+
+<span class="sd">    **Output/Returns:**</span>
+
+<span class="sd">    * **x** (`ndarray`):</span>
+<span class="sd">        Independent standard normal vector of shape ``(nsamples, dimension)``.</span>
+
+<span class="sd">    * **Cx** (`ndarray`):</span>
+<span class="sd">        Distorted correlation matrix of the random vector **X** of shape ``(dimension, dimension)``.</span>
+
+<span class="sd">    * **Jux** (`ndarray`):</span>
+<span class="sd">        The jacobian of the transformation of shape ``(dimension, dimension)``.</span>
+
+<span class="sd">    **Methods:**</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cov</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Warning</span><span class="p">(</span><span class="s1">&#39;UQpy: No action is performed.&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Cx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">distortion_z_to_x</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">cov</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cov</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Cx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">samples</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_z_to_x</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">Jux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Cx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">distortion_z_to_x</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">cov</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">Correlate</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">cov</span><span class="p">)</span><span class="o">.</span><span class="n">z</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_z_to_x</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">Jux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jacobian_u_x</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">cov</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Inverse.distortion_z_to_x"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Inverse.distortion_z_to_x">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">distortion_z_to_x</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">cov</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is a method to calculate the correlation matrix :math:`\mathbf{C_x}` of the random vector</span>
+<span class="sd">        :math:`\mathbf{x}`  given the correlation matrix :math:`\mathbf{C_z}` of the standard normal random vector</span>
+<span class="sd">        :math:`\mathbf{z}` using the `correlation_distortion` method (see ``Utilities`` class). This is a static</span>
+<span class="sd">        method, part of the ``Inverse`` class.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **dist_object** ((list of ) ``Distribution`` object(s)):</span>
+<span class="sd">                Probability distribution of each random variable. Must be an object of type</span>
+<span class="sd">                ``DistributionContinuous1D`` or ``JointInd``.</span>
+
+<span class="sd">        * **cov** (`ndarray`):</span>
+<span class="sd">            The correlation  matrix (:math:`\mathbf{C_z}`) of the standard normal vector **z** .</span>
+
+<span class="sd">            Default: The ``identity`` matrix.</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        * **cov_distorted** (`ndarray`):</span>
+<span class="sd">            Distorted correlation matrix (:math:`\mathbf{C_x}`) of the random vector **x**.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">UQpy.Utilities</span> <span class="k">import</span> <span class="n">correlation_distortion</span>
+        <span class="n">cov_distorted</span> <span class="o">=</span> <span class="n">correlation_distortion</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">cov</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cov_distorted</span></div>
+
+<div class="viewcode-block" id="Inverse.transform_z_to_x"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Inverse.transform_z_to_x">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">transform_z_to_x</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is a method to transform a vector :math:`\mathbf{z}` of  standard normal samples to a vector</span>
+<span class="sd">        :math:`\mathbf{x}` of  samples with marginal distributions :math:`f_i(x_i)` and cumulative distributions</span>
+<span class="sd">        :math:`F_i(x_i)` according to: :math:`Z_{i}=F_i^{-1}(\Phi(Z_{i}))`, where :math:`\Phi` is the cumulative</span>
+<span class="sd">        distribution function of a standard  normal variable.</span>
+
+<span class="sd">        This is a static method, part of the ``Nataf`` class.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **z** (`ndarray`):</span>
+<span class="sd">            Standard normal vector of shape ``(nsamples, dimension)``.</span>
+
+<span class="sd">        * **dist_object** ((list of) ``Distribution`` object(s)):</span>
+<span class="sd">                    Probability distribution of each random variable. Must be an object of type</span>
+<span class="sd">                    ``DistributionContinuous1D`` or ``JointInd``.</span>
+
+<span class="sd">        **Outputs:**</span>
+
+<span class="sd">        * **x** (`ndarray`):</span>
+<span class="sd">            Random vector of shape ``(nsamples, dimension)`` with prescribed probability distribution.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">JointInd</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;icdf&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">dist_object</span><span class="o">.</span><span class="n">marginals</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="o">.</span><span class="n">marginals</span><span class="p">)):</span>
+                    <span class="n">f_i</span> <span class="o">=</span> <span class="n">dist_object</span><span class="o">.</span><span class="n">marginals</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">icdf</span>
+                    <span class="n">x</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">f_i</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">z</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">DistributionContinuous1D</span><span class="p">):</span>
+            <span class="n">f_i</span> <span class="o">=</span> <span class="n">dist_object</span><span class="o">.</span><span class="n">icdf</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">f_i</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">z</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="n">f_i</span> <span class="o">=</span> <span class="n">dist_object</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">icdf</span>
+                <span class="n">x</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">f_i</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">z</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+
+<div class="viewcode-block" id="Inverse.jacobian_u_x"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Inverse.jacobian_u_x">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">jacobian_u_x</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">cov</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is a method to calculate the jacobian of the transformation :math:`\mathbf{J}_{\mathbf{ux}}`.</span>
+
+<span class="sd">        This is a static method, part of the ``Nataf`` class.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **u** (`ndarray`):</span>
+<span class="sd">            Standard normal vector of shape ``(nsamples, dimension)``.</span>
+
+<span class="sd">        * **x** (`ndarray`):</span>
+<span class="sd">            Random vector of shape ``(nsamples, dimension)``.</span>
+
+<span class="sd">        * **dist_object** ((list of) ``Distribution`` object(s)):</span>
+<span class="sd">                    Probability distribution of each random variable. Must be an object of type</span>
+<span class="sd">                    ``DistributionContinuous1D`` or ``JointInd``.</span>
+
+<span class="sd">        * **cov** (`ndarray`):</span>
+<span class="sd">        The covariance  matrix of shape ``(dimension, dimension)``.</span>
+
+<span class="sd">        **Outputs:**</span>
+
+<span class="sd">        * **jacobian_u_to_x** (`ndarray`):</span>
+<span class="sd">            Matrix of shape ``(dimension, dimension)``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">cholesky</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">cholesky</span><span class="p">(</span><span class="n">cov</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="n">jacobian_u_to_x</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">m</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]])</span>
+                <span class="n">zi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">z</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]])</span>
+                <span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist_object</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="o">/</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">zi</span><span class="p">)</span>
+            <span class="n">jacobian_u_to_x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">jacobian_u_to_x</span></div></div>
+
+
+<div class="viewcode-block" id="Uncorrelate"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Uncorrelate">[docs]</a><span class="k">class</span> <span class="nc">Uncorrelate</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove correlation from correlated standard normal random variables.</span>
+
+<span class="sd">    **Inputs:**</span>
+
+<span class="sd">    * **samples** (`ndarray`):</span>
+<span class="sd">        Correlated standard normal vector of shape ``(nsamples, dimension)``.</span>
+
+<span class="sd">    * **cov** (`ndarray`):</span>
+<span class="sd">        The correlation matrix. Must be an ``ndarray`` of shape ``(u.shape[1], u.shape[1])``.</span>
+
+<span class="sd">    **Outputs:**</span>
+
+<span class="sd">    * **u** (`ndarray`):</span>
+<span class="sd">        Correlated standard normal vector of shape ``(nsamples, dimension)``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">corr</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">samples</span>
+        <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">cholesky</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">cholesky</span><span class="p">(</span><span class="n">corr</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">h</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
+
+
+<div class="viewcode-block" id="Correlate"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Correlate">[docs]</a><span class="k">class</span> <span class="nc">Correlate</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Induce correlation to uncorrelated standard normal random variables.</span>
+
+<span class="sd">    **Inputs:**</span>
+
+<span class="sd">    * **samples** (`ndarray`):</span>
+<span class="sd">        Uncorrelated standard normal vector of shape ``(nsamples, dimension)``.</span>
+
+<span class="sd">    * **cov** (`ndarray`):</span>
+<span class="sd">        The correlation matrix. Must be an ``ndarray`` of shape ``(u.shape[1], u.shape[1])``.</span>
+
+<span class="sd">    **Outputs:**</span>
+
+<span class="sd">    * **z** (`ndarray`):</span>
+<span class="sd">        Correlated standard normal vector of shape ``(nsamples, dimension)``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">cov</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">u</span> <span class="o">=</span> <span class="n">samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">corr</span> <span class="o">=</span> <span class="n">cov</span>
+        <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">cholesky</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">cholesky</span><span class="p">(</span><span class="n">cov</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../index.html">
+    <img class="logo" src="../../_static/logo.jpg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Uncertainty quantification with Python </p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=SURG&repo=UQpy&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../distributions.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samplemethods.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../transformations.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../surrogates.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reliability.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dimension_reduction.html">Dimension reduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, SURG, JHU.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/SURG/UQpy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,1002 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>UQpy.Surrogates &#8212; UQpy v3.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for UQpy.Surrogates</h1><div class="highlight"><pre>
+<span></span><span class="c1"># UQpy is distributed under the MIT license.</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (C) 2018  -- Michael D. Shields</span>
+<span class="c1">#</span>
+<span class="c1"># Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated</span>
+<span class="c1"># documentation files (the &quot;Software&quot;), to deal in the Software without restriction, including without limitation the</span>
+<span class="c1"># rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit</span>
+<span class="c1"># persons to whom the Software is furnished to do so, subject to the following conditions:</span>
+<span class="c1">#</span>
+<span class="c1"># The above copyright notice and this permission notice shall be included in all copies or substantial portions of the</span>
+<span class="c1"># Software.</span>
+<span class="c1">#</span>
+<span class="c1"># THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE</span>
+<span class="c1"># WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR</span>
+<span class="c1"># COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR</span>
+<span class="c1"># OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains functionality for all the surrogate methods supported in UQpy.</span>
+
+<span class="sd">* SROM: Estimate a discrete approximation for a continuous random variable using Stochastic Reduced Order Model.</span>
+
+<span class="sd">* Krig: Generates an approximates surrogate model using Kriging.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="o">*</span>
+
+
+<span class="c1">########################################################################################################################</span>
+<span class="c1">########################################################################################################################</span>
+<span class="c1">#                                         Stochastic Reduced Order Model  (SROM)                                       #</span>
+<span class="c1">########################################################################################################################</span>
+<span class="c1">########################################################################################################################</span>
+
+<div class="viewcode-block" id="SROM"><a class="viewcode-back" href="../../surrogates.html#UQpy.Surrogates.SROM">[docs]</a><span class="k">class</span> <span class="nc">SROM</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random</span>
+<span class="sd">    quantity.</span>
+
+<span class="sd">    SROM generates a discrete approximation of continuous random variables. The probabilities/weights are</span>
+<span class="sd">    considered to be the parameters for the SROM and they can be obtained by minimizing the error between the</span>
+<span class="sd">    marginal distributions, first and second order moments about origin and correlation between random variables.</span>
+
+<span class="sd">    **References:**</span>
+
+<span class="sd">    1. M. Grigoriu, &quot;Reduced order models for random functions. Application to stochastic problems&quot;,</span>
+<span class="sd">       Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.</span>
+
+<span class="sd">    **Input:**</span>
+
+<span class="sd">    :param samples: An array/list of samples corresponding to each random variables</span>
+<span class="sd">    :type samples: numpy array</span>
+
+<span class="sd">    :param cdf_target: A list of Cumulative distribution functions of random variables</span>
+<span class="sd">    :type cdf_target: list str or list function</span>
+
+<span class="sd">    :param cdf_target_params: Parameters of distribution</span>
+<span class="sd">    :type cdf_target_params: list</span>
+
+<span class="sd">    :param moments: A list containing first and second order moment about origin of all random variables</span>
+<span class="sd">    :type moments: ndarray or list (float)</span>
+
+<span class="sd">    :param weights_errors: Weights associated with error in distribution, moments and correlation.</span>
+<span class="sd">                           Default: weights_errors = [1, 0.2, 0]</span>
+<span class="sd">    :type weights_errors: list</span>
+
+<span class="sd">    :param properties: A list of booleans representing properties, which are required to match in reduce</span>
+<span class="sd">                       order model. This class focus on reducing errors in distribution, first order moment</span>
+<span class="sd">                       about origin, second order moment about origin and correlation of samples.</span>
+<span class="sd">                       Default: properties = [True, True, True, False]</span>
+<span class="sd">                       Example: properties = [True, True, False, False] will minimize errors in distribution and</span>
+<span class="sd">                       errors in first order moment about origin in reduce order model.</span>
+<span class="sd">    :type properties: list</span>
+
+<span class="sd">    :param weights_distribution: An list or array containing weights associated with different samples.</span>
+<span class="sd">                                 Options:</span>
+<span class="sd">                                    If weights_distribution is None, then default value is assigned.</span>
+<span class="sd">                                    If size of weights_distribution is 1xd, then it is assigned as dot product</span>
+<span class="sd">                                        of weights_distribution and default value.</span>
+<span class="sd">                                    Otherwise size of weights_distribution should be equal to Nxd.</span>
+<span class="sd">                                 Default: weights_distribution = Nxd dimensional array with all elements equal</span>
+<span class="sd">                                 to 1.</span>
+<span class="sd">    :type weights_distribution: ndarray or list (float)</span>
+
+<span class="sd">    :param weights_moments: An array of dimension 2xd, where &#39;d&#39; is number of random variables. It contain</span>
+<span class="sd">                            weights associated with moments.</span>
+<span class="sd">                            Options:</span>
+<span class="sd">                                If weights_moments is None, then default value is assigned.</span>
+<span class="sd">                                If size of weights_moments is 1xd, then it is assigned as dot product</span>
+<span class="sd">                                    of weights_moments and default value.</span>
+<span class="sd">                                Otherwise size of weights_distribution should be equal to 2xd.</span>
+<span class="sd">                            Default: weights_moments = Square of reciprocal of elements of moments.</span>
+<span class="sd">    :type weights_moments: ndarray or list (float)</span>
+
+<span class="sd">    :param weights_correlation: An array of dimension dxd, where &#39;d&#39; is number of random variables. It contain</span>
+<span class="sd">                                weights associated with correlation of random variables.</span>
+<span class="sd">                                Default: weights_correlation = dxd dimensional array with all elements equal to</span>
+<span class="sd">                                1.</span>
+<span class="sd">    :type weights_correlation: ndarray or list (float)</span>
+
+<span class="sd">    :param correlation: Correlation matrix between random variables.</span>
+<span class="sd">    :type correlation: ndarray or list (float)</span>
+
+<span class="sd">    **Attributes:**</span>
+
+<span class="sd">    :return: SROM.sample_weights: The probabilities/weights defining discrete approximation of continuous random</span>
+<span class="sd">             variables.</span>
+<span class="sd">    :rtype: SROM.sample_weights: ndarray</span>
+
+<span class="sd">    **Authors:**</span>
+
+<span class="sd">    Authors: Mohit Chauhan</span>
+<span class="sd">    Last modified: 6/7/18 by Dimitris G. Giovanis</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cdf_target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">moments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights_errors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">weights_distribution</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights_moments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights_correlation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cdf_target_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">correlation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">weights_distribution</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_distribution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">weights_distribution</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_distribution</span> <span class="o">=</span> <span class="n">weights_distribution</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">weights_moments</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_moments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">weights_moments</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_moments</span> <span class="o">=</span> <span class="n">weights_moments</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">correlation</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">correlation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">correlation</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">correlation</span> <span class="o">=</span> <span class="n">correlation</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">moments</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">moments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">moments</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">moments</span> <span class="o">=</span> <span class="n">moments</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">samples</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">weights_correlation</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_correlation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">weights_correlation</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_correlation</span> <span class="o">=</span> <span class="n">weights_correlation</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights_errors</span> <span class="o">=</span> <span class="n">weights_errors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cdf_target</span> <span class="o">=</span> <span class="n">cdf_target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">properties</span> <span class="o">=</span> <span class="n">properties</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cdf_target_params</span> <span class="o">=</span> <span class="n">cdf_target_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_srom</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sample_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_srom</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SROM.run_srom"><a class="viewcode-back" href="../../surrogates.html#UQpy.Surrogates.SROM.run_srom">[docs]</a>    <span class="k">def</span> <span class="nf">run_srom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs stochastic reduced order model.</span>
+
+<span class="sd">        This is an instance method that runs SROM. It is automatically called when the SROM class is instantiated.</span>
+
+<span class="sd">        **Output:**</span>
+
+<span class="sd">        :return p_.x: Weights associated with each sample</span>
+<span class="sd">        :rtype p_.x: numpy array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Performing SROM...&#39;</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">optimize</span>
+
+        <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">wd</span><span class="p">,</span> <span class="n">wm</span><span class="p">,</span> <span class="n">wc</span><span class="p">,</span> <span class="n">mar</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">para</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">correlation</span><span class="p">):</span>
+            <span class="n">e1</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="n">e2</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="n">e22</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="n">e3</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="n">com</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">p0</span><span class="p">)),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+                <span class="n">srt</span> <span class="o">=</span> <span class="n">com</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">com</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">())]</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">srt</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="n">j</span><span class="p">]</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">srt</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="n">d</span><span class="p">]</span>
+                <span class="n">a0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                <span class="n">marginal</span> <span class="o">=</span> <span class="n">mar</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">prop</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                        <span class="n">e1</span> <span class="o">+=</span> <span class="n">wd</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">a0</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">marginal</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">],</span> <span class="n">para</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span> <span class="o">**</span> <span class="mi">2</span>
+
+                <span class="k">if</span> <span class="n">prop</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">e2</span> <span class="o">+=</span> <span class="n">wm</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p0</span><span class="p">)</span> <span class="o">*</span> <span class="n">samples</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span> <span class="o">-</span> <span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+
+                <span class="k">if</span> <span class="n">prop</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">e22</span> <span class="o">+=</span> <span class="n">wm</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">samples</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]))</span> <span class="o">-</span> <span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+
+                <span class="k">if</span> <span class="n">prop</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="n">j</span><span class="p">:</span>
+                            <span class="n">r</span> <span class="o">=</span> <span class="n">correlation</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span> <span class="o">+</span> \
+                                <span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span>
+                            <span class="n">e3</span> <span class="o">+=</span> <span class="n">wc</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span>
+                                    <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p_</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+                                                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">k</span><span class="p">])))</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+            <span class="k">return</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">e1</span> <span class="o">+</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">e2</span> <span class="o">+</span> <span class="n">e22</span><span class="p">)</span> <span class="o">+</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">e3</span>
+
+        <span class="k">def</span> <span class="nf">constraint</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">def</span> <span class="nf">constraint2</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">-</span> <span class="n">y</span>
+
+        <span class="k">def</span> <span class="nf">constraint3</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">z</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="n">cons</span> <span class="o">=</span> <span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;eq&#39;</span><span class="p">,</span> <span class="s1">&#39;fun&#39;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;ineq&#39;</span><span class="p">,</span> <span class="s1">&#39;fun&#39;</span><span class="p">:</span> <span class="n">constraint2</span><span class="p">},</span>
+                <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;ineq&#39;</span><span class="p">,</span> <span class="s1">&#39;fun&#39;</span><span class="p">:</span> <span class="n">constraint3</span><span class="p">})</span>
+
+        <span class="n">p_</span> <span class="o">=</span> <span class="n">optimize</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">),</span>
+                               <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_distribution</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_moments</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">weights_correlation</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cdf_target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">moments</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_errors</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cdf_target_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">correlation</span><span class="p">),</span>
+                               <span class="n">constraints</span><span class="o">=</span><span class="n">cons</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;SLSQP&#39;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Done!&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">p_</span><span class="o">.</span><span class="n">x</span></div>
+
+<div class="viewcode-block" id="SROM.init_srom"><a class="viewcode-back" href="../../surrogates.html#UQpy.Surrogates.SROM.init_srom">[docs]</a>    <span class="k">def</span> <span class="nf">init_srom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialization and preliminary error checks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cdf_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Exit code: Distribution not defined.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check samples</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Samples not provided for SROM&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Check properties to match</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">properties</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">]</span>
+
+        <span class="c1"># Check moments and correlation</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;&#39;moments&#39; are required&quot;</span><span class="p">)</span>
+        <span class="c1"># Both moments are required, if correlation property is required to be match</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;1. Size of &#39;moments&#39; is not correct&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">correlation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">)</span>
+        <span class="c1"># moments.shape[0] should be 1 or 2</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;2. Size of &#39;moments&#39; is not correct&quot;</span><span class="p">)</span>
+        <span class="c1"># If both the moments are to be included in objective function, then moments.shape[0] should be 2</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;3. Size of &#39;moments&#39; is not correct&quot;</span><span class="p">)</span>
+        <span class="c1"># If only second order moment is to be included in objective function and moments.shape[0] is 1. Then</span>
+        <span class="c1"># self.moments is converted shape = (2, self.dimension) where is second row contain second order moments.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">):</span>
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">moments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">temp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments</span><span class="p">))</span>
+
+        <span class="c1"># Check weights corresponding to errors</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_errors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_errors</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights_errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights_errors</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+        <span class="c1"># Check weights corresponding to distribution</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_distribution</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_distribution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights_distribution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights_distribution</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_distribution</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_distribution</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_distribution</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                                                   <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_distribution</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Size of &#39;weights for distribution&#39; is not correct&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check weights corresponding to moments and it&#39;s default list</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_moments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_moments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moments</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights_moments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights_moments</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_moments</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_moments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_moments</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_moments</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Size of &#39;weights for moments&#39; is not correct&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check weights corresponding to correlation and it&#39;s default list</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_correlation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_correlation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights_correlation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights_correlation</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_correlation</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Size of &#39;weights for correlation&#39; is not correct&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check cdf_target</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cdf_target</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cdf_target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cdf_target</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cdf_target_params</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cdf_target_params</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cdf_target</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Size of cdf_type should be 1 or equal to dimension&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Assign cdf_target function for each dimension</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cdf_target</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cdf_target</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;function&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cdf_target</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cdf_target</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cdf_target</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;str&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cdf_target</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Distribution</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cdf_target</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">cdf</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Distribution type should be either &#39;function&#39; or &#39;list&#39;&quot;</span><span class="p">)</span></div></div>
+
+
+<span class="c1">########################################################################################################################</span>
+<span class="c1">########################################################################################################################</span>
+<span class="c1">#                                         Kriging Interpolation  (Krig)                                                #</span>
+<span class="c1">########################################################################################################################</span>
+<span class="c1">########################################################################################################################</span>
+
+<span class="k">class</span> <span class="nc">Krig</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Krig generates an approximate surrogate model to predict the function value at unknown/new samples.</span>
+
+<span class="sd">    A Surrogate is generated using training data and information about regression and correlation model. A Maximum</span>
+<span class="sd">    Likelihood Estimator (MLE) is computed for hyperparameter of correlation model. This class create a method,</span>
+<span class="sd">    i.e. Krig.interpolate. This functions estimates the approximate functional value and mean square error at</span>
+<span class="sd">    unknown/new samples.</span>
+
+<span class="sd">    **References:**</span>
+
+<span class="sd">    1. S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, &quot;DACE -- A MATLAB Kriging Toolbox&quot;, Informatics and</span>
+<span class="sd">       Mathematical Modelling, Version 2.0, 2002.</span>
+
+<span class="sd">    **Input:**</span>
+
+<span class="sd">    :param reg_model: Regression model contains the basis function, which defines the trend of the model.</span>
+<span class="sd">                      Options: Constant, Linear, Quadratic.</span>
+<span class="sd">    :type reg_model: str or function</span>
+
+<span class="sd">    :param corr_model: Correlation model contains the correlation function, which uses sample distance</span>
+<span class="sd">                       to define similarity between samples.</span>
+<span class="sd">                       Options: Exponential, Gaussian, Linear, Spherical, Cubic, Spline.</span>
+<span class="sd">    :type corr_model: str or function</span>
+
+<span class="sd">    :param corr_model_params: Initial values corresponding to hyperparameters/scale parameters.</span>
+<span class="sd">    :type corr_model_params: numpy array</span>
+
+<span class="sd">    :param bounds: Bounds for hyperparameters used to solve optimization problem to estimate maximum</span>
+<span class="sd">                   likelihood estimator. This should be a closed bound.</span>
+<span class="sd">                   Default: [0.001, 10**7] for each hyperparamter.</span>
+<span class="sd">    :type bounds: list</span>
+
+<span class="sd">    :param op: Indicator to solve MLE problem or not. If &#39;True&#39; corr_model_params will be used as initial</span>
+<span class="sd">               solution for optimization problem. Otherwise, corr_model_params will be directly use as</span>
+<span class="sd">               hyperparamter. Default: &#39;True&#39;.</span>
+<span class="sd">    :type op: boolean</span>
+
+<span class="sd">    :param n_opt: Number of times optimization problem is to be solved with different starting point.</span>
+<span class="sd">                  Default: 1</span>
+<span class="sd">    :type n_opt: int</span>
+
+<span class="sd">    :param verbose: A boolean declaring whether to write text to the terminal.</span>
+<span class="sd">    :type verbose: bool</span>
+
+<span class="sd">    **Attributes:**</span>
+
+<span class="sd">    :return: beta: Regression coefficients</span>
+<span class="sd">    :rtype: beta: numpy array</span>
+
+<span class="sd">    :return: err_var: Variance in the error (assumed to be gaussian process)</span>
+<span class="sd">    :rtype: err_var: numpy array</span>
+
+<span class="sd">    :return: C_inv: Inverse of cholesky decomposition of the Correlation matrix</span>
+<span class="sd">    :rtype: C_inv: numpy array</span>
+
+<span class="sd">    **Authors:**</span>
+
+<span class="sd">    Authors: Mohit Chauhan, Matthew Lombardo</span>
+<span class="sd">    Last modified: 3/30/2020 by Mohit S. Chauhan</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reg_model</span><span class="o">=</span><span class="s1">&#39;Linear&#39;</span><span class="p">,</span> <span class="n">corr_model</span><span class="o">=</span><span class="s1">&#39;Exponential&#39;</span><span class="p">,</span> <span class="n">corr_model_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">n_opt</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dimension</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_model</span> <span class="o">=</span> <span class="n">reg_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">corr_model</span> <span class="o">=</span> <span class="n">corr_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">corr_model_params</span> <span class="o">=</span> <span class="n">corr_model_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="n">dimension</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">bounds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_opt</span> <span class="o">=</span> <span class="n">n_opt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="n">op</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="c1"># Initialize and run preliminary error checks.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_krig</span><span class="p">()</span>
+
+        <span class="c1"># Variables are used outside the __init__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_s</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_y</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rmodel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmodel</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F_dash</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">C_inv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit the surrogate model using training points.</span>
+
+<span class="sd">        This method estimate the maximum likelihood estimator of hyperparameters of correlation model and the regression</span>
+<span class="sd">        coefficient.</span>
+
+<span class="sd">        :param samples: An array/list of samples corresponding to each variables</span>
+<span class="sd">        :type samples: list or numpy array</span>
+
+<span class="sd">        :param values: Function value at the sample points.</span>
+<span class="sd">        :type values: list or numpy array</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Performing Krig...&#39;</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">optimize</span>
+        <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">cholesky</span><span class="p">,</span> <span class="n">cho_solve</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+        <span class="c1"># Normalizing the data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">s_</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_s</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">std_s</span>
+        <span class="n">y_</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_y</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">std_y</span>
+        <span class="c1"># Number of samples and dimensions of samples and values</span>
+        <span class="n">m_</span><span class="p">,</span> <span class="n">n_</span> <span class="o">=</span> <span class="n">s_</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">y_</span><span class="p">)</span><span class="o">/</span><span class="n">m_</span><span class="p">)</span>
+
+        <span class="n">f_</span><span class="p">,</span> <span class="n">jf_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_model</span><span class="p">(</span><span class="n">s_</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">re</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+            <span class="c1"># Return the log-likelihood function and it&#39;s gradient. Gradient is calculate using Central Difference</span>
+            <span class="n">r__</span><span class="p">,</span> <span class="n">dr_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_model</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">s</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">s</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">p0</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">cc</span> <span class="o">=</span> <span class="n">cholesky</span><span class="p">(</span><span class="n">r__</span> <span class="o">+</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">52</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">m</span><span class="p">),</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">re</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+            <span class="c1"># Product of diagonal terms is negligible sometimes, even when cc exists.</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">cc</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">re</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+            <span class="n">f__</span> <span class="o">=</span> <span class="n">cho_solve</span><span class="p">((</span><span class="n">cc</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="n">f</span><span class="p">)</span>
+            <span class="n">y__</span> <span class="o">=</span> <span class="n">cho_solve</span><span class="p">((</span><span class="n">cc</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">q__</span><span class="p">,</span> <span class="n">g__</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">f__</span><span class="p">)</span>  <span class="c1"># Eq: 3.11, DACE</span>
+
+            <span class="c1"># Check if F is a full rank matrix</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">g__</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">f__</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">f__</span><span class="p">,</span> <span class="mi">1</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Chosen regression functions are not sufficiently linearly independent&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Design parameters</span>
+            <span class="n">beta_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">g__</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">q__</span><span class="p">),</span> <span class="n">y__</span><span class="p">))</span>
+
+            <span class="c1"># Computing the process variance (Eq: 3.13, DACE)</span>
+            <span class="n">sigma_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">lj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">q</span><span class="p">):</span>
+                <span class="n">sigma_</span><span class="p">[</span><span class="n">lj</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">m</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">y__</span><span class="p">[:,</span> <span class="n">lj</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">f__</span><span class="p">,</span> <span class="n">beta_</span><span class="p">[:,</span> <span class="n">lj</span><span class="p">]))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+            <span class="c1"># Objective function:= log(det(R)) + Y^T inv(R) Y + constant</span>
+            <span class="n">ll</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">cc</span><span class="p">)))</span> <span class="o">+</span> <span class="n">m</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">sigma_</span><span class="p">)))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+
+            <span class="k">if</span> <span class="n">re</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ll</span>
+
+            <span class="n">grad1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="mf">0.005</span>
+            <span class="k">for</span> <span class="n">dr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                <span class="n">temp</span><span class="p">[</span><span class="n">dr</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">low</span> <span class="o">=</span> <span class="n">p0</span> <span class="o">-</span> <span class="n">h</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">temp</span>
+                <span class="n">hi</span> <span class="o">=</span> <span class="n">p0</span> <span class="o">+</span> <span class="n">h</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">temp</span>
+                <span class="n">f_hi</span> <span class="o">=</span> <span class="n">log_likelihood</span><span class="p">(</span><span class="n">hi</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">f_low</span> <span class="o">=</span> <span class="n">log_likelihood</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">f_hi</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">or</span> <span class="n">f_low</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+                    <span class="n">grad1</span><span class="p">[</span><span class="n">dr</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">grad1</span><span class="p">[</span><span class="n">dr</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f_hi</span> <span class="o">-</span> <span class="n">f_low</span><span class="p">)</span> <span class="o">/</span> <span class="n">h</span>
+
+            <span class="k">return</span> <span class="n">ll</span><span class="p">,</span> <span class="n">grad1</span>
+
+        <span class="c1"># Maximum Likelihood Estimation : Solving optimization problem to calculate hyperparameters</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="p">:</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_model_params</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_opt</span><span class="p">,</span> <span class="n">n_</span><span class="p">])</span>
+            <span class="n">pf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_opt</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">i__</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_opt</span><span class="p">):</span>
+                <span class="c1"># print(&quot;----------------------------------&quot;, i__, &quot;-------------------------------------&quot;)</span>
+                <span class="n">p_</span> <span class="o">=</span> <span class="n">optimize</span><span class="o">.</span><span class="n">fmin_l_bfgs_b</span><span class="p">(</span><span class="n">log_likelihood</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">s_</span><span class="p">,</span> <span class="n">m_</span><span class="p">,</span> <span class="n">n_</span><span class="p">,</span> <span class="n">f_</span><span class="p">,</span> <span class="n">y_</span><span class="p">),</span> <span class="n">bounds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
+                <span class="n">p</span><span class="p">[</span><span class="n">i__</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">p_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">pf</span><span class="p">[</span><span class="n">i__</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="c1"># print(i__, p_[0], p_[1])</span>
+                <span class="c1"># Generating new starting points using log-uniform distribution</span>
+                <span class="k">if</span> <span class="n">i__</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_opt</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">sp</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">reciprocal</span><span class="o">.</span><span class="n">rvs</span><span class="p">([</span><span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">],</span> <span class="p">[</span><span class="n">j</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="n">pf</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Maximum likelihood estimator failed: Choose different starting point or &quot;</span>
+                                          <span class="s2">&quot;increase n_opt&quot;</span><span class="p">)</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">pf</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">corr_model_params</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_opt</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">r_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_model</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">s_</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">s_</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_model_params</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">r_</span><span class="p">)</span>                   <span class="c1"># Eq: 3.8, DACE</span>
+        <span class="n">c_inv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+        <span class="n">f_dash</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">c_inv</span><span class="p">,</span> <span class="n">f_</span><span class="p">)</span>
+        <span class="n">y_dash</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">c_inv</span><span class="p">,</span> <span class="n">y_</span><span class="p">)</span>
+        <span class="n">q_</span><span class="p">,</span> <span class="n">g_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">f_dash</span><span class="p">)</span>                 <span class="c1"># Eq: 3.11, DACE</span>
+
+        <span class="c1"># Check if F is a full rank matrix</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">g_</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">f_</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">f_</span><span class="p">,</span> <span class="mi">1</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Chosen regression functions are not sufficiently linearly independent&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Design parameters</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">g_</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">q_</span><span class="p">),</span> <span class="n">y_dash</span><span class="p">))</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">c_inv</span><span class="p">),</span> <span class="n">c_inv</span><span class="p">),</span> <span class="p">(</span><span class="n">y_</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">f_</span><span class="p">,</span> <span class="n">beta</span><span class="p">)))</span>
+
+        <span class="c1"># Computing the process variance (Eq: 3.13, DACE)</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">q</span><span class="p">):</span>
+            <span class="n">sigma</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">m_</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">y_dash</span><span class="p">[:,</span> <span class="n">l</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">f_dash</span><span class="p">,</span> <span class="n">beta</span><span class="p">[:,</span> <span class="n">l</span><span class="p">]))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F_dash</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">C_inv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">f_dash</span><span class="p">,</span> <span class="n">c_inv</span><span class="p">,</span> <span class="n">g_</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Done!&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">dy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict the function value at new points.</span>
+
+<span class="sd">        This method evaluates the regression and correlation model at new sample point. Then, it predicts the function</span>
+<span class="sd">        value and mean square error using regression coefficients and training data.</span>
+
+<span class="sd">        **Input:**</span>
+
+<span class="sd">        :param x: nD-array (2 dimensional) corresponding to the new points.</span>
+<span class="sd">        :type  x: list or array</span>
+
+<span class="sd">        :param dy: Contains the keyword for the user defined rank. If a list or numpy ndarray containing the rank of</span>
+<span class="sd">               each matrix is not provided, the code will compute them using numpy.linalg.matrix_rank.</span>
+<span class="sd">        :type dy: dictionary of arguments</span>
+
+<span class="sd">        **Output:**</span>
+
+<span class="sd">        :return y: Kriging prediction at new samples &#39;x&#39;.</span>
+<span class="sd">        :rtype y: numpy array</span>
+
+<span class="sd">        :return mse: Mean square error in the kriging prediction.</span>
+<span class="sd">        :rtype mse: numpy array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_s</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">std_s</span>
+        <span class="n">s_</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_s</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_s</span>
+        <span class="n">fx</span><span class="p">,</span> <span class="n">jf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">rx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_model</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">s_</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_model_params</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,jk-&gt;ik&#39;</span><span class="p">,</span> <span class="n">fx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,jk-&gt;ik&#39;</span><span class="p">,</span> <span class="n">rx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_y</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_y</span>
+        <span class="k">if</span> <span class="n">dy</span><span class="p">:</span>
+            <span class="c1"># print(self.C_inv.shape)</span>
+            <span class="c1"># print(rx.shape)</span>
+            <span class="n">r_dash</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,jk-&gt;ik&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">C_inv</span><span class="p">,</span> <span class="n">rx</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,jk-&gt;ik&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F_dash</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">r_dash</span><span class="p">)</span><span class="o">-</span><span class="n">fx</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">norm1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">r_dash</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+            <span class="n">norm2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+            <span class="n">mse</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std_y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sig</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">norm2</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">norm1</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">mse</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">y</span>
+
+    <span class="k">def</span> <span class="nf">jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict the gradient of the function at new points.</span>
+
+<span class="sd">        This method evaluates the regression and correlation model at new sample point. Then, it predicts the gradient</span>
+<span class="sd">        using regression coefficients and training data.</span>
+
+<span class="sd">        **Input:**</span>
+
+<span class="sd">        :param x: nD-array (2 dimensional) corresponding to the new points.</span>
+<span class="sd">        :type  x: list or array</span>
+
+<span class="sd">        **Output:**</span>
+
+<span class="sd">        :return y_grad: Kriging gradient prediction at new samples &#39;x&#39;.</span>
+<span class="sd">        :rtype y_grad: numpy array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_s</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_s</span>
+        <span class="n">s_</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_s</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_s</span>
+        <span class="n">fx</span><span class="p">,</span> <span class="n">jf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">rx</span><span class="p">,</span> <span class="n">drdx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_model</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">s_</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_model_params</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ikj,jm-&gt;ik&#39;</span><span class="p">,</span> <span class="n">jf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijk,jm-&gt;ki&#39;</span><span class="p">,</span> <span class="n">drdx</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
+        <span class="n">y_grad</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">std_y</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">std_s</span>
+        <span class="k">return</span> <span class="n">y_grad</span>
+
+    <span class="c1"># Defining Regression model (Linear)</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">regress</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines a function to evaluate basis functions.</span>
+
+<span class="sd">        This method defines a function based on the choice of regression model, which computes the basis functions</span>
+<span class="sd">        for provided samples.</span>
+
+<span class="sd">        **Input:**</span>
+
+<span class="sd">        :param model: nD-array (2 dimensional) corresponding to the new points.</span>
+<span class="sd">        :type  model: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">r</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;Constant&#39;</span><span class="p">:</span>
+                <span class="n">fx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="n">jf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="k">return</span> <span class="n">fx</span><span class="p">,</span> <span class="n">jf</span>
+            <span class="k">if</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;Linear&#39;</span><span class="p">:</span>
+                <span class="n">fx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">s</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">jf_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;jii-&gt;ji&#39;</span><span class="p">,</span> <span class="n">jf_b</span><span class="p">)[:]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">jf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">jf_b</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">fx</span><span class="p">,</span> <span class="n">jf</span>
+            <span class="k">if</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;Quadratic&#39;</span><span class="p">:</span>
+                <span class="n">fx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nb">int</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)])</span>
+                <span class="n">jf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">int</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)])</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+                    <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]))</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">)):</span>
+                        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">temp</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">::]))</span>
+                    <span class="n">fx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">temp</span>
+                    <span class="c1"># definie H matrix</span>
+                    <span class="n">h_</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">)):</span>
+                        <span class="n">tmp_</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                        <span class="n">t1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
+                        <span class="n">t1</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
+                        <span class="n">tmp</span> <span class="o">=</span> <span class="n">tmp_</span> <span class="o">+</span> <span class="n">t1</span>
+                        <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">h_</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[:,</span> <span class="n">j</span><span class="p">::]</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">h_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">h_</span><span class="p">,</span> <span class="n">tmp</span><span class="p">[:,</span> <span class="n">j</span><span class="p">::]))</span>
+                    <span class="n">jf</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">h_</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">fx</span><span class="p">,</span> <span class="n">jf</span>
+        <span class="k">return</span> <span class="n">r</span>
+
+    <span class="c1"># Defining Correlation model (Gaussian Process)</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">corr</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines a function to compute correlation matrix.</span>
+
+<span class="sd">        This method defines a function based on the choice of correlation model, which computes the correlation matrix</span>
+<span class="sd">        for provided samples.</span>
+
+<span class="sd">        **Input:**</span>
+
+<span class="sd">        :param model: nD-array (2 dimensional) corresponding to the new points.</span>
+<span class="sd">        :type  model: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">c</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="n">rx</span><span class="p">,</span> <span class="n">drdt</span><span class="p">,</span> <span class="n">drdx</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">]</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="c1"># Create stack matrix, where each block is x_i with all s</span>
+            <span class="n">stack</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_3d</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;Exponential&#39;</span><span class="p">:</span>
+                <span class="n">rx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="n">params</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stack</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">dt</span><span class="p">:</span>
+                    <span class="n">drdt</span> <span class="o">=</span> <span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">rx</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+                <span class="k">if</span> <span class="n">dx</span><span class="p">:</span>
+                    <span class="n">drdx</span> <span class="o">=</span> <span class="n">params</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">rx</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+            <span class="k">elif</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;Gaussian&#39;</span><span class="p">:</span>
+                <span class="n">rx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="n">params</span> <span class="o">*</span> <span class="p">(</span><span class="n">stack</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">dt</span><span class="p">:</span>
+                    <span class="n">drdt</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">stack</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">rx</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">dx</span><span class="p">:</span>
+                    <span class="n">drdx</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">params</span> <span class="o">*</span> <span class="n">stack</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">rx</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;Linear&#39;</span><span class="p">:</span>
+                <span class="c1"># Taking stack and turning each d value into 1-theta*dij</span>
+                <span class="n">after_parameters</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">params</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span>
+                <span class="c1"># Define matrix of zeros to compare against (not necessary to be defined separately,</span>
+                <span class="c1"># but the line is bulky if this isn&#39;t defined first, and it is used more than once)</span>
+                <span class="n">comp_zero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+                <span class="c1"># Compute matrix of max{0,1-theta*d}</span>
+                <span class="n">max_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">after_parameters</span><span class="p">,</span> <span class="n">comp_zero</span><span class="p">)</span>
+                <span class="n">rx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">max_matrix</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+                <span class="c1"># Create matrix that has 1s where max_matrix is nonzero</span>
+                <span class="c1"># -Essentially, this acts as a way to store the indices of where the values are nonzero</span>
+                <span class="n">ones_and_zeros</span> <span class="o">=</span> <span class="n">max_matrix</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+                <span class="c1"># Set initial derivatives as if all were positive</span>
+                <span class="n">first_dtheta</span> <span class="o">=</span> <span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span>
+                <span class="n">first_dx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">negative</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span>
+                <span class="c1"># Multiply derivs by ones_and_zeros...this will set the values where the</span>
+                <span class="c1"># derivative should be zero to zero, and keep all other values the same</span>
+                <span class="n">drdt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">first_dtheta</span><span class="p">,</span> <span class="n">ones_and_zeros</span><span class="p">)</span>
+                <span class="n">drdx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">first_dx</span><span class="p">,</span> <span class="n">ones_and_zeros</span><span class="p">)</span>
+                <span class="c1"># Loop over parameters, shifting max_matrix and multiplying over derivative</span>
+                <span class="c1"># matrix with each iteration</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">drdt</span> <span class="o">=</span> <span class="n">drdt</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">max_matrix</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">drdx</span> <span class="o">=</span> <span class="n">drdx</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">max_matrix</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;Spherical&#39;</span><span class="p">:</span>
+                <span class="c1"># Taking stack and creating array of all thetaj*dij</span>
+                <span class="n">after_parameters</span> <span class="o">=</span> <span class="n">params</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span>
+                <span class="c1"># Create matrix of all ones to compare</span>
+                <span class="n">comp_ones</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+                <span class="c1"># zeta_matrix has all values min{1,theta*dij}</span>
+                <span class="n">zeta_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">after_parameters</span><span class="p">,</span> <span class="n">comp_ones</span><span class="p">)</span>
+                <span class="c1"># Copy zeta_matrix to another matrix that will used to find where derivative should be zero</span>
+                <span class="n">indices</span> <span class="o">=</span> <span class="n">zeta_matrix</span>
+                <span class="c1"># If value of min{1,theta*dij} is 1, the derivative should be 0.</span>
+                <span class="c1"># So, replace all values of 1 with 0, then perform the .astype(bool).astype(int)</span>
+                <span class="c1"># operation like in the linear example, so you end up with an array of 1&#39;s where</span>
+                <span class="c1"># the derivative should be caluclated and 0 where it should be zero</span>
+                <span class="n">indices</span><span class="p">[</span><span class="n">indices</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="c1"># Create matrix of all |dij| (where non zero) to be used in calculation of dR/dtheta</span>
+                <span class="n">dtheta_derivs</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span>
+                <span class="c1"># Same as above, but for matrix of all thetaj where non-zero</span>
+                <span class="n">dx_derivs</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">*</span> <span class="n">params</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span>
+                <span class="c1"># Initial matrices containing derivates for all values in array. Note since</span>
+                <span class="c1"># dtheta_s and dx_s already accounted for where derivative should be zero, all</span>
+                <span class="c1"># that must be done is multiplying the |dij| or thetaj matrix on top of a</span>
+                <span class="c1"># matrix of derivates w.r.t zeta (in this case, dzeta = -1.5+1.5zeta**2)</span>
+                <span class="n">drdt</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.5</span> <span class="o">+</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">zeta_matrix</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">dtheta_derivs</span>
+                <span class="n">drdx</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.5</span> <span class="o">+</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">zeta_matrix</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">dx_derivs</span>
+                <span class="c1"># Also, create matrix for values of equation, 1 - 1.5zeta + 0.5zeta**3, for loop</span>
+                <span class="n">zeta_function</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">zeta_matrix</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">zeta_matrix</span> <span class="o">**</span> <span class="mi">3</span>
+                <span class="n">rx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">zeta_function</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+                <span class="c1"># Same as previous example, loop over zeta matrix by shifting index</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">drdt</span> <span class="o">=</span> <span class="n">drdt</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">zeta_function</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">drdx</span> <span class="o">=</span> <span class="n">drdx</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">zeta_function</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;Cubic&#39;</span><span class="p">:</span>
+                <span class="c1"># Taking stack and creating array of all thetaj*dij</span>
+                <span class="n">after_parameters</span> <span class="o">=</span> <span class="n">params</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span>
+                <span class="c1"># Create matrix of all ones to compare</span>
+                <span class="n">comp_ones</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+                <span class="c1"># zeta_matrix has all values min{1,theta*dij}</span>
+                <span class="n">zeta_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">after_parameters</span><span class="p">,</span> <span class="n">comp_ones</span><span class="p">)</span>
+                <span class="c1"># Copy zeta_matrix to another matrix that will used to find where derivative should be zero</span>
+                <span class="n">indices</span> <span class="o">=</span> <span class="n">zeta_matrix</span>
+                <span class="c1"># If value of min{1,theta*dij} is 1, the derivative should be 0.</span>
+                <span class="c1"># So, replace all values of 1 with 0, then perform the .astype(bool).astype(int)</span>
+                <span class="c1"># operation like in the linear example, so you end up with an array of 1&#39;s where</span>
+                <span class="c1"># the derivative should be caluclated and 0 where it should be zero</span>
+                <span class="n">indices</span><span class="p">[</span><span class="n">indices</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="c1"># Create matrix of all |dij| (where non zero) to be used in calculation of dR/dtheta</span>
+                <span class="n">dtheta_derivs</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span>
+                <span class="c1"># Same as above, but for matrix of all thetaj where non-zero</span>
+                <span class="n">dx_derivs</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">*</span> <span class="n">params</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span>
+                <span class="c1"># Initial matrices containing derivates for all values in array. Note since</span>
+                <span class="c1"># dtheta_s and dx_s already accounted for where derivative should be zero, all</span>
+                <span class="c1"># that must be done is multiplying the |dij| or thetaj matrix on top of a</span>
+                <span class="c1"># matrix of derivates w.r.t zeta (in this case, dzeta = -6zeta+6zeta**2)</span>
+                <span class="n">drdt</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">6</span> <span class="o">*</span> <span class="n">zeta_matrix</span> <span class="o">+</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">zeta_matrix</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">dtheta_derivs</span>
+                <span class="n">drdx</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">6</span> <span class="o">*</span> <span class="n">zeta_matrix</span> <span class="o">+</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">zeta_matrix</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">dx_derivs</span>
+                <span class="c1"># Also, create matrix for values of equation, 1 - 1.5zeta + 0.5zeta**3, for loop</span>
+                <span class="n">zeta_function</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">zeta_matrix</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">zeta_matrix</span> <span class="o">**</span> <span class="mi">3</span>
+                <span class="n">rx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">zeta_function</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+                <span class="c1"># Same as previous example, loop over zeta matrix by shifting index</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">drdt</span> <span class="o">=</span> <span class="n">drdt</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">zeta_function</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">drdx</span> <span class="o">=</span> <span class="n">drdx</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">zeta_function</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">model</span> <span class="o">==</span> <span class="s1">&#39;Spline&#39;</span><span class="p">:</span>
+                <span class="c1"># In this case, the zeta value is just abs(stack)*parameters, no comparison</span>
+                <span class="n">zeta_matrix</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span> <span class="o">*</span> <span class="n">params</span>
+                <span class="c1"># So, dtheta and dx are just |dj| and theta*sgn(dj), respectively</span>
+                <span class="n">dtheta_derivs</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span>
+                <span class="c1"># dx_derivs = np.ones((np.size(x,0),np.size(s,0),np.size(s,1)))*parameters</span>
+                <span class="n">dx_derivs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span> <span class="o">*</span> <span class="n">params</span>
+
+                <span class="c1"># Initialize empty sigma and dsigma matrices</span>
+                <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">zeta_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">zeta_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">zeta_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+                <span class="n">dsigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">zeta_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">zeta_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">zeta_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+
+                <span class="c1"># Loop over cases to create zeta_matrix and subsequent dR matrices</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">zeta_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">zeta_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">zeta_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
+                            <span class="n">y</span> <span class="o">=</span> <span class="n">zeta_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span>
+                            <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">y</span> <span class="o">&lt;=</span> <span class="mf">0.2</span><span class="p">:</span>
+                                <span class="n">sigma</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">15</span> <span class="o">*</span> <span class="n">y</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">30</span> <span class="o">*</span> <span class="n">y</span> <span class="o">**</span> <span class="mi">3</span>
+                                <span class="n">dsigma</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">30</span> <span class="o">*</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">y</span> <span class="o">**</span> <span class="mi">2</span>
+                            <span class="k">elif</span> <span class="mf">0.2</span> <span class="o">&lt;</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+                                <span class="n">sigma</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.25</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">**</span> <span class="mi">3</span>
+                                <span class="n">dsigma</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mf">3.75</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span>
+                            <span class="k">elif</span> <span class="n">y</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+                                <span class="n">sigma</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                                <span class="n">dsigma</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+                <span class="n">rx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+                <span class="c1"># Initialize derivative matrices incorporating chain rule</span>
+                <span class="n">drdt</span> <span class="o">=</span> <span class="n">dsigma</span> <span class="o">*</span> <span class="n">dtheta_derivs</span>
+                <span class="n">drdx</span> <span class="o">=</span> <span class="n">dsigma</span> <span class="o">*</span> <span class="n">dx_derivs</span>
+
+                <span class="c1"># Loop over to create proper matrices</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">drdt</span> <span class="o">=</span> <span class="n">drdt</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">drdx</span> <span class="o">=</span> <span class="n">drdx</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+            <span class="c1"># Multiplying matrices by ones_and_zeros multiplication sets 0 values equal to</span>
+            <span class="c1"># -0.0, so this comparison sets all -0.0 to 0.0 (Python should treat these the</span>
+            <span class="c1"># same, but it looks better with 0.0)</span>
+            <span class="n">drdt</span><span class="p">[</span><span class="n">drdt</span> <span class="o">==</span> <span class="o">-</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">drdx</span><span class="p">[</span><span class="n">drdx</span> <span class="o">==</span> <span class="o">-</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+            <span class="k">if</span> <span class="n">dt</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">rx</span><span class="p">,</span> <span class="n">drdt</span>
+            <span class="k">if</span> <span class="n">dx</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">rx</span><span class="p">,</span> <span class="n">drdx</span>
+            <span class="k">return</span> <span class="n">rx</span>
+
+        <span class="k">return</span> <span class="n">c</span>
+
+    <span class="k">def</span> <span class="nf">init_krig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialization and preliminary error checks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Exit code: Regression model is not defined.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Exit code: Correlation model is not defined.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_model_params</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Exit code: Either define corr_model_params or dimension.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_model_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">corr_model_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.001</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="mi">7</span><span class="p">]]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_model_params</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.001</span><span class="p">,</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">7</span><span class="p">]]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg_model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;function&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reg_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_model</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_model</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Constant&#39;</span><span class="p">,</span> <span class="s1">&#39;Linear&#39;</span><span class="p">,</span> <span class="s1">&#39;Quadratic&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rmodel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_model</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reg_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">regress</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reg_model</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Exit code: Doesn&#39;t recognize the Regression model.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;function&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">corr_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_model</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_model</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Exponential&#39;</span><span class="p">,</span> <span class="s1">&#39;Gaussian&#39;</span><span class="p">,</span> <span class="s1">&#39;Linear&#39;</span><span class="p">,</span> <span class="s1">&#39;Spherical&#39;</span><span class="p">,</span> <span class="s1">&#39;Cubic&#39;</span><span class="p">,</span> <span class="s1">&#39;Spline&#39;</span><span class="p">,</span> <span class="s1">&#39;Other&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cmodel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_model</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">corr_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_model</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Exit code: Doesn&#39;t recognize the Correlation model.&quot;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../index.html">
+    <img class="logo" src="../../_static/logo.jpg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Uncertainty quantification with Python </p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=SURG&repo=UQpy&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../distributions.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samplemethods.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../transformations.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../surrogates.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reliability.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dimension_reduction.html">Dimension reduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, SURG, JHU.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/SURG/UQpy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>
