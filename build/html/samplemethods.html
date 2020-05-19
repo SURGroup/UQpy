@@ -58,40 +58,40 @@ other <code class="docutils literal notranslate"><span class="pre">UQpy</span></
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x1</span> <span class="o">=</span> <span class="n">MCS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x1</span> <span class="o">=</span> <span class="n">MCS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">123</span><span class="p">),</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
 <span class="go">    UQpy: Running Monte Carlo Sampling...</span>
 <span class="go">    UQpy: Monte Carlo Sampling Complete.</span>
-<span class="go">        [[ 1.62434536  1.78862847]</span>
-<span class="go">        [-0.61175641  0.43650985]</span>
-<span class="go">        [-0.52817175  0.09649747]</span>
-<span class="go">        [-1.07296862 -1.8634927 ]</span>
-<span class="go">        [ 0.86540763 -0.2773882 ]]</span>
+<span class="go">        [[-1.0856306   1.65143654]</span>
+<span class="go">         [ 0.99734545 -2.42667924]</span>
+<span class="go">         [ 0.2829785  -0.42891263]</span>
+<span class="go">         [-1.50629471  1.26593626]</span>
+<span class="go">         [-0.57860025 -0.8667404 ]]</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">MCS</span></code> class can be used to run MCS for multivariate distributions</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">MVNormal</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">MVNormal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">],</span> <span class="n">cov</span><span class="o">=</span><span class="p">[[</span><span class="mf">4.</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.9</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x2</span> <span class="o">=</span> <span class="n">MCS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x2</span> <span class="o">=</span> <span class="n">MCS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">456</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x2</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
-<span class="go">        [[ 3.38736185  2.23541269]</span>
-<span class="go">        [ 0.08946208  0.8979547 ]</span>
-<span class="go">        [ 2.53138343  3.06057229]</span>
-<span class="go">        [ 5.72159837  0.30657467]</span>
-<span class="go">        [-1.71534735  1.97285583]]</span>
+<span class="go">        [[ 2.21206564  1.21635688]</span>
+<span class="go">         [-0.09732382  2.8152297 ]</span>
+<span class="go">         [-1.30600471  4.1038246 ]</span>
+<span class="go">         [ 0.50407636  2.54147535]</span>
+<span class="go">         [ 1.61407521  1.54649951]]</span>
 </pre></div>
 </div>
 <p>Or for a combination of distributions</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">MVNormal</span><span class="p">,</span> <span class="n">Normal</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">MVNormal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">],</span> <span class="n">cov</span><span class="o">=</span><span class="p">[[</span><span class="mf">4.</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.9</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x3</span> <span class="o">=</span> <span class="n">MCS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="p">[</span><span class="mi">123</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x3</span> <span class="o">=</span> <span class="n">MCS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">789</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x3</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
-<span class="go">        [[array([-1.0856306]) array([0.21193807, 2.35155014])]</span>
-<span class="go">        [array([0.99734545]) array([-1.02985401,  1.83075511])]</span>
-<span class="go">        [array([0.2829785]) array([3.09845703, 1.67722522])]</span>
-<span class="go">        [array([-1.50629471]) array([2.13964859, 1.22068072])]</span>
-<span class="go">        [array([-0.57860025]) array([-1.16164199,  2.21637435])]]</span>
+<span class="go">        [[array([-1.1081114]) array([2.9781381 , 1.51253378])]</span>
+<span class="go">         [array([-0.72571863]) array([1.96173102, 0.89589751])]</span>
+<span class="go">         [array([0.52280433]) array([-0.91034353,  3.25303316])]</span>
+<span class="go">         [array([1.2344419]) array([-1.75177129,  2.37998095])]</span>
+<span class="go">         [array([0.09689585]) array([1.43288471, 1.1029768 ])]]</span>
 </pre></div>
 </div>
 <p>In this case the number of  samples will be</p>
@@ -122,7 +122,7 @@ other <code class="docutils literal notranslate"><span class="pre">UQpy</span></
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>random_state</strong> ((list of) <cite>int(s)</cite>):</dt><dd><p>The random seed to initialize the <em>Mersenne Twister</em> pseudo-random number generator.</p>
+<dt>random_state (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
 </dd>
 </dl>
 </li>
@@ -133,7 +133,7 @@ other <code class="docutils literal notranslate"><span class="pre">UQpy</span></
 </dl>
 </li>
 </ul>
-<p><strong>Output/Returns:</strong></p>
+<p><strong>Attributes:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
 <dt><strong>samples</strong> (<cite>ndarray</cite> or <cite>list</cite>):</dt><dd><p>Generated samples. If a list of <code class="docutils literal notranslate"><span class="pre">DistributionContinuous1D</span></code>, <code class="docutils literal notranslate"><span class="pre">DistributionContinuous1D</span></code>
@@ -162,15 +162,15 @@ Uniform(0,1) hypercube using the method <code class="docutils literal notranslat
 existing samples. For example, to the 5 samples in object <code class="docutils literal notranslate"><span class="pre">x1</span></code> we can add two more by running</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
 <span class="go">    &lt;UQpy.SampleMethods.MCS object at 0x1a148ba85&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x1</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="p">[</span><span class="mi">123</span><span class="p">,</span> <span class="mi">567</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x1</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">23</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
-<span class="go">    [[ 1.62434536  1.78862847]</span>
-<span class="go">     [-0.61175641  0.43650985]</span>
-<span class="go">     [-0.52817175  0.09649747]</span>
-<span class="go">     [-1.07296862 -1.8634927 ]</span>
-<span class="go">     [ 0.86540763 -0.2773882 ]</span>
-<span class="go">     [ 1.62434536  1.78862847]</span>
-<span class="go">     [-0.61175641  0.43650985]]</span>
+<span class="go">    [[-1.0856306   1.65143654]</span>
+<span class="go">     [ 0.99734545 -2.42667924]</span>
+<span class="go">     [ 0.2829785  -0.42891263]</span>
+<span class="go">     [-1.50629471  1.26593626]</span>
+<span class="go">     [-0.57860025 -0.8667404 ]</span>
+<span class="go">     [ 0.66698806 -0.77761941]</span>
+<span class="go">     [ 0.02581308  0.94863382]]</span>
 </pre></div>
 </div>
 <p>The total number of samples is now</p>
@@ -189,13 +189,13 @@ Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pr
 <span class="go">    &lt;UQpy.SampleMethods.MCS object at 0x1a18c03450&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x1</span><span class="o">.</span><span class="n">transform_u01</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">samplesU01</span><span class="p">)</span>
-<span class="go">    [[0.94784894 0.96316267]</span>
-<span class="go">     [0.27034947 0.66876657]</span>
-<span class="go">     [0.29869007 0.53843726]</span>
-<span class="go">     [0.1416426  0.03119649]</span>
-<span class="go">     [0.80659245 0.39074102]</span>
-<span class="go">     [0.94784894 0.96316267]</span>
-<span class="go">     [0.27034947 0.66876657]]</span>
+<span class="go">    [[0.13882123 0.95067527]</span>
+<span class="go">     [0.84070157 0.00761886]</span>
+<span class="go">     [0.61140334 0.3339934 ]</span>
+<span class="go">     [0.06599577 0.89723205]</span>
+<span class="go">     [0.28142947 0.19304213]</span>
+<span class="go">     [0.74761012 0.21839671]</span>
+<span class="go">     [0.51029679 0.82859656]]</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -251,7 +251,7 @@ Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pr
 </div>
 <dl class="class">
 <dt id="UQpy.SampleMethods.LHS">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">LHS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">nsamples</em>, <em class="sig-param">criterion='random'</em>, <em class="sig-param">metric='euclidean'</em>, <em class="sig-param">iterations=100</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">LHS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">nsamples</em>, <em class="sig-param">criterion='random'</em>, <em class="sig-param">metric='euclidean'</em>, <em class="sig-param">iterations=100</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform Latin hypercube sampling (MCS) of random variables.</p>
 <p><strong>Attributes:</strong></p>
 <p><strong>Input:</strong></p>
@@ -308,6 +308,11 @@ Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pr
 </dd>
 </dl>
 </li>
+<li><dl class="simple">
+<dt>random_state (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+</dd>
+</dl>
+</li>
 <li><dl>
 <dt><strong>verbose</strong> (<cite>Boolean</cite>):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
 <p>Default value: False</p>
@@ -315,7 +320,7 @@ Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pr
 </dl>
 </li>
 </ul>
-<p><strong>Output/Returns:</strong></p>
+<p><strong>Attributes:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
 <dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the generated samples.</p>
@@ -331,18 +336,19 @@ Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pr
 <dd><p>A Latin hypercube design based on sampling the centers of the bins.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">LHS</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
 <span class="go">Run LHS with the ``centered`` method:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;correlate&#39;</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;centered&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">123</span><span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
 <span class="go">UQpy: Running Latin Hypercube sampling...</span>
 <span class="go">Successful execution of LHS design.</span>
-<span class="go">[[-1.28155157  0.71844843]</span>
-<span class="go"> [ 0.52440051  2.52440051]</span>
-<span class="go"> [ 1.28155157  2.        ]</span>
-<span class="go"> [ 0.          3.28155157]</span>
-<span class="go"> [-0.52440051  1.47559949]]</span>
+<span class="go">[[0.3 0.7]</span>
+<span class="go"> [0.7 0.9]</span>
+<span class="go"> [0.1 0.3]</span>
+<span class="go"> [0.9 0.5]</span>
+<span class="go"> [0.5 0.1]]</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -356,16 +362,17 @@ Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pr
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
 <span class="go">Run LHS with the ``correlate`` method:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;correlate&#39;</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;correlate&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">123</span><span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
 <span class="go">UQpy: Running Latin Hypercube sampling...</span>
-<span class="go">UQpy: Achieved minimum correlation of  0.00019327853813977584</span>
+<span class="go">UQpy: Achieved minimum correlation of  0.041564851956975124</span>
 <span class="go">Successful execution of LHS design.</span>
-<span class="go">[[0.22585805 0.87167809]</span>
-<span class="go"> [0.12410009 0.0665815 ]</span>
-<span class="go"> [0.50548145 0.78194119]</span>
-<span class="go"> [0.903594   0.43153321]</span>
-<span class="go"> [0.73471617 0.35147028]]</span>
+<span class="go">[[0.62552244 0.46112928]</span>
+<span class="go"> [0.97877307 0.78336976]</span>
+<span class="go"> [0.57030961 0.28521913]</span>
+<span class="go"> [0.0425663  0.90352469]</span>
+<span class="go"> [0.27846081 0.09930159]]</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -379,16 +386,17 @@ Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pr
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
 <span class="go">Run LHS with the ``max_min`` method:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;correlate&#39;</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;maximin&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">123</span><span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span>         <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
 <span class="go">UQpy: Running Latin Hypercube sampling...</span>
-<span class="go">UQpy: Achieved max_min distance of  0.44043282285181284</span>
+<span class="go">UQpy: Achieved max_min distance of  0.4406062190580699</span>
 <span class="go">Successful execution of LHS design.</span>
-<span class="go">[[0.33874957 0.31460038]</span>
-<span class="go"> [0.91109051 0.44301033]</span>
-<span class="go"> [0.059657   0.77562892]</span>
-<span class="go"> [0.67762949 0.03327944]</span>
-<span class="go"> [0.59516606 0.90984061]]</span>
+<span class="go">[[0.46990371 0.00812322]</span>
+<span class="go"> [0.65548479 0.40773992]</span>
+<span class="go"> [0.99978368 0.84601799]</span>
+<span class="go"> [0.04775668 0.3291645 ]</span>
+<span class="go"> [0.34095571 0.75204205]]</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -399,19 +407,19 @@ Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pr
 <dd><p>A Latin hypercube design based on sampling randomly inside each bin.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">LHS</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">2.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
 <span class="go">Run LHS with the ``random`` method:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;correlate&#39;</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">123</span><span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span>         <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
 <span class="go">UQpy: Running Latin Hypercube sampling...</span>
-<span class="go">UQpy: Achieved max_min distance of  0.44043282285181284</span>
 <span class="go">Successful execution of LHS design.</span>
-<span class="go">[[3.75621818 0.97949371]</span>
-<span class="go"> [4.85220593 0.37270871]</span>
-<span class="go"> [3.1521886  0.4610569 ]</span>
-<span class="go"> [4.41441601 0.10184899]</span>
-<span class="go"> [3.89444322 0.6775048 ]]</span>
+<span class="go">[[0.71026295 0.8784235 ]</span>
+<span class="go"> [0.94389379 0.39615284]</span>
+<span class="go"> [0.44537029 0.53696595]</span>
+<span class="go"> [0.13929384 0.69618638]</span>
+<span class="go"> [0.25722787 0.08462129]]</span>
 </pre></div>
 </div>
 </dd></dl>

@@ -108,10 +108,11 @@ class MCS:
                 self.dist_object = dist_object
                 self.list = False
                 self.array = True
-            if random_state is not None:
-                if not isinstance(random_state, int):
-                    raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
             self.random_state = random_state
+            if isinstance(self.random_state, int):
+                self.random_state = np.random.RandomState(self.random_state)
+            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         # Instantiate the output attributes.
         self.samples = None
@@ -132,15 +133,15 @@ class MCS:
 
         >>> print(x1)
             <UQpy.SampleMethods.MCS object at 0x1a148ba85>
-        >>> x1.run(nsamples=2, random_state=[123, 567])
+        >>> x1.run(nsamples=2, random_state=np.random.RandomState(23))
         >>> print(x1.samples)
-            [[ 1.62434536  1.78862847]
-             [-0.61175641  0.43650985]
-             [-0.52817175  0.09649747]
-             [-1.07296862 -1.8634927 ]
-             [ 0.86540763 -0.2773882 ]
-             [ 1.62434536  1.78862847]
-             [-0.61175641  0.43650985]]
+            [[-1.0856306   1.65143654]
+             [ 0.99734545 -2.42667924]
+             [ 0.2829785  -0.42891263]
+             [-1.50629471  1.26593626]
+             [-0.57860025 -0.8667404 ]
+             [ 0.66698806 -0.77761941]
+             [ 0.02581308  0.94863382]]
 
         The total number of samples is now
 
@@ -209,13 +210,13 @@ class MCS:
             <UQpy.SampleMethods.MCS object at 0x1a18c03450>
         >>> x1.transform_u01()
         >>> print(x1.samplesU01)
-            [[0.94784894 0.96316267]
-             [0.27034947 0.66876657]
-             [0.29869007 0.53843726]
-             [0.1416426  0.03119649]
-             [0.80659245 0.39074102]
-             [0.94784894 0.96316267]
-             [0.27034947 0.66876657]]
+            [[0.13882123 0.95067527]
+             [0.84070157 0.00761886]
+             [0.61140334 0.3339934 ]
+             [0.06599577 0.89723205]
+             [0.28142947 0.19304213]
+             [0.74761012 0.21839671]
+             [0.51029679 0.82859656]]
         """
 
         if isinstance(self.dist_object, list) and self.array is True:
@@ -269,50 +270,53 @@ class LHS:
     **Input:**
 
     * **dist_object** ((list of) ``Distribution`` object(s)):
-                    List of ``Distribution`` objects corresponding to each random variable.
+            List of ``Distribution`` objects corresponding to each random variable.
 
     * **nsamples** (`int`):
-                    Number of samples to be drawn from each distribution.
+            Number of samples to be drawn from each distribution.
 
 
     * **criterion** (`str` or `callable`):
-                The criterion for generating sample points
-                    Options:
-                        1. 'random' - completely random. \n
-                        2. centered' - points only at the centre. \n
-                        3. 'maximin - maximizing the minimum distance between points. \n
-                        4. 'correlate' - minimizing the correlation between the points. \n
-                        5. `callable` - User-defined method.
+            The criterion for generating sample points
+                Options:
+                    1. 'random' - completely random. \n
+                    2. centered' - points only at the centre. \n
+                    3. 'maximin - maximizing the minimum distance between points. \n
+                    4. 'correlate' - minimizing the correlation between the points. \n
+                    5. `callable` - User-defined method.
 
-                Default: 'random'
+            Default: 'random'
 
     * **metric** (`str` or `callable`):
-                The distance metric to use.
-                    Options:
-                        1. `str` - Available options are: `braycurtis`, `canberra`, `chebyshev`, `cityblock`,
-                        `correlation`, `cosine`, `dice`, `euclidean`, `hamming`, `jaccard`, `jensenshannon`,
-                        `kulsinski`, `mahalanobis`, `matching`, `minkowski`, `rogerstanimoto`, `russellrao`,
-                        `seuclidean`, `sokalmichener`, `sokalsneath`, `sqeuclidean`, `yule`.
+            The distance metric to use.
+                Options:
+                    1. `str` - Available options are: `braycurtis`, `canberra`, `chebyshev`, `cityblock`,
+                    `correlation`, `cosine`, `dice`, `euclidean`, `hamming`, `jaccard`, `jensenshannon`,
+                    `kulsinski`, `mahalanobis`, `matching`, `minkowski`, `rogerstanimoto`, `russellrao`,
+                    `seuclidean`, `sokalmichener`, `sokalsneath`, `sqeuclidean`, `yule`.
 
-                    2. User-defined function.
+                2. User-defined function.
 
-                Default: `euclidean`.
+            Default: `euclidean`.
 
     * **iterations** (`int`):
-                The number of iteration to run. Required only for ``maximin`` and ``correlate`` criterion.
+            The number of iteration to run. Required only for ``maximin`` and ``correlate`` criterion.
 
-                Default: 100.
+            Default: 100.
+
+    * random_state (None or `int` or `np.random.RandomState` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
 
     * **verbose** (`Boolean`):
-                    A boolean declaring whether to write text to the terminal.
+            A boolean declaring whether to write text to the terminal.
 
-                    Default value: False
+            Default value: False
 
 
-    **Output/Returns:**
+    **Attributes:**
 
     * **samples** (`ndarray`):
-                    `ndarray` containing the generated samples.
+            `ndarray` containing the generated samples.
 
     **Methods**
 
@@ -321,7 +325,7 @@ class LHS:
     """
 
     def __init__(self, dist_object, nsamples, criterion='random', metric='euclidean',
-                 iterations=100,  verbose=False):
+                 iterations=100,  random_state=None, verbose=False):
 
         # Check if a Distribution object is provided.
         from UQpy.Distributions import DistributionContinuous1D, JointInd
@@ -335,6 +339,12 @@ class LHS:
                 raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
         self.dist_object = dist_object
+
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if isinstance(criterion, str):
             if criterion not in ['random', 'centered', 'maximin', 'correlate']:
@@ -424,29 +434,29 @@ class LHS:
 
         >>> from UQpy.Distributions import Uniform
         >>> from UQpy.SampleMethods import LHS
-        >>> dist1 = Uniform(loc=3., scale=2.)
+        >>> dist1 = Uniform(loc=0., scale=1.)
         >>> dist2 = Uniform(loc=0., scale=1.)
         Run LHS with the ``random`` method:
-        >>> x = LHS(dist_object=[dist1, dist2], criterion='correlate', nsamples=5, verbose=True)
+        >>> x = LHS(dist_object=[dist1, dist2], criterion='random', random_state=np.random.RandomState(123),
+        >>>          nsamples=5, verbose=True)
         >>> print(x.samples)
         UQpy: Running Latin Hypercube sampling...
-        UQpy: Achieved max_min distance of  0.44043282285181284
         Successful execution of LHS design.
-        [[3.75621818 0.97949371]
-         [4.85220593 0.37270871]
-         [3.1521886  0.4610569 ]
-         [4.41441601 0.10184899]
-         [3.89444322 0.6775048 ]]
+        [[0.71026295 0.8784235 ]
+         [0.94389379 0.39615284]
+         [0.44537029 0.53696595]
+         [0.13929384 0.69618638]
+         [0.25722787 0.08462129]]
         """
 
         cut = np.linspace(0, 1, self.nsamples + 1)
         a = cut[:self.nsamples]
         b = cut[1:self.nsamples + 1]
 
-        u = np.random.rand(self.samples.shape[0], self.samples.shape[1])
+        u = np.zeros(shape=(self.samples.shape[0], self.samples.shape[1]))
         samples = np.zeros_like(u)
-
         for i in range(self.samples.shape[1]):
+            u[:, i] = stats.uniform.rvs(size=self.samples.shape[0], random_state=self.random_state)
             samples[:, i] = u[:, i] * (b - a) + a
 
         for j in range(self.samples.shape[1]):
@@ -461,18 +471,19 @@ class LHS:
 
         >>> from UQpy.Distributions import Uniform
         >>> from UQpy.SampleMethods import LHS
-        >>> dist1 = Normal(loc=0., scale=1.)
-        >>> dist2 = Normal(loc=2., scale=1.)
+        >>> dist1 = Uniform(loc=0., scale=1.)
+        >>> dist2 = Uniform(loc=0., scale=1.)
         Run LHS with the ``centered`` method:
-        >>> x = LHS(dist_object=[dist1, dist2], criterion='correlate', nsamples=5, verbose=True)
+        >>> x = LHS(dist_object=[dist1, dist2], criterion='centered', random_state=np.random.RandomState(123),
+        >>>         nsamples=5, verbose=True)
         >>> print(x.samples)
         UQpy: Running Latin Hypercube sampling...
         Successful execution of LHS design.
-        [[-1.28155157  0.71844843]
-         [ 0.52440051  2.52440051]
-         [ 1.28155157  2.        ]
-         [ 0.          3.28155157]
-         [-0.52440051  1.47559949]]
+        [[0.3 0.7]
+         [0.7 0.9]
+         [0.1 0.3]
+         [0.9 0.5]
+         [0.5 0.1]]
         """
         cut = np.linspace(0, 1, self.nsamples + 1)
         a = cut[:self.nsamples]
@@ -495,16 +506,17 @@ class LHS:
         >>> dist1 = Uniform(loc=0., scale=1.)
         >>> dist2 = Uniform(loc=0., scale=1.)
         Run LHS with the ``max_min`` method:
-        >>> x = LHS(dist_object=[dist1, dist2], criterion='correlate', nsamples=5, verbose=True)
+        >>> x = LHS(dist_object=[dist1, dist2], criterion='maximin', random_state=np.random.RandomState(123),
+        >>>          nsamples=5, verbose=True)
         >>> print(x.samples)
         UQpy: Running Latin Hypercube sampling...
-        UQpy: Achieved max_min distance of  0.44043282285181284
+        UQpy: Achieved max_min distance of  0.4406062190580699
         Successful execution of LHS design.
-        [[0.33874957 0.31460038]
-         [0.91109051 0.44301033]
-         [0.059657   0.77562892]
-         [0.67762949 0.03327944]
-         [0.59516606 0.90984061]]
+        [[0.46990371 0.00812322]
+         [0.65548479 0.40773992]
+         [0.99978368 0.84601799]
+         [0.04775668 0.3291645 ]
+         [0.34095571 0.75204205]]
 
         """
         cut = np.linspace(0, 1, self.nsamples + 1)
@@ -538,16 +550,17 @@ class LHS:
         >>> dist1 = Uniform(loc=0., scale=1.)
         >>> dist2 = Uniform(loc=0., scale=1.)
         Run LHS with the ``correlate`` method:
-        >>> x = LHS(dist_object=[dist1, dist2], criterion='correlate', nsamples=5, verbose=True)
+        >>> x = LHS(dist_object=[dist1, dist2], criterion='correlate', random_state=np.random.RandomState(123),
+        >>>         nsamples=5, verbose=True)
         >>> print(x.samples)
         UQpy: Running Latin Hypercube sampling...
-        UQpy: Achieved minimum correlation of  0.00019327853813977584
+        UQpy: Achieved minimum correlation of  0.041564851956975124
         Successful execution of LHS design.
-        [[0.22585805 0.87167809]
-         [0.12410009 0.0665815 ]
-         [0.50548145 0.78194119]
-         [0.903594   0.43153321]
-         [0.73471617 0.35147028]]
+        [[0.62552244 0.46112928]
+         [0.97877307 0.78336976]
+         [0.57030961 0.28521913]
+         [0.0425663  0.90352469]
+         [0.27846081 0.09930159]]
 
         """
         cut = np.linspace(0, 1, self.nsamples + 1)

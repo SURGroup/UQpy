@@ -50,18 +50,18 @@ where :math:`\textbf{H}` is the Hessian matrix of the second derivatives of :mat
 
 where :math:`\kappa_i` is the `i-th`  curvature. 
 
-The ``TayloreSeries`` class is the parent class of the ``Form`` and ``Sorm`` classes that perform the FORM and SORM, respectively. These classes can be imported in a python script using the following command:
+The ``TayloreSeries`` class is the parent class of the ``FORM`` and ``SORM`` classes that perform the FORM and SORM, respectively. These classes can be imported in a python script using the following command:
 
->>> from UQpy.Reliability import Form, Sorm
+>>> from UQpy.Reliability import FORM, SORM
 
 
 .. autoclass:: UQpy.Reliability.TaylorSeries
     :members: 
 
-Form
+FORM
 ~~~~~~~~~~
 
-The ``Form`` class can be used to estimate the reliability of a system using the first order reliability method. For example, consider the simple structural reliability problem defined in a two-dimensional parameter space consisting of a resistance :math:`R` and a stress :math:`S`. The failure happens when the stress is higher than the resistance, leading to the following limit-state function:
+The ``FORM`` class can be used to estimate the reliability of a system using the first order reliability method. For example, consider the simple structural reliability problem defined in a two-dimensional parameter space consisting of a resistance :math:`R` and a stress :math:`S`. The failure happens when the stress is higher than the resistance, leading to the following limit-state function:
 
 .. math:: \textbf{X}=\{R, S\}
 .. math:: g(\textbf{X}) = R - S
@@ -70,11 +70,11 @@ The two random variables are independent  and  normally distributed according to
 
 >>> from UQpy.RunModel import RunModel
 >>> from UQpy.Distributions import Normal
->>> from UQpy.Reliability import Form
+>>> from UQpy.Reliability import FORM
 >>> dist1 = Normal(loc=200, scale=20)
 >>> dist2 = Normal(loc=150, scale=10)
 >>> RunModelObject = RunModel(model_script='pfn.py',model_object_name="model") #see RunModel section on how to define the model
->>> Q = Form(dist_object=[dist1,dist2], model=RunModelObject)
+>>> Q = FORM(dist_object=[dist1,dist2], model=RunModelObject)
 
 If we want to print the results:
 
@@ -95,10 +95,10 @@ If we want to print the results:
 .. autoclass:: UQpy.Reliability.Form
     :members: 
 	
-Sorm
+SORM
 ~~~~~~~~~~
 
-The ``Sorm`` class can be used to estimate the reliability of a system using the second order reliability method. For example, consider the problem where the limit state to be a nonlinear function of two (`d`) random variables
+The ``SORM`` class can be used to estimate the reliability of a system using the second order reliability method. For example, consider the problem where the limit state to be a nonlinear function of two (`d`) random variables
 
 .. math:: g(X_1, X_2) = X_1X_1 - 80
 
@@ -106,7 +106,7 @@ where :math:`X_1` follows a normal distribution with mean :math:`\mu_{X_1}=20` a
 
 >>> from UQpy.RunModel import RunModel
 >>> from UQpy.Distributions import Normal, Lognormal
->>> from UQpy.Reliability import Sorm
+>>> from UQpy.Reliability import SORM
 
 First we need to gfind the parameters of the `Lognormal` distribution model (see ``scipy.stats``):
 
@@ -122,7 +122,7 @@ Then we define the ``Distribution`` objects and the ``RunModel`` object:
 
 Then we can run SORM
 
->>> F = Sorm(dist_object=[dist1,dist2], model=RunModelObject)
+>>> F = SORM(dist_object=[dist1,dist2], model=RunModelObject)
 
 If we want to print the results:
 

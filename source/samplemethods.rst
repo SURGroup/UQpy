@@ -31,40 +31,40 @@ For example,  to run MCS  for two independent normally distribution random varia
 >>> from UQpy.Distributions import Normal
 >>> dist1 = Normal(loc=1., scale=1.)
 >>> dist2 = Normal(loc=0., scale=1.)
->>> x1 = MCS(dist_object=[dist1, dist2], nsamples=5, random_state = [1,3], verbose=True)
+>>> x1 = MCS(dist_object=[dist1, dist2], nsamples=5, random_state=np.random.RandomState(123), verbose=True)
 >>> print(x1.samples)
     UQpy: Running Monte Carlo Sampling...
     UQpy: Monte Carlo Sampling Complete.
-	[[ 1.62434536  1.78862847]
- 	[-0.61175641  0.43650985]
- 	[-0.52817175  0.09649747]
-	[-1.07296862 -1.8634927 ]
- 	[ 0.86540763 -0.2773882 ]]
+	[[-1.0856306   1.65143654]
+	 [ 0.99734545 -2.42667924]
+	 [ 0.2829785  -0.42891263]
+	 [-1.50629471  1.26593626]
+	 [-0.57860025 -0.8667404 ]]
 
 The ``MCS`` class can be used to run MCS for multivariate distributions
 
 >>> from UQpy.Distributions import MVNormal
 >>> dist = MVNormal(mean=[1., 2.], cov=[[4., -0.9], [-0.9, 1.]])
->>> x2 = MCS(dist_object=[dist], nsamples=5, random_state=123)
+>>> x2 = MCS(dist_object=[dist], nsamples=5, random_state=np.random.RandomState(456))
 >>> print(x2.samples)
-	[[ 3.38736185  2.23541269]
-	[ 0.08946208  0.8979547 ]
-	[ 2.53138343  3.06057229]
-	[ 5.72159837  0.30657467]
-	[-1.71534735  1.97285583]]
+	[[ 2.21206564  1.21635688]
+	 [-0.09732382  2.8152297 ]
+	 [-1.30600471  4.1038246 ]
+	 [ 0.50407636  2.54147535]
+	 [ 1.61407521  1.54649951]]
 
 Or for a combination of distributions
 
 >>> from UQpy.Distributions import MVNormal, Normal
 >>> dist1 = Normal(loc=1., scale=1.)
 >>> dist = MVNormal(mean=[1., 2.], cov=[[4., -0.9], [-0.9, 1.]])
->>> x3 = MCS(dist_object=[dist1, dist], nsamples=5, random_state=[123, None])
+>>> x3 = MCS(dist_object=[dist1, dist], nsamples=5, random_state=np.random.RandomState(789))
 >>> print(x3.samples)
-	[[array([-1.0856306]) array([0.21193807, 2.35155014])]
- 	[array([0.99734545]) array([-1.02985401,  1.83075511])]
- 	[array([0.2829785]) array([3.09845703, 1.67722522])]
- 	[array([-1.50629471]) array([2.13964859, 1.22068072])]
- 	[array([-0.57860025]) array([-1.16164199,  2.21637435])]]
+	[[array([-1.1081114]) array([2.9781381 , 1.51253378])]
+	 [array([-0.72571863]) array([1.96173102, 0.89589751])]
+	 [array([0.52280433]) array([-0.91034353,  3.25303316])]
+	 [array([1.2344419]) array([-1.75177129,  2.37998095])]
+	 [array([0.09689585]) array([1.43288471, 1.1029768 ])]]
 	 
 In this case the number of  samples will be
 
@@ -110,21 +110,25 @@ The ``LHS`` class of ``UQpy`` offers a variaty of methods for a Latin Hypercube 
 >>> dist1 = Uniform(loc=0., scale=1.)
 >>> dist2 = Uniform(loc=0., scale=1.)
 
->>> def new_method():
->>> samples_in_U_ab = np.atleast_2d(np.array([1., 1.]))
->>> 	return samples_in_U_ab
+>>> def criterion():
+>>>    nsamples = 5
+>>>    dimension = 2
+>>>    cut = np.linspace(0, 1, nsamples + 1)
+>>>    a = cut[:nsamples]
+>>>    b = cut[1:nsamples + 1]
+>>>    samples = np.zeros([nsamples, dimension])
+>>>    centers = (a + b) / 2
+>>>    for i in range(dimension):
+>>>        samples[:, i] = np.random.permutation(centers)
+>>>    return samples
 
->>> def new_distance(y):
->>> 	return y + 1
-
->>> x1 = LHS(dist_object=[dist1, dist2], nsamples=5, criterion=new_method, metric=new_distance)
+>>> x1 = LHS(dist_object=[dist1, dist2], nsamples=5, random_state=np.random.RandomState(123),  criterion=new_method, metric=new_distance)
 >>> print(x1.samples)
-	[[1. 1.]
- 	[1. 1.]
- 	[1. 1.]
- 	[1. 1.]
- 	[1. 1.]]
-
+	[[0.7 0.3]
+ 	[0.3 0.1]
+ 	[0.5 0.7]
+ 	[0.1 0.5]
+ 	[0.9 0.9]]
 
 .. autoclass:: UQpy.SampleMethods.LHS
 	:members:
