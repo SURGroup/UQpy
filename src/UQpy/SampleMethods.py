@@ -15,16 +15,23 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""This module contains functionality for all the sampling methods supported in UQpy."""
+"""This module contains functionality for all the sampling methods supported in ``UQpy``.
+
+The module currently contains the following classes:
+
+- ``MCS``: Class to perform Monte Carlo sampling.
+- ``LHS``: Class to perform Latin hypercube sampling.
+- ``MCMC``: Class to perform Markov Chain Monte Carlo sampling.
+- ``IS``: Class to perform Importance sampling.
+"""
 
 import copy
+from os import sys
+
 from scipy.spatial.distance import pdist
-import random
+
 from UQpy.Distributions import *
 from UQpy.Utilities import *
-from os import sys
-from functools import partial
-import warnings
 
 
 ########################################################################################################################

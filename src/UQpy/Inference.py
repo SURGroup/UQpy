@@ -16,22 +16,24 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 """
-This module contains classes and functions for statistical inference from data. The module currently contains the
+This module contains classes and functions for statistical inference from data.
+
+The module currently contains the
 following classes:
 
-* InferenceModel: Define a probabilistic model for Inference.
-* MLEstimation: Compute maximum likelihood parameter estimate.
-* InfoModelSelection: Perform model selection using information theoretic criteria.
-* BayesParameterEstimation: Perform Bayesian parameter estimation (estimate posterior density) via MCMC or IS.
-* BayesModelSelection: Estimate model posterior probabilities.
+* ``InferenceModel``: Define a probabilistic model for Inference.
+* ``MLEstimation``: Compute maximum likelihood parameter estimate.
+* ``InfoModelSelection``: Perform model selection using information theoretic criteria.
+* ``BayesParameterEstimation``: Perform Bayesian parameter estimation (estimate posterior density) via MCMC or IS.
+* ``BayesModelSelection``: Estimate model posterior probabilities.
 """
 
+import numpy as np
+
+from UQpy.Distributions import Distribution, Normal, MVNormal
 from UQpy.RunModel import RunModel
 from UQpy.SampleMethods import MCMC, IS
 from UQpy.Utilities import check_input_dims
-from UQpy.Distributions import Distribution, Normal, MVNormal
-
-import numpy as np
 
 
 ########################################################################################################################

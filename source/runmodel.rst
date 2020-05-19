@@ -1,7 +1,7 @@
 .. _runmodel:
 
-RunModel Module
-===============
+RunModel
+==========
 
 .. automodule:: UQpy.RunModel
 

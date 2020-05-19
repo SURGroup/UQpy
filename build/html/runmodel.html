@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>RunModel Module &#8212; UQpy v3.0 documentation</title>
+    <title>RunModel &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -33,20 +33,16 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-UQpy.RunModel">
-<span id="runmodel-module"></span><span id="runmodel"></span><h1>RunModel Module<a class="headerlink" href="#module-UQpy.RunModel" title="Permalink to this headline">¶</a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">RunModel</span></code> is the core module for <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> to execute computational models</p>
+  <div class="section" id="runmodel">
+<span id="id1"></span><h1>RunModel<a class="headerlink" href="#runmodel" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-UQpy.RunModel"></span><p><code class="docutils literal notranslate"><span class="pre">RunModel</span></code> is the core module for <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> to execute computational models</p>
 <p><code class="docutils literal notranslate"><span class="pre">RunModel</span></code> contains a single class, also called <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> that is used to execute computational models at specified
 sample points. <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> may be used to execute Python models or third-party software models and is capable of
 running models serially or in parallel on both local machines or HPC clusters.</p>
 <p>The module currently contains the following classes:</p>
 <ul class="simple">
-<li><p>RunModel - Class for execution of a computational model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RunModel</span></code>: Class for execution of a computational model</p></li>
 </ul>
-<p>The <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> class is imported into the Python environment as follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.RunModel</span> <span class="k">import</span> <span class="n">RunModel</span>
-</pre></div>
-</div>
 <div class="section" id="architecture-workflow">
 <h2>Architecture &amp; Workflow<a class="headerlink" href="#architecture-workflow" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> class has four basic workflows delineated in two levels. At the first level, <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> can be used for execution of either a Python computational model, in which case the model is imported and run directly, or for execution of a third-party software model. When running with a third-party software model, <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> interfaces with the model through text-based input files and serves as the “driver” to initiate the necessary calculations. At the second level, the jobs that are run by <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> can either be executed
@@ -90,7 +86,7 @@ values returned by the output object are directly stored according to their samp
 </div>
 <div class="section" id="third-party-model-workflow-parallel-execution">
 <h3>Third-Party Model Workflow: Parallel Execution<a class="headerlink" href="#third-party-model-workflow-parallel-execution" title="Permalink to this headline">¶</a></h3>
-<p>Parallel execution in <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> is carried out by the <cite>GNU parallel</cite> library <a class="footnote-reference brackets" href="#id3" id="id1">1</a>. GNU parallel is essential and must be installed on the computer running the model. Information regarding how to install GNU parallel is provided at <a class="reference external" href="https://www.gnu.org/software/parallel">https://www.gnu.org/software/parallel</a>. Parallel execution is activated in <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> by setting the parameter <code class="docutils literal notranslate"><span class="pre">ntasks&gt;1</span></code>. The key differences in terms of the workflow are listed below.</p>
+<p>Parallel execution in <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> is carried out by the <cite>GNU parallel</cite> library <a class="footnote-reference brackets" href="#id4" id="id2">1</a>. GNU parallel is essential and must be installed on the computer running the model. Information regarding how to install GNU parallel is provided at <a class="reference external" href="https://www.gnu.org/software/parallel">https://www.gnu.org/software/parallel</a>. Parallel execution is activated in <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> by setting the parameter <code class="docutils literal notranslate"><span class="pre">ntasks&gt;1</span></code>. The key differences in terms of the workflow are listed below.</p>
 <ol class="arabic simple">
 <li><p>During parallel execution, all required input files are generated prior to model execution as opposed to serial execution where input files are generated
 individually prior to each run.</p></li>
@@ -228,7 +224,7 @@ the command line as</p>
 <p><strong>Third-Party Models</strong></p>
 <p><code class="docutils literal notranslate"><span class="pre">RunModel</span></code> can be used to execute nearly any third-party model. In the <cite>example</cite> folder, we provide files for the execution of several commonly-used engineering software packages.</p>
 <p><em>Abaqus Model</em></p>
-<p>Code is provided for execution of 100 Monte Carlo samples of two random variables for the analysis of a beam subject to thermo-mechanical loading under fire conditions. The example is described in <a class="footnote-reference brackets" href="#id4" id="id2">2</a>. The analysis is set up to run on a HPC cluster (specifically the Maryland Advanced Research Computing Center, MARCC) using the SLURM scheduler from the shell script <cite>run_sfe_example.sh</cite>. The model executes 100 finite element calculations using the Abacus software over a total of 25 cores on a single compute node with each calculation using 1 core. The requisite <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> files are the following:</p>
+<p>Code is provided for execution of 100 Monte Carlo samples of two random variables for the analysis of a beam subject to thermo-mechanical loading under fire conditions. The example is described in <a class="footnote-reference brackets" href="#id5" id="id3">2</a>. The analysis is set up to run on a HPC cluster (specifically the Maryland Advanced Research Computing Center, MARCC) using the SLURM scheduler from the shell script <cite>run_sfe_example.sh</cite>. The model executes 100 finite element calculations using the Abacus software over a total of 25 cores on a single compute node with each calculation using 1 core. The requisite <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> files are the following:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">model_script</span> <span class="pre">=</span> <span class="pre">'abaqus_fire_analysis.py'</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">input_template</span> <span class="pre">=</span> <span class="pre">'abaqus_input.py'</span></code></p></li>
@@ -520,10 +516,10 @@ existing ones.</p>
 </dd></dl>
 
 <dl class="footnote brackets">
-<dt class="label" id="id3"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
 <dd><p>Tange, Ole. (2018). GNU Parallel 2018, <a class="reference external" href="https://doi.org/10.5281/zenodo.1146014">https://doi.org/10.5281/zenodo.1146014</a></p>
 </dd>
-<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dt class="label" id="id5"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
 <dd><p>Olivier, A., Aakash, B.S., Chauhan, M., Vandanapu, L., Giovanis, D.G., and Shields, M.D. (In Review) “UQpy: A general purpose Python package and development environment for uncertainty quantification.” <cite>Journal of Computational Science</cite>.</p>
 </dd>
 </dl>
@@ -563,7 +559,7 @@ existing ones.</p>
 <h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">RunModel Module</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">RunModel</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#architecture-workflow">Architecture &amp; Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#examples-template-files">Examples &amp; Template Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#runmodel-class">RunModel Class</a></li>

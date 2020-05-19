@@ -4,13 +4,7 @@
 SampleMethods
 =============
 
-This module contains functionality for all the sampling methods supported in ``UQpy``. 
-The module currently contains the following classes:
-
-- ``MCS``: Class to perform Monte Carlo sampling using ``UQpy``.
-- ``LHS``: Class to perform Latin hypercube sampling using ``UQpy``.
-- ``MCMC``: Class to perform sampling using Markov chains using ``UQpy``.
-- ``IS``: Class to perform Importance sampling using ``UQpy``.
+.. automodule:: UQpy.SampleMethods
 
 
 MCS

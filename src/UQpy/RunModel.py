@@ -24,11 +24,8 @@ running models serially or in parallel on both local machines or HPC clusters.
 
 The module currently contains the following classes:
 
-* RunModel - Class for execution of a computational model
+* ``RunModel``: Class for execution of a computational model
 
-The ``RunModel`` class is imported into the Python environment as follows::
-
-    >>> from UQpy.RunModel import RunModel
 """
 
 import collections

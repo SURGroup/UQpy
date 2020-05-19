@@ -50,17 +50,21 @@
 <span class="c1"># OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">This module contains functionality for all the distributions supported in UQpy.</span>
+<span class="sd">This module contains functionality for all probability distributions supported in ``UQpy``.</span>
 
-<span class="sd">The module currently contains the following parent classes:</span>
+<span class="sd">The ``Distributions`` module is  used  to  define  probability  distribution  objects.   These  objects  possess various</span>
+<span class="sd">methods  that  allow the user  to:  compute  the  probability  density/mass  function ``pdf/pmf``, the cumulative</span>
+<span class="sd">distribution  function ``cdf``, the logarithm of the pdf/pmf ``log_pdf/log_pmf``, return the moments ``moments``, draw</span>
+<span class="sd">independent samples ``rvs`` and compute the maximum likelihood estimate of the parameters from data ``mle``.</span>
 
-<span class="sd">- Distribution: Parent class to all distributions.</span>
-<span class="sd">- DistributionContinuous1D: Parent class to 1-dimensional continuous probability distributions.</span>
-<span class="sd">- DistributionDiscrete1D: Parent class to 1-dimensional discrete probability distributions.</span>
-<span class="sd">- DistributionND: Parent class to multivariate probability distributions.</span>
-<span class="sd">- Copula: Parent class to copula to model dependency between marginals.</span>
+<span class="sd">The module contains the following parent classes - probability distributions are defined via sub-classing those parent</span>
+<span class="sd">classes:</span>
 
-<span class="sd">Probability distributions are defined via sub-classing of the previous parent classes.</span>
+<span class="sd">- ``Distribution``: Parent class to all distributions.</span>
+<span class="sd">- ``DistributionContinuous1D``: Parent class to 1-dimensional continuous probability distributions.</span>
+<span class="sd">- ``DistributionDiscrete1D``: Parent class to 1-dimensional discrete probability distributions.</span>
+<span class="sd">- ``DistributionND``: Parent class to multivariate probability distributions.</span>
+<span class="sd">- ``Copula``: Parent class to copula to model dependency between marginals.</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 
@@ -2413,7 +2417,7 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../distributions.html">Distributions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samplemethods.html">SampleMethods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../transformations.html">Transformations</a></li>

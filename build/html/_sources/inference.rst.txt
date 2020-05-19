@@ -3,14 +3,16 @@
 Inference
 =============
 
-The goal in inference can be twofold: 1) given a model, parameterized by parameter vector :math:`\theta`, and some data :math:`\mathcal{D}`, learn the value of the parameter vector that best explains the data; 2) given a set of candidate models :math:`\lbrace m_{i} \rbrace_{i=1:M}` and some data :math:`\mathcal{D}`, learn which model best explains the data. UQpy currently supports the following inference algorithms for parameter estimation (see e.g. [1]_ for theory on parameter estimation in frequentist vs. Bayesian frameworks):
+.. automodule:: UQpy.Inference
+
+The goal in inference can be twofold: 1) given a model, parameterized by parameter vector :math:`\theta`, and some data :math:`\mathcal{D}`, learn the value of the parameter vector that best explains the data; 2) given a set of candidate models :math:`\lbrace m_{i} \rbrace_{i=1:M}` and some data :math:`\mathcal{D}`, learn which model best explains the data. ``UQpy`` currently supports the following inference algorithms for parameter estimation (see e.g. [1]_ for theory on parameter estimation in frequentist vs. Bayesian frameworks):
 
 * Maximum Likelihood estimation,
 * Bayesian approach: estimation of posterior pdf via sampling methods (MCMC/IS).
 
 and the following algorithms for model selection:
 
-* model selection using information theoretic criteria,
+* Model selection using information theoretic criteria,
 * Bayesian model class selection, i.e., estimation of model posterior probabilities.
 
 The capabilities of ``UQpy`` and associated classes are summarized in the following figure.
