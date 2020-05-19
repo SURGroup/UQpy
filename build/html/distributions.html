@@ -54,16 +54,18 @@ logarithm of the pdf <code class="docutils literal notranslate"><span class="pre
 <dt id="UQpy.Distributions.Distribution">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Distribution</code><span class="sig-paren">(</span><em class="sig-param">order_params=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Distribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Distribution" title="Permalink to this definition">¶</a></dt>
 <dd><p>A parent class to all Distribution classes.</p>
+<p>All distributions possess attribute <cite>order_params</cite> and methods <cite>get_params</cite>, <cite>update_params</cite>. Some distributions
+also possess additional methods such as <cite>pdf/pmf, log_pdf/log_pmf, cdf, icdf, rvs, fit, moments</cite>.</p>
 <p><strong>Attributes:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>params</strong> (<cite>dict</cite>):</dt><dd><p>Parameters of the distribution. Note: this attribute is not defined for joint distributions defined via their
-marginals</p>
+<dt><strong>order_params</strong> (<cite>list</cite>):</dt><dd><p>List of parameter names, useful when parameter values are stored in vectors and must be passed to update_params</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>order_params</strong> (<cite>list</cite>):</dt><dd><p>List of parameter names</p>
+<dt><strong>params</strong> (<cite>dict</cite>):</dt><dd><p>Parameters of the distribution. Note: this attribute is not defined for certain distributions such as JointInd
+or JointCopula distributions, the user is advised to use the <cite>get_params</cite> method to access the parameters.</p>
 </dd>
 </dl>
 </li>
@@ -189,7 +191,7 @@ continuous-discrete distribution.</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>random_state (<cite>int</cite>):</dt><dd><p>Number used to initialize pseudorandom number generator. Default is None.</p>
+<dt>random_state (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
 </dd>
 </dl>
 </li>

@@ -80,14 +80,17 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A parent class to all Distribution classes.</span>
 
+<span class="sd">    All distributions possess attribute `order_params` and methods `get_params`, `update_params`. Some distributions</span>
+<span class="sd">    also possess additional methods such as `pdf/pmf, log_pdf/log_pmf, cdf, icdf, rvs, fit, moments`.</span>
+
 <span class="sd">    **Attributes:**</span>
 
-<span class="sd">    * **params** (`dict`):</span>
-<span class="sd">        Parameters of the distribution. Note: this attribute is not defined for joint distributions defined via their</span>
-<span class="sd">        marginals</span>
-
 <span class="sd">    * **order_params** (`list`):</span>
-<span class="sd">        List of parameter names</span>
+<span class="sd">        List of parameter names, useful when parameter values are stored in vectors and must be passed to update_params</span>
+
+<span class="sd">    * **params** (`dict`):</span>
+<span class="sd">        Parameters of the distribution. Note: this attribute is not defined for certain distributions such as JointInd</span>
+<span class="sd">        or JointCopula distributions, the user is advised to use the `get_params` method to access the parameters.</span>
 
 <span class="sd">    **Methods:**</span>
 
@@ -179,8 +182,8 @@
 <span class="sd">        * nsamples (`int`):</span>
 <span class="sd">            Number of iid samples to be drawn. Default is 1.</span>
 
-<span class="sd">        * random_state (`int`):</span>
-<span class="sd">            Number used to initialize pseudorandom number generator. Default is None.</span>
+<span class="sd">        * random_state (None or `int` or `np.random.RandomState` object):</span>
+<span class="sd">            Random seed used to initialize the pseudo-random number generator. Default is None.</span>
 
 <span class="sd">        **Output/Returns:**</span>
 
