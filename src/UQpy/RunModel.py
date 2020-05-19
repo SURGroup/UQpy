@@ -31,15 +31,16 @@ The ``RunModel`` class is imported into the Python environment as follows::
     >>> from UQpy.RunModel import RunModel
 """
 
-import os
-import subprocess
-import pathlib
-import re
 import collections
-import numpy as np
 import datetime
-import shutil
+import os
+import pathlib
 import platform
+import re
+import shutil
+import subprocess
+
+import numpy as np
 
 
 class RunModel:
@@ -357,6 +358,7 @@ class RunModel:
 
         # Initialize sample related variables
         self.samples = []
+        self.samples = np.atleast_2d(self.samples)
         self.qoi_list = []
         self.nexist = 0
         self.nsim = 0
@@ -422,10 +424,12 @@ class RunModel:
         # If append_samples is False, a new set of samples is created, the previous ones are deleted!
         if not append_samples:
             self.samples = []
+            self.samples = np.atleast_2d(self.samples)
             self.qoi_list = []
 
         # Check if samples already exist, if yes append new samples to old ones
-        if not self.samples:  # There are currently no samples
+        # if not self.samples:  # There are currently no samples
+        if self.samples.size == 0:
 
             # If there are no samples, check to ensure that len(var_names) = n_vars
             if self.input_template is not None:
@@ -447,7 +451,7 @@ class RunModel:
         else:  # Samples already exist in the RunModel object, append new ones
             self.nexist = len(self.samples)
             self.qoi_list.extend([None] * self.nsim)
-            self.samples = np.vstack(self.samples, samples)
+            self.samples = np.vstack((self.samples, samples))
 
         # Check if there is a template input file or not and execute the appropriate function
         if self.input_template is not None:  # If there is a template input file
