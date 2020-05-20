@@ -12,7 +12,7 @@ MCS
 
 The ``MCS`` class generates random samples from a specified probability distribution(s).  The ``MCS`` class utilizes the ``Distributions`` class to define probability distributions.  The advantage of using the ``MCS`` class for ``UQpy`` operations, as opposed to simply generating samples with the ``scipy.stats`` package, is that it allows building an object containing the samples and their distributions for integration with other ``UQpy`` modules.
 
-Class Description
+Class Descriptions
 ^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.SampleMethods.MCS
@@ -38,7 +38,7 @@ The ``LHS`` class offers a variety of methods for pairing the samples in a Latin
 >>> 	return lhs_samples
 
 
-Class Description
+Class Descriptions
 ^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.SampleMethods.LHS
@@ -83,8 +83,8 @@ A useful note is that the user has access to a number of useful attributes / uti
 * the ``_check_methods_proposal`` method checks whether a given proposal is adequate (i.e., has ``rvs`` and ``log_pdf``/``pdf`` methods).
 
 
-Parent and Child Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
 
 
 .. autoclass:: UQpy.SampleMethods.MCMC
@@ -137,6 +137,9 @@ If :math:`p` is only known up to a constant, i.e., one can only evaluate :math:`
    :alt: IS weighted samples
    :align: center
    
+   
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
    
 .. autoclass:: UQpy.SampleMethods.IS
    :members:

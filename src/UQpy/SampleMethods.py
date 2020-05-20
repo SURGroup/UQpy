@@ -43,39 +43,50 @@ class MCS:
     """
     Perform Monte Carlo sampling (MCS) of random variables.
 
-    **Attributes:**
-
     **Input:**
 
     * **dist_object** ((list of) ``Distribution`` object(s)):
-                        Probability distribution of each random variable. Must be an object of type ``Distribution``.
+        Probability distribution of each random variable. Must be an object (or a list of objects) of the
+        ``Distribution`` class.
 
     * **nsamples** (`int`):
-                     Number of samples to be drawn from each distribution.
+        Number of samples to be drawn from each distribution.
 
-    * random_state (None or `int` or `np.random.RandomState` object):
+        The ``run`` method is automatically called if `nsamples` is provided. If `nsamples` is not provided, then the
+        ``MCS`` object is created but samples are not generated.
+
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
         Random seed used to initialize the pseudo-random number generator. Default is None.
 
-    * **verbose** (Boolean):
-                        A boolean declaring whether to write text to the terminal.
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
 
-                        Default value: False
+    * **verbose** (Boolean):
+        A boolean declaring whether to write text to the terminal.
+
 
     **Attributes:**
 
     * **samples** (`ndarray` or `list`):
-                        Generated samples. If a list of ``DistributionContinuous1D``, ``DistributionContinuous1D``
-                        objects is provided then **samples** is an array with
-                        ``samples.shape=(nsamples, len(dist_object))``. If  ``DistributionContinuous1D`` object is
-                        provided then **samples** is an array with ``samples.shape=(nsamples, 1)``. If a
-                        ``DistributionContinuousND`` object is provided then **samples** is an array with
-                        ``samples.shape=(nsamples, ND)``. If a list of ``DistributionContinuous1D``,
-                        ``DistributionContinuousND`` is provided then **samples** is a list with
-                        ``len(samples)=nsamples`` and ``len(samples[i]) = len(dist_object)``.
+        Generated samples.
+
+        If a list of ``DistributionContinuous1D`` objects is provided for ``dist_object``, then `samples` is an
+        `ndarray` with ``samples.shape=(nsamples, len(dist_object))``.
+
+        If a ``DistributionContinuous1D`` object is provided for ``dist_object`` then `samples` is an array with
+        `samples.shape=(nsamples, 1)``.
+
+        If a ``DistributionContinuousND`` object is provided for ``dist_object`` then `samples` is an array with
+        ``samples.shape=(nsamples, ND)``.
+
+        If a list of mixed ``DistributionContinuous1D`` and ``DistributionContinuousND`` objects is provided then
+        `samples` is a list with ``len(samples)=nsamples`` and ``len(samples[i]) = len(dist_object)``.
 
     * **samplesU01** (`ndarray` (`list`)):
-                        If the ``Distribution`` object has a ``cdf`` method, MCS also returns the samples in the
-                        Uniform(0,1) hypercube using the method ``transform_u01``.
+        Generated samples transformed to the unit hypercube.
+
+        This attribute exists only if the ``transform_u01`` method is invoked by the user.
+
 
     **Methods**
 
@@ -127,32 +138,39 @@ class MCS:
         # Set printing options
         self.verbose = verbose
         self.nsamples = nsamples
-        # ==============================================================================================================
-        #                                       Run Monte Carlo sampling
+
+        # Run Monte Carlo sampling
         if nsamples is not None:
             self.run(nsamples=self.nsamples, random_state=self.random_state)
 
     def run(self, nsamples, random_state=None):
         """
-        The ``run`` method of the ``MCS`` class can be invoked many times and the generated samples are appended to the
-        existing samples. For example, to the 5 samples in object ``x1`` we can add two more by running
+        Execute the random sampling in the ``MCS`` class.
 
-        >>> print(x1)
-            <UQpy.SampleMethods.MCS object at 0x1a148ba85>
-        >>> x1.run(nsamples=2, random_state=np.random.RandomState(23))
-        >>> print(x1.samples)
-            [[-1.0856306   1.65143654]
-             [ 0.99734545 -2.42667924]
-             [ 0.2829785  -0.42891263]
-             [-1.50629471  1.26593626]
-             [-0.57860025 -0.8667404 ]
-             [ 0.66698806 -0.77761941]
-             [ 0.02581308  0.94863382]]
+        The ``run`` method is the function that performs random sampling in the ``MCS`` class. If `nsamples` is
+        provided, the ``run`` method is automatically called when the ``MCS`` object is defined. The user may also call
+        the ``run`` method directly to generate samples. The ``run`` method of the ``MCS`` class can be invoked many
+        times and each time the generated samples are appended to the existing samples.
 
-        The total number of samples is now
+        ** Input:**
 
-        >>> print(x1.nsamples)
-            7
+        * **nsamples** (`int`):
+            Number of samples to be drawn from each distribution.
+
+            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+            existing samples.
+
+        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
+
+            If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+            object itself can be passed directly.
+
+        **Output/Returns:**
+
+        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``MCS``
+        class.
+
         """
         # Check if a random_state is provided.
         if random_state is None:
@@ -209,20 +227,18 @@ class MCS:
 
     def transform_u01(self):
         """
-        The ``transform_u01`` method of the ``MCS`` is used to transform samples from the parameter space to the
-        Uniform [0, 1] space. ``Distribution`` objects need to have a ``cdf`` method.
+        Transform random samples to uniform on the unit hypercube.
 
-        >>> print(x1)
-            <UQpy.SampleMethods.MCS object at 0x1a18c03450>
-        >>> x1.transform_u01()
-        >>> print(x1.samplesU01)
-            [[0.13882123 0.95067527]
-             [0.84070157 0.00761886]
-             [0.61140334 0.3339934 ]
-             [0.06599577 0.89723205]
-             [0.28142947 0.19304213]
-             [0.74761012 0.21839671]
-             [0.51029679 0.82859656]]
+        **Input:**
+
+        The ``transform_u01`` method is an instance method that perform the transformation on an existing ``MCS``
+        object. It takes no input.
+
+        **Output/Returns:**
+
+        The ``transform_u01`` method has no returns, although it creates and/or appends the `samplesU01` attribute of
+        the ``MCS`` class.
+
         """
 
         if isinstance(self.dist_object, list) and self.array is True:
