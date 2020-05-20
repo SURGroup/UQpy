@@ -26,7 +26,6 @@ The module currently contains the following classes:
 """
 
 import copy
-from os import sys
 
 from scipy.spatial.distance import pdist
 
@@ -331,8 +330,8 @@ class LHS:
 
     """
 
-    def __init__(self, dist_object, nsamples, criterion=None, metric='euclidean',
-                 iterations=100,  random_state=None, verbose=False):
+    def __init__(self, dist_object, nsamples, criterion=None, metric='euclidean', random_state=None, verbose=False,
+                 **kwargs):
 
         # Check if a Distribution object is provided.
         from UQpy.Distributions import DistributionContinuous1D, JointInd
@@ -346,6 +345,7 @@ class LHS:
                 raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
         self.dist_object = dist_object
+        self.kwargs = kwargs
 
         self.random_state = random_state
         if isinstance(self.random_state, int):
@@ -373,10 +373,6 @@ class LHS:
                                           "'rogerstanimoto'," "'russellrao', 'seuclidean','sokalmichener', "
                                           "'sokalsneath', 'sqeuclidean'.")
         self.metric = metric
-        if isinstance(iterations, int):
-            self.iterations = iterations
-        else:
-            raise ValueError('UQpy: number of iterations must be an integer.')
 
         if isinstance(nsamples, int):
             self.nsamples = nsamples
@@ -424,9 +420,9 @@ class LHS:
                     u_lhs[:, i] = (a + b) / 2
                 u_lhs = self.centered(u_lhs)
             elif self.criterion == 'maximin':
-                u_lhs = self.max_min(u_lhs)
+                u_lhs = self.max_min(u_lhs, self.kwargs)
             elif self.criterion == 'correlate':
-                u_lhs = self.correlate(u_lhs)
+                u_lhs = self.correlate(u_lhs, self.kwargs)
             elif callable(self.criterion):
                 u_lhs = self.criterion(u_lhs)
             else:
@@ -464,14 +460,17 @@ class LHS:
 
         return lhs_samples
 
-    def max_min(self, samples):
+    def max_min(self, samples, iterations=100):
         """
         A Latin hypercube design based on maximizing the inter-site distances.
         """
 
+        if not isinstance(iterations, int):
+            raise ValueError('UQpy: number of iterations must be an integer.')
+
         max_min_dist = 0
         i = 0
-        while i < self.iterations:
+        while i < iterations:
             samples_try = self.random(samples)
             if isinstance(self.metric, str):
                 d = pdist(samples_try, metric=self.metric)
@@ -488,14 +487,17 @@ class LHS:
 
         return lhs_samples
 
-    def correlate(self, samples):
+    def correlate(self, samples, iterations):
         """
         A Latin hypercube design based on minimizing the pairwise correlations.
         """
 
+        if not isinstance(iterations, int):
+            raise ValueError('UQpy: number of iterations must be an integer.')
+
         min_corr = np.inf
         i = 0
-        while i < self.iterations:
+        while i < iterations:
             samples_try = self.random(samples)
             r = np.corrcoef(np.transpose(samples_try))
             np.fill_diagonal(r, 1)

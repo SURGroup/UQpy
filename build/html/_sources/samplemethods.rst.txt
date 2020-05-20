@@ -21,35 +21,19 @@ LHS
 
 The ``LHS`` class generates random samples from a specified probability distribution(s) using Latin hypercube sampling. LHS has the advantage that the samples generated are uniformly distributed over each marginal distribution. LHS is perfomed by dividing the range of each random variable into N bins with equal probability mass, where N is the required number of samples, generating one sample per bin, and then randomly pairing the samples.
 
-Adding New Latin Hypercube Designs
+Adding New Latin Hypercube Design Criteria
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 	 
-The ``LHS`` class offers a variaty of methods pairing the samples in a Latin hypercube design. These are specified by the `criterion` parameter (i.e. 'random', 'centered', 'minmax', 'correlate'). However, adding a new method is straightforward. This is done by creating a new method that contains the algorithm for pairing the samples. This method takes as input the randomly generated samples in equal probability bins in each dimension and returns a set of samples that is paired according to the user's desired criterion. The output of this function should be a numpy array of at least two-dimensions with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined criterion is given below:
+The ``LHS`` class offers a variety of methods for pairing the samples in a Latin hypercube design. These are specified by the `criterion` parameter (i.e. 'random', 'centered', 'minmax', 'correlate'). However, adding a new method is straightforward. This is done by creating a new method that contains the algorithm for pairing the samples. This method takes as input the randomly generated samples in equal probability bins in each dimension and returns a set of samples that is paired according to the user's desired criterion. The output of this function should be a numpy array of at least two-dimensions with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined criterion is given below:
 
 	
->>> from UQpy.Distributions import Uniform
->>> dist1 = Uniform(loc=0., scale=1.)
->>> dist2 = Uniform(loc=0., scale=1.)
+>>> def criterion(samples):
+>>> 	lhs_samples = np.zeros_like(samples)
+>>> 	for j in range(samples.shape[1]):
+>>> 		order = np.random.permutation(samples.shape[0])
+>>> 		lhs_samples[:, j] = samples[order, j]
+>>> 	return lhs_samples
 
->>> def criterion():
->>>    nsamples = 5
->>>    dimension = 2
->>>    cut = np.linspace(0, 1, nsamples + 1)
->>>    a = cut[:nsamples]
->>>    b = cut[1:nsamples + 1]
->>>    samples = np.zeros([nsamples, dimension])
->>>    centers = (a + b) / 2
->>>    for i in range(dimension):
->>>        samples[:, i] = np.random.permutation(centers)
->>>    return samples
-
->>> x1 = LHS(dist_object=[dist1, dist2], nsamples=5, random_state=np.random.RandomState(123),  criterion=new_method, metric=new_distance)
->>> print(x1.samples)
-	[[0.7 0.3]
- 	[0.3 0.1]
- 	[0.5 0.7]
- 	[0.1 0.5]
- 	[0.9 0.9]]
 
 .. autoclass:: UQpy.SampleMethods.LHS
 	:members:

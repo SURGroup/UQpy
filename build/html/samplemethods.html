@@ -148,39 +148,20 @@ Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pr
 <div class="section" id="lhs">
 <h2>LHS<a class="headerlink" href="#lhs" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">LHS</span></code> class generates random samples from a specified probability distribution(s) using Latin hypercube sampling. LHS has the advantage that the samples generated are uniformly distributed over each marginal distribution. LHS is perfomed by dividing the range of each random variable into N bins with equal probability mass, where N is the required number of samples, generating one sample per bin, and then randomly pairing the samples.</p>
-<div class="section" id="adding-new-latin-hypercube-designs">
-<h3>Adding New Latin Hypercube Designs<a class="headerlink" href="#adding-new-latin-hypercube-designs" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">LHS</span></code> class offers a variaty of methods pairing the samples in a Latin hypercube design. These are specified by the <cite>criterion</cite> parameter (i.e. ‘random’, ‘centered’, ‘minmax’, ‘correlate’). However, adding a new method is straightforward. This is done by creating a new method that contains the algorithm for pairing the samples. This method takes as input the randomly generated samples in equal probability bins in each dimension and returns a set of samples that is paired according to the user’s desired criterion. The output of this function should be a numpy array of at least two-dimensions with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined criterion is given below:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">criterion</span><span class="p">():</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="n">nsamples</span> <span class="o">=</span> <span class="mi">5</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="n">dimension</span> <span class="o">=</span> <span class="mi">2</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="n">cut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nsamples</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="n">a</span> <span class="o">=</span> <span class="n">cut</span><span class="p">[:</span><span class="n">nsamples</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="n">b</span> <span class="o">=</span> <span class="n">cut</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">nsamples</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">dimension</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="n">centers</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dimension</span><span class="p">):</span>
-<span class="gp">&gt;&gt;&gt; </span>       <span class="n">samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">centers</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="k">return</span> <span class="n">samples</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x1</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">123</span><span class="p">),</span>  <span class="n">criterion</span><span class="o">=</span><span class="n">new_method</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">new_distance</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
-<span class="go">        [[0.7 0.3]</span>
-<span class="go">        [0.3 0.1]</span>
-<span class="go">        [0.5 0.7]</span>
-<span class="go">        [0.1 0.5]</span>
-<span class="go">        [0.9 0.9]]</span>
+<div class="section" id="adding-new-latin-hypercube-design-criteria">
+<h3>Adding New Latin Hypercube Design Criteria<a class="headerlink" href="#adding-new-latin-hypercube-design-criteria" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">LHS</span></code> class offers a variety of methods for pairing the samples in a Latin hypercube design. These are specified by the <cite>criterion</cite> parameter (i.e. ‘random’, ‘centered’, ‘minmax’, ‘correlate’). However, adding a new method is straightforward. This is done by creating a new method that contains the algorithm for pairing the samples. This method takes as input the randomly generated samples in equal probability bins in each dimension and returns a set of samples that is paired according to the user’s desired criterion. The output of this function should be a numpy array of at least two-dimensions with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined criterion is given below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">criterion</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">lhs_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="n">lhs_samples</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[</span><span class="n">order</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">lhs_samples</span>
 </pre></div>
 </div>
 <dl class="class">
 <dt id="UQpy.SampleMethods.LHS">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">LHS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">nsamples</em>, <em class="sig-param">criterion='random'</em>, <em class="sig-param">metric='euclidean'</em>, <em class="sig-param">iterations=100</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">LHS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">nsamples</em>, <em class="sig-param">criterion=None</em>, <em class="sig-param">metric='euclidean'</em>, <em class="sig-param">iterations=100</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform Latin hypercube sampling (MCS) of random variables.</p>
 <p><strong>Attributes:</strong></p>
 <p><strong>Input:</strong></p>
@@ -261,96 +242,26 @@ Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pr
 <p>The LHS class supports the following LHS design methods:</p>
 <dl class="method">
 <dt id="UQpy.SampleMethods.LHS.centered">
-<code class="sig-name descname">centered</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.centered"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.centered" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">centered</code><span class="sig-paren">(</span><em class="sig-param">samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.centered"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.centered" title="Permalink to this definition">¶</a></dt>
 <dd><p>A Latin hypercube design based on sampling the centers of the bins.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">LHS</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-<span class="go">Run LHS with the ``centered`` method:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;centered&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">123</span><span class="p">),</span>
-<span class="gp">&gt;&gt;&gt; </span>        <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
-<span class="go">UQpy: Running Latin Hypercube sampling...</span>
-<span class="go">Successful execution of LHS design.</span>
-<span class="go">[[0.3 0.7]</span>
-<span class="go"> [0.7 0.9]</span>
-<span class="go"> [0.1 0.3]</span>
-<span class="go"> [0.9 0.5]</span>
-<span class="go"> [0.5 0.1]]</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="method">
 <dt id="UQpy.SampleMethods.LHS.correlate">
-<code class="sig-name descname">correlate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.correlate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.correlate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">correlate</code><span class="sig-paren">(</span><em class="sig-param">samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.correlate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.correlate" title="Permalink to this definition">¶</a></dt>
 <dd><p>A Latin hypercube design based on minimizing the pairwise correlations.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">LHS</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-<span class="go">Run LHS with the ``correlate`` method:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;correlate&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">123</span><span class="p">),</span>
-<span class="gp">&gt;&gt;&gt; </span>        <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
-<span class="go">UQpy: Running Latin Hypercube sampling...</span>
-<span class="go">UQpy: Achieved minimum correlation of  0.041564851956975124</span>
-<span class="go">Successful execution of LHS design.</span>
-<span class="go">[[0.62552244 0.46112928]</span>
-<span class="go"> [0.97877307 0.78336976]</span>
-<span class="go"> [0.57030961 0.28521913]</span>
-<span class="go"> [0.0425663  0.90352469]</span>
-<span class="go"> [0.27846081 0.09930159]]</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="method">
 <dt id="UQpy.SampleMethods.LHS.max_min">
-<code class="sig-name descname">max_min</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.max_min"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.max_min" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">max_min</code><span class="sig-paren">(</span><em class="sig-param">samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.max_min"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.max_min" title="Permalink to this definition">¶</a></dt>
 <dd><p>A Latin hypercube design based on maximizing the inter-site distances.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">LHS</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-<span class="go">Run LHS with the ``max_min`` method:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;maximin&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">123</span><span class="p">),</span>
-<span class="gp">&gt;&gt;&gt; </span>         <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
-<span class="go">UQpy: Running Latin Hypercube sampling...</span>
-<span class="go">UQpy: Achieved max_min distance of  0.4406062190580699</span>
-<span class="go">Successful execution of LHS design.</span>
-<span class="go">[[0.46990371 0.00812322]</span>
-<span class="go"> [0.65548479 0.40773992]</span>
-<span class="go"> [0.99978368 0.84601799]</span>
-<span class="go"> [0.04775668 0.3291645 ]</span>
-<span class="go"> [0.34095571 0.75204205]]</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="method">
 <dt id="UQpy.SampleMethods.LHS.random">
-<code class="sig-name descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.random"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.random" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">random</code><span class="sig-paren">(</span><em class="sig-param">samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.random"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.random" title="Permalink to this definition">¶</a></dt>
 <dd><p>A Latin hypercube design based on sampling randomly inside each bin.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">LHS</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-<span class="go">Run LHS with the ``random`` method:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">123</span><span class="p">),</span>
-<span class="gp">&gt;&gt;&gt; </span>         <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
-<span class="go">UQpy: Running Latin Hypercube sampling...</span>
-<span class="go">Successful execution of LHS design.</span>
-<span class="go">[[0.71026295 0.8784235 ]</span>
-<span class="go"> [0.94389379 0.39615284]</span>
-<span class="go"> [0.44537029 0.53696595]</span>
-<span class="go"> [0.13929384 0.69618638]</span>
-<span class="go"> [0.25722787 0.08462129]]</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="method">
@@ -358,31 +269,6 @@ Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pr
 <code class="sig-name descname">transform_u01</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.transform_u01"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.transform_u01" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <code class="docutils literal notranslate"><span class="pre">transform_u01</span></code> method of the <code class="docutils literal notranslate"><span class="pre">LHS</span></code> is used to transform samples from the parameter space to the
 Uniform [0, 1] space. <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> objects need to have a <code class="docutils literal notranslate"><span class="pre">cdf</span></code> method.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">LHS</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-<span class="go">Run LHS with the ``correlate`` method:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">LHS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span> <span class="n">dist2</span><span class="p">],</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;centered&#39;</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
-<span class="go">UQpy: Running Latin Hypercube sampling...</span>
-<span class="go">Successful execution of LHS design.</span>
-<span class="go">[[0.1        1.47559949]</span>
-<span class="go"> [0.3        2.52440051]</span>
-<span class="go"> [0.9        0.71844843]</span>
-<span class="go"> [0.5        2.        ]</span>
-<span class="go"> [0.7        3.28155157]]</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">transform_u01</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samplesU01</span><span class="p">)</span>
-<span class="go">[[0.1        0.02871656]</span>
-<span class="go">[0.3        0.04456546]</span>
-<span class="go">[0.7        0.09680048]</span>
-<span class="go">[0.5        0.0668072 ]</span>
-<span class="go">[0.9        0.13566606]]</span>
-</pre></div>
-</div>
 </dd></dl>
 
 </dd></dl>
