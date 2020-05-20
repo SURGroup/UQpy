@@ -4,76 +4,16 @@
 SampleMethods
 =============
 
-This module contains functionality for all the sampling methods supported in ``UQpy``. 
-The module currently contains the following classes:
-
-- ``MCS``: Class to perform Monte Carlo sampling using ``UQpy``.
-- ``LHS``: Class to perform Latin hypercube sampling using ``UQpy``.
-- ``MCMC``: Class to perform sampling using Markov chains using ``UQpy``.
-- ``IS``: Class to perform Importance sampling using ``UQpy``.
+.. automodule:: UQpy.SampleMethods
 
 
 MCS
 ----
 
-``MCS``  class can be used to generate  random  draws  from  specified probability distribution(s).  The ``MCS``
-class utilizes the ``Distributions`` class to define probability distributions.  The advantage of using the ``MCS``
-class for ``UQpy`` operations, as opposed to simply generating samples with the ``scipy.stats`` package, is that it
-allows building an object  containing  the  samples,  their  distributions  and variable names for integration with
-other ``UQpy`` modules.
+The ``MCS`` class generates random samples from a specified probability distribution(s).  The ``MCS`` class utilizes the ``Distributions`` class to define probability distributions.  The advantage of using the ``MCS`` class for ``UQpy`` operations, as opposed to simply generating samples with the ``scipy.stats`` package, is that it allows building an object containing the samples and their distributions for integration with other ``UQpy`` modules.
 
-``MCS``  class can be imported in a python script using the following command:
-
->>> from UQpy.SampleMethods import MCS
-
-For example,  to run MCS  for two independent normally distribution random variables `N(1,1)` and `N(0,1)`
-
->>> from UQpy.Distributions import Normal
->>> dist1 = Normal(loc=1., scale=1.)
->>> dist2 = Normal(loc=0., scale=1.)
->>> x1 = MCS(dist_object=[dist1, dist2], nsamples=5, random_state = [1,3], verbose=True)
->>> print(x1.samples)
-    UQpy: Running Monte Carlo Sampling...
-    UQpy: Monte Carlo Sampling Complete.
-	[[ 1.62434536  1.78862847]
- 	[-0.61175641  0.43650985]
- 	[-0.52817175  0.09649747]
-	[-1.07296862 -1.8634927 ]
- 	[ 0.86540763 -0.2773882 ]]
-
-The ``MCS`` class can be used to run MCS for multivariate distributions
-
->>> from UQpy.Distributions import MVNormal
->>> dist = MVNormal(mean=[1., 2.], cov=[[4., -0.9], [-0.9, 1.]])
->>> x2 = MCS(dist_object=[dist], nsamples=5, random_state=123)
->>> print(x2.samples)
-	[[ 3.38736185  2.23541269]
-	[ 0.08946208  0.8979547 ]
-	[ 2.53138343  3.06057229]
-	[ 5.72159837  0.30657467]
-	[-1.71534735  1.97285583]]
-
-Or for a combination of distributions
-
->>> from UQpy.Distributions import MVNormal, Normal
->>> dist1 = Normal(loc=1., scale=1.)
->>> dist = MVNormal(mean=[1., 2.], cov=[[4., -0.9], [-0.9, 1.]])
->>> x3 = MCS(dist_object=[dist1, dist], nsamples=5, random_state=[123, None])
->>> print(x3.samples)
-	[[array([-1.0856306]) array([0.21193807, 2.35155014])]
- 	[array([0.99734545]) array([-1.02985401,  1.83075511])]
- 	[array([0.2829785]) array([3.09845703, 1.67722522])]
- 	[array([-1.50629471]) array([2.13964859, 1.22068072])]
- 	[array([-0.57860025]) array([-1.16164199,  2.21637435])]]
-	 
-In this case the number of  samples will be
-
->>> print(len(x3.samples.shape))
-    5
-and the dimension of the problem is
-
->>> print(len(x3.samples[0].shape))
-    2
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.SampleMethods.MCS
 	:members:
@@ -82,49 +22,24 @@ and the dimension of the problem is
 LHS
 ----
 
-``LHS``  class can be used to generate  random  draws  from  specified probability distribution(s) using Latin hypercube sampling, which belongs to the family of stratified sampling techniques. LHS has the advantage that the samples generated are uniformly distributed over each marginal distribution. LHS is perfomed by dividing the the range of each random variable into N bins with equal probability mass, where N is the required number of samples, generating one sample per bin, and then randomly pairing the samples.
+The ``LHS`` class generates random samples from a specified probability distribution(s) using Latin hypercube sampling. LHS has the advantage that the samples generated are uniformly distributed over each marginal distribution. LHS is perfomed by dividing the range of each random variable into N bins with equal probability mass, where N is the required number of samples, generating one sample per bin, and then randomly pairing the samples.
 
-``LHS``  class can be imported in a python script using the following command:
-
->>> from UQpy.SampleMethods import LHS
-
-For example,  to run LHS  for two independent uniformly distribution random variables `U(0, 1)`
-
->>> from UQpy.Distributions import Normal
->>> dist1 = Uniform(loc=0., scale=1.)
->>> dist2 = Uniform(loc=0., scale=1.)
->>> x1 = LHS(dist_object=[dist1, dist2], nsamples=5,  verbose=True)
->>> print(x1.samples)
-	UQpy: Running Latin Hypercube sampling...
-	Successful execution of LHS design.
-	[[0.01373095 0.83176942]
- 	[0.34778514 0.52142516]
- 	[0.77989405 0.30824438]
- 	[0.55000767 0.16585118]
- 	[0.9397917  0.6990165 ]]
+Adding New Latin Hypercube Design Criteria
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 	 
-The ``LHS`` class of ``UQpy`` offers a variaty of methods for a Latin Hypercube Design ('random', 'centered', 'minmax', 'correlate`). However, adding a new method is straightforward. For example, if we want to perform a LHS desing using a new method we can do it easily by providing a function as the `criterion`. The output of this function should be an array at least two-dimension. In the same way, a distance metric can be provided by the user. For example:
+The ``LHS`` class offers a variety of methods for pairing the samples in a Latin hypercube design. These are specified by the `criterion` parameter (i.e. 'random', 'centered', 'minmax', 'correlate'). However, adding a new method is straightforward. This is done by creating a new method that contains the algorithm for pairing the samples. This method takes as input the randomly generated samples in equal probability bins in each dimension and returns a set of samples that is paired according to the user's desired criterion. The user may also pass criterion-specific parameters into the custom method. These parameters are input to the ``LHS`` class through the `**kwargs`. The output of this function should be a numpy array of at least two-dimensions with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined criterion is given below:
 
 	
->>> from UQpy.Distributions import Uniform
->>> dist1 = Uniform(loc=0., scale=1.)
->>> dist2 = Uniform(loc=0., scale=1.)
+>>> def criterion(samples):
+>>> 	lhs_samples = np.zeros_like(samples)
+>>> 	for j in range(samples.shape[1]):
+>>> 		order = np.random.permutation(samples.shape[0])
+>>> 		lhs_samples[:, j] = samples[order, j]
+>>> 	return lhs_samples
 
->>> def new_method():
->>> samples_in_U_ab = np.atleast_2d(np.array([1., 1.]))
->>> 	return samples_in_U_ab
 
->>> def new_distance(y):
->>> 	return y + 1
-
->>> x1 = LHS(dist_object=[dist1, dist2], nsamples=5, criterion=new_method, metric=new_distance)
->>> print(x1.samples)
-	[[1. 1.]
- 	[1. 1.]
- 	[1. 1.]
- 	[1. 1.]
- 	[1. 1.]]
-
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.SampleMethods.LHS
 	:members:
@@ -151,7 +66,26 @@ The transition probability :math:`Q` is chosen by the user (see input `proposal`
 
 Finally, samples from the target distribution will be generated only when the chain has converged to its stationary distribution, after a so-called burn-in period. Thus the user would often reject the first few samples (see input `nburn`). Also, the chain yields correlated samples; thus to obtain i.i.d. samples from the target distribution, the user should keep only one out of n samples (see input `jump`). This means that the code will perform in total nburn + jump * N evaluations of the target pdf to yield N i.i.d. samples from the target distribution (for the MH algorithm with a single chain).
 
-The parent class for all MCMC algorithms is the ``MCMC class``, which defines the inputs that are common to all MCMC algorithms, along with the *run* method that is being called to run the chain. Any given MCMC algorithm is a sub-class of MCMC that overwrites the main *run_one_iteration* method.
+The parent class for all MCMC algorithms is the ``MCMC class``, which defines the inputs that are common to all MCMC algorithms, along with the ``run`` method that is being called to run the chain. Any given MCMC algorithm is a child class of MCMC that overwrites the main ``run_one_iteration`` method.
+
+Adding New MCMC Algorithms
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In order to add a new MCMC algorithm, a user must create a child class of ``MCMC``, and overwrite the ``run_one_iteration`` method that propagates all the chains forward one iteration. Such a new class may use any number of additional inputs compared to the ``MCMC`` base class. The reader is encouraged to have a look at the ``MH`` class and its code to better understand how a particular algorithm should fit the general framework. 
+
+A useful note is that the user has access to a number of useful attributes / utility methods as the algorithm proceeds, such as:
+
+* the attribute ``evaluate_log_target`` (and possibly ``evaluate_log_target_marginals`` if marginals were provided) is created at initialization. It is a callable that simply evaluates the log-pdf of the target distribution at a given point `x`. It can be called within the code of a new sampler as ``log_pdf_value = self.evaluate_log_target(x)``. 
+* the `nsamples` and `nsamples_per_chain` attributes indicate the number of samples that have been stored up to the current iteration (i.e., they are updated dynamically as the algorithm proceeds),
+* the `samples` attribute contains all previously stored samples. Cautionary note: `self.samples` also contains trailing zeros, for samples yet to be stored, thus to access all previously stored samples at a given iteration the user must call ``self.samples[:self.nsamples_per_chain]``, which will return an `ndarray` of size (self.nsamples_per_chain, self.nchains, self.dimension) ,
+* the `log_pdf_values` attribute contains all previously stored log target values. Same cautionary note as above,
+* the ``_update_acceptance_rate`` method updates the `acceptance_rate` attribute of the sampler, given a (list of) boolean(s) indicating if the candidate state(s) were accepted at a given iteration,
+* the ``_check_methods_proposal`` method checks whether a given proposal is adequate (i.e., has ``rvs`` and ``log_pdf``/``pdf`` methods).
+
+
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
+
 
 .. autoclass:: UQpy.SampleMethods.MCMC
    :members:
@@ -186,19 +120,7 @@ DREAM
 .. autoclass:: UQpy.SampleMethods.DREAM
 	:members:
 
-Adding a new MCMC 
-~~~~~~~~~~~~~~~~~~~~~
 
-In order to add a new MCMC algorithm, a user must create a subclass of ``MCMC``, and overwrite the *run_one_iteration* method that propagates all the chains forward one iteration. Such a new class may use any number of additional inputs compared to the ``MCMC`` base class. The reader is encouraged to have a look at the ``MH`` class and its code to better understand how a particular algorithm should fit the general framework. 
-
-A useful note is that the user has access to a number of useful attributes / utility methods as the algorithm proceeds, such as:
-
-* the attribute `evaluate_log_target` (and possibly `self.evaluate_log_target_marginals` if marginals were provided) is created at initialization. It is a callable that simply evaluates the log-pdf of the target distribution at a given point `x`. It can be called within the code of a new sampler as `log_pdf_value = self.evaluate_log_target(x)`. 
-* the `nsamples` and `nsamples_per_chain` attributes indicate the number of samples that have been stored up to the current iteration (i.e., they are updated dynamically as the algorithm proceeds),
-* the `samples` attribute contains all previously stored samples. Cautionary note: `self.samples` also contains trailing zeros, for samples yet to be stored, thus to access all previously stored samples at a given iteration the user must call `self.samples[:self.nsamples_per_chain]`, which will return a (self.nsamples_per_chain, self.nchains, self.dimension) `ndarray`,
-* the `log_pdf_values` attribute contains all previously stored log target values, same cautionary note as above,
-* the `_update_acceptance_rate` method updates the `acceptance_rate` attribute of the sampler, given a  (list of) boolean(s) indicating if the candidate state(s) were accepted at a given iteration,
-* the `_check_methods_proposal` method checks wether a given proposal is adequate (i.e., has `rvs` and `log_pdf`/`pdf` methods).
 
    
 IS
@@ -215,6 +137,9 @@ If :math:`p` is only known up to a constant, i.e., one can only evaluate :math:`
    :alt: IS weighted samples
    :align: center
    
+   
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
    
 .. autoclass:: UQpy.SampleMethods.IS
    :members:

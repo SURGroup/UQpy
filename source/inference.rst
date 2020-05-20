@@ -3,14 +3,16 @@
 Inference
 =============
 
-The goal in inference can be twofold: 1) given a model, parameterized by parameter vector :math:`\theta`, and some data :math:`\mathcal{D}`, learn the value of the parameter vector that best explains the data; 2) given a set of candidate models :math:`\lbrace m_{i} \rbrace_{i=1:M}` and some data :math:`\mathcal{D}`, learn which model best explains the data. UQpy currently supports the following inference algorithms for parameter estimation (see e.g. [1]_ for theory on parameter estimation in frequentist vs. Bayesian frameworks):
+.. automodule:: UQpy.Inference
+
+The goal in inference can be twofold: 1) given a model, parameterized by parameter vector :math:`\theta`, and some data :math:`\mathcal{D}`, learn the value of the parameter vector that best explains the data; 2) given a set of candidate models :math:`\lbrace m_{i} \rbrace_{i=1:M}` and some data :math:`\mathcal{D}`, learn which model best explains the data. ``UQpy`` currently supports the following inference algorithms for parameter estimation (see e.g. [1]_ for theory on parameter estimation in frequentist vs. Bayesian frameworks):
 
 * Maximum Likelihood estimation,
 * Bayesian approach: estimation of posterior pdf via sampling methods (MCMC/IS).
 
 and the following algorithms for model selection:
 
-* model selection using information theoretic criteria,
+* Model selection using information theoretic criteria,
 * Bayesian model class selection, i.e., estimation of model posterior probabilities.
 
 The capabilities of ``UQpy`` and associated classes are summarized in the following figure.
@@ -29,14 +31,20 @@ For any inference task, the user must first create, for each model studied, an i
    :scale: 30 %
    :align: left
    
+   
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
+   
 .. autoclass:: UQpy.Inference.InferenceModel
    :members:
    
 Parameter estimation
 --------------------------------
 
-Maximum Likelihood
-~~~~~~~~~~~~~~~~~~~~~~
+Parameter estimation refers to process of estimating the parameter vector of a given model. Depending on the nature of the method, parameter estimation may provide a point estimator or a probability distribution for the parameter vector. ``UQpy`` supports two different types of parameter estimation: Maximum Likelihood estimation through the ``MLEstimation`` class and Bayesian parameter estimation through the ``BayesParameterEstimation`` class.
+
+MLEstimation
+--------------
 
 The ``MLEstimation`` class evaluates the maximum likelihood estimate :math:`\hat{\theta}` of the model parameters, i.e.
 
@@ -46,6 +54,9 @@ Note: for a Gaussian-error model of the form :math:`\mathcal{D}=h(\theta)+\epsil
 
 A numerical optimization procedure is performed to compute the MLE. By default, the `minimize` function of the ``scipy.optimize`` module is used, however other optimizers can be leveraged via the `optimizer` input of the  ``MLEstimation`` class.
 
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
+
 .. autoclass:: UQpy.Inference.MLEstimation
    :members:
    
@@ -54,16 +65,20 @@ A numerical optimization procedure is performed to compute the MLE. By default, 
 More generally, the user may want to compute a parameter estimate by minimizing an error function between the data and model outputs. This can be easily done by subclassing the ``MLEstimation`` class and overwriting the method `_evaluate_func_to_minimize`.
 
 	
-Bayesian Estimation
-~~~~~~~~~~~~~~~~~~~~~~
+BayesParameterEstimation
+-------------------------
 
-Given some data :math:`\mathcal{D}`, a parameterized model for the data, and a prior probability density for the model parameters :math:`p(\theta)`, the ``BayesParameterEstimation`` class is leveraged to draw samples from the posterior pdf of the model parameters using Markov Chain Monte Carlo or Importance Sampling. Via Bayes theorem, the posterior pdf is as follows:
+Given some data :math:`\mathcal{D}`, a parameterized model for the data, and a prior probability density for the model parameters :math:`p(\theta)`, the ``BayesParameterEstimation`` class is leveraged to draw samples from the posterior pdf of the model parameters using Markov Chain Monte Carlo or Importance Sampling. Via Bayes theorem, the posterior pdf is defined as follows:
 
 .. math:: p(\theta \vert \mathcal{D}) = \frac{p(\mathcal{D} \vert \theta)p(\theta)}{p(\mathcal{D})}
 
 Note that if no prior is defined in the model, the prior pdf is chosen as uninformative, i.e., :math:`p(\theta) = 1` (cautionary note, this is an improper prior).
 
-The ``BayesParameterEstimation`` leverages the ``MCMC`` or ``IS`` classes of the ``SampleMethods`` module of UQpy. When creating a ``BayesParameterEstimation`` object, an object of class ``MCMC`` or ``IS`` is created and saved as an attribute `sampler`. The `run` method of the ``BayesParameterEstimation`` class then calls the `run` method of that sampler, thus the user can add samples as they wish by calling the `run` method several times.
+The ``BayesParameterEstimation`` leverages the ``MCMC`` or ``IS`` classes of the ``SampleMethods`` module of ``UQpy``. When creating a ``BayesParameterEstimation`` object, an object of class ``MCMC`` or ``IS`` is created and saved as an attribute `sampler`. The ``run`` method of the ``BayesParameterEstimation`` class then calls the ``run`` method of that sampler, thus the user can add samples as they wish by calling the ``run`` method several times.
+
+
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.Inference.BayesParameterEstimation
     :members: 
@@ -73,10 +88,10 @@ Model Selection
 
 Model selection refers to the task of selecting a statistical model from a set of candidate models, given some data. A good model is one that is capable of explaining the data well. Given models of the same explanatory power, the simplest model should be chosen (Occam's razor). 
 
-Information theoretic criteria
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+InfoModelSelection
+--------------------
 
-Several simple information theoretic criteria can be used to compute a model's quality and perform model selection [2]_. ``UQpy`` implements three criteria: 
+The ``InfoModelSelection`` class employs information-theoretic criteria for model selection. Several simple information theoretic criteria can be used to compute a model's quality and perform model selection [2]_. ``UQpy`` implements three criteria: 
 
 * Bayesian information criterion,  :math:`BIC = \ln(n) k - 2 \ln(\hat{L})`
 * Akaike information criterion, :math:`AIC = 2 k - 2 \ln (\hat{L})`
@@ -86,11 +101,14 @@ where :math:`k` is the number of parameters characterizing the model, :math:`\ha
 
 A probability can be defined for each model as :math:`P(m_{i}) \propto \exp\left(  -\frac{\text{criterion}}{2} \right)`.
 
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
+
 .. autoclass:: UQpy.Inference.InfoModelSelection
     :members: 
 	
-Bayesian Model Selection
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+BayesModelSelection
+---------------------
 
 In the Bayesian approach to model selection, the posterior probability of each model is computed as
 
@@ -104,7 +122,10 @@ Currently, calculation of the evidence is performed using the method of the harm
 
 .. math:: p(\mathcal{D} \vert m_{i}) = \left[ \frac{1}{B} \sum_{b=1}^{B} \frac{1}{p(\mathcal{D} \vert m_{i}, \theta_{b})} \right]^{-1}
 
-where :math:`\theta_{1,\cdots,B}` are samples from the posterior pdf of :math:`\theta`. In UQpy, these samples are obtained via the ``BayesParameterEstimation`` class. However, note that this method is known to yield evidence estimates with large variance. Future releases of UQpy will include more robust methods for computation of model evidences. Also, it is known that results of such Bayesian model selection procedure usually highly depends on the choice of prior for the parameters of the competing models, thus the user should carefully define such priors when creating instances of the ``InferenceModel`` class.
+where :math:`\theta_{1,\cdots,B}` are samples from the posterior pdf of :math:`\theta`. In UQpy, these samples are obtained via the ``BayesParameterEstimation`` class. However, note that this method is known to yield evidence estimates with large variance. Future releases of ``UQpy`` will include more robust methods for computation of model evidences. Also, it is known that results of such Bayesian model selection procedure usually highly depends on the choice of prior for the parameters of the competing models, thus the user should carefully define such priors when creating instances of the ``InferenceModel`` class.
+
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.Inference.BayesModelSelection
     :members: 

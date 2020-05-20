@@ -49,16 +49,22 @@
 <span class="c1"># COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR</span>
 <span class="c1"># OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</span>
 
-<span class="sd">&quot;&quot;&quot;This module contains functionality for all the sampling methods supported in UQpy.&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;This module contains functionality for all the sampling methods supported in ``UQpy``.</span>
+
+<span class="sd">The module currently contains the following classes:</span>
+
+<span class="sd">- ``MCS``: Class to perform Monte Carlo sampling.</span>
+<span class="sd">- ``LHS``: Class to perform Latin hypercube sampling.</span>
+<span class="sd">- ``MCMC``: Class to perform Markov Chain Monte Carlo sampling.</span>
+<span class="sd">- ``IS``: Class to perform Importance sampling.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">copy</span>
+
 <span class="kn">from</span> <span class="nn">scipy.spatial.distance</span> <span class="k">import</span> <span class="n">pdist</span>
-<span class="kn">import</span> <span class="nn">random</span>
+
 <span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">UQpy.Utilities</span> <span class="k">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">os</span> <span class="k">import</span> <span class="n">sys</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
 
 
 <span class="c1">########################################################################################################################</span>
@@ -71,39 +77,50 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform Monte Carlo sampling (MCS) of random variables.</span>
 
-<span class="sd">    **Attributes:**</span>
-
 <span class="sd">    **Input:**</span>
 
 <span class="sd">    * **dist_object** ((list of) ``Distribution`` object(s)):</span>
-<span class="sd">                        Probability distribution of each random variable. Must be an object of type ``Distribution``.</span>
+<span class="sd">        Probability distribution of each random variable. Must be an object (or a list of objects) of the</span>
+<span class="sd">        ``Distribution`` class.</span>
 
 <span class="sd">    * **nsamples** (`int`):</span>
-<span class="sd">                     Number of samples to be drawn from each distribution.</span>
+<span class="sd">        Number of samples to be drawn from each distribution.</span>
 
-<span class="sd">    * **random_state** ((list of) `int(s)`):</span>
-<span class="sd">                        The random seed to initialize the *Mersenne Twister* pseudo-random number generator.</span>
+<span class="sd">        The ``run`` method is automatically called if `nsamples` is provided. If `nsamples` is not provided, then the</span>
+<span class="sd">        ``MCS`` object is created but samples are not generated.</span>
+
+<span class="sd">    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):</span>
+<span class="sd">        Random seed used to initialize the pseudo-random number generator. Default is None.</span>
+
+<span class="sd">        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the</span>
+<span class="sd">        object itself can be passed directly.</span>
 
 <span class="sd">    * **verbose** (Boolean):</span>
-<span class="sd">                        A boolean declaring whether to write text to the terminal.</span>
+<span class="sd">        A boolean declaring whether to write text to the terminal.</span>
 
-<span class="sd">                        Default value: False</span>
 
-<span class="sd">    **Output/Returns:**</span>
+<span class="sd">    **Attributes:**</span>
 
 <span class="sd">    * **samples** (`ndarray` or `list`):</span>
-<span class="sd">                        Generated samples. If a list of ``DistributionContinuous1D``, ``DistributionContinuous1D``</span>
-<span class="sd">                        objects is provided then **samples** is an array with</span>
-<span class="sd">                        ``samples.shape=(nsamples, len(dist_object))``. If  ``DistributionContinuous1D`` object is</span>
-<span class="sd">                        provided then **samples** is an array with ``samples.shape=(nsamples, 1)``. If a</span>
-<span class="sd">                        ``DistributionContinuousND`` object is provided then **samples** is an array with</span>
-<span class="sd">                        ``samples.shape=(nsamples, ND)``. If a list of ``DistributionContinuous1D``,</span>
-<span class="sd">                        ``DistributionContinuousND`` is provided then **samples** is a list with</span>
-<span class="sd">                        ``len(samples)=nsamples`` and ``len(samples[i]) = len(dist_object)``.</span>
+<span class="sd">        Generated samples.</span>
+
+<span class="sd">        If a list of ``DistributionContinuous1D`` objects is provided for ``dist_object``, then `samples` is an</span>
+<span class="sd">        `ndarray` with ``samples.shape=(nsamples, len(dist_object))``.</span>
+
+<span class="sd">        If a ``DistributionContinuous1D`` object is provided for ``dist_object`` then `samples` is an array with</span>
+<span class="sd">        `samples.shape=(nsamples, 1)``.</span>
+
+<span class="sd">        If a ``DistributionContinuousND`` object is provided for ``dist_object`` then `samples` is an array with</span>
+<span class="sd">        ``samples.shape=(nsamples, ND)``.</span>
+
+<span class="sd">        If a list of mixed ``DistributionContinuous1D`` and ``DistributionContinuousND`` objects is provided then</span>
+<span class="sd">        `samples` is a list with ``len(samples)=nsamples`` and ``len(samples[i]) = len(dist_object)``.</span>
 
 <span class="sd">    * **samplesU01** (`ndarray` (`list`)):</span>
-<span class="sd">                        If the ``Distribution`` object has a ``cdf`` method, MCS also returns the samples in the</span>
-<span class="sd">                        Uniform(0,1) hypercube using the method ``transform_u01``.</span>
+<span class="sd">        Generated samples transformed to the unit hypercube.</span>
+
+<span class="sd">        This attribute exists only if the ``transform_u01`` method is invoked by the user.</span>
+
 
 <span class="sd">    **Methods**</span>
 
@@ -128,12 +145,12 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">list</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">False</span>
 
-            <span class="k">if</span> <span class="n">random_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">random_state</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Incompatible dimensions between random_state and dist_object.&#39;</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="p">[</span><span class="n">random_state</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="o">=</span> <span class="n">dist_object</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">Distribution</span><span class="p">):</span>
@@ -142,10 +159,11 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="o">=</span> <span class="n">dist_object</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">list</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">if</span> <span class="n">random_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Incompatible dimensions between random_state and dist_object.&#39;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
 
         <span class="c1"># Instantiate the output attributes.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="kc">None</span>
@@ -154,43 +172,48 @@
         <span class="c1"># Set printing options</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span>
-        <span class="c1"># ==============================================================================================================</span>
-        <span class="c1">#                                       Run Monte Carlo sampling</span>
+
+        <span class="c1"># Run Monte Carlo sampling</span>
         <span class="k">if</span> <span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MCS.run"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MCS.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The ``run`` method of the ``MCS`` class can be invoked many times and the generated samples are appended to the</span>
-<span class="sd">        existing samples. For example, to the 5 samples in object ``x1`` we can add two more by running</span>
+<span class="sd">        Execute the random sampling in the ``MCS`` class.</span>
 
-<span class="sd">        &gt;&gt;&gt; print(x1)</span>
-<span class="sd">            &lt;UQpy.SampleMethods.MCS object at 0x1a148ba85&gt;</span>
-<span class="sd">        &gt;&gt;&gt; x1.run(nsamples=2, random_state=[123, 567])</span>
-<span class="sd">        &gt;&gt;&gt; print(x1.samples)</span>
-<span class="sd">            [[ 1.62434536  1.78862847]</span>
-<span class="sd">             [-0.61175641  0.43650985]</span>
-<span class="sd">             [-0.52817175  0.09649747]</span>
-<span class="sd">             [-1.07296862 -1.8634927 ]</span>
-<span class="sd">             [ 0.86540763 -0.2773882 ]</span>
-<span class="sd">             [ 1.62434536  1.78862847]</span>
-<span class="sd">             [-0.61175641  0.43650985]]</span>
+<span class="sd">        The ``run`` method is the function that performs random sampling in the ``MCS`` class. If `nsamples` is</span>
+<span class="sd">        provided, the ``run`` method is automatically called when the ``MCS`` object is defined. The user may also call</span>
+<span class="sd">        the ``run`` method directly to generate samples. The ``run`` method of the ``MCS`` class can be invoked many</span>
+<span class="sd">        times and each time the generated samples are appended to the existing samples.</span>
 
-<span class="sd">        The total number of samples is now</span>
+<span class="sd">        ** Input:**</span>
 
-<span class="sd">        &gt;&gt;&gt; print(x1.nsamples)</span>
-<span class="sd">            7</span>
+<span class="sd">        * **nsamples** (`int`):</span>
+<span class="sd">            Number of samples to be drawn from each distribution.</span>
+
+<span class="sd">            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the</span>
+<span class="sd">            existing samples.</span>
+
+<span class="sd">        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):</span>
+<span class="sd">            Random seed used to initialize the pseudo-random number generator. Default is None.</span>
+
+<span class="sd">            If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the</span>
+<span class="sd">            object itself can be passed directly.</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``MCS``</span>
+<span class="sd">        class.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Check if a random_state is provided.</span>
         <span class="k">if</span> <span class="n">random_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">random_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">random_state</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Incompatible dimensions between random_state and dist_object.&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Incompatible dimensions between random_state and dist_object.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">random_state</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">nsamples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Number of samples must be defined.&#39;</span><span class="p">)</span>
@@ -204,7 +227,7 @@
             <span class="n">temp_samples</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">)):</span>
                 <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;rvs&#39;</span><span class="p">):</span>
-                    <span class="n">temp_samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                    <span class="n">temp_samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: rvs method is missing.&#39;</span><span class="p">)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
@@ -238,20 +261,18 @@
 
 <div class="viewcode-block" id="MCS.transform_u01"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MCS.transform_u01">[docs]</a>    <span class="k">def</span> <span class="nf">transform_u01</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The ``transform_u01`` method of the ``MCS`` is used to transform samples from the parameter space to the</span>
-<span class="sd">        Uniform [0, 1] space. ``Distribution`` objects need to have a ``cdf`` method.</span>
+<span class="sd">        Transform random samples to uniform on the unit hypercube.</span>
 
-<span class="sd">        &gt;&gt;&gt; print(x1)</span>
-<span class="sd">            &lt;UQpy.SampleMethods.MCS object at 0x1a18c03450&gt;</span>
-<span class="sd">        &gt;&gt;&gt; x1.transform_u01()</span>
-<span class="sd">        &gt;&gt;&gt; print(x1.samplesU01)</span>
-<span class="sd">            [[0.94784894 0.96316267]</span>
-<span class="sd">             [0.27034947 0.66876657]</span>
-<span class="sd">             [0.29869007 0.53843726]</span>
-<span class="sd">             [0.1416426  0.03119649]</span>
-<span class="sd">             [0.80659245 0.39074102]</span>
-<span class="sd">             [0.94784894 0.96316267]</span>
-<span class="sd">             [0.27034947 0.66876657]]</span>
+<span class="sd">        **Input:**</span>
+
+<span class="sd">        The ``transform_u01`` method is an instance method that perform the transformation on an existing ``MCS``</span>
+<span class="sd">        object. It takes no input.</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        The ``transform_u01`` method has no returns, although it creates and/or appends the `samplesU01` attribute of</span>
+<span class="sd">        the ``MCS`` class.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
@@ -305,50 +326,53 @@
 <span class="sd">    **Input:**</span>
 
 <span class="sd">    * **dist_object** ((list of) ``Distribution`` object(s)):</span>
-<span class="sd">                    List of ``Distribution`` objects corresponding to each random variable.</span>
+<span class="sd">            List of ``Distribution`` objects corresponding to each random variable.</span>
 
 <span class="sd">    * **nsamples** (`int`):</span>
-<span class="sd">                    Number of samples to be drawn from each distribution.</span>
+<span class="sd">            Number of samples to be drawn from each distribution.</span>
 
 
 <span class="sd">    * **criterion** (`str` or `callable`):</span>
-<span class="sd">                The criterion for generating sample points</span>
-<span class="sd">                    Options:</span>
-<span class="sd">                        1. &#39;random&#39; - completely random. \n</span>
-<span class="sd">                        2. centered&#39; - points only at the centre. \n</span>
-<span class="sd">                        3. &#39;maximin - maximizing the minimum distance between points. \n</span>
-<span class="sd">                        4. &#39;correlate&#39; - minimizing the correlation between the points. \n</span>
-<span class="sd">                        5. `callable` - User-defined method.</span>
+<span class="sd">            The criterion for generating sample points</span>
+<span class="sd">                Options:</span>
+<span class="sd">                    1. &#39;random&#39; - completely random. \n</span>
+<span class="sd">                    2. centered&#39; - points only at the centre. \n</span>
+<span class="sd">                    3. &#39;maximin - maximizing the minimum distance between points. \n</span>
+<span class="sd">                    4. &#39;correlate&#39; - minimizing the correlation between the points. \n</span>
+<span class="sd">                    5. `callable` - User-defined method.</span>
 
-<span class="sd">                Default: &#39;random&#39;</span>
+<span class="sd">            Default: &#39;random&#39;</span>
 
 <span class="sd">    * **metric** (`str` or `callable`):</span>
-<span class="sd">                The distance metric to use.</span>
-<span class="sd">                    Options:</span>
-<span class="sd">                        1. `str` - Available options are: `braycurtis`, `canberra`, `chebyshev`, `cityblock`,</span>
-<span class="sd">                        `correlation`, `cosine`, `dice`, `euclidean`, `hamming`, `jaccard`, `jensenshannon`,</span>
-<span class="sd">                        `kulsinski`, `mahalanobis`, `matching`, `minkowski`, `rogerstanimoto`, `russellrao`,</span>
-<span class="sd">                        `seuclidean`, `sokalmichener`, `sokalsneath`, `sqeuclidean`, `yule`.</span>
+<span class="sd">            The distance metric to use.</span>
+<span class="sd">                Options:</span>
+<span class="sd">                    1. `str` - Available options are: `braycurtis`, `canberra`, `chebyshev`, `cityblock`,</span>
+<span class="sd">                    `correlation`, `cosine`, `dice`, `euclidean`, `hamming`, `jaccard`, `jensenshannon`,</span>
+<span class="sd">                    `kulsinski`, `mahalanobis`, `matching`, `minkowski`, `rogerstanimoto`, `russellrao`,</span>
+<span class="sd">                    `seuclidean`, `sokalmichener`, `sokalsneath`, `sqeuclidean`, `yule`.</span>
 
-<span class="sd">                    2. User-defined function.</span>
+<span class="sd">                2. User-defined function.</span>
 
-<span class="sd">                Default: `euclidean`.</span>
+<span class="sd">            Default: `euclidean`.</span>
 
 <span class="sd">    * **iterations** (`int`):</span>
-<span class="sd">                The number of iteration to run. Required only for ``maximin`` and ``correlate`` criterion.</span>
+<span class="sd">            The number of iteration to run. Required only for ``maximin`` and ``correlate`` criterion.</span>
 
-<span class="sd">                Default: 100.</span>
+<span class="sd">            Default: 100.</span>
+
+<span class="sd">    * random_state (None or `int` or `np.random.RandomState` object):</span>
+<span class="sd">            Random seed used to initialize the pseudo-random number generator. Default is None.</span>
 
 <span class="sd">    * **verbose** (`Boolean`):</span>
-<span class="sd">                    A boolean declaring whether to write text to the terminal.</span>
+<span class="sd">            A boolean declaring whether to write text to the terminal.</span>
 
-<span class="sd">                    Default value: False</span>
+<span class="sd">            Default value: False</span>
 
 
-<span class="sd">    **Output/Returns:**</span>
+<span class="sd">    **Attributes:**</span>
 
 <span class="sd">    * **samples** (`ndarray`):</span>
-<span class="sd">                    `ndarray` containing the generated samples.</span>
+<span class="sd">            `ndarray` containing the generated samples.</span>
 
 <span class="sd">    **Methods**</span>
 
@@ -356,8 +380,8 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">,</span>
-                 <span class="n">iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>  <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="c1"># Check if a Distribution object is provided.</span>
         <span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">DistributionContinuous1D</span><span class="p">,</span> <span class="n">JointInd</span>
@@ -371,6 +395,13 @@
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A DistributionContinuous1D or JointInd object must be provided.&#39;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="o">=</span> <span class="n">dist_object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">criterion</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">criterion</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="s1">&#39;centered&#39;</span><span class="p">,</span> <span class="s1">&#39;maximin&#39;</span><span class="p">,</span> <span class="s1">&#39;correlate&#39;</span><span class="p">]:</span>
@@ -380,22 +411,6 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">=</span> <span class="n">criterion</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">=</span> <span class="n">criterion</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">metric</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;braycurtis&#39;</span><span class="p">,</span> <span class="s1">&#39;canberra&#39;</span><span class="p">,</span> <span class="s1">&#39;chebyshev&#39;</span><span class="p">,</span> <span class="s1">&#39;cityblock&#39;</span><span class="p">,</span> <span class="s1">&#39;correlation&#39;</span><span class="p">,</span> <span class="s1">&#39;cosine&#39;</span><span class="p">,</span>
-                              <span class="s1">&#39;dice&#39;</span><span class="p">,</span> <span class="s1">&#39;euclidean&#39;</span><span class="p">,</span> <span class="s1">&#39;hamming&#39;</span><span class="p">,</span> <span class="s1">&#39;jaccard&#39;</span><span class="p">,</span> <span class="s1">&#39;kulsinski&#39;</span><span class="p">,</span> <span class="s1">&#39;mahalanobis&#39;</span><span class="p">,</span>
-                              <span class="s1">&#39;matching&#39;</span><span class="p">,</span> <span class="s1">&#39;minkowski&#39;</span><span class="p">,</span> <span class="s1">&#39;rogerstanimoto&#39;</span><span class="p">,</span> <span class="s1">&#39;russellrao&#39;</span><span class="p">,</span> <span class="s1">&#39;seuclidean&#39;</span><span class="p">,</span>
-                              <span class="s1">&#39;sokalmichener&#39;</span><span class="p">,</span> <span class="s1">&#39;sokalsneath&#39;</span><span class="p">,</span> <span class="s1">&#39;sqeuclidean&#39;</span><span class="p">]:</span>
-                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Exit code: Supported lhs distances: &#39;braycurtis&#39;, &#39;canberra&#39;, &#39;chebyshev&#39;, &quot;</span>
-                                          <span class="s2">&quot;&#39;cityblock&#39;,&quot;</span> <span class="s2">&quot; &#39;correlation&#39;, &#39;cosine&#39;,&#39;dice&#39;, &#39;euclidean&#39;, &#39;hamming&#39;, &quot;</span>
-                                          <span class="s2">&quot;&#39;jaccard&#39;, &quot;</span> <span class="s2">&quot;&#39;kulsinski&#39;, &#39;mahalanobis&#39;, &#39;matching&#39;, &#39;minkowski&#39;, &quot;</span>
-                                          <span class="s2">&quot;&#39;rogerstanimoto&#39;,&quot;</span> <span class="s2">&quot;&#39;russellrao&#39;, &#39;seuclidean&#39;,&#39;sokalmichener&#39;, &quot;</span>
-                                          <span class="s2">&quot;&#39;sokalsneath&#39;, &#39;sqeuclidean&#39;.&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">metric</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span> <span class="o">=</span> <span class="n">iterations</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: number of iterations must be an integer.&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nsamples</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span>
@@ -424,236 +439,158 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Running Latin Hypercube sampling...&#39;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;random&#39;</span><span class="p">:</span>
-            <span class="n">u_ab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;centered&#39;</span><span class="p">:</span>
-            <span class="n">u_ab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">centered</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;maximin&#39;</span><span class="p">:</span>
-            <span class="n">u_ab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_min</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;correlate&#39;</span><span class="p">:</span>
-            <span class="n">u_ab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlate</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">):</span>
-            <span class="n">u_ab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: A valid criterion is required.&#39;</span><span class="p">)</span>
+        <span class="n">cut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">cut</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">]</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">cut</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">u</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">uniform</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+            <span class="n">samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="n">a</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;random&#39;</span><span class="p">:</span>
+                <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;centered&#39;</span><span class="p">:</span>
+                <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">centered</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;maximin&#39;</span><span class="p">:</span>
+                <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_min</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;correlate&#39;</span><span class="p">:</span>
+                <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">):</span>
+                <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: A valid criterion is required.&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">samplesU01</span> <span class="o">=</span> <span class="n">u_lhs</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">)):</span>
                 <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="s1">&#39;icdf&#39;</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">icdf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">u_ab</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">icdf</span><span class="p">(</span><span class="n">u_lhs</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span>
 
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">JointInd</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;icdf&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">marginals</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">marginals</span><span class="p">)):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">marginals</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">icdf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">u_ab</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">marginals</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">icdf</span><span class="p">(</span><span class="n">u_lhs</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span>
 
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">DistributionContinuous1D</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="s1">&#39;icdf&#39;</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">icdf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">u_ab</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">icdf</span><span class="p">(</span><span class="n">u_lhs</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Successful execution of LHS design.&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LHS.random"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.random">[docs]</a>    <span class="k">def</span> <span class="nf">random</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="LHS.random"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.random">[docs]</a>    <span class="k">def</span> <span class="nf">random</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A Latin hypercube design based on sampling randomly inside each bin.</span>
-
-<span class="sd">        &gt;&gt;&gt; from UQpy.Distributions import Uniform</span>
-<span class="sd">        &gt;&gt;&gt; from UQpy.SampleMethods import LHS</span>
-<span class="sd">        &gt;&gt;&gt; dist1 = Uniform(loc=3., scale=2.)</span>
-<span class="sd">        &gt;&gt;&gt; dist2 = Uniform(loc=0., scale=1.)</span>
-<span class="sd">        Run LHS with the ``random`` method:</span>
-<span class="sd">        &gt;&gt;&gt; x = LHS(dist_object=[dist1, dist2], criterion=&#39;correlate&#39;, nsamples=5, verbose=True)</span>
-<span class="sd">        &gt;&gt;&gt; print(x.samples)</span>
-<span class="sd">        UQpy: Running Latin Hypercube sampling...</span>
-<span class="sd">        UQpy: Achieved max_min distance of  0.44043282285181284</span>
-<span class="sd">        Successful execution of LHS design.</span>
-<span class="sd">        [[3.75621818 0.97949371]</span>
-<span class="sd">         [4.85220593 0.37270871]</span>
-<span class="sd">         [3.1521886  0.4610569 ]</span>
-<span class="sd">         [4.41441601 0.10184899]</span>
-<span class="sd">         [3.89444322 0.6775048 ]]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">cut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">a</span> <span class="o">=</span> <span class="n">cut</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">]</span>
-        <span class="n">b</span> <span class="o">=</span> <span class="n">cut</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">lhs_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
+            <span class="n">lhs_samples</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[</span><span class="n">order</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
 
-        <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lhs_samples</span></div>
 
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-            <span class="n">samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="n">a</span>
-
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-            <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
-            <span class="n">samples</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[</span><span class="n">order</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
-
-        <span class="k">return</span> <span class="n">samples</span></div>
-
-<div class="viewcode-block" id="LHS.centered"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.centered">[docs]</a>    <span class="k">def</span> <span class="nf">centered</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        A Latin hypercube design based on sampling the centers of the bins.</span>
-
-<span class="sd">        &gt;&gt;&gt; from UQpy.Distributions import Uniform</span>
-<span class="sd">        &gt;&gt;&gt; from UQpy.SampleMethods import LHS</span>
-<span class="sd">        &gt;&gt;&gt; dist1 = Normal(loc=0., scale=1.)</span>
-<span class="sd">        &gt;&gt;&gt; dist2 = Normal(loc=2., scale=1.)</span>
-<span class="sd">        Run LHS with the ``centered`` method:</span>
-<span class="sd">        &gt;&gt;&gt; x = LHS(dist_object=[dist1, dist2], criterion=&#39;correlate&#39;, nsamples=5, verbose=True)</span>
-<span class="sd">        &gt;&gt;&gt; print(x.samples)</span>
-<span class="sd">        UQpy: Running Latin Hypercube sampling...</span>
-<span class="sd">        Successful execution of LHS design.</span>
-<span class="sd">        [[-1.28155157  0.71844843]</span>
-<span class="sd">         [ 0.52440051  2.52440051]</span>
-<span class="sd">         [ 1.28155157  2.        ]</span>
-<span class="sd">         [ 0.          3.28155157]</span>
-<span class="sd">         [-0.52440051  1.47559949]]</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">cut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">a</span> <span class="o">=</span> <span class="n">cut</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">]</span>
-        <span class="n">b</span> <span class="o">=</span> <span class="n">cut</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
-
-        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
-        <span class="n">centers</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
-
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-            <span class="n">samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">centers</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">samples</span></div>
-
-<div class="viewcode-block" id="LHS.max_min"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.max_min">[docs]</a>    <span class="k">def</span> <span class="nf">max_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="LHS.max_min"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.max_min">[docs]</a>    <span class="k">def</span> <span class="nf">max_min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A Latin hypercube design based on maximizing the inter-site distances.</span>
-
-<span class="sd">        &gt;&gt;&gt; from UQpy.Distributions import Uniform</span>
-<span class="sd">        &gt;&gt;&gt; from UQpy.SampleMethods import LHS</span>
-<span class="sd">        &gt;&gt;&gt; dist1 = Uniform(loc=0., scale=1.)</span>
-<span class="sd">        &gt;&gt;&gt; dist2 = Uniform(loc=0., scale=1.)</span>
-<span class="sd">        Run LHS with the ``max_min`` method:</span>
-<span class="sd">        &gt;&gt;&gt; x = LHS(dist_object=[dist1, dist2], criterion=&#39;correlate&#39;, nsamples=5, verbose=True)</span>
-<span class="sd">        &gt;&gt;&gt; print(x.samples)</span>
-<span class="sd">        UQpy: Running Latin Hypercube sampling...</span>
-<span class="sd">        UQpy: Achieved max_min distance of  0.44043282285181284</span>
-<span class="sd">        Successful execution of LHS design.</span>
-<span class="sd">        [[0.33874957 0.31460038]</span>
-<span class="sd">         [0.91109051 0.44301033]</span>
-<span class="sd">         [0.059657   0.77562892]</span>
-<span class="sd">         [0.67762949 0.03327944]</span>
-<span class="sd">         [0.59516606 0.90984061]]</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">cut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">a</span> <span class="o">=</span> <span class="n">cut</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">]</span>
-        <span class="n">b</span> <span class="o">=</span> <span class="n">cut</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;metric&quot;</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+            <span class="n">metric</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;metric&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">metric</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;braycurtis&#39;</span><span class="p">,</span> <span class="s1">&#39;canberra&#39;</span><span class="p">,</span> <span class="s1">&#39;chebyshev&#39;</span><span class="p">,</span> <span class="s1">&#39;cityblock&#39;</span><span class="p">,</span> <span class="s1">&#39;correlation&#39;</span><span class="p">,</span> <span class="s1">&#39;cosine&#39;</span><span class="p">,</span>
+                                  <span class="s1">&#39;dice&#39;</span><span class="p">,</span> <span class="s1">&#39;euclidean&#39;</span><span class="p">,</span> <span class="s1">&#39;hamming&#39;</span><span class="p">,</span> <span class="s1">&#39;jaccard&#39;</span><span class="p">,</span> <span class="s1">&#39;kulsinski&#39;</span><span class="p">,</span> <span class="s1">&#39;mahalanobis&#39;</span><span class="p">,</span>
+                                  <span class="s1">&#39;matching&#39;</span><span class="p">,</span> <span class="s1">&#39;minkowski&#39;</span><span class="p">,</span> <span class="s1">&#39;rogerstanimoto&#39;</span><span class="p">,</span> <span class="s1">&#39;russellrao&#39;</span><span class="p">,</span> <span class="s1">&#39;seuclidean&#39;</span><span class="p">,</span>
+                                  <span class="s1">&#39;sokalmichener&#39;</span><span class="p">,</span> <span class="s1">&#39;sokalsneath&#39;</span><span class="p">,</span> <span class="s1">&#39;sqeuclidean&#39;</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Exit code: Supported lhs distances: &#39;braycurtis&#39;, &#39;canberra&#39;,&quot;</span>
+                                              <span class="s2">&quot; &#39;chebyshev&#39;, &quot;</span>
+                                              <span class="s2">&quot;&#39;cityblock&#39;,&quot;</span> <span class="s2">&quot; &#39;correlation&#39;, &#39;cosine&#39;,&#39;dice&#39;, &#39;euclidean&#39;, &#39;hamming&#39;, &quot;</span>
+                                              <span class="s2">&quot;&#39;jaccard&#39;, &quot;</span> <span class="s2">&quot;&#39;kulsinski&#39;, &#39;mahalanobis&#39;, &#39;matching&#39;, &#39;minkowski&#39;, &quot;</span>
+                                              <span class="s2">&quot;&#39;rogerstanimoto&#39;,&quot;</span> <span class="s2">&quot;&#39;russellrao&#39;, &#39;seuclidean&#39;,&#39;sokalmichener&#39;, &quot;</span>
+                                              <span class="s2">&quot;&#39;sokalsneath&#39;, &#39;sqeuclidean&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">metric</span> <span class="o">=</span> <span class="s2">&quot;euclidean&quot;</span>
+
+        <span class="k">if</span> <span class="s2">&quot;iterations&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+            <span class="n">iterations</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">iterations</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;iterations&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: number of iterations must be an integer.&#39;</span><span class="p">)</span>
 
         <span class="n">max_min_dist</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">):</span>
-            <span class="n">samples_try</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="n">d</span> <span class="o">=</span> <span class="n">pdist</span><span class="p">(</span><span class="n">samples_try</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">):</span>
-                <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="n">samples_try</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">iterations</span><span class="p">:</span>
+            <span class="n">samples_try</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">pdist</span><span class="p">(</span><span class="n">samples_try</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">metric</span><span class="p">):</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">metric</span><span class="p">(</span><span class="n">samples_try</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">max_min_dist</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
                 <span class="n">max_min_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
-                <span class="n">samples</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">samples_try</span><span class="p">)</span>
+                <span class="n">lhs_samples</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">samples_try</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Achieved maximum distance of &#39;</span><span class="p">,</span> <span class="n">max_min_dist</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">samples</span></div>
+        <span class="k">return</span> <span class="n">lhs_samples</span></div>
 
-<div class="viewcode-block" id="LHS.correlate"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.correlate">[docs]</a>    <span class="k">def</span> <span class="nf">correlate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="LHS.correlate"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.correlate">[docs]</a>    <span class="k">def</span> <span class="nf">correlate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A Latin hypercube design based on minimizing the pairwise correlations.</span>
-
-<span class="sd">        &gt;&gt;&gt; from UQpy.Distributions import Uniform</span>
-<span class="sd">        &gt;&gt;&gt; from UQpy.SampleMethods import LHS</span>
-<span class="sd">        &gt;&gt;&gt; dist1 = Uniform(loc=0., scale=1.)</span>
-<span class="sd">        &gt;&gt;&gt; dist2 = Uniform(loc=0., scale=1.)</span>
-<span class="sd">        Run LHS with the ``correlate`` method:</span>
-<span class="sd">        &gt;&gt;&gt; x = LHS(dist_object=[dist1, dist2], criterion=&#39;correlate&#39;, nsamples=5, verbose=True)</span>
-<span class="sd">        &gt;&gt;&gt; print(x.samples)</span>
-<span class="sd">        UQpy: Running Latin Hypercube sampling...</span>
-<span class="sd">        UQpy: Achieved minimum correlation of  0.00019327853813977584</span>
-<span class="sd">        Successful execution of LHS design.</span>
-<span class="sd">        [[0.22585805 0.87167809]</span>
-<span class="sd">         [0.12410009 0.0665815 ]</span>
-<span class="sd">         [0.50548145 0.78194119]</span>
-<span class="sd">         [0.903594   0.43153321]</span>
-<span class="sd">         [0.73471617 0.35147028]]</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">cut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">a</span> <span class="o">=</span> <span class="n">cut</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">]</span>
-        <span class="n">b</span> <span class="o">=</span> <span class="n">cut</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;iterations&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+            <span class="n">iterations</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">iterations</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;iterations&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: number of iterations must be an integer.&#39;</span><span class="p">)</span>
 
         <span class="n">min_corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
-        <span class="n">samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">):</span>
-            <span class="n">samples_try</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">iterations</span><span class="p">:</span>
+            <span class="n">samples_try</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
             <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">samples_try</span><span class="p">))</span>
             <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="n">r1</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">r</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">r1</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">min_corr</span><span class="p">:</span>
                 <span class="n">min_corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">r1</span><span class="p">))</span>
-                <span class="n">samples</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">samples_try</span><span class="p">)</span>
-
+                <span class="n">lhs_samples</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">samples_try</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Achieved minimum correlation of &#39;</span><span class="p">,</span> <span class="n">min_corr</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">samples</span></div>
+        <span class="k">return</span> <span class="n">lhs_samples</span></div>
 
-<div class="viewcode-block" id="LHS.transform_u01"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.transform_u01">[docs]</a>    <span class="k">def</span> <span class="nf">transform_u01</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="LHS.centered"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.centered">[docs]</a>    <span class="k">def</span> <span class="nf">centered</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The ``transform_u01`` method of the ``LHS`` is used to transform samples from the parameter space to the</span>
-<span class="sd">        Uniform [0, 1] space. ``Distribution`` objects need to have a ``cdf`` method.</span>
-
-<span class="sd">        &gt;&gt;&gt; from UQpy.Distributions import Uniform</span>
-<span class="sd">        &gt;&gt;&gt; from UQpy.SampleMethods import LHS</span>
-<span class="sd">        &gt;&gt;&gt; dist1 = Uniform(loc=0., scale=1.)</span>
-<span class="sd">        &gt;&gt;&gt; dist2 = Normal(loc=2., scale=1.)</span>
-<span class="sd">        Run LHS with the ``correlate`` method:</span>
-<span class="sd">        &gt;&gt;&gt; x = LHS(dist_object=[dist1, dist2], criterion=&#39;centered&#39;, nsamples=5, verbose=True)</span>
-<span class="sd">        &gt;&gt;&gt; print(x.samples)</span>
-<span class="sd">        UQpy: Running Latin Hypercube sampling...</span>
-<span class="sd">        Successful execution of LHS design.</span>
-<span class="sd">        [[0.1        1.47559949]</span>
-<span class="sd">         [0.3        2.52440051]</span>
-<span class="sd">         [0.9        0.71844843]</span>
-<span class="sd">         [0.5        2.        ]</span>
-<span class="sd">         [0.7        3.28155157]]</span>
-
-<span class="sd">         &gt;&gt;&gt; x.transform_u01()</span>
-<span class="sd">         &gt;&gt;&gt; print(x.samplesU01)</span>
-<span class="sd">         [[0.1        0.02871656]</span>
-<span class="sd">         [0.3        0.04456546]</span>
-<span class="sd">         [0.7        0.09680048]</span>
-<span class="sd">         [0.5        0.0668072 ]</span>
-<span class="sd">         [0.9        0.13566606]]</span>
-
+<span class="sd">        A Latin hypercube design based on sampling the centers of the bins.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">)):</span>
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="s1">&#39;cdf&#39;</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">samplesU01</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: All Distributions must have a cdf method.&#39;</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;b&quot;</span><span class="p">]</span>
 
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">DistributionContinuous1D</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="s1">&#39;cdf&#39;</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">samplesU01</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+        <span class="n">u_temp</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">lhs_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">lhs_samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">u_temp</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: All Distributions must have a cdf method.&#39;</span><span class="p">)</span>
+                <span class="n">lhs_samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">u_temp</span><span class="p">)</span>
 
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">JointInd</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">marginals</span><span class="p">)):</span>
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">marginals</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="s1">&#39;cdf&#39;</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">samplesU01</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">marginals</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span></div></div>
-
+        <span class="k">return</span> <span class="n">lhs_samples</span></div></div>
 
 <span class="c1">########################################################################################################################</span>
 <span class="c1">########################################################################################################################</span>
@@ -3683,7 +3620,7 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../distributions.html">Distributions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samplemethods.html">SampleMethods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../transformations.html">Transformations</a></li>

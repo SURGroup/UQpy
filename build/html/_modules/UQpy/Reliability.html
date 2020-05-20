@@ -7,12 +7,12 @@
     <title>UQpy.Reliability &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -1092,26 +1092,6 @@
 <span class="sd">    .. [2] K. Breitung, “Asymptotic approximations for multinormal integrals”, J. Eng. Mech., ASCE, Vol. 110, no. 3,</span>
 <span class="sd">       pp: 357–367, 1984.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>  <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">):</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)):</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">,</span> <span class="n">JointInd</span><span class="p">)):</span>
-                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be provided.&#39;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">,</span> <span class="n">JointInd</span><span class="p">)):</span>
-                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.&#39;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">RunModel</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: A RunModel object is required for the model.&#39;</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Form"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.Form">[docs]</a><span class="k">class</span> <span class="nc">Form</span><span class="p">(</span><span class="n">TaylorSeries</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A class perform the First Order reliability method. This is a an child class of the ``TaylorSeries`` class.</span>
-
 <span class="sd">    **Inputs:**</span>
 
 <span class="sd">    * **dist_object** ((list of ) ``Distribution`` object(s)):</span>
@@ -1152,7 +1132,31 @@
 
 <span class="sd">         Default: 100</span>
 
-<span class="sd">    **Output/Returns:**</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>  <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">,</span> <span class="n">JointInd</span><span class="p">)):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be provided.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">,</span> <span class="n">JointInd</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">RunModel</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: A RunModel object is required for the model.&#39;</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">FORM</span><span class="p">(</span><span class="n">TaylorSeries</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class perform the First Order reliability method. This is a an child class of the ``TaylorSeries`` class.</span>
+
+<span class="sd">    **Inputs:**</span>
+
+<span class="sd">    The same as ``TaylorSeries`` class.</span>
+
+<span class="sd">    **Attributes:**</span>
 
 <span class="sd">    * **Prob_FORM** (`float`):</span>
 <span class="sd">         First Order probability of failure.</span>
@@ -1319,7 +1323,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">u_check</span> <span class="o">=</span> <span class="n">u_check</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">g_check</span> <span class="o">=</span> <span class="n">g_check</span>
 
-<div class="viewcode-block" id="Form.gradient"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.Form.gradient">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">df_step</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">run_form</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">read_qoi</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A method to estimate the gradients (1st, 2nd, mixed) of a function using a finite difference scheme. First</span>
@@ -1519,17 +1523,17 @@
                 <span class="n">d2u_dij</span><span class="p">[:,</span> <span class="n">count</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">qoi_0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">qoi_3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">qoi_1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">qoi_2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">eps_i1_0</span> <span class="o">*</span> <span class="n">eps_i1_1</span><span class="p">))</span>
 
                 <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="k">return</span> <span class="n">d2u_dij</span></div></div>
+            <span class="k">return</span> <span class="n">d2u_dij</span>
 
 
-<div class="viewcode-block" id="Sorm"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.Sorm">[docs]</a><span class="k">class</span> <span class="nc">Sorm</span><span class="p">(</span><span class="n">TaylorSeries</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">SORM</span><span class="p">(</span><span class="n">TaylorSeries</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class perform the Second Order reliability method. ``Sorm`` class performs  FORM and then corrects the estimated</span>
 <span class="sd">    FORM probability using second-order information. This is a an child class of the ``TaylorSeries`` class.</span>
 
 <span class="sd">    **Inputs:**</span>
 
-<span class="sd">    The ``Sorm`` class has the same inputs with the ``Form`` class.</span>
+<span class="sd">    The ``Sorm`` class has the same inputs with the ``TaylorSeries`` class.</span>
 
 <span class="sd">    **Output/Returns:**</span>
 
@@ -1546,7 +1550,7 @@
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
 
-        <span class="n">obj</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="n">n_iter</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">FORM</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="n">n_iter</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">dimension</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">alpha</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">DesignPoint_U</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">DesignPoint_U</span>
@@ -1585,7 +1589,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">Prob_SORM</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">HL_beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">HL_beta</span> <span class="o">*</span> <span class="n">kappa</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">beta_SORM</span> <span class="o">=</span> <span class="o">-</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Prob_SORM</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Sorm.hessian"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.Sorm.hessian">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">hessian</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="n">dist_obj</span><span class="p">,</span> <span class="n">read_qoi</span><span class="p">,</span> <span class="n">df_step</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">run_form</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A function to calculate the hessian matrix  using finite differences. The Hessian matrix is a  square matrix</span>
@@ -1632,11 +1636,11 @@
         <span class="n">point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
         <span class="n">dimension</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-        <span class="n">dg_second</span> <span class="o">=</span> <span class="n">Form</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;second&#39;</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="n">point</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+        <span class="n">dg_second</span> <span class="o">=</span> <span class="n">FORM</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;second&#39;</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="n">point</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
                                   <span class="n">df_step</span><span class="o">=</span><span class="n">df_step</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">dist_object</span><span class="o">=</span><span class="n">dist_obj</span><span class="p">,</span>
                                   <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">,</span> <span class="n">read_qoi</span><span class="o">=</span><span class="n">read_qoi</span><span class="p">,</span> <span class="n">run_form</span><span class="o">=</span><span class="n">run_form</span><span class="p">)</span>
 
-        <span class="n">dg_mixed</span> <span class="o">=</span> <span class="n">Form</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;mixed&#39;</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="n">point</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+        <span class="n">dg_mixed</span> <span class="o">=</span> <span class="n">FORM</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;mixed&#39;</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="n">point</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
                                  <span class="n">df_step</span><span class="o">=</span><span class="n">df_step</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">dist_object</span><span class="o">=</span><span class="n">dist_obj</span><span class="p">,</span>
                                  <span class="n">read_qoi</span><span class="o">=</span><span class="n">read_qoi</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">,</span> <span class="n">run_form</span><span class="o">=</span><span class="n">run_form</span><span class="p">)</span>
 
@@ -1649,7 +1653,7 @@
             <span class="n">hessian</span><span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">hessian</span><span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
             <span class="n">add_</span> <span class="o">+=</span> <span class="mi">1</span>
 
-        <span class="k">return</span> <span class="n">hessian</span></div></div>
+        <span class="k">return</span> <span class="n">hessian</span>
 </pre></div>
 
           </div>
@@ -1684,7 +1688,7 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../distributions.html">Distributions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samplemethods.html">SampleMethods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../transformations.html">Transformations</a></li>
@@ -1715,7 +1719,7 @@
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1724,7 +1728,7 @@
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

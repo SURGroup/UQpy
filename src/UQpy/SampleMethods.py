@@ -15,16 +15,22 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""This module contains functionality for all the sampling methods supported in UQpy."""
+"""This module contains functionality for all the sampling methods supported in ``UQpy``.
+
+The module currently contains the following classes:
+
+- ``MCS``: Class to perform Monte Carlo sampling.
+- ``LHS``: Class to perform Latin hypercube sampling.
+- ``MCMC``: Class to perform Markov Chain Monte Carlo sampling.
+- ``IS``: Class to perform Importance sampling.
+"""
 
 import copy
+
 from scipy.spatial.distance import pdist
-import random
+
 from UQpy.Distributions import *
 from UQpy.Utilities import *
-from os import sys
-from functools import partial
-import warnings
 
 
 ########################################################################################################################
@@ -37,39 +43,50 @@ class MCS:
     """
     Perform Monte Carlo sampling (MCS) of random variables.
 
-    **Attributes:**
-
     **Input:**
 
     * **dist_object** ((list of) ``Distribution`` object(s)):
-                        Probability distribution of each random variable. Must be an object of type ``Distribution``.
+        Probability distribution of each random variable. Must be an object (or a list of objects) of the
+        ``Distribution`` class.
 
     * **nsamples** (`int`):
-                     Number of samples to be drawn from each distribution.
+        Number of samples to be drawn from each distribution.
 
-    * **random_state** ((list of) `int(s)`):
-                        The random seed to initialize the *Mersenne Twister* pseudo-random number generator.
+        The ``run`` method is automatically called if `nsamples` is provided. If `nsamples` is not provided, then the
+        ``MCS`` object is created but samples are not generated.
+
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
 
     * **verbose** (Boolean):
-                        A boolean declaring whether to write text to the terminal.
+        A boolean declaring whether to write text to the terminal.
 
-                        Default value: False
 
-    **Output/Returns:**
+    **Attributes:**
 
     * **samples** (`ndarray` or `list`):
-                        Generated samples. If a list of ``DistributionContinuous1D``, ``DistributionContinuous1D``
-                        objects is provided then **samples** is an array with
-                        ``samples.shape=(nsamples, len(dist_object))``. If  ``DistributionContinuous1D`` object is
-                        provided then **samples** is an array with ``samples.shape=(nsamples, 1)``. If a
-                        ``DistributionContinuousND`` object is provided then **samples** is an array with
-                        ``samples.shape=(nsamples, ND)``. If a list of ``DistributionContinuous1D``,
-                        ``DistributionContinuousND`` is provided then **samples** is a list with
-                        ``len(samples)=nsamples`` and ``len(samples[i]) = len(dist_object)``.
+        Generated samples.
+
+        If a list of ``DistributionContinuous1D`` objects is provided for ``dist_object``, then `samples` is an
+        `ndarray` with ``samples.shape=(nsamples, len(dist_object))``.
+
+        If a ``DistributionContinuous1D`` object is provided for ``dist_object`` then `samples` is an array with
+        `samples.shape=(nsamples, 1)``.
+
+        If a ``DistributionContinuousND`` object is provided for ``dist_object`` then `samples` is an array with
+        ``samples.shape=(nsamples, ND)``.
+
+        If a list of mixed ``DistributionContinuous1D`` and ``DistributionContinuousND`` objects is provided then
+        `samples` is a list with ``len(samples)=nsamples`` and ``len(samples[i]) = len(dist_object)``.
 
     * **samplesU01** (`ndarray` (`list`)):
-                        If the ``Distribution`` object has a ``cdf`` method, MCS also returns the samples in the
-                        Uniform(0,1) hypercube using the method ``transform_u01``.
+        Generated samples transformed to the unit hypercube.
+
+        This attribute exists only if the ``transform_u01`` method is invoked by the user.
+
 
     **Methods**
 
@@ -94,12 +111,12 @@ class MCS:
                 self.list = True
                 self.array = False
 
-            if random_state is not None:
-                if isinstance(random_state, int) or len(dist_object) != len(random_state):
-                    raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
-                self.random_state = random_state
-            else:
-                self.random_state = [random_state]*len(dist_object)
+            self.random_state = random_state
+            if isinstance(self.random_state, int):
+                self.random_state = np.random.RandomState(self.random_state)
+            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
             self.dist_object = dist_object
         else:
             if not isinstance(dist_object, Distribution):
@@ -108,10 +125,11 @@ class MCS:
                 self.dist_object = dist_object
                 self.list = False
                 self.array = True
-            if random_state is not None:
-                if not isinstance(random_state, int):
-                    raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
             self.random_state = random_state
+            if isinstance(self.random_state, int):
+                self.random_state = np.random.RandomState(self.random_state)
+            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         # Instantiate the output attributes.
         self.samples = None
@@ -120,43 +138,48 @@ class MCS:
         # Set printing options
         self.verbose = verbose
         self.nsamples = nsamples
-        # ==============================================================================================================
-        #                                       Run Monte Carlo sampling
+
+        # Run Monte Carlo sampling
         if nsamples is not None:
             self.run(nsamples=self.nsamples, random_state=self.random_state)
 
     def run(self, nsamples, random_state=None):
         """
-        The ``run`` method of the ``MCS`` class can be invoked many times and the generated samples are appended to the
-        existing samples. For example, to the 5 samples in object ``x1`` we can add two more by running
+        Execute the random sampling in the ``MCS`` class.
 
-        >>> print(x1)
-            <UQpy.SampleMethods.MCS object at 0x1a148ba85>
-        >>> x1.run(nsamples=2, random_state=[123, 567])
-        >>> print(x1.samples)
-            [[ 1.62434536  1.78862847]
-             [-0.61175641  0.43650985]
-             [-0.52817175  0.09649747]
-             [-1.07296862 -1.8634927 ]
-             [ 0.86540763 -0.2773882 ]
-             [ 1.62434536  1.78862847]
-             [-0.61175641  0.43650985]]
+        The ``run`` method is the function that performs random sampling in the ``MCS`` class. If `nsamples` is
+        provided, the ``run`` method is automatically called when the ``MCS`` object is defined. The user may also call
+        the ``run`` method directly to generate samples. The ``run`` method of the ``MCS`` class can be invoked many
+        times and each time the generated samples are appended to the existing samples.
 
-        The total number of samples is now
+        ** Input:**
 
-        >>> print(x1.nsamples)
-            7
+        * **nsamples** (`int`):
+            Number of samples to be drawn from each distribution.
+
+            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+            existing samples.
+
+        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
+
+            If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+            object itself can be passed directly.
+
+        **Output/Returns:**
+
+        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``MCS``
+        class.
+
         """
         # Check if a random_state is provided.
         if random_state is None:
             random_state = self.random_state
         else:
-            if isinstance(self.dist_object, list):
-                if isinstance(random_state, int) or len(self.dist_object) != len(random_state):
-                    raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
-            else:
-                if not isinstance(random_state, int):
-                    raise TypeError('UQpy: Incompatible dimensions between random_state and dist_object.')
+            if isinstance(random_state, int):
+                random_state = np.random.RandomState(random_state)
+            elif not isinstance(random_state, (type(None), np.random.RandomState)):
+                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if nsamples is None:
             raise ValueError('UQpy: Number of samples must be defined.')
@@ -170,7 +193,7 @@ class MCS:
             temp_samples = list()
             for i in range(len(self.dist_object)):
                 if hasattr(self.dist_object[i], 'rvs'):
-                    temp_samples.append(self.dist_object[i].rvs(nsamples=nsamples, random_state=random_state[i]))
+                    temp_samples.append(self.dist_object[i].rvs(nsamples=nsamples, random_state=random_state))
                 else:
                     ValueError('UQpy: rvs method is missing.')
             x = list()
@@ -204,20 +227,18 @@ class MCS:
 
     def transform_u01(self):
         """
-        The ``transform_u01`` method of the ``MCS`` is used to transform samples from the parameter space to the
-        Uniform [0, 1] space. ``Distribution`` objects need to have a ``cdf`` method.
+        Transform random samples to uniform on the unit hypercube.
 
-        >>> print(x1)
-            <UQpy.SampleMethods.MCS object at 0x1a18c03450>
-        >>> x1.transform_u01()
-        >>> print(x1.samplesU01)
-            [[0.94784894 0.96316267]
-             [0.27034947 0.66876657]
-             [0.29869007 0.53843726]
-             [0.1416426  0.03119649]
-             [0.80659245 0.39074102]
-             [0.94784894 0.96316267]
-             [0.27034947 0.66876657]]
+        **Input:**
+
+        The ``transform_u01`` method is an instance method that perform the transformation on an existing ``MCS``
+        object. It takes no input.
+
+        **Output/Returns:**
+
+        The ``transform_u01`` method has no returns, although it creates and/or appends the `samplesU01` attribute of
+        the ``MCS`` class.
+
         """
 
         if isinstance(self.dist_object, list) and self.array is True:
@@ -271,50 +292,53 @@ class LHS:
     **Input:**
 
     * **dist_object** ((list of) ``Distribution`` object(s)):
-                    List of ``Distribution`` objects corresponding to each random variable.
+            List of ``Distribution`` objects corresponding to each random variable.
 
     * **nsamples** (`int`):
-                    Number of samples to be drawn from each distribution.
+            Number of samples to be drawn from each distribution.
 
 
     * **criterion** (`str` or `callable`):
-                The criterion for generating sample points
-                    Options:
-                        1. 'random' - completely random. \n
-                        2. centered' - points only at the centre. \n
-                        3. 'maximin - maximizing the minimum distance between points. \n
-                        4. 'correlate' - minimizing the correlation between the points. \n
-                        5. `callable` - User-defined method.
+            The criterion for generating sample points
+                Options:
+                    1. 'random' - completely random. \n
+                    2. centered' - points only at the centre. \n
+                    3. 'maximin - maximizing the minimum distance between points. \n
+                    4. 'correlate' - minimizing the correlation between the points. \n
+                    5. `callable` - User-defined method.
 
-                Default: 'random'
+            Default: 'random'
 
     * **metric** (`str` or `callable`):
-                The distance metric to use.
-                    Options:
-                        1. `str` - Available options are: `braycurtis`, `canberra`, `chebyshev`, `cityblock`,
-                        `correlation`, `cosine`, `dice`, `euclidean`, `hamming`, `jaccard`, `jensenshannon`,
-                        `kulsinski`, `mahalanobis`, `matching`, `minkowski`, `rogerstanimoto`, `russellrao`,
-                        `seuclidean`, `sokalmichener`, `sokalsneath`, `sqeuclidean`, `yule`.
+            The distance metric to use.
+                Options:
+                    1. `str` - Available options are: `braycurtis`, `canberra`, `chebyshev`, `cityblock`,
+                    `correlation`, `cosine`, `dice`, `euclidean`, `hamming`, `jaccard`, `jensenshannon`,
+                    `kulsinski`, `mahalanobis`, `matching`, `minkowski`, `rogerstanimoto`, `russellrao`,
+                    `seuclidean`, `sokalmichener`, `sokalsneath`, `sqeuclidean`, `yule`.
 
-                    2. User-defined function.
+                2. User-defined function.
 
-                Default: `euclidean`.
+            Default: `euclidean`.
 
     * **iterations** (`int`):
-                The number of iteration to run. Required only for ``maximin`` and ``correlate`` criterion.
+            The number of iteration to run. Required only for ``maximin`` and ``correlate`` criterion.
 
-                Default: 100.
+            Default: 100.
+
+    * random_state (None or `int` or `np.random.RandomState` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
 
     * **verbose** (`Boolean`):
-                    A boolean declaring whether to write text to the terminal.
+            A boolean declaring whether to write text to the terminal.
 
-                    Default value: False
+            Default value: False
 
 
-    **Output/Returns:**
+    **Attributes:**
 
     * **samples** (`ndarray`):
-                    `ndarray` containing the generated samples.
+            `ndarray` containing the generated samples.
 
     **Methods**
 
@@ -322,8 +346,8 @@ class LHS:
 
     """
 
-    def __init__(self, dist_object, nsamples, criterion='random', metric='euclidean',
-                 iterations=100,  verbose=False):
+    def __init__(self, dist_object, nsamples, criterion=None, random_state=None, verbose=False,
+                 **kwargs):
 
         # Check if a Distribution object is provided.
         from UQpy.Distributions import DistributionContinuous1D, JointInd
@@ -337,6 +361,13 @@ class LHS:
                 raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
         self.dist_object = dist_object
+        self.kwargs = kwargs
+
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if isinstance(criterion, str):
             if criterion not in ['random', 'centered', 'maximin', 'correlate']:
@@ -346,22 +377,6 @@ class LHS:
                 self.criterion = criterion
         else:
             self.criterion = criterion
-
-        if isinstance(metric, str):
-            if metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
-                              'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis',
-                              'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean',
-                              'sokalmichener', 'sokalsneath', 'sqeuclidean']:
-                raise NotImplementedError("Exit code: Supported lhs distances: 'braycurtis', 'canberra', 'chebyshev', "
-                                          "'cityblock'," " 'correlation', 'cosine','dice', 'euclidean', 'hamming', "
-                                          "'jaccard', " "'kulsinski', 'mahalanobis', 'matching', 'minkowski', "
-                                          "'rogerstanimoto'," "'russellrao', 'seuclidean','sokalmichener', "
-                                          "'sokalsneath', 'sqeuclidean'.")
-        self.metric = metric
-        if isinstance(iterations, int):
-            self.iterations = iterations
-        else:
-            raise ValueError('UQpy: number of iterations must be an integer.')
 
         if isinstance(nsamples, int):
             self.nsamples = nsamples
@@ -390,236 +405,158 @@ class LHS:
         if self.verbose:
             print('UQpy: Running Latin Hypercube sampling...')
 
-        if self.criterion == 'random':
-            u_ab = self.random()
-        elif self.criterion == 'centered':
-            u_ab = self.centered()
-        elif self.criterion == 'maximin':
-            u_ab = self.max_min()
-        elif self.criterion == 'correlate':
-            u_ab = self.correlate()
-        elif callable(self.criterion):
-            u_ab = self.criterion()
-        else:
-            raise ValueError('UQpy: A valid criterion is required.')
+        cut = np.linspace(0, 1, self.nsamples + 1)
+        a = cut[:self.nsamples]
+        b = cut[1:self.nsamples + 1]
+
+        u = np.zeros(shape=(self.samples.shape[0], self.samples.shape[1]))
+        samples = np.zeros_like(u)
+        for i in range(self.samples.shape[1]):
+            u[:, i] = stats.uniform.rvs(size=self.samples.shape[0], random_state=self.random_state)
+            samples[:, i] = u[:, i] * (b - a) + a
+
+        if self.criterion is not None:
+            if self.criterion == 'random':
+                u_lhs = self.random(samples)
+            elif self.criterion == 'centered':
+                u_lhs = self.centered(samples, a=a, b=b)
+            elif self.criterion == 'maximin':
+                u_lhs = self.max_min(samples, self.kwargs)
+            elif self.criterion == 'correlate':
+                u_lhs = self.correlate(samples, self.kwargs)
+            elif callable(self.criterion):
+                u_lhs = self.criterion(samples)
+            else:
+                raise ValueError('UQpy: A valid criterion is required.')
+        elif self.criterion is None:
+            u_lhs = self.random(samples)
+
+        self.samplesU01 = u_lhs
 
         if isinstance(self.dist_object, list):
             for j in range(len(self.dist_object)):
                 if hasattr(self.dist_object[j], 'icdf'):
-                    self.samples[:, j] = self.dist_object[j].icdf(np.atleast_2d(u_ab[:, j]).T)
+                    self.samples[:, j] = self.dist_object[j].icdf(u_lhs[:, j])
 
         elif isinstance(self.dist_object, JointInd):
             if all(hasattr(m, 'icdf') for m in self.dist_object.marginals):
                 for j in range(len(self.dist_object.marginals)):
-                    self.samples[:, j] = self.dist_object.marginals[j].icdf(np.atleast_2d(u_ab[:, j]).T)
+                    self.samples[:, j] = self.dist_object.marginals[j].icdf(u_lhs[:, j])
 
         elif isinstance(self.dist_object, DistributionContinuous1D):
             if hasattr(self.dist_object, 'icdf'):
-                self.samples = self.dist_object.icdf(np.atleast_2d(u_ab.T))
+                self.samples = self.dist_object.icdf(u_lhs)
 
         if self.verbose:
             print('Successful execution of LHS design.')
 
-    def random(self):
+    def random(self, samples):
         """
         A Latin hypercube design based on sampling randomly inside each bin.
-
-        >>> from UQpy.Distributions import Uniform
-        >>> from UQpy.SampleMethods import LHS
-        >>> dist1 = Uniform(loc=3., scale=2.)
-        >>> dist2 = Uniform(loc=0., scale=1.)
-        Run LHS with the ``random`` method:
-        >>> x = LHS(dist_object=[dist1, dist2], criterion='correlate', nsamples=5, verbose=True)
-        >>> print(x.samples)
-        UQpy: Running Latin Hypercube sampling...
-        UQpy: Achieved max_min distance of  0.44043282285181284
-        Successful execution of LHS design.
-        [[3.75621818 0.97949371]
-         [4.85220593 0.37270871]
-         [3.1521886  0.4610569 ]
-         [4.41441601 0.10184899]
-         [3.89444322 0.6775048 ]]
         """
 
-        cut = np.linspace(0, 1, self.nsamples + 1)
-        a = cut[:self.nsamples]
-        b = cut[1:self.nsamples + 1]
+        lhs_samples = np.zeros_like(samples)
+        for j in range(samples.shape[1]):
+            if self.random_state is not None:
+                order = self.random_state.permutation(self.nsamples)
+            else:
+                order = np.random.permutation(self.nsamples)
+            lhs_samples[:, j] = samples[order, j]
 
-        u = np.random.rand(self.samples.shape[0], self.samples.shape[1])
-        samples = np.zeros_like(u)
+        return lhs_samples
 
-        for i in range(self.samples.shape[1]):
-            samples[:, i] = u[:, i] * (b - a) + a
-
-        for j in range(self.samples.shape[1]):
-            order = np.random.permutation(self.nsamples)
-            samples[:, j] = samples[order, j]
-
-        return samples
-
-    def centered(self):
-        """
-        A Latin hypercube design based on sampling the centers of the bins.
-
-        >>> from UQpy.Distributions import Uniform
-        >>> from UQpy.SampleMethods import LHS
-        >>> dist1 = Normal(loc=0., scale=1.)
-        >>> dist2 = Normal(loc=2., scale=1.)
-        Run LHS with the ``centered`` method:
-        >>> x = LHS(dist_object=[dist1, dist2], criterion='correlate', nsamples=5, verbose=True)
-        >>> print(x.samples)
-        UQpy: Running Latin Hypercube sampling...
-        Successful execution of LHS design.
-        [[-1.28155157  0.71844843]
-         [ 0.52440051  2.52440051]
-         [ 1.28155157  2.        ]
-         [ 0.          3.28155157]
-         [-0.52440051  1.47559949]]
-        """
-        cut = np.linspace(0, 1, self.nsamples + 1)
-        a = cut[:self.nsamples]
-        b = cut[1:self.nsamples + 1]
-
-        samples = np.zeros([self.samples.shape[0], self.samples.shape[1]])
-        centers = (a + b) / 2
-
-        for i in range(self.samples.shape[1]):
-            samples[:, i] = np.random.permutation(centers)
-
-        return samples
-
-    def max_min(self):
+    def max_min(self, samples, parameters):
         """
         A Latin hypercube design based on maximizing the inter-site distances.
-
-        >>> from UQpy.Distributions import Uniform
-        >>> from UQpy.SampleMethods import LHS
-        >>> dist1 = Uniform(loc=0., scale=1.)
-        >>> dist2 = Uniform(loc=0., scale=1.)
-        Run LHS with the ``max_min`` method:
-        >>> x = LHS(dist_object=[dist1, dist2], criterion='correlate', nsamples=5, verbose=True)
-        >>> print(x.samples)
-        UQpy: Running Latin Hypercube sampling...
-        UQpy: Achieved max_min distance of  0.44043282285181284
-        Successful execution of LHS design.
-        [[0.33874957 0.31460038]
-         [0.91109051 0.44301033]
-         [0.059657   0.77562892]
-         [0.67762949 0.03327944]
-         [0.59516606 0.90984061]]
-
         """
-        cut = np.linspace(0, 1, self.nsamples + 1)
-        a = cut[:self.nsamples]
-        b = cut[1:self.nsamples + 1]
+
+        if "metric" in parameters:
+            metric = parameters["metric"]
+            if isinstance(metric, str):
+                if metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
+                                  'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis',
+                                  'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean',
+                                  'sokalmichener', 'sokalsneath', 'sqeuclidean']:
+                    raise NotImplementedError("Exit code: Supported lhs distances: 'braycurtis', 'canberra',"
+                                              " 'chebyshev', "
+                                              "'cityblock'," " 'correlation', 'cosine','dice', 'euclidean', 'hamming', "
+                                              "'jaccard', " "'kulsinski', 'mahalanobis', 'matching', 'minkowski', "
+                                              "'rogerstanimoto'," "'russellrao', 'seuclidean','sokalmichener', "
+                                              "'sokalsneath', 'sqeuclidean'.")
+        else:
+            metric = "euclidean"
+
+        if "iterations" not in parameters:
+            iterations = 100
+        else:
+            iterations = parameters["iterations"]
+            if not isinstance(iterations, int):
+                raise ValueError('UQpy: number of iterations must be an integer.')
 
         max_min_dist = 0
-        samples = self.random()
-        for _ in range(self.iterations):
-            samples_try = self.random()
-            if isinstance(self.metric, str):
-                d = pdist(samples_try, metric=self.metric)
-            elif callable(self.metric):
-                d = self.metric(samples_try)
+        i = 0
+        while i < iterations:
+            samples_try = self.random(samples)
+            if isinstance(metric, str):
+                d = pdist(samples_try, metric=metric)
+            elif callable(metric):
+                d = metric(samples_try)
 
             if max_min_dist < np.min(d):
                 max_min_dist = np.min(d)
-                samples = copy.deepcopy(samples_try)
+                lhs_samples = copy.deepcopy(samples_try)
+            i = i + 1
 
         if self.verbose:
             print('UQpy: Achieved maximum distance of ', max_min_dist)
 
-        return samples
+        return lhs_samples
 
-    def correlate(self):
+    def correlate(self, samples, parameters):
         """
         A Latin hypercube design based on minimizing the pairwise correlations.
-
-        >>> from UQpy.Distributions import Uniform
-        >>> from UQpy.SampleMethods import LHS
-        >>> dist1 = Uniform(loc=0., scale=1.)
-        >>> dist2 = Uniform(loc=0., scale=1.)
-        Run LHS with the ``correlate`` method:
-        >>> x = LHS(dist_object=[dist1, dist2], criterion='correlate', nsamples=5, verbose=True)
-        >>> print(x.samples)
-        UQpy: Running Latin Hypercube sampling...
-        UQpy: Achieved minimum correlation of  0.00019327853813977584
-        Successful execution of LHS design.
-        [[0.22585805 0.87167809]
-         [0.12410009 0.0665815 ]
-         [0.50548145 0.78194119]
-         [0.903594   0.43153321]
-         [0.73471617 0.35147028]]
-
         """
-        cut = np.linspace(0, 1, self.nsamples + 1)
-        a = cut[:self.nsamples]
-        b = cut[1:self.nsamples + 1]
+
+        if "iterations" not in parameters:
+            iterations = 100
+        else:
+            iterations = parameters["iterations"]
+            if not isinstance(iterations, int):
+                raise ValueError('UQpy: number of iterations must be an integer.')
 
         min_corr = np.inf
-        samples = self.random()
-        for _ in range(self.iterations):
-            samples_try = self.random()
+        i = 0
+        while i < iterations:
+            samples_try = self.random(samples)
             r = np.corrcoef(np.transpose(samples_try))
             np.fill_diagonal(r, 1)
             r1 = r[r != 1]
             if np.max(np.abs(r1)) < min_corr:
                 min_corr = np.max(np.abs(r1))
-                samples = copy.deepcopy(samples_try)
-
+                lhs_samples = copy.deepcopy(samples_try)
+            i = i + 1
         if self.verbose:
             print('UQpy: Achieved minimum correlation of ', min_corr)
 
-        return samples
+        return lhs_samples
 
-    def transform_u01(self):
+    def centered(self, samples, **kwargs):
         """
-        The ``transform_u01`` method of the ``LHS`` is used to transform samples from the parameter space to the
-        Uniform [0, 1] space. ``Distribution`` objects need to have a ``cdf`` method.
-
-        >>> from UQpy.Distributions import Uniform
-        >>> from UQpy.SampleMethods import LHS
-        >>> dist1 = Uniform(loc=0., scale=1.)
-        >>> dist2 = Normal(loc=2., scale=1.)
-        Run LHS with the ``correlate`` method:
-        >>> x = LHS(dist_object=[dist1, dist2], criterion='centered', nsamples=5, verbose=True)
-        >>> print(x.samples)
-        UQpy: Running Latin Hypercube sampling...
-        Successful execution of LHS design.
-        [[0.1        1.47559949]
-         [0.3        2.52440051]
-         [0.9        0.71844843]
-         [0.5        2.        ]
-         [0.7        3.28155157]]
-
-         >>> x.transform_u01()
-         >>> print(x.samplesU01)
-         [[0.1        0.02871656]
-         [0.3        0.04456546]
-         [0.7        0.09680048]
-         [0.5        0.0668072 ]
-         [0.9        0.13566606]]
-
+        A Latin hypercube design based on sampling the centers of the bins.
         """
 
-        if isinstance(self.dist_object, list):
-            for j in range(len(self.dist_object)):
-                if hasattr(self.dist_object[j], 'cdf'):
-                    self.samplesU01[:, j] = self.dist_object[j].cdf(self.samples[:, 0])
-                else:
-                    raise ValueError('UQpy: All Distributions must have a cdf method.')
+        a = kwargs["a"]
+        b = kwargs["b"]
 
-        elif isinstance(self.dist_object, DistributionContinuous1D):
-            if hasattr(self.dist_object, 'cdf'):
-                self.samplesU01 = self.dist_object.cdf(self.samples)
+        u_temp = (a + b) / 2
+        lhs_samples = np.zeros([samples.shape[0], samples.shape[1]])
+        for i in range(samples.shape[1]):
+            if self.random_state is not None:
+                lhs_samples[:, i] = self.random_state.permutation(u_temp)
             else:
-                raise ValueError('UQpy: All Distributions must have a cdf method.')
+                lhs_samples[:, i] = np.random.permutation(u_temp)
 
-        elif isinstance(self.dist_object, JointInd):
-            for j in range(len(self.dist_object.marginals)):
-                if hasattr(self.dist_object.marginals[j], 'cdf'):
-                    self.samplesU01[:, j] = self.dist_object.marginals[j].cdf(self.samples[:, j])
-
+        return lhs_samples
 
 ########################################################################################################################
 ########################################################################################################################

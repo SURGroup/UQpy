@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="SampleMethods" href="samplemethods.html" />
-    <link rel="prev" title="RunModel Module" href="runmodel.html" />
+    <link rel="prev" title="RunModel" href="runmodel.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -35,11 +35,13 @@
             
   <div class="section" id="distributions">
 <span id="id1"></span><h1>Distributions<a class="headerlink" href="#distributions" title="Permalink to this headline">¶</a></h1>
-<p>This module contains functionality for all the probability distributions supported in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>. The <code class="docutils literal notranslate"><span class="pre">Distributions</span></code>
-module is  used  to  define  probability  distribution  objects.   These  objects  possess various  methods  that  allow
-the user  to:  compute  the  probability  density/mass  function <code class="docutils literal notranslate"><span class="pre">pdf/pmf</span></code>, the cumulative  distribution  function <code class="docutils literal notranslate"><span class="pre">cdf</span></code>, the
-logarithm of the pdf <code class="docutils literal notranslate"><span class="pre">log_pdf/log_pmf</span></code>, return the moments <code class="docutils literal notranslate"><span class="pre">moments</span></code>, draw independent samples <code class="docutils literal notranslate"><span class="pre">rvs</span></code> and compute the maximum likelihood estimate of the parameters from data <code class="docutils literal notranslate"><span class="pre">mle</span></code>.</p>
-<p>The module contains the following parent classes - probability distributions are defined via sub-classing those parent classes:</p>
+<span class="target" id="module-UQpy.Distributions"></span><p>This module contains functionality for all probability distributions supported in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Distributions</span></code> module is  used  to  define  probability  distribution  objects.   These  objects  possess various
+methods  that  allow the user  to:  compute  the  probability  density/mass  function <code class="docutils literal notranslate"><span class="pre">pdf/pmf</span></code>, the cumulative
+distribution  function <code class="docutils literal notranslate"><span class="pre">cdf</span></code>, the logarithm of the pdf/pmf <code class="docutils literal notranslate"><span class="pre">log_pdf/log_pmf</span></code>, return the moments <code class="docutils literal notranslate"><span class="pre">moments</span></code>, draw
+independent samples <code class="docutils literal notranslate"><span class="pre">rvs</span></code> and compute the maximum likelihood estimate of the parameters from data <code class="docutils literal notranslate"><span class="pre">mle</span></code>.</p>
+<p>The module contains the following parent classes - probability distributions are defined via sub-classing those parent
+classes:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Distribution</span></code>: Parent class to all distributions.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">DistributionContinuous1D</span></code>: Parent class to 1-dimensional continuous probability distributions.</p></li>
@@ -1106,7 +1108,7 @@ that <cite>marginals</cite> consist of solely 2 continuous distributions).</p>
 <h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="runmodel.html">RunModel Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runmodel.html">RunModel</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Distributions</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#parent-distribution-class">Parent Distribution Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#d-continuous-distributions">1D Continuous Distributions</a></li>
@@ -1133,7 +1135,7 @@ that <cite>marginals</cite> consist of solely 2 continuous distributions).</p>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="runmodel.html" title="previous chapter">RunModel Module</a></li>
+      <li>Previous: <a href="runmodel.html" title="previous chapter">RunModel</a></li>
       <li>Next: <a href="samplemethods.html" title="next chapter">SampleMethods</a></li>
   </ul></li>
 </ul>

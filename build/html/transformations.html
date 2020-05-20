@@ -7,12 +7,12 @@
     <title>Transformations &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="StochasticProcess" href="stochastic_process.html" />
@@ -66,7 +66,7 @@ According  to  the Nataf transformation theory, a <cite>n</cite>-dimensional dep
 <div class="math notranslate nohighlight">
 \[X_{i}=F_i^{-1}(\Phi(Z_{i}))\]</div>
 <p>The <code class="docutils literal notranslate"><span class="pre">Forward</span></code> and <code class="docutils literal notranslate"><span class="pre">Inverse</span></code>  classes can be imported in a python script using the following command:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="n">Forward</span><span class="p">,</span> <span class="n">Inverse</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="n">Forward</span><span class="p">,</span> <span class="n">Inverse</span>
 </pre></div>
 </div>
 <dl class="class">
@@ -92,13 +92,13 @@ Prob. Eng. Mech.,  vol. 24, pp. 312-320, 2009.</p>
 <h3>Forward<a class="headerlink" href="#forward" title="Permalink to this headline">¶</a></h3>
 <p>This is the class that runs the forward Nataf transformation.</p>
 <p>Usage example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="n">Forward</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="n">Forward</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">Lognormal</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Gamma</span><span class="p">(</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Lognormal</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">MCS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span><span class="n">dist2</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>   <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">MCS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span><span class="n">dist2</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>   <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
 <span class="go">        UQpy: Running Monte Carlo Sampling.</span>
 <span class="go">        UQpy: Monte Carlo Sampling Complete.</span>
@@ -110,7 +110,7 @@ Prob. Eng. Mech.,  vol. 24, pp. 312-320, 2009.</p>
 </pre></div>
 </div>
 <p>Provide a correlation matrix between the random variables</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]])</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">Forward</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span><span class="n">dist2</span><span class="p">],</span> <span class="n">samples</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">Rho</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Uncorrelated standard normal samples:&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">u</span><span class="p">)</span>
 <span class="go">        Uncorrelated standard normal samples:</span>
@@ -325,14 +325,14 @@ distribution function of a standard  normal variable.</p>
 <h3>Inverse<a class="headerlink" href="#inverse" title="Permalink to this headline">¶</a></h3>
 <p>This is the class that runs the inverse Nataf transformation.</p>
 <p>Usage example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="n">Inverse</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="n">Inverse</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">Lognormal</span><span class="p">,</span> <span class="n">Normal</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Gamma</span><span class="p">(</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Lognormal</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">MCS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist</span><span class="p">,</span> <span class="n">dist</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">MCS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist</span><span class="p">,</span> <span class="n">dist</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
 <span class="go">        UQpy: Running Monte Carlo Sampling.</span>
 <span class="go">        UQpy: Monte Carlo Sampling Complete.</span>
@@ -344,7 +344,7 @@ distribution function of a standard  normal variable.</p>
 </pre></div>
 </div>
 <p>Provide a correlation matrix between the random variables</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]])</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span><span class="n">dist2</span><span class="p">],</span> <span class="n">samples</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">Rho</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Uncorrelated standard normal samples:&#39;</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
 <span class="go">        Correlated standard normal samples:</span>
@@ -528,22 +528,22 @@ distribution function of a standard  normal variable.</p>
 \[\mathbf{z}^\intercal = \mathbf{Hu}^\intercal\]</div>
 <p>where <span class="math notranslate nohighlight">\(\mathbf{u}\)</span> is the vector of uncorrelated standard normal samples and  <span class="math notranslate nohighlight">\(\mathbf{H}\)</span> is the lower triangular matrix obtained from the <cite>Cholesky</cite> decomposition of the covariance matrix <span class="math notranslate nohighlight">\(\mathbf{C_Z}\)</span>, i.e. <span class="math notranslate nohighlight">\(\mathbf{C_Z}=\mathbf{H}\mathbf{H}^\intercal\)</span>.</p>
 <p>For example, if we want to correlate standard normal samples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="n">Correlate</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="n">Correlate</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">MCS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span><span class="n">dist2</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span><span class="o">.</span><span class="n">samples</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">MCS</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span><span class="n">dist2</span><span class="p">],</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span><span class="o">.</span><span class="n">samples</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/Transformations_uncorrelate.png"><img alt="Unorrelated standard normal samples" class="align-center" src="_images/Transformations_uncorrelate.png" style="width: 407.0px; height: 280.0px;" /></a>
 <p>according to the correlation matrix</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]])</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]])</span>
 </pre></div>
 </div>
 <p>we can do it by simply typing:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">Correlate</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">cov</span><span class="p">)</span><span class="o">.</span><span class="n">z</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">Correlate</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">cov</span><span class="p">)</span><span class="o">.</span><span class="n">z</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/Transformations_correlate.png"><img alt="Correlated standard normal samples obtained with the ``Correlate`` class." class="align-center" src="_images/Transformations_correlate.png" style="width: 426.0px; height: 285.0px;" /></a>
@@ -582,7 +582,7 @@ distribution function of a standard  normal variable.</p>
 \[\mathbf{u}^\intercal = \mathbf{H^{-1}z}^\intercal\]</div>
 <p>where <span class="math notranslate nohighlight">\(\mathbf{z}\)</span> is the vector of correlated standard normal samples and <span class="math notranslate nohighlight">\(\mathbf{H}\)</span> is the lower triangular matrix obtained from the <cite>Cholesky</cite> decomposition of the covariance matrix <span class="math notranslate nohighlight">\(\mathbf{C_Z}\)</span>, i.e. <span class="math notranslate nohighlight">\(\mathbf{C_Z}=\mathbf{H}\mathbf{H}^\intercal\)</span>.</p>
 <p>For example, we can use the <code class="docutils literal notranslate"><span class="pre">Uncorrelate</span></code> class to uncorrelate the samples <strong>z</strong> from the <code class="docutils literal notranslate"><span class="pre">Correlate</span></code> class example by simply typing:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">Uncorrelate</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">cov</span><span class="p">)</span><span class="o">.</span><span class="n">u</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">Uncorrelate</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">cov</span><span class="p">)</span><span class="o">.</span><span class="n">u</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/Transformations_uncorrelate.png"><img alt="Unorrelated standard normal samples obtained with the ``Uncorrelate`` class." class="align-center" src="_images/Transformations_uncorrelate.png" style="width: 407.0px; height: 280.0px;" /></a>
@@ -651,7 +651,7 @@ distribution function of a standard  normal variable.</p>
 <h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="runmodel.html">RunModel Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runmodel.html">RunModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="distributions.html">Distributions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="samplemethods.html">SampleMethods</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Transformations</a><ul>
@@ -687,7 +687,7 @@ distribution function of a standard  normal variable.</p>
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -696,7 +696,7 @@ distribution function of a standard  normal variable.</p>
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
