@@ -330,7 +330,7 @@ class LHS:
 
     """
 
-    def __init__(self, dist_object, nsamples, criterion=None, metric='euclidean', random_state=None, verbose=False,
+    def __init__(self, dist_object, nsamples, criterion=None, random_state=None, verbose=False,
                  **kwargs):
 
         # Check if a Distribution object is provided.
@@ -361,18 +361,6 @@ class LHS:
                 self.criterion = criterion
         else:
             self.criterion = criterion
-
-        if isinstance(metric, str):
-            if metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
-                              'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis',
-                              'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean',
-                              'sokalmichener', 'sokalsneath', 'sqeuclidean']:
-                raise NotImplementedError("Exit code: Supported lhs distances: 'braycurtis', 'canberra', 'chebyshev', "
-                                          "'cityblock'," " 'correlation', 'cosine','dice', 'euclidean', 'hamming', "
-                                          "'jaccard', " "'kulsinski', 'mahalanobis', 'matching', 'minkowski', "
-                                          "'rogerstanimoto'," "'russellrao', 'seuclidean','sokalmichener', "
-                                          "'sokalsneath', 'sqeuclidean'.")
-        self.metric = metric
 
         if isinstance(nsamples, int):
             self.nsamples = nsamples
@@ -411,36 +399,37 @@ class LHS:
             u[:, i] = stats.uniform.rvs(size=self.samples.shape[0], random_state=self.random_state)
             samples[:, i] = u[:, i] * (b - a) + a
 
-        u_lhs = self.random(samples)
-
         if self.criterion is not None:
-            if self.criterion == 'centered':
-                u_lhs = np.zeros(shape=(self.samples.shape[0], self.samples.shape[1]))
-                for i in range(self.samples.shape[1]):
-                    u_lhs[:, i] = (a + b) / 2
-                u_lhs = self.centered(u_lhs)
+            if self.criterion == 'random':
+                u_lhs = self.random(samples)
+            elif self.criterion == 'centered':
+                u_lhs = self.centered(samples, a=a, b=b)
             elif self.criterion == 'maximin':
-                u_lhs = self.max_min(u_lhs, self.kwargs)
+                u_lhs = self.max_min(samples, self.kwargs)
             elif self.criterion == 'correlate':
-                u_lhs = self.correlate(u_lhs, self.kwargs)
+                u_lhs = self.correlate(samples, self.kwargs)
             elif callable(self.criterion):
-                u_lhs = self.criterion(u_lhs)
+                u_lhs = self.criterion(samples)
             else:
                 raise ValueError('UQpy: A valid criterion is required.')
+        elif self.criterion is None:
+            u_lhs = self.random(samples)
+
+        self.samplesU01 = u_lhs
 
         if isinstance(self.dist_object, list):
             for j in range(len(self.dist_object)):
                 if hasattr(self.dist_object[j], 'icdf'):
-                    self.samples[:, j] = self.dist_object[j].icdf(np.atleast_2d(u_lhs[:, j]).T)
+                    self.samples[:, j] = self.dist_object[j].icdf(u_lhs[:, j])
 
         elif isinstance(self.dist_object, JointInd):
             if all(hasattr(m, 'icdf') for m in self.dist_object.marginals):
                 for j in range(len(self.dist_object.marginals)):
-                    self.samples[:, j] = self.dist_object.marginals[j].icdf(np.atleast_2d(u_lhs[:, j]).T)
+                    self.samples[:, j] = self.dist_object.marginals[j].icdf(u_lhs[:, j])
 
         elif isinstance(self.dist_object, DistributionContinuous1D):
             if hasattr(self.dist_object, 'icdf'):
-                self.samples = self.dist_object.icdf(np.atleast_2d(u_lhs.T))
+                self.samples = self.dist_object.icdf(u_lhs)
 
         if self.verbose:
             print('Successful execution of LHS design.')
@@ -460,22 +449,42 @@ class LHS:
 
         return lhs_samples
 
-    def max_min(self, samples, iterations=100):
+    def max_min(self, samples, parameters):
         """
         A Latin hypercube design based on maximizing the inter-site distances.
         """
 
-        if not isinstance(iterations, int):
-            raise ValueError('UQpy: number of iterations must be an integer.')
+        if "metric" in parameters:
+            metric = parameters["metric"]
+            if isinstance(metric, str):
+                if metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
+                                  'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis',
+                                  'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean',
+                                  'sokalmichener', 'sokalsneath', 'sqeuclidean']:
+                    raise NotImplementedError("Exit code: Supported lhs distances: 'braycurtis', 'canberra',"
+                                              " 'chebyshev', "
+                                              "'cityblock'," " 'correlation', 'cosine','dice', 'euclidean', 'hamming', "
+                                              "'jaccard', " "'kulsinski', 'mahalanobis', 'matching', 'minkowski', "
+                                              "'rogerstanimoto'," "'russellrao', 'seuclidean','sokalmichener', "
+                                              "'sokalsneath', 'sqeuclidean'.")
+        else:
+            metric = "euclidean"
+
+        if "iterations" not in parameters:
+            iterations = 100
+        else:
+            iterations = parameters["iterations"]
+            if not isinstance(iterations, int):
+                raise ValueError('UQpy: number of iterations must be an integer.')
 
         max_min_dist = 0
         i = 0
         while i < iterations:
             samples_try = self.random(samples)
-            if isinstance(self.metric, str):
-                d = pdist(samples_try, metric=self.metric)
-            elif callable(self.metric):
-                d = self.metric(samples_try)
+            if isinstance(metric, str):
+                d = pdist(samples_try, metric=metric)
+            elif callable(metric):
+                d = metric(samples_try)
 
             if max_min_dist < np.min(d):
                 max_min_dist = np.min(d)
@@ -487,13 +496,17 @@ class LHS:
 
         return lhs_samples
 
-    def correlate(self, samples, iterations):
+    def correlate(self, samples, parameters):
         """
         A Latin hypercube design based on minimizing the pairwise correlations.
         """
 
-        if not isinstance(iterations, int):
-            raise ValueError('UQpy: number of iterations must be an integer.')
+        if "iterations" not in parameters:
+            iterations = 100
+        else:
+            iterations = parameters["iterations"]
+            if not isinstance(iterations, int):
+                raise ValueError('UQpy: number of iterations must be an integer.')
 
         min_corr = np.inf
         i = 0
@@ -511,44 +524,23 @@ class LHS:
 
         return lhs_samples
 
-    def centered(self, samples):
+    def centered(self, samples, **kwargs):
         """
         A Latin hypercube design based on sampling the centers of the bins.
         """
 
+        a = kwargs["a"]
+        b = kwargs["b"]
+
+        u_temp = (a + b) / 2
         lhs_samples = np.zeros([samples.shape[0], samples.shape[1]])
         for i in range(samples.shape[1]):
             if self.random_state is not None:
-                lhs_samples[:, i] = self.random_state.permutation(samples[:, i])
+                lhs_samples[:, i] = self.random_state.permutation(u_temp)
             else:
-                lhs_samples[:, i] = np.random.permutation(samples[:, i])
+                lhs_samples[:, i] = np.random.permutation(u_temp)
 
         return lhs_samples
-
-    def transform_u01(self):
-        """
-        The ``transform_u01`` method of the ``LHS`` is used to transform samples from the parameter space to the
-        Uniform [0, 1] space. ``Distribution`` objects need to have a ``cdf`` method.
-        """
-
-        if isinstance(self.dist_object, list):
-            for j in range(len(self.dist_object)):
-                if hasattr(self.dist_object[j], 'cdf'):
-                    self.samplesU01[:, j] = self.dist_object[j].cdf(self.samples[:, 0])
-                else:
-                    raise ValueError('UQpy: All Distributions must have a cdf method.')
-
-        elif isinstance(self.dist_object, DistributionContinuous1D):
-            if hasattr(self.dist_object, 'cdf'):
-                self.samplesU01 = self.dist_object.cdf(self.samples)
-            else:
-                raise ValueError('UQpy: All Distributions must have a cdf method.')
-
-        elif isinstance(self.dist_object, JointInd):
-            for j in range(len(self.dist_object.marginals)):
-                if hasattr(self.dist_object.marginals[j], 'cdf'):
-                    self.samplesU01[:, j] = self.dist_object.marginals[j].cdf(self.samples[:, j])
-
 
 ########################################################################################################################
 ########################################################################################################################
