@@ -445,11 +445,10 @@ class Krig:
                 else:
                     return np.inf
 
-            # alpha = cho_solve((cc, True), y)
-            # t4 = np.einsum("ik,ik->k", y, alpha)
+            cc_inv = np.linalg.inv(cc)
+            f__ = cc_inv.dot(f)
+            y__ = cc_inv.dot(y)
 
-            f__ = cho_solve((cc, True), f)
-            y__ = cho_solve((cc, True), y)
             q__, g__ = np.linalg.qr(f__)  # Eq: 3.11, DACE
 
             # Check if F is a full rank matrix
@@ -464,8 +463,7 @@ class Krig:
             for lj in range(q):
                 sigma_[lj] = (1 / m) * (np.linalg.norm(y__[:, lj] - np.matmul(f__, beta_[:, lj])) ** 2)
 
-            # Objective function:= log(det(R)) + Y^T inv(R) Y + constant
-            # ll = (np.log(np.prod(np.diagonal(cc))) + t4 + m * np.log(2 * np.pi)) / 2
+            # Objective function:= log(det(R)) + (Y-F*beta)^T inv(R) (Y-F*beta) + constant
             ll = (np.log(np.prod(np.diagonal(cc))) + m * (np.log(2 * np.pi * np.prod(sigma_))) + 1)/2
 
             if re == 1:
@@ -487,52 +485,6 @@ class Krig:
 
             return ll, grad1
 
-        # def log_likelihood(p0, s, m, n, f, y, re=0):
-        #     # Return the log-likelihood function and it's gradient. Gradient is calculate using Central Difference
-        #     r__, dr_ = self.corr_model(x=s, s=s, params=p0, dt=True)
-        #     try:
-        #         cc = cholesky(r__, lower=True)
-        #     except np.linalg.LinAlgError:
-        #         if re == 0:
-        #             return np.inf, np.zeros(n)
-        #         else:
-        #             return np.inf
-        #
-        #     # Product of diagonal terms is negligible sometimes, even when cc exists.
-        #     if np.prod(np.diagonal(cc)) == 0:
-        #         if re == 0:
-        #             return np.inf, np.zeros(n)
-        #         else:
-        #             return np.inf
-        #
-        #     # alpha = inv(R)*y
-        #     # if any(np.isnan(y)):
-        #     #     print('What happened?')
-        #
-        #     alpha = cho_solve((cc, True), y)
-        #     t4 = np.einsum("ik,ik->k", y, alpha)
-        #
-        #     # Objective function:= log(det(R)) + Y^T inv(R) Y + constant
-        #     ll = (np.log(np.prod(np.diagonal(cc))) + t4 + m * np.log(2 * np.pi)) / 2
-        #     if re == 1:
-        #         return ll
-        #
-        #     grad1 = np.zeros(n)
-        #     h = 0.005
-        #     for dr in range(n):
-        #         temp = np.zeros(n)
-        #         temp[dr] = 1
-        #         low = p0 - h / 2 * temp
-        #         hi = p0 + h / 2 * temp
-        #         f_hi = log_likelihood(hi, s, m, n, f, y, 1)
-        #         f_low = log_likelihood(low, s, m, n, f, y, 1)
-        #         if f_hi == np.inf or f_low == np.inf:
-        #             grad1[dr] = 0
-        #         else:
-        #             grad1[dr] = (f_hi - f_low) / h
-        #
-        #     return ll, grad1
-
         # Maximum Likelihood Estimation : Solving optimization problem to calculate hyperparameters
         if self.op:
             sp = self.corr_model_params
@@ -552,7 +504,6 @@ class Krig:
                                           "increase n_opt")
             t = np.argmin(pf)
             self.corr_model_params = p[t, :]
-
         self.n_opt = 1
 
         r_ = self.corr_model(x=s_, s=s_, params=self.corr_model_params)
@@ -718,7 +669,7 @@ class Krig:
         """
         def c(x, s, params, dt=False, dx=False):
             rx, drdt, drdx = [0.], [0.], [0.]
-            x = np.atleast_2d(x)
+            x, s = np.atleast_2d(x), np.atleast_2d(s)
             # Create stack matrix, where each block is x_i with all s
             stack = - np.tile(np.swapaxes(np.atleast_3d(x), 1, 2), (1, np.size(s, 0), 1)) + np.tile(s, (
                 np.size(x, 0),

@@ -135,17 +135,21 @@ def compute_Voronoi_centroid_volume(vertices):
 
 def compute_Delaunay_centroid_volume(vertices):
 
-    from scipy.spatial import ConvexHull
-    import math
+    from scipy.spatial import ConvexHull, qhull
 
-    ch = ConvexHull(vertices)
-    volume = ch.volume
+    try:
+        ch = ConvexHull(vertices)
+        volume = ch.volume
+    except qhull.QhullError:
+        volume = 0
+
     centroid = np.mean(vertices, axis=0)
 
     # v1 = np.concatenate((np.ones([np.size(vertices, 0), 1]), vertices), 1)
     # volume = (1 / math.factorial(np.size(vertices, 0) - 1)) * np.linalg.det(v1.T)
 
     return centroid, volume
+
 
 def correlation_distortion(marginal, params, rho_norm):
 
