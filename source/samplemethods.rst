@@ -12,6 +12,9 @@ MCS
 
 The ``MCS`` class generates random samples from a specified probability distribution(s).  The ``MCS`` class utilizes the ``Distributions`` class to define probability distributions.  The advantage of using the ``MCS`` class for ``UQpy`` operations, as opposed to simply generating samples with the ``scipy.stats`` package, is that it allows building an object containing the samples and their distributions for integration with other ``UQpy`` modules.
 
+Class Description
+^^^^^^^^^^^^^^^^^^^
+
 .. autoclass:: UQpy.SampleMethods.MCS
 	:members:
 
@@ -34,6 +37,9 @@ The ``LHS`` class offers a variety of methods for pairing the samples in a Latin
 >>> 		lhs_samples[:, j] = samples[order, j]
 >>> 	return lhs_samples
 
+
+Class Description
+^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.SampleMethods.LHS
 	:members:
@@ -60,7 +66,26 @@ The transition probability :math:`Q` is chosen by the user (see input `proposal`
 
 Finally, samples from the target distribution will be generated only when the chain has converged to its stationary distribution, after a so-called burn-in period. Thus the user would often reject the first few samples (see input `nburn`). Also, the chain yields correlated samples; thus to obtain i.i.d. samples from the target distribution, the user should keep only one out of n samples (see input `jump`). This means that the code will perform in total nburn + jump * N evaluations of the target pdf to yield N i.i.d. samples from the target distribution (for the MH algorithm with a single chain).
 
-The parent class for all MCMC algorithms is the ``MCMC class``, which defines the inputs that are common to all MCMC algorithms, along with the *run* method that is being called to run the chain. Any given MCMC algorithm is a sub-class of MCMC that overwrites the main *run_one_iteration* method.
+The parent class for all MCMC algorithms is the ``MCMC class``, which defines the inputs that are common to all MCMC algorithms, along with the ``run`` method that is being called to run the chain. Any given MCMC algorithm is a child class of MCMC that overwrites the main ``run_one_iteration`` method.
+
+Adding New MCMC Algorithms
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In order to add a new MCMC algorithm, a user must create a child class of ``MCMC``, and overwrite the ``run_one_iteration`` method that propagates all the chains forward one iteration. Such a new class may use any number of additional inputs compared to the ``MCMC`` base class. The reader is encouraged to have a look at the ``MH`` class and its code to better understand how a particular algorithm should fit the general framework. 
+
+A useful note is that the user has access to a number of useful attributes / utility methods as the algorithm proceeds, such as:
+
+* the attribute ``evaluate_log_target`` (and possibly ``evaluate_log_target_marginals`` if marginals were provided) is created at initialization. It is a callable that simply evaluates the log-pdf of the target distribution at a given point `x`. It can be called within the code of a new sampler as ``log_pdf_value = self.evaluate_log_target(x)``. 
+* the `nsamples` and `nsamples_per_chain` attributes indicate the number of samples that have been stored up to the current iteration (i.e., they are updated dynamically as the algorithm proceeds),
+* the `samples` attribute contains all previously stored samples. Cautionary note: `self.samples` also contains trailing zeros, for samples yet to be stored, thus to access all previously stored samples at a given iteration the user must call ``self.samples[:self.nsamples_per_chain]``, which will return an `ndarray` of size (self.nsamples_per_chain, self.nchains, self.dimension) ,
+* the `log_pdf_values` attribute contains all previously stored log target values. Same cautionary note as above,
+* the ``_update_acceptance_rate`` method updates the `acceptance_rate` attribute of the sampler, given a (list of) boolean(s) indicating if the candidate state(s) were accepted at a given iteration,
+* the ``_check_methods_proposal`` method checks whether a given proposal is adequate (i.e., has ``rvs`` and ``log_pdf``/``pdf`` methods).
+
+
+Parent and Child Class Descriptions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 .. autoclass:: UQpy.SampleMethods.MCMC
    :members:
@@ -95,19 +120,7 @@ DREAM
 .. autoclass:: UQpy.SampleMethods.DREAM
 	:members:
 
-Adding a new MCMC 
-~~~~~~~~~~~~~~~~~~~~~
 
-In order to add a new MCMC algorithm, a user must create a subclass of ``MCMC``, and overwrite the *run_one_iteration* method that propagates all the chains forward one iteration. Such a new class may use any number of additional inputs compared to the ``MCMC`` base class. The reader is encouraged to have a look at the ``MH`` class and its code to better understand how a particular algorithm should fit the general framework. 
-
-A useful note is that the user has access to a number of useful attributes / utility methods as the algorithm proceeds, such as:
-
-* the attribute `evaluate_log_target` (and possibly `self.evaluate_log_target_marginals` if marginals were provided) is created at initialization. It is a callable that simply evaluates the log-pdf of the target distribution at a given point `x`. It can be called within the code of a new sampler as `log_pdf_value = self.evaluate_log_target(x)`. 
-* the `nsamples` and `nsamples_per_chain` attributes indicate the number of samples that have been stored up to the current iteration (i.e., they are updated dynamically as the algorithm proceeds),
-* the `samples` attribute contains all previously stored samples. Cautionary note: `self.samples` also contains trailing zeros, for samples yet to be stored, thus to access all previously stored samples at a given iteration the user must call `self.samples[:self.nsamples_per_chain]`, which will return a (self.nsamples_per_chain, self.nchains, self.dimension) `ndarray`,
-* the `log_pdf_values` attribute contains all previously stored log target values, same cautionary note as above,
-* the `_update_acceptance_rate` method updates the `acceptance_rate` attribute of the sampler, given a  (list of) boolean(s) indicating if the candidate state(s) were accepted at a given iteration,
-* the `_check_methods_proposal` method checks wether a given proposal is adequate (i.e., has `rvs` and `log_pdf`/`pdf` methods).
 
    
 IS
