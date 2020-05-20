@@ -60,7 +60,6 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">from</span> <span class="nn">os</span> <span class="k">import</span> <span class="n">sys</span>
 
 <span class="kn">from</span> <span class="nn">scipy.spatial.distance</span> <span class="k">import</span> <span class="n">pdist</span>
 
@@ -365,8 +364,8 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">,</span>
-                 <span class="n">iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>  <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="c1"># Check if a Distribution object is provided.</span>
         <span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">DistributionContinuous1D</span><span class="p">,</span> <span class="n">JointInd</span>
@@ -380,6 +379,7 @@
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A DistributionContinuous1D or JointInd object must be provided.&#39;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="o">=</span> <span class="n">dist_object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
@@ -407,10 +407,6 @@
                                           <span class="s2">&quot;&#39;rogerstanimoto&#39;,&quot;</span> <span class="s2">&quot;&#39;russellrao&#39;, &#39;seuclidean&#39;,&#39;sokalmichener&#39;, &quot;</span>
                                           <span class="s2">&quot;&#39;sokalsneath&#39;, &#39;sqeuclidean&#39;.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">metric</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span> <span class="o">=</span> <span class="n">iterations</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: number of iterations must be an integer.&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nsamples</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span>
@@ -458,9 +454,9 @@
                     <span class="n">u_lhs</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
                 <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">centered</span><span class="p">(</span><span class="n">u_lhs</span><span class="p">)</span>
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;maximin&#39;</span><span class="p">:</span>
-                <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_min</span><span class="p">(</span><span class="n">u_lhs</span><span class="p">)</span>
+                <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_min</span><span class="p">(</span><span class="n">u_lhs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;correlate&#39;</span><span class="p">:</span>
-                <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">u_lhs</span><span class="p">)</span>
+                <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">u_lhs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">):</span>
                 <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">(</span><span class="n">u_lhs</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -498,14 +494,17 @@
 
         <span class="k">return</span> <span class="n">lhs_samples</span></div>
 
-<div class="viewcode-block" id="LHS.max_min"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.max_min">[docs]</a>    <span class="k">def</span> <span class="nf">max_min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">):</span>
+<div class="viewcode-block" id="LHS.max_min"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.max_min">[docs]</a>    <span class="k">def</span> <span class="nf">max_min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A Latin hypercube design based on maximizing the inter-site distances.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: number of iterations must be an integer.&#39;</span><span class="p">)</span>
+
         <span class="n">max_min_dist</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">:</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">iterations</span><span class="p">:</span>
             <span class="n">samples_try</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="n">d</span> <span class="o">=</span> <span class="n">pdist</span><span class="p">(</span><span class="n">samples_try</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span>
@@ -522,14 +521,17 @@
 
         <span class="k">return</span> <span class="n">lhs_samples</span></div>
 
-<div class="viewcode-block" id="LHS.correlate"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.correlate">[docs]</a>    <span class="k">def</span> <span class="nf">correlate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">):</span>
+<div class="viewcode-block" id="LHS.correlate"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.correlate">[docs]</a>    <span class="k">def</span> <span class="nf">correlate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">iterations</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A Latin hypercube design based on minimizing the pairwise correlations.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: number of iterations must be an integer.&#39;</span><span class="p">)</span>
+
         <span class="n">min_corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
         <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">:</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">iterations</span><span class="p">:</span>
             <span class="n">samples_try</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
             <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">samples_try</span><span class="p">))</span>
             <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
