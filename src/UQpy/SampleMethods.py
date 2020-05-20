@@ -460,10 +460,14 @@ class LHS:
 
         return lhs_samples
 
-    def max_min(self, samples, iterations=100):
+    def max_min(self, samples, parameters):
         """
         A Latin hypercube design based on maximizing the inter-site distances.
         """
+        if "iterations" not in parameters:
+            iterations = 100
+        else:
+            iterations = parameters["iterations"]
 
         if not isinstance(iterations, int):
             raise ValueError('UQpy: number of iterations must be an integer.')
@@ -487,10 +491,15 @@ class LHS:
 
         return lhs_samples
 
-    def correlate(self, samples, iterations):
+    def correlate(self, samples, parameters):
         """
         A Latin hypercube design based on minimizing the pairwise correlations.
         """
+
+        if "iterations" not in parameters:
+            iterations = 100
+        else:
+            iterations = parameters["iterations"]
 
         if not isinstance(iterations, int):
             raise ValueError('UQpy: number of iterations must be an integer.')
