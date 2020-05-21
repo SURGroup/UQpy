@@ -287,62 +287,48 @@ class LHS:
     """
     Perform Latin hypercube sampling (MCS) of random variables.
 
-    **Attributes:**
-
     **Input:**
 
     * **dist_object** ((list of) ``Distribution`` object(s)):
-            List of ``Distribution`` objects corresponding to each random variable.
+        List of ``Distribution`` objects corresponding to each random variable.
+
+        All distributions in ``LHS`` must be independent. ``LHS`` does not generate correlated random variables.
+        Therefore, for multi-variate designs the `dist_object` must be a list of ``DistributionContinuous1D`` objects
+        or an object of the ``JointInd`` class.
 
     * **nsamples** (`int`):
-            Number of samples to be drawn from each distribution.
-
+        Number of samples to be drawn from each distribution.
 
     * **criterion** (`str` or `callable`):
-            The criterion for generating sample points
-                Options:
-                    1. 'random' - completely random. \n
-                    2. centered' - points only at the centre. \n
-                    3. 'maximin - maximizing the minimum distance between points. \n
-                    4. 'correlate' - minimizing the correlation between the points. \n
-                    5. `callable` - User-defined method.
+        The criterion for pairing the generating sample points
+            Options:
+                1. 'random' - completely random. \n
+                2. 'centered' - points only at the centre. \n
+                3. 'maximin' - maximizing the minimum distance between points. \n
+                4. 'correlate' - minimizing the correlation between the points. \n
+                5. `callable` - User-defined method.
 
-            Default: 'random'
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
 
-    * **metric** (`str` or `callable`):
-            The distance metric to use.
-                Options:
-                    1. `str` - Available options are: `braycurtis`, `canberra`, `chebyshev`, `cityblock`,
-                    `correlation`, `cosine`, `dice`, `euclidean`, `hamming`, `jaccard`, `jensenshannon`,
-                    `kulsinski`, `mahalanobis`, `matching`, `minkowski`, `rogerstanimoto`, `russellrao`,
-                    `seuclidean`, `sokalmichener`, `sokalsneath`, `sqeuclidean`, `yule`.
-
-                2. User-defined function.
-
-            Default: `euclidean`.
-
-    * **iterations** (`int`):
-            The number of iteration to run. Required only for ``maximin`` and ``correlate`` criterion.
-
-            Default: 100.
-
-    * random_state (None or `int` or `np.random.RandomState` object):
-            Random seed used to initialize the pseudo-random number generator. Default is None.
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
 
     * **verbose** (`Boolean`):
-            A boolean declaring whether to write text to the terminal.
+        A boolean declaring whether to write text to the terminal.
 
-            Default value: False
-
+    * ****kwargs**
+        Additional arguments to be passed to the method specified by `criterion`
 
     **Attributes:**
 
     * **samples** (`ndarray`):
-            `ndarray` containing the generated samples.
+        The generated LHS samples.
+
+    * **samples_U01** (`ndarray`):
+        The generated LHS samples on the unit hypercube.
 
     **Methods**
-
-    The LHS class supports the following LHS design methods:
 
     """
 
@@ -395,9 +381,33 @@ class LHS:
 
         self.samplesU01 = np.zeros_like(self.samples)
 
-        self.run(self.nsamples)
+        if self.nsamples is None:
+            self.run(self.nsamples)
 
     def run(self, nsamples):
+
+        """
+        Execute the random sampling in the ``LHS`` class.
+
+        The ``run`` method is the function that performs random sampling in the ``LHS`` class. If `nsamples` is
+        provided, the ``run`` method is automatically called when the ``LHS`` object is defined. The user may also call
+        the ``run`` method directly to generate samples. The ``run`` method of the ``LHS`` class cannot be invoked
+        multiple times for sample size extension.
+
+        **Input:**
+
+        * **nsamples** (`int`):
+            Number of samples to be drawn from each distribution.
+
+            If the ``run`` method is invoked multiple times, the newly generated samples will be overwrite the
+            existing samples.
+
+        **Output/Returns:**
+
+        The ``run`` method has no returns, although it creates and/or appends the `samples` and `samples_U01` attributes
+        of the ``LHS`` object.
+
+        """
 
         if self.nsamples is None:
             self.nsamples = nsamples
@@ -415,21 +425,18 @@ class LHS:
             u[:, i] = stats.uniform.rvs(size=self.samples.shape[0], random_state=self.random_state)
             samples[:, i] = u[:, i] * (b - a) + a
 
-        if self.criterion is not None:
-            if self.criterion == 'random':
-                u_lhs = self.random(samples)
-            elif self.criterion == 'centered':
-                u_lhs = self.centered(samples, a=a, b=b)
-            elif self.criterion == 'maximin':
-                u_lhs = self.max_min(samples, self.kwargs)
-            elif self.criterion == 'correlate':
-                u_lhs = self.correlate(samples, self.kwargs)
-            elif callable(self.criterion):
-                u_lhs = self.criterion(samples)
-            else:
-                raise ValueError('UQpy: A valid criterion is required.')
-        elif self.criterion is None:
-            u_lhs = self.random(samples)
+        if self.criterion == 'random' or self.criterion is None:
+            u_lhs = self.random(samples, random_state=self.random_state)
+        elif self.criterion == 'centered':
+            u_lhs = self.centered(samples, random_state=self.random_state, a=a, b=b)
+        elif self.criterion == 'maximin':
+            u_lhs = self.max_min(samples, random_state=self.random_state, **self.kwargs)
+        elif self.criterion == 'correlate':
+            u_lhs = self.correlate(samples, random_state=self.random_state, **self.kwargs)
+        elif callable(self.criterion):
+            u_lhs = self.criterion(samples, random_state=self.random_state, **self.kwargs)
+        else:
+            raise ValueError('UQpy: A valid criterion is required.')
 
         self.samplesU01 = u_lhs
 
@@ -450,57 +457,94 @@ class LHS:
         if self.verbose:
             print('Successful execution of LHS design.')
 
-    def random(self, samples):
+    @staticmethod
+    def random(samples, random_state=None):
         """
-        A Latin hypercube design based on sampling randomly inside each bin.
+        Method for generating a Latin hypercube design by sampling randomly inside each bin.
+
+        The ``random`` method takes a set of samples drawn randomly from within the Latin hypercube bins and performs a
+        random shuffling of them to pair the variables.
+
+        **Input:**
+
+        * **samples** (`ndarray`):
+            A set of samples drawn from within each bin.
+
+        * **random_state** (``numpy.random.RandomState`` object):
+            A ``numpy.RandomState`` object that fixes the seed of the pseudo random number generation.
+
+        **Output/Returns:**
+
+        * **lhs_samples** (`ndarray`)
+            The randomly shuffled set of LHS samples.
         """
 
         lhs_samples = np.zeros_like(samples)
+        nsamples = len(samples)
         for j in range(samples.shape[1]):
-            if self.random_state is not None:
-                order = self.random_state.permutation(self.nsamples)
+            if random_state is not None:
+                order = random_state.permutation(nsamples)
             else:
-                order = np.random.permutation(self.nsamples)
+                order = np.random.permutation(nsamples)
             lhs_samples[:, j] = samples[order, j]
 
         return lhs_samples
 
-    def max_min(self, samples, parameters):
+    def max_min(self, samples, random_state=None, iterations=100, metric='euclidean'):
         """
-        A Latin hypercube design based on maximizing the inter-site distances.
+        Method for generating a Latin hypercube design that aims to maximize the minimum sample distance.
+
+        **Input:**
+
+        * **samples** (`ndarray`):
+            A set of samples drawn from within each LHS bin.
+
+        * **random_state** (``numpy.random.RandomState`` object):
+            A ``numpy.RandomState`` object that fixes the seed of the pseudo random number generation.
+
+        * **iterations** (`int`):
+            The number of iteration to run in the search for a maximin design.
+
+        * **metric** (`str` or `callable`):
+            The distance metric to use.
+                Options:
+                    1. `str` - Available options are those supported by ``scipy.spatial.distance``
+                    2. User-defined function to compute the distance between samples. This function replaces the
+                       ``scipy.spatial.distance.pdist`` method.
+
+        **Output/Returns:**
+
+        * **lhs_samples** (`ndarray`)
+            The maximin set of LHS samples.
+
         """
 
-        if "metric" in parameters:
-            metric = parameters["metric"]
-            if isinstance(metric, str):
-                if metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
-                                  'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis',
-                                  'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean',
-                                  'sokalmichener', 'sokalsneath', 'sqeuclidean']:
-                    raise NotImplementedError("Exit code: Supported lhs distances: 'braycurtis', 'canberra',"
-                                              " 'chebyshev', "
-                                              "'cityblock'," " 'correlation', 'cosine','dice', 'euclidean', 'hamming', "
-                                              "'jaccard', " "'kulsinski', 'mahalanobis', 'matching', 'minkowski', "
-                                              "'rogerstanimoto'," "'russellrao', 'seuclidean','sokalmichener', "
-                                              "'sokalsneath', 'sqeuclidean'.")
-        else:
-            metric = "euclidean"
+        if isinstance(metric, str):
+            if metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice',
+                              'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski',
+                              'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath',
+                              'sqeuclidean']:
+                raise NotImplementedError("UQpy Exit code: Please provide a string corresponding to a distance metric"
+                                          "supported by scipy.spatial.distance or provide a method to compute a user-"
+                                          "defined distance.")
 
-        if "iterations" not in parameters:
-            iterations = 100
-        else:
-            iterations = parameters["iterations"]
-            if not isinstance(iterations, int):
-                raise ValueError('UQpy: number of iterations must be an integer.')
+        if not isinstance(iterations, int):
+            raise ValueError('UQpy: number of iterations must be an integer.')
 
-        max_min_dist = 0
+        if isinstance(metric, str):
+            def d_func(x): return pdist(x, metric=metric)
+        elif callable(metric):
+            d_func = metric
+        else:
+            raise ValueError("UQpy: Please provide a valid metric.")
+
         i = 0
+        lhs_samples = LHS.random(samples, random_state)
+        d = d_func(lhs_samples)
+        max_min_dist = d
         while i < iterations:
-            samples_try = self.random(samples)
-            if isinstance(metric, str):
-                d = pdist(samples_try, metric=metric)
-            elif callable(metric):
-                d = metric(samples_try)
+            samples_try = LHS.random(samples, random_state)
+            d = d_func(samples_try)
 
             if max_min_dist < np.min(d):
                 max_min_dist = np.min(d)
@@ -512,22 +556,39 @@ class LHS:
 
         return lhs_samples
 
-    def correlate(self, samples, parameters):
+    def correlate(self, samples, random_state=None, iterations=100):
         """
-        A Latin hypercube design based on minimizing the pairwise correlations.
+        Method for generating a Latin hypercube design that aims to minimize spurious correlations.
+
+        **Input:**
+
+        * **samples** (`ndarray`):
+            A set of samples drawn from within each LHS bin.
+
+        * **random_state** (``numpy.random.RandomState`` object):
+            A ``numpy.RandomState`` object that fixes the seed of the pseudo random number generation.
+
+        * **iterations** (`int`):
+            The number of iteration to run in the search for a maximin design.
+
+        **Output/Returns:**
+
+        * **lhs_samples** (`ndarray`)
+            The minimum correlation set of LHS samples.
+
         """
 
-        if "iterations" not in parameters:
-            iterations = 100
-        else:
-            iterations = parameters["iterations"]
-            if not isinstance(iterations, int):
-                raise ValueError('UQpy: number of iterations must be an integer.')
+        if not isinstance(iterations, int):
+            raise ValueError('UQpy: number of iterations must be an integer.')
 
-        min_corr = np.inf
         i = 0
+        lhs_samples = LHS.random(samples, random_state)
+        r = np.corrcoef(np.transpose(lhs_samples))
+        np.fill_diagonal(r, 1)
+        r1 = r[r != 1]
+        min_corr = np.max(np.abs(r1))
         while i < iterations:
-            samples_try = self.random(samples)
+            samples_try = LHS.random(samples, random_state)
             r = np.corrcoef(np.transpose(samples_try))
             np.fill_diagonal(r, 1)
             r1 = r[r != 1]
@@ -540,19 +601,36 @@ class LHS:
 
         return lhs_samples
 
-    def centered(self, samples, **kwargs):
+    @staticmethod
+    def centered(samples, random_state=None, a=None, b=None):
         """
-        A Latin hypercube design based on sampling the centers of the bins.
-        """
+        Method for generating a Latin hypercube design with samples centered in the bins.
 
-        a = kwargs["a"]
-        b = kwargs["b"]
+        **Input:**
+
+        * **samples** (`ndarray`):
+            A set of samples drawn from within each LHS bin. In this method, the samples passed in are not used.
+
+        * **random_state** (``numpy.random.RandomState`` object):
+            A ``numpy.RandomState`` object that fixes the seed of the pseudo random number generation.
+
+        * **a** (`ndarray`)
+            An array of the bin lower-bounds.
+
+        * **b** (`ndarray`)
+            An array of the bin upper-bounds
+
+        **Output/Returns:**
+
+        * **lhs_samples** (`ndarray`)
+            The centered set of LHS samples.
+        """
 
         u_temp = (a + b) / 2
         lhs_samples = np.zeros([samples.shape[0], samples.shape[1]])
         for i in range(samples.shape[1]):
-            if self.random_state is not None:
-                lhs_samples[:, i] = self.random_state.permutation(u_temp)
+            if random_state is not None:
+                lhs_samples[:, i] = random_state.permutation(u_temp)
             else:
                 lhs_samples[:, i] = np.random.permutation(u_temp)
 

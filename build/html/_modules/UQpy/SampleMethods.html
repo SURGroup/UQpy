@@ -321,62 +321,48 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform Latin hypercube sampling (MCS) of random variables.</span>
 
-<span class="sd">    **Attributes:**</span>
-
 <span class="sd">    **Input:**</span>
 
 <span class="sd">    * **dist_object** ((list of) ``Distribution`` object(s)):</span>
-<span class="sd">            List of ``Distribution`` objects corresponding to each random variable.</span>
+<span class="sd">        List of ``Distribution`` objects corresponding to each random variable.</span>
+
+<span class="sd">        All distributions in ``LHS`` must be independent. ``LHS`` does not generate correlated random variables.</span>
+<span class="sd">        Therefore, for multi-variate designs the `dist_object` must be a list of ``DistributionContinuous1D`` objects</span>
+<span class="sd">        or an object of the ``JointInd`` class.</span>
 
 <span class="sd">    * **nsamples** (`int`):</span>
-<span class="sd">            Number of samples to be drawn from each distribution.</span>
-
+<span class="sd">        Number of samples to be drawn from each distribution.</span>
 
 <span class="sd">    * **criterion** (`str` or `callable`):</span>
-<span class="sd">            The criterion for generating sample points</span>
-<span class="sd">                Options:</span>
-<span class="sd">                    1. &#39;random&#39; - completely random. \n</span>
-<span class="sd">                    2. centered&#39; - points only at the centre. \n</span>
-<span class="sd">                    3. &#39;maximin - maximizing the minimum distance between points. \n</span>
-<span class="sd">                    4. &#39;correlate&#39; - minimizing the correlation between the points. \n</span>
-<span class="sd">                    5. `callable` - User-defined method.</span>
+<span class="sd">        The criterion for pairing the generating sample points</span>
+<span class="sd">            Options:</span>
+<span class="sd">                1. &#39;random&#39; - completely random. \n</span>
+<span class="sd">                2. &#39;centered&#39; - points only at the centre. \n</span>
+<span class="sd">                3. &#39;maximin&#39; - maximizing the minimum distance between points. \n</span>
+<span class="sd">                4. &#39;correlate&#39; - minimizing the correlation between the points. \n</span>
+<span class="sd">                5. `callable` - User-defined method.</span>
 
-<span class="sd">            Default: &#39;random&#39;</span>
+<span class="sd">    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):</span>
+<span class="sd">        Random seed used to initialize the pseudo-random number generator. Default is None.</span>
 
-<span class="sd">    * **metric** (`str` or `callable`):</span>
-<span class="sd">            The distance metric to use.</span>
-<span class="sd">                Options:</span>
-<span class="sd">                    1. `str` - Available options are: `braycurtis`, `canberra`, `chebyshev`, `cityblock`,</span>
-<span class="sd">                    `correlation`, `cosine`, `dice`, `euclidean`, `hamming`, `jaccard`, `jensenshannon`,</span>
-<span class="sd">                    `kulsinski`, `mahalanobis`, `matching`, `minkowski`, `rogerstanimoto`, `russellrao`,</span>
-<span class="sd">                    `seuclidean`, `sokalmichener`, `sokalsneath`, `sqeuclidean`, `yule`.</span>
-
-<span class="sd">                2. User-defined function.</span>
-
-<span class="sd">            Default: `euclidean`.</span>
-
-<span class="sd">    * **iterations** (`int`):</span>
-<span class="sd">            The number of iteration to run. Required only for ``maximin`` and ``correlate`` criterion.</span>
-
-<span class="sd">            Default: 100.</span>
-
-<span class="sd">    * random_state (None or `int` or `np.random.RandomState` object):</span>
-<span class="sd">            Random seed used to initialize the pseudo-random number generator. Default is None.</span>
+<span class="sd">        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the</span>
+<span class="sd">        object itself can be passed directly.</span>
 
 <span class="sd">    * **verbose** (`Boolean`):</span>
-<span class="sd">            A boolean declaring whether to write text to the terminal.</span>
+<span class="sd">        A boolean declaring whether to write text to the terminal.</span>
 
-<span class="sd">            Default value: False</span>
-
+<span class="sd">    * ****kwargs**</span>
+<span class="sd">        Additional arguments to be passed to the method specified by `criterion`</span>
 
 <span class="sd">    **Attributes:**</span>
 
 <span class="sd">    * **samples** (`ndarray`):</span>
-<span class="sd">            `ndarray` containing the generated samples.</span>
+<span class="sd">        The generated LHS samples.</span>
+
+<span class="sd">    * **samples_U01** (`ndarray`):</span>
+<span class="sd">        The generated LHS samples on the unit hypercube.</span>
 
 <span class="sd">    **Methods**</span>
-
-<span class="sd">    The LHS class supports the following LHS design methods:</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -429,9 +415,33 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">samplesU01</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
+<div class="viewcode-block" id="LHS.run"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute the random sampling in the ``LHS`` class.</span>
+
+<span class="sd">        The ``run`` method is the function that performs random sampling in the ``LHS`` class. If `nsamples` is</span>
+<span class="sd">        provided, the ``run`` method is automatically called when the ``LHS`` object is defined. The user may also call</span>
+<span class="sd">        the ``run`` method directly to generate samples. The ``run`` method of the ``LHS`` class cannot be invoked</span>
+<span class="sd">        multiple times for sample size extension.</span>
+
+<span class="sd">        **Input:**</span>
+
+<span class="sd">        * **nsamples** (`int`):</span>
+<span class="sd">            Number of samples to be drawn from each distribution.</span>
+
+<span class="sd">            If the ``run`` method is invoked multiple times, the newly generated samples will be overwrite the</span>
+<span class="sd">            existing samples.</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        The ``run`` method has no returns, although it creates and/or appends the `samples` and `samples_U01` attributes</span>
+<span class="sd">        of the ``LHS`` object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span>
@@ -449,21 +459,18 @@
             <span class="n">u</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">uniform</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
             <span class="n">samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="n">a</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;random&#39;</span><span class="p">:</span>
-                <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;centered&#39;</span><span class="p">:</span>
-                <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">centered</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;maximin&#39;</span><span class="p">:</span>
-                <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_min</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;correlate&#39;</span><span class="p">:</span>
-                <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">):</span>
-                <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: A valid criterion is required.&#39;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;random&#39;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;centered&#39;</span><span class="p">:</span>
+            <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">centered</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;maximin&#39;</span><span class="p">:</span>
+            <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_min</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;correlate&#39;</span><span class="p">:</span>
+            <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">):</span>
+            <span class="n">u_lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: A valid criterion is required.&#39;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">samplesU01</span> <span class="o">=</span> <span class="n">u_lhs</span>
 
@@ -482,59 +489,96 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">icdf</span><span class="p">(</span><span class="n">u_lhs</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Successful execution of LHS design.&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Successful execution of LHS design.&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="LHS.random"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.random">[docs]</a>    <span class="k">def</span> <span class="nf">random</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">):</span>
+<div class="viewcode-block" id="LHS.random"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.random">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">random</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        A Latin hypercube design based on sampling randomly inside each bin.</span>
+<span class="sd">        Method for generating a Latin hypercube design by sampling randomly inside each bin.</span>
+
+<span class="sd">        The ``random`` method takes a set of samples drawn randomly from within the Latin hypercube bins and performs a</span>
+<span class="sd">        random shuffling of them to pair the variables.</span>
+
+<span class="sd">        **Input:**</span>
+
+<span class="sd">        * **samples** (`ndarray`):</span>
+<span class="sd">            A set of samples drawn from within each bin.</span>
+
+<span class="sd">        * **random_state** (``numpy.random.RandomState`` object):</span>
+<span class="sd">            A ``numpy.RandomState`` object that fixes the seed of the pseudo random number generation.</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        * **lhs_samples** (`ndarray`)</span>
+<span class="sd">            The randomly shuffled set of LHS samples.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">lhs_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+        <span class="n">nsamples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">random_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">order</span> <span class="o">=</span> <span class="n">random_state</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">nsamples</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
+                <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">nsamples</span><span class="p">)</span>
             <span class="n">lhs_samples</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[</span><span class="n">order</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">lhs_samples</span></div>
 
-<div class="viewcode-block" id="LHS.max_min"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.max_min">[docs]</a>    <span class="k">def</span> <span class="nf">max_min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+<div class="viewcode-block" id="LHS.max_min"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.max_min">[docs]</a>    <span class="k">def</span> <span class="nf">max_min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        A Latin hypercube design based on maximizing the inter-site distances.</span>
+<span class="sd">        Method for generating a Latin hypercube design that aims to maximize the minimum sample distance.</span>
+
+<span class="sd">        **Input:**</span>
+
+<span class="sd">        * **samples** (`ndarray`):</span>
+<span class="sd">            A set of samples drawn from within each LHS bin.</span>
+
+<span class="sd">        * **random_state** (``numpy.random.RandomState`` object):</span>
+<span class="sd">            A ``numpy.RandomState`` object that fixes the seed of the pseudo random number generation.</span>
+
+<span class="sd">        * **iterations** (`int`):</span>
+<span class="sd">            The number of iteration to run in the search for a maximin design.</span>
+
+<span class="sd">        * **metric** (`str` or `callable`):</span>
+<span class="sd">            The distance metric to use.</span>
+<span class="sd">                Options:</span>
+<span class="sd">                    1. `str` - Available options are those supported by ``scipy.spatial.distance``</span>
+<span class="sd">                    2. User-defined function to compute the distance between samples. This function replaces the</span>
+<span class="sd">                       ``scipy.spatial.distance.pdist`` method.</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        * **lhs_samples** (`ndarray`)</span>
+<span class="sd">            The maximin set of LHS samples.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="s2">&quot;metric&quot;</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
-            <span class="n">metric</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;metric&quot;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">metric</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;braycurtis&#39;</span><span class="p">,</span> <span class="s1">&#39;canberra&#39;</span><span class="p">,</span> <span class="s1">&#39;chebyshev&#39;</span><span class="p">,</span> <span class="s1">&#39;cityblock&#39;</span><span class="p">,</span> <span class="s1">&#39;correlation&#39;</span><span class="p">,</span> <span class="s1">&#39;cosine&#39;</span><span class="p">,</span>
-                                  <span class="s1">&#39;dice&#39;</span><span class="p">,</span> <span class="s1">&#39;euclidean&#39;</span><span class="p">,</span> <span class="s1">&#39;hamming&#39;</span><span class="p">,</span> <span class="s1">&#39;jaccard&#39;</span><span class="p">,</span> <span class="s1">&#39;kulsinski&#39;</span><span class="p">,</span> <span class="s1">&#39;mahalanobis&#39;</span><span class="p">,</span>
-                                  <span class="s1">&#39;matching&#39;</span><span class="p">,</span> <span class="s1">&#39;minkowski&#39;</span><span class="p">,</span> <span class="s1">&#39;rogerstanimoto&#39;</span><span class="p">,</span> <span class="s1">&#39;russellrao&#39;</span><span class="p">,</span> <span class="s1">&#39;seuclidean&#39;</span><span class="p">,</span>
-                                  <span class="s1">&#39;sokalmichener&#39;</span><span class="p">,</span> <span class="s1">&#39;sokalsneath&#39;</span><span class="p">,</span> <span class="s1">&#39;sqeuclidean&#39;</span><span class="p">]:</span>
-                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Exit code: Supported lhs distances: &#39;braycurtis&#39;, &#39;canberra&#39;,&quot;</span>
-                                              <span class="s2">&quot; &#39;chebyshev&#39;, &quot;</span>
-                                              <span class="s2">&quot;&#39;cityblock&#39;,&quot;</span> <span class="s2">&quot; &#39;correlation&#39;, &#39;cosine&#39;,&#39;dice&#39;, &#39;euclidean&#39;, &#39;hamming&#39;, &quot;</span>
-                                              <span class="s2">&quot;&#39;jaccard&#39;, &quot;</span> <span class="s2">&quot;&#39;kulsinski&#39;, &#39;mahalanobis&#39;, &#39;matching&#39;, &#39;minkowski&#39;, &quot;</span>
-                                              <span class="s2">&quot;&#39;rogerstanimoto&#39;,&quot;</span> <span class="s2">&quot;&#39;russellrao&#39;, &#39;seuclidean&#39;,&#39;sokalmichener&#39;, &quot;</span>
-                                              <span class="s2">&quot;&#39;sokalsneath&#39;, &#39;sqeuclidean&#39;.&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">metric</span> <span class="o">=</span> <span class="s2">&quot;euclidean&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">metric</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;braycurtis&#39;</span><span class="p">,</span> <span class="s1">&#39;canberra&#39;</span><span class="p">,</span> <span class="s1">&#39;chebyshev&#39;</span><span class="p">,</span> <span class="s1">&#39;cityblock&#39;</span><span class="p">,</span> <span class="s1">&#39;correlation&#39;</span><span class="p">,</span> <span class="s1">&#39;cosine&#39;</span><span class="p">,</span> <span class="s1">&#39;dice&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;euclidean&#39;</span><span class="p">,</span> <span class="s1">&#39;hamming&#39;</span><span class="p">,</span> <span class="s1">&#39;jaccard&#39;</span><span class="p">,</span> <span class="s1">&#39;kulsinski&#39;</span><span class="p">,</span> <span class="s1">&#39;mahalanobis&#39;</span><span class="p">,</span> <span class="s1">&#39;matching&#39;</span><span class="p">,</span> <span class="s1">&#39;minkowski&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;rogerstanimoto&#39;</span><span class="p">,</span> <span class="s1">&#39;russellrao&#39;</span><span class="p">,</span> <span class="s1">&#39;seuclidean&#39;</span><span class="p">,</span> <span class="s1">&#39;sokalmichener&#39;</span><span class="p">,</span> <span class="s1">&#39;sokalsneath&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;sqeuclidean&#39;</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;UQpy Exit code: Please provide a string corresponding to a distance metric&quot;</span>
+                                          <span class="s2">&quot;supported by scipy.spatial.distance or provide a method to compute a user-&quot;</span>
+                                          <span class="s2">&quot;defined distance.&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="s2">&quot;iterations&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
-            <span class="n">iterations</span> <span class="o">=</span> <span class="mi">100</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">iterations</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;iterations&quot;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: number of iterations must be an integer.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: number of iterations must be an integer.&#39;</span><span class="p">)</span>
 
-        <span class="n">max_min_dist</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">d_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">pdist</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">metric</span><span class="p">):</span>
+            <span class="n">d_func</span> <span class="o">=</span> <span class="n">metric</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;UQpy: Please provide a valid metric.&quot;</span><span class="p">)</span>
+
         <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">lhs_samples</span> <span class="o">=</span> <span class="n">LHS</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">d_func</span><span class="p">(</span><span class="n">lhs_samples</span><span class="p">)</span>
+        <span class="n">max_min_dist</span> <span class="o">=</span> <span class="n">d</span>
         <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">iterations</span><span class="p">:</span>
-            <span class="n">samples_try</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="n">d</span> <span class="o">=</span> <span class="n">pdist</span><span class="p">(</span><span class="n">samples_try</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">metric</span><span class="p">):</span>
-                <span class="n">d</span> <span class="o">=</span> <span class="n">metric</span><span class="p">(</span><span class="n">samples_try</span><span class="p">)</span>
+            <span class="n">samples_try</span> <span class="o">=</span> <span class="n">LHS</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="p">)</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">d_func</span><span class="p">(</span><span class="n">samples_try</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">max_min_dist</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
                 <span class="n">max_min_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
@@ -546,22 +590,39 @@
 
         <span class="k">return</span> <span class="n">lhs_samples</span></div>
 
-<div class="viewcode-block" id="LHS.correlate"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.correlate">[docs]</a>    <span class="k">def</span> <span class="nf">correlate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+<div class="viewcode-block" id="LHS.correlate"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.correlate">[docs]</a>    <span class="k">def</span> <span class="nf">correlate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        A Latin hypercube design based on minimizing the pairwise correlations.</span>
+<span class="sd">        Method for generating a Latin hypercube design that aims to minimize spurious correlations.</span>
+
+<span class="sd">        **Input:**</span>
+
+<span class="sd">        * **samples** (`ndarray`):</span>
+<span class="sd">            A set of samples drawn from within each LHS bin.</span>
+
+<span class="sd">        * **random_state** (``numpy.random.RandomState`` object):</span>
+<span class="sd">            A ``numpy.RandomState`` object that fixes the seed of the pseudo random number generation.</span>
+
+<span class="sd">        * **iterations** (`int`):</span>
+<span class="sd">            The number of iteration to run in the search for a maximin design.</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        * **lhs_samples** (`ndarray`)</span>
+<span class="sd">            The minimum correlation set of LHS samples.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="s2">&quot;iterations&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
-            <span class="n">iterations</span> <span class="o">=</span> <span class="mi">100</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">iterations</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;iterations&quot;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: number of iterations must be an integer.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: number of iterations must be an integer.&#39;</span><span class="p">)</span>
 
-        <span class="n">min_corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
         <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">lhs_samples</span> <span class="o">=</span> <span class="n">LHS</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">lhs_samples</span><span class="p">))</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">r1</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">r</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">min_corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">r1</span><span class="p">))</span>
         <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">iterations</span><span class="p">:</span>
-            <span class="n">samples_try</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+            <span class="n">samples_try</span> <span class="o">=</span> <span class="n">LHS</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="p">)</span>
             <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">samples_try</span><span class="p">))</span>
             <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="n">r1</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">r</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">]</span>
@@ -574,19 +635,36 @@
 
         <span class="k">return</span> <span class="n">lhs_samples</span></div>
 
-<div class="viewcode-block" id="LHS.centered"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.centered">[docs]</a>    <span class="k">def</span> <span class="nf">centered</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="LHS.centered"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.centered">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">centered</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        A Latin hypercube design based on sampling the centers of the bins.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        Method for generating a Latin hypercube design with samples centered in the bins.</span>
 
-        <span class="n">a</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span>
-        <span class="n">b</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;b&quot;</span><span class="p">]</span>
+<span class="sd">        **Input:**</span>
+
+<span class="sd">        * **samples** (`ndarray`):</span>
+<span class="sd">            A set of samples drawn from within each LHS bin. In this method, the samples passed in are not used.</span>
+
+<span class="sd">        * **random_state** (``numpy.random.RandomState`` object):</span>
+<span class="sd">            A ``numpy.RandomState`` object that fixes the seed of the pseudo random number generation.</span>
+
+<span class="sd">        * **a** (`ndarray`)</span>
+<span class="sd">            An array of the bin lower-bounds.</span>
+
+<span class="sd">        * **b** (`ndarray`)</span>
+<span class="sd">            An array of the bin upper-bounds</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        * **lhs_samples** (`ndarray`)</span>
+<span class="sd">            The centered set of LHS samples.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">u_temp</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
         <span class="n">lhs_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">lhs_samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">u_temp</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">random_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">lhs_samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">random_state</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">u_temp</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">lhs_samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">u_temp</span><span class="p">)</span>
 
