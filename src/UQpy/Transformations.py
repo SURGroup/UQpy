@@ -15,566 +15,468 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""This module contains functionality for all the transformations supported in UQpy."""
 
-
-from UQpy.Utilities import *
 from UQpy.Distributions import *
-
-# Authors: Dimitris G.Giovanis, Audrey Olivier
-# Last Modified: 12/4/18 by Dimitris G. Giovanis
-
-
-########################################################################################################################
-########################################################################################################################
-#                                         Correlate standard normal samples
-########################################################################################################################
-
-class Correlate:
-    """
-    Description:
-    A class to correlate standard normal samples ~ N(0, 1) given a correlation matrix.
-
-    Input:
-    :param input_samples: An object of a SampleMethods class or an array of standard normal samples ~ N(0, 1).
-    :type input_samples: object or ndarray
-
-    :param corr_norm: The correlation matrix of the random variables in the standard normal space.
-    :type corr_norm: ndarray
-
-    param: distribution: An object list containing the distributions of the random variables.
-                         Each item in the list is an object of the Distribution class (see Distributions.py).
-                         The list has length equal to dimension.
-    :type distribution: list
-
-    Output:
-    :return: Correlate.samples: Set of correlated normal samples.
-    :rtype: Correlate.samples: ndarray
-
-    """
-
-    # Authors: Dimitris G.Giovanis
-    # Last Modified: 7/4/18 by Michael D. Shields
-
-    def __init__(self, input_samples=None, corr_norm=None, dimension=None):
-
-        # If samples is not an array (It should be an instance of a SampleMethods class)
-        if isinstance(input_samples, np.ndarray) is False:
-            _dict = {**input_samples.__dict__}
-            for k, v in _dict.items():
-                setattr(self, k, v)
-
-            self.corr_norm = corr_norm
-            self.samples_uncorr = self.samples.copy()
-
-            for i in range(len(self.dist_name)):
-                if self.dist_name[i].lower() != 'normal' or self.dist_params[i] != [0, 1]:
-                    raise RuntimeError("In order to use class 'Correlate' the random variables should be standard"
-                                       "normal")
-
-        # If samples is an array
-        else:
-            print('Caution: The samples provided must be uncorrelated standard normal random variables.')
-            self.samples_uncorr = input_samples
-            if dimension is None:
-                raise RuntimeError("Dimension must be specified when entering samples as an array.")
-
-            self.dimension = dimension
-            self.dist_name = ['normal'] * self.dimension
-            self.dist_params = [[0, 1]] * self.dimension
-            self.corr_norm = corr_norm
-            self.distribution = [None] * self.dimension
-            for i in range(self.dimension):
-                self.distribution[i] = Distribution(self.dist_name[i])
-
-            if self.corr_norm is None:
-                raise RuntimeError("A correlation matrix is required.")
-
-        if np.linalg.norm(self.corr_norm - np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
-            self.samples = self.samples_uncorr.copy()
-        else:
-            self.samples = run_corr(self.samples_uncorr, self.corr_norm)
-
-
-########################################################################################################################
-########################################################################################################################
-#                                         Decorrelate standard normal samples
-########################################################################################################################
-
-class Decorrelate:
-    """
-        Description:
-
-            A class to decorrelate already correlated normal samples given their correlation matrix.
-
-        Input:
-            :param input_samples: An object of type Correlate or an array of correlated N(0,1) samples
-            :type input_samples: object or ndarray
-
-            param: distribution: An object list containing the distributions of the random variables.
-                                 Each item in the list is an object of the Distribution class (see Distributions.py).
-                                 The list has length equal to dimension.
-            :type distribution: list
-
-            :param corr_norm: The correlation matrix of the random variables in the standard normal space
-            :type corr_norm: ndarray
-
-        Output:
-            :return: Decorrelate.samples: Set of uncorrelated normal samples.
-            :rtype: Decorrelate.samples: ndarray
-    """
-
-    # Authors: Dimitris G.Giovanis
-    # Last Modified: 6/24/18 by Dimitris G. Giovanis
-
-    def __init__(self, input_samples=None, corr_norm=None, dimension=None):
-
-        # If samples is not an array (It should be an instance of the Correlate class)
-        if isinstance(input_samples, np.ndarray) is False:
-            _dict = {**input_samples.__dict__}
-            for k, v in _dict.items():
-                setattr(self, k, v)
-
-            self.corr_norm = corr_norm
-            self.samples_corr = self.samples.copy()
-
-            for i in range(len(self.dist_name)):
-                if self.dist_name[i].lower() != 'normal' or self.dist_params[i] != [0, 1]:
-                    raise RuntimeError("In order to use class 'Decorrelate' the random variables should be standard "
-                                       "normal.")
-
-        # If samples is an array
-        else:
-            print('Caution: The samples provided must be correlated standard normal random variables.')
-            self.samples_corr = input_samples
-            if dimension is None:
-                raise RuntimeError("Dimension must be specified when entering samples as an array.")
-            self.dimension = dimension
-            self.dist_name = ['normal'] * self.dimension
-            self.dist_params = [[0, 1]] * self.dimension
-            self.corr_norm = corr_norm
-            self.distribution = [None] * self.dimension
-            for i in range(self.dimension):
-                self.distribution[i] = Distribution(self.dist_name[i])
-
-            if self.corr_norm is None:
-                raise RuntimeError("A correlation matrix is required.")
-
-        if np.linalg.norm(self.corr_norm - np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
-            self.samples = self.samples_corr
-        else:
-            self.samples = run_decorr(self.samples_corr, self.corr_norm)
-
-
-########################################################################################################################
-########################################################################################################################
-#                                         Inverse Nataf transformation
-########################################################################################################################
-
-
-class InvNataf:
-    """
-        Description:
-
-            A class to perform the inverse Nataf transformation of samples from N(0, 1) to a user-defined distribution.
-
-        Input:
-            :param input_samples: An object of a SampleMethods class containing N(0,1) samples or an array of N(0,1)
-                                  samples.
-            :type input_samples: object or ndarray
-
-            :param dist_name: A list containing the names of the distributions of the random variables.
-                              Distribution names must match those in the Distributions module.
-                              If the distribution does not match one from the Distributions module,the user must provide
-                              custom_dist.py.
-                              The length of the string must be 1 (if all distributions are the same) or equal to
-                              dimension.
-            :type dist_name: string list
-
-            :param dist_params: Parameters of the distribution.
-                                Parameters for each random variable are defined as ndarrays
-                                Each item in the list, dist_params[i], specifies the parameters for the corresponding
-                                distribution, dist[i].
-            :type dist_params: list
-
-            :param corr_norm: The correlation matrix of the random variables in the standard normal space
-            :type corr_norm: ndarray
-
-            param: distribution: An object list containing the distributions of the random variables.
-                                 Each item in the list is an object of the Distribution class (see Distributions.py).
-                                 The list has length equal to dimension.
-            :type distribution: list
-
-        Output:
-            :return: InvNataf.corr: The distorted correlation matrix of the random variables in the standard space;
-            :rtype: InvNataf.corr: ndarray
-
-            :return: InvNataf.samplesN01: An array of N(0,1) samples;
-            :rtype: InvNataf.corr: ndarray
-
-            :return: InvNataf.samples: An array of samples following the prescribed distributions;
-            :rtype: InvNataf.corr: ndarray
-
-            :return: InvNataf.jacobian: An array containing the Jacobian of the transformation.
-            :rtype: InvNataf.jacobian: ndarray
-
-    """
-
-    # Authors: Dimitris G. Giovanis
-    # Last Modified: 7/15/18 by Michael D. Shields
-
-    def __init__(self, input_samples=None, corr_norm=None, dist_name=None, dist_params=None, dimension=None):
-
-        # Check if samples is a SampleMethods Object or an array
-        if isinstance(input_samples, np.ndarray) is False and input_samples is not None:
-            _dict = {**input_samples.__dict__}
-            for k, v in _dict.items():
-                setattr(self, k, v)
-
-            self.dimension = len(dist_name)
-            self.dist_name = dist_name
-            self.dist_params = dist_params
-            if dist_name is None or dist_params is None:
-                if not hasattr(self, 'dist_name') or not hasattr(self, 'dist_params'):
-                    raise RuntimeError("In order to use class 'InvNataf' the distributions and their parameters must"
-                                       "be provided.")
-
-            # Ensure the dimensions of dist_name are consistent
-            if type(self.dist_name).__name__ != 'list':
-                self.dist_name = [self.dist_name]
-            if len(self.dist_name) == 1 and self.dimension != 1:
-                self.dist_name = self.dist_name * self.dimension
-
-            # Ensure that dist_params is a list of length dimension
-            if type(self.dist_params).__name__ != 'list':
-                self.dist_params = [self.dist_params]
-            if len(self.dist_params) == 1 and self.dimension != 1:
-                self.dist_params = self.dist_params * self.dimension
-
-            self.distribution = [None] * self.dimension
-            for j in range(len(self.dist_name)):
-                self.distribution[j] = Distribution(self.dist_name[j])
-
-            if not hasattr(self, 'corr_norm'):
-                if corr_norm is None:
-                    self.corr_norm = np.identity(n=self.dimension)
-                    self.corr = self.corr_norm
-                elif corr_norm is not None:
-                    self.corr_norm = corr_norm
-                    self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
-            else:
-                self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
-
-            self.samplesN01 = self.samples.copy()
-            self.samples = np.zeros_like(self.samples)
-
-            self.samples, self.jacobian = transform_g_to_ng(self.corr_norm, self.distribution, self.dist_params,
-                                                            self.samplesN01)
-
-        elif isinstance(input_samples, np.ndarray):
-            self.samplesN01 = input_samples
-            if dimension is None:
-                raise RuntimeError("UQpy: Dimension must be specified in 'InvNataf' when entering samples as an array.")
-            self.dimension = dimension
-
-            self.dist_name = dist_name
-            self.dist_params = dist_params
-            if self.dist_name is None or self.dist_params is None:
-                raise RuntimeError("UQpy: Marginal distributions and their parameters must be specified in 'InvNataf' "
-                                   "when entering samples as an array.")
-
-            # Ensure the dimensions of dist_name are consistent
-            if type(self.dist_name).__name__ != 'list':
-                self.dist_name = [self.dist_name]
-            if len(self.dist_name) == 1 and self.dimension != 1:
-                self.dist_name = self.dist_name * self.dimension
-
-            # Ensure that dist_params is a list of length dimension
-            if type(self.dist_params).__name__ != 'list':
-                self.dist_params = [self.dist_params]
-            if len(self.dist_params) == 1 and self.dimension != 1:
-                self.dist_params = self.dist_params * self.dimension
-
-            self.distribution = [None] * self.dimension
-            for j in range(len(self.dist_name)):
-                self.distribution[j] = Distribution(self.dist_name[j])
-
-            if corr_norm is None:
-                self.corr_norm = np.identity(n=self.dimension)
-                self.corr = self.corr_norm
-            elif corr_norm is not None:
-                self.corr_norm = corr_norm
-                if np.linalg.norm(self.corr_norm - np.identity(n=self.corr_norm.shape[0])) < 10 ** (-8):
-                    self.corr = self.corr_norm.copy()
-                else:
-                    self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
-
-            self.samples = np.zeros_like(self.samplesN01)
-
-            self.samples, self.jacobian = transform_g_to_ng(self.corr_norm, self.distribution, self.dist_params,
-                                                            self.samplesN01)
-            print()
-
-        elif input_samples is None:
-            if corr_norm is not None:
-                self.dist_name = dist_name
-                self.dist_params = dist_params
-                self.corr_norm = corr_norm
-                if self.dist_name is None or self.dist_params is None:
-                    raise RuntimeError("UQpy: In order to use class 'InvNataf', marginal distributions and their "
-                                       "parameters must be provided.")
-
-                if dimension is not None:
-                    self.dimension = dimension
-                else:
-                    self.dimension = len(self.dist_name)
-
-                # Ensure the dimensions of dist_name are consistent
-                if type(self.dist_name).__name__ != 'list':
-                    self.dist_name = [self.dist_name]
-                if len(self.dist_name) == 1 and self.dimension != 1:
-                    self.dist_name = self.dist_name * self.dimension
-
-                # Ensure that dist_params is a list of length dimension
-                if type(self.dist_params).__name__ != 'list':
-                    self.dist_params = [self.dist_params]
-                if len(self.dist_params) == 1 and self.dimension != 1:
-                    self.dist_params = self.dist_params * self.dimension
-
-                self.distribution = [None] * self.dimension
-                for j in range(len(self.dist_name)):
-                    self.distribution[j] = Distribution(self.dist_name[j])
-
-                self.corr = correlation_distortion(self.distribution, self.dist_params, self.corr_norm)
-
-            else:
-                raise RuntimeError("UQpy: To perform the inverse Nataf transformation without samples, a correlation "
-                                   "function 'corr_norm' must be provided.")
-
-
-########################################################################################################################
-########################################################################################################################
-#                                         Nataf transformation
-########################################################################################################################
 
 
 class Nataf:
     """
-        Description:
-            A class to perform the Nataf transformation of samples from a user-defined distribution to N(0, 1).
+    Transform random variables  using the `Nataf` transformation  and  calculate  the  correlation  distortion.
+    ([1]_, [2]_).
 
-        Input:
-            :param input_samples: An object of type SampleMethods, ndarray and InvNataf
-            :type input_samples: object
+    This is the parent class to all Nataf algorithms.
 
-            :param dist_name: A list containing the names of the distributions of the random variables.
-                            Distribution names must match those in the Distributions module.
-                            If the distribution does not match one from the Distributions module, the user must provide
-                            custom_dist.py.
-                            The length of the string must be 1 (if all distributions are the same) or equal to dimension
-            :type dist_name: string list
+    **References:**
 
-            :param dist_params: Parameters of the distribution
-                    Parameters for each random variable are defined as ndarrays
-                    Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
-                        dist[i]
-            :type dist_params: list
+    .. [1] A. Nataf, “Determination des distributions dont les marges sont donnees”, C. R. Acad. Sci.
+       vol. 225, pp. 42-43, Paris, 1962.
+    .. [2] R. Lebrun and A. Dutfoy, “An innovating analysis of the Nataf transformation from the copula viewpoint”,
+       Prob. Eng. Mech.,  vol. 24, pp. 312-320, 2009.
 
-            param: distribution: An object list containing the distributions of the random variables.
-                   Each item in the list is an object of the Distribution class (see Distributions.py).
-                   The list has length equal to dimension.
-            :type distribution: list
-
-            :param corr The correlation matrix of the random variables in the parameter space.
-            :type corr: ndarray
-
-            :param itam_error1:
-            :type itam_error1: float
-
-            :param itam_error2:
-            :type itam_error1: float
-
-            :param beta:
-            :type itam_error1: float
-
-
-        Output:
-            :return: Nataf.corr: The distorted correlation matrix of the random variables in the standard space;
-            :rtype: Nataf.corr: ndarray
-
-            :return: Nataf.samplesN01: An array of N(0,1) samples;
-            :rtype: Nataf.corr: ndarray
-
-            :return: Nataf.samples: An array of samples following the normal distribution.
-            :rtype: Nataf.corr: ndarray
-
-            :return: Nataf.jacobian: An array containing the Jacobian of the transformation.
-            :rtype: Nataf.jacobian: ndarray
     """
 
-    # Authors: Dimitris G.Giovanis
-    # Last Modified: 4/12/2018 by Dimitris G. Giovanis
+    def __init__(self, dist_object):
 
-    def __init__(self, input_samples=None, dimension=None, corr=None, dist_name=None, dist_params=None, beta=None,
-                 itam_error1=None, itam_error2=None):
+        if isinstance(dist_object, list):
+            for i in range(len(dist_object)):
+                if not isinstance(dist_object[i], (DistributionContinuous1D, JointInd)):
+                    raise TypeError('UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be provided.')
+        else:
+            if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
+                raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
 
-        # If samples is an instance of a SampleMethods class
-        if isinstance(input_samples, np.ndarray) is False and input_samples is not None:
-            _dict = {**input_samples.__dict__}
-            for k, v in _dict.items():
-                setattr(self, k, v)
 
-            # Allow to inherit distribution from samples or the user to specify the distribution
-            if dist_name is None or dist_params is None:
-                if not hasattr(self, 'dist_name') or not hasattr(self, 'dist_params'):
-                    raise RuntimeError("In order to use class 'Nataf' the distributions and their parameters must"
-                                       "be provided.")
+class Forward(Nataf):
+    """
+    A class perform the Nataf transformation, i.e. transform arbitrarily distributed random variables
+    to independent standard normal variables. This is a an child class of the ``Nataf`` class.
 
-            # Allow to inherit correlation from samples or the user to specify the correlation
-            if corr is None:
-                if not hasattr(self, 'corr'):
-                    self.corr = np.identity(n=self.dimension)
+    **Inputs:**
+
+    * **samples** (`ndarray`):
+            Random vector of shape ``(nsamples, dimension)`` with prescribed probability distribution, with
+            ``(nsamples, dimension) = samples.shape``.
+
+    * **dist_object** ((list of ) ``Distribution`` object(s)):
+                    Probability distribution of each random variable. Must be an object of type
+                    ``DistributionContinuous1D`` or ``JointInd``.
+
+    * **cov** (`ndarray`):
+        The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
+
+        Default: The ``identity`` matrix.
+
+    * **itam_error1** (`float`):
+        A threshold value the `ITAM` method (see ``Utilities`` module).
+
+        Default: 0.001
+
+    * **itam_error2** (`float`):
+        A threshold value the `ITAM` method (see ``Utilities`` module).
+
+        Default: 0.01
+
+    * **beta** (`float`):
+        A variable selected to optimize convergence speed and desired accuracy of the ITAM method (see
+        ``Utilities`` module).
+
+        Default: 1.0
+
+    **Output/Returns:**
+
+    * **U** (`ndarray`):
+        Independent standard normal vector of shape ``(nsamples, dimension)``.
+
+    * **Cz** (`ndarray`):
+        Distorted correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal vector **Z**.
+
+    * **Jxu** (`ndarray`):
+        The jacobian of the transformation of shape ``(dimension, dimension)`` (if asked).
+
+    **Methods:**
+    """
+
+    def __init__(self, dist_object, samples=None, cov=None, beta=1.0, itam_error1=0.001,
+                 itam_error2=0.01):
+
+        super().__init__(dist_object)
+
+        self.beta = beta
+        self.itam_error1 = itam_error1
+        self.itam_error2 = itam_error2
+
+        if samples is None:
+            if cov is None:
+                raise Warning('UQpy: No action is performed.')
             else:
-                self.corr = corr
+                self.Cz = self.distortion_x_to_z(dist_object, cov, beta, itam_error1, itam_error2)
 
-            self.distribution = [None] * len(self.dist_name)
-            for j in range(len(self.dist_name)):
-                self.distribution[j] = Distribution(self.dist_name[j])
+        else:
+            if cov is None:
+                self.C_z = np.eye(samples.shape[1])
+                self.z = self.transform_x_to_z(samples, dist_object)
+                self.u = self.z
 
-            # Check for variables that are  standard normal
-            count = 0
-            for i in range(len(self.dist_name)):
-                if self.dist_name[i].lower() == 'normal' and self.dist_params[i] == [0, 1]:
-                    count = count + 1
-
-            if count == len(self.dist_name):  # Case where the variables are all standard normal
-                self.samplesN01 = self.samples.copy()
-                m, n = np.shape(self.samples)
-                self.samples = input_samples
-                self.Jacobian = list()
-                for i in range(m):
-                    self.Jacobian.append(np.identity(n=self.dimension))
-                self.corr_norm = self.corr
-            else:
-                if np.linalg.norm(self.corr - np.identity(n=self.corr.shape[0])) < 10 ** (-8):
-                    self.corr_norm = self.corr.copy()
-                else:
-                    self.corr_norm = itam(self.distribution, self.dist_params, self.corr, beta, itam_error1,
-                                          itam_error2)
-
-                self.Jacobian = list()
-                self.samplesNG = self.samples.copy()
-                self.samples = np.zeros_like(self.samplesNG)
-
-                self.samples, self.jacobian = transform_ng_to_g(self.corr_norm, self.distribution, self.dist_params,
-                                                                self.samplesNG)
-
-        # If samples is an array
-        elif isinstance(input_samples, np.ndarray):
-            if dimension is None:
-                raise RuntimeError("UQpy: Dimension must be specified in 'Nataf' when entering samples as an array.")
-            self.dimension = dimension
-            self.samplesNG = input_samples
-            if corr is None:
-                raise RuntimeError("UQpy: corr must be specified in 'Nataf' when entering samples as an array.")
-            self.corr = corr
-            self.dist_name = dist_name
-            self.dist_params = dist_params
-            if self.dist_name is None or self.dist_params is None:
-                raise RuntimeError("UQpy: Marginal distributions and their parameters must be specified in 'Nataf' "
-                                   "when entering samples as an array.")
-
-            # Ensure the dimensions of dist_name are consistent
-            if type(self.dist_name).__name__ != 'list':
-                self.dist_name = [self.dist_name]
-            if len(self.dist_name) == 1 and self.dimension != 1:
-                self.dist_name = self.dist_name * self.dimension
-
-            # Ensure that dist_params is a list of length dimension
-            if type(self.dist_params).__name__ != 'list':
-                self.dist_params = [self.dist_params]
-            if len(self.dist_params) == 1 and self.dimension != 1:
-                self.dist_params = self.dist_params * self.dimension
-
-            self.distribution = [None] * self.dimension
-            for j in range(len(self.dist_name)):
-                self.distribution[j] = Distribution(self.dist_name[j])
-
-            # Check for variables that are non-Gaussian
-            count = 0
-            for i in range(len(self.distribution)):
-                if self.dist_name[i].lower() == 'normal' and self.dist_params[i] == [0, 1]:
-                    count = count + 1
-
-            if count == len(self.distribution):
-                self.samples = self.samplesNG.copy()
-                self.jacobian = list()
-                for i in range(len(self.distribution)):
-                    self.jacobian.append(np.identity(n=self.dimension))
-                self.corr_norm = self.corr
-            else:
-                if np.linalg.norm(self.corr - np.identity(n=self.corr.shape[0])) < 10 ** (-8):
-                    self.corr_norm = self.corr
-                else:
-                    self.corr = corr
-                    self.corr_norm = itam(self.distribution, self.dist_params, self.corr, beta, itam_error1,
-                                          itam_error2)
-
-                self.Jacobian = list()
-                self.samples = np.zeros_like(self.samplesNG)
-
-                self.samples, self.jacobian = transform_ng_to_g(self.corr_norm, self.distribution, self.dist_params,
-                                                                self.samplesNG)
-
-        # Perform ITAM to identify underlying Gaussian correlation without samples.
-        elif input_samples is None:
-            if corr is not None:
-                self.dist_name = dist_name
-                self.dist_params = dist_params
-                self.corr = corr
-                if self.dist_name is None or self.dist_params is None:
-                    raise RuntimeError("UQpy: In order to use class 'Nataf', marginal distributions and their "
-                                       "parameters must be provided.")
-
-                if dimension is not None:
-                    self.dimension = dimension
-                else:
-                    self.dimension = len(self.dist_name)
-
-                # Ensure the dimensions of dist_name are consistent
-                if type(self.dist_name).__name__ != 'list':
-                    self.dist_name = [self.dist_name]
-                if len(self.dist_name) == 1 and self.dimension != 1:
-                    self.dist_name = self.dist_name * self.dimension
-
-                # Ensure that dist_params is a list of length dimension
-                if type(self.dist_params).__name__ != 'list':
-                    self.dist_params = [self.dist_params]
-                if len(self.dist_params) == 1 and self.dimension != 1:
-                    self.dist_params = self.dist_params * self.dimension
-
-                self.distribution = [None] * self.dimension
-                for j in range(len(self.dist_name)):
-                    self.distribution[j] = Distribution(self.dist_name[j])
-
-                count = 0
-                for i in range(len(self.dist_name)):
-                    if self.dist_name[i].lower() == 'normal' and self.dist_params[i] == [0, 1]:
-                        count = count + 1
-
-                if count == len(self.distribution):
-                    self.jacobian = list()
-                    for i in range(len(self.distribution)):
-                        self.jacobian.append(np.identity(n=self.dimension))
-                    self.corr_norm = self.corr
-                else:
-                    if np.linalg.norm(self.corr - np.identity(n=self.corr.shape[0])) < 10 ** (-8):
-                        self.corr_norm = self.corr
-                    else:
-                        self.corr = corr
-                        self.corr_norm = itam(self.distribution, self.dist_params, self.corr, beta, itam_error1,
-                                              itam_error2)
+                self.Jxu = np.eye(samples.shape[1])
 
             else:
-                raise RuntimeError("UQpy: To perform the Nataf transformation without samples, a correlation "
-                                   "function 'corr' must be provided.")
+                self.Cz = self.distortion_x_to_z(dist_object, cov, beta, itam_error1, itam_error2)
+                z = self.transform_x_to_z(samples, dist_object)
+                self.z = Correlate(z, self.Cz).z
+                self.u = Uncorrelate(self.z, self.Cz).u
+
+                self.Jxu = self.jacobian_x_u(dist_object, samples, self.u, self.Cz)
+
+    @staticmethod
+    def distortion_x_to_z(dist_object, cov, beta=1.0, itam_error1=0.001, itam_error2=0.01):
+        """
+        This is a method to calculate the correlation matrix :math:`\mathbf{C_Z}` of the standard normal random vector
+        :math:`\mathbf{z}`  given the correlation matrix :math:`\mathbf{C_x}` of the random vector :math:`\mathbf{x}`
+        using the `ITAM` method (see ``Utilities`` class).
+
+        **Inputs:**
+
+        * **dist_object** ((list of ) ``Distribution`` object(s)):
+                Probability distribution of each random variable. Must be an object of type
+                ``DistributionContinuous1D`` or ``JointInd``.
+
+        * **cov** (`ndarray`):
+            The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
+
+            Default: The ``identity`` matrix.
+
+        * **itam_error1** (`float`):
+            A threshold value the `ITAM` method (see ``Utilities`` module).
+
+            Default: 0.001
+
+        * **itam_error2** (`float`):
+            A threshold value the `ITAM` method (see ``Utilities`` module).
+
+            Default: 0.01
+
+        * **beta** (`float`):
+            A variable selected to optimize convergence speed and desired accuracy of the ITAM method (see
+            ``Utilities`` module).
+
+            Default: 1.0
+
+        **Output/Returns:**
+
+        * **cov_distorted** (`ndarray`):
+            Distorted correlation matrix (:math:`\mathbf{C_z}`) of the standard normal vector **Z**.
+
+        """
+        from UQpy.Utilities import itam
+        cov_distorted = itam(dist_object, cov, beta, itam_error1, itam_error2)
+        return cov_distorted
+
+    @staticmethod
+    def transform_x_to_z(x, dist_object):
+        """
+        This is a method to transform a vector :math:`\mathbf{x}` of  samples with marginal distributions
+        :math:`f_i(x_i)` and cumulative distributions :math:`F_i(x_i)` to a vector :math:`\mathbf{z}` of standard normal
+        samples  according to: :math:`Z_{i}=\Phi^{-1}(F_i(X_{i}))`, where :math:`\Phi` is the cumulative
+        distribution function of a standard  normal variable.
+
+        This is a static method, part of the ``Nataf`` class.
+
+        **Inputs:**
+
+        * **x** (`ndarray`):
+            Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.
+
+        * **dist_object** ((list of) ``Distribution`` object(s)):
+                    Probability distribution of each random variable. Must be an object of type
+                    ``DistributionContinuous1D`` or ``JointInd``.
+        **Outputs:**
+
+        * **z** (`ndarray`):
+            Standard normal random vector of shape ``(nsamples, dimension)``.
+
+        """
+        z = np.zeros_like(x)
+
+        if isinstance(dist_object, JointInd):
+            if all(hasattr(m, 'cdf') for m in dist_object.marginals):
+                for j in range(len(dist_object.marginals)):
+                    z[:, j] = stats.norm.ppf(dist_object.marginals[j].cdf(np.atleast_2d(x[:, j]).T))
+        elif isinstance(dist_object, DistributionContinuous1D):
+            f_i = dist_object.cdf
+            z = np.atleast_2d(stats.norm.ppf(f_i(x))).T
+        else:
+            m, n = np.shape(x)
+            for j in range(n):
+                f_i = dist_object[j].cdf
+                z[:, j] = stats.norm.ppf(f_i(np.atleast_2d(x[:, j]).T))
+        return z
+
+    @staticmethod
+    def jacobian_x_u(dist_object, x, z, cov):
+        """
+        This is a method to calculate the jacobian of the transformation :math:`\mathbf{J}_{\mathbf{xu}}`.
+
+        This is a static method, part of the ``Nataf`` class.
+
+        **Inputs:**
+
+        * **u** (`ndarray`):
+            Standard normal vector of shape ``(nsamples, dimension)``.
+
+        * **x** (`ndarray`):
+            Random vector of shape ``(nsamples, dimension)``.
+
+        * **dist_object** ((list of) ``Distribution`` object(s)):
+                    Probability distribution of each random variable. Must be an object of type
+                    ``DistributionContinuous1D`` or ``JointInd``.
+
+        * **cov** (`ndarray`):
+        The covariance  matrix of shape ``(dimension, dimension)``.
+
+        **Outputs:**
+
+        * **jacobian_x_to_u** (`ndarray`):
+            Matrix of shape ``(dimension, dimension)``.
+
+        """
+        from scipy.linalg import cholesky
+        h = cholesky(cov, lower=True)
+        m, n = np.shape(z)
+        y = np.zeros(shape=(n, n))
+        jacobian_x_to_u = [None] * m
+        for i in range(m):
+            for j in range(n):
+                xi = np.array([x[i, j]])
+                zi = np.array([z[i, j]])
+                y[j, j] = stats.norm.pdf(zi) / dist_object[j].pdf(xi)
+            jacobian_x_to_u[i] = np.linalg.solve(y, h)
+
+        return jacobian_x_to_u
+
+
+class Inverse(Nataf):
+    """
+    A class perform the inverse Nataf transformation, i.e. transform independent standard normal variables to
+    arbitrarily distributed random variables. This is a an child class of the ``Nataf`` class.
+
+    **Inputs:**
+
+    * **samples** (`ndarray``):
+        Uncorrelated standard normal vector of shape ``(nsamples, dimension)`` with
+        ``(nsamples, dimension) = samples.shape``.
+
+    * **dist_object** ((list of) ``Distribution`` object(s)):
+            Probability distribution of each random variable. Must be an object of type
+                    ``DistributionContinuous1D`` or ``JointInd``.
+
+    * **cov** (`ndarray`):
+        The covariance  matrix of shape ``(dimension, dimension)`` (Optional) .
+
+        Default: The ``identity`` matrix.
+
+    **Output/Returns:**
+
+    * **x** (`ndarray`):
+        Independent standard normal vector of shape ``(nsamples, dimension)``.
+
+    * **Cx** (`ndarray`):
+        Distorted correlation matrix of the random vector **X** of shape ``(dimension, dimension)``.
+
+    * **Jux** (`ndarray`):
+        The jacobian of the transformation of shape ``(dimension, dimension)``.
+
+    **Methods:**
+
+    """
+
+    def __init__(self, dist_object, samples=None, cov=None):
+
+        super().__init__(dist_object)
+
+        if samples is None:
+            if cov is None:
+                raise Warning('UQpy: No action is performed.')
+            else:
+                self.Cx = self.distortion_z_to_x(dist_object, cov)
+
+        else:
+            if cov is None:
+                self.Cx = np.eye(samples.shape[1])
+                self.z = samples
+                self.x = self.transform_z_to_x(self.z, dist_object)
+
+                self.Jux = np.eye(samples.shape[1])
+
+            else:
+                self.Cx = self.distortion_z_to_x(dist_object, cov)
+                self.z = Correlate(samples, cov).z
+                self.x = self.transform_z_to_x(samples, dist_object)
+
+                self.Jux = self.jacobian_u_x(dist_object, self.z, self.x, cov)
+
+    @staticmethod
+    def distortion_z_to_x(dist_object, cov):
+        """
+        This is a method to calculate the correlation matrix :math:`\mathbf{C_x}` of the random vector
+        :math:`\mathbf{x}`  given the correlation matrix :math:`\mathbf{C_z}` of the standard normal random vector
+        :math:`\mathbf{z}` using the `correlation_distortion` method (see ``Utilities`` class). This is a static
+        method, part of the ``Inverse`` class.
+
+        **Inputs:**
+
+        * **dist_object** ((list of ) ``Distribution`` object(s)):
+                Probability distribution of each random variable. Must be an object of type
+                ``DistributionContinuous1D`` or ``JointInd``.
+
+        * **cov** (`ndarray`):
+            The correlation  matrix (:math:`\mathbf{C_z}`) of the standard normal vector **z** .
+
+            Default: The ``identity`` matrix.
+
+        **Output/Returns:**
+
+        * **cov_distorted** (`ndarray`):
+            Distorted correlation matrix (:math:`\mathbf{C_x}`) of the random vector **x**.
+
+        """
+        from UQpy.Utilities import correlation_distortion
+        cov_distorted = correlation_distortion(dist_object, cov)
+        return cov_distorted
+
+    @staticmethod
+    def transform_z_to_x(z, dist_object):
+        """
+        This is a method to transform a vector :math:`\mathbf{z}` of  standard normal samples to a vector
+        :math:`\mathbf{x}` of  samples with marginal distributions :math:`f_i(x_i)` and cumulative distributions
+        :math:`F_i(x_i)` according to: :math:`Z_{i}=F_i^{-1}(\Phi(Z_{i}))`, where :math:`\Phi` is the cumulative
+        distribution function of a standard  normal variable.
+
+        This is a static method, part of the ``Nataf`` class.
+
+        **Inputs:**
+
+        * **z** (`ndarray`):
+            Standard normal vector of shape ``(nsamples, dimension)``.
+
+        * **dist_object** ((list of) ``Distribution`` object(s)):
+                    Probability distribution of each random variable. Must be an object of type
+                    ``DistributionContinuous1D`` or ``JointInd``.
+
+        **Outputs:**
+
+        * **x** (`ndarray`):
+            Random vector of shape ``(nsamples, dimension)`` with prescribed probability distribution.
+
+        """
+
+        x = np.zeros_like(z)
+
+        if isinstance(dist_object, JointInd):
+            if all(hasattr(m, 'icdf') for m in dist_object.marginals):
+                for j in range(len(dist_object.marginals)):
+                    f_i = dist_object.marginals[j].icdf
+                    x[:, j] = np.atleast_2d(f_i(stats.norm.cdf(z[:, j]).T))
+        elif isinstance(dist_object, DistributionContinuous1D):
+            f_i = dist_object.icdf
+            x = np.atleast_2d(f_i(stats.norm.cdf(z))).T
+        elif isinstance(dist_object, list):
+            _, n = np.shape(z)
+            for j in range(n):
+                f_i = dist_object[j].icdf
+                x[:, j] = np.atleast_2d(f_i(stats.norm.cdf(z[:, j]).T))
+        return x
+
+    @staticmethod
+    def jacobian_u_x(dist_object, z, x, cov):
+        """
+        This is a method to calculate the jacobian of the transformation :math:`\mathbf{J}_{\mathbf{ux}}`.
+
+        This is a static method, part of the ``Nataf`` class.
+
+        **Inputs:**
+
+        * **u** (`ndarray`):
+            Standard normal vector of shape ``(nsamples, dimension)``.
+
+        * **x** (`ndarray`):
+            Random vector of shape ``(nsamples, dimension)``.
+
+        * **dist_object** ((list of) ``Distribution`` object(s)):
+                    Probability distribution of each random variable. Must be an object of type
+                    ``DistributionContinuous1D`` or ``JointInd``.
+
+        * **cov** (`ndarray`):
+        The covariance  matrix of shape ``(dimension, dimension)``.
+
+        **Outputs:**
+
+        * **jacobian_u_to_x** (`ndarray`):
+            Matrix of shape ``(dimension, dimension)``.
+
+        """
+        from scipy.linalg import cholesky
+        h = cholesky(cov, lower=True)
+        m, n = np.shape(z)
+        y = np.zeros(shape=(n, n))
+        jacobian_u_to_x = [None] * m
+        for i in range(m):
+            for j in range(n):
+                xi = np.array([x[i, j]])
+                zi = np.array([z[i, j]])
+                y[j, j] = dist_object[j].pdf(xi) / stats.norm.pdf(zi)
+            jacobian_u_to_x[i] = np.linalg.solve(h, y)
+
+        return jacobian_u_to_x
+
+
+class Uncorrelate:
+    """
+    Remove correlation from correlated standard normal random variables.
+
+    **Inputs:**
+
+    * **samples** (`ndarray`):
+        Correlated standard normal vector of shape ``(nsamples, dimension)``.
+
+    * **cov** (`ndarray`):
+        The correlation matrix. Must be an ``ndarray`` of shape ``(u.shape[1], u.shape[1])``.
+
+    **Outputs:**
+
+    * **u** (`ndarray`):
+        Correlated standard normal vector of shape ``(nsamples, dimension)``.
+
+    """
+
+    def __init__(self, samples, corr):
+        self.z = samples
+        from scipy.linalg import cholesky
+        h = cholesky(corr, lower=True)
+        self.u = np.dot(np.linalg.inv(h), self.z.T).T
+
+
+class Correlate:
+    """
+    Induce correlation to uncorrelated standard normal random variables.
+
+    **Inputs:**
+
+    * **samples** (`ndarray`):
+        Uncorrelated standard normal vector of shape ``(nsamples, dimension)``.
+
+    * **cov** (`ndarray`):
+        The correlation matrix. Must be an ``ndarray`` of shape ``(u.shape[1], u.shape[1])``.
+
+    **Outputs:**
+
+    * **z** (`ndarray`):
+        Correlated standard normal vector of shape ``(nsamples, dimension)``.
+
+    """
+
+    def __init__(self, samples, cov):
+        self.u = samples
+        self.corr = cov
+        from scipy.linalg import cholesky
+        h = cholesky(cov, lower=True)
+        self.z = np.dot(h, self.u.T).T

@@ -14,8 +14,8 @@ class SRM:
     Singular Value Decomposition as opposed to Cholesky Decomposition to be more robust with near-Positive Definite
     multi-dimensional Power Spectra.
 
-    Input:
-
+    **Input:**
+    
     :param nsamples: Number of Stochastic Processes to be generated
     :type nsamples: int
 
@@ -36,13 +36,29 @@ class SRM:
                     2. 'multi' - Multi-variate
     :type case: str
 
-    Output:
+    **Attributes:**
 
+    :param self.phi: Random Phase angles used in the simulation
+    :type: self.phi: ndarray
+
+    :param self.n: Dimension of the Stochastic process
+    :type: self.n: int
+
+    :param self.m: Number of variables in the Stochastic process
+    :type: self.m: int
+
+    **Output:**
+
+    :param: samples: Generated Stochastic Process
     :rtype: samples: numpy.ndarray
+    
+    **Author:**
+
+    Lohit Vandanapu
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:02/12/2019 Lohit Vandanapu
+    # Last Modified:04/08/2020 Lohit Vandanapu
 
     def __init__(self, nsamples, S, dw, nt, nw, case='uni'):
         self.S = S
@@ -67,6 +83,7 @@ class SRM:
         B = np.exp(phi * 1.0j) * np.sqrt(2 ** (self.n + 1) * self.S * np.prod(self.dw))
         sample = np.fft.fftn(B, np.ones(self.n, dtype=np.int32) * self.nt)
         samples = np.real(sample)
+        samples = samples[:, np.newaxis]
         return samples
 
     def _simulate_multi(self, phi):
@@ -76,7 +93,8 @@ class SRM:
         R = np.einsum('...ij,...j->...ij', U, np.sqrt(s))
         F = Coeff * np.einsum('...ij,n...j -> n...i', R, np.exp(phi * 1.0j))
         F[np.isnan(F)] = 0
-        samples = np.real(np.fft.fftn(F, s=[self.nt for _ in range(self.n)], axes=tuple(np.arange(1, 1+self.n))))
+        samples = np.real(np.fft.fftn(F, s=[self.nt for _ in range(self.n)], axes=tuple(np.arange(1, 1 + self.n))))
+        samples = np.einsum('n...m->nm...', samples)
         return samples
 
 
@@ -87,10 +105,10 @@ class BSRM:
     Processes. This class uses Singular Value Decomposition as opposed to Cholesky Decomposition to be more robust with
     near-Positive Definite multi-dimensional Power Spectra.
 
-    Input:
+    **Input:**
 
-    :param nsamples: Number of Stochastic Processes to be generated
-    :type nsamples: int
+    :param: nsamples: Number of Stochastic Processes to be generated
+    :type: nsamples: int
 
     :param S: Power Spectral Density to be used for generating the samples
     :type S: numpy.ndarray
@@ -110,13 +128,47 @@ class BSRM:
     :param nw: Array of number of frequency discretizations across dimensions
     :type nw: numpy.ndarray
 
-    Output:
+    **Attributes:**
 
+    :param self.phi: Random Phase angles used in the simulation
+    :type: self.phi: ndarray
+
+    :param self.n: Dimension of the Stochastic process
+    :type: self.n: int
+
+    :param self.B_Ampl: Amplitude of the complex-valued Bispectrum
+    :type: self.B_Ampl: ndarray
+
+    :param self.B_Real: Real part of the complex-valued Bispectrum
+    :type: self.B_Real: ndarray
+
+    :param self.B_Imag: Imaginary part of the complex-valued Bispectrum
+    :type: self.B_Imag: ndarray
+
+    :param self.Biphase: Biphase values of the complex-valued Bispectrum
+    :type: self.Biphase: ndarray
+
+    :param self.Bc2: Values of the squared Bicoherence
+    :type: self.Bc2: ndarray
+
+    :param self.sum_Bc2: Values of the sum of squared Bicoherence
+    :type: self.sum_Bc2: ndarray
+
+    :param self.PP: Pure part of the Power Spectrum
+    :type: self.PP: ndarray
+
+    **Output:**
+
+    :param: samples: Generated Stochastic Process
     :rtype samples: numpy.ndarray
+
+    **Author:**
+
+    Lohit Vandanapu
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:02/12/2019 Lohit Vandanapu
+    # Last Modified:04/08/2020 Lohit Vandanapu
 
     def __init__(self, n_sim, S, B, dt, dw, nt, nw, case='uni'):
         self.n_sim = n_sim
@@ -204,6 +256,7 @@ class BSRM:
         B = B * Coeff
         B[np.isnan(B)] = 0
         samples = np.fft.fftn(B, [self.nt for _ in range(self.n)])
+        samples = samples[:, np.newaxis]
         return np.real(samples)
 
 
@@ -212,35 +265,50 @@ class KLE:
     A class to simulate Stochastic Processes from a given auto-correlation function based on the Karhunen-Louve
     Expansion
 
-    Input:
+    **Input:**
 
-    :param nsamples: Number of Stochastic Processes to be generated
-    :type nsamples: int
+    :param: nsamples: Number of Stochastic Processes to be generated
+    :type: nsamples: int
 
-    :param R: Auto-correlation Function to be used for generating the samples
-    :type R: numpy.ndarray
+    :param: R: Auto-correlation Function to be used for generating the samples
+    :type: R: numpy.ndarray
 
-    Output:
+    **Attributes:**
 
-    :rtype samples: numpy.ndarray
+    :param: nRV: Number of eigen values to be used in the expansion
+    :type: nRV: int
+
+    **Output:**
+
+    :param: samples: Generated Stochastic Process
+    :rtype: samples: numpy.ndarray
+
+    **Author:**
+
+    Lohit Vandanapu
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:08/04/2018 Lohit Vandanapu
+    # Last Modified:04/08/2020 Lohit Vandanapu
 
-    def __init__(self, nsamples, R):
+    def __init__(self, nsamples, R, dt, threshold=None):
         self.R = R
         self.samples = self._simulate(nsamples)
+        self.dt = dt
+        if threshold:
+            self.nRV = threshold
+        else:
+            self.nRV = len(self.R[0])
 
     def _simulate(self, nsamples):
         lam, phi = np.linalg.eig(self.R)
-        nRV = self.R.shape[0]
-        xi = np.random.normal(size=(nRV, nsamples))
+        xi = np.random.normal(size=(self.nRV, nsamples))
         lam = np.diag(lam)
         lam = lam.astype(np.float64)
-        samples = np.dot(phi, np.dot(sqrtm(lam), xi))
+        samples = np.dot(phi[:, :self.nRV], np.dot(sqrtm(lam[:self.nRV]), xi))
         samples = np.real(samples)
         samples = samples.T
+        samples = samples[:, np.newaxis]
         return samples
 
 
@@ -248,47 +316,60 @@ class Translation:
     """
     A class to translate Gaussian Stochastic Processes to non-Gaussian Stochastic Processes
 
-    Input:
+    **Input:**
 
-    :param samples_g: Gaussian Stochastic Processes
-    :type samples_g: numpy.ndarray
+    :param: samples_g: Gaussian Stochastic Processes
+    :rtype: samples_g: numpy.ndarray
 
-    :param S_g: Power Spectrum of the Gaussian Stochastic Processes
-    :type S_g: numpy.ndarray
+    :param: R_g: Auto-covariance of the Gaussian Stochastic Processes
+    :rtype: R_g: numpy.ndarray
 
-    :param R_g: Auto-correlation Function of the Gaussian Stochastic Processes
-    :type R_g: numpy.ndarray
+    :param: S_g: Power Spectrum of the Gaussian Stochastic Processes
+    :rtype: S_g: numpy.ndarray
 
-    :param marginal: name of marginal
-    :type marginal: str
+    :param: marginal: name of marginal
+    :type: marginal: str
 
-    :param params: list of parameters for the marginal
-    :type params: list
+    :param: params: list of parameters for the marginal
+    :type: params: list
 
-    Output:
+    **Output:**
 
-    :rtype samples_ng: numpy.ndarray
-    :rtype R_ng: numpy.ndarray
+    :param: samples_ng: Non-Gaussian Stochastic Processes
+    :type: samples_ng: numpy.ndarray
+
+    :param: S_ng: Power Spectrum of the Gaussian Non-Stochastic Processes
+    :type: S_ng: numpy.ndarray
+
+    :param: R_ng: Auto-covariance Function of the Non-Gaussian Stochastic Processes
+    :type: R_ng: numpy.ndarray
+
+    **Author:**
+
+    Lohit Vandanapu
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:05/14/2019 Lohit Vandanapu
+    # Last Modified:04/08/2020 Lohit Vandanapu
 
-    def __init__(self, samples_g, marginal, params, dt, dw, nt, nw, S_g=None, R_g=None):
-        self.samples_g = samples_g
+    def __init__(self, marginal, params, dt, dw, nt, nw, S_g=None, R_g=None, samples_g=None):
+        if R_g and S_g is None:
+            print('Either the Power Spectrum or the Autocorrelation function should be specified')
         if R_g is None:
             self.S_g = S_g
-            self.R_g = S_to_R(S_g, np.arange(0, nw)*dw, np.arange(0, nt)*dt)
+            self.R_g = S_to_R(S_g, np.arange(0, nw) * dw, np.arange(0, nt) * dt)
         elif S_g is None:
             self.R_g = R_g
-            self.S_g = R_to_S(R_g, np.arange(0, nw)*dw, np.arange(0, nt)*dt)
-        self.num = self.R_g.shape[0]
+            self.S_g = R_to_S(R_g, np.arange(0, nw) * dw, np.arange(0, nt) * dt)
+        self.shape = self.R_g.shape
         self.dim = len(self.R_g.shape)
         self.marginal = marginal
         self.params = params
-        self.samples_ng = self.translate_g_samples()
+        if samples_g is not None:
+            self.samples_g = samples_g
+            self.samples_ng = self.translate_g_samples()
         self.r_ng, self.R_ng = self.autocorrealtion_distortion()
-        self.S_ng = R_to_S(self.R_ng, np.arange(0, nw)*dw, np.arange(0, nt)*dt)
+        self.S_ng = R_to_S(self.R_ng, np.arange(0, nw) * dw, np.arange(0, nt) * dt)
 
     def translate_g_samples(self):
         std = np.sqrt(np.var(self.samples_g))
@@ -303,7 +384,7 @@ class Translation:
         r_ng = np.zeros_like(r_g)
         # for i in itertools.product(*[range(self.num) for _ in range(self.dim)]):
         #     R_ng[(*i, *[])] = self.solve_integral(r_g[(*i, *[])])
-        for i in range(self.num):
+        for i in itertools.product(*[range(s) for s in self.shape]):
             r_ng[i] = self.solve_integral(r_g[i])
         R_ng = r_ng * Distribution(self.marginal).moments(self.params)[1]
         return r_ng, R_ng
@@ -330,9 +411,9 @@ class Translation:
         w2d = weights2d.flatten()
         # tmp_f_xi = inv_cdf(self.marginal)[0](stats.norm.cdf(xi), self.params[0])
         # tmp_f_eta = inv_cdf(self.marginal)[0](stats.norm.cdf(eta), self.params[0])
-        tmp_f_xi = Distribution(self.marginal).icdf(stats.norm.cdf(xi), self.params)
-        tmp_f_eta = Distribution(self.marginal).icdf(stats.norm.cdf(eta), self.params)
-        coef = tmp_f_xi * tmp_f_eta * w2d
+        tmp_f_xi = Distribution(self.marginal).icdf(stats.norm.cdf(xi[:, np.newaxis]), self.params)
+        tmp_f_eta = Distribution(self.marginal).icdf(stats.norm.cdf(eta[:, np.newaxis]), self.params)
+        coef = tmp_f_xi[:, 0] * tmp_f_eta[:, 0] * w2d
         rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
         rho_non = (rho_non - (Distribution(self.marginal).moments(self.params)[0]) ** 2) / \
                   Distribution(self.marginal).moments(self.params)[1]
@@ -344,35 +425,47 @@ class InverseTranslation:
     A class to perform Iterative Translation Approximation Method to find the underlying  Gaussian Stochastic Processes
     which upon translation would yield the necessary non-Gaussian Stochastic Processes
 
-    Input:
+    **Input:**
 
-    :param samples_ng: Gaussian Stochastic Processes
-    :type samples_ng: numpy.ndarray
+    :param: samples_ng: Non-Gaussian Stochastic Processes
+    :type: samples_ng: numpy.ndarray
 
-    :param R_ng: Auto-correlation Function of the Gaussian Stochastic Processes
-    :type R_ng: numpy.ndarray
+    :param: S_ng: Power Spectrum of the Gaussian Non-Stochastic Processes
+    :type: R_ng: numpy.ndarray
 
-    :param marginal: mane of the marginal
-    :type marginal: str
+    :param: R_ng: Auto-covariance Function of the Non-Gaussian Stochastic Processes
+    :type: R_ng: numpy.ndarray
 
-    :param params: list of parameters for the marginal
-    :type params: list
+    :param: marginal: name of the marginal
+    :type: marginal: str
 
-    Output:
+    :param: params: list of parameters for the marginal
+    :type: params: list
 
-    :rtype samples_g: numpy.ndarray
-    :rtype R_g: numpy.ndarray
+    **Output:**
+
+    :param: samples_g: Gaussian Stochastic Processes
+    :rtype: samples_g: numpy.ndarray
+
+    :param: R_g: Auto-covariance of the Gaussian Stochastic Processes
+    :rtype: R_g: numpy.ndarray
+
+    :param: S_g: Power Spectrum of the Gaussian Stochastic Processes
+    :rtype: S_g: numpy.ndarray
+
+    **Author:**
+
+    Lohit Vandanapu
     """
 
     # Created by Lohit Vandanapu
-    # Last Modified:02/13/2019 Lohit Vandanapu
+    # Last Modified:04/08/2020 Lohit Vandanapu
 
-    def __init__(self, samples_ng, marginal, params, dt, dw, nt, nw, R_ng=None, S_ng=None):
-        self.samples_ng = samples_ng
-        self.w = np.arange(0, nw)*dw
-        self.t = np.arange(0, nt)*dt
-        # if R_ng and S_ng is None:
-        #     print('Either the Power Spectrum or the Autocorrelation function should be specified')
+    def __init__(self, marginal, params, dt, dw, nt, nw, R_ng=None, S_ng=None, samples_ng=None):
+        self.w = np.arange(0, nw) * dw
+        self.t = np.arange(0, nt) * dt
+        if R_ng and S_ng is None:
+            print('Either the Power Spectrum or the Autocorrelation function should be specified')
         if R_ng is None:
             self.S_ng = S_ng
             self.R_ng = S_to_R(S_ng, self.w, self.t)
@@ -383,16 +476,18 @@ class InverseTranslation:
         self.dim = len(self.R_ng.shape)
         self.marginal = marginal
         self.params = params
-        self.samples_g = self.inverse_translate_ng_samples()
+        if samples_ng is not None:
+            self.samples_ng = samples_ng
+            self.samples_g = self.inverse_translate_ng_samples()
         self.S_g = self.itam()
         self.R_g = S_to_R(self.S_g, self.w, self.t)
-        self.r_g = self.R_g/self.R_g[0]
+        self.r_g = self.R_g / self.R_g[0]
 
     def inverse_translate_ng_samples(self):
         # samples_cdf = cdf(self.marginal)[0](self.samples_ng, self.params[0])
         # samples_g = inv_cdf(['Normal'])[0](samples_cdf, [0, 1])
-        samples_cdf = Distribution(self.marginal).cdf(self.samples_ng, self.params)
-        samples_g = Distribution('Normal').icdf(samples_cdf, [0, 1])
+        samples_cdf = Distribution(dist_name=self.marginal).cdf(self.samples_ng, self.params)
+        samples_g = Distribution(dist_name='normal').icdf(samples_cdf, [0, 1])
         return samples_g
 
     def itam(self):
@@ -412,7 +507,7 @@ class InverseTranslation:
             r_g_iterate = S_to_R(s_g_iterate, self.w, self.t)
             # for i in itertools.product(*[range(self.num) for _ in range(self.dim)]):
             for i in range(len(target_r)):
-                r_ng_iterate[i] = self.solve_integral(r_g_iterate[i]/r_g_iterate[0])
+                r_ng_iterate[i] = self.solve_integral(r_g_iterate[i] / r_g_iterate[0])
             s_ng_iterate = R_to_S(r_ng_iterate, self.w, self.t)
 
             # compute the relative difference between the computed NGACF & the target R(Normalized)
@@ -432,7 +527,7 @@ class InverseTranslation:
                 s_g_iterate = s_g_next_iterate
                 error0 = error1
 
-        return s_g_iterate/Distribution(self.marginal).moments(self.params)[1]
+        return s_g_iterate / Distribution(self.marginal).moments(self.params)[1]
 
     def solve_integral(self, rho):
         if rho == 1.0:
@@ -454,8 +549,8 @@ class InverseTranslation:
 
         weights2d = first * second
         w2d = weights2d.flatten()
-        tmp_f_xi = Distribution(self.marginal).icdf(stats.norm.cdf(xi), self.params)
-        tmp_f_eta = Distribution(self.marginal).icdf(stats.norm.cdf(eta), self.params)
+        tmp_f_xi = Distribution(self.marginal).icdf(stats.norm.cdf(xi[:, np.newaxis]), self.params)
+        tmp_f_eta = Distribution(self.marginal).icdf(stats.norm.cdf(eta[:, np.newaxis]), self.params)
         # tmp_f_xi = inv_cdf(self.marginal)[0](stats.norm.cdf(xi), self.params[0])
         # tmp_f_eta = inv_cdf(self.marginal)[0](stats.norm.cdf(eta), self.params[0])
         coef = tmp_f_xi * tmp_f_eta * w2d

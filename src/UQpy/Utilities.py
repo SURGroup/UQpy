@@ -26,7 +26,7 @@ from scipy.special import gamma
 from scipy.stats import chi2, norm
 
 
-def _run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
+def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
     """
     Execute the python model in parallel
     :param sample: One sample point where the model has to be evaluated
@@ -147,25 +147,32 @@ def compute_Delaunay_centroid_volume(vertices):
 
     return centroid, volume
 
-def correlation_distortion(marginal, params, rho_norm):
+
+def correlation_distortion(marginal, rho_norm):
 
     """
         Description:
+
             A function to solve the double integral equation in order to evaluate the modified correlation
             matrix in the standard normal space given the correlation matrix in the original space. This is achieved
             by a quadratic two-dimensional Gauss-Legendre integration.
             This function is a part of the ERADIST code that can be found in:
             https://www.era.bgu.tum.de/en/software/
+
         Input:
             :param marginal: marginal distributions
             :type marginal: list
+
             :param params: marginal distribution parameters.
             :type params: list
+
             :param rho_norm: Correlation at standard normal space.
             :type rho_norm: ndarray
+
         Output:
             :return rho: Distorted correlation
             :rtype rho: ndarray
+
     """
 
     n = 1024
@@ -188,59 +195,92 @@ def correlation_distortion(marginal, params, rho_norm):
     rho = np.ones_like(rho_norm)
 
     print('UQpy: Computing Nataf correlation distortion...')
-    for i in range(len(marginal)):
-        i_cdf_i = marginal[i].icdf
-        moments_i = marginal[i].moments
-        mi = moments_i(params[i])
-        if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
-            raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+    from UQpy.Distributions import JointInd, DistributionContinuous1D
+    if isinstance(marginal, JointInd):
+        if all(hasattr(m, 'moments') for m in marginal.marginals) and \
+                all(hasattr(m, 'icdf') for m in marginal.marginals):
+            for i in range(len(marginal.marginals)):
+                i_cdf_i = marginal.marginals[i].icdf
+                mi = marginal.marginals[i].moments()
+                if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
+                    raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+                for j in range(i + 1, len(marginal.marginals)):
+                    i_cdf_j = marginal.marginals[j].icdf
+                    mj = marginal.marginals[j].moments()
+                    if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
+                        raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
 
-        for j in range(i + 1, len(marginal)):
-            i_cdf_j = marginal[j].icdf
-            moments_j = marginal[j].moments
-            mj = moments_j(params[j])
-            if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
-                raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+                    tmp_f_xi = ((i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T) - mj[0]) / np.sqrt(mj[1]))
+                    tmp_f_eta = ((i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T) - mi[0]) / np.sqrt(mi[1]))
+                    coef = tmp_f_xi * tmp_f_eta * w2d
 
-            tmp_f_xi = ((i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T, params[j]) - mj[0]) / np.sqrt(mj[1]))
-            tmp_f_eta = ((i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T, params[i]) - mi[0]) / np.sqrt(mi[1]))
-            coef = tmp_f_xi * tmp_f_eta * w2d
+                    rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
+                    rho[j, i] = rho[i, j]
 
-            rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
-            rho[j, i] = rho[i, j]
+    elif isinstance(marginal, list):
+        if all(hasattr(m, 'moments') for m in marginal) and \
+                all(hasattr(m, 'icdf') for m in marginal):
+            for i in range(len(marginal)):
+                i_cdf_i = marginal[i].icdf
+                mi = marginal[i].moments()
+                if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
+                    raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+
+                for j in range(i + 1, len(marginal)):
+                    i_cdf_j = marginal[j].icdf
+                    mj = marginal[j].moments()
+                    if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
+                        raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+
+                    tmp_f_xi = ((i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T) - mj[0]) / np.sqrt(mj[1]))
+                    tmp_f_eta = ((i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T) - mi[0]) / np.sqrt(mi[1]))
+                    coef = tmp_f_xi * tmp_f_eta * w2d
+
+                    rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
+                    rho[j, i] = rho[i, j]
 
     print('UQpy: Done.')
     return rho
 
 
-def itam(marginal, params, corr, beta, thresh1, thresh2):
+def itam(marginal, corr, beta, thresh1, thresh2):
 
     """
         Description:
+
             A function to perform the  Iterative Translation Approximation Method;  an iterative scheme for
             upgrading the Gaussian power spectral density function.
             [1] Shields M, Deodatis G, Bocchini P. A simple and efficient methodology to approximate a general
             non-Gaussian  stochastic process by a translation process. Probab Eng Mech 2011;26:511–9.
+
+
         Input:
             :param marginal: marginal distributions
             :type marginal: list
+
             :param params: marginal distribution parameters.
             :type params: list
+
             :param corr: Non-Gaussian Correlation matrix.
             :type corr: ndarray
+
             :param beta:  A variable selected to optimize convergence speed and desired accuracy.
-            :type beta: int
+            :type beta: float
+
             :param thresh1: Threshold
             :type thresh1: float
+
             :param thresh2: Threshold
             :type thresh2: float
+
         Output:
             :return corr_norm: Gaussian correlation matrix
             :rtype corr_norm: ndarray
+
     """
 
     if beta is None:
-        beta = 1
+        beta = 1.0
     if thresh1 is None:
         thresh1 = 0.0001
     if thresh2 is None:
@@ -258,7 +298,7 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
     print("UQpy: Initializing Iterative Translation Approximation Method (ITAM)")
     while iter_ < max_iter and error1 > thresh1 and abs(error1-error0)/error0 > thresh2:
         error0 = error1
-        corr0 = correlation_distortion(marginal, params, corr_norm0)
+        corr0 = correlation_distortion(marginal, corr_norm0)
         error1 = np.linalg.norm(corr - corr0)
 
         max_ratio = np.amax(np.ones((len(corr), len(corr))) / abs(corr_norm0))
@@ -286,16 +326,23 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
 def bi_variate_normal_pdf(x1, x2, rho):
 
     """
+
         Description:
+
             A function which evaluates the values of the bi-variate normal probability distribution function.
+
         Input:
             :param x1: value 1
             :type x1: ndarray
+
             :param x2: value 2
             :type x2: ndarray
+
             :param rho: correlation between x1, x2
             :type rho: float
+
         Output:
+
     """
     return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
             np.exp(-1/(2*(1-rho**2)) *
@@ -306,9 +353,12 @@ def _get_a_plus(a):
 
     """
         Description:
+
             A supporting function for the nearest_pd function
+
         Input:
             :param a:A general nd array
+
         Output:
             :return a_plus: A modified nd array
             :rtype:np.ndarray
@@ -325,7 +375,9 @@ def _get_ps(a, w=None):
 
     """
         Description:
+
             A supporting function for the nearest_pd function
+
     """
 
     w05 = np.matrix(w ** .5)
@@ -337,7 +389,9 @@ def _get_pu(a, w=None):
 
     """
         Description:
+
             A supporting function for the nearest_pd function
+
     """
 
     a_ret = np.array(a.copy())
@@ -350,11 +404,14 @@ def nearest_psd(a, nit=10):
     """
         Description:
             A function to compute the nearest positive semi definite matrix of a given matrix
+
          Input:
             :param a: Input matrix
             :type a: ndarray
+
             :param nit: Number of iterations to perform (Default=10)
             :type nit: int
+
         Output:
             :return:
     """
@@ -379,16 +436,21 @@ def nearest_pd(a):
 
     """
         Description:
+
             Find the nearest positive-definite matrix to input
             A Python/Numpy port of John D'Errico's `nearestSPD` MATLAB code [1], which
             credits [2].
             [1] https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd
             [2] N.J. Higham, "Computing a nearest symmetric positive semidefinite
             matrix" (1988): https://doi.org/10.1016/0024-3795(88)90223-6
+
         Input:
             :param a: Input matrix
             :type a:
+
+
         Output:
+
     """
 
     b = (a + a.T) / 2
@@ -426,10 +488,14 @@ def is_pd(b):
 
     """
         Description:
+
             Returns true when input is positive-definite, via Cholesky decomposition.
+
         Input:
             :param b: A general matrix
+
         Output:
+
     """
     try:
         _ = np.linalg.cholesky(b)
@@ -442,13 +508,16 @@ def estimate_psd(samples, nt, t):
 
     """
         Description: A function to estimate the Power Spectrum of a stochastic process given an ensemble of samples
+
         Input:
             :param samples: Samples of the stochastic process
             :param nt: Number of time discretisations in the time domain
             :param t: Total simulation time
+
         Output:
             :return: Power Spectrum
             :rtype: ndarray
+
     """
 
     sample_size = nt
@@ -466,11 +535,14 @@ def S_to_R(S, w, t):
 
     """
         Description:
+
             A function to transform the power spectrum to an autocorrelation function
+
         Input:
             :param s: Power Spectrum of the signal
             :param w: Array of frequency discretisations
             :param t: Array of time discretisations
+
         Output:
             :return r: Autocorrelation function
             :rtype: ndarray
@@ -491,13 +563,17 @@ def R_to_S(R, w, t):
 
     """
         Description: A function to transform the autocorrelation function to a power spectrum
+
+
         Input:
             :param r: Autocorrelation function of the signal
             :param w: Array of frequency discretizations
             :param t: Array of time discretizations
+
         Output:
             :return s: Power Spectrum
             :rtype: ndarray
+
     """
     dt = t[1] - t[0]
     fac = np.ones(len(t))
@@ -515,48 +591,43 @@ def R_to_r(R):
 
     """
         Description: A function to scale down the autocorrelation function to a correlation function
+
+
         Input:
             :param R: Autocorrelation function of the signal
         Output:
             :return r: correlation function of the signal
             :rtype: ndarray
+
     """
-    r = R/R[0]
+    r = R/np.max(R)
     return r
 
 
-def eval_hessian(dimension, mixed_der, der):
-
-    """
-    Calculate the hessian matrix with finite differences
-    Parameters:
-    """
-    hessian = np.diag(der)
-    import itertools
-    range_ = list(range(dimension))
-    add_ = 0
-    for i in itertools.combinations(range_, 2):
-        hessian[i[0], i[1]] = mixed_der[add_]
-        hessian[i[1], i[0]] = hessian[i[0], i[1]]
-        add_ += 1
-    return hessian
-
-
 def IS_diagnostics(sampling_outputs=None, weights=None, graphics=False, figsize=(8, 3), ):
+    """
+    Diagnostics for IS.
+
+    These diagnostics are qualitative, they can help the user in understanding how the IS algorithm is performing.
+    This function returns printouts and plots.
+
+    **Inputs:**
+
+    :param sampling_outputs: output object of a sampling method
+    :type sampling_outputs: object of class MCMC
+
+    :param weights: output weights (alternative to giving sampling_outputs)
+    :type weights: ndarray
+
+    :param graphics: indicates whether or not to do a plot
+
+                     Default: False
+    :type graphics: boolean
+
+    :param figsize: size of the figure for output plots
+    :type figsize: tuple (width, height)
 
     """
-         Input:
-             :param sampling_outputs: output object of a sampling method
-             :type sampling_outputs: object of class MCMC or IS
-             :param weights: output weights of IS (alternative to giving sampling_outputs for IS)
-             :type weights: ndarray
-             :param graphics: indicates whether or not to do a plot
-             :type graphics: boolean, default False
-             :param figsize: size of the figure for output plots
-             :type figsize: tuple (width, height)
-         Output:
-             returns various diagnostics values/plots to evaluate importance sampling outputs
-     """
 
     if (sampling_outputs is None) and (weights is None):
         raise ValueError('UQpy error: sampling_outputs or weights should be provided')
@@ -579,24 +650,36 @@ def IS_diagnostics(sampling_outputs=None, weights=None, graphics=False, figsize=
 
 def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ESS=0.05,
                      graphics=False, figsize=None):
+    """
+    Diagnostics for MCMC.
+
+    These diagnostics are qualitative, they can help the user in understanding how the MCMC algorithm is performing.
+    These diagnostics are not intended to give a quantitative assessment of MCMC algorithms. This function returns
+    printouts and plots.
+
+    **Inputs:**
+
+    :param sampling_outputs: output object of a sampling method
+    :type sampling_outputs: object of class MCMC
+
+    :param samples: output samples of a sampling method, alternative to giving sampling_outputs
+    :type samples: ndarray
+
+    :param eps_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
+    :type eps_ESS: float in [0,1]
+
+    :param alpha_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
+    :type alpha_ESS: float in [0,1]
+
+    :param graphics: indicates whether or not to do a plot
+
+                     Default: False
+    :type graphics: boolean
+
+    :param figsize: size of the figure for output plots
+    :type figsize: tuple (width, height)
 
     """
-         Input:
-             :param sampling_outputs: output object of a sampling method
-             :type sampling_outputs: object of class MCMC or IS
-             :param samples: output samples of a sampling method (alternative to giving sampling_outputs for MCMC)
-             :type samples: ndarray
-             :param eps_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
-             :type eps_ESS: float in [0,1]
-             :param alpha_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
-             :type alpha_ESS: float in [0,1]
-             :param graphics: indicates whether or not to do a plot
-             :type graphics: boolean, default False
-             :param figsize: size of the figure for output plots
-             :type figsize: tuple (width, height)
-         Output:
-             returns various diagnostics values/plots to evaluate MCMC sampling outputs
-     """
 
     if (eps_ESS < 0) or (eps_ESS > 1):
         raise ValueError('eps_ESS should be a float between 0 and 1.')
@@ -689,6 +772,33 @@ def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ES
 
 
 def resample(samples, weights, method='multinomial', size=None):
+    """
+    Resample to get a set of un-weighted samples that represent a density in place of a set of weighted samples.
+
+    **Inputs:**
+
+    :param samples: Existing weighted samples
+    :type samples: ndarray (nsamples, dim)
+
+    :param weights: Weights of samples.
+    :type pdf: ndarray (nsamples,)
+
+    :param method: resampling method, as of V3 only multinomial resampling is supported
+
+                   Default: 'multinomial'
+    :type method: str
+
+    :param size: Number of un-weighted samples to generate.
+
+                 Default: None (same number of samples is generated as number of existing samples).
+    :type pdf: int
+
+    **Output/Returns:**
+
+    :param unweighted_samples: Un-weighted samples that represent the target pdf
+    :type unweighted_samples: ndarray
+
+    """
     nsamples = samples.shape[0]
     if size is None:
         size = nsamples
@@ -717,6 +827,15 @@ def suppress_stdout():
 
 
 def check_input_dims(x):
+    """
+    Check that x is a 2D ndarray.
+
+    **Inputs:**
+
+    :param x: Existing samples
+    :type x: ndarray (nsamples, dim)
+
+    """
     if not isinstance(x, np.ndarray):
         try:
             x = np.array(x)
@@ -725,21 +844,6 @@ def check_input_dims(x):
     if len(x.shape) != 2:
         raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
     return x
-
-
-def recursive_update_mean_covariance(n, new_sample, previous_mean, previous_covariance=None):
-    """ Iterative formula to compute a new mean, covariance based on previous ones and new sample.
-     n is the number of samples used to compute the current mean """
-    new_mean = (n - 1) / n * previous_mean + 1 / n * new_sample
-    if previous_covariance is None:
-        return new_mean
-    dim = new_sample.size
-    if n == 1:
-        new_covariance = np.zeros((dim, dim))
-    else:
-        delta_n = (new_sample - previous_mean).reshape((dim, 1))
-        new_covariance = (n - 2) / (n - 1) * previous_covariance + 1 / n * np.matmul(delta_n, delta_n.T)
-    return new_mean, new_covariance
 
 
 # Grassmann: svd
@@ -793,8 +897,8 @@ def check_arguments(argv, min_num_matrix, ortho):
     """
     Check input arguments for consistency.
 
-    Check the input matrices for consistency given the minimum number of matrices and the boolean varible
-    to test the orthogonality.
+    Check the input matrices for consistency given the minimum number of matrices (min_num_matrix) 
+    and the boolean varible (ortho) to test the orthogonality.
 
     **Input:**
 
@@ -854,7 +958,7 @@ def check_arguments(argv, min_num_matrix, ortho):
                 # Loop over all elements
                 for i in range(nargs):                  
                     # Verify the type of the input variables and store in a list
-                    inputs.append(TestType(args[i], ortho))
+                    inputs.append(test_type(args[i], ortho))
 
     else:
 
@@ -863,12 +967,12 @@ def check_arguments(argv, min_num_matrix, ortho):
         inputs = []
         for i in range(nargv):
             # Verify the type of the input variables and store in a list
-            inputs.append(TestType(argv[i], ortho))
+            inputs.append(test_type(argv[i], ortho))
 
     return inputs, nargs
 
 
-def TestType(X, ortho):
+def test_type(X, ortho):
     
     """
     Test the datatype of X.
@@ -903,3 +1007,44 @@ def TestType(X, ortho):
 
     return Y
 
+def nn_coord(x, k):
+    
+    """
+    Select k elements close to x.
+
+    Select k elements close to x to be used to construct a sparse kernel
+    matrix to be used in the diffusion maps.
+
+    **Input:**
+
+    :param x: Matrices to be tested.
+    :type  x: list or numpy array
+    
+    :param k: Number of points close to x.
+    :type  k: int
+
+    **Output/Returns:**
+
+    :param idx: Indices of the closer points.
+    :type  idx: int
+    """
+        
+    if isinstance(x, list):
+        x = np.array(x)
+        
+    dim = np.shape(x)
+    
+    if len(dim) is not 1:
+        raise ValueError('k MUST be a vector.')
+    
+    if not isinstance(k, int):
+        raise TypeError('k MUST be integer.')
+
+    if k<1:
+        raise ValueError('k MUST be larger than or equal to 1.')
+    
+    #idx = x.argsort()[::-1][:k]
+    idx = x.argsort()[:len(x)-k]
+    #idx = idx[0:k]
+    #idx = idx[k+1:]
+    return idx
