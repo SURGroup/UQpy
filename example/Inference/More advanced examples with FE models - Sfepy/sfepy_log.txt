@@ -1,0 +1,61 @@
+material_opt_micro: reading mesh [line2, tri3, quad4, tetra4, hexa8] (/anaconda3/lib/python3.6/site-packages/sfepy/meshes/3d/matrix_fiber_rand.vtk)...
+material_opt_micro: ...done in 0.02 s
+material_opt_micro: warning: bad element orientation, trying to correct...
+material_opt_micro: ...corrected
+material_opt_micro: creating regions...
+material_opt_micro:     Y
+material_opt_micro:     Ym
+material_opt_micro:     Near
+material_opt_micro:     Far
+material_opt_micro:     Bottom
+material_opt_micro:     Top
+material_opt_micro:     Left
+material_opt_micro:     Right
+material_opt_micro:     Corners
+material_opt_micro:     Yf
+material_opt_micro: ...done in 0.03 s
+material_opt_micro: using solvers:
+                ts: no ts
+               nls: newton
+                ls: ls
+he: computing Volume_total...
+he: computing dependency pis...
+he: ...done
+he: computing dependency corrs_rs...
+he:   equation "balance_of_forces":
+he:   dw_lin_elastic.5.Y(mat.D, v, u)
+                = - dw_lin_elastic.5.Y(mat.D, v, Pi)
+he:   equation "tmp":
+he:   d_volume.5.Y( u )
+he:   updating materials...
+he:   ...done in 0.00 s
+he: ...done
+he:   updating variables...
+he:   ...done
+he: computing vol...
+he:   equation "tmp":
+he:   d_volume.5.Ym(u)
+he:   updating materials...
+he:   ...done in 0.00 s
+he:   equation "tmp":
+he:   d_volume.5.Yf(u)
+he:   updating materials...
+he:   ...done in 0.00 s
+he: ...done
+he:   setting up dof connectivities...
+he:   ...done in 0.00 s
+he:   matrix shape: (1806, 1806)
+he:   assembling matrix graph...
+he:   ...done in 0.01 s
+he:   matrix structural nonzeros: 48690 (1.49e-02% fill)
+he:   updating materials...
+he:       mat
+he:   ...done in 0.01 s
+he:   using solvers:
+                ts: no ts
+               nls: newton
+                ls: ls
+he:   updating variables...
+he:   ...done
+he:   updating variables...
+he:   ...done
