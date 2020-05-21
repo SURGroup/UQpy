@@ -2304,37 +2304,30 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.</span>
 
-<span class="sd">    This is the base class for all MCMC algorithms. This base class only provides the framework for MCMC and cannot be</span>
-<span class="sd">    used directly for sampling. Sampling is done by calling a subclass - see example in class ``MH``.</span>
+<span class="sd">    This is the parent class for all MCMC algorithms. This parent class only provides the framework for MCMC and cannot</span>
+<span class="sd">    be used directly for sampling. Sampling is done by calling the child class for the specific MCMC algorithm.</span>
 
-<span class="sd">    **References:**</span>
-
-<span class="sd">    * Gelman et al., &quot;Bayesian data analysis&quot;, Chapman and Hall/CRC, 2013</span>
-<span class="sd">    * R.C. Smith, &quot;Uncertainty Quantification - Theory, Implementation and Applications&quot;, CS&amp;E, 2014</span>
 
 <span class="sd">    **Inputs:**</span>
 
 <span class="sd">    * **dimension** (`int`):</span>
-<span class="sd">        A scalar value defining the dimension of target density function. Either dimension or seed must be provided.</span>
+<span class="sd">        A scalar value defining the dimension of target density function. Either `dimension` and `nchains` or `seed`</span>
+<span class="sd">        must be provided.</span>
 
 <span class="sd">    * **pdf_target** ((`list` of) callables):</span>
 <span class="sd">        Target density function from which to draw random samples. Either `pdf_target` or `log_pdf_target` must be</span>
 <span class="sd">        provided (the latter should be preferred for better numerical stability).</span>
 
 <span class="sd">        If `pdf_target` is a callable, it refers to the joint pdf to sample from, it must take at least one input `x`,</span>
-<span class="sd">        the point(s) where to evaluate the pdf. Within MCMC the target is evaluated as:</span>
+<span class="sd">        which are the point(s) at which to evaluate the pdf. Within MCMC the `pdf_target` is evaluated as:</span>
+<span class="sd">        ``p(x) = pdf_target(x, *args_target)``</span>
 
-<span class="sd">        `p(x) = pdf_target(x, *args_target)`</span>
-
-<span class="sd">        where `x` is a ndarray of shape (npoints, dimension) and `args_target` are additional positional arguments that</span>
+<span class="sd">        where `x` is a ndarray of shape (nsamples, dimension) and `args_target` are additional positional arguments that</span>
 <span class="sd">        are provided to MCMC via its `args_target` input.</span>
 
-<span class="sd">        If `pdf_target` is a list of callables, it refers to independent marginals to sample from, marginal in dimension</span>
-<span class="sd">        `j` is evaluated as:</span>
-
-<span class="sd">        `p_j(xj) = pdf_target[j](xj, *args_target[j])`</span>
-
-<span class="sd">        where `x` is a ndarray of shape (npoints, dimension)</span>
+<span class="sd">        If `pdf_target` is a list of callables, it refers to independent marginals to sample from. The marginal in</span>
+<span class="sd">        dimension `j` is evaluated as: ``p_j(xj) = pdf_target[j](xj, *args_target[j])`` where `x` is a ndarray of shape</span>
+<span class="sd">        (nsamples, dimension)</span>
 
 <span class="sd">    * **log_pdf_target** ((`list` of) callables):</span>
 <span class="sd">        Logarithm of the target density function from which to draw random samples. Either `pdf_target` or</span>
@@ -2345,52 +2338,53 @@
 <span class="sd">    * **args_target** ((`list` of) `tuple`):</span>
 <span class="sd">        Positional arguments of the pdf / log-pdf target function. See `pdf_target`</span>
 
-<span class="sd">    * **jump** (`int`):</span>
-<span class="sd">        Thinning parameter, used to reduce correlation between samples. Setting `jump=n` corresponds to	skipping `n-1`</span>
-<span class="sd">        states between accepted states of the chain. Default is 1 (no thinning).</span>
+<span class="sd">    * **seed** (`ndarray`):</span>
+<span class="sd">        Seed of the Markov chain(s), shape ``(nchains, dimension)``. Default: zeros(`nchains` x `dimension`).</span>
+
+<span class="sd">        If `seed` is not provided, both `nchains` and `dimension` must be provided.</span>
 
 <span class="sd">    * **nburn** (`int`):</span>
 <span class="sd">        Length of burn-in - i.e., number of samples at the beginning of the chain to discard (note: no thinning during</span>
 <span class="sd">        burn-in). Default is 0, no burn-in.</span>
 
-<span class="sd">    * **seed** (`ndarray`):</span>
-<span class="sd">        Seed of the Markov chain(s), shape ``(nchains, dimension)``. Default: zeros(1 x dimension).</span>
+<span class="sd">    * **jump** (`int`):</span>
+<span class="sd">        Thinning parameter, used to reduce correlation between samples. Setting `jump=n` corresponds to	skipping `n-1`</span>
+<span class="sd">        states between accepted states of the chain. Default is 1 (no thinning).</span>
+
+<span class="sd">    * **nchains** (`int`):</span>
+<span class="sd">        The number of Markov chains to generate. Either `dimension` and `nchains` or `seed` must be provided.</span>
 
 <span class="sd">    * **save_log_pdf** (`bool`):</span>
 <span class="sd">        Boolean that indicates whether to save log-pdf values along with the samples. Default: False</span>
+
+<span class="sd">    * **verbose** (`boolean`)</span>
+<span class="sd">        Set ``verbose = True`` to print status messages to the terminal during execution.</span>
 
 <span class="sd">    * **concat_chains** (`bool`):</span>
 <span class="sd">        Boolean that indicates whether to concatenate the chains after a run, i.e., samples are stored as an `ndarray`</span>
 <span class="sd">        of shape (nsamples * nchains, dimension) if True, (nsamples, nchains, dimension) if False. Default: True</span>
 
-<span class="sd">    * **nsamples** (`int`):</span>
-<span class="sd">        Number of samples to generate - see `run` method. If not None, the `run` method is called when the object is</span>
-<span class="sd">        created. Default: None</span>
-
-<span class="sd">    * **nsamples_per_chain** (`int`):</span>
-<span class="sd">        Number of samples to generate per chain - see `run` method. If not None, the `run` method is called when the</span>
-<span class="sd">        object is created. Default: None</span>
-
-<span class="sd">    * random_state (None or `int` or `np.random.RandomState` object):</span>
+<span class="sd">    * **random_state** (None or `int` or `np.random.RandomState` object):</span>
 <span class="sd">        Random seed used to initialize the pseudo-random number generator. Default is None.</span>
 
-<span class="sd">    * **verbose** (`boolean`)</span>
-<span class="sd">        Set ``verbose = True`` to print status messages to the terminal during execution.</span>
 
 <span class="sd">    **Attributes:**</span>
 
 <span class="sd">    * **samples** (`ndarray`)</span>
-<span class="sd">        Set of MCMC samples following the target distribution, `ndarray` of shape (nsamples * nchains, dimension) or</span>
-<span class="sd">        (nsamples, nchains, dimension) (see input `concat_chains`).</span>
+<span class="sd">        Set of MCMC samples following the target distribution, `ndarray` of shape (`nsamples` * `nchains`, `dimension`)</span>
+<span class="sd">        or (nsamples, nchains, dimension) (see input `concat_chains`).</span>
 
 <span class="sd">    * **log_pdf_values** (`ndarray`)</span>
 <span class="sd">        Values of the log pdf for the accepted samples, `ndarray` of shape (nchains * nsamples,) or (nsamples, nchains)</span>
 
 <span class="sd">    * **nsamples** (`list`)</span>
-<span class="sd">        Total number of samples; it is updated during iterations as new samples as saved.</span>
+<span class="sd">        Total number of samples; The `nsamples` attribute tallies the total number of generated samples. After each</span>
+<span class="sd">        iteration, it is updated by 1. At the end of the simulation, the `nsamples` attribute equals the user-specified</span>
+<span class="sd">        value for input `nsamples` given to the child class.</span>
 
 <span class="sd">    * **nsamples_per_chain** (`list`)</span>
-<span class="sd">        Total number of samples per chain; it is updated during iterations as new samples as saved.</span>
+<span class="sd">        Total number of samples per chain; Similar to the attribute `nsamples`, it is updated during iterations as new</span>
+<span class="sd">        samples are saved.</span>
 
 <span class="sd">    * **niterations** (`list`)</span>
 <span class="sd">        Total number of iterations, updated on-the-fly as the algorithm proceeds. It is related to number of samples as</span>
@@ -2404,14 +2398,14 @@
     <span class="c1"># Last Modified: 10/05/20 by Audrey Olivier</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dimension</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pdf_target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_pdf_target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">args_target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nburn</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                 <span class="n">jump</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">save_log_pdf</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">concat_chains</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                 <span class="n">jump</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nchains</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_log_pdf</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">concat_chains</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">nburn</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">nburn</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: nburn should be an integer &gt;= 0&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">jump</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">jump</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: jump should be an integer &gt;= 1&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nburn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jump</span> <span class="o">=</span> <span class="n">nburn</span><span class="p">,</span> <span class="n">jump</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocess_seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dimension</span><span class="p">)</span>    <span class="c1"># check type and assign default [0.s]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocess_seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dimension</span><span class="p">,</span> <span class="n">nchains</span><span class="o">=</span><span class="n">nchains</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nchains</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="o">.</span><span class="n">shape</span>
 
         <span class="c1"># Check target pdf</span>
@@ -2425,7 +2419,7 @@
         <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
-        <span class="c1">##### ADDED MDS 1/21/20</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">log_pdf_target</span> <span class="o">=</span> <span class="n">log_pdf_target</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pdf_target</span> <span class="o">=</span> <span class="n">pdf_target</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">args_target</span> <span class="o">=</span> <span class="n">args_target</span>
@@ -2439,10 +2433,10 @@
 
 <div class="viewcode-block" id="MCMC.run"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MCMC.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Run the MCMC chain.</span>
+<span class="sd">        Run the MCMC algorithm.</span>
 
-<span class="sd">        This function samples from the MCMC chains and append samples to existing ones (if any). This method leverages</span>
-<span class="sd">        the run_iterations method that is specific to each algorithm.</span>
+<span class="sd">        This function samples from the MCMC chains and appends samples to existing ones (if any). This method leverages</span>
+<span class="sd">        the ``run_iterations`` method that is specific to each algorithm.</span>
 
 <span class="sd">        **Inputs:**</span>
 
@@ -2452,8 +2446,8 @@
 <span class="sd">        * **nsamples_per_chain** (`int`)</span>
 <span class="sd">            Number of samples to generate per chain.</span>
 
-<span class="sd">        Either nsamples or nsamples_per_chain must be provided (not both). Not that if nsamples is not a multiple of</span>
-<span class="sd">        nchains, nsamples is set to the next integer that is a multiple of nchains.</span>
+<span class="sd">        Either `nsamples` or `nsamples_per_chain` must be provided (not both). Not that if `nsamples` is not a multiple</span>
+<span class="sd">        of `nchains`, `nsamples` is set to the next largest integer that is a multiple of `nchains`.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Initialize the runs: allocate space for the new samples and log pdf values</span>
@@ -2487,10 +2481,10 @@
 
 <div class="viewcode-block" id="MCMC.run_one_iteration"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MCMC.run_one_iteration">[docs]</a>    <span class="k">def</span> <span class="nf">run_one_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_state</span><span class="p">,</span> <span class="n">current_log_pdf</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Run one iteration of the MCMC algorithm, starting at current_state.</span>
+<span class="sd">        Run one iteration of the MCMC algorithm, starting at `current_state`.</span>
 
 <span class="sd">        This method is over-written for each different MCMC algorithm. It must return the new state and associated</span>
-<span class="sd">        log-pdf, which will be passed as inputs to the `run_one_iteration` method at the next iteration.</span>
+<span class="sd">        log-pdf, which will be passed as inputs to the ``run_one_iteration`` method at the next iteration.</span>
 
 <span class="sd">        **Inputs:**</span>
 
@@ -2592,9 +2586,6 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">log_pdf_values</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">current_log_pdf</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">nsamples_per_chain</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nchains</span>
-                <span class="c1">#nsims = self.jump * nsamples_per_chain - 1</span>
-            <span class="c1">#else:</span>
-                <span class="c1">#nsims = self.nburn + self.jump * nsamples_per_chain</span>
 
         <span class="k">else</span><span class="p">:</span>    <span class="c1"># fetch previous samples to start the new run, current state is last saved sample</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>   <span class="c1"># the chains were previously concatenated</span>
@@ -2606,7 +2597,7 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_log_pdf</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">log_pdf_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
                     <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">log_pdf_values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nsamples_per_chain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nchains</span><span class="p">))],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            <span class="c1">#nsims = self.jump * nsamples_per_chain</span>
+
         <span class="k">return</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="p">,</span> <span class="n">current_state</span><span class="p">,</span> <span class="n">current_log_pdf</span>
 
     <span class="k">def</span> <span class="nf">_update_acceptance_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_accept</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -2661,7 +2652,6 @@
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: When log_pdf_target is a list, args should be a list (of tuples) of same &#39;</span>
                                      <span class="s1">&#39;length.&#39;</span><span class="p">)</span>
                 <span class="n">evaluate_log_pdf_marginals</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">log_pdf</span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">log_pdf</span><span class="p">))))</span>
-                <span class="c1">#evaluate_log_pdf_marginals = [partial(log_pdf_, *args_) for (log_pdf_, args_) in zip(log_pdf, args)]</span>
                 <span class="n">evaluate_log_pdf</span> <span class="o">=</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
                     <span class="p">[</span><span class="n">log_pdf</span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">x</span><span class="p">[:,</span> <span class="n">i</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">log_pdf</span><span class="p">))]))</span>
             <span class="k">else</span><span class="p">:</span>
@@ -2677,7 +2667,8 @@
                 <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">args</span> <span class="o">=</span> <span class="p">[()]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">pdf</span><span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">pdf</span><span class="p">)):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: When pdf_target is given as a list, args should also be a list of same length.&#39;</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: When pdf_target is given as a list, args should also be a list of same &#39;</span>
+                                     <span class="s1">&#39;length.&#39;</span><span class="p">)</span>
                 <span class="n">evaluate_log_pdf_marginals</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
                     <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">pdf</span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
                                                               <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">320</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],)))),</span>
@@ -2686,7 +2677,6 @@
                 <span class="n">evaluate_log_pdf</span> <span class="o">=</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
                     <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">pdf</span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">x</span><span class="p">[:,</span> <span class="n">i</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">320</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],))))</span>
                      <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">log_pdf</span><span class="p">))]))</span>
-                <span class="c1">#evaluate_log_pdf = None</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: pdf_target must be a callable or list of callables&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -2694,7 +2684,7 @@
         <span class="k">return</span> <span class="n">evaluate_log_pdf</span><span class="p">,</span> <span class="n">evaluate_log_pdf_marginals</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_preprocess_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_preprocess_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">nchains</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Preprocess input seed.</span>
 
@@ -2712,9 +2702,9 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">dim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: One of inputs seed or dimension must be provided.&#39;</span><span class="p">)</span>
-            <span class="n">seed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">dim</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">nchains</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Either `seed` or `dimension` and `nchains` must be provided.&#39;</span><span class="p">)</span>
+            <span class="n">seed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nchains</span><span class="p">,</span> <span class="n">dim</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">seed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">seed</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -2723,6 +2713,8 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Input seed should be an array of shape (dimension, ) or (nchains, dimension).&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">dim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">seed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">dim</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Wrong dimensions between seed and dimension.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">nchains</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">seed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">nchains</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: The number of chains and the seed shape are inconsistent.&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">seed</span>
 
     <span class="nd">@staticmethod</span>
@@ -2756,18 +2748,11 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Metropolis-Hastings algorithm</span>
 
-<span class="sd">    &gt;&gt;&gt; from UQpy.Distributions import Normal, Gumbel, JointCopula</span>
-<span class="sd">    &gt;&gt;&gt; dist_true = JointCopula(marginals=[Normal(), Normal()], copula=Gumbel(theta=2.))</span>
-<span class="sd">    &gt;&gt;&gt; proposal = JointInd(marginals=[Normal(scale=0.2), Normal(scale=0.2)])</span>
-<span class="sd">    &gt;&gt;&gt; sampler = MH(log_pdf_target=dist_true.log_pdf, nsamples=500, proposal=proposal, seed=[0., 0.], random_state=123)</span>
-<span class="sd">    &gt;&gt;&gt; print(sampler.samples.shape)</span>
-<span class="sd">    (500, 2)</span>
-<span class="sd">    &gt;&gt;&gt; print(np.round(sampler.samples[-5:], 4))</span>
-<span class="sd">    [[-0.1966  0.1831]</span>
-<span class="sd">     [-0.2325  0.2526]</span>
-<span class="sd">     [ 0.2104  0.0748]</span>
-<span class="sd">     [ 0.0091  0.1651]</span>
-<span class="sd">     [ 0.1693  0.2409]]</span>
+<span class="sd">    **References**</span>
+
+<span class="sd">    1. Gelman et al., &quot;Bayesian data analysis&quot;, Chapman and Hall/CRC, 2013</span>
+<span class="sd">    2. R.C. Smith, &quot;Uncertainty Quantification - Theory, Implementation and Applications&quot;, CS&amp;E, 2014</span>
+
 
 <span class="sd">    **Algorithm-specific inputs:**</span>
 
@@ -2775,8 +2760,8 @@
 <span class="sd">        Proposal distribution, must have a log_pdf/pdf and rvs method. Default: standard multivariate normal</span>
 
 <span class="sd">    * **proposal_is_symmetric** (`bool`):</span>
-<span class="sd">        indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha</span>
-<span class="sd">        Default: False</span>
+<span class="sd">        Indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha</span>
+<span class="sd">        Default: False, set to True if default proposal is used</span>
 
 <span class="sd">    **Methods:**</span>
 
@@ -2847,24 +2832,27 @@
 <div class="viewcode-block" id="MMH"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MMH">[docs]</a><span class="k">class</span> <span class="nc">MMH</span><span class="p">(</span><span class="n">MCMC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="sd">    Modified Metropolis-Hastings algorithm.</span>
+<span class="sd">    Component-wise Modified Metropolis-Hastings algorithm.</span>
 
-<span class="sd">    In this algorithm, candidate samples are drawn separately in each dimension, thus the proposal consists in a list</span>
+<span class="sd">    In this algorithm, candidate samples are drawn separately in each dimension, thus the proposal consists of a list</span>
 <span class="sd">    of 1d distributions. The target pdf can be given as a joint pdf or a list of marginal pdfs in all dimensions. This</span>
 <span class="sd">    will trigger two different algorithms.</span>
 
 <span class="sd">    **References:**</span>
 
-<span class="sd">    * S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”</span>
-<span class="sd">      Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.</span>
+<span class="sd">    1. S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”</span>
+<span class="sd">       Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.</span>
 
 <span class="sd">    **Algorithm-specific inputs:**</span>
 
 <span class="sd">    * **proposal** ((`list` of) ``Distribution`` object(s)):</span>
-<span class="sd">        Proposal distribution(s) in dimension 1, must have a log_pdf/pdf and rvs method. Default: standard normal</span>
+<span class="sd">        Proposal distribution(s) in one dimension, must have a log_pdf/pdf and rvs method.</span>
+
+<span class="sd">        The proposal object may be a list of ``DistributionContinuous1D`` objects or a ``JointInd`` object.</span>
+<span class="sd">        Default: standard normal</span>
 
 <span class="sd">    * **proposal_is_symmetric** ((`list` of) `bool`):</span>
-<span class="sd">        indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha</span>
+<span class="sd">        Indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha</span>
 <span class="sd">        Default: False, set to True if default proposal is used</span>
 
 <span class="sd">    **Methods:**</span>
@@ -3001,10 +2989,10 @@
 
 <span class="sd">    **References:**</span>
 
-<span class="sd">    * J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,</span>
-<span class="sd">      no. 1, pp. 65–80, 2010.</span>
-<span class="sd">    * Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. &quot;emcee: The MCMC Hammer&quot;.</span>
-<span class="sd">      Publications of the Astronomical Society of the Pacific, 125(925):306–312,2013.</span>
+<span class="sd">    1. J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,</span>
+<span class="sd">       no. 1, pp. 65–80, 2010.</span>
+<span class="sd">    2. Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. &quot;emcee: The MCMC Hammer&quot;.</span>
+<span class="sd">       Publications of the Astronomical Society of the Pacific, 125(925):306–312,2013.</span>
 
 <span class="sd">    **Algorithm-specific inputs:**</span>
 
@@ -3059,7 +3047,6 @@
             <span class="n">unif_rvs</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">()</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">Ns</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
             <span class="n">zz</span> <span class="o">=</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">-</span> <span class="mf">1.</span><span class="p">)</span> <span class="o">*</span> <span class="n">unif_rvs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mf">2.</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>  <span class="c1"># sample Z</span>
             <span class="n">factors</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">-</span> <span class="mf">1.</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">zz</span><span class="p">)</span>  <span class="c1"># compute log(Z ** (d - 1))</span>
-            <span class="c1">#rint = np.random.choice(Nc, size=(Ns,), replace=True)  # sample X_{j} from complementary set</span>
             <span class="n">multi_rvs</span> <span class="o">=</span> <span class="n">Multinomial</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">Nc</span><span class="p">,</span> <span class="p">]</span> <span class="o">*</span> <span class="n">Nc</span><span class="p">)</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">Ns</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
             <span class="n">rint</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">multi_rvs</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>    <span class="c1"># sample X_{j} from complementary set</span>
             <span class="n">candidates</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="n">rint</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">rint</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">zz</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">])</span>  <span class="c1"># new candidates</span>
@@ -3090,30 +3077,30 @@
 
 <span class="sd">    In this algorithm, the proposal density is Gaussian and its covariance C is being updated from samples as</span>
 <span class="sd">    C = sp * C_sample where C_sample is the sample covariance. Also, the delayed rejection scheme is applied, i.e,</span>
-<span class="sd">    if a candidate is not accepted another one is generated from proposal with covariance gamma_2 ** 2 * C.</span>
+<span class="sd">    if a candidate is not accepted another one is generated from the proposal with covariance gamma_2 ** 2 * C.</span>
 
 <span class="sd">    **References:**</span>
 
-<span class="sd">    * Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. &quot;DRAM: Efficient adaptive MCMC&quot;. Statistics</span>
-<span class="sd">      and Computing, 16(4):339–354, 2006</span>
-<span class="sd">    * R.C. Smith, &quot;Uncertainty Quantification - Theory, Implementation and Applications&quot;, CS&amp;E, 2014</span>
+<span class="sd">    1. Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. &quot;DRAM: Efficient adaptive MCMC&quot;. Statistics</span>
+<span class="sd">       and Computing, 16(4):339–354, 2006</span>
+<span class="sd">    2. R.C. Smith, &quot;Uncertainty Quantification - Theory, Implementation and Applications&quot;, CS&amp;E, 2014</span>
 
 <span class="sd">    **Algorithm-specific inputs:**</span>
 
 <span class="sd">    * **initial_cov** (`ndarray`):</span>
-<span class="sd">        initial covariance for the gaussian proposal distribution. Default: I(dim)</span>
+<span class="sd">        Initial covariance for the gaussian proposal distribution. Default: I(dim)</span>
 
 <span class="sd">    * **k0** (`int`):</span>
-<span class="sd">        rate at which covariance is being updated, i.e., every k0 iterations. Default: 100</span>
+<span class="sd">        Rate at which covariance is being updated, i.e., every k0 iterations. Default: 100</span>
 
 <span class="sd">    * **sp** (`float`):</span>
-<span class="sd">        scale parameter for covariance updating. Default: 2.38 ** 2 / dim</span>
+<span class="sd">        Scale parameter for covariance updating. Default: 2.38 ** 2 / dim</span>
 
 <span class="sd">    * **gamma_2** (`float`):</span>
-<span class="sd">        scale parameter for delayed rejection. Default: 1 / 5</span>
+<span class="sd">        Scale parameter for delayed rejection. Default: 1 / 5</span>
 
 <span class="sd">    * **save_cov** (`bool`):</span>
-<span class="sd">        if True, updated covariance is saved in attribute adaptive_covariance. Default: False</span>
+<span class="sd">        If True, updated covariance is saved in attribute `adaptive_covariance`. Default: False</span>
 
 <span class="sd">    **Methods:**</span>
 
@@ -3207,13 +3194,13 @@
             <span class="n">log_prop_cand_curr</span> <span class="o">=</span> <span class="n">mvp</span><span class="o">.</span><span class="n">log_pdf</span><span class="p">(</span><span class="n">candidates_DR</span> <span class="o">-</span> <span class="n">current_states_DR</span><span class="p">)</span>
             <span class="c1"># Accept or reject</span>
             <span class="n">unif_rvs</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">()</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">inds_DR</span><span class="p">),</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,))</span>
-            <span class="k">for</span> <span class="p">(</span><span class="n">nc</span><span class="p">,</span> <span class="n">cand2</span><span class="p">,</span> <span class="n">log_p_cand2</span><span class="p">,</span> <span class="n">J1</span><span class="p">,</span> <span class="n">J2</span><span class="p">,</span> <span class="n">u_rv</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inds_DR</span><span class="p">,</span> <span class="n">candidate2</span><span class="p">,</span> <span class="n">log_p_candidate2</span><span class="p">,</span> <span class="n">log_prop_cand_cand2</span><span class="p">,</span>
-                                                        <span class="n">log_prop_cand_curr</span><span class="p">,</span> <span class="n">unif_rvs</span><span class="p">):</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">nc</span><span class="p">,</span> <span class="n">cand2</span><span class="p">,</span> <span class="n">log_p_cand2</span><span class="p">,</span> <span class="n">J1</span><span class="p">,</span> <span class="n">J2</span><span class="p">,</span> <span class="n">u_rv</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inds_DR</span><span class="p">,</span> <span class="n">candidate2</span><span class="p">,</span> <span class="n">log_p_candidate2</span><span class="p">,</span>
+                                                              <span class="n">log_prop_cand_cand2</span><span class="p">,</span> <span class="n">log_prop_cand_curr</span><span class="p">,</span> <span class="n">unif_rvs</span><span class="p">):</span>
                 <span class="n">alpha_cand_cand2</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_p_candidate</span><span class="p">[</span><span class="n">nc</span><span class="p">]</span> <span class="o">-</span> <span class="n">log_p_cand2</span><span class="p">))</span>
                 <span class="n">alpha_cand_curr</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_p_candidate</span><span class="p">[</span><span class="n">nc</span><span class="p">]</span> <span class="o">-</span> <span class="n">current_log_pdf</span><span class="p">[</span><span class="n">nc</span><span class="p">]))</span>
                 <span class="n">log_alpha2</span> <span class="o">=</span> <span class="n">log_p_cand2</span> <span class="o">-</span> <span class="n">current_log_pdf</span><span class="p">[</span><span class="n">nc</span><span class="p">]</span> <span class="o">+</span> <span class="n">J1</span> <span class="o">-</span> <span class="n">J2</span> <span class="o">+</span> \
-                             <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">alpha_cand_cand2</span><span class="p">,</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">320</span><span class="p">)))</span> \
-                             <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">alpha_cand_curr</span><span class="p">,</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">320</span><span class="p">)))</span>
+                             <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">alpha_cand_cand2</span><span class="p">,</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">320</span><span class="p">)))</span> <span class="o">-</span> \
+                             <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">alpha_cand_curr</span><span class="p">,</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">320</span><span class="p">)))</span>
                 <span class="n">accept</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">u_rv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">min</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="n">log_alpha2</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">accept</span><span class="p">:</span>
                     <span class="n">current_state</span><span class="p">[</span><span class="n">nc</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">cand2</span>
@@ -3275,31 +3262,31 @@
 
 <span class="sd">    **References:**</span>
 
-<span class="sd">    * J.A. Vrugt et al. &quot;Accelerating Markov chain Monte Carlo simulation by differential evolution with</span>
-<span class="sd">      self-adaptive randomized subspace sampling&quot;. International Journal of Nonlinear Sciences and Numerical</span>
-<span class="sd">      Simulation, 10(3):273–290, 2009.[68]</span>
-<span class="sd">    * J.A. Vrugt. &quot;Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and</span>
-<span class="sd">      MATLAB implementation&quot;. Environmental Modelling &amp; Software, 75:273–316, 2016.</span>
+<span class="sd">    1. J.A. Vrugt et al. &quot;Accelerating Markov chain Monte Carlo simulation by differential evolution with</span>
+<span class="sd">       self-adaptive randomized subspace sampling&quot;. International Journal of Nonlinear Sciences and Numerical</span>
+<span class="sd">       Simulation, 10(3):273–290, 2009.[68]</span>
+<span class="sd">    2. J.A. Vrugt. &quot;Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and</span>
+<span class="sd">       MATLAB implementation&quot;. Environmental Modelling &amp; Software, 75:273–316, 2016.</span>
 
 <span class="sd">    **Algorithm-specific inputs:**</span>
 
 <span class="sd">    * **delta** (`int`):</span>
-<span class="sd">        jump rate. Default: 3</span>
+<span class="sd">        Jump rate. Default: 3</span>
 
 <span class="sd">    * **c** (`float`):</span>
-<span class="sd">        differential evolution parameter. Default: 0.1</span>
+<span class="sd">        Differential evolution parameter. Default: 0.1</span>
 
 <span class="sd">    * **c_star** (`float`):</span>
-<span class="sd">        differential evolution parameter, should be small compared to width of target. Default: 1e-6</span>
+<span class="sd">        Differential evolution parameter, should be small compared to width of target. Default: 1e-6</span>
 
 <span class="sd">    * **n_CR** (`int`):</span>
-<span class="sd">        number of crossover probabilities. Default: 3</span>
+<span class="sd">        Number of crossover probabilities. Default: 3</span>
 
 <span class="sd">    * **p_g** (`float`):</span>
-<span class="sd">        prob(gamma=1). Default: 0.2</span>
+<span class="sd">        Prob(gamma=1). Default: 0.2</span>
 
 <span class="sd">    * **adapt_CR** (`tuple`):</span>
-<span class="sd">        (iter_max, rate) governs adapation of crossover probabilities (adapts every rate iterations if iter&lt;iter_max).</span>
+<span class="sd">        (iter_max, rate) governs adaptation of crossover probabilities (adapts every rate iterations if iter&lt;iter_max).</span>
 <span class="sd">        Default: (-1, 1), i.e., no adaptation</span>
 
 <span class="sd">    * **check_chains** (`tuple`):</span>
@@ -3373,7 +3360,6 @@
         <span class="n">multi_rvs</span> <span class="o">=</span> <span class="n">Multinomial</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">delta</span><span class="p">,</span> <span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta</span><span class="p">)</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
             <span class="n">nsamples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nchains</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
         <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">multi_rvs</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="c1">#D = np.random.choice(self.delta, size=(self.nchains,), replace=True)</span>
         <span class="n">as_</span> <span class="o">=</span> <span class="p">[</span><span class="n">R</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">draw</span><span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]),</span> <span class="n">j</span><span class="p">]]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nchains</span><span class="p">)]</span>
         <span class="n">bs_</span> <span class="o">=</span> <span class="p">[</span><span class="n">R</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">draw</span><span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span> <span class="n">j</span><span class="p">]]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nchains</span><span class="p">)]</span>
         <span class="n">multi_rvs</span> <span class="o">=</span> <span class="n">Multinomial</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pCR</span><span class="p">)</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nchains</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
@@ -3390,8 +3376,6 @@
         <span class="n">gamma_d</span> <span class="o">=</span> <span class="mf">2.38</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">D</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">d_star</span><span class="p">)</span>
         <span class="n">g</span> <span class="o">=</span> <span class="n">Binomial</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">p_g</span><span class="p">)</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nchains</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">))</span>
         <span class="n">g</span><span class="p">[</span><span class="n">g</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">gamma_d</span><span class="p">[</span><span class="n">g</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
-        <span class="c1">#g = [np.random.choice([gamma_d[j], 1], size=1, replace=True, p=[1 - self.p_g, self.p_g])</span>
-        <span class="c1">#     for j in range(self.nchains)]</span>
         <span class="n">norm_vars</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nchains</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span>
                                                  <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nchains</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nchains</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nchains</span><span class="p">):</span>
@@ -3435,14 +3419,14 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check outlier chains in DREAM algorithm.</span>
 
-<span class="sd">        This function check for outlier chains as part of the DREAM algorithm, potentially replacing outlier chains</span>
+<span class="sd">        This function checks for outlier chains as part of the DREAM algorithm, potentially replacing outlier chains</span>
 <span class="sd">        (i.e. the samples and log_pdf_values) with &#39;good&#39; chains. The function does not have any returned output but it</span>
 <span class="sd">        prints out the number of outlier chains.</span>
 
 <span class="sd">        **Inputs:**</span>
 
 <span class="sd">        * **replace_with_best** (`bool`):</span>
-<span class="sd">            indicates whether to replace outlier chains with the best (most probable) chain. Default: False</span>
+<span class="sd">            Indicates whether to replace outlier chains with the best (most probable) chain. Default: False</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_log_pdf</span><span class="p">:</span>

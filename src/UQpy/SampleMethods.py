@@ -2270,37 +2270,30 @@ class MCMC:
     """
     Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
 
-    This is the base class for all MCMC algorithms. This base class only provides the framework for MCMC and cannot be
-    used directly for sampling. Sampling is done by calling a subclass - see example in class ``MH``.
+    This is the parent class for all MCMC algorithms. This parent class only provides the framework for MCMC and cannot
+    be used directly for sampling. Sampling is done by calling the child class for the specific MCMC algorithm.
 
-    **References:**
-
-    * Gelman et al., "Bayesian data analysis", Chapman and Hall/CRC, 2013
-    * R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
 
     **Inputs:**
 
     * **dimension** (`int`):
-        A scalar value defining the dimension of target density function. Either dimension or seed must be provided.
+        A scalar value defining the dimension of target density function. Either `dimension` and `nchains` or `seed`
+        must be provided.
 
     * **pdf_target** ((`list` of) callables):
         Target density function from which to draw random samples. Either `pdf_target` or `log_pdf_target` must be
         provided (the latter should be preferred for better numerical stability).
 
         If `pdf_target` is a callable, it refers to the joint pdf to sample from, it must take at least one input `x`,
-        the point(s) where to evaluate the pdf. Within MCMC the target is evaluated as:
+        which are the point(s) at which to evaluate the pdf. Within MCMC the `pdf_target` is evaluated as:
+        ``p(x) = pdf_target(x, *args_target)``
 
-        `p(x) = pdf_target(x, *args_target)`
-
-        where `x` is a ndarray of shape (npoints, dimension) and `args_target` are additional positional arguments that
+        where `x` is a ndarray of shape (nsamples, dimension) and `args_target` are additional positional arguments that
         are provided to MCMC via its `args_target` input.
 
-        If `pdf_target` is a list of callables, it refers to independent marginals to sample from, marginal in dimension
-        `j` is evaluated as:
-
-        `p_j(xj) = pdf_target[j](xj, *args_target[j])`
-
-        where `x` is a ndarray of shape (npoints, dimension)
+        If `pdf_target` is a list of callables, it refers to independent marginals to sample from. The marginal in
+        dimension `j` is evaluated as: ``p_j(xj) = pdf_target[j](xj, *args_target[j])`` where `x` is a ndarray of shape
+        (nsamples, dimension)
 
     * **log_pdf_target** ((`list` of) callables):
         Logarithm of the target density function from which to draw random samples. Either `pdf_target` or
@@ -2311,52 +2304,53 @@ class MCMC:
     * **args_target** ((`list` of) `tuple`):
         Positional arguments of the pdf / log-pdf target function. See `pdf_target`
 
-    * **jump** (`int`):
-        Thinning parameter, used to reduce correlation between samples. Setting `jump=n` corresponds to	skipping `n-1`
-        states between accepted states of the chain. Default is 1 (no thinning).
+    * **seed** (`ndarray`):
+        Seed of the Markov chain(s), shape ``(nchains, dimension)``. Default: zeros(`nchains` x `dimension`).
+
+        If `seed` is not provided, both `nchains` and `dimension` must be provided.
 
     * **nburn** (`int`):
         Length of burn-in - i.e., number of samples at the beginning of the chain to discard (note: no thinning during
         burn-in). Default is 0, no burn-in.
 
-    * **seed** (`ndarray`):
-        Seed of the Markov chain(s), shape ``(nchains, dimension)``. Default: zeros(1 x dimension).
+    * **jump** (`int`):
+        Thinning parameter, used to reduce correlation between samples. Setting `jump=n` corresponds to	skipping `n-1`
+        states between accepted states of the chain. Default is 1 (no thinning).
+
+    * **nchains** (`int`):
+        The number of Markov chains to generate. Either `dimension` and `nchains` or `seed` must be provided.
 
     * **save_log_pdf** (`bool`):
         Boolean that indicates whether to save log-pdf values along with the samples. Default: False
+
+    * **verbose** (`boolean`)
+        Set ``verbose = True`` to print status messages to the terminal during execution.
 
     * **concat_chains** (`bool`):
         Boolean that indicates whether to concatenate the chains after a run, i.e., samples are stored as an `ndarray`
         of shape (nsamples * nchains, dimension) if True, (nsamples, nchains, dimension) if False. Default: True
 
-    * **nsamples** (`int`):
-        Number of samples to generate - see `run` method. If not None, the `run` method is called when the object is
-        created. Default: None
-
-    * **nsamples_per_chain** (`int`):
-        Number of samples to generate per chain - see `run` method. If not None, the `run` method is called when the
-        object is created. Default: None
-
-    * random_state (None or `int` or `np.random.RandomState` object):
+    * **random_state** (None or `int` or `np.random.RandomState` object):
         Random seed used to initialize the pseudo-random number generator. Default is None.
 
-    * **verbose** (`boolean`)
-        Set ``verbose = True`` to print status messages to the terminal during execution.
 
     **Attributes:**
 
     * **samples** (`ndarray`)
-        Set of MCMC samples following the target distribution, `ndarray` of shape (nsamples * nchains, dimension) or
-        (nsamples, nchains, dimension) (see input `concat_chains`).
+        Set of MCMC samples following the target distribution, `ndarray` of shape (`nsamples` * `nchains`, `dimension`)
+        or (nsamples, nchains, dimension) (see input `concat_chains`).
 
     * **log_pdf_values** (`ndarray`)
         Values of the log pdf for the accepted samples, `ndarray` of shape (nchains * nsamples,) or (nsamples, nchains)
 
     * **nsamples** (`list`)
-        Total number of samples; it is updated during iterations as new samples as saved.
+        Total number of samples; The `nsamples` attribute tallies the total number of generated samples. After each
+        iteration, it is updated by 1. At the end of the simulation, the `nsamples` attribute equals the user-specified
+        value for input `nsamples` given to the child class.
 
     * **nsamples_per_chain** (`list`)
-        Total number of samples per chain; it is updated during iterations as new samples as saved.
+        Total number of samples per chain; Similar to the attribute `nsamples`, it is updated during iterations as new
+        samples are saved.
 
     * **niterations** (`list`)
         Total number of iterations, updated on-the-fly as the algorithm proceeds. It is related to number of samples as
@@ -2370,14 +2364,14 @@ class MCMC:
     # Last Modified: 10/05/20 by Audrey Olivier
 
     def __init__(self, dimension=None, pdf_target=None, log_pdf_target=None, args_target=None, seed=None, nburn=0,
-                 jump=1, save_log_pdf=False, verbose=False, concat_chains=True, random_state=None):
+                 jump=1, nchains=None, save_log_pdf=False, verbose=False, concat_chains=True, random_state=None):
 
         if not (isinstance(nburn, int) and nburn >= 0):
             raise TypeError('UQpy: nburn should be an integer >= 0')
         if not (isinstance(jump, int) and jump >= 1):
             raise TypeError('UQpy: jump should be an integer >= 1')
         self.nburn, self.jump = nburn, jump
-        self.seed = self._preprocess_seed(seed=seed, dim=dimension)    # check type and assign default [0.s]
+        self.seed = self._preprocess_seed(seed=seed, dim=dimension, nchains=nchains)
         self.nchains, self.dimension = self.seed.shape
 
         # Check target pdf
@@ -2391,7 +2385,7 @@ class MCMC:
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
         self.verbose = verbose
-        ##### ADDED MDS 1/21/20
+
         self.log_pdf_target = log_pdf_target
         self.pdf_target = pdf_target
         self.args_target = args_target
@@ -2405,10 +2399,10 @@ class MCMC:
 
     def run(self, nsamples=None, nsamples_per_chain=None):
         """
-        Run the MCMC chain.
+        Run the MCMC algorithm.
 
-        This function samples from the MCMC chains and append samples to existing ones (if any). This method leverages
-        the run_iterations method that is specific to each algorithm.
+        This function samples from the MCMC chains and appends samples to existing ones (if any). This method leverages
+        the ``run_iterations`` method that is specific to each algorithm.
 
         **Inputs:**
 
@@ -2418,8 +2412,8 @@ class MCMC:
         * **nsamples_per_chain** (`int`)
             Number of samples to generate per chain.
 
-        Either nsamples or nsamples_per_chain must be provided (not both). Not that if nsamples is not a multiple of
-        nchains, nsamples is set to the next integer that is a multiple of nchains.
+        Either `nsamples` or `nsamples_per_chain` must be provided (not both). Not that if `nsamples` is not a multiple
+        of `nchains`, `nsamples` is set to the next largest integer that is a multiple of `nchains`.
 
         """
         # Initialize the runs: allocate space for the new samples and log pdf values
@@ -2453,10 +2447,10 @@ class MCMC:
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
-        Run one iteration of the MCMC algorithm, starting at current_state.
+        Run one iteration of the MCMC algorithm, starting at `current_state`.
 
         This method is over-written for each different MCMC algorithm. It must return the new state and associated
-        log-pdf, which will be passed as inputs to the `run_one_iteration` method at the next iteration.
+        log-pdf, which will be passed as inputs to the ``run_one_iteration`` method at the next iteration.
 
         **Inputs:**
 
@@ -2558,9 +2552,6 @@ class MCMC:
                     self.log_pdf_values[0, :] = current_log_pdf
                 self.nsamples_per_chain += 1
                 self.nsamples += self.nchains
-                #nsims = self.jump * nsamples_per_chain - 1
-            #else:
-                #nsims = self.nburn + self.jump * nsamples_per_chain
 
         else:    # fetch previous samples to start the new run, current state is last saved sample
             if len(self.samples.shape) == 2:   # the chains were previously concatenated
@@ -2572,7 +2563,7 @@ class MCMC:
             if self.save_log_pdf:
                 self.log_pdf_values = np.concatenate(
                     [self.log_pdf_values, np.zeros((nsamples_per_chain, self.nchains))], axis=0)
-            #nsims = self.jump * nsamples_per_chain
+
         return nsamples, nsamples_per_chain, current_state, current_log_pdf
 
     def _update_acceptance_rate(self, new_accept=None):
@@ -2627,7 +2618,6 @@ class MCMC:
                     raise ValueError('UQpy: When log_pdf_target is a list, args should be a list (of tuples) of same '
                                      'length.')
                 evaluate_log_pdf_marginals = list(map(lambda i: lambda x: log_pdf[i](x, *args[i]), range(len(log_pdf))))
-                #evaluate_log_pdf_marginals = [partial(log_pdf_, *args_) for (log_pdf_, args_) in zip(log_pdf, args)]
                 evaluate_log_pdf = (lambda x: np.sum(
                     [log_pdf[i](x[:, i, np.newaxis], *args[i]) for i in range(len(log_pdf))]))
             else:
@@ -2643,7 +2633,8 @@ class MCMC:
                 if args is None:
                     args = [()] * len(pdf)
                 if not (isinstance(args, (list, tuple)) and len(args) == len(pdf)):
-                    raise ValueError('UQpy: When pdf_target is given as a list, args should also be a list of same length.')
+                    raise ValueError('UQpy: When pdf_target is given as a list, args should also be a list of same '
+                                     'length.')
                 evaluate_log_pdf_marginals = list(
                     map(lambda i: lambda x: np.log(np.maximum(pdf[i](x, *args[i]),
                                                               10 ** (-320) * np.ones((x.shape[0],)))),
@@ -2652,7 +2643,6 @@ class MCMC:
                 evaluate_log_pdf = (lambda x: np.sum(
                     [np.log(np.maximum(pdf[i](x[:, i, np.newaxis], *args[i]), 10**(-320)*np.ones((x.shape[0],))))
                      for i in range(len(log_pdf))]))
-                #evaluate_log_pdf = None
             else:
                 raise TypeError('UQpy: pdf_target must be a callable or list of callables')
         else:
@@ -2660,7 +2650,7 @@ class MCMC:
         return evaluate_log_pdf, evaluate_log_pdf_marginals
 
     @staticmethod
-    def _preprocess_seed(seed, dim):
+    def _preprocess_seed(seed, dim, nchains):
         """
         Preprocess input seed.
 
@@ -2678,9 +2668,9 @@ class MCMC:
 
         """
         if seed is None:
-            if dim is None:
-                raise ValueError('UQpy: One of inputs seed or dimension must be provided.')
-            seed = np.zeros((1, dim))
+            if dim is None or nchains is None:
+                raise ValueError('UQpy: Either `seed` or `dimension` and `nchains` must be provided.')
+            seed = np.zeros((nchains, dim))
         else:
             seed = np.atleast_1d(seed)
             if len(seed.shape) == 1:
@@ -2689,6 +2679,8 @@ class MCMC:
                 raise ValueError('UQpy: Input seed should be an array of shape (dimension, ) or (nchains, dimension).')
             if dim is not None and seed.shape[1] != dim:
                 raise ValueError('UQpy: Wrong dimensions between seed and dimension.')
+            if nchains is not None and seed.shape[0] != nchains:
+                raise ValueError('UQpy: The number of chains and the seed shape are inconsistent.')
         return seed
 
     @staticmethod
@@ -2722,18 +2714,11 @@ class MH(MCMC):
     """
     Metropolis-Hastings algorithm
 
-    >>> from UQpy.Distributions import Normal, Gumbel, JointCopula
-    >>> dist_true = JointCopula(marginals=[Normal(), Normal()], copula=Gumbel(theta=2.))
-    >>> proposal = JointInd(marginals=[Normal(scale=0.2), Normal(scale=0.2)])
-    >>> sampler = MH(log_pdf_target=dist_true.log_pdf, nsamples=500, proposal=proposal, seed=[0., 0.], random_state=123)
-    >>> print(sampler.samples.shape)
-    (500, 2)
-    >>> print(np.round(sampler.samples[-5:], 4))
-    [[-0.1966  0.1831]
-     [-0.2325  0.2526]
-     [ 0.2104  0.0748]
-     [ 0.0091  0.1651]
-     [ 0.1693  0.2409]]
+    **References**
+
+    1. Gelman et al., "Bayesian data analysis", Chapman and Hall/CRC, 2013
+    2. R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
+
 
     **Algorithm-specific inputs:**
 
@@ -2741,8 +2726,8 @@ class MH(MCMC):
         Proposal distribution, must have a log_pdf/pdf and rvs method. Default: standard multivariate normal
 
     * **proposal_is_symmetric** (`bool`):
-        indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
-        Default: False
+        Indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
+        Default: False, set to True if default proposal is used
 
     **Methods:**
 
@@ -2813,24 +2798,27 @@ class MH(MCMC):
 class MMH(MCMC):
     """
 
-    Modified Metropolis-Hastings algorithm.
+    Component-wise Modified Metropolis-Hastings algorithm.
 
-    In this algorithm, candidate samples are drawn separately in each dimension, thus the proposal consists in a list
+    In this algorithm, candidate samples are drawn separately in each dimension, thus the proposal consists of a list
     of 1d distributions. The target pdf can be given as a joint pdf or a list of marginal pdfs in all dimensions. This
     will trigger two different algorithms.
 
     **References:**
 
-    * S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
-      Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+    1. S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
+       Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
 
     **Algorithm-specific inputs:**
 
     * **proposal** ((`list` of) ``Distribution`` object(s)):
-        Proposal distribution(s) in dimension 1, must have a log_pdf/pdf and rvs method. Default: standard normal
+        Proposal distribution(s) in one dimension, must have a log_pdf/pdf and rvs method.
+
+        The proposal object may be a list of ``DistributionContinuous1D`` objects or a ``JointInd`` object.
+        Default: standard normal
 
     * **proposal_is_symmetric** ((`list` of) `bool`):
-        indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
+        Indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
         Default: False, set to True if default proposal is used
 
     **Methods:**
@@ -2967,10 +2955,10 @@ class Stretch(MCMC):
 
     **References:**
 
-    * J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
-      no. 1, pp. 65–80, 2010.
-    * Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. "emcee: The MCMC Hammer".
-      Publications of the Astronomical Society of the Pacific, 125(925):306–312,2013.
+    1. J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
+       no. 1, pp. 65–80, 2010.
+    2. Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. "emcee: The MCMC Hammer".
+       Publications of the Astronomical Society of the Pacific, 125(925):306–312,2013.
 
     **Algorithm-specific inputs:**
 
@@ -3025,7 +3013,6 @@ class Stretch(MCMC):
             unif_rvs = Uniform().rvs(nsamples=Ns, random_state=self.random_state)
             zz = ((self.scale - 1.) * unif_rvs + 1) ** 2. / self.scale  # sample Z
             factors = (self.dimension - 1.) * np.log(zz)  # compute log(Z ** (d - 1))
-            #rint = np.random.choice(Nc, size=(Ns,), replace=True)  # sample X_{j} from complementary set
             multi_rvs = Multinomial(n=1, p=[1. / Nc, ] * Nc).rvs(nsamples=Ns, random_state=self.random_state)
             rint = np.nonzero(multi_rvs)[1]    # sample X_{j} from complementary set
             candidates = c[rint, :] - (c[rint, :] - s) * np.tile(zz, [1, self.dimension])  # new candidates
@@ -3056,30 +3043,30 @@ class DRAM(MCMC):
 
     In this algorithm, the proposal density is Gaussian and its covariance C is being updated from samples as
     C = sp * C_sample where C_sample is the sample covariance. Also, the delayed rejection scheme is applied, i.e,
-    if a candidate is not accepted another one is generated from proposal with covariance gamma_2 ** 2 * C.
+    if a candidate is not accepted another one is generated from the proposal with covariance gamma_2 ** 2 * C.
 
     **References:**
 
-    * Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive MCMC". Statistics
-      and Computing, 16(4):339–354, 2006
-    * R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
+    1. Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive MCMC". Statistics
+       and Computing, 16(4):339–354, 2006
+    2. R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
 
     **Algorithm-specific inputs:**
 
     * **initial_cov** (`ndarray`):
-        initial covariance for the gaussian proposal distribution. Default: I(dim)
+        Initial covariance for the gaussian proposal distribution. Default: I(dim)
 
     * **k0** (`int`):
-        rate at which covariance is being updated, i.e., every k0 iterations. Default: 100
+        Rate at which covariance is being updated, i.e., every k0 iterations. Default: 100
 
     * **sp** (`float`):
-        scale parameter for covariance updating. Default: 2.38 ** 2 / dim
+        Scale parameter for covariance updating. Default: 2.38 ** 2 / dim
 
     * **gamma_2** (`float`):
-        scale parameter for delayed rejection. Default: 1 / 5
+        Scale parameter for delayed rejection. Default: 1 / 5
 
     * **save_cov** (`bool`):
-        if True, updated covariance is saved in attribute adaptive_covariance. Default: False
+        If True, updated covariance is saved in attribute `adaptive_covariance`. Default: False
 
     **Methods:**
 
@@ -3173,13 +3160,13 @@ class DRAM(MCMC):
             log_prop_cand_curr = mvp.log_pdf(candidates_DR - current_states_DR)
             # Accept or reject
             unif_rvs = Uniform().rvs(nsamples=len(inds_DR), random_state=self.random_state).reshape((-1,))
-            for (nc, cand2, log_p_cand2, J1, J2, u_rv) in zip(inds_DR, candidate2, log_p_candidate2, log_prop_cand_cand2,
-                                                        log_prop_cand_curr, unif_rvs):
+            for (nc, cand2, log_p_cand2, J1, J2, u_rv) in zip(inds_DR, candidate2, log_p_candidate2,
+                                                              log_prop_cand_cand2, log_prop_cand_curr, unif_rvs):
                 alpha_cand_cand2 = min(1., np.exp(log_p_candidate[nc] - log_p_cand2))
                 alpha_cand_curr = min(1., np.exp(log_p_candidate[nc] - current_log_pdf[nc]))
                 log_alpha2 = log_p_cand2 - current_log_pdf[nc] + J1 - J2 + \
-                             np.log(max(1. - alpha_cand_cand2, 10 ** (-320))) \
-                             - np.log(max(1. - alpha_cand_curr, 10 ** (-320)))
+                             np.log(max(1. - alpha_cand_cand2, 10 ** (-320))) - \
+                             np.log(max(1. - alpha_cand_curr, 10 ** (-320)))
                 accept = np.log(u_rv) < min(0., log_alpha2)
                 if accept:
                     current_state[nc, :] = cand2
@@ -3241,31 +3228,31 @@ class DREAM(MCMC):
 
     **References:**
 
-    * J.A. Vrugt et al. "Accelerating Markov chain Monte Carlo simulation by differential evolution with
-      self-adaptive randomized subspace sampling". International Journal of Nonlinear Sciences and Numerical
-      Simulation, 10(3):273–290, 2009.[68]
-    * J.A. Vrugt. "Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and
-      MATLAB implementation". Environmental Modelling & Software, 75:273–316, 2016.
+    1. J.A. Vrugt et al. "Accelerating Markov chain Monte Carlo simulation by differential evolution with
+       self-adaptive randomized subspace sampling". International Journal of Nonlinear Sciences and Numerical
+       Simulation, 10(3):273–290, 2009.[68]
+    2. J.A. Vrugt. "Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and
+       MATLAB implementation". Environmental Modelling & Software, 75:273–316, 2016.
 
     **Algorithm-specific inputs:**
 
     * **delta** (`int`):
-        jump rate. Default: 3
+        Jump rate. Default: 3
 
     * **c** (`float`):
-        differential evolution parameter. Default: 0.1
+        Differential evolution parameter. Default: 0.1
 
     * **c_star** (`float`):
-        differential evolution parameter, should be small compared to width of target. Default: 1e-6
+        Differential evolution parameter, should be small compared to width of target. Default: 1e-6
 
     * **n_CR** (`int`):
-        number of crossover probabilities. Default: 3
+        Number of crossover probabilities. Default: 3
 
     * **p_g** (`float`):
-        prob(gamma=1). Default: 0.2
+        Prob(gamma=1). Default: 0.2
 
     * **adapt_CR** (`tuple`):
-        (iter_max, rate) governs adapation of crossover probabilities (adapts every rate iterations if iter<iter_max).
+        (iter_max, rate) governs adaptation of crossover probabilities (adapts every rate iterations if iter<iter_max).
         Default: (-1, 1), i.e., no adaptation
 
     * **check_chains** (`tuple`):
@@ -3339,7 +3326,6 @@ class DREAM(MCMC):
         multi_rvs = Multinomial(n=1, p=[1./self.delta, ] * self.delta).rvs(
             nsamples=self.nchains, random_state=self.random_state)
         D = np.nonzero(multi_rvs)[1]
-        #D = np.random.choice(self.delta, size=(self.nchains,), replace=True)
         as_ = [R[j, draw[slice(D[j]), j]] for j in range(self.nchains)]
         bs_ = [R[j, draw[slice(D[j], 2 * D[j], 1), j]] for j in range(self.nchains)]
         multi_rvs = Multinomial(n=1, p=self.pCR).rvs(nsamples=self.nchains, random_state=self.random_state)
@@ -3356,8 +3342,6 @@ class DREAM(MCMC):
         gamma_d = 2.38 / np.sqrt(2 * (D + 1) * d_star)
         g = Binomial(n=1, p=self.p_g).rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1, ))
         g[g == 0] = gamma_d[g == 0]
-        #g = [np.random.choice([gamma_d[j], 1], size=1, replace=True, p=[1 - self.p_g, self.p_g])
-        #     for j in range(self.nchains)]
         norm_vars = Normal(loc=0., scale=1.).rvs(nsamples=self.nchains ** 2,
                                                  random_state=self.random_state).reshape((self.nchains, self.nchains))
         for j in range(self.nchains):
@@ -3401,14 +3385,14 @@ class DREAM(MCMC):
         """
         Check outlier chains in DREAM algorithm.
 
-        This function check for outlier chains as part of the DREAM algorithm, potentially replacing outlier chains
+        This function checks for outlier chains as part of the DREAM algorithm, potentially replacing outlier chains
         (i.e. the samples and log_pdf_values) with 'good' chains. The function does not have any returned output but it
         prints out the number of outlier chains.
 
         **Inputs:**
 
         * **replace_with_best** (`bool`):
-            indicates whether to replace outlier chains with the best (most probable) chain. Default: False
+            Indicates whether to replace outlier chains with the best (most probable) chain. Default: False
 
         """
         if not self.save_log_pdf:
