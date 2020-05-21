@@ -1,0 +1,233 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Surrogates &#8212; UQpy v3.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reliability" href="reliability.html" />
+    <link rel="prev" title="StochasticProcess" href="stochastic_process.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="surrogates">
+<span id="id1"></span><h1>Surrogates<a class="headerlink" href="#surrogates" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="UQpy.Surrogates.SROM">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Surrogates.</code><code class="sig-name descname">SROM</code><span class="sig-paren">(</span><em class="sig-param">samples=None</em>, <em class="sig-param">cdf_target=None</em>, <em class="sig-param">moments=None</em>, <em class="sig-param">weights_errors=None</em>, <em class="sig-param">weights_distribution=None</em>, <em class="sig-param">weights_moments=None</em>, <em class="sig-param">weights_correlation=None</em>, <em class="sig-param">properties=None</em>, <em class="sig-param">cdf_target_params=None</em>, <em class="sig-param">correlation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Surrogates.html#SROM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Surrogates.SROM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random
+quantity.</p>
+<p>SROM generates a discrete approximation of continuous random variables. The probabilities/weights are
+considered to be the parameters for the SROM and they can be obtained by minimizing the error between the
+marginal distributions, first and second order moments about origin and correlation between random variables.</p>
+<p><strong>References:</strong></p>
+<ol class="arabic simple">
+<li><p>M. Grigoriu, “Reduced order models for random functions. Application to stochastic problems”,
+Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.</p></li>
+</ol>
+<p><strong>Input:</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>numpy array</em>) – An array/list of samples corresponding to each random variables</p></li>
+<li><p><strong>cdf_target</strong> (<em>list str</em><em> or </em><em>list function</em>) – A list of Cumulative distribution functions of random variables</p></li>
+<li><p><strong>cdf_target_params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – Parameters of distribution</p></li>
+<li><p><strong>moments</strong> (<em>ndarray</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em> (</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>)</em>) – A list containing first and second order moment about origin of all random variables</p></li>
+<li><p><strong>weights_errors</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – Weights associated with error in distribution, moments and correlation.
+Default: weights_errors = [1, 0.2, 0]</p></li>
+<li><p><strong>properties</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – A list of booleans representing properties, which are required to match in reduce
+order model. This class focus on reducing errors in distribution, first order moment
+about origin, second order moment about origin and correlation of samples.
+Default: properties = [True, True, True, False]
+Example: properties = [True, True, False, False] will minimize errors in distribution and
+errors in first order moment about origin in reduce order model.</p></li>
+<li><p><strong>weights_distribution</strong> (<em>ndarray</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em> (</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>)</em>) – <p>An list or array containing weights associated with different samples.
+Options:</p>
+<blockquote>
+<div><p>If weights_distribution is None, then default value is assigned.
+If size of weights_distribution is 1xd, then it is assigned as dot product</p>
+<blockquote>
+<div><p>of weights_distribution and default value.</p>
+</div></blockquote>
+<p>Otherwise size of weights_distribution should be equal to Nxd.</p>
+</div></blockquote>
+<p>Default: weights_distribution = Nxd dimensional array with all elements equal
+to 1.</p>
+</p></li>
+<li><p><strong>weights_moments</strong> (<em>ndarray</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em> (</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>)</em>) – <p>An array of dimension 2xd, where ‘d’ is number of random variables. It contain
+weights associated with moments.
+Options:</p>
+<blockquote>
+<div><p>If weights_moments is None, then default value is assigned.
+If size of weights_moments is 1xd, then it is assigned as dot product</p>
+<blockquote>
+<div><p>of weights_moments and default value.</p>
+</div></blockquote>
+<p>Otherwise size of weights_distribution should be equal to 2xd.</p>
+</div></blockquote>
+<p>Default: weights_moments = Square of reciprocal of elements of moments.</p>
+</p></li>
+<li><p><strong>weights_correlation</strong> (<em>ndarray</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em> (</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>)</em>) – An array of dimension dxd, where ‘d’ is number of random variables. It contain
+weights associated with correlation of random variables.
+Default: weights_correlation = dxd dimensional array with all elements equal to
+1.</p></li>
+<li><p><strong>correlation</strong> (<em>ndarray</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em> (</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>)</em>) – Correlation matrix between random variables.</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Attributes:</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>SROM.sample_weights: The probabilities/weights defining discrete approximation of continuous random
+variables.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>SROM.sample_weights: ndarray</p>
+</dd>
+</dl>
+<p><strong>Authors:</strong></p>
+<p>Authors: Mohit Chauhan
+Last modified: 6/7/18 by Dimitris G. Giovanis</p>
+<dl class="method">
+<dt id="UQpy.Surrogates.SROM.init_srom">
+<code class="sig-name descname">init_srom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Surrogates.html#SROM.init_srom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Surrogates.SROM.init_srom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialization and preliminary error checks.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Surrogates.SROM.run_srom">
+<code class="sig-name descname">run_srom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Surrogates.html#SROM.run_srom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Surrogates.SROM.run_srom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs stochastic reduced order model.</p>
+<p>This is an instance method that runs SROM. It is automatically called when the SROM class is instantiated.</p>
+<p><strong>Output:</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Return p.x<a href="#id2"><span class="problematic" id="id3">p_</span></a>.x</dt>
+<dd class="field-odd"><p>Weights associated with each sample</p>
+</dd>
+<dt class="field-even">Rtype p.x<a href="#id4"><span class="problematic" id="id5">p_</span></a>.x</dt>
+<dd class="field-even"><p>numpy array</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.jpg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Uncertainty quantification with Python </p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=SURG&repo=UQpy&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runmodel.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributions.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samplemethods.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transformations.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stochastic_process.html">StochasticProcess</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Surrogates</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reliability.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">Dimension reduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="news.html">News</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="stochastic_process.html" title="previous chapter">StochasticProcess</a></li>
+      <li>Next: <a href="reliability.html" title="next chapter">Reliability</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, SURG, JHU.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/surrogates.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/SURG/UQpy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

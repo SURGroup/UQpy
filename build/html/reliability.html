@@ -1,0 +1,300 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Reliability &#8212; UQpy v3.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Inference" href="inference.html" />
+    <link rel="prev" title="Surrogates" href="surrogates.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="reliability">
+<span id="id1"></span><h1>Reliability<a class="headerlink" href="#reliability" title="Permalink to this headline">¶</a></h1>
+<p>Reliability of a system refers to the assessment of its probability failure (i.e the structure no longer satisfies some performance measures), given the model uncertainty in the structural, environmental and load parameters. Given a vector of random variables <span class="math notranslate nohighlight">\(\textbf{X}=\{X_1, X_2, \ldots, X_n\} \in \mathcal{D}_\textbf{X}\subset \mathbb{R}^n\)</span>, where <span class="math notranslate nohighlight">\(\mathcal{D}\)</span> is the domain of interest and <span class="math notranslate nohighlight">\(f_{\textbf{X}}(\textbf{x})\)</span> is its joint probability density function then, the probability that the system will fail is defined as</p>
+<div class="math notranslate nohighlight">
+\[P_f =\mathbb{P}(g(\textbf{X}) \leq 0) = \int_{D_f} f_{\textbf{X}}(\textbf{x})d\textbf{x} = \int_{\{\textbf{X}:g(\textbf{X})\leq 0 \}} f_{\textbf{X}}(\textbf{x})d\textbf{x}\]</div>
+<p>where <span class="math notranslate nohighlight">\(g(\textbf{X})\)</span> is the so-called performance function. Formulation of reliability methods in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> is made on the standard normal space <span class="math notranslate nohighlight">\(\textbf{U}\sim \mathcal{N}(\textbf{0}, \textbf{I}_n)\)</span> which means that a nonlinear isoprobabilistic  transformation from the generally non-normal parameter space <span class="math notranslate nohighlight">\(\textbf{X}\sim f_{\textbf{X}}(\cdot)\)</span> is required (see module <code class="docutils literal notranslate"><span class="pre">Tansformations</span></code>). The performance function in the standard normal space is denoted <span class="math notranslate nohighlight">\(G(\textbf{U})\)</span>.</p>
+<p>This module contains functionality for all the structural reliability methods supported in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.
+The module currently contains the following classes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code>: Class to perform reliability analysis using FORM/SORM.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SubsetSimulation</span></code>: Class to perform reliability analysis using subset simulation.</p></li>
+</ul>
+<div class="section" id="taylor-series">
+<h2>Taylor Series<a class="headerlink" href="#taylor-series" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> is a class that calculates the reliability  of a model using the First Order Reliability Method (FORM) or the Second Order Reliability Method (SORM) based on the first-order and second-order Taylor series expansion approximation of the performance function, respectively.</p>
+<p>In FORM, the performance function is linearized according to</p>
+<div class="math notranslate nohighlight">
+\[G(\textbf{U})  \approx  G(\textbf{U}^\star) + \nabla G_{|_{\textbf{U}^\star}}(\textbf{U}-\textbf{U}^\star)^\intercal\]</div>
+<p>where <span class="math notranslate nohighlight">\(\textbf{U}^\star\)</span> is expansion point, <span class="math notranslate nohighlight">\(G(\textbf{U})\)</span> is the performance function evaluated in the standard normal space and <span class="math notranslate nohighlight">\(\nabla G_{|_{\textbf{U}^\star}}\)</span> is the gradient of <span class="math notranslate nohighlight">\(G(\textbf{U})\)</span> evaluated at <span class="math notranslate nohighlight">\(\textbf{U}^\star\)</span>. The probability failure can be calculated by</p>
+<div class="math notranslate nohighlight">
+\[P_{f, \text{form}} = \Phi(-\beta_{HL})\]</div>
+<p>where <span class="math notranslate nohighlight">\(\Phi(\cdot)\)</span> is the standard normal cumulative distribution function and <span class="math notranslate nohighlight">\(\beta_{HL}=||\textbf{U}^*||\)</span> is the norm of the design point known as the Hasofer-Lind reliability index calculated with the Hasofer-Lind-Rackwitz-Fiessler (HLRF) algorithm.</p>
+<a class="reference internal image-reference" href="_images/Reliability_FORM.png"><img alt="Graphical representation of the FORM." class="align-center" src="_images/Reliability_FORM.png" style="width: 842.0px; height: 230.0px;" /></a>
+<p>In SORM the performance function is approximated by a second-order Taylor series around the design point according to</p>
+<div class="math notranslate nohighlight">
+\[G(\textbf{U}) = G(\textbf{U}^\star) + \nabla G_{|_{\textbf{U}^\star}}(\textbf{U}-\textbf{U}^\star)^\intercal + \frac{1}{2}(\textbf{U}-\textbf{U}^\star)\textbf{H}(\textbf{U}-\textbf{U}^\star)\]</div>
+<p>where <span class="math notranslate nohighlight">\(\textbf{H}\)</span> is the Hessian matrix of the second derivatives of <span class="math notranslate nohighlight">\(G(\textbf{U})\)</span> evaluated at <span class="math notranslate nohighlight">\(\textbf{U}^*\)</span>. After the design point <span class="math notranslate nohighlight">\(\textbf{U}^*\)</span> is identified and the probability of failure <span class="math notranslate nohighlight">\(P_{f, \text{form}}\)</span> is calculated with FORM a correction is made according to</p>
+<div class="math notranslate nohighlight">
+\[P_{f, \text{sorm}} = \Phi(-\beta_{HL}) \prod_{i=1}^{n-1} (1+\beta_{HL}\kappa_i)^{-\frac{1}{2}}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\kappa_i\)</span> is the <cite>i-th</cite>  curvature.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">TayloreSeries</span></code> class is the parent class of the <code class="docutils literal notranslate"><span class="pre">FORM</span></code> and <code class="docutils literal notranslate"><span class="pre">SORM</span></code> classes that perform the FORM and SORM, respectively. These classes can be imported in a python script using the following command:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Reliability</span> <span class="k">import</span> <span class="n">FORM</span><span class="p">,</span> <span class="n">SORM</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="UQpy.Reliability.TaylorSeries">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">TaylorSeries</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">model</em>, <em class="sig-param">cov=None</em>, <em class="sig-param">n_iter=100</em>, <em class="sig-param">tol=0.001</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#TaylorSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.TaylorSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform First and Second Order Reliability (FORM/SORM) methods (<a class="footnote-reference brackets" href="#id4" id="id2">1</a>, <a class="footnote-reference brackets" href="#id5" id="id3">2</a>).</p>
+<p>This is the parent class to all Taylor series expansion algorithms.</p>
+<p><strong>References:</strong></p>
+<dl class="footnote brackets">
+<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
+<dd><p>R. Rackwitz and R. Fiessler, “Structural reliability under combined random load sequences”,
+Structural Safety, Vol. 22, no. 1, pp: 27–60, 1978.</p>
+</dd>
+<dt class="label" id="id5"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
+<dd><p>K. Breitung, “Asymptotic approximations for multinormal integrals”, J. Eng. Mech., ASCE, Vol. 110, no. 3,
+pp: 357–367, 1984.</p>
+</dd>
+</dl>
+<p><strong>Inputs:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>dist_object</strong> ((list of ) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>Probability distribution of each random variable. Must be an object of type
+<code class="docutils literal notranslate"><span class="pre">DistributionContinuous1D</span></code> or <code class="docutils literal notranslate"><span class="pre">JointInd</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>model</strong> (Object or a <cite>callable</cite> ):</dt><dd><p>The numerical model. It should be of type <cite>RunModel</cite> (see <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> class) or <code class="docutils literal notranslate"><span class="pre">Krig</span></code> (see <code class="docutils literal notranslate"><span class="pre">Surrogates</span></code>
+class) object or a <cite>callable</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>seed</strong> (<cite>ndarray</cite>):</dt><dd><p>The initial starting point for the <cite>Hasofer-Lind</cite> algorithm. If provided, it should be a point in the parameter
+space <strong>X</strong>. Otherwise, the algorithm starts from point <span class="math notranslate nohighlight">\((0, 0, \ldots, 0)\)</span> in the uncorrelated
+standard normal space <strong>U</strong>.</p>
+<p>Default: <span class="math notranslate nohighlight">\((0, 0, \ldots, 0)\)</span></p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>cov</strong> (<cite>ndarray</cite>):</dt><dd><p>The distorted correlation  structure (<span class="math notranslate nohighlight">\(\mathbf{C_z}\)</span>) of the standard normal random vector <strong>Z</strong>. If the
+correlation structure in the parameter space is given (<span class="math notranslate nohighlight">\(\mathbf{C_x}\)</span>)  then the method
+<code class="docutils literal notranslate"><span class="pre">distortion_x_to_z</span></code> from the <code class="docutils literal notranslate"><span class="pre">Forward</span></code> class in the <code class="docutils literal notranslate"><span class="pre">Nataf</span></code> class should be used  before running FORM to
+obtain <span class="math notranslate nohighlight">\(\mathbf{C_z}\)</span>.</p>
+<p>Default: The <code class="docutils literal notranslate"><span class="pre">identity</span></code> matrix.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>cov</strong> (<cite>ndarray</cite>):</dt><dd><p>The correlation  structure (<span class="math notranslate nohighlight">\(\mathbf{C_X}\)</span>) of the random vector <strong>X</strong> .</p>
+<p>Default: The <code class="docutils literal notranslate"><span class="pre">identity</span></code> matrix.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>tol</strong> (<cite>float</cite>):</dt><dd><p>Convergence threshold for the <cite>Hasofer-Lind</cite> algorithm.</p>
+<p>Default: 0.001</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>n_iter</strong> (<cite>int</cite>):</dt><dd><p>Maximum number of iterations for the <cite>Hasofer-Lind</cite> algorithm.</p>
+<p>Default: 100</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<div class="section" id="form">
+<h3>FORM<a class="headerlink" href="#form" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">FORM</span></code> class can be used to estimate the reliability of a system using the first order reliability method. For example, consider the simple structural reliability problem defined in a two-dimensional parameter space consisting of a resistance <span class="math notranslate nohighlight">\(R\)</span> and a stress <span class="math notranslate nohighlight">\(S\)</span>. The failure happens when the stress is higher than the resistance, leading to the following limit-state function:</p>
+<div class="math notranslate nohighlight">
+\[\textbf{X}=\{R, S\}\]</div>
+<div class="math notranslate nohighlight">
+\[g(\textbf{X}) = R - S\]</div>
+<p>The two random variables are independent  and  normally distributed according to <span class="math notranslate nohighlight">\(R \sim N(200, 20)\)</span> and <span class="math notranslate nohighlight">\(S \sim N(150, 50)\)</span>. The probability of failure in this case is estimated with MCS to be 0.0127.  In order to estimate the probability of failure using FORM we simply type in a python script:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.RunModel</span> <span class="k">import</span> <span class="n">RunModel</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Reliability</span> <span class="k">import</span> <span class="n">FORM</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">RunModelObject</span> <span class="o">=</span> <span class="n">RunModel</span><span class="p">(</span><span class="n">model_script</span><span class="o">=</span><span class="s1">&#39;pfn.py&#39;</span><span class="p">,</span><span class="n">model_object_name</span><span class="o">=</span><span class="s2">&quot;model&quot;</span><span class="p">)</span> <span class="c1">#see RunModel section on how to define the model</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span> <span class="o">=</span> <span class="n">FORM</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span><span class="n">dist2</span><span class="p">],</span> <span class="n">model</span><span class="o">=</span><span class="n">RunModelObject</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If we want to print the results:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Design point in standard normal space: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">Q</span><span class="o">.</span><span class="n">DesignPoint_U</span><span class="p">)</span>
+<span class="go">        Design point in standard normal space: [[-2.  1.]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Design point in parameter space: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">Q</span><span class="o">.</span><span class="n">DesignPoint_X</span><span class="p">)</span>
+<span class="go">        Design point in parameter space: [[160. 160.]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Hasofer-Lind reliability index: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">Q</span><span class="o">.</span><span class="n">HL_beta</span><span class="p">)</span>
+<span class="go">        Hasofer-Lind reliability index: [2.23606798]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;FORM probability of failure: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">Q</span><span class="o">.</span><span class="n">Prob_FORM</span><span class="p">)</span>
+<span class="go">        FORM probability of failure: [0.01267366]</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/Reliability_example_form.png"><img alt="Limit-state function in the parameter space." class="align-center" src="_images/Reliability_example_form.png" style="width: 571.1999999999999px; height: 402.5px;" /></a>
+</div>
+<div class="section" id="sorm">
+<h3>SORM<a class="headerlink" href="#sorm" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">SORM</span></code> class can be used to estimate the reliability of a system using the second order reliability method. For example, consider the problem where the limit state to be a nonlinear function of two (<cite>d</cite>) random variables</p>
+<div class="math notranslate nohighlight">
+\[g(X_1, X_2) = X_1X_1 - 80\]</div>
+<p>where <span class="math notranslate nohighlight">\(X_1\)</span> follows a normal distribution with mean <span class="math notranslate nohighlight">\(\mu_{X_1}=20\)</span> and standard deviation <span class="math notranslate nohighlight">\(\sigma_{X_1}=7\)</span> and <span class="math notranslate nohighlight">\(X_2\)</span> follows a lognormal distribution with mean <span class="math notranslate nohighlight">\(\mu_{X_2}=7\)</span> and standard deviation <span class="math notranslate nohighlight">\(\sigma_{X_2}=1.4\)</span>. In order to estimate the probability of failure using the <code class="docutils literal notranslate"><span class="pre">Sorm</span></code> class we type in a python script:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.RunModel</span> <span class="k">import</span> <span class="n">RunModel</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">Lognormal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Reliability</span> <span class="k">import</span> <span class="n">SORM</span>
+</pre></div>
+</div>
+<p>First we need to gfind the parameters of the <cite>Lognormal</cite> distribution model (see <code class="docutils literal notranslate"><span class="pre">scipy.stats</span></code>):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">7.</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.4</span> <span class="o">/</span> <span class="mf">7.</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.4</span> <span class="o">/</span><span class="mf">7.</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Then we define the <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> objects and the <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object:
+&gt;&gt;&gt; dist1 = Normal(loc=20., scale=3.5)
+&gt;&gt;&gt; dist2 = Lognormal(s=s, loc=0.0, scale=scale)</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">RunModelObject</span> <span class="o">=</span> <span class="n">RunModel</span><span class="p">(</span><span class="n">model_script</span><span class="o">=</span><span class="s1">&#39;pfn.py&#39;</span><span class="p">,</span><span class="n">model_object_name</span><span class="o">=</span><span class="s2">&quot;model&quot;</span><span class="p">)</span> <span class="c1">#see RunModel section on how to define the model</span>
+</pre></div>
+</div>
+<p>Then we can run SORM</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">SORM</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="p">[</span><span class="n">dist1</span><span class="p">,</span><span class="n">dist2</span><span class="p">],</span> <span class="n">model</span><span class="o">=</span><span class="n">RunModelObject</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If we want to print the results:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;FORM probability of failure: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">F</span><span class="o">.</span><span class="n">Prob_FORM</span><span class="p">)</span>
+<span class="go">        FORM probability of failure: [0.02784094]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;SORM probability of failure: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">F</span><span class="o">.</span><span class="n">Prob_SORM</span><span class="p">)</span>
+<span class="go">        SORM probability of failure: [0.03007141]</span>
+</pre></div>
+</div>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.jpg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Uncertainty quantification with Python </p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=SURG&repo=UQpy&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runmodel.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributions.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samplemethods.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transformations.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stochastic_process.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="surrogates.html">Surrogates</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Reliability</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#taylor-series">Taylor Series</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">Dimension reduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="news.html">News</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="surrogates.html" title="previous chapter">Surrogates</a></li>
+      <li>Next: <a href="inference.html" title="next chapter">Inference</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, SURG, JHU.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/reliability.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/SURG/UQpy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>
