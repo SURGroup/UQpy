@@ -2379,7 +2379,7 @@ class MCMC:
 
         # Check target pdf
         self.evaluate_log_target, self.evaluate_log_target_marginals = self._preprocess_target(
-            pdf=pdf_target, log_pdf=log_pdf_target, args=args_target)
+            pdf_=pdf_target, log_pdf_=log_pdf_target, args=args_target)
         self.save_log_pdf = save_log_pdf
         self.concat_chains = concat_chains
         self.random_state = random_state
@@ -2585,7 +2585,7 @@ class MCMC:
                                 for (na, a) in zip(new_accept, self.acceptance_rate)]
 
     @staticmethod
-    def _preprocess_target(log_pdf, pdf, args):
+    def _preprocess_target(log_pdf_, pdf_, args):
         """
         Preprocess the target pdf inputs.
 
@@ -2595,9 +2595,9 @@ class MCMC:
 
         **Inputs:**
 
-        * log_pdf ((list of) callables): Log of the target density function from which to draw random samples. Either
+        * log_pdf_ ((list of) callables): Log of the target density function from which to draw random samples. Either
           pdf_target or log_pdf_target must be provided.
-        * pdf ((list of) callables): Target density function from which to draw random samples. Either pdf_target or
+        * pdf_ ((list of) callables): Target density function from which to draw random samples. Either pdf_target or
           log_pdf_target must be provided.
         * args (tuple): Positional arguments of the pdf target.
 
@@ -2608,44 +2608,45 @@ class MCMC:
 
         """
         # log_pdf is provided
-        if log_pdf is not None:
-            if callable(log_pdf):
+        if log_pdf_ is not None:
+            if callable(log_pdf_):
                 if args is None:
                     args = ()
-                evaluate_log_pdf = (lambda x: log_pdf(x, *args))
+                evaluate_log_pdf = (lambda x: log_pdf_(x, *args))
                 evaluate_log_pdf_marginals = None
-            elif isinstance(log_pdf, list) and (all(callable(p) for p in log_pdf)):
+            elif isinstance(log_pdf_, list) and (all(callable(p) for p in log_pdf_)):
                 if args is None:
-                    args = [()] * len(log_pdf)
-                if not (isinstance(args, list) and len(args) == len(log_pdf)):
+                    args = [()] * len(log_pdf_)
+                if not (isinstance(args, list) and len(args) == len(log_pdf_)):
                     raise ValueError('UQpy: When log_pdf_target is a list, args should be a list (of tuples) of same '
                                      'length.')
-                evaluate_log_pdf_marginals = list(map(lambda i: lambda x: log_pdf[i](x, *args[i]), range(len(log_pdf))))
+                evaluate_log_pdf_marginals = list(
+                    map(lambda i: lambda x: log_pdf_[i](x, *args[i]), range(len(log_pdf_))))
                 evaluate_log_pdf = (lambda x: np.sum(
-                    [log_pdf[i](x[:, i, np.newaxis], *args[i]) for i in range(len(log_pdf))]))
+                    [log_pdf_[i](x[:, i, np.newaxis], *args[i]) for i in range(len(log_pdf_))]))
             else:
                 raise TypeError('UQpy: log_pdf_target must be a callable or list of callables')
         # pdf is provided
-        elif pdf is not None:
-            if callable(pdf):
+        elif pdf_ is not None:
+            if callable(pdf_):
                 if args is None:
                     args = ()
-                evaluate_log_pdf = (lambda x: np.log(np.maximum(pdf(x, *args), 10 ** (-320) * np.ones((x.shape[0],)))))
+                evaluate_log_pdf = (lambda x: np.log(np.maximum(pdf_(x, *args), 10 ** (-320) * np.ones((x.shape[0],)))))
                 evaluate_log_pdf_marginals = None
-            elif isinstance(pdf, (list, tuple)) and (all(callable(p) for p in pdf)):
+            elif isinstance(pdf_, (list, tuple)) and (all(callable(p) for p in pdf_)):
                 if args is None:
-                    args = [()] * len(pdf)
-                if not (isinstance(args, (list, tuple)) and len(args) == len(pdf)):
+                    args = [()] * len(pdf_)
+                if not (isinstance(args, (list, tuple)) and len(args) == len(pdf_)):
                     raise ValueError('UQpy: When pdf_target is given as a list, args should also be a list of same '
                                      'length.')
                 evaluate_log_pdf_marginals = list(
-                    map(lambda i: lambda x: np.log(np.maximum(pdf[i](x, *args[i]),
+                    map(lambda i: lambda x: np.log(np.maximum(pdf_[i](x, *args[i]),
                                                               10 ** (-320) * np.ones((x.shape[0],)))),
-                        range(len(pdf))
+                        range(len(pdf_))
                         ))
                 evaluate_log_pdf = (lambda x: np.sum(
-                    [np.log(np.maximum(pdf[i](x[:, i, np.newaxis], *args[i]), 10**(-320)*np.ones((x.shape[0],))))
-                     for i in range(len(log_pdf))]))
+                    [np.log(np.maximum(pdf_[i](x[:, i, np.newaxis], *args[i]), 10**(-320)*np.ones((x.shape[0],))))
+                     for i in range(len(log_pdf_))]))
             else:
                 raise TypeError('UQpy: pdf_target must be a callable or list of callables')
         else:
@@ -2737,11 +2738,11 @@ class MH(MCMC):
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 proposal=None, proposal_is_symmetric=False, verbose=False, random_state=None):
+                 nchains=None, proposal=None, proposal_is_symmetric=False, verbose=False, random_state=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose, random_state=random_state)
+                         concat_chains=concat_chains, verbose=verbose, random_state=random_state, nchains=nchains)
 
         # Initialize algorithm specific inputs
         self.proposal = proposal
@@ -2829,11 +2830,11 @@ class MMH(MCMC):
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 proposal=None, proposal_is_symmetric=False, verbose=False, random_state=None):
+                 proposal=None, proposal_is_symmetric=False, verbose=False, random_state=None, nchains=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose, random_state=random_state)
+                         concat_chains=concat_chains, verbose=verbose, random_state=random_state, nchains=nchains)
 
         # If proposal is not provided: set it as a list of standard gaussians
         from UQpy.Distributions import Normal
@@ -2847,7 +2848,12 @@ class MMH(MCMC):
         # Proposal is provided, check it
         else:
             # only one Distribution is provided, check it and transform it to a list
-            if not isinstance(self.proposal, list):
+            if isinstance(self.proposal, JointInd):
+                self.proposal = [m for m in self.proposal.marginals]
+                if len(self.proposal) != self.dimension:
+                    raise ValueError('UQpy: Proposal given as a list should be of length dimension')
+                [self._check_methods_proposal(p) for p in self.proposal]
+            elif not isinstance(self.proposal, list):
                 self._check_methods_proposal(self.proposal)
                 self.proposal = [self.proposal] * self.dimension
             else:  # a list of proposals is provided
@@ -2901,8 +2907,8 @@ class MMH(MCMC):
                     log_ratios = log_p_candidate_j - self.current_log_pdf_marginals[j]
                 else:  # If the proposal is non-symmetric, one needs to account for it in computing acceptance ratio
                     log_prop_j = self.proposal[j].log_pdf
-                    log_proposal_ratio = log_prop_j(candidate_j - current_state[:, j, np.newaxis]) - \
-                                         log_prop_j(current_state[:, j, np.newaxis] - candidate_j)
+                    log_proposal_ratio = (log_prop_j(candidate_j - current_state[:, j, np.newaxis]) -
+                                          log_prop_j(current_state[:, j, np.newaxis] - candidate_j))
                     log_ratios = log_p_candidate_j - self.current_log_pdf_marginals[j] - log_proposal_ratio
 
                 # Compare candidate with current sample and decide or not to keep the candidate
@@ -2918,7 +2924,6 @@ class MMH(MCMC):
 
         # The target pdf is provided as a joint pdf
         else:
-            current_log_pdf_marginals = ()
             candidate = np.copy(current_state)
             for j in range(self.dimension):
                 candidate_j = current_state[:, j, np.newaxis] + self.proposal[j].rvs(
@@ -2933,8 +2938,8 @@ class MMH(MCMC):
                     log_ratios = log_p_candidate - current_log_pdf
                 else:  # If the proposal is non-symmetric, one needs to account for it in computing acceptance ratio
                     log_prop_j = self.proposal[j].log_pdf
-                    log_proposal_ratio = log_prop_j(candidate_j - current_state[:, j, np.newaxis]) - \
-                                         log_prop_j(current_state[:, j, np.newaxis] - candidate_j)
+                    log_proposal_ratio = (log_prop_j(candidate_j - current_state[:, j, np.newaxis]) -
+                                          log_prop_j(current_state[:, j, np.newaxis] - candidate_j))
                     log_ratios = log_p_candidate - current_log_pdf - log_proposal_ratio
                 unif_rvs = Uniform().rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1,))
                 for nc, (cand, log_p_cand, r_) in enumerate(zip(candidate_j, log_p_candidate, log_ratios)):
@@ -2973,13 +2978,23 @@ class Stretch(MCMC):
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 scale=2., verbose=False, random_state=None):
+                 scale=2., verbose=False, random_state=None, nchains=None):
+
+        flag_seed = False
+        if seed is None:
+            if dimension is None or nchains is None:
+                raise ValueError('UQpy: Either `seed` or `dimension` and `nchains` must be provided.')
+            flag_seed = True
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose, random_state=random_state)
+                         concat_chains=concat_chains, verbose=verbose, random_state=random_state, nchains=nchains)
 
         # Check nchains = ensemble size for the Stretch algorithm
+        if flag_seed:
+            self.seed = Uniform().rvs(nsamples=self.dimension * self.nchains, random_state=self.random_state).reshape(
+                (self.nchains, self.dimension)
+            )
         if self.nchains < 2:
             raise ValueError('UQpy: For the Stretch algorithm, a seed must be provided with at least two samples.')
 
@@ -3005,27 +3020,29 @@ class Stretch(MCMC):
         accept_vec = np.zeros((self.nchains,))
         # Separate the full ensemble into two sets, use one as a complementary ensemble to the other and vice-versa
         for split in range(2):
-            S1 = (inds == split)
+            set1 = (inds == split)
 
             # Get current and complementary sets
             sets = [current_state[inds == j, :] for j in range(2)]
-            s, c = sets[split], sets[1 - split]  # current and complementary sets respectively
-            Ns, Nc = len(s), len(c)
+            curr_set, comp_set = sets[split], sets[1 - split]  # current and complementary sets respectively
+            ns, nc = len(curr_set), len(comp_set)
 
             # Sample new state for S1 based on S0 and vice versa
-            unif_rvs = Uniform().rvs(nsamples=Ns, random_state=self.random_state)
+            unif_rvs = Uniform().rvs(nsamples=ns, random_state=self.random_state)
             zz = ((self.scale - 1.) * unif_rvs + 1) ** 2. / self.scale  # sample Z
             factors = (self.dimension - 1.) * np.log(zz)  # compute log(Z ** (d - 1))
-            multi_rvs = Multinomial(n=1, p=[1. / Nc, ] * Nc).rvs(nsamples=Ns, random_state=self.random_state)
+            multi_rvs = Multinomial(n=1, p=[1. / nc, ] * nc).rvs(nsamples=ns, random_state=self.random_state)
             rint = np.nonzero(multi_rvs)[1]    # sample X_{j} from complementary set
-            candidates = c[rint, :] - (c[rint, :] - s) * np.tile(zz, [1, self.dimension])  # new candidates
+            candidates = comp_set[rint, :] - (comp_set[rint, :] - curr_set) * np.tile(
+                zz, [1, self.dimension])  # new candidates
 
             # Compute new likelihood, can be done in parallel :)
             logp_candidates = self.evaluate_log_target(candidates)
 
             # Compute acceptance rate
-            unif_rvs = Uniform().rvs(nsamples=len(all_inds[S1]), random_state=self.random_state).reshape((-1,))
-            for j, f, lpc, candidate, u_rv in zip(all_inds[S1], factors, logp_candidates, candidates, unif_rvs):
+            unif_rvs = Uniform().rvs(nsamples=len(all_inds[set1]), random_state=self.random_state).reshape((-1,))
+            for j, f, lpc, candidate, u_rv in zip(
+                    all_inds[set1], factors, logp_candidates, candidates, unif_rvs):
                 accept = np.log(u_rv) < f + lpc - current_log_pdf[j]
                 if accept:
                     current_state[j] = candidate
@@ -3078,11 +3095,11 @@ class DRAM(MCMC):
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
                  initial_covariance=None, k0=100, sp=None, gamma_2=1/5, save_covariance=False, verbose=False,
-                 random_state=None):
+                 random_state=None, nchains=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose, random_state=random_state)
+                         concat_chains=concat_chains, verbose=verbose, random_state=random_state, nchains=nchains)
 
         # Check the initial covariance
         self.initial_covariance = initial_covariance
@@ -3135,7 +3152,7 @@ class DRAM(MCMC):
 
         # Compare candidate with current sample and decide or not to keep the candidate (loop over nc chains)
         accept_vec = np.zeros((self.nchains, ))
-        inds_DR = []   # indices of chains that will undergo delayed rejection
+        inds_delayed = []   # indices of chains that will undergo delayed rejection
         unif_rvs = Uniform().rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1,))
         for nc, (cand, log_p_cand, log_p_curr) in enumerate(zip(candidate, log_p_candidate, current_log_pdf)):
             accept = np.log(unif_rvs[nc]) < log_p_cand - log_p_curr
@@ -3144,32 +3161,33 @@ class DRAM(MCMC):
                 current_log_pdf[nc] = log_p_cand
                 accept_vec[nc] += 1.
             else:    # enter delayed rejection
-                inds_DR.append(nc)    # these indices will enter the delayed rejection part
+                inds_delayed.append(nc)    # these indices will enter the delayed rejection part
 
         # Delayed rejection
-        if len(inds_DR) > 0:   # performed delayed rejection for some samples
-            current_states_DR = np.zeros((len(inds_DR), self.dimension))
-            candidates_DR = np.zeros((len(inds_DR), self.dimension))
-            candidate2 = np.zeros((len(inds_DR), self.dimension))
+        if len(inds_delayed) > 0:   # performed delayed rejection for some chains
+            current_states_delayed = np.zeros((len(inds_delayed), self.dimension))
+            candidates_delayed = np.zeros((len(inds_delayed), self.dimension))
+            candidate2 = np.zeros((len(inds_delayed), self.dimension))
             # Sample other candidates closer to the current one
-            for i, nc in enumerate(inds_DR):
-                current_states_DR[i, :] = current_state[nc, :]
-                candidates_DR[i, :] = candidate[nc, :]
+            for i, nc in enumerate(inds_delayed):
+                current_states_delayed[i, :] = current_state[nc, :]
+                candidates_delayed[i, :] = candidate[nc, :]
                 mvp.update_params(cov=self.gamma_2 ** 2 * self.current_covariance[nc])
-                candidate2[i, :] = current_states_DR[nc, :] + mvp.rvs(nsamples=1).reshape((self.dimension, ))
+                candidate2[i, :] = current_states_delayed[i, :] + mvp.rvs(
+                    nsamples=1, random_state=self.random_state).reshape((self.dimension, ))
             # Evaluate their log_target
             log_p_candidate2 = self.evaluate_log_target(candidate2)
-            log_prop_cand_cand2 = mvp.log_pdf(candidates_DR - candidate2)
-            log_prop_cand_curr = mvp.log_pdf(candidates_DR - current_states_DR)
+            log_prop_cand_cand2 = mvp.log_pdf(candidates_delayed - candidate2)
+            log_prop_cand_curr = mvp.log_pdf(candidates_delayed - current_states_delayed)
             # Accept or reject
-            unif_rvs = Uniform().rvs(nsamples=len(inds_DR), random_state=self.random_state).reshape((-1,))
-            for (nc, cand2, log_p_cand2, J1, J2, u_rv) in zip(inds_DR, candidate2, log_p_candidate2,
+            unif_rvs = Uniform().rvs(nsamples=len(inds_delayed), random_state=self.random_state).reshape((-1,))
+            for (nc, cand2, log_p_cand2, j1, j2, u_rv) in zip(inds_delayed, candidate2, log_p_candidate2,
                                                               log_prop_cand_cand2, log_prop_cand_curr, unif_rvs):
                 alpha_cand_cand2 = min(1., np.exp(log_p_candidate[nc] - log_p_cand2))
                 alpha_cand_curr = min(1., np.exp(log_p_candidate[nc] - current_log_pdf[nc]))
-                log_alpha2 = log_p_cand2 - current_log_pdf[nc] + J1 - J2 + \
-                             np.log(max(1. - alpha_cand_cand2, 10 ** (-320))) - \
-                             np.log(max(1. - alpha_cand_curr, 10 ** (-320)))
+                log_alpha2 = (log_p_cand2 - current_log_pdf[nc] + j1 - j2 +
+                              np.log(max(1. - alpha_cand_cand2, 10 ** (-320))) -
+                              np.log(max(1. - alpha_cand_curr, 10 ** (-320))))
                 accept = np.log(u_rv) < min(0., log_alpha2)
                 if accept:
                     current_state[nc, :] = cand2
@@ -3248,13 +3266,13 @@ class DREAM(MCMC):
     * **c_star** (`float`):
         Differential evolution parameter, should be small compared to width of target. Default: 1e-6
 
-    * **n_CR** (`int`):
+    * **n_cr** (`int`):
         Number of crossover probabilities. Default: 3
 
     * **p_g** (`float`):
         Prob(gamma=1). Default: 0.2
 
-    * **adapt_CR** (`tuple`):
+    * **adapt_cr** (`tuple`):
         (iter_max, rate) governs adaptation of crossover probabilities (adapts every rate iterations if iter<iter_max).
         Default: (-1, 1), i.e., no adaptation
 
@@ -3268,12 +3286,12 @@ class DREAM(MCMC):
 
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 delta=3, c=0.1, c_star=1e-6, n_CR=3, p_g=0.2, adapt_CR=(-1, 1), check_chains=(-1, 1), verbose=False,
-                 random_state=None):
+                 delta=3, c=0.1, c_star=1e-6, n_cr=3, p_g=0.2, adapt_cr=(-1, 1), check_chains=(-1, 1), verbose=False,
+                 random_state=None, nchains=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose, random_state=random_state)
+                         concat_chains=concat_chains, verbose=verbose, random_state=random_state, nchains=nchains)
 
         # Check nb of chains
         if self.nchains < 2:
@@ -3283,17 +3301,17 @@ class DREAM(MCMC):
         self.delta = delta
         self.c = c
         self.c_star = c_star
-        self.n_CR = n_CR
+        self.n_cr = n_cr
         self.p_g = p_g
-        self.adapt_CR = adapt_CR
+        self.adapt_cr = adapt_cr
         self.check_chains = check_chains
 
-        for key, typ in zip(['delta', 'c', 'c_star', 'n_CR', 'p_g'], [int, float, float, int, float]):
+        for key, typ in zip(['delta', 'c', 'c_star', 'n_cr', 'p_g'], [int, float, float, int, float]):
             if not isinstance(getattr(self, key), typ):
                 raise TypeError('Input ' + key + ' must be of type ' + typ.__name__)
-        if self.dimension is not None and self.n_CR > self.dimension:
-            self.n_CR = self.dimension
-        for key in ['adapt_CR', 'check_chains']:
+        if self.dimension is not None and self.n_cr > self.dimension:
+            self.n_cr = self.dimension
+        for key in ['adapt_cr', 'check_chains']:
             p = getattr(self, key)
             if not (isinstance(p, tuple) and len(p) == 2 and all(isinstance(i, (int, float)) for i in p)):
                 raise TypeError('Inputs ' + key + ' must be a tuple of 2 integers.')
@@ -3301,8 +3319,8 @@ class DREAM(MCMC):
             raise ValueError('UQpy: Input save_log_pdf must be True in order to check outlier chains')
 
         # Initialize a few other variables
-        self.J, self.n_id = np.zeros((self.n_CR,)), np.zeros((self.n_CR,))
-        self.pCR = np.ones((self.n_CR,)) / self.n_CR
+        self.j_ind, self.n_id = np.zeros((self.n_cr,)), np.zeros((self.n_cr,))
+        self.cross_prob = np.ones((self.n_cr,)) / self.n_cr
 
         if self.verbose:
             print('UQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.\n')
@@ -3315,43 +3333,43 @@ class DREAM(MCMC):
         """
         Run one iteration of the MCMC chain for DREAM algorithm, starting at current state - see ``MCMC`` class.
         """
-        R = np.array([np.setdiff1d(np.arange(self.nchains), j) for j in range(self.nchains)])
-        CR = np.arange(1, self.n_CR + 1) / self.n_CR
+        r_diff = np.array([np.setdiff1d(np.arange(self.nchains), j) for j in range(self.nchains)])
+        cross = np.arange(1, self.n_cr + 1) / self.n_cr
 
         # Dynamic part: evolution of chains
         unif_rvs = Uniform().rvs(nsamples=self.nchains * (self.nchains-1),
                                  random_state=self.random_state).reshape((self.nchains - 1, self.nchains))
         draw = np.argsort(unif_rvs, axis=0)
-        dX = np.zeros_like(current_state)
+        dx = np.zeros_like(current_state)
         lmda = Uniform(scale=2 * self.c).rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1, ))
         std_x_tmp = np.std(current_state, axis=0)
 
         multi_rvs = Multinomial(n=1, p=[1./self.delta, ] * self.delta).rvs(
             nsamples=self.nchains, random_state=self.random_state)
-        D = np.nonzero(multi_rvs)[1]
-        as_ = [R[j, draw[slice(D[j]), j]] for j in range(self.nchains)]
-        bs_ = [R[j, draw[slice(D[j], 2 * D[j], 1), j]] for j in range(self.nchains)]
-        multi_rvs = Multinomial(n=1, p=self.pCR).rvs(nsamples=self.nchains, random_state=self.random_state)
-        id = np.nonzero(multi_rvs)[1]
+        d_ind = np.nonzero(multi_rvs)[1]
+        as_ = [r_diff[j, draw[slice(d_ind[j]), j]] for j in range(self.nchains)]
+        bs_ = [r_diff[j, draw[slice(d_ind[j], 2 * d_ind[j], 1), j]] for j in range(self.nchains)]
+        multi_rvs = Multinomial(n=1, p=self.cross_prob).rvs(nsamples=self.nchains, random_state=self.random_state)
+        id_ = np.nonzero(multi_rvs)[1]
         # id = np.random.choice(self.n_CR, size=(self.nchains, ), replace=True, p=self.pCR)
         z = Uniform().rvs(nsamples=self.nchains * self.dimension,
                           random_state=self.random_state).reshape((self.nchains, self.dimension))
-        A = [np.where(z_j < CR[id_j])[0] for (z_j, id_j) in zip(z, id)]  # subset A of selected dimensions
-        d_star = np.array([len(A_j) for A_j in A])
+        subset_a = [np.where(z_j < cross[id_j])[0] for (z_j, id_j) in zip(z, id_)]  # subset A of selected dimensions
+        d_star = np.array([len(a_j) for a_j in subset_a])
         for j in range(self.nchains):
             if d_star[j] == 0:
-                A[j] = np.array([np.argmin(z[j])])
+                subset_a[j] = np.array([np.argmin(z[j])])
                 d_star[j] = 1
-        gamma_d = 2.38 / np.sqrt(2 * (D + 1) * d_star)
+        gamma_d = 2.38 / np.sqrt(2 * (d_ind + 1) * d_star)
         g = Binomial(n=1, p=self.p_g).rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1, ))
         g[g == 0] = gamma_d[g == 0]
         norm_vars = Normal(loc=0., scale=1.).rvs(nsamples=self.nchains ** 2,
                                                  random_state=self.random_state).reshape((self.nchains, self.nchains))
         for j in range(self.nchains):
-            for i in A[j]:
-                dX[j, i] = self.c_star * norm_vars[j, i] + \
+            for i in subset_a[j]:
+                dx[j, i] = self.c_star * norm_vars[j, i] + \
                            (1 + lmda[j]) * g[j] * np.sum(current_state[as_[j], i] - current_state[bs_[j], i])
-        candidates = current_state + dX
+        candidates = current_state + dx
 
         # Evaluate log likelihood of candidates
         logp_candidates = self.evaluate_log_target(candidates)
@@ -3366,17 +3384,17 @@ class DREAM(MCMC):
                 current_log_pdf[nc] = lpc
                 accept_vec[nc] = 1.
             else:
-                dX[nc, :] = 0
-            self.J[id[nc]] = self.J[id[nc]] + np.sum((dX[nc, :] / std_x_tmp) ** 2)
-            self.n_id[id[nc]] += 1
+                dx[nc, :] = 0
+            self.j_ind[id_[nc]] = self.j_ind[id_[nc]] + np.sum((dx[nc, :] / std_x_tmp) ** 2)
+            self.n_id[id_[nc]] += 1
 
         # Save the acceptance rate
         self._update_acceptance_rate(accept_vec)
 
         # update selection cross prob
-        if self.niterations < self.adapt_CR[0] and self.niterations % self.adapt_CR[1] == 0:
-            self.pCR = self.J / self.n_id
-            self.pCR /= sum(self.pCR)
+        if self.niterations < self.adapt_cr[0] and self.niterations % self.adapt_cr[1] == 0:
+            self.cross_prob = self.j_ind / self.n_id
+            self.cross_prob /= sum(self.cross_prob)
         # check outlier chains (only if you have saved at least 100 values already)
         if (self.nsamples >= 100) and (self.niterations < self.check_chains[0]) and \
                 (self.niterations % self.check_chains[1] == 0):
@@ -3491,7 +3509,7 @@ class IS:
                                                                 10 ** (-320) * np.ones((x.shape[0],))))
 
         # Initialize target
-        self.evaluate_log_target = self._preprocess_target(log_pdf=log_pdf_target, pdf=pdf_target, args=args_target)
+        self.evaluate_log_target = self._preprocess_target(log_pdf_=log_pdf_target, pdf_=pdf_target, args=args_target)
 
         self.verbose = verbose
         self.random_state = random_state
@@ -3607,7 +3625,7 @@ class IS:
         if method == 'multinomial':
             multinomial_run = np.random.multinomial(nsamples, self.weights, size=1)[0]
             idx = list()
-            for j in range(nsamples):
+            for j in range(self.samples.shape[0]):
                 if multinomial_run[j] > 0:
                     idx.extend([j for _ in range(multinomial_run[j])])
             self.unweighted_samples = self.samples[idx, :]
@@ -3615,7 +3633,7 @@ class IS:
             raise ValueError('Exit code: Current available method: multinomial')
 
     @staticmethod
-    def _preprocess_target(log_pdf, pdf, args):
+    def _preprocess_target(log_pdf_, pdf_, args):
         """
         Preprocess the target pdf inputs.
 
@@ -3624,9 +3642,9 @@ class IS:
 
         **Inputs:**
 
-        * log_pdf ((list of) callables): Log of the target density function from which to draw random samples. Either
+        * log_pdf_ ((list of) callables): Log of the target density function from which to draw random samples. Either
           pdf_target or log_pdf_target must be provided
-        * pdf ((list of) callables): Target density function from which to draw random samples.
+        * pdf_ ((list of) callables): Target density function from which to draw random samples.
         * args (tuple): Positional arguments of the pdf target
 
         **Output/Returns:**
@@ -3635,19 +3653,19 @@ class IS:
 
         """
         # log_pdf is provided
-        if log_pdf is not None:
-            if callable(log_pdf):
+        if log_pdf_ is not None:
+            if callable(log_pdf_):
                 if args is None:
                     args = ()
-                evaluate_log_pdf = (lambda x: log_pdf(x, *args))
+                evaluate_log_pdf = (lambda x: log_pdf_(x, *args))
             else:
                 raise TypeError('UQpy: log_pdf_target must be a callable')
         # pdf is provided
-        elif pdf is not None:
-            if callable(pdf):
+        elif pdf_ is not None:
+            if callable(pdf_):
                 if args is None:
                     args = ()
-                evaluate_log_pdf = (lambda x: np.log(np.maximum(pdf(x, *args), 10 ** (-320) * np.ones((x.shape[0],)))))
+                evaluate_log_pdf = (lambda x: np.log(np.maximum(pdf_(x, *args), 10 ** (-320) * np.ones((x.shape[0],)))))
             else:
                 raise TypeError('UQpy: pdf_target must be a callable')
         else:
