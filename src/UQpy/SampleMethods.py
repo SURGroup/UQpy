@@ -133,6 +133,7 @@ class MCS:
 
         # Instantiate the output attributes.
         self.samples = None
+        self.x = None
         self.samplesU01 = None
 
         # Set printing options
@@ -196,30 +197,30 @@ class MCS:
                     temp_samples.append(self.dist_object[i].rvs(nsamples=nsamples, random_state=random_state))
                 else:
                     ValueError('UQpy: rvs method is missing.')
-            x = list()
+            self.x = list()
             for j in range(nsamples):
                 y = list()
                 for k in range(len(self.dist_object)):
                     y.append(temp_samples[k][j])
-                x.append(np.array(y))
+                self.x.append(np.array(y))
         else:
             if hasattr(self.dist_object, 'rvs'):
                 temp_samples = self.dist_object.rvs(nsamples=nsamples, random_state=random_state)
-                x = temp_samples
+                self.x = temp_samples
 
         if self.samples is None:
             if isinstance(self.dist_object, list) and self.array is True:
-                self.samples = np.hstack(np.array(x)).T
+                self.samples = np.hstack(np.array(self.x)).T
             else:
-                self.samples = np.array(x)
+                self.samples = np.array(self.x)
         else:
             # If self.samples already has existing samples, append the new samples to the existing attribute.
             if isinstance(self.dist_object, list) and self.array is True:
-                self.samples = np.concatenate([self.samples, np.hstack(np.array(x)).T], axis=0)
+                self.samples = np.concatenate([self.samples, np.hstack(np.array(self.x)).T], axis=0)
             elif isinstance(self.dist_object, Distribution):
-                self.samples = np.vstack([self.samples, x])
+                self.samples = np.vstack([self.samples, self.x])
             else:
-                self.samples = np.vstack([self.samples, x])
+                self.samples = np.vstack([self.samples, self.x])
         self.nsamples = len(self.samples)
 
         if self.verbose:
@@ -263,7 +264,7 @@ class MCS:
                 raise ValueError('UQpy: All Distributions must have a cdf method.')
 
         elif isinstance(self.dist_object, list) and self.list is True:
-            temp_samples_u01 = [None] * self.nsamples
+            temp_samples_u01 = list()
             for i in range(self.nsamples):
                 z = self.samples[i][:]
                 y = [None] * len(self.dist_object)
@@ -273,7 +274,7 @@ class MCS:
                     else:
                         raise ValueError('UQpy: All Distributions must have a cdf method.')
                     y[j] = zi
-                temp_samples_u01[i] = np.array(y)
+                temp_samples_u01.append(np.array(y))
             self.samplesU01 = temp_samples_u01
 
 ########################################################################################################################
@@ -381,7 +382,7 @@ class LHS:
 
         self.samplesU01 = np.zeros_like(self.samples)
 
-        if self.nsamples is None:
+        if self.nsamples is not None:
             self.run(self.nsamples)
 
     def run(self, nsamples):
@@ -541,11 +542,10 @@ class LHS:
         i = 0
         lhs_samples = LHS.random(samples, random_state)
         d = d_func(lhs_samples)
-        max_min_dist = d
+        max_min_dist = np.min(d)
         while i < iterations:
             samples_try = LHS.random(samples, random_state)
             d = d_func(samples_try)
-
             if max_min_dist < np.min(d):
                 max_min_dist = np.min(d)
                 lhs_samples = copy.deepcopy(samples_try)
