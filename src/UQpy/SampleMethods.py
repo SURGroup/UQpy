@@ -2330,8 +2330,11 @@ class MCMC:
         Boolean that indicates whether to concatenate the chains after a run, i.e., samples are stored as an `ndarray`
         of shape (nsamples * nchains, dimension) if True, (nsamples, nchains, dimension) if False. Default: True
 
-    * **random_state** (None or `int` or `np.random.RandomState` object):
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
         Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
 
 
     **Attributes:**
@@ -3427,45 +3430,37 @@ class IS:
     """
     Sample from a user-defined target density using importance sampling.
 
-    >>> from UQpy.Distributions import Normal, Gumbel, JointCopula
-    >>> dist_true = JointCopula(marginals=[Normal(), Normal()], copula=Gumbel(theta=2.))
-    >>> proposal = JointInd(marginals=[Normal(), Normal()])
-    >>> sampler = IS(log_pdf_target=dist_true.log_pdf, nsamples=500, proposal=proposal, random_state=123)
-    >>> print(sampler.samples.shape)
-    (500, 2)
-    >>> print(sampler.weights.shape)
-    (500,)
-    >>> print(np.round(sampler.samples[-5:], 4))
-    [[ 0.5679  0.6348]
-     [ 0.513   1.0699]
-     [-0.0269 -0.9093]
-     [ 0.3116  0.4703]
-     [-0.1421 -1.1114]]
 
     **Inputs:**
 
-    * **proposal** (``Distribution`` object):
-        Proposal to sample from. This Distribution object must have an rvs method and a log_pdf (or pdf) methods
-
-    * **log_pdf_target** (callable)
-        Callable that evaluates the target log-pdf. One of log_pdf_target or pdf_target must be specified (the former
-        is preferred).
-
-    * **pdf_target** (callable):
-        Callable that evaluates the target pdf
-
-    * **args_target** (`tuple`):
-        Positional arguments of the target log_pdf / pdf callable
-
     * **nsamples** (`int`):
-        Number of samples to generate - see `run` method. If not None, the `run` method is called when the object is
+        Number of samples to generate - see ``run`` method. If not `None`, the `run` method is called when the object is
         created. Default is None.
 
-    * random_state (None or `int` or `np.random.RandomState` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
+    * **pdf_target** (callable):
+        Callable that evaluates the pdf of the target distribution. Either log_pdf_target or pdf_target must be
+        specified (the former is preferred).
+
+    * **log_pdf_target** (callable)
+        Callable that evaluates the log-pdf of the target distribution. Either log_pdf_target or pdf_target must be
+        specified (the former is preferred).
+
+    * **args_target** (`tuple`):
+        Positional arguments of the target log_pdf / pdf callable.
+
+    * **proposal** (``Distribution`` object):
+        Proposal to sample from. This ``UQpy.Distributions`` object must have an rvs method and a log_pdf (or pdf)
+        method.
 
     * **verbose** (`boolean`)
         Set ``verbose = True`` to print status messages to the terminal during execution.
+
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
+
 
     **Attributes:**
 
@@ -3509,6 +3504,7 @@ class IS:
         self.samples = None
         self.unnormalized_log_weights = None
         self.weights = None
+        self.unweighted_samples = None
 
         # Run IS if nsamples is provided
         if nsamples is not None and nsamples != 0:
@@ -3518,14 +3514,18 @@ class IS:
         """
         Generate and weight samples.
 
-        This function samples from the proposal and append samples to existing ones (if any). It then weights the 
-        samples as log_w_unnormalized) = log(target)-log(proposal). This function updates the output attributes 
-        samples, unnormalized_log_weights and weights.
+        This function samples from the proposal and appends samples to existing ones (if any). It then weights the
+        samples as log_w_unnormalized) = log(target)-log(proposal).
 
         **Inputs:**
 
         * **nsamples** (`int`)
             Number of weighted samples to generate.
+
+        * **Output/Returns:**
+
+        This function has no returns, but it updates the output attributes `samples`, `unnormalized_log_weights` and
+        `weights` of the ``IS`` object.
         """
 
         if self.verbose:
@@ -3551,29 +3551,68 @@ class IS:
         if self.verbose:
             print('UQpy: Importance Sampling performed successfully')
 
+    # def resample(self, method='multinomial', nsamples=None):
+    #     """
+    #     Resample to get a set of un-weighted samples that represent the target pdf.
+    #
+    #     Utility function that creates a set of un-weighted samples from a set of weighted samples. Can be useful for
+    #     plotting for instance.
+    #
+    #     **Inputs:**
+    #
+    #     * **method** (`str`)
+    #         Resampling method, as of V3 only multinomial resampling is supported. Default: 'multinomial'.
+    #     * **nsamples** (`int`)
+    #         Number of un-weighted samples to generate. Default: None (same number of samples is generated as number of
+    #         existing samples).
+    #
+    #     **Output/Returns:**
+    #
+    #     * (`ndarray`)
+    #         Un-weighted samples that represent the target pdf, `ndarray` of shape (nsamples, dimension)
+    #
+    #     """
+    #     from .Utilities import resample
+    #     return resample(self.samples, self.weights, method=method, size=nsamples)
+
     def resample(self, method='multinomial', nsamples=None):
-        """ 
+        """
         Resample to get a set of un-weighted samples that represent the target pdf.
-        
-        Utility function that create a set of un-weighted samples from a set of weighted samples. Can be useful for
+
+        Utility function that creates a set of un-weighted samples from a set of weighted samples. Can be useful for
         plotting for instance.
-        
+
+        The ``resample`` method is not called automatically when instantiating the ``IS`` class or when invoking its
+        ``run`` method.
+
         **Inputs:**
 
         * **method** (`str`)
             Resampling method, as of V3 only multinomial resampling is supported. Default: 'multinomial'.
         * **nsamples** (`int`)
-            Number of un-weighted samples to generate. Default: None (same number of samples is generated as number of
+            Number of un-weighted samples to generate. Default: None (sets `nsamples` equal to the number of
             existing samples).
 
         **Output/Returns:**
 
-        * (`ndarray`)
+        The method has no returns, but it creates the attribute following attribute of the ``IS`` object.
+
+        * **unweighted_samples** (`ndarray`)
             Un-weighted samples that represent the target pdf, `ndarray` of shape (nsamples, dimension)
 
         """
-        from .Utilities import resample
-        return resample(self.samples, self.weights, method=method, size=nsamples)
+
+        if nsamples is None:
+            nsamples = self.samples.shape[0]
+        if method == 'multinomial':
+            multinomial_run = np.random.multinomial(nsamples, self.weights, size=1)[0]
+            idx = list()
+            for j in range(nsamples):
+                if multinomial_run[j] > 0:
+                    idx.extend([j for _ in range(multinomial_run[j])])
+            self.unweighted_samples = self.samples[idx, :]
+        else:
+            raise ValueError('Exit code: Current available method: multinomial')
 
     @staticmethod
     def _preprocess_target(log_pdf, pdf, args):

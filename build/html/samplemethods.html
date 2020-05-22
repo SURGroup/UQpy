@@ -520,8 +520,10 @@ of shape (nsamples * nchains, dimension) if True, (nsamples, nchains, dimension)
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt><strong>random_state</strong> (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+<li><dl>
+<dt><strong>random_state</strong> (None or <cite>int</cite> or <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+<p>If an integer is provided, this sets the seed for an object of <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code>. Otherwise, the
+object itself can be passed directly.</p>
 </dd>
 </dl>
 </li>
@@ -868,7 +870,7 @@ prints out the number of outlier chains.</p>
 </div>
 <div class="section" id="is">
 <h2>IS<a class="headerlink" href="#is" title="Permalink to this headline">¶</a></h2>
-<p>Importance sampling (IS) is based on the idea of concentrating sampling in certain regions of the input space, allowing efficient evaluations of expectations <span class="math notranslate nohighlight">\(E_{ \textbf{x} \sim p} [ f(\textbf{x}) ]\)</span> where <span class="math notranslate nohighlight">\(f( \textbf{x})\)</span> is small outside of a small region of the input space. To this end, a sample <span class="math notranslate nohighlight">\(\textbf{x}\)</span> is drawn from a proposal distribution <span class="math notranslate nohighlight">\(q(\textbf{x})\)</span> and re-weighted to correct for the discrepancy between the sampling distribution <span class="math notranslate nohighlight">\(q\)</span> and the true distribution <span class="math notranslate nohighlight">\(p\)</span>. The weight of the sample is computed as</p>
+<p>Importance sampling (IS) is based on the idea of sampling from an alternate distribution and reweighting the samples to be representative of the target distribution (perhaps concentrating sampling in certain regions of the input space that are of greater importance). This often enables efficient evaluations of expectations <span class="math notranslate nohighlight">\(E_{ \textbf{x} \sim p} [ f(\textbf{x}) ]\)</span> where <span class="math notranslate nohighlight">\(f( \textbf{x})\)</span> is small outside of a small region of the input space. To this end, a sample <span class="math notranslate nohighlight">\(\textbf{x}\)</span> is drawn from a proposal distribution <span class="math notranslate nohighlight">\(q(\textbf{x})\)</span> and re-weighted to correct for the discrepancy between the sampling distribution <span class="math notranslate nohighlight">\(q\)</span> and the true distribution <span class="math notranslate nohighlight">\(p\)</span>. The weight of the sample is computed as</p>
 <div class="math notranslate nohighlight">
 \[w(\textbf{x}) = \frac{p(\textbf{x})}{q(\textbf{x})}\]</div>
 <p>If <span class="math notranslate nohighlight">\(p\)</span> is only known up to a constant, i.e., one can only evaluate <span class="math notranslate nohighlight">\(\tilde{p}(\textbf{x})\)</span>, where <span class="math notranslate nohighlight">\(p(\textbf{x})=\frac{\tilde{p}(\textbf{x})}{Z}\)</span>, IS can be used by further normalizing the weights (self-normalized IS). The following figure shows the weighted samples obtained when using IS to estimate a 2d Gaussian target distribution <span class="math notranslate nohighlight">\(p\)</span>, sampling from a uniform proposal distribution <span class="math notranslate nohighlight">\(q\)</span>.</p>
@@ -879,58 +881,46 @@ prints out the number of outlier chains.</p>
 <dt id="UQpy.SampleMethods.IS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">IS</code><span class="sig-paren">(</span><em class="sig-param">nsamples=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">proposal=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sample from a user-defined target density using importance sampling.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">Gumbel</span><span class="p">,</span> <span class="n">JointCopula</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist_true</span> <span class="o">=</span> <span class="n">JointCopula</span><span class="p">(</span><span class="n">marginals</span><span class="o">=</span><span class="p">[</span><span class="n">Normal</span><span class="p">(),</span> <span class="n">Normal</span><span class="p">()],</span> <span class="n">copula</span><span class="o">=</span><span class="n">Gumbel</span><span class="p">(</span><span class="n">theta</span><span class="o">=</span><span class="mf">2.</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">proposal</span> <span class="o">=</span> <span class="n">JointInd</span><span class="p">(</span><span class="n">marginals</span><span class="o">=</span><span class="p">[</span><span class="n">Normal</span><span class="p">(),</span> <span class="n">Normal</span><span class="p">()])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sampler</span> <span class="o">=</span> <span class="n">IS</span><span class="p">(</span><span class="n">log_pdf_target</span><span class="o">=</span><span class="n">dist_true</span><span class="o">.</span><span class="n">log_pdf</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">proposal</span><span class="o">=</span><span class="n">proposal</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-<span class="go">(500, 2)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-<span class="go">(500,)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">:],</span> <span class="mi">4</span><span class="p">))</span>
-<span class="go">[[ 0.5679  0.6348]</span>
-<span class="go"> [ 0.513   1.0699]</span>
-<span class="go"> [-0.0269 -0.9093]</span>
-<span class="go"> [ 0.3116  0.4703]</span>
-<span class="go"> [-0.1421 -1.1114]]</span>
-</pre></div>
-</div>
 <p><strong>Inputs:</strong></p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
-<dt><strong>proposal</strong> (<code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object):</dt><dd><p>Proposal to sample from. This Distribution object must have an rvs method and a log_pdf (or pdf) methods</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>log_pdf_target</strong> (callable)</dt><dd><p>Callable that evaluates the target log-pdf. One of log_pdf_target or pdf_target must be specified (the former
-is preferred).</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>pdf_target</strong> (callable):</dt><dd><p>Callable that evaluates the target pdf</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>args_target</strong> (<cite>tuple</cite>):</dt><dd><p>Positional arguments of the target log_pdf / pdf callable</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to generate - see <cite>run</cite> method. If not None, the <cite>run</cite> method is called when the object is
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to generate - see <code class="docutils literal notranslate"><span class="pre">run</span></code> method. If not <cite>None</cite>, the <cite>run</cite> method is called when the object is
 created. Default is None.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>random_state (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+<dt><strong>pdf_target</strong> (callable):</dt><dd><p>Callable that evaluates the pdf of the target distribution. Either log_pdf_target or pdf_target must be
+specified (the former is preferred).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>log_pdf_target</strong> (callable)</dt><dd><p>Callable that evaluates the log-pdf of the target distribution. Either log_pdf_target or pdf_target must be
+specified (the former is preferred).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>args_target</strong> (<cite>tuple</cite>):</dt><dd><p>Positional arguments of the target log_pdf / pdf callable.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>proposal</strong> (<code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object):</dt><dd><p>Proposal to sample from. This <code class="docutils literal notranslate"><span class="pre">UQpy.Distributions</span></code> object must have an rvs method and a log_pdf (or pdf)
+method.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
 <dt><strong>verbose</strong> (<cite>boolean</cite>)</dt><dd><p>Set <code class="docutils literal notranslate"><span class="pre">verbose</span> <span class="pre">=</span> <span class="pre">True</span></code> to print status messages to the terminal during execution.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>random_state</strong> (None or <cite>int</cite> or <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+<p>If an integer is provided, this sets the seed for an object of <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code>. Otherwise, the
+object itself can be passed directly.</p>
 </dd>
 </dl>
 </li>
@@ -958,8 +948,10 @@ created. Default is None.</p>
 <dt id="UQpy.SampleMethods.IS.resample">
 <code class="sig-name descname">resample</code><span class="sig-paren">(</span><em class="sig-param">method='multinomial'</em>, <em class="sig-param">nsamples=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS.resample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS.resample" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resample to get a set of un-weighted samples that represent the target pdf.</p>
-<p>Utility function that create a set of un-weighted samples from a set of weighted samples. Can be useful for
+<p>Utility function that creates a set of un-weighted samples from a set of weighted samples. Can be useful for
 plotting for instance.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">resample</span></code> method is not called automatically when instantiating the <code class="docutils literal notranslate"><span class="pre">IS</span></code> class or when invoking its
+<code class="docutils literal notranslate"><span class="pre">run</span></code> method.</p>
 <p><strong>Inputs:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
@@ -968,16 +960,17 @@ plotting for instance.</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>)</dt><dd><p>Number of un-weighted samples to generate. Default: None (same number of samples is generated as number of
+<dt><strong>nsamples</strong> (<cite>int</cite>)</dt><dd><p>Number of un-weighted samples to generate. Default: None (sets <cite>nsamples</cite> equal to the number of
 existing samples).</p>
 </dd>
 </dl>
 </li>
 </ul>
 <p><strong>Output/Returns:</strong></p>
+<p>The method has no returns, but it creates the attribute following attribute of the <code class="docutils literal notranslate"><span class="pre">IS</span></code> object.</p>
 <ul class="simple">
 <li><dl class="simple">
-<dt>(<cite>ndarray</cite>)</dt><dd><p>Un-weighted samples that represent the target pdf, <cite>ndarray</cite> of shape (nsamples, dimension)</p>
+<dt><strong>unweighted_samples</strong> (<cite>ndarray</cite>)</dt><dd><p>Un-weighted samples that represent the target pdf, <cite>ndarray</cite> of shape (nsamples, dimension)</p>
 </dd>
 </dl>
 </li>
@@ -988,9 +981,8 @@ existing samples).</p>
 <dt id="UQpy.SampleMethods.IS.run">
 <code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate and weight samples.</p>
-<p>This function samples from the proposal and append samples to existing ones (if any). It then weights the
-samples as log_w_unnormalized) = log(target)-log(proposal). This function updates the output attributes
-samples, unnormalized_log_weights and weights.</p>
+<p>This function samples from the proposal and appends samples to existing ones (if any). It then weights the
+samples as log_w_unnormalized) = log(target)-log(proposal).</p>
 <p><strong>Inputs:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
@@ -998,7 +990,10 @@ samples, unnormalized_log_weights and weights.</p>
 </dd>
 </dl>
 </li>
+<li><p><strong>Output/Returns:</strong></p></li>
 </ul>
+<p>This function has no returns, but it updates the output attributes <cite>samples</cite>, <cite>unnormalized_log_weights</cite> and
+<cite>weights</cite> of the <code class="docutils literal notranslate"><span class="pre">IS</span></code> object.</p>
 </dd></dl>
 
 </dd></dl>

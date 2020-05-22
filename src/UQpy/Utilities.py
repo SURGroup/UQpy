@@ -16,12 +16,13 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy.stats as stats
-from contextlib import contextmanager
-import sys
 import os
+import sys
+from contextlib import contextmanager
+
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy.stats as stats
 from scipy.special import gamma
 from scipy.stats import chi2, norm
 
@@ -66,7 +67,7 @@ def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=Non
 
 def voronoi_unit_hypercube(samples):
 
-    from scipy.spatial import Voronoi, voronoi_plot_2d
+    from scipy.spatial import Voronoi
 
     # Mirror the samples in both low and high directions for each dimension
     samples_center = samples
@@ -136,7 +137,6 @@ def compute_Voronoi_centroid_volume(vertices):
 def compute_Delaunay_centroid_volume(vertices):
 
     from scipy.spatial import ConvexHull
-    import math
 
     ch = ConvexHull(vertices)
     volume = ch.volume
@@ -195,7 +195,7 @@ def correlation_distortion(marginal, rho_norm):
     rho = np.ones_like(rho_norm)
 
     print('UQpy: Computing Nataf correlation distortion...')
-    from UQpy.Distributions import JointInd, DistributionContinuous1D
+    from UQpy.Distributions import JointInd
     if isinstance(marginal, JointInd):
         if all(hasattr(m, 'moments') for m in marginal.marginals) and \
                 all(hasattr(m, 'icdf') for m in marginal.marginals):
@@ -770,48 +770,6 @@ def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ES
     else:
         return ValueError('Wrong dimensions in samples.')
 
-
-def resample(samples, weights, method='multinomial', size=None):
-    """
-    Resample to get a set of un-weighted samples that represent a density in place of a set of weighted samples.
-
-    **Inputs:**
-
-    :param samples: Existing weighted samples
-    :type samples: ndarray (nsamples, dim)
-
-    :param weights: Weights of samples.
-    :type pdf: ndarray (nsamples,)
-
-    :param method: resampling method, as of V3 only multinomial resampling is supported
-
-                   Default: 'multinomial'
-    :type method: str
-
-    :param size: Number of un-weighted samples to generate.
-
-                 Default: None (same number of samples is generated as number of existing samples).
-    :type pdf: int
-
-    **Output/Returns:**
-
-    :param unweighted_samples: Un-weighted samples that represent the target pdf
-    :type unweighted_samples: ndarray
-
-    """
-    nsamples = samples.shape[0]
-    if size is None:
-        size = nsamples
-    if method == 'multinomial':
-        multinomial_run = np.random.multinomial(size, weights, size=1)[0]
-        idx = list()
-        for j in range(nsamples):
-            if multinomial_run[j] > 0:
-                idx.extend([j for _ in range(multinomial_run[j])])
-        output = samples[idx, :]
-        return output
-    else:
-        raise ValueError('Exit code: Current available method: multinomial')
 
 
 @contextmanager
