@@ -85,34 +85,49 @@
 
 <div class="viewcode-block" id="Distribution"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Distribution">[docs]</a><span class="k">class</span> <span class="nc">Distribution</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A parent class to all Distribution classes.</span>
+<span class="sd">    A parent class to all ``Distribution`` classes.</span>
 
-<span class="sd">    All distributions possess attribute `order_params` and methods `get_params`, `update_params`. Some distributions</span>
-<span class="sd">    also possess additional methods such as `pdf/pmf, log_pdf/log_pmf, cdf, icdf, rvs, fit, moments`.</span>
+<span class="sd">    All distributions possess a number of methods to perform basic probabilistic operations. For most of the predefined</span>
+<span class="sd">    distributions in ``UQpy`` these methods are inherited from the ``scipy.stats`` package. These include standard</span>
+<span class="sd">    operations such as computing probability density/mass functions, cumulative distribution functions and their</span>
+<span class="sd">    inverse, drawing random samples, computing moments and parameter fitting. However, for user-defined distributions,</span>
+<span class="sd">    any desired method can be constructed into the child class structure.</span>
+
+<span class="sd">    For bookkeeping purposes, all ``Distribution`` objects possesses ``get_params`` and ``update_params`` methods. These</span>
+<span class="sd">    are described in more detail below.</span>
+
+<span class="sd">    Any ``Distribution`` further inherits from one of the following classes:</span>
+
+<span class="sd">    - ``DistributionContinuous1D``: Parent class to 1-dimensional continuous probability distributions.</span>
+<span class="sd">    - ``DistributionDiscrete1D``: Parent class to 1-dimensional discrete probability distributions.</span>
+<span class="sd">    - ``DistributionND``: Parent class to multivariate probability distributions.</span>
+
 
 <span class="sd">    **Attributes:**</span>
 
 <span class="sd">    * **order_params** (`list`):</span>
-<span class="sd">        List of parameter names, useful when parameter values are stored in vectors and must be passed to update_params</span>
+<span class="sd">        Ordered list of parameter names, useful when parameter values are stored in vectors and must be passed to the</span>
+<span class="sd">        ``update_params`` method.</span>
 
 <span class="sd">    * **params** (`dict`):</span>
-<span class="sd">        Parameters of the distribution. Note: this attribute is not defined for certain distributions such as JointInd</span>
-<span class="sd">        or JointCopula distributions, the user is advised to use the `get_params` method to access the parameters.</span>
+<span class="sd">        Parameters of the distribution. Note: this attribute is not defined for certain ``Distribution`` objects such as</span>
+<span class="sd">        those of type ``JointInd`` or ``JointCopula``. The user is advised to use the ``get_params`` method to access</span>
+<span class="sd">        the parameters.</span>
 
 <span class="sd">    **Methods:**</span>
 
 <span class="sd">    **cdf** *(x)*</span>
-<span class="sd">        Evaluate the cumulative probability function.</span>
+<span class="sd">        Evaluate the cumulative distribution function.</span>
 
 <span class="sd">        **Input:**</span>
 
 <span class="sd">        * **x** (`ndarray`):</span>
-<span class="sd">            Point(s) at which to evaluate the `cdf`, must be of shape ``(npoints, dimension)``.</span>
+<span class="sd">            Point(s) at which to evaluate the `cdf`, must be of shape `(npoints, dimension)`.</span>
 
 <span class="sd">        **Output/Returns:**</span>
 
-<span class="sd">        * (ndarray):</span>
-<span class="sd">            Evaluated cdf values, `ndarray` of shape ``(npoints,)``.</span>
+<span class="sd">        * (`ndarray`):</span>
+<span class="sd">            Evaluated cdf values, `ndarray` of shape `(npoints,)`.</span>
 
 <span class="sd">    **pdf** *(x)*</span>
 <span class="sd">        Evaluate the probability density function of a continuous or multivariate mixed continuous-discrete</span>
@@ -121,12 +136,12 @@
 <span class="sd">        **Input:**</span>
 
 <span class="sd">        * **x** (`ndarray`):</span>
-<span class="sd">            Point(s) at which to evaluate the `pdf`, must be of shape ``(npoints, dimension)``.</span>
+<span class="sd">            Point(s) at which to evaluate the `pdf`, must be of shape `(npoints, dimension)`.</span>
 
 <span class="sd">        **Output/Returns:**</span>
 
 <span class="sd">        * (`ndarray`):</span>
-<span class="sd">            Evaluated pdf values, `ndarray` of shape ``(npoints,)``.</span>
+<span class="sd">            Evaluated pdf values, `ndarray` of shape `(npoints,)`.</span>
 
 <span class="sd">    **pmf** *(x)*</span>
 <span class="sd">        Evaluate the probability mass function of a discrete distribution.</span>
@@ -134,12 +149,12 @@
 <span class="sd">        **Input:**</span>
 
 <span class="sd">        * **x** (`ndarray`):</span>
-<span class="sd">            Point(s) at which to evaluate the `pmf`, must be of shape ``(npoints, dimension)``.</span>
+<span class="sd">            Point(s) at which to evaluate the `pmf`, must be of shape `(npoints, dimension)`.</span>
 
 <span class="sd">        **Output/Returns:**</span>
 
 <span class="sd">        * (`ndarray`):</span>
-<span class="sd">            Evaluated pmf values, `ndarray` of shape ``(npoints,)``.</span>
+<span class="sd">            Evaluated pmf values, `ndarray` of shape `(npoints,)`.</span>
 
 <span class="sd">    **log_pdf** *(x)*</span>
 <span class="sd">        Evaluate the logarithm of the probability density function of a continuous or multivariate mixed</span>
@@ -148,57 +163,60 @@
 <span class="sd">        **Input:**</span>
 
 <span class="sd">        * **x** (`ndarray`):</span>
-<span class="sd">            Point(s) at which to evaluate the `log_pdf`, must be of shape ``(npoints, dimension)``.</span>
+<span class="sd">            Point(s) at which to evaluate the `log_pdf`, must be of shape `(npoints, dimension)`.</span>
 
 <span class="sd">        **Output/Returns:**</span>
 
 <span class="sd">        * (`ndarray`):</span>
-<span class="sd">            Evaluated log-pdf values, `ndarray` of shape ``(npoints,)``.</span>
+<span class="sd">            Evaluated log-pdf values, `ndarray` of shape `(npoints,)`.</span>
 
 <span class="sd">    **log_pmf** *(x)*</span>
-<span class="sd">        Evaluate the logarithm of the probability density function of a discrete distribution.</span>
+<span class="sd">        Evaluate the logarithm of the probability mass function of a discrete distribution.</span>
 
 <span class="sd">        **Input:**</span>
 
 <span class="sd">        * **x** (`ndarray`):</span>
-<span class="sd">            Point(s) at which to evaluate the `log_pmf`, must be of shape ``(npoints, dimension)``.</span>
+<span class="sd">            Point(s) at which to evaluate the `log_pmf`, must be of shape `(npoints, dimension)`.</span>
 
 <span class="sd">        **Output/Returns:**</span>
 
 <span class="sd">        * (`ndarray`):</span>
-<span class="sd">            Evaluated log-pmf values, `ndarray` of shape ``(npoints,)``.</span>
+<span class="sd">            Evaluated log-pmf values, `ndarray` of shape `(npoints,)`.</span>
 
 <span class="sd">    **icdf** *(x)*</span>
-<span class="sd">        Evaluate the inverse cumulative probability function for univariate distributions.</span>
+<span class="sd">        Evaluate the inverse cumulative distribution function for univariate distributions.</span>
 
 <span class="sd">        **Input:**</span>
 
 <span class="sd">        * **x** (`ndarray`):</span>
-<span class="sd">            Point(s) at which to evaluate the `icdf`, must be of shape ``(npoints, dimension)``.</span>
+<span class="sd">            Point(s) at which to evaluate the `icdf`, must be of shape `(npoints, dimension)`.</span>
 
 <span class="sd">        **Output/Returns:**</span>
 
 <span class="sd">        * (`ndarray`):</span>
-<span class="sd">            Evaluated icdf values, `ndarray` of shape ``(npoints,)``.</span>
+<span class="sd">            Evaluated icdf values, `ndarray` of shape `(npoints,)`.</span>
 
 <span class="sd">    **rvs** *(nsamples=1, random_state=None)*</span>
 <span class="sd">        Sample independent identically distributed (iid) realizations.</span>
 
 <span class="sd">        **Inputs:**</span>
 
-<span class="sd">        * nsamples (`int`):</span>
+<span class="sd">        * **nsamples** (`int`):</span>
 <span class="sd">            Number of iid samples to be drawn. Default is 1.</span>
 
-<span class="sd">        * random_state (None or `int` or `np.random.RandomState` object):</span>
+<span class="sd">        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):</span>
 <span class="sd">            Random seed used to initialize the pseudo-random number generator. Default is None.</span>
+
+<span class="sd">            If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the</span>
+<span class="sd">            object itself can be passed directly.</span>
 
 <span class="sd">        **Output/Returns:**</span>
 
 <span class="sd">        * (`ndarray`):</span>
-<span class="sd">            Generated iid samples, `ndarray` of shape ``(npoints, dimension)``.</span>
+<span class="sd">            Generated iid samples, `ndarray` of shape `(npoints, dimension)`.</span>
 
 <span class="sd">    **moments** *()*</span>
-<span class="sd">        Compute the first four n-th order non-central moments of a distribution.</span>
+<span class="sd">        Compute the first four non-central moments of a distribution.</span>
 
 <span class="sd">        For a univariate distribution, mean, variance, skewness and kurtosis are returned. For a multivariate</span>
 <span class="sd">        distribution, the mean vector, covariance and vectors of marginal skewness and marginal kurtosis are returned.</span>
@@ -212,13 +230,13 @@
 <span class="sd">    **fit** *(data)*</span>
 <span class="sd">        Compute the maximum-likelihood parameters from iid data.</span>
 
-<span class="sd">        It computes the mle analytically if possible. For univariate continuous distributions, it leverages the fit</span>
+<span class="sd">        Computes the mle analytically if possible. For univariate continuous distributions, it leverages the fit</span>
 <span class="sd">        method of the scipy.stats package.</span>
 
 <span class="sd">        **Input:**</span>
 
 <span class="sd">        * **data** (`ndarray`):</span>
-<span class="sd">            Data array, must be of shape ``(npoints, dimension)``.</span>
+<span class="sd">            Data array, must be of shape `(npoints, dimension)`.</span>
 
 <span class="sd">        **Output/Returns:**</span>
 
@@ -236,12 +254,12 @@
 
 <div class="viewcode-block" id="Distribution.update_params"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Distribution.update_params">[docs]</a>    <span class="k">def</span> <span class="nf">update_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Update the parameters of the distribution object.</span>
+<span class="sd">        Update the parameters of the ``Distribution`` object.</span>
 
 <span class="sd">        **Input:**</span>
 
 <span class="sd">        * keyword arguments:</span>
-<span class="sd">            Parameters to be updated</span>
+<span class="sd">            Parameters to be updated, designated by their respective keywords.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>

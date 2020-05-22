@@ -51,34 +51,49 @@ from .Utilities import check_input_dims
 
 class Distribution:
     """
-    A parent class to all Distribution classes.
+    A parent class to all ``Distribution`` classes.
 
-    All distributions possess attribute `order_params` and methods `get_params`, `update_params`. Some distributions
-    also possess additional methods such as `pdf/pmf, log_pdf/log_pmf, cdf, icdf, rvs, fit, moments`.
+    All distributions possess a number of methods to perform basic probabilistic operations. For most of the predefined
+    distributions in ``UQpy`` these methods are inherited from the ``scipy.stats`` package. These include standard
+    operations such as computing probability density/mass functions, cumulative distribution functions and their
+    inverse, drawing random samples, computing moments and parameter fitting. However, for user-defined distributions,
+    any desired method can be constructed into the child class structure.
+
+    For bookkeeping purposes, all ``Distribution`` objects possesses ``get_params`` and ``update_params`` methods. These
+    are described in more detail below.
+
+    Any ``Distribution`` further inherits from one of the following classes:
+
+    - ``DistributionContinuous1D``: Parent class to 1-dimensional continuous probability distributions.
+    - ``DistributionDiscrete1D``: Parent class to 1-dimensional discrete probability distributions.
+    - ``DistributionND``: Parent class to multivariate probability distributions.
+
 
     **Attributes:**
 
     * **order_params** (`list`):
-        List of parameter names, useful when parameter values are stored in vectors and must be passed to update_params
+        Ordered list of parameter names, useful when parameter values are stored in vectors and must be passed to the
+        ``update_params`` method.
 
     * **params** (`dict`):
-        Parameters of the distribution. Note: this attribute is not defined for certain distributions such as JointInd
-        or JointCopula distributions, the user is advised to use the `get_params` method to access the parameters.
+        Parameters of the distribution. Note: this attribute is not defined for certain ``Distribution`` objects such as
+        those of type ``JointInd`` or ``JointCopula``. The user is advised to use the ``get_params`` method to access
+        the parameters.
 
     **Methods:**
 
     **cdf** *(x)*
-        Evaluate the cumulative probability function.
+        Evaluate the cumulative distribution function.
 
         **Input:**
 
         * **x** (`ndarray`):
-            Point(s) at which to evaluate the `cdf`, must be of shape ``(npoints, dimension)``.
+            Point(s) at which to evaluate the `cdf`, must be of shape `(npoints, dimension)`.
 
         **Output/Returns:**
 
-        * (ndarray):
-            Evaluated cdf values, `ndarray` of shape ``(npoints,)``.
+        * (`ndarray`):
+            Evaluated cdf values, `ndarray` of shape `(npoints,)`.
 
     **pdf** *(x)*
         Evaluate the probability density function of a continuous or multivariate mixed continuous-discrete
@@ -87,12 +102,12 @@ class Distribution:
         **Input:**
 
         * **x** (`ndarray`):
-            Point(s) at which to evaluate the `pdf`, must be of shape ``(npoints, dimension)``.
+            Point(s) at which to evaluate the `pdf`, must be of shape `(npoints, dimension)`.
 
         **Output/Returns:**
 
         * (`ndarray`):
-            Evaluated pdf values, `ndarray` of shape ``(npoints,)``.
+            Evaluated pdf values, `ndarray` of shape `(npoints,)`.
 
     **pmf** *(x)*
         Evaluate the probability mass function of a discrete distribution.
@@ -100,12 +115,12 @@ class Distribution:
         **Input:**
 
         * **x** (`ndarray`):
-            Point(s) at which to evaluate the `pmf`, must be of shape ``(npoints, dimension)``.
+            Point(s) at which to evaluate the `pmf`, must be of shape `(npoints, dimension)`.
 
         **Output/Returns:**
 
         * (`ndarray`):
-            Evaluated pmf values, `ndarray` of shape ``(npoints,)``.
+            Evaluated pmf values, `ndarray` of shape `(npoints,)`.
 
     **log_pdf** *(x)*
         Evaluate the logarithm of the probability density function of a continuous or multivariate mixed
@@ -114,57 +129,60 @@ class Distribution:
         **Input:**
 
         * **x** (`ndarray`):
-            Point(s) at which to evaluate the `log_pdf`, must be of shape ``(npoints, dimension)``.
+            Point(s) at which to evaluate the `log_pdf`, must be of shape `(npoints, dimension)`.
 
         **Output/Returns:**
 
         * (`ndarray`):
-            Evaluated log-pdf values, `ndarray` of shape ``(npoints,)``.
+            Evaluated log-pdf values, `ndarray` of shape `(npoints,)`.
 
     **log_pmf** *(x)*
-        Evaluate the logarithm of the probability density function of a discrete distribution.
+        Evaluate the logarithm of the probability mass function of a discrete distribution.
 
         **Input:**
 
         * **x** (`ndarray`):
-            Point(s) at which to evaluate the `log_pmf`, must be of shape ``(npoints, dimension)``.
+            Point(s) at which to evaluate the `log_pmf`, must be of shape `(npoints, dimension)`.
 
         **Output/Returns:**
 
         * (`ndarray`):
-            Evaluated log-pmf values, `ndarray` of shape ``(npoints,)``.
+            Evaluated log-pmf values, `ndarray` of shape `(npoints,)`.
 
     **icdf** *(x)*
-        Evaluate the inverse cumulative probability function for univariate distributions.
+        Evaluate the inverse cumulative distribution function for univariate distributions.
 
         **Input:**
 
         * **x** (`ndarray`):
-            Point(s) at which to evaluate the `icdf`, must be of shape ``(npoints, dimension)``.
+            Point(s) at which to evaluate the `icdf`, must be of shape `(npoints, dimension)`.
 
         **Output/Returns:**
 
         * (`ndarray`):
-            Evaluated icdf values, `ndarray` of shape ``(npoints,)``.
+            Evaluated icdf values, `ndarray` of shape `(npoints,)`.
 
     **rvs** *(nsamples=1, random_state=None)*
         Sample independent identically distributed (iid) realizations.
 
         **Inputs:**
 
-        * nsamples (`int`):
+        * **nsamples** (`int`):
             Number of iid samples to be drawn. Default is 1.
 
-        * random_state (None or `int` or `np.random.RandomState` object):
+        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
             Random seed used to initialize the pseudo-random number generator. Default is None.
+
+            If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+            object itself can be passed directly.
 
         **Output/Returns:**
 
         * (`ndarray`):
-            Generated iid samples, `ndarray` of shape ``(npoints, dimension)``.
+            Generated iid samples, `ndarray` of shape `(npoints, dimension)`.
 
     **moments** *()*
-        Compute the first four n-th order non-central moments of a distribution.
+        Compute the first four non-central moments of a distribution.
 
         For a univariate distribution, mean, variance, skewness and kurtosis are returned. For a multivariate
         distribution, the mean vector, covariance and vectors of marginal skewness and marginal kurtosis are returned.
@@ -178,13 +196,13 @@ class Distribution:
     **fit** *(data)*
         Compute the maximum-likelihood parameters from iid data.
 
-        It computes the mle analytically if possible. For univariate continuous distributions, it leverages the fit
+        Computes the mle analytically if possible. For univariate continuous distributions, it leverages the fit
         method of the scipy.stats package.
 
         **Input:**
 
         * **data** (`ndarray`):
-            Data array, must be of shape ``(npoints, dimension)``.
+            Data array, must be of shape `(npoints, dimension)`.
 
         **Output/Returns:**
 
@@ -202,12 +220,12 @@ class Distribution:
 
     def update_params(self, **kwargs):
         """
-        Update the parameters of the distribution object.
+        Update the parameters of the ``Distribution`` object.
 
         **Input:**
 
         * keyword arguments:
-            Parameters to be updated
+            Parameters to be updated, designated by their respective keywords.
 
         """
         for key in kwargs.keys():

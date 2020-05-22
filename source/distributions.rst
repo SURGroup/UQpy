@@ -8,16 +8,9 @@ Distributions
 Parent Distribution Class
 ----------------------------------
 
-In ``UQpy``, the ``Distribution`` class is the parent class to all probability distributions. Any distribution possesses a `get_params` and `update_params` methods, along with one or several of the other methods described below:
-
 .. autoclass:: UQpy.Distributions.Distribution
 	:members:
 	
-Any distribution further inherits from one of the following classes:
-
-- ``DistributionContinuous1D``: Parent class to 1-dimensional continuous probability distributions.
-- ``DistributionDiscrete1D``: Parent class to 1-dimensional discrete probability distributions.
-- ``DistributionND``: Parent class to multivariate probability distributions.
 	
 1D Continuous Distributions
 ---------------------------------------
