@@ -293,32 +293,533 @@ method of the scipy.stats package.</p>
 <dt id="UQpy.Distributions.DistributionContinuous1D">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">DistributionContinuous1D</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#DistributionContinuous1D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.DistributionContinuous1D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parent class for univariate continuous probability distributions.</p>
-<p>The following code shows how to import some of the existing distributions and calling their methods.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Uniform</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">)</span>
-<span class="go">    (&lt;class &#39;UQpy.Distributions.DistributionContinuous1D&#39;&gt;,)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d1</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">2.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">d1</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
-<span class="go">    {&#39;loc&#39;: 1.0, &#39;scale&#39;: 2.0}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">d1</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span> <span class="mf">3.</span><span class="p">]))</span>
-<span class="go">    [0.  0.  0.5 1. ]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">d1</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">))</span>
-<span class="go">    [[2.39293837]</span>
-<span class="go">    [1.57227867]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d1</span><span class="o">.</span><span class="n">update_params</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">d1</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
-<span class="go">    {&#39;loc&#39;: 0.0, &#39;scale&#39;: 2.0}</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
-<span class="go">    {&#39;loc&#39;: 0.25, &#39;scale&#39;: 2.48746859276655}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
-<span class="go">    {&#39;loc&#39;: 0.0, &#39;scale&#39;: 2.5}</span>
-</pre></div>
-</div>
 </dd></dl>
 
+<div class="section" id="list-of-distributions">
+<h3>List of Distributions<a class="headerlink" href="#list-of-distributions" title="Permalink to this headline">¶</a></h3>
+<p>The following is a list of all 1D continuous distributions currently available in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p>
+<dl class="class">
+<dt id="UQpy.Distributions.Beta">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Beta</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Beta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Beta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Beta distribution having probability density function</p>
+<div class="math notranslate nohighlight">
+\[f(x|a,b) = \dfrac{\Gamma(a+b)x^{a-1}(1-x)^{b-1}}{\Gamma(a)\Gamma(b)}\]</div>
+<p>for <span class="math notranslate nohighlight">\(0\le x\ge 0\)</span>, <span class="math notranslate nohighlight">\(a&gt;0, b&gt;0\)</span>. Here <span class="math notranslate nohighlight">\(\Gamma(a)\)</span> refers to the Gamma function.</p>
+<p>In this standard form <cite>(loc=0, scale=1)</cite>, the distribution is defined over the interval (0, 1). Use <cite>loc</cite> and
+<cite>scale</cite> to shift the distribution to interval <cite>(loc, loc + scale)</cite>. Specifically, this is equivalent to computing
+<span class="math notranslate nohighlight">\(f(y|a,b)\)</span> where <span class="math notranslate nohighlight">\(y=(x-loc)/scale\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>a</strong> (<cite>float</cite>):</dt><dd><p>first shape parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>b</strong> (float):</dt><dd><p>second shape parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Beta</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code></p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Cauchy">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Cauchy</code><span class="sig-paren">(</span><em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Cauchy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Cauchy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cauchy distribution having probability density function</p>
+<div class="math notranslate nohighlight">
+\[f(x) = \dfrac{1}{\pi(1+x^2)}\]</div>
+<p>In this standard form <cite>(loc=0, scale=1)</cite>. Use <cite>loc</cite> and <cite>scale</cite> to shift and scale the distribution. Specifically,
+this is equivalent to computing <span class="math notranslate nohighlight">\(f(y)\)</span> where <span class="math notranslate nohighlight">\(y=(x-loc)/scale\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Cauchy</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code></p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.ChiSquare">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">ChiSquare</code><span class="sig-paren">(</span><em class="sig-param">df</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#ChiSquare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.ChiSquare" title="Permalink to this definition">¶</a></dt>
+<dd><p>Chi-square distribution having probability density:</p>
+<div class="math notranslate nohighlight">
+\[f(x|k) = \dfrac{1}{2^{k/2}\Gamma(k/2)}x^{k/2-1}\exp{(-x/2)}\]</div>
+<p>for <span class="math notranslate nohighlight">\(x\ge 0\)</span>, <span class="math notranslate nohighlight">\(k&gt;0\)</span>. Here <span class="math notranslate nohighlight">\(\Gamma(\cdot)\)</span> refers to the Gamma function.</p>
+<p>In this standard form <cite>(loc=0, scale=1)</cite>. Use <cite>loc</cite> and <cite>scale</cite> to shift and scale the distribution. Specifically,
+this is equivalent to computing <span class="math notranslate nohighlight">\(f(y|k)\)</span> where <span class="math notranslate nohighlight">\(y=(x-loc)/scale\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>df</strong> (<cite>float</cite>):</dt><dd><p>shape parameter (degrees of freedom) (given by <cite>k</cite> in the equation above)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">ChiSquare</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Exponential">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Exponential</code><span class="sig-paren">(</span><em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Exponential"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Exponential" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exponential distribution having probability density function:</p>
+<div class="math notranslate nohighlight">
+\[f(x) = \exp(-x)\]</div>
+<p>In this standard form <cite>(loc=0, scale=1)</cite>. Use <cite>loc</cite> and <cite>scale</cite> to shift and scale the distribution. Specifically,
+this is equivalent to computing <span class="math notranslate nohighlight">\(f(y)\)</span> where <span class="math notranslate nohighlight">\(y=(x-loc)/scale\)</span>.</p>
+<p>A common parameterization for Exponential is in terms of the rate parameter <span class="math notranslate nohighlight">\(\lambda\)</span>, which corresponds to
+using <span class="math notranslate nohighlight">\(scale = 1 / \lambda\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Exponential</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Gamma">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Gamma</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Gamma"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Gamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gamma distribution having probability density function:</p>
+<div class="math notranslate nohighlight">
+\[f(x|a) = \dfrac{x^{a-1}\exp(-x)}{\Gamma(a)}\]</div>
+<p>for <span class="math notranslate nohighlight">\(x\ge 0\)</span>, <span class="math notranslate nohighlight">\(a&gt;0\)</span>. Here <span class="math notranslate nohighlight">\(\Gamma(a)\)</span> refers to the Gamma function.</p>
+<p>In this standard form <cite>(loc=0, scale=1)</cite>. Use <cite>loc</cite> and <cite>scale</cite> to shift and scale the distribution. Specifically,
+this is equivalent to computing <span class="math notranslate nohighlight">\(f(y)\)</span> where <span class="math notranslate nohighlight">\(y=(x-loc)/scale\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>a</strong> (<cite>float</cite>):</dt><dd><p>shape parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Gamma</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.GenExtreme">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">GenExtreme</code><span class="sig-paren">(</span><em class="sig-param">c</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#GenExtreme"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.GenExtreme" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generalized Extreme Value distribution having probability density function:</p>
+<div class="math notranslate nohighlight">
+\[`f(x|c) = \exp(-(1-cx)^{1/c})(1-cx)^{1/c-1}`\]</div>
+<p>for <span class="math notranslate nohighlight">\(x\le 1/c, c&gt;0\)</span>.</p>
+<p>For <cite>c=0</cite></p>
+<div class="math notranslate nohighlight">
+\[f(x) = \exp(\exp(-x))\exp(-x)\]</div>
+<p>In this standard form <cite>(loc=0, scale=1)</cite>. Use <cite>loc</cite> and <cite>scale</cite> to shift and scale the distribution. Specifically,
+this is equivalent to computing <span class="math notranslate nohighlight">\(f(y)\)</span> where <span class="math notranslate nohighlight">\(y=(x-loc)/scale\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>c</strong> (<cite>float</cite>):</dt><dd><p>shape parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">GenExtreme</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.InvGauss">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">InvGauss</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#InvGauss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.InvGauss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse Gaussian distribution having probability density function</p>
+<div class="math notranslate nohighlight">
+\[f(x|\mu) = \dfrac{1}{2\pi x^3}\exp{(-\dfrac{(x\mu)^2}{2x\mu^2})}\]</div>
+<p>for <span class="math notranslate nohighlight">\(x&gt;0\)</span>. <code class="docutils literal notranslate"><span class="pre">cdf</span></code> method returns <cite>NaN</cite> for <span class="math notranslate nohighlight">\(\mu&lt;0.0028\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>mu</strong> (<cite>float</cite>):</dt><dd><p>shape parameter, <span class="math notranslate nohighlight">\(\mu\)</span></p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>In this standard form <cite>(loc=0, scale=1)</cite>. Use <cite>loc</cite> and <cite>scale</cite> to shift and scale the distribution. Specifically,
+this is equivalent to computing <span class="math notranslate nohighlight">\(f(y)\)</span> where <span class="math notranslate nohighlight">\(y=(x-loc)/scale\)</span>.</p>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">InvGauss</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Laplace">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Laplace</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Laplace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Laplace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Laplace distribution having probability density function</p>
+<div class="math notranslate nohighlight">
+\[f(x) = \dfrac{1}{2}\exp{-|x|}\]</div>
+<p>In this standard form <cite>(loc=0, scale=1)</cite>. Use <cite>loc</cite> and <cite>scale</cite> to shift and scale the distribution. Specifically,
+this is equivalent to computing <span class="math notranslate nohighlight">\(f(y)\)</span> where <span class="math notranslate nohighlight">\(y=(x-loc)/scale\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Laplace</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Levy">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Levy</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Levy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Levy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Levy distribution having probability density function</p>
+<div class="math notranslate nohighlight">
+\[f(x) = \dfrac{1}{\sqrt{2\pi x^3}}\exp(-\dfrac{1}{2x})\]</div>
+<p>for <span class="math notranslate nohighlight">\(x\ge 0\)</span>.</p>
+<p>In this standard form <cite>(loc=0, scale=1)</cite>. Use <cite>loc</cite> and <cite>scale</cite> to shift and scale the distribution. Specifically,
+this is equivalent to computing <span class="math notranslate nohighlight">\(f(y)\)</span> where <span class="math notranslate nohighlight">\(y=(x-loc)/scale\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Levy</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Logistic">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Logistic</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Logistic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Logistic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logistic distribution having probability density function</p>
+<div class="math notranslate nohighlight">
+\[f(x) = \dfrac{\exp(-x)}{(1+\exp(-x))^2}\]</div>
+<p>In this standard form <cite>(loc=0, scale=1)</cite>. Use <cite>loc</cite> and <cite>scale</cite> to shift and scale the distribution. Specifically,
+this is equivalent to computing <span class="math notranslate nohighlight">\(f(y)\)</span> where <span class="math notranslate nohighlight">\(y=(x-loc)/scale\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Logistic</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Lognormal">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Lognormal</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Lognormal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Lognormal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lognormal distribution having probability density function</p>
+<div class="math notranslate nohighlight">
+\[f(x|s) = \dfrac{1}{sx\sqrt{2\pi}}\exp(-\dfrac{\log^2(x)}{2s^2})\]</div>
+<p>for <span class="math notranslate nohighlight">\(x&gt;0, s&gt;0\)</span>.</p>
+<p>A common parametrization for a lognormal random variable Y is in terms of the mean, mu, and standard deviation,
+sigma, of the gaussian random variable X such that exp(X) = Y. This parametrization corresponds to setting
+s = sigma and scale = exp(mu).</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>s</strong> (<cite>float</cite>):</dt><dd><p>shape parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Lognormal</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Maxwell">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Maxwell</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Maxwell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Maxwell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maxwell-Boltzmann distribution having probability density function</p>
+<div class="math notranslate nohighlight">
+\[f(x) = \sqrt{2/\pi}x^2\exp(-x^2/2)\]</div>
+<p>for <span class="math notranslate nohighlight">\(x\ge0\)</span>.</p>
+<p>In this standard form <cite>(loc=0, scale=1)</cite>. Use <cite>loc</cite> and <cite>scale</cite> to shift and scale the distribution. Specifically,
+this is equivalent to computing <span class="math notranslate nohighlight">\(f(y)\)</span> where <span class="math notranslate nohighlight">\(y=(x-loc)/scale\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Maxwell</span></code>:
+* <code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Normal">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Normal</code><span class="sig-paren">(</span><em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Normal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Normal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normal distribution having probability density function</p>
+<div class="math notranslate nohighlight">
+\[f(x) = \dfrac{\exp(-x^2/2)}{\sqrt{2\pi}}\]</div>
+<p>In this standard form <cite>(loc=0, scale=1)</cite>. Use <cite>loc</cite> and <cite>scale</cite> to shift and scale the distribution. Specifically,
+this is equivalent to computing <span class="math notranslate nohighlight">\(f(y)\)</span> where <span class="math notranslate nohighlight">\(y=(x-loc)/scale\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>mean</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>standard deviation</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Normal</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Pareto">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Pareto</code><span class="sig-paren">(</span><em class="sig-param">b</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Pareto"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Pareto" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pareto distribution having probability density function</p>
+<div class="math notranslate nohighlight">
+\[f(x|b) = \dfrac{b}{x^{b+1}}\]</div>
+<p>for <span class="math notranslate nohighlight">\(x\ge 1, b&gt;0\)</span>.</p>
+<p>In this standard form <cite>(loc=0, scale=1)</cite>. Use <cite>loc</cite> and <cite>scale</cite> to shift and scale the distribution. Specifically,
+this is equivalent to computing <span class="math notranslate nohighlight">\(f(y)\)</span> where <span class="math notranslate nohighlight">\(y=(x-loc)/scale\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>b</strong> (<cite>float</cite>):</dt><dd><p>shape parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Pareto</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Rayleigh">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Rayleigh</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Rayleigh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Rayleigh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rayleigh distribution having probability density function</p>
+<div class="math notranslate nohighlight">
+\[f(x) = x\exp(-x^2/2)\]</div>
+<p>for <span class="math notranslate nohighlight">\(x\ge 0\)</span>.</p>
+<p>In this standard form <cite>(loc=0, scale=1)</cite>. Use <cite>loc</cite> and <cite>scale</cite> to shift and scale the distribution. Specifically,
+this is equivalent to computing <span class="math notranslate nohighlight">\(f(y)\)</span> where <span class="math notranslate nohighlight">\(y=(x-loc)/scale\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Rayleigh</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.TruncNorm">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">TruncNorm</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em>, <em class="sig-param">loc=0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#TruncNorm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.TruncNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Truncated normal distribution</p>
+<p>The standard form of this distribution (i.e, loc=0., scale=1) is a standard normal truncated to the range [a, b].
+Note that a and b are defined over the domain of the standard normal.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>a</strong> (<cite>float</cite>):</dt><dd><p>shape parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>b</strong> (<cite>float</cite>):</dt><dd><p>shape parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">TruncNorm</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Uniform">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Uniform</code><span class="sig-paren">(</span><em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Uniform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Uniform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uniform distribution having probability density function</p>
+<div class="math notranslate nohighlight">
+\[f(x|a, b) = \dfrac{1}{b-a}\]</div>
+<p>where <span class="math notranslate nohighlight">\(a=loc\)</span> and <span class="math notranslate nohighlight">\(b=loc+scale\)</span></p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>lower bound</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>range</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Uniform</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+</div>
 </div>
 <div class="section" id="d-discrete-distributions">
 <h2>1D Discrete Distributions<a class="headerlink" href="#d-discrete-distributions" title="Permalink to this headline">¶</a></h2>
@@ -533,387 +1034,8 @@ would check that marginals is of length 2 and continuous, and raise an error if 
 </dd></dl>
 
 </div>
-<div class="section" id="list-of-distributions">
-<h2>List of Distributions<a class="headerlink" href="#list-of-distributions" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="univariate-continuous">
-<h3>Univariate continuous<a class="headerlink" href="#univariate-continuous" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="UQpy.Distributions.Beta">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Beta</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Beta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Beta" title="Permalink to this definition">¶</a></dt>
-<dd><p>Beta distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>a</strong> (<cite>float</cite>):</dt><dd><p>first shape parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>b</strong> (float):</dt><dd><p>second shape parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>In its standard form (loc=0, scale=1.), the distribution is defined over the interval (0, 1). Use loc and scale to
-shift the distribution to interval (loc, loc + scale). Specifically, Beta(a, b, loc, scale).pdf(x) is identical to
-Beta(a, b).pdf(y) / scale with y=(x-loc)/scale.</p>
-<p>The following methods are available for Beta: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.Cauchy">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Cauchy</code><span class="sig-paren">(</span><em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Cauchy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Cauchy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Cauchy distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>The following methods are available for Cauchy: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.ChiSquare">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">ChiSquare</code><span class="sig-paren">(</span><em class="sig-param">df</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#ChiSquare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.ChiSquare" title="Permalink to this definition">¶</a></dt>
-<dd><p>Chi-square distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>df</strong> (<cite>float</cite>):</dt><dd><p>shape parameter (degrees of freedom)</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>ChiSquare(c, loc, scale).pdf(x) is identical to ChiSquare(c).pdf(y) / scale with y=(x-loc)/scale</p>
-<p>The following methods are available for ChiSquare: <em>cdf, pdf, log_pdf, icdf, rvs, moments, fit</em>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.Exponential">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Exponential</code><span class="sig-paren">(</span><em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Exponential"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Exponential" title="Permalink to this definition">¶</a></dt>
-<dd><p>Exponential distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>A common parameterization for Exponential is in terms of the rate parameter lambda, which corresponds to using
-scale = 1 / lambda.</p>
-<p>The following methods are available for Exponential: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.Gamma">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Gamma</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Gamma"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Gamma" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gamma distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>a</strong> (<cite>float</cite>):</dt><dd><p>shape parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>The following methods are available for Gamma: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.InvGauss">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">InvGauss</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#InvGauss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.InvGauss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Inverse Gaussian distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>mu</strong> (<cite>float</cite>):</dt><dd><p>shape parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>The following methods are available for InvGauss: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.Laplace">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Laplace</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Laplace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Laplace" title="Permalink to this definition">¶</a></dt>
-<dd><p>Laplace distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>The following methods are available for Laplace: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.Levy">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Levy</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Levy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Levy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Levy distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>The following methods are available for Levy: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.Logistic">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Logistic</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Logistic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Logistic" title="Permalink to this definition">¶</a></dt>
-<dd><p>Logistic distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>The following methods are available for Logistic: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.Lognormal">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Lognormal</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Lognormal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Lognormal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Lognormal distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>s</strong> (<cite>float</cite>):</dt><dd><p>shape parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>A common parametrization for a lognormal random variable Y is in terms of the mean, mu, and standard deviation,
-sigma, of the gaussian random variable X such that exp(X) = Y. This parametrization corresponds to setting
-s = sigma and scale = exp(mu).</p>
-<p>The following methods are available for Lognormal: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.Maxwell">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Maxwell</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Maxwell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Maxwell" title="Permalink to this definition">¶</a></dt>
-<dd><p>Maxwell-Boltzmann distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>The following methods are available for Maxwell: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.Normal">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Normal</code><span class="sig-paren">(</span><em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Normal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Normal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Normal distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>mean</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>standard deviation</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>The following methods are available for Normal: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.Pareto">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Pareto</code><span class="sig-paren">(</span><em class="sig-param">b</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Pareto"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Pareto" title="Permalink to this definition">¶</a></dt>
-<dd><p>Pareto distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>b</strong> (<cite>float</cite>):</dt><dd><p>shape parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>The following methods are available for Pareto: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.Rayleigh">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Rayleigh</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Rayleigh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Rayleigh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rayleigh distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>The following methods are available for Rayleigh: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.TruncNorm">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">TruncNorm</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em>, <em class="sig-param">loc=0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#TruncNorm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.TruncNorm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Truncated normal distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>a</strong> (<cite>float</cite>):</dt><dd><p>shape parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>b</strong> (<cite>float</cite>):</dt><dd><p>shape parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>scale parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>The standard form of this distribution (i.e, loc=0., scale=1) is a standard normal truncated to the range [a, b].</p>
-<p>The following methods are available for TruncNorm: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.Uniform">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Uniform</code><span class="sig-paren">(</span><em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Uniform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Uniform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Uniform distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>lower bound</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>scale</strong> (<cite>float</cite>):</dt><dd><p>range</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>Parameters loc and scale define the uniform distribution U[loc, loc + scale], default is U[0, 1].</p>
-<p>The following methods are available for Uniform: <cite>cdf, pdf, log_pdf, icdf, rvs, moments, fit</cite>.</p>
-</dd></dl>
-
-</div>
+<div class="section" id="id2">
+<h2>List of Distributions<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="univariate-discrete">
 <h3>Univariate discrete<a class="headerlink" href="#univariate-discrete" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
@@ -1123,7 +1245,7 @@ that <cite>marginals</cite> consist of solely 2 continuous distributions).</p>
 <li class="toctree-l2"><a class="reference internal" href="#d-discrete-distributions">1D Discrete Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#multivariate-distributions">Multivariate Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#copula">Copula</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#list-of-distributions">List of Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">List of Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#list-of-copula">List of Copula</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#user-defined-distributions-and-copula">User-defined Distributions and Copula</a></li>
 </ul>

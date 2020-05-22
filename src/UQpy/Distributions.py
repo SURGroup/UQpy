@@ -250,28 +250,7 @@ class DistributionContinuous1D(Distribution):
     """
     Parent class for univariate continuous probability distributions.
 
-    The following code shows how to import some of the existing distributions and calling their methods.
 
-    >>> from UQpy.Distributions import Uniform
-    >>> print(Uniform.__bases__)
-        (<class 'UQpy.Distributions.DistributionContinuous1D'>,)
-    >>> d1 = Uniform(loc=1., scale=2.)
-    >>> print(d1.params)
-        {'loc': 1.0, 'scale': 2.0}
-    >>> print(d1.cdf(x=[0., 1., 2., 3.]))
-        [0.  0.  0.5 1. ]
-    >>> print(d1.rvs(nsamples=2, random_state=123))
-        [[2.39293837]
-        [1.57227867]]
-    >>> d1.update_params(loc=0.)
-    >>> print(d1.params)
-        {'loc': 0.0, 'scale': 2.0}
-
-    >>> from UQpy.Distributions import Normal
-    >>> print(Normal(loc=None, scale=None).fit(data=[-4, 2, 2, 1]))
-        {'loc': 0.25, 'scale': 2.48746859276655}
-    >>> print(Normal(loc=0., scale=None).fit(data=[-4, 2, 2, 1]))
-        {'loc': 0.0, 'scale': 2.5}
     """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -313,7 +292,15 @@ class DistributionContinuous1D(Distribution):
 
 class Beta(DistributionContinuous1D):
     """
-    Beta distribution
+    Beta distribution having probability density function
+
+    .. math:: f(x|a,b) = \dfrac{\Gamma(a+b)x^{a-1}(1-x)^{b-1}}{\Gamma(a)\Gamma(b)}
+
+    for :math:`0\le x\ge 0`, :math:`a>0, b>0`. Here :math:`\Gamma(a)` refers to the Gamma function.
+
+    In this standard form `(loc=0, scale=1)`, the distribution is defined over the interval (0, 1). Use `loc` and
+    `scale` to shift the distribution to interval `(loc, loc + scale)`. Specifically, this is equivalent to computing
+    :math:`f(y|a,b)` where :math:`y=(x-loc)/scale`.
 
     **Inputs:**
 
@@ -326,11 +313,9 @@ class Beta(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    In its standard form (loc=0, scale=1.), the distribution is defined over the interval (0, 1). Use loc and scale to
-    shift the distribution to interval (loc, loc + scale). Specifically, Beta(a, b, loc, scale).pdf(x) is identical to
-    Beta(a, b).pdf(y) / scale with y=(x-loc)/scale.
+    The following methods are available for ``Beta``:
 
-    The following methods are available for Beta: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``
     """
     def __init__(self, a, b, loc=0., scale=1.):
         super().__init__(a=a, b=b, loc=loc, scale=scale, order_params=('a', 'b', 'loc', 'scale'))
@@ -339,7 +324,12 @@ class Beta(DistributionContinuous1D):
 
 class Cauchy(DistributionContinuous1D):
     """
-    Cauchy distribution
+    Cauchy distribution having probability density function
+
+    .. math:: f(x) = \dfrac{1}{\pi(1+x^2)}
+
+    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
+    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
     **Inputs:**
 
@@ -348,7 +338,9 @@ class Cauchy(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Cauchy: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    The following methods are available for ``Cauchy``:
+
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``
     """
     def __init__(self, loc=0., scale=1.):
         super().__init__(ploc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -357,20 +349,27 @@ class Cauchy(DistributionContinuous1D):
 
 class ChiSquare(DistributionContinuous1D):
     """
-    Chi-square distribution
+    Chi-square distribution having probability density:
+
+    .. math:: f(x|k) = \dfrac{1}{2^{k/2}\Gamma(k/2)}x^{k/2-1}\exp{(-x/2)}
+
+    for :math:`x\ge 0`, :math:`k>0`. Here :math:`\Gamma(\cdot)` refers to the Gamma function.
+
+    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
+    this is equivalent to computing :math:`f(y|k)` where :math:`y=(x-loc)/scale`.
 
     **Inputs:**
 
     * **df** (`float`):
-        shape parameter (degrees of freedom)
+        shape parameter (degrees of freedom) (given by `k` in the equation above)
     * **loc** (`float`):
         location parameter
     * **scale** (`float`):
         scale parameter
 
-    ChiSquare(c, loc, scale).pdf(x) is identical to ChiSquare(c).pdf(y) / scale with y=(x-loc)/scale
+    The following methods are available for ``ChiSquare``:
 
-    The following methods are available for ChiSquare: *cdf, pdf, log_pdf, icdf, rvs, moments, fit*.
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, df, loc=0., scale=1):
         super().__init__(df=df, loc=loc, scale=scale, order_params=('df', 'loc', 'scale'))
@@ -379,7 +378,15 @@ class ChiSquare(DistributionContinuous1D):
 
 class Exponential(DistributionContinuous1D):
     """
-    Exponential distribution
+    Exponential distribution having probability density function:
+
+    .. math:: f(x) = \exp(-x)
+
+    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
+    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
+
+    A common parameterization for Exponential is in terms of the rate parameter :math:`\lambda`, which corresponds to
+    using :math:`scale = 1 / \lambda`.
 
     **Inputs:**
 
@@ -388,10 +395,9 @@ class Exponential(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    A common parameterization for Exponential is in terms of the rate parameter lambda, which corresponds to using
-    scale = 1 / lambda.
+    The following methods are available for ``Exponential``:
 
-    The following methods are available for Exponential: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, loc=0., scale=1.):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -400,7 +406,14 @@ class Exponential(DistributionContinuous1D):
 
 class Gamma(DistributionContinuous1D):
     """
-    Gamma distribution
+    Gamma distribution having probability density function:
+
+    .. math:: f(x|a) = \dfrac{x^{a-1}\exp(-x)}{\Gamma(a)}
+
+    for :math:`x\ge 0`, :math:`a>0`. Here :math:`\Gamma(a)` refers to the Gamma function.
+
+    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
+    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
     **Inputs:**
 
@@ -411,7 +424,9 @@ class Gamma(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Gamma: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    The following methods are available for ``Gamma``:
+
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, a, loc=0., scale=1.):
         super().__init__(a=a, loc=loc, scale=scale, order_params=('a', 'loc', 'scale'))
@@ -420,7 +435,18 @@ class Gamma(DistributionContinuous1D):
 
 class GenExtreme(DistributionContinuous1D):
     """
-    Generalized Extreme Value distribution.
+    Generalized Extreme Value distribution having probability density function:
+
+    .. math:: `f(x|c) = \exp(-(1-cx)^{1/c})(1-cx)^{1/c-1}`
+
+    for :math:`x\le 1/c, c>0`.
+
+    For `c=0`
+
+    .. math:: f(x) = \exp(\exp(-x))\exp(-x)
+
+    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
+    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
     **Inputs:**
 
@@ -431,9 +457,9 @@ class GenExtreme(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    Genextreme(c, loc, scale).pdf(x) is identical to Genextreme(c).pdf(y) / scale with y=(x-loc)/scale.
+    The following methods are available for ``GenExtreme``:
 
-    The following methods are available for Genextreme: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, c, loc=0., scale=1.):
         super().__init__(c=c, loc=loc, scale=scale, order_params=('c', 'loc', 'scale'))
@@ -442,18 +468,27 @@ class GenExtreme(DistributionContinuous1D):
 
 class InvGauss(DistributionContinuous1D):
     """
-    Inverse Gaussian distribution
+    Inverse Gaussian distribution having probability density function
+
+    .. math:: f(x|\mu) = \dfrac{1}{2\pi x^3}\exp{(-\dfrac{(x\\mu)^2}{2x\mu^2})}
+
+    for :math:`x>0`. ``cdf`` method returns `NaN` for :math:`\mu<0.0028`.
 
     **Inputs:**
 
     * **mu** (`float`):
-        shape parameter
+        shape parameter, :math:`\mu`
     * **loc** (`float`):
         location parameter
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for InvGauss: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
+    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
+
+    The following methods are available for ``InvGauss``:
+
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, mu, loc=0., scale=1.):
         super().__init__(mu=mu, loc=loc, scale=scale, order_params=('mu', 'loc', 'scale'))
@@ -462,7 +497,12 @@ class InvGauss(DistributionContinuous1D):
 
 class Laplace(DistributionContinuous1D):
     """
-    Laplace distribution
+    Laplace distribution having probability density function
+
+    .. math:: f(x) = \dfrac{1}{2}\exp{-|x|}
+
+    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
+    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
     **Inputs:**
 
@@ -471,7 +511,9 @@ class Laplace(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Laplace: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    The following methods are available for ``Laplace``:
+
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, loc=0, scale=1):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -480,7 +522,14 @@ class Laplace(DistributionContinuous1D):
 
 class Levy(DistributionContinuous1D):
     """
-    Levy distribution
+    Levy distribution having probability density function
+
+    .. math:: f(x) = \dfrac{1}{\sqrt{2\pi x^3}}\exp(-\dfrac{1}{2x})
+
+    for :math:`x\ge 0`.
+
+    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
+    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
     **Inputs:**
 
@@ -489,7 +538,9 @@ class Levy(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Levy: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    The following methods are available for ``Levy``:
+
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, loc=0, scale=1):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -498,7 +549,12 @@ class Levy(DistributionContinuous1D):
 
 class Logistic(DistributionContinuous1D):
     """
-    Logistic distribution
+    Logistic distribution having probability density function
+
+    .. math:: f(x) = \dfrac{\exp(-x)}{(1+\exp(-x))^2}
+
+    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
+    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
     **Inputs:**
 
@@ -507,7 +563,9 @@ class Logistic(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Logistic: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    The following methods are available for ``Logistic``:
+
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, loc=0, scale=1):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -516,7 +574,15 @@ class Logistic(DistributionContinuous1D):
 
 class Lognormal(DistributionContinuous1D):
     """
-    Lognormal distribution
+    Lognormal distribution having probability density function
+
+    .. math:: f(x|s) = \dfrac{1}{sx\sqrt{2\pi}}\exp(-\dfrac{\log^2(x)}{2s^2})
+
+    for :math:`x>0, s>0`.
+
+    A common parametrization for a lognormal random variable Y is in terms of the mean, mu, and standard deviation,
+    sigma, of the gaussian random variable X such that exp(X) = Y. This parametrization corresponds to setting
+    s = sigma and scale = exp(mu).
 
     **Inputs:**
 
@@ -527,11 +593,9 @@ class Lognormal(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    A common parametrization for a lognormal random variable Y is in terms of the mean, mu, and standard deviation,
-    sigma, of the gaussian random variable X such that exp(X) = Y. This parametrization corresponds to setting
-    s = sigma and scale = exp(mu).
+    The following methods are available for ``Lognormal``:
 
-    The following methods are available for Lognormal: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, s, loc=0., scale=1.):
         super().__init__(s=s, loc=loc, scale=scale, order_params=('s', 'loc', 'scale'))
@@ -540,7 +604,14 @@ class Lognormal(DistributionContinuous1D):
 
 class Maxwell(DistributionContinuous1D):
     """
-    Maxwell-Boltzmann distribution
+    Maxwell-Boltzmann distribution having probability density function
+
+    .. math:: f(x) = \sqrt{2/\pi}x^2\exp(-x^2/2)
+
+    for :math:`x\ge0`.
+
+    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
+    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
     **Inputs:**
 
@@ -549,7 +620,8 @@ class Maxwell(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Maxwell: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    The following methods are available for ``Maxwell``:
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, loc=0, scale=1):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -558,7 +630,12 @@ class Maxwell(DistributionContinuous1D):
 
 class Normal(DistributionContinuous1D):
     """
-    Normal distribution
+    Normal distribution having probability density function
+
+    .. math:: f(x) = \dfrac{\exp(-x^2/2)}{\sqrt{2\pi}}
+
+    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
+    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
     **Inputs:**
 
@@ -567,7 +644,9 @@ class Normal(DistributionContinuous1D):
     * **scale** (`float`):
         standard deviation
 
-    The following methods are available for Normal: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    The following methods are available for ``Normal``:
+
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, loc=0., scale=1.):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -585,7 +664,14 @@ class Normal(DistributionContinuous1D):
 
 class Pareto(DistributionContinuous1D):
     """
-    Pareto distribution
+    Pareto distribution having probability density function
+
+    .. math:: f(x|b) = \dfrac{b}{x^{b+1}}
+
+    for :math:`x\ge 1, b>0`.
+
+    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
+    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
     **Inputs:**
 
@@ -596,7 +682,9 @@ class Pareto(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Pareto: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    The following methods are available for ``Pareto``:
+
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, b, loc=0., scale=1.):
         super().__init__(b=b, loc=loc, scale=scale, order_params=('b', 'loc', 'scale'))
@@ -605,7 +693,14 @@ class Pareto(DistributionContinuous1D):
 
 class Rayleigh(DistributionContinuous1D):
     """
-    Rayleigh distribution
+    Rayleigh distribution having probability density function
+
+    .. math:: f(x) = x\exp(-x^2/2)
+
+    for :math:`x\ge 0`.
+
+    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
+    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
     **Inputs:**
 
@@ -614,7 +709,9 @@ class Rayleigh(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The following methods are available for Rayleigh: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    The following methods are available for ``Rayleigh``:
+
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, loc=0, scale=1):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
@@ -624,6 +721,9 @@ class Rayleigh(DistributionContinuous1D):
 class TruncNorm(DistributionContinuous1D):
     """
     Truncated normal distribution
+
+    The standard form of this distribution (i.e, loc=0., scale=1) is a standard normal truncated to the range [a, b].
+    Note that a and b are defined over the domain of the standard normal.
 
     **Inputs:**
 
@@ -636,9 +736,9 @@ class TruncNorm(DistributionContinuous1D):
     * **scale** (`float`):
         scale parameter
 
-    The standard form of this distribution (i.e, loc=0., scale=1) is a standard normal truncated to the range [a, b].
+    The following methods are available for ``TruncNorm``:
 
-    The following methods are available for TruncNorm: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, a, b, loc=0, scale=1.):
         super().__init__(a=a, b=b, loc=loc, scale=scale, order_params=('a', 'b', 'loc', 'scale'))
@@ -647,7 +747,11 @@ class TruncNorm(DistributionContinuous1D):
 
 class Uniform(DistributionContinuous1D):
     """
-    Uniform distribution
+    Uniform distribution having probability density function
+
+    .. math:: f(x|a, b) = \dfrac{1}{b-a}
+
+    where :math:`a=loc` and :math:`b=loc+scale`
 
     **Inputs:**
 
@@ -656,9 +760,9 @@ class Uniform(DistributionContinuous1D):
     * **scale** (`float`):
         range
 
-    Parameters loc and scale define the uniform distribution U[loc, loc + scale], default is U[0, 1].
+    The following methods are available for ``Uniform``:
 
-    The following methods are available for Uniform: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.
+    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, loc=0., scale=1.):
         super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))

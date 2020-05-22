@@ -284,28 +284,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parent class for univariate continuous probability distributions.</span>
 
-<span class="sd">    The following code shows how to import some of the existing distributions and calling their methods.</span>
 
-<span class="sd">    &gt;&gt;&gt; from UQpy.Distributions import Uniform</span>
-<span class="sd">    &gt;&gt;&gt; print(Uniform.__bases__)</span>
-<span class="sd">        (&lt;class &#39;UQpy.Distributions.DistributionContinuous1D&#39;&gt;,)</span>
-<span class="sd">    &gt;&gt;&gt; d1 = Uniform(loc=1., scale=2.)</span>
-<span class="sd">    &gt;&gt;&gt; print(d1.params)</span>
-<span class="sd">        {&#39;loc&#39;: 1.0, &#39;scale&#39;: 2.0}</span>
-<span class="sd">    &gt;&gt;&gt; print(d1.cdf(x=[0., 1., 2., 3.]))</span>
-<span class="sd">        [0.  0.  0.5 1. ]</span>
-<span class="sd">    &gt;&gt;&gt; print(d1.rvs(nsamples=2, random_state=123))</span>
-<span class="sd">        [[2.39293837]</span>
-<span class="sd">        [1.57227867]]</span>
-<span class="sd">    &gt;&gt;&gt; d1.update_params(loc=0.)</span>
-<span class="sd">    &gt;&gt;&gt; print(d1.params)</span>
-<span class="sd">        {&#39;loc&#39;: 0.0, &#39;scale&#39;: 2.0}</span>
-
-<span class="sd">    &gt;&gt;&gt; from UQpy.Distributions import Normal</span>
-<span class="sd">    &gt;&gt;&gt; print(Normal(loc=None, scale=None).fit(data=[-4, 2, 2, 1]))</span>
-<span class="sd">        {&#39;loc&#39;: 0.25, &#39;scale&#39;: 2.48746859276655}</span>
-<span class="sd">    &gt;&gt;&gt; print(Normal(loc=0., scale=None).fit(data=[-4, 2, 2, 1]))</span>
-<span class="sd">        {&#39;loc&#39;: 0.0, &#39;scale&#39;: 2.5}</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -347,7 +326,15 @@
 
 <div class="viewcode-block" id="Beta"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Beta">[docs]</a><span class="k">class</span> <span class="nc">Beta</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Beta distribution</span>
+<span class="sd">    Beta distribution having probability density function</span>
+
+<span class="sd">    .. math:: f(x|a,b) = \dfrac{\Gamma(a+b)x^{a-1}(1-x)^{b-1}}{\Gamma(a)\Gamma(b)}</span>
+
+<span class="sd">    for :math:`0\le x\ge 0`, :math:`a&gt;0, b&gt;0`. Here :math:`\Gamma(a)` refers to the Gamma function.</span>
+
+<span class="sd">    In this standard form `(loc=0, scale=1)`, the distribution is defined over the interval (0, 1). Use `loc` and</span>
+<span class="sd">    `scale` to shift the distribution to interval `(loc, loc + scale)`. Specifically, this is equivalent to computing</span>
+<span class="sd">    :math:`f(y|a,b)` where :math:`y=(x-loc)/scale`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -360,11 +347,9 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    In its standard form (loc=0, scale=1.), the distribution is defined over the interval (0, 1). Use loc and scale to</span>
-<span class="sd">    shift the distribution to interval (loc, loc + scale). Specifically, Beta(a, b, loc, scale).pdf(x) is identical to</span>
-<span class="sd">    Beta(a, b).pdf(y) / scale with y=(x-loc)/scale.</span>
+<span class="sd">    The following methods are available for ``Beta``:</span>
 
-<span class="sd">    The following methods are available for Beta: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -373,7 +358,12 @@
 
 <div class="viewcode-block" id="Cauchy"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Cauchy">[docs]</a><span class="k">class</span> <span class="nc">Cauchy</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Cauchy distribution</span>
+<span class="sd">    Cauchy distribution having probability density function</span>
+
+<span class="sd">    .. math:: f(x) = \dfrac{1}{\pi(1+x^2)}</span>
+
+<span class="sd">    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,</span>
+<span class="sd">    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -382,7 +372,9 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Cauchy: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    The following methods are available for ``Cauchy``:</span>
+
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">ploc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -391,20 +383,27 @@
 
 <div class="viewcode-block" id="ChiSquare"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.ChiSquare">[docs]</a><span class="k">class</span> <span class="nc">ChiSquare</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Chi-square distribution</span>
+<span class="sd">    Chi-square distribution having probability density:</span>
+
+<span class="sd">    .. math:: f(x|k) = \dfrac{1}{2^{k/2}\Gamma(k/2)}x^{k/2-1}\exp{(-x/2)}</span>
+
+<span class="sd">    for :math:`x\ge 0`, :math:`k&gt;0`. Here :math:`\Gamma(\cdot)` refers to the Gamma function.</span>
+
+<span class="sd">    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,</span>
+<span class="sd">    this is equivalent to computing :math:`f(y|k)` where :math:`y=(x-loc)/scale`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
 <span class="sd">    * **df** (`float`):</span>
-<span class="sd">        shape parameter (degrees of freedom)</span>
+<span class="sd">        shape parameter (degrees of freedom) (given by `k` in the equation above)</span>
 <span class="sd">    * **loc** (`float`):</span>
 <span class="sd">        location parameter</span>
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    ChiSquare(c, loc, scale).pdf(x) is identical to ChiSquare(c).pdf(y) / scale with y=(x-loc)/scale</span>
+<span class="sd">    The following methods are available for ``ChiSquare``:</span>
 
-<span class="sd">    The following methods are available for ChiSquare: *cdf, pdf, log_pdf, icdf, rvs, moments, fit*.</span>
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;df&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -413,7 +412,15 @@
 
 <div class="viewcode-block" id="Exponential"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Exponential">[docs]</a><span class="k">class</span> <span class="nc">Exponential</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Exponential distribution</span>
+<span class="sd">    Exponential distribution having probability density function:</span>
+
+<span class="sd">    .. math:: f(x) = \exp(-x)</span>
+
+<span class="sd">    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,</span>
+<span class="sd">    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.</span>
+
+<span class="sd">    A common parameterization for Exponential is in terms of the rate parameter :math:`\lambda`, which corresponds to</span>
+<span class="sd">    using :math:`scale = 1 / \lambda`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -422,10 +429,9 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    A common parameterization for Exponential is in terms of the rate parameter lambda, which corresponds to using</span>
-<span class="sd">    scale = 1 / lambda.</span>
+<span class="sd">    The following methods are available for ``Exponential``:</span>
 
-<span class="sd">    The following methods are available for Exponential: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -434,7 +440,14 @@
 
 <div class="viewcode-block" id="Gamma"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Gamma">[docs]</a><span class="k">class</span> <span class="nc">Gamma</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Gamma distribution</span>
+<span class="sd">    Gamma distribution having probability density function:</span>
+
+<span class="sd">    .. math:: f(x|a) = \dfrac{x^{a-1}\exp(-x)}{\Gamma(a)}</span>
+
+<span class="sd">    for :math:`x\ge 0`, :math:`a&gt;0`. Here :math:`\Gamma(a)` refers to the Gamma function.</span>
+
+<span class="sd">    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,</span>
+<span class="sd">    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -445,16 +458,29 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Gamma: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    The following methods are available for ``Gamma``:</span>
+
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span></div>
 
 
-<span class="k">class</span> <span class="nc">GenExtreme</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="GenExtreme"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.GenExtreme">[docs]</a><span class="k">class</span> <span class="nc">GenExtreme</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generalized Extreme Value distribution.</span>
+<span class="sd">    Generalized Extreme Value distribution having probability density function:</span>
+
+<span class="sd">    .. math:: `f(x|c) = \exp(-(1-cx)^{1/c})(1-cx)^{1/c-1}`</span>
+
+<span class="sd">    for :math:`x\le 1/c, c&gt;0`.</span>
+
+<span class="sd">    For `c=0`</span>
+
+<span class="sd">    .. math:: f(x) = \exp(\exp(-x))\exp(-x)</span>
+
+<span class="sd">    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,</span>
+<span class="sd">    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -465,29 +491,38 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    Genextreme(c, loc, scale).pdf(x) is identical to Genextreme(c).pdf(y) / scale with y=(x-loc)/scale.</span>
+<span class="sd">    The following methods are available for ``GenExtreme``:</span>
 
-<span class="sd">    The following methods are available for Genextreme: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">genextreme</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">genextreme</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="InvGauss"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.InvGauss">[docs]</a><span class="k">class</span> <span class="nc">InvGauss</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Inverse Gaussian distribution</span>
+<span class="sd">    Inverse Gaussian distribution having probability density function</span>
+
+<span class="sd">    .. math:: f(x|\mu) = \dfrac{1}{2\pi x^3}\exp{(-\dfrac{(x\\mu)^2}{2x\mu^2})}</span>
+
+<span class="sd">    for :math:`x&gt;0`. ``cdf`` method returns `NaN` for :math:`\mu&lt;0.0028`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
 <span class="sd">    * **mu** (`float`):</span>
-<span class="sd">        shape parameter</span>
+<span class="sd">        shape parameter, :math:`\mu`</span>
 <span class="sd">    * **loc** (`float`):</span>
 <span class="sd">        location parameter</span>
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for InvGauss: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,</span>
+<span class="sd">    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.</span>
+
+<span class="sd">    The following methods are available for ``InvGauss``:</span>
+
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -496,7 +531,12 @@
 
 <div class="viewcode-block" id="Laplace"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Laplace">[docs]</a><span class="k">class</span> <span class="nc">Laplace</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Laplace distribution</span>
+<span class="sd">    Laplace distribution having probability density function</span>
+
+<span class="sd">    .. math:: f(x) = \dfrac{1}{2}\exp{-|x|}</span>
+
+<span class="sd">    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,</span>
+<span class="sd">    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -505,7 +545,9 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Laplace: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    The following methods are available for ``Laplace``:</span>
+
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -514,7 +556,14 @@
 
 <div class="viewcode-block" id="Levy"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Levy">[docs]</a><span class="k">class</span> <span class="nc">Levy</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Levy distribution</span>
+<span class="sd">    Levy distribution having probability density function</span>
+
+<span class="sd">    .. math:: f(x) = \dfrac{1}{\sqrt{2\pi x^3}}\exp(-\dfrac{1}{2x})</span>
+
+<span class="sd">    for :math:`x\ge 0`.</span>
+
+<span class="sd">    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,</span>
+<span class="sd">    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -523,7 +572,9 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Levy: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    The following methods are available for ``Levy``:</span>
+
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -532,7 +583,12 @@
 
 <div class="viewcode-block" id="Logistic"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Logistic">[docs]</a><span class="k">class</span> <span class="nc">Logistic</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Logistic distribution</span>
+<span class="sd">    Logistic distribution having probability density function</span>
+
+<span class="sd">    .. math:: f(x) = \dfrac{\exp(-x)}{(1+\exp(-x))^2}</span>
+
+<span class="sd">    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,</span>
+<span class="sd">    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -541,7 +597,9 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Logistic: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    The following methods are available for ``Logistic``:</span>
+
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -550,7 +608,15 @@
 
 <div class="viewcode-block" id="Lognormal"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Lognormal">[docs]</a><span class="k">class</span> <span class="nc">Lognormal</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Lognormal distribution</span>
+<span class="sd">    Lognormal distribution having probability density function</span>
+
+<span class="sd">    .. math:: f(x|s) = \dfrac{1}{sx\sqrt{2\pi}}\exp(-\dfrac{\log^2(x)}{2s^2})</span>
+
+<span class="sd">    for :math:`x&gt;0, s&gt;0`.</span>
+
+<span class="sd">    A common parametrization for a lognormal random variable Y is in terms of the mean, mu, and standard deviation,</span>
+<span class="sd">    sigma, of the gaussian random variable X such that exp(X) = Y. This parametrization corresponds to setting</span>
+<span class="sd">    s = sigma and scale = exp(mu).</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -561,11 +627,9 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    A common parametrization for a lognormal random variable Y is in terms of the mean, mu, and standard deviation,</span>
-<span class="sd">    sigma, of the gaussian random variable X such that exp(X) = Y. This parametrization corresponds to setting</span>
-<span class="sd">    s = sigma and scale = exp(mu).</span>
+<span class="sd">    The following methods are available for ``Lognormal``:</span>
 
-<span class="sd">    The following methods are available for Lognormal: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">s</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -574,7 +638,14 @@
 
 <div class="viewcode-block" id="Maxwell"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Maxwell">[docs]</a><span class="k">class</span> <span class="nc">Maxwell</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Maxwell-Boltzmann distribution</span>
+<span class="sd">    Maxwell-Boltzmann distribution having probability density function</span>
+
+<span class="sd">    .. math:: f(x) = \sqrt{2/\pi}x^2\exp(-x^2/2)</span>
+
+<span class="sd">    for :math:`x\ge0`.</span>
+
+<span class="sd">    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,</span>
+<span class="sd">    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -583,7 +654,8 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Maxwell: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    The following methods are available for ``Maxwell``:</span>
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -592,7 +664,12 @@
 
 <div class="viewcode-block" id="Normal"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Normal">[docs]</a><span class="k">class</span> <span class="nc">Normal</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Normal distribution</span>
+<span class="sd">    Normal distribution having probability density function</span>
+
+<span class="sd">    .. math:: f(x) = \dfrac{\exp(-x^2/2)}{\sqrt{2\pi}}</span>
+
+<span class="sd">    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,</span>
+<span class="sd">    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -601,7 +678,9 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        standard deviation</span>
 
-<span class="sd">    The following methods are available for Normal: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    The following methods are available for ``Normal``:</span>
+
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -619,7 +698,14 @@
 
 <div class="viewcode-block" id="Pareto"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Pareto">[docs]</a><span class="k">class</span> <span class="nc">Pareto</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Pareto distribution</span>
+<span class="sd">    Pareto distribution having probability density function</span>
+
+<span class="sd">    .. math:: f(x|b) = \dfrac{b}{x^{b+1}}</span>
+
+<span class="sd">    for :math:`x\ge 1, b&gt;0`.</span>
+
+<span class="sd">    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,</span>
+<span class="sd">    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -630,7 +716,9 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Pareto: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    The following methods are available for ``Pareto``:</span>
+
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -639,7 +727,14 @@
 
 <div class="viewcode-block" id="Rayleigh"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Rayleigh">[docs]</a><span class="k">class</span> <span class="nc">Rayleigh</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Rayleigh distribution</span>
+<span class="sd">    Rayleigh distribution having probability density function</span>
+
+<span class="sd">    .. math:: f(x) = x\exp(-x^2/2)</span>
+
+<span class="sd">    for :math:`x\ge 0`.</span>
+
+<span class="sd">    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,</span>
+<span class="sd">    this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -648,7 +743,9 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The following methods are available for Rayleigh: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    The following methods are available for ``Rayleigh``:</span>
+
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -658,6 +755,9 @@
 <div class="viewcode-block" id="TruncNorm"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.TruncNorm">[docs]</a><span class="k">class</span> <span class="nc">TruncNorm</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Truncated normal distribution</span>
+
+<span class="sd">    The standard form of this distribution (i.e, loc=0., scale=1) is a standard normal truncated to the range [a, b].</span>
+<span class="sd">    Note that a and b are defined over the domain of the standard normal.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -670,9 +770,9 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        scale parameter</span>
 
-<span class="sd">    The standard form of this distribution (i.e, loc=0., scale=1) is a standard normal truncated to the range [a, b].</span>
+<span class="sd">    The following methods are available for ``TruncNorm``:</span>
 
-<span class="sd">    The following methods are available for TruncNorm: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>
@@ -681,7 +781,11 @@
 
 <div class="viewcode-block" id="Uniform"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Uniform">[docs]</a><span class="k">class</span> <span class="nc">Uniform</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Uniform distribution</span>
+<span class="sd">    Uniform distribution having probability density function</span>
+
+<span class="sd">    .. math:: f(x|a, b) = \dfrac{1}{b-a}</span>
+
+<span class="sd">    where :math:`a=loc` and :math:`b=loc+scale`</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -690,9 +794,9 @@
 <span class="sd">    * **scale** (`float`):</span>
 <span class="sd">        range</span>
 
-<span class="sd">    Parameters loc and scale define the uniform distribution U[loc, loc + scale], default is U[0, 1].</span>
+<span class="sd">    The following methods are available for ``Uniform``:</span>
 
-<span class="sd">    The following methods are available for Uniform: `cdf, pdf, log_pdf, icdf, rvs, moments, fit`.</span>
+<span class="sd">    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">))</span>

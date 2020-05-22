@@ -19,6 +19,45 @@ In ``UQpy``, univariate continuous distributions inherit from the ``Distribution
 
 .. autoclass:: UQpy.Distributions.DistributionContinuous1D
     :members: 
+	
+List of Distributions
+~~~~~~~~~~~~~~~~~~~~~~~~
+	
+The following is a list of all 1D continuous distributions currently available in ``UQpy``.
+
+.. autoclass:: UQpy.Distributions.Beta
+
+.. autoclass:: UQpy.Distributions.Cauchy
+
+.. autoclass:: UQpy.Distributions.ChiSquare
+
+.. autoclass:: UQpy.Distributions.Exponential
+
+.. autoclass:: UQpy.Distributions.Gamma
+
+.. autoclass:: UQpy.Distributions.GenExtreme
+
+.. autoclass:: UQpy.Distributions.InvGauss
+
+.. autoclass:: UQpy.Distributions.Laplace
+
+.. autoclass:: UQpy.Distributions.Levy
+
+.. autoclass:: UQpy.Distributions.Logistic
+
+.. autoclass:: UQpy.Distributions.Lognormal
+
+.. autoclass:: UQpy.Distributions.Maxwell
+
+.. autoclass:: UQpy.Distributions.Normal
+
+.. autoclass:: UQpy.Distributions.Pareto
+
+.. autoclass:: UQpy.Distributions.Rayleigh
+
+.. autoclass:: UQpy.Distributions.TruncNorm
+
+.. autoclass:: UQpy.Distributions.Uniform
 
 1D Discrete Distributions
 ----------------------------------
@@ -58,42 +97,7 @@ Copula
 List of Distributions
 --------------------------
 
-Univariate continuous
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: UQpy.Distributions.Beta
-
-.. autoclass:: UQpy.Distributions.Cauchy
-
-.. autoclass:: UQpy.Distributions.ChiSquare
-
-.. autoclass:: UQpy.Distributions.Exponential
-
-.. autoclass:: UQpy.Distributions.Gamma
-
-.. autoclass:: UQpy.Distributions.Genextreme
-
-.. autoclass:: UQpy.Distributions.InvGauss
-
-.. autoclass:: UQpy.Distributions.Laplace
-
-.. autoclass:: UQpy.Distributions.Levy
-
-.. autoclass:: UQpy.Distributions.Logistic
-
-.. autoclass:: UQpy.Distributions.Lognormal
-
-.. autoclass:: UQpy.Distributions.Maxwell
-
-.. autoclass:: UQpy.Distributions.Normal
-
-.. autoclass:: UQpy.Distributions.Pareto
-
-.. autoclass:: UQpy.Distributions.Rayleigh
-
-.. autoclass:: UQpy.Distributions.TruncNorm
-
-.. autoclass:: UQpy.Distributions.Uniform
 
 Univariate discrete
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
