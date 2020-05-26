@@ -277,7 +277,7 @@ class MLEstimation:
 
     >>> candidate_model = InferenceModel(nparams=2, dist_object=Normal(loc=None, scale=None))
     >>> data = np.array([0.2, -0.3, 0.01]).reshape((-1, 1))
-    >>> ml_estimator = MLEstimation(inference_model=candidate_model, data=data, iter_optim=2)
+    >>> ml_estimator = MLEstimation(inference_model=candidate_model, data=data, nopt=2)
     >>> print(ml_estimator.mle)
     [-0.03        0.20607442]
     >>> print(ml_estimator.max_log_like)
@@ -309,11 +309,11 @@ class MLEstimation:
     * **x0** (`ndarray`):
         Starting point(s) for optimization, see `run_estimation`. Default is None.
 
-    * **iter_optim** (`int`):
+    * **nopt** (`int`):
         Number of iterations that the optimization is run, starting at random initial guesses. See `run_estiamtion`.
         Default is None.
 
-    If both `x0` and `iter_optim` are None, the object is created but the optimization procedure is not run, one must
+    If both `x0` and `nopt` are None, the object is created but the optimization procedure is not run, one must
     call the run method.
 
     **Attributes:**
@@ -330,7 +330,7 @@ class MLEstimation:
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
 
-    def __init__(self, inference_model, data, verbose=False, iter_optim=None, x0=None, optimizer=None,
+    def __init__(self, inference_model, data, verbose=False, nopt=None, x0=None, optimizer=None,
                  **kwargs_optimizer):
 
         # Initialize variables
@@ -353,27 +353,27 @@ class MLEstimation:
             print('UQpy: Initialization of MLEstimation object completed.')
 
         # Run the optimization procedure
-        if (iter_optim is not None) or (x0 is not None):
-            self.run(iter_optim=iter_optim, x0=x0)
+        if (nopt is not None) or (x0 is not None):
+            self.run(nopt=nopt, x0=x0)
 
-    def run(self, iter_optim=1, x0=None):
+    def run(self, nopt=1, x0=None):
         """
         Run the maximum likelihood estimation procedure.
 
         This function runs the optimization and updates the mle and max_log_like attributes of the class. When learning
         the parameters of a distribution, if dist_object possesses an mle method this method is leveraged. If `x0` or
-        `iter_optim` are given when creating the MLEstimation object, this method is called directly when the object is
+        `nopt` are given when creating the MLEstimation object, this method is called directly when the object is
         created.
 
         **Inputs:**
 
         * **x0** (`ndarray`):
             Initial guess(es) for optimization, ndarray of shape (nstarts, nparams) or (nparams, ), where nstarts is
-            the number of times the optimizer will be called. Alternatively, the user can provide input iter_optim to
+            the number of times the optimizer will be called. Alternatively, the user can provide input nopt to
             randomly samples initial guess(es). The identified MLE is the one that yields the maximum log likelihood
             over all calls of the optimizer.
 
-        * **iter_optim** (`int`):
+        * **nopt** (`int`):
             Number of iterations that the optimization is run, starting at random initial guesses. It is only used if
             `x0` is not provided. Default is 1.
 
@@ -387,9 +387,9 @@ class MLEstimation:
 
         # Case 3: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization below.
         if (self.inference_model.dist_object is not None) and hasattr(self.inference_model.dist_object, 'fit'):
-            if not (isinstance(iter_optim, int) and iter_optim >= 1):
-                raise ValueError('iter_optim should be an integer >= 1.')
-            for _ in range(iter_optim):
+            if not (isinstance(nopt, int) and nopt >= 1):
+                raise ValueError('nopt should be an integer >= 1.')
+            for _ in range(nopt):
                 self.inference_model.dist_object.update_params(
                     **{key: None for key in self.inference_model.list_params})
                 mle_dict = self.inference_model.dist_object.fit(data=self.data)
@@ -407,9 +407,9 @@ class MLEstimation:
         # Otherwise run optimization
         else:
             if x0 is None:
-                if not (isinstance(iter_optim, int) and iter_optim >= 1):
-                    raise ValueError('UQpy: iter_optim should be an integer >= 1.')
-                x0 = np.random.rand(iter_optim, self.inference_model.nparams)
+                if not (isinstance(nopt, int) and nopt >= 1):
+                    raise ValueError('UQpy: nopt should be an integer >= 1.')
+                x0 = np.random.rand(nopt, self.inference_model.nparams)
                 if 'bounds' in self.kwargs_optimizer.keys():
                     bounds = np.array(self.kwargs_optimizer['bounds'])
                     x0 = bounds[:, 0].reshape((1, -1)) + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) * x0
@@ -487,10 +487,12 @@ class BayesParameterEstimation:
         Class instance, must be a subclass of ``MCMC`` or ``IS``.
 
     * **kwargs_sampler**:
-        Key-word arguments of the sampling class.
+        Key-word arguments of the sampling class, see ``SampleMethods.MCMC`` or ``SampleMethods.IS``.
 
-    * **nchains**:
-        Number of chains in MCMC, will be used to sample seed from prior if seed is not provided. Default is 1.
+        Note on the seed for MCMC: if input `seed` is not provided, a seed (`ndarray` of shape (nchains, dimension)) is
+        sampled from the prior pdf, which must have an `rvs` method.
+
+        Note on the proposal for IS: if no input `proposal` is provided, the prior is used as proposal.
 
     * **nsamples** (`int`):
         Number of samples used in MCMC/IS, see `run` method.
@@ -531,7 +533,7 @@ class BayesParameterEstimation:
                 if self.inference_model.prior is None or not hasattr(self.inference_model.prior, 'rvs'):
                     raise NotImplementedError('UQpy: A prior with a rvs method or a seed must be provided for MCMC.')
                 else:
-                    kwargs_sampler['seed'] = self.inference_model.prior.rvs(nsamples=nchains)
+                    kwargs_sampler['seed'] = self.inference_model.prior.rvs(nsamples=kwargs_sampler['nchains'])
             self.sampler = sampling_class(
                 dimension=self.inference_model.nparams, verbose=self.verbose,
                 log_pdf_target=self.inference_model.evaluate_log_posterior, args_target=(self.data, ),
@@ -605,7 +607,7 @@ class InfoModelSelection:
     >>> m1 = InferenceModel(dist_object=Exponential(loc=None, scale=None), nparams=2, name='exponential')
     >>> data = np.array([[0.98948677], [1.68020571], [2.45840788]])
     >>> selector = InfoModelSelection(candidate_models=[m0, m1], data=data, criterion='BIC')
-    >>> selector.run(iter_optim=3)
+    >>> selector.run(nopt=3)
     >>> print(selector.ml_estimators[0].mle)
     [ 3.95134934e+02 -1.01996273e+01  3.01344306e-02]
     >>> print(selector.ml_estimators[1].mle)
@@ -633,10 +635,10 @@ class InfoModelSelection:
     * **x0** (`list` of `ndarrays`):
         Starting points for optimization - see MLEstimation
 
-    * **iter_optim** (`list` of `int`):
+    * **nopt** (`list` of `int`):
         Number of iterations for the maximization procedure - see MLEstimation
 
-    If `x0` and `iter_optim` are both None, the object is created but the model selection procedure is not run, one
+    If `x0` and `nopt` are both None, the object is created but the model selection procedure is not run, one
     must then call the `run` method.
 
     **Attributes:**
@@ -658,7 +660,7 @@ class InfoModelSelection:
     """
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
-    def __init__(self, candidate_models, data, criterion='AIC', verbose=False, iter_optim=None, x0=None, **kwargs):
+    def __init__(self, candidate_models, data, criterion='AIC', verbose=False, nopt=None, x0=None, **kwargs):
 
         # Check inputs
         # candidate_models is a list of InferenceModel objects
@@ -681,7 +683,7 @@ class InfoModelSelection:
         for i, inference_model in enumerate(self.candidate_models):
             kwargs_i = dict([(key, value[i]) for (key, value) in kwargs.items()])
             ml_estimator = MLEstimation(inference_model=inference_model, data=self.data, verbose=self.verbose,
-                                        x0=None, iter_optim=None, **kwargs_i, )
+                                        x0=None, nopt=None, **kwargs_i, )
             self.ml_estimators.append(ml_estimator)
 
         # Initialize the outputs
@@ -690,10 +692,10 @@ class InfoModelSelection:
         self.probabilities = [None] * self.nmodels
 
         # Run the model selection procedure
-        if (iter_optim is not None) or (x0 is not None):
-            self.run(iter_optim=iter_optim, x0=x0)
+        if (nopt is not None) or (x0 is not None):
+            self.run(nopt=nopt, x0=x0)
 
-    def run(self, iter_optim=1, x0=None):
+    def run(self, nopt=1, x0=None):
         """
         Run the model selection procedure, i.e. compute criterion value for all models.
 
@@ -703,19 +705,19 @@ class InfoModelSelection:
         **Inputs:**
 
         * **x0** (`list` of `ndarrays`):
-            Starting point(s) for optimization for all models. Default is None. If not provided, see `iter_optim`. See
+            Starting point(s) for optimization for all models. Default is None. If not provided, see `nopt`. See
             ``MLEstimation`` class.
 
-        * **iter_optim** (`int` or `list` of `ints`):
+        * **nopt** (`int` or `list` of `ints`):
             Number of iterations that the optimization is run, starting at random initial guesses. It is only used if
             `x0` is not provided. Default is 1. See ``MLEstimation`` class.
 
         """
-        # Check inputs x0, iter_optim
-        if isinstance(iter_optim, int) or iter_optim is None:
-            iter_optim = [iter_optim] * self.nmodels
-        if not (isinstance(iter_optim, list) and len(iter_optim) == self.nmodels):
-            raise ValueError('UQpy: iter_optim should be an int or list of length nmodels')
+        # Check inputs x0, nopt
+        if isinstance(nopt, int) or nopt is None:
+            nopt = [nopt] * self.nmodels
+        if not (isinstance(nopt, list) and len(nopt) == self.nmodels):
+            raise ValueError('UQpy: nopt should be an int or list of length nmodels')
         if x0 is None:
             x0 = [None] * self.nmodels
         if not (isinstance(x0, list) and len(x0) == self.nmodels):
@@ -724,7 +726,7 @@ class InfoModelSelection:
         # Loop over all the models
         for i, (inference_model, ml_estimator) in enumerate(zip(self.candidate_models, self.ml_estimators)):
             # First evaluate ML estimate for all models, do several iterations if demanded
-            ml_estimator.run(iter_optim=iter_optim[i], x0=x0[i])
+            ml_estimator.run(nopt=nopt[i], x0=x0[i])
 
             # Then minimize the criterion
             self.criterion_values[i], self.penalty_terms[i] = self._compute_info_criterion(
