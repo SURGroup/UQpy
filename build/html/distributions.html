@@ -7,12 +7,12 @@
     <title>Distributions &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="SampleMethods" href="samplemethods.html" />
@@ -224,14 +224,21 @@ object itself can be passed directly.</p>
 </li>
 </ul>
 </dd>
-<dt><strong>moments</strong> <em>()</em></dt><dd><p>Compute the first four non-central moments of a distribution.</p>
+<dt><strong>moments</strong> <em>(moments2return=’mvsk’)</em></dt><dd><p>Computes the mean ‘m’, variance/covariance (‘v’), skewness (‘s’) and/or kurtosis (‘k’) of the distribution.</p>
 <p>For a univariate distribution, mean, variance, skewness and kurtosis are returned. For a multivariate
-distribution, the mean vector, covariance and vectors of marginal skewness and marginal kurtosis are returned.
-If a given moment cannot be computed, None is returned in its place.</p>
+distribution, the mean vector, covariance and vectors of marginal skewness and marginal kurtosis are returned.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>moments2return</strong> (<cite>str</cite>):</dt><dd><p>Indicates which moments are to be returned (mean, variance, skewness and/or kurtosis). Default is ‘mvsk’.</p>
+</dd>
+</dl>
+</li>
+</ul>
 <p><strong>Output/Returns:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt>(<cite>tuple</cite>):</dt><dd><p><code class="docutils literal notranslate"><span class="pre">mean</span></code>: mean, <code class="docutils literal notranslate"><span class="pre">var</span></code>:  covariance, <code class="docutils literal notranslate"><span class="pre">skew</span></code>: skewness, <code class="docutils literal notranslate"><span class="pre">kurt</span></code>: kurtosis.</p>
+<dt>(<cite>tuple</cite>):</dt><dd><p><code class="docutils literal notranslate"><span class="pre">mean</span></code>: mean, <code class="docutils literal notranslate"><span class="pre">var</span></code>:  variance/covariance, <code class="docutils literal notranslate"><span class="pre">skew</span></code>: skewness, <code class="docutils literal notranslate"><span class="pre">kurt</span></code>: kurtosis.</p>
 </dd>
 </dl>
 </li>
@@ -939,14 +946,14 @@ Note that a and b are defined over the domain of the standard normal.</p>
 </ul>
 <p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Multinomial</span></code>:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">pmf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pmf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pmf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pmf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>.</p></li>
 </ul>
 </dd></dl>
 
 <dl class="class">
 <dt id="UQpy.Distributions.MVNormal">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">MVNormal</code><span class="sig-paren">(</span><em class="sig-param">mean</em>, <em class="sig-param">cov=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#MVNormal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.MVNormal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Multivariate normal distrbution having probability density function</p>
+<dd><p>Multivariate normal distribution having probability density function</p>
 <div class="math notranslate nohighlight">
 \[f(x) = \dfrac{1}{\sqrt{(2\pi)^k\det\Sigma}}\exp{-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)}\]</div>
 <p>where <span class="math notranslate nohighlight">\(\mu\)</span> is the mean vector, <span class="math notranslate nohighlight">\(\Sigma\)</span> is the covariance matrix, and <span class="math notranslate nohighlight">\(k\)</span> is the dimension of
@@ -966,7 +973,7 @@ Note that a and b are defined over the domain of the standard normal.</p>
 </ul>
 <p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">MVNormal</span></code>:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>.</p></li>
 </ul>
 </dd></dl>
 
@@ -1272,7 +1279,7 @@ checks that marginals is of length 2 and continuous, and raise an error if that 
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1281,7 +1288,7 @@ checks that marginals is of length 2 and continuous, and raise an error if that 
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

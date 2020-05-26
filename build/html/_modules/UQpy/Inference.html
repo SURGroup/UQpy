@@ -7,12 +7,12 @@
     <title>UQpy.Inference &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -311,7 +311,7 @@
 
 <span class="sd">    &gt;&gt;&gt; candidate_model = InferenceModel(nparams=2, dist_object=Normal(loc=None, scale=None))</span>
 <span class="sd">    &gt;&gt;&gt; data = np.array([0.2, -0.3, 0.01]).reshape((-1, 1))</span>
-<span class="sd">    &gt;&gt;&gt; ml_estimator = MLEstimation(inference_model=candidate_model, data=data, iter_optim=2)</span>
+<span class="sd">    &gt;&gt;&gt; ml_estimator = MLEstimation(inference_model=candidate_model, data=data, nopt=2)</span>
 <span class="sd">    &gt;&gt;&gt; print(ml_estimator.mle)</span>
 <span class="sd">    [-0.03        0.20607442]</span>
 <span class="sd">    &gt;&gt;&gt; print(ml_estimator.max_log_like)</span>
@@ -343,11 +343,11 @@
 <span class="sd">    * **x0** (`ndarray`):</span>
 <span class="sd">        Starting point(s) for optimization, see `run_estimation`. Default is None.</span>
 
-<span class="sd">    * **iter_optim** (`int`):</span>
+<span class="sd">    * **nopt** (`int`):</span>
 <span class="sd">        Number of iterations that the optimization is run, starting at random initial guesses. See `run_estiamtion`.</span>
 <span class="sd">        Default is None.</span>
 
-<span class="sd">    If both `x0` and `iter_optim` are None, the object is created but the optimization procedure is not run, one must</span>
+<span class="sd">    If both `x0` and `nopt` are None, the object is created but the optimization procedure is not run, one must</span>
 <span class="sd">    call the run method.</span>
 
 <span class="sd">    **Attributes:**</span>
@@ -364,7 +364,7 @@
     <span class="c1"># Authors: Audrey Olivier, Dimitris Giovanis</span>
     <span class="c1"># Last Modified: 12/19 by Audrey Olivier</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inference_model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">iter_optim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inference_model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs_optimizer</span><span class="p">):</span>
 
         <span class="c1"># Initialize variables</span>
@@ -387,27 +387,27 @@
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Initialization of MLEstimation object completed.&#39;</span><span class="p">)</span>
 
         <span class="c1"># Run the optimization procedure</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">iter_optim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">x0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">iter_optim</span><span class="o">=</span><span class="n">iter_optim</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">nopt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">x0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nopt</span><span class="o">=</span><span class="n">nopt</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MLEstimation.run"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.MLEstimation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iter_optim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MLEstimation.run"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.MLEstimation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the maximum likelihood estimation procedure.</span>
 
 <span class="sd">        This function runs the optimization and updates the mle and max_log_like attributes of the class. When learning</span>
 <span class="sd">        the parameters of a distribution, if dist_object possesses an mle method this method is leveraged. If `x0` or</span>
-<span class="sd">        `iter_optim` are given when creating the MLEstimation object, this method is called directly when the object is</span>
+<span class="sd">        `nopt` are given when creating the MLEstimation object, this method is called directly when the object is</span>
 <span class="sd">        created.</span>
 
 <span class="sd">        **Inputs:**</span>
 
 <span class="sd">        * **x0** (`ndarray`):</span>
 <span class="sd">            Initial guess(es) for optimization, ndarray of shape (nstarts, nparams) or (nparams, ), where nstarts is</span>
-<span class="sd">            the number of times the optimizer will be called. Alternatively, the user can provide input iter_optim to</span>
+<span class="sd">            the number of times the optimizer will be called. Alternatively, the user can provide input nopt to</span>
 <span class="sd">            randomly samples initial guess(es). The identified MLE is the one that yields the maximum log likelihood</span>
 <span class="sd">            over all calls of the optimizer.</span>
 
-<span class="sd">        * **iter_optim** (`int`):</span>
+<span class="sd">        * **nopt** (`int`):</span>
 <span class="sd">            Number of iterations that the optimization is run, starting at random initial guesses. It is only used if</span>
 <span class="sd">            `x0` is not provided. Default is 1.</span>
 
@@ -421,9 +421,9 @@
 
         <span class="c1"># Case 3: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization below.</span>
         <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">dist_object</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="s1">&#39;fit&#39;</span><span class="p">):</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">iter_optim</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">iter_optim</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;iter_optim should be an integer &gt;= 1.&#39;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iter_optim</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">nopt</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">nopt</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;nopt should be an integer &gt;= 1.&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nopt</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">update_params</span><span class="p">(</span>
                     <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">list_params</span><span class="p">})</span>
                 <span class="n">mle_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
@@ -441,9 +441,9 @@
         <span class="c1"># Otherwise run optimization</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">iter_optim</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">iter_optim</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: iter_optim should be an integer &gt;= 1.&#39;</span><span class="p">)</span>
-                <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">iter_optim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">nparams</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">nopt</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">nopt</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: nopt should be an integer &gt;= 1.&#39;</span><span class="p">)</span>
+                <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">nopt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">nparams</span><span class="p">)</span>
                 <span class="k">if</span> <span class="s1">&#39;bounds&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs_optimizer</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                     <span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs_optimizer</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">])</span>
                     <span class="n">x0</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="n">bounds</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">x0</span>
@@ -521,10 +521,12 @@
 <span class="sd">        Class instance, must be a subclass of ``MCMC`` or ``IS``.</span>
 
 <span class="sd">    * **kwargs_sampler**:</span>
-<span class="sd">        Key-word arguments of the sampling class.</span>
+<span class="sd">        Key-word arguments of the sampling class, see ``SampleMethods.MCMC`` or ``SampleMethods.IS``.</span>
 
-<span class="sd">    * **nchains**:</span>
-<span class="sd">        Number of chains in MCMC, will be used to sample seed from prior if seed is not provided. Default is 1.</span>
+<span class="sd">        Note on the seed for MCMC: if input `seed` is not provided, a seed (`ndarray` of shape (nchains, dimension)) is</span>
+<span class="sd">        sampled from the prior pdf, which must have an `rvs` method.</span>
+
+<span class="sd">        Note on the proposal for IS: if no input `proposal` is provided, the prior is used as proposal.</span>
 
 <span class="sd">    * **nsamples** (`int`):</span>
 <span class="sd">        Number of samples used in MCMC/IS, see `run` method.</span>
@@ -548,7 +550,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Authors: Audrey Olivier, Dimitris Giovanis</span>
     <span class="c1"># Last Modified: 12/19 by Audrey Olivier</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inference_model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sampling_class</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nchains</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inference_model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sampling_class</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_sampler</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span> <span class="o">=</span> <span class="n">inference_model</span>
@@ -565,7 +567,7 @@
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">prior</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">prior</span><span class="p">,</span> <span class="s1">&#39;rvs&#39;</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;UQpy: A prior with a rvs method or a seed must be provided for MCMC.&#39;</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">kwargs_sampler</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nchains</span><span class="p">)</span>
+                    <span class="n">kwargs_sampler</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">kwargs_sampler</span><span class="p">[</span><span class="s1">&#39;nchains&#39;</span><span class="p">])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span> <span class="o">=</span> <span class="n">sampling_class</span><span class="p">(</span>
                 <span class="n">dimension</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">nparams</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
                 <span class="n">log_pdf_target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">evaluate_log_posterior</span><span class="p">,</span> <span class="n">args_target</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="p">),</span>
@@ -639,7 +641,7 @@
 <span class="sd">    &gt;&gt;&gt; m1 = InferenceModel(dist_object=Exponential(loc=None, scale=None), nparams=2, name=&#39;exponential&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; data = np.array([[0.98948677], [1.68020571], [2.45840788]])</span>
 <span class="sd">    &gt;&gt;&gt; selector = InfoModelSelection(candidate_models=[m0, m1], data=data, criterion=&#39;BIC&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; selector.run(iter_optim=3)</span>
+<span class="sd">    &gt;&gt;&gt; selector.run(nopt=3)</span>
 <span class="sd">    &gt;&gt;&gt; print(selector.ml_estimators[0].mle)</span>
 <span class="sd">    [ 3.95134934e+02 -1.01996273e+01  3.01344306e-02]</span>
 <span class="sd">    &gt;&gt;&gt; print(selector.ml_estimators[1].mle)</span>
@@ -661,16 +663,17 @@
 
 <span class="sd">        Keys must refer to input names to the ``MLEstimation`` class, and values must be lists of length nmodels,</span>
 <span class="sd">        ordered in the same way as input `candidate_models`. For example, setting</span>
-<span class="sd">        `kwargs={`method&#39;: [`Nelder-Mead&#39;, `Powell&#39;]}` means that the Nelder-Mead minimization algorithm will be used for</span>
-<span class="sd">        ML estimation of the first candidate model, while the Powell method will be used for the second candidate model.</span>
+<span class="sd">        `kwargs={`method&#39;: [`Nelder-Mead&#39;, `Powell&#39;]}` means that the Nelder-Mead minimization algorithm will be used</span>
+<span class="sd">        for ML estimation of the first candidate model, while the Powell method will be used for the second candidate</span>
+<span class="sd">        model.</span>
 
 <span class="sd">    * **x0** (`list` of `ndarrays`):</span>
 <span class="sd">        Starting points for optimization - see MLEstimation</span>
 
-<span class="sd">    * **iter_optim** (`list` of `int`):</span>
+<span class="sd">    * **nopt** (`list` of `int`):</span>
 <span class="sd">        Number of iterations for the maximization procedure - see MLEstimation</span>
 
-<span class="sd">    If `x0` and `iter_optim` are both None, the object is created but the model selection procedure is not run, one</span>
+<span class="sd">    If `x0` and `nopt` are both None, the object is created but the model selection procedure is not run, one</span>
 <span class="sd">    must then call the `run` method.</span>
 
 <span class="sd">    **Attributes:**</span>
@@ -692,7 +695,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Authors: Audrey Olivier, Dimitris Giovanis</span>
     <span class="c1"># Last Modified: 12/19 by Audrey Olivier</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate_models</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;AIC&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">iter_optim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate_models</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;AIC&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="c1"># Check inputs</span>
         <span class="c1"># candidate_models is a list of InferenceModel objects</span>
@@ -715,19 +718,19 @@
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inference_model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span><span class="p">):</span>
             <span class="n">kwargs_i</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
             <span class="n">ml_estimator</span> <span class="o">=</span> <span class="n">MLEstimation</span><span class="p">(</span><span class="n">inference_model</span><span class="o">=</span><span class="n">inference_model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
-                                        <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iter_optim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_i</span><span class="p">,</span> <span class="p">)</span>
+                                        <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_i</span><span class="p">,</span> <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ml_estimators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ml_estimator</span><span class="p">)</span>
 
         <span class="c1"># Initialize the outputs</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">criterion_values</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">penalty_terms</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">criterion_values</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">penalty_terms</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
 
         <span class="c1"># Run the model selection procedure</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">iter_optim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">x0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">iter_optim</span><span class="o">=</span><span class="n">iter_optim</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">nopt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">x0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nopt</span><span class="o">=</span><span class="n">nopt</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">)</span>
 
-<div class="viewcode-block" id="InfoModelSelection.run"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.InfoModelSelection.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iter_optim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="InfoModelSelection.run"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.InfoModelSelection.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the model selection procedure, i.e. compute criterion value for all models.</span>
 
@@ -737,19 +740,19 @@
 <span class="sd">        **Inputs:**</span>
 
 <span class="sd">        * **x0** (`list` of `ndarrays`):</span>
-<span class="sd">            Starting point(s) for optimization for all models. Default is None. If not provided, see `iter_optim`. See</span>
+<span class="sd">            Starting point(s) for optimization for all models. Default is None. If not provided, see `nopt`. See</span>
 <span class="sd">            ``MLEstimation`` class.</span>
 
-<span class="sd">        * **iter_optim** (`int` or `list` of `ints`):</span>
+<span class="sd">        * **nopt** (`int` or `list` of `ints`):</span>
 <span class="sd">            Number of iterations that the optimization is run, starting at random initial guesses. It is only used if</span>
 <span class="sd">            `x0` is not provided. Default is 1. See ``MLEstimation`` class.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Check inputs x0, iter_optim</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iter_optim</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">iter_optim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">iter_optim</span> <span class="o">=</span> <span class="p">[</span><span class="n">iter_optim</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">iter_optim</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">iter_optim</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: iter_optim should be an int or list of length nmodels&#39;</span><span class="p">)</span>
+        <span class="c1"># Check inputs x0, nopt</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nopt</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">nopt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nopt</span> <span class="o">=</span> <span class="p">[</span><span class="n">nopt</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">nopt</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">nopt</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: nopt should be an int or list of length nmodels&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">x0</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span><span class="p">):</span>
@@ -758,7 +761,7 @@
         <span class="c1"># Loop over all the models</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">inference_model</span><span class="p">,</span> <span class="n">ml_estimator</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ml_estimators</span><span class="p">)):</span>
             <span class="c1"># First evaluate ML estimate for all models, do several iterations if demanded</span>
-            <span class="n">ml_estimator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">iter_optim</span><span class="o">=</span><span class="n">iter_optim</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">ml_estimator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nopt</span><span class="o">=</span><span class="n">nopt</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 
             <span class="c1"># Then minimize the criterion</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">criterion_values</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">penalty_terms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_info_criterion</span><span class="p">(</span>
@@ -816,11 +819,11 @@
 
 <span class="sd">        **Output/Returns:**</span>
 
-<span class="sd">        :param criterion_value: Value of criterion.</span>
-<span class="sd">        :type criterion_value: float</span>
+<span class="sd">        :return criterion_value: Value of criterion.</span>
+<span class="sd">        :rtype criterion_value: float</span>
 
-<span class="sd">        :param penalty_term: Value of penalty term.</span>
-<span class="sd">        :type penalty_term: float</span>
+<span class="sd">        :return penalty_term: Value of penalty term.</span>
+<span class="sd">        :rtype penalty_term: float</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -853,8 +856,8 @@
 
 <span class="sd">        **Output/Returns:**</span>
 
-<span class="sd">        :param probabilities: Values of model probabilities</span>
-<span class="sd">        :type probabilities: list (length nmodels) of floats</span>
+<span class="sd">        :return probabilities: Values of model probabilities</span>
+<span class="sd">        :rtype probabilities: list (length nmodels) of floats</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -1064,12 +1067,12 @@
 
 <span class="sd">        **Output/Returns:**</span>
 
-<span class="sd">        :param evidence: Value of evidence p(data|M).</span>
-<span class="sd">        :type evidence: float</span>
+<span class="sd">        :return evidence: Value of evidence p(data|M).</span>
+<span class="sd">        :rtype evidence: float</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">method_evidence_computation</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;harmonic_mean&#39;</span><span class="p">:</span>
-            <span class="c1">#samples[int(0.5 * len(samples)):]</span>
+            <span class="c1"># samples[int(0.5 * len(samples)):]</span>
             <span class="n">log_likelihood_values</span> <span class="o">=</span> <span class="n">log_posterior_values</span> <span class="o">-</span> <span class="n">inference_model</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">log_pdf</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">posterior_samples</span><span class="p">)</span>
             <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_likelihood_values</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1094,8 +1097,8 @@
 
 <span class="sd">        **Output/Returns:**</span>
 
-<span class="sd">        :param probabilities: Values of model posterior probabilities</span>
-<span class="sd">        :type probabilities: list (length nmodels) of floats</span>
+<span class="sd">        :return probabilities: Values of model posterior probabilities</span>
+<span class="sd">        :rtype probabilities: list (length nmodels) of floats</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">scaled_evidences</span> <span class="o">=</span> <span class="p">[</span><span class="n">evi</span> <span class="o">*</span> <span class="n">prior_prob</span> <span class="k">for</span> <span class="p">(</span><span class="n">evi</span><span class="p">,</span> <span class="n">prior_prob</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">evidence_values</span><span class="p">,</span> <span class="n">prior_probabilities</span><span class="p">)]</span>
@@ -1165,7 +1168,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1174,7 +1177,7 @@
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

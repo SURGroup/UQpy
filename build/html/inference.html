@@ -7,12 +7,12 @@
     <title>Inference &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Dimension reduction" href="dimension_reduction.html" />
@@ -80,7 +80,7 @@ with the likelihood function definition.</p></li>
 (ndata, dim) and consists in ndata iid samples from pi. The user must define the distribution_object input. The
 following lines of code show how to create an object for case 3:</p></li>
 </ul>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">candidate_model</span> <span class="o">=</span> <span class="n">InferenceModel</span><span class="p">(</span><span class="n">nparams</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">distribution_object</span><span class="o">=</span><span class="n">dist</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -222,11 +222,11 @@ possess a prior, an uninformative prior <cite>p(params)=1</cite> is assumed.</p>
 <h3>Class Descriptions<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.Inference.MLEstimation">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">MLEstimation</code><span class="sig-paren">(</span><em class="sig-param">inference_model</em>, <em class="sig-param">data</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">iter_optim=None</em>, <em class="sig-param">x0=None</em>, <em class="sig-param">optimizer=None</em>, <em class="sig-param">**kwargs_optimizer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#MLEstimation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.MLEstimation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">MLEstimation</code><span class="sig-paren">(</span><em class="sig-param">inference_model</em>, <em class="sig-param">data</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">nopt=None</em>, <em class="sig-param">x0=None</em>, <em class="sig-param">optimizer=None</em>, <em class="sig-param">**kwargs_optimizer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#MLEstimation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.MLEstimation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate the maximum likelihood estimate of a model given some data.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">candidate_model</span> <span class="o">=</span> <span class="n">InferenceModel</span><span class="p">(</span><span class="n">nparams</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dist_object</span><span class="o">=</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">candidate_model</span> <span class="o">=</span> <span class="n">InferenceModel</span><span class="p">(</span><span class="n">nparams</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dist_object</span><span class="o">=</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ml_estimator</span> <span class="o">=</span> <span class="n">MLEstimation</span><span class="p">(</span><span class="n">inference_model</span><span class="o">=</span><span class="n">candidate_model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">iter_optim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ml_estimator</span> <span class="o">=</span> <span class="n">MLEstimation</span><span class="p">(</span><span class="n">inference_model</span><span class="o">=</span><span class="n">candidate_model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ml_estimator</span><span class="o">.</span><span class="n">mle</span><span class="p">)</span>
 <span class="go">[-0.03        0.20607442]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ml_estimator</span><span class="o">.</span><span class="n">max_log_like</span><span class="p">)</span>
@@ -269,13 +269,13 @@ the code as:</div>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>iter_optim</strong> (<cite>int</cite>):</dt><dd><p>Number of iterations that the optimization is run, starting at random initial guesses. See <cite>run_estiamtion</cite>.
+<dt><strong>nopt</strong> (<cite>int</cite>):</dt><dd><p>Number of iterations that the optimization is run, starting at random initial guesses. See <cite>run_estiamtion</cite>.
 Default is None.</p>
 </dd>
 </dl>
 </li>
 </ul>
-<p>If both <cite>x0</cite> and <cite>iter_optim</cite> are None, the object is created but the optimization procedure is not run, one must
+<p>If both <cite>x0</cite> and <cite>nopt</cite> are None, the object is created but the optimization procedure is not run, one must
 call the run method.</p>
 <p><strong>Attributes:</strong></p>
 <ul class="simple">
@@ -293,24 +293,24 @@ call the run method.</p>
 <p><strong>Methods:</strong></p>
 <dl class="method">
 <dt id="UQpy.Inference.MLEstimation.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">iter_optim=1</em>, <em class="sig-param">x0=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#MLEstimation.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.MLEstimation.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nopt=1</em>, <em class="sig-param">x0=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#MLEstimation.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.MLEstimation.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the maximum likelihood estimation procedure.</p>
 <p>This function runs the optimization and updates the mle and max_log_like attributes of the class. When learning
 the parameters of a distribution, if dist_object possesses an mle method this method is leveraged. If <cite>x0</cite> or
-<cite>iter_optim</cite> are given when creating the MLEstimation object, this method is called directly when the object is
+<cite>nopt</cite> are given when creating the MLEstimation object, this method is called directly when the object is
 created.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
 <li><dl class="simple">
 <dt><strong>x0</strong> (<cite>ndarray</cite>):</dt><dd><p>Initial guess(es) for optimization, ndarray of shape (nstarts, nparams) or (nparams, ), where nstarts is
-the number of times the optimizer will be called. Alternatively, the user can provide input iter_optim to
+the number of times the optimizer will be called. Alternatively, the user can provide input nopt to
 randomly samples initial guess(es). The identified MLE is the one that yields the maximum log likelihood
 over all calls of the optimizer.</p>
 </dd>
 </dl>
 </li>
 <li><dl>
-<dt><strong>iter_optim</strong> (<cite>int</cite>):</dt><dd><p>Number of iterations that the optimization is run, starting at random initial guesses. It is only used if
+<dt><strong>nopt</strong> (<cite>int</cite>):</dt><dd><p>Number of iterations that the optimization is run, starting at random initial guesses. It is only used if
 <cite>x0</cite> is not provided. Default is 1.</p>
 <p>The random initial guesses are sampled uniformly between 0 and 1, or uniformly between user-defined bounds
 if an input bounds is provided to the <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> object.</p>
@@ -337,11 +337,11 @@ if an input bounds is provided to the <code class="docutils literal notranslate"
 <h3>Class Descriptions<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.Inference.BayesParameterEstimation">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">BayesParameterEstimation</code><span class="sig-paren">(</span><em class="sig-param">inference_model</em>, <em class="sig-param">data</em>, <em class="sig-param">sampling_class=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">nchains=1</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">**kwargs_sampler</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#BayesParameterEstimation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.BayesParameterEstimation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">BayesParameterEstimation</code><span class="sig-paren">(</span><em class="sig-param">inference_model</em>, <em class="sig-param">data</em>, <em class="sig-param">sampling_class=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">**kwargs_sampler</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#BayesParameterEstimation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.BayesParameterEstimation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimate the parameter posterior density given some data.</p>
 <p>This class generates samples from the parameter posterior distribution, using MCMC or IS. It leverages the MCMC and
 IS classes from the SampleMethods module.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">JointInd</span><span class="p">,</span> <span class="n">Uniform</span><span class="p">,</span> <span class="n">Lognormal</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">JointInd</span><span class="p">,</span> <span class="n">Uniform</span><span class="p">,</span> <span class="n">Lognormal</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">prior</span> <span class="o">=</span> <span class="n">JointInd</span><span class="p">(</span><span class="n">marginals</span><span class="o">=</span><span class="p">[</span><span class="n">Uniform</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">15</span><span class="p">),</span> <span class="n">Lognormal</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">candidate_model</span> <span class="o">=</span> <span class="n">InferenceModel</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span> <span class="n">nparams</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">MH</span>
@@ -353,7 +353,7 @@ IS classes from the SampleMethods module.</p>
 </pre></div>
 </div>
 <p><strong>Inputs:</strong></p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
 <dt><strong>model</strong> (object of class <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code>):</dt><dd><p>The inference model that defines the likelihood function.</p>
 </dd>
@@ -369,13 +369,11 @@ IS classes from the SampleMethods module.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt><strong>kwargs_sampler</strong>:</dt><dd><p>Key-word arguments of the sampling class.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nchains</strong>:</dt><dd><p>Number of chains in MCMC, will be used to sample seed from prior if seed is not provided. Default is 1.</p>
+<li><dl>
+<dt><strong>kwargs_sampler</strong>:</dt><dd><p>Key-word arguments of the sampling class, see <code class="docutils literal notranslate"><span class="pre">SampleMethods.MCMC</span></code> or <code class="docutils literal notranslate"><span class="pre">SampleMethods.IS</span></code>.</p>
+<p>Note on the seed for MCMC: if input <cite>seed</cite> is not provided, a seed (<cite>ndarray</cite> of shape (nchains, dimension)) is
+sampled from the prior pdf, which must have an <cite>rvs</cite> method.</p>
+<p>Note on the proposal for IS: if no input <cite>proposal</cite> is provided, the prior is used as proposal.</p>
 </dd>
 </dl>
 </li>
@@ -446,17 +444,17 @@ distribution.</p>
 <h3>Class Descriptions<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.Inference.InfoModelSelection">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">InfoModelSelection</code><span class="sig-paren">(</span><em class="sig-param">candidate_models</em>, <em class="sig-param">data</em>, <em class="sig-param">criterion='AIC'</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">iter_optim=None</em>, <em class="sig-param">x0=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#InfoModelSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.InfoModelSelection" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">InfoModelSelection</code><span class="sig-paren">(</span><em class="sig-param">candidate_models</em>, <em class="sig-param">data</em>, <em class="sig-param">criterion='AIC'</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">nopt=None</em>, <em class="sig-param">x0=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#InfoModelSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.InfoModelSelection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform model selection using information theoretic criteria.</p>
 <p>Supported criteria are BIC, AIC (default), AICc. This class leverages the <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class for maximum
 likelihood estimation, thus inputs to <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> can also be provided to <code class="docutils literal notranslate"><span class="pre">InfoModelSelection</span></code>, as lists of
 length equal to the number of models.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">Exponential</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">Exponential</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m0</span> <span class="o">=</span> <span class="n">InferenceModel</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">Gamma</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span> <span class="n">nparams</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;gamma&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m1</span> <span class="o">=</span> <span class="n">InferenceModel</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">Exponential</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span> <span class="n">nparams</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;exponential&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.98948677</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.68020571</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.45840788</span><span class="p">]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">selector</span> <span class="o">=</span> <span class="n">InfoModelSelection</span><span class="p">(</span><span class="n">candidate_models</span><span class="o">=</span><span class="p">[</span><span class="n">m0</span><span class="p">,</span> <span class="n">m1</span><span class="p">],</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;BIC&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">selector</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">iter_optim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">selector</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nopt</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">selector</span><span class="o">.</span><span class="n">ml_estimators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mle</span><span class="p">)</span>
 <span class="go">[ 3.95134934e+02 -1.01996273e+01  3.01344306e-02]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">selector</span><span class="o">.</span><span class="n">ml_estimators</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mle</span><span class="p">)</span>
@@ -484,8 +482,9 @@ length equal to the number of models.</p>
 <dt><strong>kwargs</strong>:</dt><dd><p>Additional key-word inputs to the maximum likelihood estimators.</p>
 <p>Keys must refer to input names to the <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class, and values must be lists of length nmodels,
 ordered in the same way as input <cite>candidate_models</cite>. For example, setting
-<cite>kwargs={`method’: [`Nelder-Mead’, `Powell’]}</cite> means that the Nelder-Mead minimization algorithm will be used for
-ML estimation of the first candidate model, while the Powell method will be used for the second candidate model.</p>
+<cite>kwargs={`method’: [`Nelder-Mead’, `Powell’]}</cite> means that the Nelder-Mead minimization algorithm will be used
+for ML estimation of the first candidate model, while the Powell method will be used for the second candidate
+model.</p>
 </dd>
 </dl>
 </li>
@@ -495,12 +494,12 @@ ML estimation of the first candidate model, while the Powell method will be used
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>iter_optim</strong> (<cite>list</cite> of <cite>int</cite>):</dt><dd><p>Number of iterations for the maximization procedure - see MLEstimation</p>
+<dt><strong>nopt</strong> (<cite>list</cite> of <cite>int</cite>):</dt><dd><p>Number of iterations for the maximization procedure - see MLEstimation</p>
 </dd>
 </dl>
 </li>
 </ul>
-<p>If <cite>x0</cite> and <cite>iter_optim</cite> are both None, the object is created but the model selection procedure is not run, one
+<p>If <cite>x0</cite> and <cite>nopt</cite> are both None, the object is created but the model selection procedure is not run, one
 must then call the <cite>run</cite> method.</p>
 <p><strong>Attributes:</strong></p>
 <ul class="simple">
@@ -528,20 +527,20 @@ must then call the <cite>run</cite> method.</p>
 <p><strong>Methods:</strong></p>
 <dl class="method">
 <dt id="UQpy.Inference.InfoModelSelection.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">iter_optim=1</em>, <em class="sig-param">x0=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#InfoModelSelection.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.InfoModelSelection.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nopt=1</em>, <em class="sig-param">x0=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#InfoModelSelection.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.InfoModelSelection.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the model selection procedure, i.e. compute criterion value for all models.</p>
 <p>This function calls the <cite>run</cite> method of the MLEstimation object for each model to compute the maximum
 log-likelihood, then computes the criterion value and probability for each model.</p>
 <p><strong>Inputs:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>x0</strong> (<cite>list</cite> of <cite>ndarrays</cite>):</dt><dd><p>Starting point(s) for optimization for all models. Default is None. If not provided, see <cite>iter_optim</cite>. See
+<dt><strong>x0</strong> (<cite>list</cite> of <cite>ndarrays</cite>):</dt><dd><p>Starting point(s) for optimization for all models. Default is None. If not provided, see <cite>nopt</cite>. See
 <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>iter_optim</strong> (<cite>int</cite> or <cite>list</cite> of <cite>ints</cite>):</dt><dd><p>Number of iterations that the optimization is run, starting at random initial guesses. It is only used if
+<dt><strong>nopt</strong> (<cite>int</cite> or <cite>list</cite> of <cite>ints</cite>):</dt><dd><p>Number of iterations that the optimization is run, starting at random initial guesses. It is only used if
 <cite>x0</cite> is not provided. Default is 1. See <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class.</p>
 </dd>
 </dl>
@@ -778,7 +777,7 @@ is provided to help the user to easily visualize which model is the best.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -787,7 +786,7 @@ is provided to help the user to easily visualize which model is the best.</p>
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
