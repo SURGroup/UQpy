@@ -828,18 +828,73 @@ Note that a and b are defined over the domain of the standard normal.</p>
 <dt id="UQpy.Distributions.DistributionDiscrete1D">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">DistributionDiscrete1D</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#DistributionDiscrete1D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.DistributionDiscrete1D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parent class for univariate discrete distributions.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Binomial</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">Binomial</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Binomial</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">)</span>
-<span class="go">(&lt;class &#39;UQpy.Distributions.ScipyDiscrete&#39;&gt;,)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">))</span>
-<span class="go">[[3]</span>
-<span class="go"> [1]</span>
-<span class="go"> [1]]</span>
-</pre></div>
-</div>
 </dd></dl>
 
+<div class="section" id="id2">
+<h3>List of Distributions<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>The following is a list of all 1D continuous distributions currently available in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p>
+<dl class="class">
+<dt id="UQpy.Distributions.Binomial">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Binomial</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">p</em>, <em class="sig-param">loc=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Binomial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Binomial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Binomial distribution having probability mass function:</p>
+<div class="math notranslate nohighlight">
+\[f(x) = {n \choose x} p^x(1-p)^{n-x}\]</div>
+<p>for <span class="math notranslate nohighlight">\(x\in\{0, 1, 2, ..., n\}\)</span>.</p>
+<p>In this standard form <cite>(loc=0)</cite>. Use <cite>loc</cite> to shift the distribution. Specifically, this is equivalent to computing
+<span class="math notranslate nohighlight">\(f(y)\)</span> where <span class="math notranslate nohighlight">\(y=x-loc\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>n</strong> (<cite>int</cite>):</dt><dd><p>number of trials, integer &gt;= 0</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>p</strong> (<cite>float</cite>):</dt><dd><p>success probability for each trial, real number in [0, 1]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Binomial</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pmf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pmf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs,</span> <span class="pre">moments</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.Distributions.Poisson">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Poisson</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">loc=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Poisson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Poisson" title="Permalink to this definition">¶</a></dt>
+<dd><p>Poisson distribution having probability mass function:</p>
+<div class="math notranslate nohighlight">
+\[f(x) = \exp{(-\mu)}\dfrac{\mu^k}{k!}\]</div>
+<p>for <span class="math notranslate nohighlight">\(x\ge 0\)</span>.</p>
+<p>In this standard form <cite>(loc=0)</cite>. Use <cite>loc</cite> to shift the distribution. Specifically, this is equivalent to computing
+<span class="math notranslate nohighlight">\(f(y)\)</span> where <span class="math notranslate nohighlight">\(y=x-loc\)</span>.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>mu</strong> (<cite>float</cite>):</dt><dd><p>shape parameter</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The following methods are available for <code class="docutils literal notranslate"><span class="pre">Poisson</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pmf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pmf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+</div>
 </div>
 <div class="section" id="multivariate-distributions">
 <h2>Multivariate Distributions<a class="headerlink" href="#multivariate-distributions" title="Permalink to this headline">¶</a></h2>
@@ -1034,55 +1089,10 @@ would check that marginals is of length 2 and continuous, and raise an error if 
 </dd></dl>
 
 </div>
-<div class="section" id="id2">
-<h2>List of Distributions<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id3">
+<h2>List of Distributions<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="univariate-discrete">
 <h3>Univariate discrete<a class="headerlink" href="#univariate-discrete" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="UQpy.Distributions.Binomial">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Binomial</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">p</em>, <em class="sig-param">loc=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Binomial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Binomial" title="Permalink to this definition">¶</a></dt>
-<dd><p>Binomial distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>n</strong> (<cite>int</cite>):</dt><dd><p>number of trials, integer &gt;= 0</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>p</strong> (<cite>float</cite>):</dt><dd><p>success probability for each trial, real number in [0, 1]</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>The following methods are available for Binomial: <cite>cdf, pmf, log_pmf, icdf, rvs, moments</cite>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="UQpy.Distributions.Poisson">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Poisson</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">loc=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Poisson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Poisson" title="Permalink to this definition">¶</a></dt>
-<dd><p>Poisson distribution</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>mu</strong> (<cite>float</cite>):</dt><dd><p>shape parameter</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>loc</strong> (<cite>float</cite>):</dt><dd><p>location parameter</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>The following methods are available for Poisson: <cite>cdf, pmf, log_pmf, icdf, rvs, moments</cite>.</p>
-</dd></dl>
-
 </div>
 <div class="section" id="multivariate">
 <h3>Multivariate<a class="headerlink" href="#multivariate" title="Permalink to this headline">¶</a></h3>
@@ -1245,7 +1255,7 @@ that <cite>marginals</cite> consist of solely 2 continuous distributions).</p>
 <li class="toctree-l2"><a class="reference internal" href="#d-discrete-distributions">1D Discrete Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#multivariate-distributions">Multivariate Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#copula">Copula</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id2">List of Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">List of Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#list-of-copula">List of Copula</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#user-defined-distributions-and-copula">User-defined Distributions and Copula</a></li>
 </ul>

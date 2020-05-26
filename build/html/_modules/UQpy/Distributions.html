@@ -7,12 +7,12 @@
     <title>UQpy.Distributions &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -811,14 +811,6 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parent class for univariate discrete distributions.</span>
 
-<span class="sd">    &gt;&gt;&gt; from UQpy.Distributions import Binomial</span>
-<span class="sd">    &gt;&gt;&gt; dist = Binomial(n=5, p=0.4)</span>
-<span class="sd">    &gt;&gt;&gt; print(Binomial.__bases__)</span>
-<span class="sd">    (&lt;class &#39;UQpy.Distributions.ScipyDiscrete&#39;&gt;,)</span>
-<span class="sd">    &gt;&gt;&gt; print(dist.rvs(nsamples=3, random_state=123))</span>
-<span class="sd">    [[3]</span>
-<span class="sd">     [1]</span>
-<span class="sd">     [1]]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -845,7 +837,14 @@
 
 <div class="viewcode-block" id="Binomial"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Binomial">[docs]</a><span class="k">class</span> <span class="nc">Binomial</span><span class="p">(</span><span class="n">DistributionDiscrete1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Binomial distribution</span>
+<span class="sd">    Binomial distribution having probability mass function:</span>
+
+<span class="sd">    .. math:: f(x) = {n \choose x} p^x(1-p)^{n-x}</span>
+
+<span class="sd">    for :math:`x\in\{0, 1, 2, ..., n\}`.</span>
+
+<span class="sd">    In this standard form `(loc=0)`. Use `loc` to shift the distribution. Specifically, this is equivalent to computing</span>
+<span class="sd">    :math:`f(y)` where :math:`y=x-loc`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -856,7 +855,9 @@
 <span class="sd">    * **loc** (`float`):</span>
 <span class="sd">        location parameter</span>
 
-<span class="sd">    The following methods are available for Binomial: `cdf, pmf, log_pmf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for ``Binomial``:</span>
+
+<span class="sd">    * ``cdf``, ``pmf``, ``log_pmf``, ``icdf``, ``rvs, moments``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">))</span>
@@ -865,7 +866,14 @@
 
 <div class="viewcode-block" id="Poisson"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Poisson">[docs]</a><span class="k">class</span> <span class="nc">Poisson</span><span class="p">(</span><span class="n">DistributionDiscrete1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Poisson distribution</span>
+<span class="sd">    Poisson distribution having probability mass function:</span>
+
+<span class="sd">    .. math:: f(x) = \exp{(-\mu)}\dfrac{\mu^k}{k!}</span>
+
+<span class="sd">    for :math:`x\ge 0`.</span>
+
+<span class="sd">    In this standard form `(loc=0)`. Use `loc` to shift the distribution. Specifically, this is equivalent to computing</span>
+<span class="sd">    :math:`f(y)` where :math:`y=x-loc`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -874,7 +882,9 @@
 <span class="sd">    * **loc** (`float`):</span>
 <span class="sd">        location parameter</span>
 
-<span class="sd">    The following methods are available for Poisson: `cdf, pmf, log_pmf, icdf, rvs, moments`.</span>
+<span class="sd">    The following methods are available for ``Poisson``:</span>
+
+<span class="sd">    * ``cdf``, ``pmf``, ``log_pmf``, ``icdf``, ``rvs``, ``moments``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">))</span>
@@ -2573,7 +2583,7 @@
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -2582,7 +2592,7 @@
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

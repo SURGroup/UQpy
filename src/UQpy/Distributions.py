@@ -777,14 +777,6 @@ class DistributionDiscrete1D(Distribution):
     """
     Parent class for univariate discrete distributions.
 
-    >>> from UQpy.Distributions import Binomial
-    >>> dist = Binomial(n=5, p=0.4)
-    >>> print(Binomial.__bases__)
-    (<class 'UQpy.Distributions.ScipyDiscrete'>,)
-    >>> print(dist.rvs(nsamples=3, random_state=123))
-    [[3]
-     [1]
-     [1]]
     """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -811,7 +803,14 @@ class DistributionDiscrete1D(Distribution):
 
 class Binomial(DistributionDiscrete1D):
     """
-    Binomial distribution
+    Binomial distribution having probability mass function:
+
+    .. math:: f(x) = {n \choose x} p^x(1-p)^{n-x}
+
+    for :math:`x\in\{0, 1, 2, ..., n\}`.
+
+    In this standard form `(loc=0)`. Use `loc` to shift the distribution. Specifically, this is equivalent to computing
+    :math:`f(y)` where :math:`y=x-loc`.
 
     **Inputs:**
 
@@ -822,7 +821,9 @@ class Binomial(DistributionDiscrete1D):
     * **loc** (`float`):
         location parameter
 
-    The following methods are available for Binomial: `cdf, pmf, log_pmf, icdf, rvs, moments`.
+    The following methods are available for ``Binomial``:
+
+    * ``cdf``, ``pmf``, ``log_pmf``, ``icdf``, ``rvs, moments``.
     """
     def __init__(self, n, p, loc=0.):
         super().__init__(n=n, p=p, loc=loc, order_params=('n', 'p', 'loc'))
@@ -831,7 +832,14 @@ class Binomial(DistributionDiscrete1D):
 
 class Poisson(DistributionDiscrete1D):
     """
-    Poisson distribution
+    Poisson distribution having probability mass function:
+
+    .. math:: f(x) = \exp{(-\mu)}\dfrac{\mu^k}{k!}
+
+    for :math:`x\ge 0`.
+
+    In this standard form `(loc=0)`. Use `loc` to shift the distribution. Specifically, this is equivalent to computing
+    :math:`f(y)` where :math:`y=x-loc`.
 
     **Inputs:**
 
@@ -840,7 +848,9 @@ class Poisson(DistributionDiscrete1D):
     * **loc** (`float`):
         location parameter
 
-    The following methods are available for Poisson: `cdf, pmf, log_pmf, icdf, rvs, moments`.
+    The following methods are available for ``Poisson``:
+
+    * ``cdf``, ``pmf``, ``log_pmf``, ``icdf``, ``rvs``, ``moments``.
     """
     def __init__(self, mu, loc=0.):
         super().__init__(mu=mu, loc=loc, order_params=('mu', 'loc'))
@@ -855,16 +865,6 @@ class DistributionND(Distribution):
     """
     Parent class for multivariate probability distributions.
 
-    >>> from UQpy.Distributions import MVNormal
-    >>> print(MVNormal.__bases__)
-        (<class 'UQpy.Distributions.DistributionND'>,)
-    >>> dist = MVNormal(mean=[1., 2.], cov=[[4., -0.2], [-0.2, 1.]])
-    >>> print(dist.rvs(nsamples=5, random_state=123))
-        [[ 3.23569787  2.84449354]
-         [ 0.33525582  0.54456529]
-         [ 2.26521608  3.56007209]
-         [ 5.82251567  1.25292155]
-         [-1.58752203  1.30887881]]
     """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

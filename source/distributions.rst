@@ -67,6 +67,15 @@ In ``UQpy``, univariate discrete distributions inherit from the ``DistributionDi
 .. autoclass:: UQpy.Distributions.DistributionDiscrete1D
     :members: 
 	
+List of Distributions
+~~~~~~~~~~~~~~~~~~~~~~~~
+	
+The following is a list of all 1D continuous distributions currently available in ``UQpy``.
+
+.. autoclass:: UQpy.Distributions.Binomial
+
+.. autoclass:: UQpy.Distributions.Poisson
+	
 Multivariate Distributions
 ----------------------------------
 
@@ -102,9 +111,7 @@ List of Distributions
 Univariate discrete
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: UQpy.Distributions.Binomial
 
-.. autoclass:: UQpy.Distributions.Poisson
 
 Multivariate
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
