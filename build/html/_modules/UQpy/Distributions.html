@@ -66,6 +66,7 @@
 <span class="sd">- ``DistributionND``: Parent class to multivariate probability distributions.</span>
 <span class="sd">- ``Copula``: Parent class to copula to model dependency between marginals.</span>
 
+
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">importlib</span>
@@ -254,7 +255,11 @@
 
 <div class="viewcode-block" id="Distribution.update_params"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Distribution.update_params">[docs]</a>    <span class="k">def</span> <span class="nf">update_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Update the parameters of the ``Distribution`` object.</span>
+<span class="sd">        Update the parameters of a ``Distributions`` object.</span>
+
+<span class="sd">        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a</span>
+<span class="sd">        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the</span>
+<span class="sd">        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).</span>
 
 <span class="sd">        **Input:**</span>
 
@@ -269,7 +274,11 @@
 
 <div class="viewcode-block" id="Distribution.get_params"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Distribution.get_params">[docs]</a>    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the parameters of the distribution object.</span>
+<span class="sd">        Return the parameters of a ``Distributions`` object.</span>
+
+<span class="sd">        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a</span>
+<span class="sd">        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the</span>
+<span class="sd">        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).</span>
 
 <span class="sd">        **Output/Returns:**</span>
 
@@ -899,16 +908,6 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parent class for multivariate probability distributions.</span>
 
-<span class="sd">    &gt;&gt;&gt; from UQpy.Distributions import MVNormal</span>
-<span class="sd">    &gt;&gt;&gt; print(MVNormal.__bases__)</span>
-<span class="sd">        (&lt;class &#39;UQpy.Distributions.DistributionND&#39;&gt;,)</span>
-<span class="sd">    &gt;&gt;&gt; dist = MVNormal(mean=[1., 2.], cov=[[4., -0.2], [-0.2, 1.]])</span>
-<span class="sd">    &gt;&gt;&gt; print(dist.rvs(nsamples=5, random_state=123))</span>
-<span class="sd">        [[ 3.23569787  2.84449354]</span>
-<span class="sd">         [ 0.33525582  0.54456529]</span>
-<span class="sd">         [ 2.26521608  3.56007209]</span>
-<span class="sd">         [ 5.82251567  1.25292155]</span>
-<span class="sd">         [-1.58752203  1.30887881]]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -928,16 +927,23 @@
 
 <div class="viewcode-block" id="MVNormal"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.MVNormal">[docs]</a><span class="k">class</span> <span class="nc">MVNormal</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Multivariate normal</span>
+<span class="sd">    Multivariate normal distrbution having probability density function</span>
+
+<span class="sd">    .. math:: f(x) = \dfrac{1}{\sqrt{(2\pi)^k\det\Sigma}}\exp{-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)}</span>
+
+<span class="sd">    where :math:`\mu` is the mean vector, :math:`\Sigma` is the covariance matrix, and :math:`k` is the dimension of</span>
+<span class="sd">    `x`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
 <span class="sd">    * **mean** (`ndarray`):</span>
-<span class="sd">        mean vector, `ndarray` of shape (dimension, )</span>
+<span class="sd">        mean vector, `ndarray` of shape `(dimension, )`</span>
 <span class="sd">    * **cov** (`float` or `ndarray`):</span>
-<span class="sd">        covariance, `float` or `ndarray` of shape (dimension, ) or (dimension, dimension). Default is 1.</span>
+<span class="sd">        covariance, `float` or `ndarray` of shape `(dimension, )` or `(dimension, dimension)`. Default is 1.</span>
 
-<span class="sd">    The following methods are available for MVNormal: `pdf, log_pdf, rvs, fit`.</span>
+<span class="sd">    The following methods are available for ``MVNormal``:</span>
+
+<span class="sd">    * ``pdf``, ``log_pdf``, ``rvs``, ``fit``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
@@ -975,7 +981,11 @@
 
 <div class="viewcode-block" id="Multinomial"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Multinomial">[docs]</a><span class="k">class</span> <span class="nc">Multinomial</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Multinomial distribution</span>
+<span class="sd">    Multinomial distribution having probability mass function</span>
+
+<span class="sd">    .. math:: f(x) = \dfrac{n!}{x_1!\dots x_k!}p_1^{x_1}\dots p_k^{x_k}</span>
+
+<span class="sd">    for :math:`x=\{x_1,\dots,x_k\}` where each :math:`x_i` is a non-negative integer and :math:`\sum_i x_i = n`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -984,7 +994,9 @@
 <span class="sd">    * **p** (`array_like`):</span>
 <span class="sd">        probability of a trial falling into each category; should sum to 1</span>
 
-<span class="sd">    The following methods are available for MVNormal: `pmf, log_pmf, rvs`.</span>
+<span class="sd">    The following methods are available for ``Multinomial``:</span>
+
+<span class="sd">    * ``pmf``, ``log_pmf``, ``rvs``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
@@ -1006,7 +1018,7 @@
 
 <div class="viewcode-block" id="JointInd"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.JointInd">[docs]</a><span class="k">class</span> <span class="nc">JointInd</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Define a joint distribution from its independent marginals.</span>
+<span class="sd">    Define a joint distribution from its independent marginals. ``JointInd`` is a child class of ``DistributionND``.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -1014,25 +1026,14 @@
 <span class="sd">        list of ``DistributionContinuous1D`` or ``DistributionDiscrete1D`` objects that define the marginals.</span>
 
 <span class="sd">    Such a multivariate distribution possesses the following methods, on condition that all its univariate marginals</span>
-<span class="sd">    also possess them: `pdf, log_pdf, cdf, rvs, fit, moments`.</span>
+<span class="sd">    also possess them:</span>
+
+<span class="sd">    * ``pdf``, ``log_pdf``, ``cdf``, ``rvs``, ``fit``, ``moments``.</span>
 
 <span class="sd">    The parameters of the distribution are only stored as attributes of the marginal objects. However, the</span>
-<span class="sd">    *get_params* and *update_params* method can still be used for the joint. Note that for this puspose each parameter</span>
-<span class="sd">    of the joint is assigned a unique string identifier as key_index - where key is the parameter name and index the</span>
-<span class="sd">    index of the marginal (e.g., location parameter of the 2nd marginal is identified as loc_1).</span>
-
-<span class="sd">    &gt;&gt;&gt; from UQpy.Distributions import Normal, Lognormal, JointInd</span>
-<span class="sd">    &gt;&gt;&gt; marginals = [Normal(loc=2., scale=2.), Lognormal(s=1., loc=0., scale=np.exp(5))]</span>
-<span class="sd">    &gt;&gt;&gt; dist = JointInd(marginals=marginals)</span>
-<span class="sd">    &gt;&gt;&gt; print(dist.rvs(nsamples=3, random_state=123))</span>
-<span class="sd">    [[-1.71261207e-01  5.01174573e+01]</span>
-<span class="sd">     [ 3.99469089e+00  4.02359290e+02]</span>
-<span class="sd">     [ 2.56595700e+00  1.96955635e+02]]</span>
-<span class="sd">    &gt;&gt;&gt; print([m.params for m in marginals])</span>
-<span class="sd">    [{&#39;loc&#39;: 2.0, &#39;scale&#39;: 2.0}, {&#39;s&#39;: 1.0, &#39;loc&#39;: 0.0, &#39;scale&#39;: 148.4131591025766}]</span>
-<span class="sd">    &gt;&gt;&gt; dist.update_params(loc_1=1.)</span>
-<span class="sd">    &gt;&gt;&gt; print([m.params for m in marginals])</span>
-<span class="sd">    [{&#39;loc&#39;: 2.0, &#39;scale&#39;: 2.0}, {&#39;s&#39;: 1.0, &#39;loc&#39;: 1.0, &#39;scale&#39;: 148.4131591025766}]</span>
+<span class="sd">    *get_params* and *update_params* method can still be used for the joint. Note that, for this purpose, each parameter</span>
+<span class="sd">    of the joint is assigned a unique string identifier as `key_index` - where `key` is the parameter name and `index`</span>
+<span class="sd">    the index of the marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marginals</span><span class="p">):</span>
@@ -1123,7 +1124,11 @@
 
     <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the parameters of the joint distribution.</span>
+<span class="sd">        Return the parameters of a ``Distributions`` object.</span>
+
+<span class="sd">        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a</span>
+<span class="sd">        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the</span>
+<span class="sd">        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).</span>
 
 <span class="sd">        **Output/Returns:**</span>
 
@@ -1140,7 +1145,11 @@
 
     <span class="k">def</span> <span class="nf">update_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Update the parameters of the marginals.</span>
+<span class="sd">        Update the parameters of a ``Distributions`` object.</span>
+
+<span class="sd">        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a</span>
+<span class="sd">        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the</span>
+<span class="sd">        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).</span>
 
 <span class="sd">        **Input:**</span>
 
@@ -1161,7 +1170,8 @@
 
 <div class="viewcode-block" id="JointCopula"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.JointCopula">[docs]</a><span class="k">class</span> <span class="nc">JointCopula</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Define a joint distribution from a list of marginals and a copula to introduce dependency.</span>
+<span class="sd">    Define a joint distribution from a list of marginals and a copula to introduce dependency. ``JointCopula`` is a</span>
+<span class="sd">    child class of ``DistributionND``.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -1171,27 +1181,15 @@
 <span class="sd">    * **copula** (`object`):</span>
 <span class="sd">        object of class ``Copula``</span>
 
-<span class="sd">    Such a multivariate distribution may possess a `cdf, pdf` and `log_pdf` methods if the copula allows for it (i.e.,</span>
-<span class="sd">    if the copula possesses the necessary `evaluate_cdf` and `evaluate_pdf` methods).</span>
+<span class="sd">    A ``JointCopula`` distribution may possess a ``cdf``, ``pdf`` and ``log_pdf`` methods if the copula allows for it</span>
+<span class="sd">    (i.e., if the copula possesses the necessary ``evaluate_cdf`` and ``evaluate_pdf`` methods).</span>
 
 <span class="sd">    The parameters of the distribution are only stored as attributes of the marginals/copula objects. However, the</span>
-<span class="sd">    `get_params` and `update_params` method can still be used for the joint. Note that each parameter of the joint is</span>
-<span class="sd">    assigned a unique string identifier as key_index - where key is the parameter name and index the index of the</span>
-<span class="sd">    marginal (e.g., location parameter of the 2nd marginal is identified as loc_1); and key_c for copula parameters.</span>
+<span class="sd">    ``get_params`` and ``update_params`` methods can still be used for the joint. Note that each parameter of the joint</span>
+<span class="sd">    is assigned a unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of</span>
+<span class="sd">    the marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`); and `key_c` for copula</span>
+<span class="sd">    parameters.</span>
 
-<span class="sd">    &gt;&gt;&gt; from UQpy.Distributions import JointCopula, Normal, Gumbel</span>
-<span class="sd">    &gt;&gt;&gt; marginals = [Normal(loc=0., scale=1), Normal(loc=0., scale=1)]</span>
-<span class="sd">    &gt;&gt;&gt; copula = Gumbel(theta=3.)</span>
-<span class="sd">    &gt;&gt;&gt; dist = JointCopula(marginals=marginals, copula=copula)</span>
-<span class="sd">    &gt;&gt;&gt; print(dist.get_params())</span>
-<span class="sd">    {&#39;loc_0&#39;: 0., &#39;scale_0&#39;: 1., &#39;loc_1&#39;: 0., &#39;scale_1&#39;: 1., &#39;theta_c&#39;: 3.}</span>
-<span class="sd">    &gt;&gt;&gt; print(hasattr(dist, &#39;rvs&#39;))</span>
-<span class="sd">    False</span>
-<span class="sd">    &gt;&gt;&gt; print(dist.copula.params)</span>
-<span class="sd">    {&#39;theta&#39;: 3.0}</span>
-<span class="sd">    &gt;&gt;&gt; dist.update_params(theta_c=2.)</span>
-<span class="sd">    &gt;&gt;&gt; print(dist.copula.params)</span>
-<span class="sd">    {&#39;theta&#39;: 2.0}</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marginals</span><span class="p">,</span> <span class="n">copula</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -1249,7 +1247,11 @@
 
     <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the parameters of the joint distribution.</span>
+<span class="sd">        Return the parameters of a ``Distributions`` object.</span>
+
+<span class="sd">        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a</span>
+<span class="sd">        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the</span>
+<span class="sd">        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).</span>
 
 <span class="sd">        **Output/Returns:**</span>
 
@@ -1267,7 +1269,11 @@
 
     <span class="k">def</span> <span class="nf">update_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Update the parameters of the marginals and/or copula.</span>
+<span class="sd">        Update the parameters of a ``Distributions`` object.</span>
+
+<span class="sd">        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a</span>
+<span class="sd">        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the</span>
+<span class="sd">        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).</span>
 
 <span class="sd">        **Input:**</span>
 
@@ -1297,7 +1303,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define a copula for a multivariate distribution whose dependence structure is defined with a copula.</span>
 
-<span class="sd">    This class is used in support of the JointCopula distribution class.</span>
+<span class="sd">    This class is used in support of the ``JointCopula`` distribution class.</span>
 
 <span class="sd">    **Attributes:**</span>
 
@@ -1310,45 +1316,45 @@
 <span class="sd">    **Methods:**</span>
 
 <span class="sd">    **evaluate_cdf** *(unif)*</span>
-<span class="sd">        Compute the copula cdf C(u1, u2, ..., ud) for a d-variate uniform distribution.</span>
+<span class="sd">        Compute the copula cdf :math:`C(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.</span>
 
-<span class="sd">        For a generic multivariate distribution with marginal cdfs F1, ...Fd, the joint cdf is computed as:</span>
+<span class="sd">        For a generic multivariate distribution with marginal cdfs :math:`F_1, ..., F_d` the joint cdf is computed as:</span>
 
-<span class="sd">        F(x1, ..., xd) = C(u1, u2, ..., ud)</span>
+<span class="sd">        :math:`F(x_1, ..., x_d) = C(u_1, u_2, ..., u_d)`</span>
 
-<span class="sd">        where ui = Fi(xi) is uniformly distributed. This computation is performed in the JointCopula.cdf method.</span>
+<span class="sd">        where :math:`u_i = F_i(x_i)` is uniformly distributed. This computation is performed in the ``JointCopula.cdf``</span>
+<span class="sd">        method.</span>
 
 <span class="sd">        **Input:**</span>
 
 <span class="sd">        * **unif** (`ndarray`):</span>
-<span class="sd">            Points (uniformly distributed) at which to evaluate the copula cdf, must be of shape</span>
-<span class="sd">            ``(npoints, dimension)``.</span>
+<span class="sd">            Points (uniformly distributed) at which to evaluate the copula cdf, must be of shape `(npoints, dimension)`.</span>
 
 <span class="sd">        **Output/Returns:**</span>
 
 <span class="sd">        * (`tuple`):</span>
-<span class="sd">            Values of the cdf, `ndarray` of shape ``(npoints, )``.</span>
+<span class="sd">            Values of the cdf, `ndarray` of shape `(npoints, )`.</span>
 
 <span class="sd">    **evaluate_pdf** *(unif)*</span>
-<span class="sd">        Compute the copula pdf term c(u1, u2, ..., ud) for a d-variate uniform distribution.</span>
+<span class="sd">        Compute the copula pdf :math:`c(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.</span>
 
-<span class="sd">        For a generic multivariate distribution with marginals pdfs f1, ..., fd and marginals cdfs F1, ...Fd, the</span>
-<span class="sd">        joint pdf is computed as:</span>
+<span class="sd">        For a generic multivariate distribution with marginals pdfs :math:`f_1, ..., f_d` and marginals cdfs</span>
+<span class="sd">        :math:`F_1, ..., F_d`, the joint pdf is computed as:</span>
 
-<span class="sd">        f(x1, ..., xd) = c(u1, u2, ..., ud) * f1(x1) * ... * fd(xd)</span>
+<span class="sd">        :math:`f(x_1, ..., x_d) = c(u_1, u_2, ..., u_d) f_1(x_1) ... f_d(x_d)`</span>
 
-<span class="sd">        where ui = Fi(xi) is uniformly distributed. This computation is performed in the JointCopula.pdf method.</span>
+<span class="sd">        where :math:`u_i = F_i(x_i)` is uniformly distributed. This computation is performed in the ``JointCopula.pdf``</span>
+<span class="sd">        method.</span>
 
 <span class="sd">        **Input:**</span>
 
 <span class="sd">        * **unif** (`ndarray`):</span>
-<span class="sd">            Points (uniformly distributed) at which to evaluate the copula pdf, must be of shape</span>
-<span class="sd">            ``(npoints, dimension)``.</span>
+<span class="sd">            Points (uniformly distributed) at which to evaluate the copula pdf, must be of shape `(npoints, dimension)`.</span>
 
 <span class="sd">        **Output/Returns:**</span>
 
 <span class="sd">        * (`tuple`):</span>
-<span class="sd">            Values of the copula pdf term, ndarray of shape ``(npoints, )``.</span>
+<span class="sd">            Values of the copula pdf term, ndarray of shape `(npoints, )`.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -1361,10 +1367,10 @@
 
 <div class="viewcode-block" id="Copula.check_marginals"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Copula.check_marginals">[docs]</a>    <span class="k">def</span> <span class="nf">check_marginals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marginals</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Perform some checks on the marginals, raise Errors if necessary.</span>
+<span class="sd">        Perform some checks on the marginals, raise errors if necessary.</span>
 
 <span class="sd">        As an example, Archimedian copula are only defined for bi-variate continuous distributions, thus this method</span>
-<span class="sd">        would check that marginals is of length 2 and continuous, and raise an error if that is not the case.</span>
+<span class="sd">        checks that marginals is of length 2 and continuous, and raise an error if that is not the case.</span>
 
 <span class="sd">        **Input:**</span>
 
@@ -1374,7 +1380,7 @@
 
 <span class="sd">        **Output/Returns:**</span>
 
-<span class="sd">        No outputs, this code raises Errors if necessary.</span>
+<span class="sd">        No outputs, this code raises errors if necessary.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
@@ -1391,15 +1397,22 @@
 
 <div class="viewcode-block" id="Gumbel"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Gumbel">[docs]</a><span class="k">class</span> <span class="nc">Gumbel</span><span class="p">(</span><span class="n">Copula</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Gumbel copula</span>
+<span class="sd">    Gumbel copula having cumulative distribution function</span>
+
+<span class="sd">    .. math:: F(u_1, u_2) = \exp(-(-\log(u_1))^{\Theta} + (-\log(u_2))^{\Theta})^{1/{\Theta}}</span>
+
+<span class="sd">    where :math:`u_1 = F_1(x_1), u_2 = F_2(x_2)` are uniformly distributed on the interval `[0, 1]`.</span>
 
 <span class="sd">    **Input:**</span>
 
 <span class="sd">    * **theta** (`float`):</span>
-<span class="sd">        Parameter of the Gumbel copula, real number in [1, +oo).</span>
+<span class="sd">        Parameter of the Gumbel copula, real number in :math:`[1, +\infty)`.</span>
 
-<span class="sd">    This copula possesses the following methods: `evaluate_cdf, evaluate_pdf` and `check_copula` (the latter checks</span>
-<span class="sd">    that `marginals` consist of solely 2 continuous distributions).</span>
+<span class="sd">    This copula possesses the following methods:</span>
+
+<span class="sd">    * ``evaluate_cdf``, ``evaluate_pdf`` and ``check_copula``</span>
+
+<span class="sd">    (``check_copula`` checks that `marginals` consist of solely 2 continuous univariate distributions).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
         <span class="c1"># Check the input copula_params</span>
@@ -1448,15 +1461,22 @@
 
 <div class="viewcode-block" id="Clayton"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Clayton">[docs]</a><span class="k">class</span> <span class="nc">Clayton</span><span class="p">(</span><span class="n">Copula</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Clayton copula</span>
+<span class="sd">    Clayton copula having cumulative distribution function</span>
+
+<span class="sd">    .. math:: F(u_1, u_2) = \max(u_1^{-\Theta} + u_2^{-\Theta} - 1, 0)^{-1/{\Theta}}</span>
+
+<span class="sd">    where :math:`u_1 = F_1(x_1), u_2 = F_2(x_2)` are uniformly distributed on the interval `[0, 1]`.</span>
 
 <span class="sd">    **Input:**</span>
 
 <span class="sd">    * **theta** (`float`):</span>
 <span class="sd">        Parameter of the copula, real number in [-1, +oo)\{0}.</span>
 
-<span class="sd">    This copula possesses the following methods: `evaluate_cdf` and `check_copula` (the latter checks</span>
-<span class="sd">    that `marginals` consist of solely 2 continuous distributions).</span>
+<span class="sd">    This copula possesses the following methods:</span>
+
+<span class="sd">    * ``evaluate_cdf`` and ``check_copula``</span>
+
+<span class="sd">    (``check_copula`` checks that `marginals` consist of solely 2 continuous univariate distributions).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
         <span class="c1"># Check the input copula_params</span>
@@ -1485,15 +1505,22 @@
 
 <div class="viewcode-block" id="Frank"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Frank">[docs]</a><span class="k">class</span> <span class="nc">Frank</span><span class="p">(</span><span class="n">Copula</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Frank copula</span>
+<span class="sd">    Frank copula having cumulative distribution function</span>
+
+<span class="sd">    :math:`F(u_1, u_2) = -\dfrac{1}{\Theta} \log(1+\dfrac{(\exp(-\Theta u_1)-1)(\exp(-\Theta u_2)-1)}{\exp(-\Theta)-1})`</span>
+
+<span class="sd">    where :math:`u_1 = F_1(x_1), u_2 = F_2(x_2)` are uniformly distributed on the interval `[0, 1]`.</span>
 
 <span class="sd">    **Input:**</span>
 
 <span class="sd">    * **theta** (`float`):</span>
 <span class="sd">        Parameter of the copula, real number in R\{0}.</span>
 
-<span class="sd">    This copula possesses the following methods: `evaluate_cdf` and `check_copula` (the latter checks</span>
-<span class="sd">    that `marginals` consist of solely 2 continuous distributions).</span>
+<span class="sd">    This copula possesses the following methods:</span>
+
+<span class="sd">    * ``evaluate_cdf`` and ``check_copula``</span>
+
+<span class="sd">    (``check_copula`` checks that `marginals` consist of solely 2 continuous univariate distributions).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
         <span class="c1"># Check the input copula_params</span>
@@ -1670,7 +1697,11 @@
 
     <span class="k">def</span> <span class="nf">update_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">copula_params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Sets the params/copula_params attributes of the distribution.</span>
+<span class="sd">        Update the parameters of a ``Distributions`` object.</span>
+
+<span class="sd">        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a</span>
+<span class="sd">        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the</span>
+<span class="sd">        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).</span>
 
 <span class="sd">        **Input:**</span>
 

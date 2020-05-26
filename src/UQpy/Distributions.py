@@ -32,6 +32,7 @@ classes:
 - ``DistributionND``: Parent class to multivariate probability distributions.
 - ``Copula``: Parent class to copula to model dependency between marginals.
 
+
 """
 
 import importlib
@@ -220,7 +221,11 @@ class Distribution:
 
     def update_params(self, **kwargs):
         """
-        Update the parameters of the ``Distribution`` object.
+        Update the parameters of a ``Distributions`` object.
+
+        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a
+        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
+        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
         **Input:**
 
@@ -235,7 +240,11 @@ class Distribution:
 
     def get_params(self):
         """
-        Return the parameters of the distribution object.
+        Return the parameters of a ``Distributions`` object.
+
+        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a
+        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
+        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
         **Output/Returns:**
 
@@ -884,16 +893,23 @@ class DistributionND(Distribution):
 
 class MVNormal(DistributionND):
     """
-    Multivariate normal
+    Multivariate normal distrbution having probability density function
+
+    .. math:: f(x) = \dfrac{1}{\sqrt{(2\pi)^k\det\Sigma}}\exp{-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)}
+
+    where :math:`\mu` is the mean vector, :math:`\Sigma` is the covariance matrix, and :math:`k` is the dimension of
+    `x`.
 
     **Inputs:**
 
     * **mean** (`ndarray`):
-        mean vector, `ndarray` of shape (dimension, )
+        mean vector, `ndarray` of shape `(dimension, )`
     * **cov** (`float` or `ndarray`):
-        covariance, `float` or `ndarray` of shape (dimension, ) or (dimension, dimension). Default is 1.
+        covariance, `float` or `ndarray` of shape `(dimension, )` or `(dimension, dimension)`. Default is 1.
 
-    The following methods are available for MVNormal: `pdf, log_pdf, rvs, fit`.
+    The following methods are available for ``MVNormal``:
+
+    * ``pdf``, ``log_pdf``, ``rvs``, ``fit``.
     """
     def __init__(self, mean, cov=1.):
         if len(np.array(mean).shape) != 1:
@@ -931,7 +947,11 @@ class MVNormal(DistributionND):
 
 class Multinomial(DistributionND):
     """
-    Multinomial distribution
+    Multinomial distribution having probability mass function
+
+    .. math:: f(x) = \dfrac{n!}{x_1!\dots x_k!}p_1^{x_1}\dots p_k^{x_k}
+
+    for :math:`x=\{x_1,\dots,x_k\}` where each :math:`x_i` is a non-negative integer and :math:`\sum_i x_i = n`.
 
     **Inputs:**
 
@@ -940,7 +960,9 @@ class Multinomial(DistributionND):
     * **p** (`array_like`):
         probability of a trial falling into each category; should sum to 1
 
-    The following methods are available for MVNormal: `pmf, log_pmf, rvs`.
+    The following methods are available for ``Multinomial``:
+
+    * ``pmf``, ``log_pmf``, ``rvs``.
     """
     def __init__(self, n, p):
         super().__init__(n=n, p=p)
@@ -962,7 +984,7 @@ class Multinomial(DistributionND):
 
 class JointInd(DistributionND):
     """
-    Define a joint distribution from its independent marginals.
+    Define a joint distribution from its independent marginals. ``JointInd`` is a child class of ``DistributionND``.
 
     **Inputs:**
 
@@ -970,25 +992,14 @@ class JointInd(DistributionND):
         list of ``DistributionContinuous1D`` or ``DistributionDiscrete1D`` objects that define the marginals.
 
     Such a multivariate distribution possesses the following methods, on condition that all its univariate marginals
-    also possess them: `pdf, log_pdf, cdf, rvs, fit, moments`.
+    also possess them:
+
+    * ``pdf``, ``log_pdf``, ``cdf``, ``rvs``, ``fit``, ``moments``.
 
     The parameters of the distribution are only stored as attributes of the marginal objects. However, the
-    *get_params* and *update_params* method can still be used for the joint. Note that for this puspose each parameter
-    of the joint is assigned a unique string identifier as key_index - where key is the parameter name and index the
-    index of the marginal (e.g., location parameter of the 2nd marginal is identified as loc_1).
-
-    >>> from UQpy.Distributions import Normal, Lognormal, JointInd
-    >>> marginals = [Normal(loc=2., scale=2.), Lognormal(s=1., loc=0., scale=np.exp(5))]
-    >>> dist = JointInd(marginals=marginals)
-    >>> print(dist.rvs(nsamples=3, random_state=123))
-    [[-1.71261207e-01  5.01174573e+01]
-     [ 3.99469089e+00  4.02359290e+02]
-     [ 2.56595700e+00  1.96955635e+02]]
-    >>> print([m.params for m in marginals])
-    [{'loc': 2.0, 'scale': 2.0}, {'s': 1.0, 'loc': 0.0, 'scale': 148.4131591025766}]
-    >>> dist.update_params(loc_1=1.)
-    >>> print([m.params for m in marginals])
-    [{'loc': 2.0, 'scale': 2.0}, {'s': 1.0, 'loc': 1.0, 'scale': 148.4131591025766}]
+    *get_params* and *update_params* method can still be used for the joint. Note that, for this purpose, each parameter
+    of the joint is assigned a unique string identifier as `key_index` - where `key` is the parameter name and `index`
+    the index of the marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
     """
     def __init__(self, marginals):
@@ -1079,7 +1090,11 @@ class JointInd(DistributionND):
 
     def get_params(self):
         """
-        Return the parameters of the joint distribution.
+        Return the parameters of a ``Distributions`` object.
+
+        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a
+        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
+        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
         **Output/Returns:**
 
@@ -1096,7 +1111,11 @@ class JointInd(DistributionND):
 
     def update_params(self, **kwargs):
         """
-        Update the parameters of the marginals.
+        Update the parameters of a ``Distributions`` object.
+
+        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a
+        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
+        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
         **Input:**
 
@@ -1117,7 +1136,8 @@ class JointInd(DistributionND):
 
 class JointCopula(DistributionND):
     """
-    Define a joint distribution from a list of marginals and a copula to introduce dependency.
+    Define a joint distribution from a list of marginals and a copula to introduce dependency. ``JointCopula`` is a
+    child class of ``DistributionND``.
 
     **Inputs:**
 
@@ -1127,27 +1147,15 @@ class JointCopula(DistributionND):
     * **copula** (`object`):
         object of class ``Copula``
 
-    Such a multivariate distribution may possess a `cdf, pdf` and `log_pdf` methods if the copula allows for it (i.e.,
-    if the copula possesses the necessary `evaluate_cdf` and `evaluate_pdf` methods).
+    A ``JointCopula`` distribution may possess a ``cdf``, ``pdf`` and ``log_pdf`` methods if the copula allows for it
+    (i.e., if the copula possesses the necessary ``evaluate_cdf`` and ``evaluate_pdf`` methods).
 
     The parameters of the distribution are only stored as attributes of the marginals/copula objects. However, the
-    `get_params` and `update_params` method can still be used for the joint. Note that each parameter of the joint is
-    assigned a unique string identifier as key_index - where key is the parameter name and index the index of the
-    marginal (e.g., location parameter of the 2nd marginal is identified as loc_1); and key_c for copula parameters.
+    ``get_params`` and ``update_params`` methods can still be used for the joint. Note that each parameter of the joint
+    is assigned a unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of
+    the marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`); and `key_c` for copula
+    parameters.
 
-    >>> from UQpy.Distributions import JointCopula, Normal, Gumbel
-    >>> marginals = [Normal(loc=0., scale=1), Normal(loc=0., scale=1)]
-    >>> copula = Gumbel(theta=3.)
-    >>> dist = JointCopula(marginals=marginals, copula=copula)
-    >>> print(dist.get_params())
-    {'loc_0': 0., 'scale_0': 1., 'loc_1': 0., 'scale_1': 1., 'theta_c': 3.}
-    >>> print(hasattr(dist, 'rvs'))
-    False
-    >>> print(dist.copula.params)
-    {'theta': 3.0}
-    >>> dist.update_params(theta_c=2.)
-    >>> print(dist.copula.params)
-    {'theta': 2.0}
     """
     def __init__(self, marginals, copula):
         super().__init__()
@@ -1205,7 +1213,11 @@ class JointCopula(DistributionND):
 
     def get_params(self):
         """
-        Return the parameters of the joint distribution.
+        Return the parameters of a ``Distributions`` object.
+
+        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a
+        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
+        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
         **Output/Returns:**
 
@@ -1223,7 +1235,11 @@ class JointCopula(DistributionND):
 
     def update_params(self, **kwargs):
         """
-        Update the parameters of the marginals and/or copula.
+        Update the parameters of a ``Distributions`` object.
+
+        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a
+        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
+        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
         **Input:**
 
@@ -1253,7 +1269,7 @@ class Copula:
     """
     Define a copula for a multivariate distribution whose dependence structure is defined with a copula.
 
-    This class is used in support of the JointCopula distribution class.
+    This class is used in support of the ``JointCopula`` distribution class.
 
     **Attributes:**
 
@@ -1266,45 +1282,45 @@ class Copula:
     **Methods:**
 
     **evaluate_cdf** *(unif)*
-        Compute the copula cdf C(u1, u2, ..., ud) for a d-variate uniform distribution.
+        Compute the copula cdf :math:`C(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.
 
-        For a generic multivariate distribution with marginal cdfs F1, ...Fd, the joint cdf is computed as:
+        For a generic multivariate distribution with marginal cdfs :math:`F_1, ..., F_d` the joint cdf is computed as:
 
-        F(x1, ..., xd) = C(u1, u2, ..., ud)
+        :math:`F(x_1, ..., x_d) = C(u_1, u_2, ..., u_d)`
 
-        where ui = Fi(xi) is uniformly distributed. This computation is performed in the JointCopula.cdf method.
+        where :math:`u_i = F_i(x_i)` is uniformly distributed. This computation is performed in the ``JointCopula.cdf``
+        method.
 
         **Input:**
 
         * **unif** (`ndarray`):
-            Points (uniformly distributed) at which to evaluate the copula cdf, must be of shape
-            ``(npoints, dimension)``.
+            Points (uniformly distributed) at which to evaluate the copula cdf, must be of shape `(npoints, dimension)`.
 
         **Output/Returns:**
 
         * (`tuple`):
-            Values of the cdf, `ndarray` of shape ``(npoints, )``.
+            Values of the cdf, `ndarray` of shape `(npoints, )`.
 
     **evaluate_pdf** *(unif)*
-        Compute the copula pdf term c(u1, u2, ..., ud) for a d-variate uniform distribution.
+        Compute the copula pdf :math:`c(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.
 
-        For a generic multivariate distribution with marginals pdfs f1, ..., fd and marginals cdfs F1, ...Fd, the
-        joint pdf is computed as:
+        For a generic multivariate distribution with marginals pdfs :math:`f_1, ..., f_d` and marginals cdfs
+        :math:`F_1, ..., F_d`, the joint pdf is computed as:
 
-        f(x1, ..., xd) = c(u1, u2, ..., ud) * f1(x1) * ... * fd(xd)
+        :math:`f(x_1, ..., x_d) = c(u_1, u_2, ..., u_d) f_1(x_1) ... f_d(x_d)`
 
-        where ui = Fi(xi) is uniformly distributed. This computation is performed in the JointCopula.pdf method.
+        where :math:`u_i = F_i(x_i)` is uniformly distributed. This computation is performed in the ``JointCopula.pdf``
+        method.
 
         **Input:**
 
         * **unif** (`ndarray`):
-            Points (uniformly distributed) at which to evaluate the copula pdf, must be of shape
-            ``(npoints, dimension)``.
+            Points (uniformly distributed) at which to evaluate the copula pdf, must be of shape `(npoints, dimension)`.
 
         **Output/Returns:**
 
         * (`tuple`):
-            Values of the copula pdf term, ndarray of shape ``(npoints, )``.
+            Values of the copula pdf term, ndarray of shape `(npoints, )`.
 
     """
     def __init__(self, order_params=None, **kwargs):
@@ -1317,10 +1333,10 @@ class Copula:
 
     def check_marginals(self, marginals):
         """
-        Perform some checks on the marginals, raise Errors if necessary.
+        Perform some checks on the marginals, raise errors if necessary.
 
         As an example, Archimedian copula are only defined for bi-variate continuous distributions, thus this method
-        would check that marginals is of length 2 and continuous, and raise an error if that is not the case.
+        checks that marginals is of length 2 and continuous, and raise an error if that is not the case.
 
         **Input:**
 
@@ -1330,7 +1346,7 @@ class Copula:
 
         **Output/Returns:**
 
-        No outputs, this code raises Errors if necessary.
+        No outputs, this code raises errors if necessary.
 
         """
         pass
@@ -1347,15 +1363,22 @@ class Copula:
 
 class Gumbel(Copula):
     """
-    Gumbel copula
+    Gumbel copula having cumulative distribution function
+
+    .. math:: F(u_1, u_2) = \exp(-(-\log(u_1))^{\Theta} + (-\log(u_2))^{\Theta})^{1/{\Theta}}
+
+    where :math:`u_1 = F_1(x_1), u_2 = F_2(x_2)` are uniformly distributed on the interval `[0, 1]`.
 
     **Input:**
 
     * **theta** (`float`):
-        Parameter of the Gumbel copula, real number in [1, +oo).
+        Parameter of the Gumbel copula, real number in :math:`[1, +\infty)`.
 
-    This copula possesses the following methods: `evaluate_cdf, evaluate_pdf` and `check_copula` (the latter checks
-    that `marginals` consist of solely 2 continuous distributions).
+    This copula possesses the following methods:
+
+    * ``evaluate_cdf``, ``evaluate_pdf`` and ``check_copula``
+
+    (``check_copula`` checks that `marginals` consist of solely 2 continuous univariate distributions).
     """
     def __init__(self, theta):
         # Check the input copula_params
@@ -1404,15 +1427,22 @@ class Gumbel(Copula):
 
 class Clayton(Copula):
     """
-    Clayton copula
+    Clayton copula having cumulative distribution function
+
+    .. math:: F(u_1, u_2) = \max(u_1^{-\Theta} + u_2^{-\Theta} - 1, 0)^{-1/{\Theta}}
+
+    where :math:`u_1 = F_1(x_1), u_2 = F_2(x_2)` are uniformly distributed on the interval `[0, 1]`.
 
     **Input:**
 
     * **theta** (`float`):
         Parameter of the copula, real number in [-1, +oo)\{0}.
 
-    This copula possesses the following methods: `evaluate_cdf` and `check_copula` (the latter checks
-    that `marginals` consist of solely 2 continuous distributions).
+    This copula possesses the following methods:
+
+    * ``evaluate_cdf`` and ``check_copula``
+
+    (``check_copula`` checks that `marginals` consist of solely 2 continuous univariate distributions).
     """
     def __init__(self, theta):
         # Check the input copula_params
@@ -1441,15 +1471,22 @@ class Clayton(Copula):
 
 class Frank(Copula):
     """
-    Frank copula
+    Frank copula having cumulative distribution function
+
+    :math:`F(u_1, u_2) = -\dfrac{1}{\Theta} \log(1+\dfrac{(\exp(-\Theta u_1)-1)(\exp(-\Theta u_2)-1)}{\exp(-\Theta)-1})`
+
+    where :math:`u_1 = F_1(x_1), u_2 = F_2(x_2)` are uniformly distributed on the interval `[0, 1]`.
 
     **Input:**
 
     * **theta** (`float`):
         Parameter of the copula, real number in R\{0}.
 
-    This copula possesses the following methods: `evaluate_cdf` and `check_copula` (the latter checks
-    that `marginals` consist of solely 2 continuous distributions).
+    This copula possesses the following methods:
+
+    * ``evaluate_cdf`` and ``check_copula``
+
+    (``check_copula`` checks that `marginals` consist of solely 2 continuous univariate distributions).
     """
     def __init__(self, theta):
         # Check the input copula_params
@@ -1626,7 +1663,11 @@ class Distribution_old:
 
     def update_params(self, params=None, copula_params=None):
         """
-        Sets the params/copula_params attributes of the distribution.
+        Update the parameters of a ``Distributions`` object.
+
+        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a
+        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
+        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
         **Input:**
 
