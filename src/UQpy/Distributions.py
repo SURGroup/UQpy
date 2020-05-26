@@ -182,17 +182,21 @@ class Distribution:
         * (`ndarray`):
             Generated iid samples, `ndarray` of shape `(npoints, dimension)`.
 
-    **moments** *()*
-        Compute the first four non-central moments of a distribution.
+    **moments** *(moments2return='mvsk')*
+        Computes the mean 'm', variance/covariance ('v'), skewness ('s') and/or kurtosis ('k') of the distribution.
 
         For a univariate distribution, mean, variance, skewness and kurtosis are returned. For a multivariate
         distribution, the mean vector, covariance and vectors of marginal skewness and marginal kurtosis are returned.
-        If a given moment cannot be computed, None is returned in its place.
+
+        **Inputs:**
+
+        * **moments2return** (`str`):
+            Indicates which moments are to be returned (mean, variance, skewness and/or kurtosis). Default is 'mvsk'.
 
         **Output/Returns:**
 
         * (`tuple`):
-            ``mean``: mean, ``var``:  covariance, ``skew``: skewness, ``kurt``: kurtosis.
+            ``mean``: mean, ``var``:  variance/covariance, ``skew``: skewness, ``kurt``: kurtosis.
 
     **fit** *(data)*
         Compute the maximum-likelihood parameters from iid data.
@@ -279,8 +283,8 @@ class DistributionContinuous1D(Distribution):
         self.pdf = lambda x: scipy_name.pdf(x=self._check_x_dimension(x), **self.params)
         self.log_pdf = lambda x: scipy_name.logpdf(x=self._check_x_dimension(x), **self.params)
         self.icdf = lambda x: scipy_name.ppf(q=self._check_x_dimension(x), **self.params)
-        self.moments = lambda: scipy_name.stats(moments='mvsk', **self.params)
-        self.rvs = lambda nsamples, random_state=None: scipy_name.rvs(
+        self.moments = lambda moments2return='mvsk': scipy_name.stats(moments=moments2return, **self.params)
+        self.rvs = lambda nsamples=1, random_state=None: scipy_name.rvs(
             size=nsamples, random_state=random_state, **self.params).reshape((nsamples, 1))
 
         def tmp_fit(dist, data):
@@ -805,8 +809,8 @@ class DistributionDiscrete1D(Distribution):
         self.pmf = lambda x: scipy_name.pmf(x=self._check_x_dimension(x), **self.params)
         self.log_pmf = lambda x: scipy_name.logpmf(x=self._check_x_dimension(x), **self.params)
         self.icdf = lambda x: scipy_name.ppf(q=self._check_x_dimension(x), **self.params)
-        self.moments = lambda: scipy_name.stats(moments='mvsk', **self.params)
-        self.rvs = lambda nsamples, random_state=None: scipy_name.rvs(
+        self.moments = lambda moments2return='mvsk': scipy_name.stats(moments=moments2return, **self.params)
+        self.rvs = lambda nsamples=1, random_state=None: scipy_name.rvs(
             size=nsamples, random_state=random_state, **self.params).reshape((nsamples, 1))
 
 
@@ -893,7 +897,7 @@ class DistributionND(Distribution):
 
 class MVNormal(DistributionND):
     """
-    Multivariate normal distrbution having probability density function
+    Multivariate normal distribution having probability density function
 
     .. math:: f(x) = \dfrac{1}{\sqrt{(2\pi)^k\det\Sigma}}\exp{-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)}
 
@@ -909,7 +913,7 @@ class MVNormal(DistributionND):
 
     The following methods are available for ``MVNormal``:
 
-    * ``pdf``, ``log_pdf``, ``rvs``, ``fit``.
+    * ``pdf``, ``log_pdf``, ``rvs``, ``fit``, ``moments``.
     """
     def __init__(self, mean, cov=1.):
         if len(np.array(mean).shape) != 1:
@@ -944,6 +948,16 @@ class MVNormal(DistributionND):
             mle_cov = np.matmul(tmp_x, tmp_x.T) / x.shape[0]
         return {'mean': mle_mu, 'cov': mle_cov}
 
+    def moments(self, moments2return='mv'):
+        if moments2return == 'm':
+            return self.get_params()['mean']
+        elif moments2return == 'v':
+            return self.get_params()['cov']
+        elif moments2return == 'mv':
+            return self.get_params()['mean'], self.get_params()['cov']
+        else:
+            raise ValueError('UQpy: moments2return must be "m", "v" or "mv".')
+
 
 class Multinomial(DistributionND):
     """
@@ -962,7 +976,7 @@ class Multinomial(DistributionND):
 
     The following methods are available for ``Multinomial``:
 
-    * ``pmf``, ``log_pmf``, ``rvs``.
+    * ``pmf``, ``log_pmf``, ``rvs``, ``moments``.
     """
     def __init__(self, n, p):
         super().__init__(n=n, p=p)
@@ -980,6 +994,26 @@ class Multinomial(DistributionND):
             raise ValueError('Input nsamples must be an integer > 0.')
         return stats.multinomial.rvs(
             size=nsamples, random_state=random_state, **self.params).reshape((nsamples, -1))
+
+    def moments(self, moments2return='mv'):
+        if moments2return == 'm':
+            mean = self.get_params()['n'] * np.array(self.get_params()['p'])
+            return mean
+        elif moments2return == 'v':
+            n, p = self.get_params()['n'], np.array(self.get_params()['p'])
+            d = len(p)
+            cov = - n * np.tile(p[np.newaxis, :], [d, 1]) * np.tile(p[:, np.newaxis], [1, d])
+            np.fill_diagonal(cov, n * p * (1. - p))
+            return cov
+        elif moments2return == 'mv':
+            n, p = self.get_params()['n'], np.array(self.get_params()['p'])
+            d = len(p)
+            cov = - n * np.tile(p[np.newaxis, :], [d, 1]) * np.tile(p[:, np.newaxis], [1, d])
+            np.fill_diagonal(cov, n * p * (1. - p))
+            mean = n * p
+            return mean, cov
+        else:
+            raise ValueError('UQpy: moments2return must be "m", "v" or "mv".')
 
 
 class JointInd(DistributionND):
@@ -1020,11 +1054,11 @@ class JointInd(DistributionND):
                 x = dist._check_x_dimension(x)
                 # Compute pdf of independent marginals
                 pdf_val = np.ones((x.shape[0], ))
-                for i in range(len(self.marginals)):
-                    if hasattr(self.marginals[i], 'pdf'):
-                        pdf_val *= marginals[i].pdf(x[:, i])
+                for ind_m in range(len(self.marginals)):
+                    if hasattr(self.marginals[ind_m], 'pdf'):
+                        pdf_val *= marginals[ind_m].pdf(x[:, ind_m])
                     else:
-                        pdf_val *= marginals[i].pmf(x[:, i])
+                        pdf_val *= marginals[ind_m].pmf(x[:, ind_m])
                 return pdf_val
             if any(hasattr(m, 'pdf') for m in self.marginals):
                 self.pdf = MethodType(joint_pdf, self)
@@ -1036,11 +1070,11 @@ class JointInd(DistributionND):
                 x = dist._check_x_dimension(x)
                 # Compute pdf of independent marginals
                 pdf_val = np.zeros((x.shape[0],))
-                for i in range(len(self.marginals)):
-                    if hasattr(self.marginals[i], 'log_pdf'):
-                        pdf_val += marginals[i].log_pdf(x[:, i])
+                for ind_m in range(len(self.marginals)):
+                    if hasattr(self.marginals[ind_m], 'log_pdf'):
+                        pdf_val += marginals[ind_m].log_pdf(x[:, ind_m])
                     else:
-                        pdf_val += marginals[i].log_pmf(x[:, i])
+                        pdf_val += marginals[ind_m].log_pmf(x[:, ind_m])
                 return pdf_val
             if any(hasattr(m, 'log_pdf') for m in self.marginals):
                 self.log_pdf = MethodType(joint_log_pdf, self)
@@ -1051,7 +1085,8 @@ class JointInd(DistributionND):
             def joint_cdf(dist, x):
                 x = dist._check_x_dimension(x)
                 # Compute cdf of independent marginals
-                cdf_val = np.prod(np.array([m.cdf(x[:, i]) for i, m in enumerate(dist.marginals)]), axis=0)
+                cdf_val = np.prod(np.array([marg.cdf(x[:, ind_m])
+                                            for ind_m, marg in enumerate(dist.marginals)]), axis=0)
                 return cdf_val
             self.cdf = MethodType(joint_cdf, self)
 
@@ -1059,8 +1094,8 @@ class JointInd(DistributionND):
             def joint_rvs(dist, nsamples=1, random_state=None):
                 # Go through all marginals
                 rv_s = np.zeros((nsamples, len(dist.marginals)))
-                for i, m in enumerate(dist.marginals):
-                    rv_s[:, i] = m.rvs(nsamples=nsamples, random_state=random_state).reshape((-1,))
+                for ind_m, marg in enumerate(dist.marginals):
+                    rv_s[:, ind_m] = marg.rvs(nsamples=nsamples, random_state=random_state).reshape((-1,))
                 return rv_s
             self.rvs = MethodType(joint_rvs, self)
 
@@ -1069,23 +1104,21 @@ class JointInd(DistributionND):
                 data = dist._check_x_dimension(data)
                 # Compute ml estimates of independent marginal parameters
                 mle_all = {}
-                for i, m in enumerate(dist.marginals):
-                    mle_i = m.fit(data[:, i])
-                    mle_all.update({key+'_'+str(i): val for key, val in mle_i.items()})
+                for ind_m, marg in enumerate(dist.marginals):
+                    mle_i = marg.fit(data[:, ind_m])
+                    mle_all.update({key+'_'+str(ind_m): val for key, val in mle_i.items()})
                 return mle_all
             self.fit = MethodType(joint_fit, self)
 
         if all(hasattr(m, 'moments') for m in self.marginals):
-            def joint_moments(dist):
+            def joint_moments(dist, moments2return='mvsk'):
                 # Go through all marginals
-                mean, var, skew, kurt = [], [], [], []
-                for i, m in enumerate(dist.marginals):
-                    moments_i = m.moments()
-                    mean.append(moments_i[0])
-                    var.append(moments_i[1])
-                    skew.append(moments_i[2])
-                    kurt.append(moments_i[3])
-                return mean, var, skew, kurt
+                moments_ = [np.empty((len(dist.marginals), )) for _ in range(len(moments2return))]
+                for ind_m, marg in enumerate(dist.marginals):
+                    moments_i = marg.moments(moments2return=moments2return)
+                    for j in range(len(moments2return)):
+                        moments_[j][ind_m] = moments_i[j]
+                return tuple(moments_)
             self.moments = MethodType(joint_moments, self)
 
     def get_params(self):
@@ -1183,7 +1216,7 @@ class JointCopula(DistributionND):
             def joint_cdf(dist, x):
                 x = dist._check_x_dimension(x)
                 # Compute cdf of independent marginals
-                unif = np.array([m.cdf(x[:, i]) for i, m in enumerate(dist.marginals)]).T
+                unif = np.array([marg.cdf(x[:, ind_m]) for ind_m, marg in enumerate(dist.marginals)]).T
                 # Compute copula
                 cdf_val = dist.copula.evaluate_cdf(unif=unif)
                 return cdf_val
@@ -1193,9 +1226,10 @@ class JointCopula(DistributionND):
             def joint_pdf(dist, x):
                 x = dist._check_x_dimension(x)
                 # Compute pdf of independent marginals
-                pdf_val = np.prod(np.array([m.pdf(x[:, i]) for i, m in enumerate(dist.marginals)]), axis=0)
+                pdf_val = np.prod(np.array([marg.pdf(x[:, ind_m])
+                                            for ind_m, marg in enumerate(dist.marginals)]), axis=0)
                 # Add copula term
-                unif = np.array([m.cdf(x[:, i]) for i, m in enumerate(dist.marginals)]).T
+                unif = np.array([marg.cdf(x[:, ind_m]) for ind_m, marg in enumerate(dist.marginals)]).T
                 c_ = dist.copula.evaluate_pdf(unif=unif)
                 return c_ * pdf_val
             self.pdf = MethodType(joint_pdf, self)
@@ -1204,9 +1238,10 @@ class JointCopula(DistributionND):
             def joint_log_pdf(dist, x):
                 x = dist._check_x_dimension(x)
                 # Compute pdf of independent marginals
-                logpdf_val = np.sum(np.array([m.log_pdf(x[:, i]) for i, m in enumerate(dist.marginals)]), axis=0)
+                logpdf_val = np.sum(np.array([marg.log_pdf(x[:, ind_m])
+                                              for ind_m, marg in enumerate(dist.marginals)]), axis=0)
                 # Add copula term
-                unif = np.array([m.cdf(x[:, i]) for i, m in enumerate(dist.marginals)]).T
+                unif = np.array([marg.cdf(x[:, ind_m]) for ind_m, marg in enumerate(dist.marginals)]).T
                 c_ = dist.copula.evaluate_pdf(unif=unif)
                 return np.log(c_) + logpdf_val
             self.log_pdf = MethodType(joint_log_pdf, self)
