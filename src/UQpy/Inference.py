@@ -516,7 +516,7 @@ class BayesParameterEstimation:
     """
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
-    def __init__(self, inference_model, data, sampling_class=None, nsamples=None, nsamples_per_chain=None, nchains=1,
+    def __init__(self, inference_model, data, sampling_class=None, nsamples=None, nsamples_per_chain=None,
                  verbose=False, **kwargs_sampler):
 
         self.inference_model = inference_model
@@ -629,8 +629,9 @@ class InfoModelSelection:
 
         Keys must refer to input names to the ``MLEstimation`` class, and values must be lists of length nmodels,
         ordered in the same way as input `candidate_models`. For example, setting
-        `kwargs={`method': [`Nelder-Mead', `Powell']}` means that the Nelder-Mead minimization algorithm will be used for
-        ML estimation of the first candidate model, while the Powell method will be used for the second candidate model.
+        `kwargs={`method': [`Nelder-Mead', `Powell']}` means that the Nelder-Mead minimization algorithm will be used
+        for ML estimation of the first candidate model, while the Powell method will be used for the second candidate
+        model.
 
     * **x0** (`list` of `ndarrays`):
         Starting points for optimization - see MLEstimation
@@ -687,9 +688,9 @@ class InfoModelSelection:
             self.ml_estimators.append(ml_estimator)
 
         # Initialize the outputs
-        self.criterion_values = [None] * self.nmodels
-        self.penalty_terms = [None] * self.nmodels
-        self.probabilities = [None] * self.nmodels
+        self.criterion_values = [None, ] * self.nmodels
+        self.penalty_terms = [None, ] * self.nmodels
+        self.probabilities = [None, ] * self.nmodels
 
         # Run the model selection procedure
         if (nopt is not None) or (x0 is not None):
@@ -784,11 +785,11 @@ class InfoModelSelection:
 
         **Output/Returns:**
 
-        :param criterion_value: Value of criterion.
-        :type criterion_value: float
+        :return criterion_value: Value of criterion.
+        :rtype criterion_value: float
 
-        :param penalty_term: Value of penalty term.
-        :type penalty_term: float
+        :return penalty_term: Value of penalty term.
+        :rtype penalty_term: float
 
         """
 
@@ -821,8 +822,8 @@ class InfoModelSelection:
 
         **Output/Returns:**
 
-        :param probabilities: Values of model probabilities
-        :type probabilities: list (length nmodels) of floats
+        :return probabilities: Values of model probabilities
+        :rtype probabilities: list (length nmodels) of floats
 
         """
 
@@ -1032,12 +1033,12 @@ class BayesModelSelection:
 
         **Output/Returns:**
 
-        :param evidence: Value of evidence p(data|M).
-        :type evidence: float
+        :return evidence: Value of evidence p(data|M).
+        :rtype evidence: float
 
         """
         if method_evidence_computation.lower() == 'harmonic_mean':
-            #samples[int(0.5 * len(samples)):]
+            # samples[int(0.5 * len(samples)):]
             log_likelihood_values = log_posterior_values - inference_model.prior.log_pdf(x=posterior_samples)
             temp = np.mean(1./np.exp(log_likelihood_values))
         else:
@@ -1062,8 +1063,8 @@ class BayesModelSelection:
 
         **Output/Returns:**
 
-        :param probabilities: Values of model posterior probabilities
-        :type probabilities: list (length nmodels) of floats
+        :return probabilities: Values of model posterior probabilities
+        :rtype probabilities: list (length nmodels) of floats
 
         """
         scaled_evidences = [evi * prior_prob for (evi, prior_prob) in zip(evidence_values, prior_probabilities)]
