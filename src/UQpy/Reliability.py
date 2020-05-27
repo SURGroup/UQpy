@@ -1064,9 +1064,8 @@ class TaylorSeries:
                      Probability distribution of each random variable. Must be an object of type
                      ``DistributionContinuous1D`` or ``JointInd``.
 
-    * **model** (Object or a `callable` ):
-         The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or ``Krig`` (see ``Surrogates``
-         class) object or a `callable`.
+    * **runmodel_object** (``RunModel`` object or a `callable` ):
+         The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.
 
     * **seed** (`ndarray`):
          The initial starting point for the `Hasofer-Lind` algorithm. If provided, it should be a point in the parameter
@@ -1167,9 +1166,9 @@ class FORM(TaylorSeries):
 
      """
 
-    def __init__(self, dist_object, model, seed=None, cov=None, n_iter=100,  tol=1e-3):
+    def __init__(self, dist_object, runmodel_object, seed=None, cov=None, n_iter=100,  tol=1e-3):
 
-        super().__init__(dist_object, model, cov=None, n_iter=100,  tol=1e-3)
+        super().__init__(dist_object, runmodel_object, cov=None, n_iter=100,  tol=1e-3)
 
         if cov is None:
             if isinstance(dist_object, list):
@@ -1183,7 +1182,7 @@ class FORM(TaylorSeries):
 
         self.dist_object = dist_object
         self.n_iter = n_iter
-        self.model = model
+        self.runmodel_object = runmodel_object
         self.tol = tol
         self.seed = seed
 
@@ -1201,6 +1200,8 @@ class FORM(TaylorSeries):
         self.u_check = None
         self.g_check = None
         self.g_record = None
+        self.x = None
+        self.alpha = None
 
         self._run()
 
@@ -1229,24 +1230,24 @@ class FORM(TaylorSeries):
         while conv_flag == 0:
             # FORM always starts from the standard normal space
             obj = Inverse(dist_object=self.dist_object, samples=u, cov=self.cov)
-            x = obj.x
+            self.x = obj.x
             # Jux = obj.Jux
             # Jxu = np.linalg.inv(Jux)
 
             # 1. evaluate Limit State Function at the point
-            self.model.run(x.reshape(1, -1), append_samples=False)
-            qoi = self.model.qoi_list[0]
+            self.runmodel_object.run(self.x.reshape(1, -1), append_samples=False)
+            qoi = self.runmodel_object.qoi_list[0]
             g_record.append(qoi)
 
             # 2. evaluate Limit State Function gradient at point u_k and direction cosines
-            dg = self.gradient(order='first', point=u,  model=self.model, cov=self.cov, dist_object=self.dist_object,
-                               run_form=True)
+            dg = self.gradient(order='first', point=u,  runmodel_object=self.runmodel_object, cov=self.cov,
+                               dist_object=self.dist_object)
 
             # dg_record.append(np.dot(dg[0, :], jacobi_x_to_u)) # use this if the input in gradient function is x
             dg_record.append(dg[0, :])
             norm_grad = np.linalg.norm(dg_record[k])
-            alpha = - dg_record[k] / norm_grad
-            alpha_record.append(alpha)
+            self.alpha = - dg_record[k] / norm_grad
+            alpha_record.append(self.alpha)
 
             if k == 0:
                 if qoi == 0:
@@ -1254,8 +1255,8 @@ class FORM(TaylorSeries):
                 else:
                     g0 = qoi
 
-            u_check.append(np.linalg.norm(u.reshape(-1, 1) - np.dot(alpha.reshape(1, -1), u.reshape(-1, 1))
-                                          * alpha.reshape(-1, 1)))
+            u_check.append(np.linalg.norm(u.reshape(-1, 1) - np.dot(self.alpha.reshape(1, -1), u.reshape(-1, 1))
+                                          * self.alpha.reshape(-1, 1)))
             g_check.append(abs(qoi / g0))
 
             if u_check[k] <= self.tol and g_check[k] <= self.tol:
@@ -1264,10 +1265,10 @@ class FORM(TaylorSeries):
                 conv_flag = 1
 
             u_record.append(u)
-            x_record.append(x)
+            x_record.append(self.x)
             if conv_flag == 0:
-                direction = (qoi / norm_grad + np.dot(alpha.reshape(1, -1), u.reshape(-1, 1))) * \
-                            alpha.reshape(-1, 1) - u.reshape(-1, 1)
+                direction = (qoi / norm_grad + np.dot(self.alpha.reshape(1, -1), u.reshape(-1, 1))) * \
+                            self.alpha.reshape(-1, 1) - u.reshape(-1, 1)
                 u_new = (u.reshape(-1, 1) + direction).T
                 u = u_new
                 k = k + 1
@@ -1275,12 +1276,11 @@ class FORM(TaylorSeries):
         if k == self.n_iter:
             print('UQpy: Maximum number of iterations {0} was reached before convergence.'.format(self.n_iter))
         else:
-            self.HL_beta = np.dot(u, alpha.T)
+            self.HL_beta = np.dot(u, self.alpha.T)
             self.DesignPoint_U = u
-            self.DesignPoint_X = x
+            self.DesignPoint_X = self.x
             self.Prob_FORM = stats.norm.cdf(-self.HL_beta)
             self.iterations = k
-            self.alpha = alpha
             self.g_record = g_record
             self.u_record = u_record
             self.x_record = x_record
@@ -1290,11 +1290,11 @@ class FORM(TaylorSeries):
             self.g_check = g_check
 
     @staticmethod
-    def gradient(dist_object, point, model, order='first', cov=None, df_step=0.001, run_form=False, read_qoi=None):
+    def gradient(dist_object, point, runmodel_object, order='first', cov=None, df_step=0.001, **kwargs):
         """
-        A method to estimate the gradients (1st, 2nd, mixed) of a function using a finite difference scheme. First
-        order gradients are calculated using forward finite differences. This is a static method, part of the
-        ``Form`` class.
+        A method to estimate the gradients (1st, 2nd, mixed) of a function using a finite difference scheme in the
+        standard normal space. First order gradients are calculated using central finite differences. This is a static
+        method, part of the ``Form`` class.
 
         **Inputs:**
 
@@ -1302,16 +1302,8 @@ class FORM(TaylorSeries):
                 Probability distribution of each random variable. Must be an object of type
                 ``DistributionContinuous1D`` or ``JointInd``.
 
-        * **model** (Object or a `callable` ):
-            The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or ``Krig`` (see ``Surrogates``
-            class) object or a `callable`.
-
-        * **run_form** (Boolean):
-            If the ``gradient`` method is used in the framework of FORM, then the input point is in the standard
-            normal space **U**. In this case, the ``Nataf`` class is used to transform the point in the parameter
-            space so it can be used with the model.
-
-            Default: False
+        * **runmodel_object** (``RunModel`` object or a `callable` ):
+            The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.
 
         * **cov** (`ndarray`):
             The correlation  structure (:math:`\mathbf{C_X}`) of the random vector **X** (optional).
@@ -1359,30 +1351,20 @@ class FORM(TaylorSeries):
             if len(df_step) == 1:
                 df_step = [df_step[0]] * dimension
 
-        if isinstance(model, Krig):
-            qoi = model.interpolate(samples)
-        elif isinstance(model, RunModel) and read_qoi is None:
-            qoi = model.qoi_list[0]
-        elif isinstance(model, RunModel) and read_qoi is not None:
-            qoi = read_qoi
-        elif isinstance(model, callable):
-            qoi = model(samples)
-        else:
-            raise RuntimeError('UQpy: A RunModel/Krig/callable object must be provided as model.')
+        if not isinstance(runmodel_object, RunModel) or not callable(runmodel_object):
+            raise RuntimeError('UQpy: A RunModel/callable object must be provided as model.')
 
         def func(m):
             def func_eval(x):
-                if isinstance(m, Krig):
-                    return m.interpolate(x=x)
+                if callable(m):
+                    return m(x)
                 elif isinstance(m, RunModel):
                     m.run(samples=x, append_samples=False)
                     return np.array(m.qoi_list)
-                else:
-                    return m(x)
 
             return func_eval
 
-        f_eval = func(m=model)
+        f_eval = func(m=runmodel_object)
 
         if order.lower() == 'first':
             du_dj = np.zeros([point.shape[0], dimension])
@@ -1391,22 +1373,26 @@ class FORM(TaylorSeries):
                 eps_i = df_step[ii]
                 u_i1_j = point.copy()
                 u_i1_j[:, ii] = u_i1_j[:, ii] + eps_i
+                u_1i_j = point.copy()
+                u_1i_j[:, ii] = u_1i_j[:, ii] - eps_i
 
-                if run_form is True:
-                    obj = Inverse(dist_object=dist_object, samples=u_i1_j, cov=cov)
-                    temp_x_i1_j = obj.x
-                    x_i1_j = temp_x_i1_j.reshape(1, -1)
+                obj_plus = Inverse(dist_object=dist_object, samples=u_i1_j, cov=cov)
+                temp_x_i1_j = obj_plus.x
+                x_i1_j = temp_x_i1_j.reshape(1, -1)
+                qoi_plus = f_eval(x_i1_j)
 
-                    qoi_plus = f_eval(x_i1_j)
-                else:
-                    qoi_plus = f_eval(u_i1_j)
+                obj_minus = Inverse(dist_object=dist_object, samples=u_1i_j, cov=cov)
+                temp_x_1i_j = obj_minus.x
+                x_1i_j = temp_x_1i_j.reshape(1, -1)
+                qoi_minus = f_eval(x_1i_j)
 
-                du_dj[:, ii] = ((qoi_plus[0] - qoi) / eps_i)
+                du_dj[:, ii] = ((qoi_plus[0] - qoi_minus[0]) / (2 * eps_i))
 
             return du_dj
 
         elif order.lower() == 'second':
             print('Calculating second order derivatives..')
+            qoi = kwargs["qoi"]
             d2u_dj = np.zeros([point.shape[0], dimension])
             for ii in range(dimension):
                 u_i1_j = point.copy()
@@ -1414,21 +1400,18 @@ class FORM(TaylorSeries):
                 u_1i_j = point.copy()
                 u_1i_j[:, ii] = u_1i_j[:, ii] - df_step[ii]
 
-                if run_form is True:
-                    obj = Inverse(dist_object=dist_object, samples=u_i1_j, cov=cov)
-                    temp_x_i1_j = obj.x
-                    x_i1_j = temp_x_i1_j.reshape(1, -1)
+                obj = Inverse(dist_object=dist_object, samples=u_i1_j, cov=cov)
+                temp_x_i1_j = obj.x
+                x_i1_j = temp_x_i1_j.reshape(1, -1)
 
-                    obj = Inverse(dist_object=dist_object, samples=u_1i_j, cov=cov)
-                    temp_x_1i_j = obj.x
-                    x_1i_j = temp_x_1i_j.reshape(1, -1)
+                obj = Inverse(dist_object=dist_object, samples=u_1i_j, cov=cov)
+                temp_x_1i_j = obj.x
+                x_1i_j = temp_x_1i_j.reshape(1, -1)
 
-                    qoi_plus = f_eval(x_i1_j)
-                    qoi_minus = f_eval(x_1i_j)
-                else:
-                    qoi_plus = f_eval(u_i1_j)
-                    qoi_minus = f_eval(u_1i_j)
-                d2u_dj[:, ii] = ((qoi_plus[0] - 2 * qoi + qoi_minus[0]) / (df_step[ii] *df_step[ii]))
+                qoi_plus = f_eval(x_i1_j)
+                qoi_minus = f_eval(x_1i_j)
+
+                d2u_dj[:, ii] = ((qoi_plus[0] - 2 * qoi + qoi_minus[0]) / (df_step[ii] * df_step[ii]))
 
             return d2u_dj
 
@@ -1459,32 +1442,26 @@ class FORM(TaylorSeries):
                 u_1i_1j[:, i[0]] -= eps_i1_0
                 u_1i_1j[:, i[1]] -= eps_i1_1
 
-                if run_form:
-                    obj = Inverse(dist_object=dist_object, samples=u_i1_j1, cov=cov)
-                    temp_x_i1_j1 = obj.x
-                    x_i1_j1 = temp_x_i1_j1.reshape(1, -1)
+                obj = Inverse(dist_object=dist_object, samples=u_i1_j1, cov=cov)
+                temp_x_i1_j1 = obj.x
+                x_i1_j1 = temp_x_i1_j1.reshape(1, -1)
 
-                    obj = Inverse(dist_object=dist_object, samples=u_i1_1j, cov=cov)
-                    temp_x_i1_1j = obj.x
-                    x_i1_1j = temp_x_i1_1j[0].reshape(1, -1)
+                obj = Inverse(dist_object=dist_object, samples=u_i1_1j, cov=cov)
+                temp_x_i1_1j = obj.x
+                x_i1_1j = temp_x_i1_1j[0].reshape(1, -1)
 
-                    obj = Inverse(dist_object=dist_object, samples=u_1i_j1, cov=cov)
-                    temp_x_1i_j1 = obj.x
-                    x_1i_j1 = temp_x_1i_j1[0].reshape(1, -1)
+                obj = Inverse(dist_object=dist_object, samples=u_1i_j1, cov=cov)
+                temp_x_1i_j1 = obj.x
+                x_1i_j1 = temp_x_1i_j1[0].reshape(1, -1)
 
-                    obj = Inverse(dist_object=dist_object, samples=u_1i_1j, cov=cov)
-                    temp_x_1i_1j = obj.x
-                    x_1i_1j = temp_x_1i_1j.reshape(1, -1)
+                obj = Inverse(dist_object=dist_object, samples=u_1i_1j, cov=cov)
+                temp_x_1i_1j = obj.x
+                x_1i_1j = temp_x_1i_1j.reshape(1, -1)
 
-                    qoi_0 = f_eval(x_i1_j1)
-                    qoi_1 = f_eval(x_i1_1j)
-                    qoi_2 = f_eval(x_1i_j1)
-                    qoi_3 = f_eval(x_1i_1j)
-                else:
-                    qoi_0 = f_eval(u_i1_j1)
-                    qoi_1 = f_eval(u_i1_1j)
-                    qoi_2 = f_eval(u_1i_j1)
-                    qoi_3 = f_eval(u_1i_1j)
+                qoi_0 = f_eval(x_i1_j1)
+                qoi_1 = f_eval(x_i1_1j)
+                qoi_2 = f_eval(x_1i_j1)
+                qoi_3 = f_eval(x_1i_1j)
 
                 d2u_dij[:, count] = ((qoi_0[0] + qoi_3[0] - qoi_1[0] - qoi_2[0]) / (4 * eps_i1_0 * eps_i1_1))
 
@@ -1512,15 +1489,15 @@ class SORM(TaylorSeries):
 
     """
 
-    def __init__(self, dist_object, model, seed=None, cov=None, n_iter=100, tol=1e-3):
+    def __init__(self, dist_object, runmodel_object, seed=None, cov=None, n_iter=100, tol=1e-3):
 
-        super().__init__(dist_object, model, cov=None, n_iter=100, tol=1e-3)
+        super().__init__(dist_object, runmodel_object, cov=None, n_iter=100, tol=1e-3)
 
-        obj = FORM(dist_object=dist_object, seed=seed, model=model, cov=cov, n_iter=n_iter, tol=tol)
+        obj = FORM(dist_object=dist_object, seed=seed, runmodel_object=runmodel_object, cov=cov, n_iter=n_iter, tol=tol)
         self.dimension = obj.dimension
         self.alpha = obj.alpha
         self.DesignPoint_U = obj.DesignPoint_U
-        self.model = obj.model
+        self.model = obj.runmodel_object
         self.cov = obj.cov
         self.dist_object = dist_object
         self.dg_record = obj.dg_record
@@ -1549,14 +1526,14 @@ class SORM(TaylorSeries):
 
         r1 = np.fliplr(q).T
         hessian_g = self.hessian(self.DesignPoint_U, self.model,
-                                 self.cov, self.dist_object, self.g_record[-1], run_form=True)
+                                 self.cov, self.dist_object, self.g_record[-1])
         matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(self.dg_record[-1])
         kappa = np.linalg.eig(matrix_b[:self.dimension-1, :self.dimension-1])
         self.Prob_SORM = stats.norm.cdf(-self.HL_beta) * np.prod(1 / (1 + self.HL_beta * kappa[0]) ** 0.5)
         self.beta_SORM = -stats.norm.ppf(self.Prob_SORM)
 
     @staticmethod
-    def hessian(point, model, cov, dist_obj, read_qoi, df_step=0.001, run_form=False):
+    def hessian(point, runmodel_object, cov, dist_obj, qoi, df_step=0.001):
         """
         A function to calculate the hessian matrix  using finite differences. The Hessian matrix is a  square matrix
         of second-order partial derivatives of a scalar-valued function. This is a static method, part of the
@@ -1568,16 +1545,8 @@ class SORM(TaylorSeries):
                 Probability distribution of each random variable. Must be an object of type
                 ``DistributionContinuous1D`` or ``JointInd``.
 
-        * **model** (Object or a `callable` ):
-            The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or ``Krig`` (see ``Surrogates``
-            class) object or a `callable`.
-
-        * **run_form** (Boolean):
-            If the ``gradient`` method is used in the framework of FORM, then the input point is in the standard
-            normal space **U**. In this case, the ``Nataf`` class is used to transform the point in the parameter
-            space so it can be used with the model.
-
-            Default: False
+        * **runmodel_object** (Object or a `callable` ):
+            The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.
 
         * **cov** (`ndarray`):
             The correlation  structure (:math:`\mathbf{C_X}`) of the random vector **X** (optional).
@@ -1603,12 +1572,11 @@ class SORM(TaylorSeries):
         dimension = point.shape[1]
 
         dg_second = FORM.gradient(order='second', point=point.reshape(1, -1),
-                                  df_step=df_step, model=model, dist_object=dist_obj,
-                                  cov=cov, read_qoi=read_qoi, run_form=run_form)
+                                  df_step=df_step, runmodel_object=runmodel_object, dist_object=dist_obj,
+                                  cov=cov, qoi=qoi)
 
         dg_mixed = FORM.gradient(order='mixed', point=point.reshape(1, -1),
-                                 df_step=df_step, model=model, dist_object=dist_obj,
-                                 read_qoi=read_qoi, cov=cov, run_form=run_form)
+                                 df_step=df_step, runmodel_object=runmodel_object, dist_object=dist_obj, cov=cov)
 
         hessian = np.diag(dg_second[0, :])
         import itertools
