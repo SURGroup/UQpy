@@ -499,9 +499,6 @@ class RunModel:
         if self.delete_files:
             if self.verbose:
                 print("UQpy: Deleting individual run files.")
-            # dirs2delete = glob.glob(os.path.join(self.model_dir, "run*"))
-            # dirs2delete = os.path.join(self.model_dir, "run*")
-            # shutil.rmtree(dirs2delete)
             for dirname in glob.glob(os.path.join(self.model_dir, "run*")):
                 shutil.rmtree(dirname)
 
@@ -632,9 +629,9 @@ class RunModel:
             # If the Python model is vectorized to accept many samples.
             self.model_output = model_object(self.samples[self.nexist:self.nexist + self.nsim], **self.python_kwargs)
             if self.model_is_class:
-                self.qoi_list = list(self.model_output.qoi)
+                self.qoi_list[self.nexist:self.nexist+self.nsim] = list(self.model_output.qoi)
             else:
-                self.qoi_list = list(self.model_output)
+                self.qoi_list[self.nexist:self.nexist+self.nsim] = list(self.model_output)
         else:
             # If the Python model is not vectorized and accepts only a single sample.
             for i in range(self.nexist, self.nexist + self.nsim):
