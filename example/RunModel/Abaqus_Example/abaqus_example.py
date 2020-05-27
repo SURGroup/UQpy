@@ -1,5 +1,3 @@
-import glob
-import os
 import pickle
 import time
 
@@ -27,7 +25,7 @@ print('Example: Created the model object.')
 # Creating samples using MCS
 d_n = Normal(loc=50, scale=400)
 d_u = Uniform(loc=2.50e8, scale=1.75e7)
-x_mcs = MCS(dist_object=[d_n, d_u], nsamples=100, random_state=[987979, 9487])
+x_mcs = MCS(dist_object=[d_n, d_u], nsamples=100, random_state=987979)
 
 # Running simulations using the previously defined model object and samples
 sample_points = x_mcs.samples

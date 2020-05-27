@@ -11,7 +11,7 @@ dist3 = Uniform(loc=2.0e8, scale=0.5e8)
 names_ = ['fc1', 'fy1', 'Es1',  'fc2', 'fy2', 'Es2', 'fc3', 'fy3', 'Es3', 'fc4', 'fy4', 'Es4', 'fc5', 'fy5', 'Es5',
           'fc6', 'fy6', 'Es6']
 
-x = MCS(dist_object=[dist1, dist2, dist3]*6, nsamples=5)
+x = MCS(dist_object=[dist1, dist2, dist3]*6, nsamples=5, random_state=938475)
 samples = np.array(x.samples).round(2)
 
 
