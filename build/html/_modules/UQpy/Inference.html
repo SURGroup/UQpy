@@ -7,12 +7,12 @@
     <title>UQpy.Inference &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -79,22 +79,6 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define a probabilistic model for inference.</span>
 
-<span class="sd">    This class defines an inference model that will serve as input for all remaining inference classes. A model can be</span>
-<span class="sd">    defined in various ways:</span>
-
-<span class="sd">    * case 1a: Gaussian error model powered by RunModel, i.e., `data ~ h(theta) + eps`, where `eps` is iid Gaussian and</span>
-<span class="sd">      `h` consists in running RunModel. Data is a 1D ndarray in this setting.</span>
-<span class="sd">    * case 1b: non-Gaussian error model powered by RunModel, the user must provide the likelihood function in addition</span>
-<span class="sd">      to a RunModel object. The data type is user-defined and must be consistent with the likelihood function definition</span>
-<span class="sd">    * case 2: the likelihood function is user-defined and does not leverage RunModel. The data type must be consistent</span>
-<span class="sd">      with the likelihood function definition.</span>
-<span class="sd">    * case 3: Learn parameters of a probability distribution pi (in dimension dim). Data is an ndarray of shape</span>
-<span class="sd">      (ndata, dim) and consists in ndata iid samples from pi. The user must define the distribution_object input. The</span>
-<span class="sd">      following lines of code show how to create an object for case 3:</span>
-
-<span class="sd">    &gt;&gt;&gt; dist = Normal(loc=None, scale=None)</span>
-<span class="sd">    &gt;&gt;&gt; candidate_model = InferenceModel(nparams=2, distribution_object=dist)</span>
-
 <span class="sd">    **Input:**</span>
 
 <span class="sd">    * **nparams** (`int`):</span>
@@ -107,26 +91,27 @@
 <span class="sd">        ``RunModel`` class object that defines the forward model. This input is required for cases 1a and 1b.</span>
 
 <span class="sd">    * **log_likelihood** (callable):</span>
-<span class="sd">        Function that defines the log-likelihood model, possibly in conjunction with the run_model_object (cases 1b and</span>
-<span class="sd">        2). Default is None, then a Gaussian-error model is considered (case 1a).</span>
+<span class="sd">        Function that defines the log-likelihood model, possibly in conjunction with the `run_model_object` (cases 1b</span>
+<span class="sd">        and 2). Default is None, and a Gaussian-error model is considered (case 1a).</span>
 
-<span class="sd">        |  If a run_model_object is also defined (case 1b), this function is called as:</span>
+<span class="sd">        |  If a `run_model_object` is also defined (case 1b), this function is called as:</span>
 <span class="sd">        |  `model_outputs = run_model_object.run(samples=params).qoi_list`</span>
 <span class="sd">        |  `log_likelihood(params, model_outputs, data, **kwargs_likelihood)`</span>
 
-<span class="sd">        |  If no run_model_object is defined (case 2), this function is called as:</span>
+<span class="sd">        |  If no `run_model_object` is defined (case 2), this function is called as:</span>
 <span class="sd">        |  `log_likelihood(params, data, **kwargs_likelihood)`</span>
 
 <span class="sd">    * **kwargs_likelihood**:</span>
-<span class="sd">        Key-word arguments transferred to the log-likelihood function.</span>
+<span class="sd">        Keyword arguments transferred to the log-likelihood function.</span>
 
 <span class="sd">    * **dist_object** (object of class ``Distribution``):</span>
-<span class="sd">        Distribution :math:`\pi` for which to learn parameters from iid data (case 3). When creating this</span>
-<span class="sd">        ``Distribution`` object, the parameters to be learnt should be set to None.</span>
+<span class="sd">        Distribution :math:`\pi` for which to learn parameters from iid data (case 3).</span>
+
+<span class="sd">        When creating this ``Distribution`` object, the parameters to be learned should be set to `None`.</span>
 
 <span class="sd">    * **error_covariance** (`ndarray` or `float`):</span>
 <span class="sd">        Covariance for Gaussian error model (case 1a). It can be a scalar (in which case the covariance matrix is the</span>
-<span class="sd">        identity times that value), a 1d `ndarray` in which case the covariance is assumed to be diagonal or a full</span>
+<span class="sd">        identity times that value), a 1d `ndarray` in which case the covariance is assumed to be diagonal, or a full</span>
 <span class="sd">        covariance matrix (2D `ndarray`). Default value is 1.</span>
 
 <span class="sd">    * **prior** (object of class ``Distribution``):</span>
@@ -190,27 +175,28 @@
 
 <div class="viewcode-block" id="InferenceModel.evaluate_log_likelihood"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.InferenceModel.evaluate_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Evaluate the log likelihood `log p(data|params)`.</span>
+<span class="sd">        Evaluate the log likelihood, `log p(data|params)`.</span>
 
-<span class="sd">        This method is the central piece for the Inference module, it is being called repeatedly by all other inference</span>
-<span class="sd">        classes to evaluate the likelihood of the data. The log-likelihood can be evaluated at several parameter vectors</span>
-<span class="sd">        at once, i.e., `params` is a `ndarray` of shape (nsamples, nparams). If the inference model is powered by</span>
-<span class="sd">        ``RunModel`` the `RunModel.run` method is called here, possibly leveraging its serial/parallel execution.</span>
+<span class="sd">        This method is the central piece of the ``Inference`` module, it is being called repeatedly by all other</span>
+<span class="sd">        ``Inference`` classes to evaluate the likelihood of the data. The log-likelihood can be evaluated at several</span>
+<span class="sd">        parameter vectors at once, i.e., `params` is an `ndarray` of shape (nsamples, nparams). If the</span>
+<span class="sd">        ``InferenceModel`` is powered by ``RunModel`` the ``RunModel.run`` method is called here, possibly leveraging</span>
+<span class="sd">        its parallel execution.</span>
 
 <span class="sd">        **Inputs:**</span>
 
 <span class="sd">        * **params** (`ndarray`):</span>
-<span class="sd">            Parameter vector(s) at which to evaluate the likelihood function, `ndarray` of shape (nsamples, nparams).</span>
+<span class="sd">            Parameter vector(s) at which to evaluate the likelihood function, `ndarray` of shape `(nsamples, nparams)`.</span>
 
 <span class="sd">        * **data** (`ndarray`):</span>
-<span class="sd">            Data from which to learn. For case 1b, this should be a `ndarray` of shape (ndata, ). For case 3, it must</span>
-<span class="sd">            be a `ndarray` of shape (ndata, dimension). For other cases it must be consistent with the definition of</span>
-<span class="sd">            the log_likelihood callable input.</span>
+<span class="sd">            Data from which to learn. For case 1b, this should be an `ndarray` of shape `(ndata, )`. For case 3, it must</span>
+<span class="sd">            be an `ndarray` of shape `(ndata, dimension)`. For other cases it must be consistent with the definition of</span>
+<span class="sd">            the ``log_likelihood`` callable input.</span>
 
 <span class="sd">        **Output/Returns:**</span>
 
 <span class="sd">        * (`ndarray`):</span>
-<span class="sd">            Log-likelihood evaluated at all nsamples parameter vector values, `ndarray` of shape (nsamples, ).</span>
+<span class="sd">            Log-likelihood evaluated at all `nsamples` parameter vector values, `ndarray` of shape (nsamples, ).</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -271,7 +257,7 @@
 <span class="sd">        Evaluate the scaled log posterior `log(p(data|params)p(params))`.</span>
 
 <span class="sd">        This method is called by classes that perform Bayesian inference. If the ``InferenceModel`` object does not</span>
-<span class="sd">        possess a prior, an uninformative prior `p(params)=1` is assumed.</span>
+<span class="sd">        possess a prior, an uninformative prior `p(params)=1` is assumed. Warning: This is an improper prior.</span>
 
 <span class="sd">        **Inputs:**</span>
 
@@ -284,7 +270,7 @@
 <span class="sd">        **Output/Returns:**</span>
 
 <span class="sd">        * (`ndarray`):</span>
-<span class="sd">            Log-posterior evaluated at all nsamples parameter vector values, `ndarray` of shape (nsamples, ).</span>
+<span class="sd">            Log-posterior evaluated at all `nsamples` parameter vector values, `ndarray` of shape (nsamples, ).</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Compute log likelihood</span>
@@ -307,15 +293,7 @@
 
 <div class="viewcode-block" id="MLEstimation"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.MLEstimation">[docs]</a><span class="k">class</span> <span class="nc">MLEstimation</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Evaluate the maximum likelihood estimate of a model given some data.</span>
-
-<span class="sd">    &gt;&gt;&gt; candidate_model = InferenceModel(nparams=2, dist_object=Normal(loc=None, scale=None))</span>
-<span class="sd">    &gt;&gt;&gt; data = np.array([0.2, -0.3, 0.01]).reshape((-1, 1))</span>
-<span class="sd">    &gt;&gt;&gt; ml_estimator = MLEstimation(inference_model=candidate_model, data=data, nopt=2)</span>
-<span class="sd">    &gt;&gt;&gt; print(ml_estimator.mle)</span>
-<span class="sd">    [-0.03        0.20607442]</span>
-<span class="sd">    &gt;&gt;&gt; print(ml_estimator.max_log_like)</span>
-<span class="sd">    0.4817381371542576</span>
+<span class="sd">    Estimate the maximum likelihood parameters of a model given some data.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -333,22 +311,22 @@
 <span class="sd">          the code as:</span>
 <span class="sd">        | `optimizer(func, x0, **kwargs_optimizer)`</span>
 
-<span class="sd">        It must return an object with attributes x (minimizer) and fun (minimum function value).</span>
+<span class="sd">        It must return an object with attributes `x` (minimizer) and `fun` (minimum function value).</span>
 
-<span class="sd">        Default is scipy.optimize.minimize.</span>
+<span class="sd">        Default is `scipy.optimize.minimize`.</span>
 
 <span class="sd">    * **kwargs_optimizer**:</span>
-<span class="sd">        Key-word arguments that will be transferred to the optimizer.</span>
+<span class="sd">        Keyword arguments that will be transferred to the optimizer.</span>
 
 <span class="sd">    * **x0** (`ndarray`):</span>
-<span class="sd">        Starting point(s) for optimization, see `run_estimation`. Default is None.</span>
+<span class="sd">        Starting point(s) for optimization, see `run_estimation`. Default is `None`.</span>
 
 <span class="sd">    * **nopt** (`int`):</span>
-<span class="sd">        Number of iterations that the optimization is run, starting at random initial guesses. See `run_estiamtion`.</span>
-<span class="sd">        Default is None.</span>
+<span class="sd">        Number of iterations that the optimization is run, starting at random initial guesses. See `run_estimation`.</span>
+<span class="sd">        Default is `None`.</span>
 
-<span class="sd">    If both `x0` and `nopt` are None, the object is created but the optimization procedure is not run, one must</span>
-<span class="sd">    call the run method.</span>
+<span class="sd">    If both `x0` and `nopt` are `None`, the object is created but the optimization procedure is not run, one must</span>
+<span class="sd">    call the ``run`` method.</span>
 
 <span class="sd">    **Attributes:**</span>
 
@@ -394,25 +372,25 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the maximum likelihood estimation procedure.</span>
 
-<span class="sd">        This function runs the optimization and updates the mle and max_log_like attributes of the class. When learning</span>
-<span class="sd">        the parameters of a distribution, if dist_object possesses an mle method this method is leveraged. If `x0` or</span>
-<span class="sd">        `nopt` are given when creating the MLEstimation object, this method is called directly when the object is</span>
-<span class="sd">        created.</span>
+<span class="sd">        This function runs the optimization and updates the `mle` and `max_log_like` attributes of the class. When</span>
+<span class="sd">        learning the parameters of a distribution, if `dist_object` possesses an ``mle`` method this method is used. If</span>
+<span class="sd">        `x0` or `nopt` are given when creating the ``MLEstimation`` object, this method is called automatically when the</span>
+<span class="sd">        object is created.</span>
 
 <span class="sd">        **Inputs:**</span>
 
 <span class="sd">        * **x0** (`ndarray`):</span>
-<span class="sd">            Initial guess(es) for optimization, ndarray of shape (nstarts, nparams) or (nparams, ), where nstarts is</span>
-<span class="sd">            the number of times the optimizer will be called. Alternatively, the user can provide input nopt to</span>
-<span class="sd">            randomly samples initial guess(es). The identified MLE is the one that yields the maximum log likelihood</span>
-<span class="sd">            over all calls of the optimizer.</span>
+<span class="sd">            Initial guess(es) for optimization, `ndarray` of shape `(nstarts, nparams)` or `(nparams, )`, where</span>
+<span class="sd">            `nstarts` is the number of times the optimizer will be called. Alternatively, the user can provide input</span>
+<span class="sd">            `nopt` to randomly sample initial guess(es). The identified MLE is the one that yields the maximum log</span>
+<span class="sd">            likelihood over all calls of the optimizer.</span>
 
 <span class="sd">        * **nopt** (`int`):</span>
 <span class="sd">            Number of iterations that the optimization is run, starting at random initial guesses. It is only used if</span>
 <span class="sd">            `x0` is not provided. Default is 1.</span>
 
 <span class="sd">            The random initial guesses are sampled uniformly between 0 and 1, or uniformly between user-defined bounds</span>
-<span class="sd">            if an input bounds is provided to the ``MLEstimation`` object.</span>
+<span class="sd">            if an input bounds is provided as a keyword argument to the ``MLEstimation`` object.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Run optimization (use x0 if provided, otherwise sample starting point from [0, 1] or bounds)</span>
@@ -496,37 +474,28 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Estimate the parameter posterior density given some data.</span>
 
-<span class="sd">    This class generates samples from the parameter posterior distribution, using MCMC or IS. It leverages the MCMC and</span>
-<span class="sd">    IS classes from the SampleMethods module.</span>
+<span class="sd">    This class generates samples from the parameter posterior distribution using Markov Chain Monte Carlo or Importance</span>
+<span class="sd">    Sampling. It leverages the ``MCMC`` and ``IS`` classes from the ``SampleMethods`` module.</span>
 
-<span class="sd">    &gt;&gt;&gt; from UQpy.Distributions import JointInd, Uniform, Lognormal</span>
-<span class="sd">    &gt;&gt;&gt; prior = JointInd(marginals=[Uniform(loc=0., scale=15), Lognormal(s=1., loc=0., scale=1.)])</span>
-<span class="sd">    &gt;&gt;&gt; candidate_model = InferenceModel(dist_object=Normal(loc=None, scale=None), nparams=2, prior=prior)</span>
-<span class="sd">    &gt;&gt;&gt; from UQpy.SampleMethods import MH</span>
-<span class="sd">    &gt;&gt;&gt; data = np.array([0.2, -0.3, 0.01]).reshape((-1, 1))</span>
-<span class="sd">    &gt;&gt;&gt; bayes_estimator = BayesParameterEstimation(data=data, inference_model=candidate_model, sampling_class=MH)</span>
-<span class="sd">    &gt;&gt;&gt; bayes_estimator.run(nsamples=5)</span>
-<span class="sd">    &gt;&gt;&gt; print(bayes_estimator.sampler.samples.shape)</span>
-<span class="sd">    (5, 2)</span>
 
 <span class="sd">    **Inputs:**</span>
 
-<span class="sd">    * **model** (object of class ``InferenceModel``):</span>
+<span class="sd">    * **inference_model** (object of class ``InferenceModel``):</span>
 <span class="sd">        The inference model that defines the likelihood function.</span>
 
 <span class="sd">    * **data** (`ndarray`):</span>
-<span class="sd">        Available data, `ndarray` of shape consistent with log-likelihood function in InferenceModel</span>
+<span class="sd">        Available data, `ndarray` of shape consistent with log-likelihood function in ``InferenceModel``</span>
 
 <span class="sd">    * **sampling_class** (class instance):</span>
 <span class="sd">        Class instance, must be a subclass of ``MCMC`` or ``IS``.</span>
 
 <span class="sd">    * **kwargs_sampler**:</span>
-<span class="sd">        Key-word arguments of the sampling class, see ``SampleMethods.MCMC`` or ``SampleMethods.IS``.</span>
+<span class="sd">        Keyword arguments of the sampling class, see ``SampleMethods.MCMC`` or ``SampleMethods.IS``.</span>
 
-<span class="sd">        Note on the seed for MCMC: if input `seed` is not provided, a seed (`ndarray` of shape (nchains, dimension)) is</span>
-<span class="sd">        sampled from the prior pdf, which must have an `rvs` method.</span>
+<span class="sd">        Note on the seed for ``MCMC``: if input `seed` is not provided, a seed (`ndarray` of shape</span>
+<span class="sd">        `(nchains, dimension)`) is sampled from the prior pdf, which must have an `rvs` method.</span>
 
-<span class="sd">        Note on the proposal for IS: if no input `proposal` is provided, the prior is used as proposal.</span>
+<span class="sd">        Note on the proposal for ``IS``: if no input `proposal` is provided, the prior is used as proposal.</span>
 
 <span class="sd">    * **nsamples** (`int`):</span>
 <span class="sd">        Number of samples used in MCMC/IS, see `run` method.</span>
@@ -534,12 +503,12 @@
 <span class="sd">    * **samples_per_chain** (`int`):</span>
 <span class="sd">        Number of samples per chain used in MCMC, see `run` method.</span>
 
-<span class="sd">    If both `nsamples` and `nsamples_per_chain` are None, the object is created but the sampling procedure is not run,</span>
-<span class="sd">    one must call the run method.</span>
+<span class="sd">    If both `nsamples` and `nsamples_per_chain` are `None`, the object is created but the sampling procedure is not run,</span>
+<span class="sd">    one must call the ``run`` method.</span>
 
 <span class="sd">    **Attributes:**</span>
 
-<span class="sd">    * **sampler** (object of sampling_class):</span>
+<span class="sd">    * **sampler** (object of ``SampleMethods`` class specified by `sampling_class`):</span>
 <span class="sd">        Sampling method object, contains e.g. the posterior samples.</span>
 
 <span class="sd">        This object is created along with the ``BayesParameterEstimation`` object, and its `run` method is called</span>
@@ -595,16 +564,16 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the Bayesian inference procedure, i.e., sample from the parameter posterior distribution.</span>
 
-<span class="sd">        This function calls the `run` method of the `sampler` attribute to generate samples from the parameter posterior</span>
-<span class="sd">        distribution.</span>
+<span class="sd">        This function calls the ``run`` method of the `sampler` attribute to generate samples from the parameter</span>
+<span class="sd">        posterior distribution.</span>
 
 <span class="sd">        **Inputs:**</span>
 
 <span class="sd">        * **nsamples** (`int`):</span>
-<span class="sd">            Number of samples used in MCMC/IS</span>
+<span class="sd">            Number of samples used in ``MCMC``/``IS``</span>
 
 <span class="sd">        * **samples_per_chain** (`int`):</span>
-<span class="sd">            Number of samples per chain used in MCMC</span>
+<span class="sd">            Number of samples per chain used in ``MCMC``</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -636,16 +605,6 @@
 <span class="sd">    likelihood estimation, thus inputs to ``MLEstimation`` can also be provided to ``InfoModelSelection``, as lists of</span>
 <span class="sd">    length equal to the number of models.</span>
 
-<span class="sd">    &gt;&gt;&gt; from UQpy.Distributions import Gamma, Exponential</span>
-<span class="sd">    &gt;&gt;&gt; m0 = InferenceModel(dist_object=Gamma(a=None, loc=None, scale=None), nparams=3, name=&#39;gamma&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; m1 = InferenceModel(dist_object=Exponential(loc=None, scale=None), nparams=2, name=&#39;exponential&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; data = np.array([[0.98948677], [1.68020571], [2.45840788]])</span>
-<span class="sd">    &gt;&gt;&gt; selector = InfoModelSelection(candidate_models=[m0, m1], data=data, criterion=&#39;BIC&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; selector.run(nopt=3)</span>
-<span class="sd">    &gt;&gt;&gt; print(selector.ml_estimators[0].mle)</span>
-<span class="sd">    [ 3.95134934e+02 -1.01996273e+01  3.01344306e-02]</span>
-<span class="sd">    &gt;&gt;&gt; print(selector.ml_estimators[1].mle)</span>
-<span class="sd">    [0.98948677 0.71988002]</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -656,30 +615,30 @@
 <span class="sd">        Available data</span>
 
 <span class="sd">    * **criterion** (`str`):</span>
-<span class="sd">        Criterion to be used (AIC, BIC, AICc). Default is &#39;AIC&#39;</span>
+<span class="sd">        Criterion to be used (&#39;AIC&#39;, &#39;BIC&#39;, &#39;AICc&#39;). Default is &#39;AIC&#39;</span>
 
 <span class="sd">    * **kwargs**:</span>
-<span class="sd">        Additional key-word inputs to the maximum likelihood estimators.</span>
+<span class="sd">        Additional keyword inputs to the maximum likelihood estimators.</span>
 
-<span class="sd">        Keys must refer to input names to the ``MLEstimation`` class, and values must be lists of length nmodels,</span>
+<span class="sd">        Keys must refer to input names to the ``MLEstimation`` class, and values must be lists of length `nmodels`,</span>
 <span class="sd">        ordered in the same way as input `candidate_models`. For example, setting</span>
 <span class="sd">        `kwargs={`method&#39;: [`Nelder-Mead&#39;, `Powell&#39;]}` means that the Nelder-Mead minimization algorithm will be used</span>
 <span class="sd">        for ML estimation of the first candidate model, while the Powell method will be used for the second candidate</span>
 <span class="sd">        model.</span>
 
 <span class="sd">    * **x0** (`list` of `ndarrays`):</span>
-<span class="sd">        Starting points for optimization - see MLEstimation</span>
+<span class="sd">        Starting points for optimization - see ``MLEstimation``</span>
 
 <span class="sd">    * **nopt** (`list` of `int`):</span>
-<span class="sd">        Number of iterations for the maximization procedure - see MLEstimation</span>
+<span class="sd">        Number of iterations for the maximization procedure - see ``MLEstimation``</span>
 
-<span class="sd">    If `x0` and `nopt` are both None, the object is created but the model selection procedure is not run, one</span>
-<span class="sd">    must then call the `run` method.</span>
+<span class="sd">    If `x0` and `nopt` are both `None`, the object is created but the model selection procedure is not run, one</span>
+<span class="sd">    must then call the ``run`` method.</span>
 
 <span class="sd">    **Attributes:**</span>
 
 <span class="sd">    * **ml_estimators** (`list` of `MLEstimation` objects):</span>
-<span class="sd">        MLEstimation results for each model (contains e.g. fitted parameters)</span>
+<span class="sd">        ``MLEstimation`` results for each model (contains e.g. fitted parameters)</span>
 
 <span class="sd">    * **criterion_values** (`list` of `floats`):</span>
 <span class="sd">        Value of the criterion for all models.</span>
@@ -688,7 +647,11 @@
 <span class="sd">        Value of the penalty term for all models. Data fit term is then criterion_value - penalty_term.</span>
 
 <span class="sd">    * **probabilities** (`list` of `floats`):</span>
-<span class="sd">        Value of the model probabilities, computed as `P = exp(-criterion/2)`.</span>
+<span class="sd">        Value of the model probabilities, computed as</span>
+
+<span class="sd">        .. math:: P(M_i|d) = \dfrac{\exp(-\Delta_i/2)}{\sum_i \exp(-\Delta_i/2)}</span>
+
+<span class="sd">        where :math:`\Delta_i = criterion_i - min_i(criterion)`</span>
 
 <span class="sd">    **Methods:**</span>
 
@@ -734,13 +697,13 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the model selection procedure, i.e. compute criterion value for all models.</span>
 
-<span class="sd">        This function calls the `run` method of the MLEstimation object for each model to compute the maximum</span>
+<span class="sd">        This function calls the ``run`` method of the ``MLEstimation`` object for each model to compute the maximum</span>
 <span class="sd">        log-likelihood, then computes the criterion value and probability for each model.</span>
 
 <span class="sd">        **Inputs:**</span>
 
 <span class="sd">        * **x0** (`list` of `ndarrays`):</span>
-<span class="sd">            Starting point(s) for optimization for all models. Default is None. If not provided, see `nopt`. See</span>
+<span class="sd">            Starting point(s) for optimization for all models. Default is `None`. If not provided, see `nopt`. See</span>
 <span class="sd">            ``MLEstimation`` class.</span>
 
 <span class="sd">        * **nopt** (`int` or `list` of `ints`):</span>
@@ -773,7 +736,7 @@
 
 <div class="viewcode-block" id="InfoModelSelection.sort_models"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.InfoModelSelection.sort_models">[docs]</a>    <span class="k">def</span> <span class="nf">sort_models</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Sort models in descending order of model probability (increasing order of criterion value).</span>
+<span class="sd">        Sort models in descending order of model probability (increasing order of `criterion` value).</span>
 
 <span class="sd">        This function sorts - in place - the attribute lists `candidate_models, ml_estimators, criterion_values,</span>
 <span class="sd">        penalty_terms` and `probabilities` so that they are sorted from most probable to least probable model. It is a</span>
@@ -877,8 +840,8 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform model selection via Bayesian inference, i.e., compute model posterior probabilities given data.</span>
 
-<span class="sd">    This class leverages the BayesParameterEstimation class to get samples from the parameter posterior densities. These</span>
-<span class="sd">    samples are then used to compute the model evidence `p(data|model)` for all models and the model posterior</span>
+<span class="sd">    This class leverages the ``BayesParameterEstimation`` class to get samples from the parameter posterior densities.</span>
+<span class="sd">    These samples are then used to compute the model evidence `p(data|model)` for all models and the model posterior</span>
 <span class="sd">    probabilities.</span>
 
 <span class="sd">    **References:**</span>
@@ -901,21 +864,21 @@
 <span class="sd">        as of v3, only the harmonic mean method is supported</span>
 
 <span class="sd">    * **kwargs**:</span>
-<span class="sd">        Key-word inputs to the ``BayesParameterEstimation`` class, for each model.</span>
+<span class="sd">        Keyword arguments to the ``BayesParameterEstimation`` class, for each model.</span>
 
-<span class="sd">        Keys must refer to names of inputs to the ``MLEstimation`` class, and values should be lists of length nmodels,</span>
-<span class="sd">        ordered in the same way as input candidate_models. For example, setting</span>
+<span class="sd">        Keys must refer to names of inputs to the ``MLEstimation`` class, and values should be lists of length</span>
+<span class="sd">        `nmodels`, ordered in the same way as input candidate_models. For example, setting</span>
 <span class="sd">        `kwargs={`sampling_class&#39;: [MH, Stretch]}` means that the MH algorithm will be used for sampling from the</span>
 <span class="sd">        parameter posterior pdf of the 1st candidate model, while the Stretch algorithm will be used for the 2nd model.</span>
 
 <span class="sd">    * **nsamples** (`list` of `int`):</span>
-<span class="sd">        Number of samples used in MCMC/IS, for each model</span>
+<span class="sd">        Number of samples used in ``MCMC``/``IS``, for each model</span>
 
 <span class="sd">    * **samples_per_chain** (`list` of `int`):</span>
-<span class="sd">        Number of samples per chain used in MCMC, for each model</span>
+<span class="sd">        Number of samples per chain used in ``MCMC``, for each model</span>
 
-<span class="sd">    If `nsamples` and `nsamples_per_chain` are both None, the object is created but the model selection procedure is not</span>
-<span class="sd">    run, one must then call the `run` method.</span>
+<span class="sd">    If `nsamples` and `nsamples_per_chain` are both `None`, the object is created but the model selection procedure is</span>
+<span class="sd">    not run, one must then call the ``run`` method.</span>
 
 <span class="sd">    **Attributes:**</span>
 
@@ -977,19 +940,19 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the Bayesian model selection procedure, i.e., compute model posterior probabilities.</span>
 
-<span class="sd">        This function calls the run_estimation method of the BayesParameterEstimation object for each model to sample</span>
-<span class="sd">        from the parameter posterior probability, then computes the model evidence and model posterior probability.</span>
-<span class="sd">        This function updates attributes bayes_estimators, evidences and probabilities. If nsamples or</span>
-<span class="sd">        nsamples_per_chain are given when creating the object, this method is called directly when the object is</span>
+<span class="sd">        This function calls the ``run_estimation`` method of the ``BayesParameterEstimation`` object for each model to</span>
+<span class="sd">        sample from the parameter posterior probability, then computes the model evidence and model posterior</span>
+<span class="sd">        probability. This function updates attributes `bayes_estimators`, `evidences` and `probabilities`. If `nsamples`</span>
+<span class="sd">        or `nsamples_per_chain` are given when creating the object, this method is called directly when the object is</span>
 <span class="sd">        created. It can also be called separately.</span>
 
 <span class="sd">        **Inputs:**</span>
 
 <span class="sd">        * **nsamples** (`list` of `int`):</span>
-<span class="sd">            Number of samples used in MCMC/IS, for each model</span>
+<span class="sd">            Number of samples used in ``MCMC``/``IS``, for each model</span>
 
 <span class="sd">        * **samples_per_chain** (`list` of `int`):</span>
-<span class="sd">            Number of samples per chain used in MCMC, for each model</span>
+<span class="sd">            Number of samples per chain used in ``MCMC``, for each model</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -1028,9 +991,9 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sort models in descending order of model probability (increasing order of criterion value).</span>
 
-<span class="sd">        This function sorts - in place - the attribute lists candidate_models, prior_probabilities, probabilities and</span>
-<span class="sd">        evidences so that they are sorted from most probable to least probable model. It is a stand-alone function that</span>
-<span class="sd">        is provided to help the user to easily visualize which model is the best.</span>
+<span class="sd">        This function sorts - in place - the attribute lists `candidate_models`, `prior_probabilities`, `probabilities`</span>
+<span class="sd">        and `evidences` so that they are sorted from most probable to least probable model. It is a stand-alone function</span>
+<span class="sd">        that is provided to help the user to easily visualize which model is the best.</span>
 
 <span class="sd">        No inputs/outputs.</span>
 
@@ -1168,7 +1131,7 @@
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1177,7 +1140,7 @@
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
