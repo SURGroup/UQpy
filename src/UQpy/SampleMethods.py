@@ -174,7 +174,7 @@ class MCS:
         if isinstance(self.dist_object, list):
             temp_samples = list()
             for i in range(len(self.dist_object)):
-                if hasattr(self.dist_object[i], 'rvs'):
+                if  (self.dist_object[i], 'rvs'):
                     temp_samples.append(self.dist_object[i].rvs(nsamples=nsamples, random_state=random_state))
                 else:
                     ValueError('UQpy: rvs method is missing.')
@@ -542,6 +542,7 @@ class LHS:
 
         return lhs_samples
 
+
 ########################################################################################################################
 ########################################################################################################################
 #                                         Stratified Sampling  (STS)
@@ -557,94 +558,130 @@ class STS:
 
     **Input:**
 
-    :param dimension: A scalar value defining the dimension of target density function.
-                      Default: Length of sts_design.
-    :type dimension: int
+    * **dist_object** ((list of) ``Distribution`` object(s)):
+            List of ``Distribution`` objects corresponding to each random variable.
 
-    :param dist_name: A list containing the names of the distributions of the random variables.
-                      Distribution names must match those in the Distributions module.
-                      If the distribution does not match one from the Distributions module, the user must
-                      provide custom_dist.py.
-                      The length of the string must be 1 (if all distributions are the same) or equal to
-                      dimension.
-    :type dist_name: string list
+    * **nsamples** (`int`):
+            Total number of samples. Required for voronoi stratification.
 
-    :param dist_params: Parameters of the distribution
-                        Parameters for each random variable are defined as ndarrays.
-                        Each item in the list, dist_params[i], specifies the parameters for the corresponding
-                        distribution, dist[i].
-    :type dist_params: list
+    * **sts_design** (`list`):
+            List of integers specifiying the number of strata in each dimension. Required for rectangular
+            stratification.
 
-    param: distribution: An object list containing the distributions of the random variables.
-                         Each item in the list is an object of the Distribution class (see Distributions.py).
-                         The list has length equal to dimension.
-    :type distribution: list
+    * **sts_criterion** (`str`):
+            Random or Centered samples inside a rectangular strata.
+            Options:
+                    1. 'random' - completely random. \n
+                    2. 'centered' - points only at the centre. \n
 
-    :param sts_design: Specifies the number of strata in each dimension
-    :type sts_design: int list
+            Default: 'random'
 
-    :param input_file: File path to input file specifying stratum origins and stratum widths.
-                       Default: None.
-    :type input_file: string
+    * **stype** (`str`):
+            Type of the strata (Rectangular or Voronoi).
+
+    * **n_iters** (`int`):
+            Default: 20
+
+    * **input_file** (`str`):
+            File path to input file specifying stratum origins and stratum widths.
+
+            Default: None.
+
+    * **random_state** (None or `int` or `np.random.RandomState` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
+
+    * **verbose** (`Boolean`):
+            A boolean declaring whether to write text to the terminal.
+
+            Default value: False
 
     **Attributes:**
 
-    :return: STS.samples: Set of stratified samples.
-    :rtype: STS.samples: ndarray
+    * **samples** (`ndarray`):
+            `ndarray` containing the generated samples.
 
-    :return: STS.samplesU01: Set of uniform stratified samples on [0, 1]^dimension
-    :rtype: STS.samplesU01: ndarray
+    * **samplesU01** (`ndarray`):
+            `ndarray` containing the generated samples on [0, 1]^dimension.
 
-    :return: STS.strata: Instance of the class SampleMethods.Strata
-    :rtype: STS.strata: ndarray
+    * **samples** (`class object`):
+            Instance of the class SampleMethods.Strata
 
-    **Authors:**
+    **Methods:**
 
-    Authors: Michael Shields
-    Last modified: 6/7/2018 by Dimitris Giovanis & Michael Shields
     """
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, sts_design=None, input_file=None,
-                 sts_criterion="random", stype='Rectangular', nsamples=None, n_iters=20):
+    def __init__(self, dist_object, nsamples=None, sts_design=None, sts_criterion="random", stype='Rectangular',
+                 input_file=None, n_iters=20, random_state=None, verbose=False):
 
-        if dimension is None:
-            self.dimension = len(dist_name)
-        else:
-            self.dimension = dimension
         self.stype = stype
-        self.sts_design = sts_design
         self.input_file = input_file
-        self.dist_name = dist_name
-        self.dist_params = dist_params
         self.strata = None
         self.sts_criterion = sts_criterion
+        self.verbose = verbose
         self.nsamples = nsamples
+        self.sts_design = sts_design
+        self.n_iters = n_iters
+        self.samplesU01, self.samples = None, None
 
-        if self.stype == 'Voronoi':
-            self.n_iters = n_iters
+        # Check if a Distribution object is provided.
+        from UQpy.Distributions import DistributionContinuous1D, JointInd
 
-        self.init_sts()
-        self.distribution = [None] * self.dimension
-        for i in range(self.dimension):
-            self.distribution[i] = Distribution(self.dist_name[i])
+        if isinstance(dist_object, list):
+            self.dimension = len(dist_object)
+            for i in range(len(dist_object)):
+                if not isinstance(dist_object[i], DistributionContinuous1D):
+                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
+        else:
+            self.dimension = 1
+            if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
+                raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
-        if self.stype == 'Voronoi':
-            self.run_sts()
-        elif self.stype == 'Rectangular':
-            self.samplesU01, self.samples = self.run_sts()
+        self.dist_object = dist_object
 
-    def run_sts(self):
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
+        # Check sampling criterion
+        if self.sts_criterion not in ['random', 'centered']:
+            raise NotImplementedError("Exit code: Supported sts criteria: 'random', 'centered'")
+
+        if self.stype == 'Rectangular':
+            if sts_design is not None:
+                self.run(sts_design=sts_design)
+            if input_file is not None:
+                self.run(input_file=input_file)
+        elif self.stype == 'Voronoi' and nsamples is not None:
+            self.run(nsamples=nsamples)
+
+    def run(self, nsamples=None, sts_design=None, input_file=None):
         """
         Execute stratified sampling
 
         This is an instance method that runs stratified sampling. It is automatically called when the STS class is
         instantiated.
         """
+        self.nsamples = nsamples
+        self.sts_design = sts_design
+        self.input_file = input_file
+
+        if self.verbose:
+            print('UQpy: Running Stratified Sampling...')
 
         if self.stype == 'Rectangular':
+            if self.sts_design is None:
+                if self.input_file is None:
+                    raise NotImplementedError("UQpy: Stratum design is not defined.")
+                else:
+                    self.strata = Strata(input_file=self.input_file)
+            else:
+                self.strata = Strata(n_strata=self.sts_design)
+
             samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
             samples_u_to_x = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
             for j in range(0, self.strata.origins.shape[1]):
-                i_cdf = self.distribution[j].icdf
+                i_cdf = self.dist_object[j].icdf
                 if self.sts_criterion == "random":
                     for i in range(0, self.strata.origins.shape[0]):
                         samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
@@ -653,10 +690,9 @@ class STS:
                     for i in range(0, self.strata.origins.shape[0]):
                         samples[i, j] = self.strata.origins[i, j] + self.strata.widths[i, j] / 2.
 
-                samples_u_to_x[:, j] = i_cdf(np.atleast_2d(samples[:, j]).T, self.dist_params[j])
+                samples_u_to_x[:, j] = i_cdf(samples[:, j])
 
-            print('UQpy: Successful execution of STS design..')
-            return samples, samples_u_to_x
+            self.samples, self.samplesU01 = samples_u_to_x, samples
 
         elif self.stype == 'Voronoi':
             from UQpy.Utilities import compute_Voronoi_centroid_volume, voronoi_unit_hypercube
@@ -664,7 +700,6 @@ class STS:
             samples_init = np.random.rand(self.nsamples, self.dimension)
 
             for i in range(self.n_iters):
-                # x = self.in_hypercube(samples_init)
                 self.strata = voronoi_unit_hypercube(samples_init)
 
                 self.strata.centroids = []
@@ -680,9 +715,11 @@ class STS:
             self.samplesU01 = self.strata.bounded_points
 
             self.samples = np.zeros(np.shape(self.samplesU01))
-            for i in range(self.dimension):
-                self.samples[:, i] = self.distribution[i].icdf(np.atleast_2d(self.samplesU01[:, i]).T,
-                                                               self.dist_params[i]).T
+            for i in range(self.samples.shape[1]):
+                self.samples[:, i] = self.dist_object[i].icdf(np.atleast_2d(self.samplesU01[:, i]).T).T
+
+        if self.verbose:
+            print('Successful execution of STS design.')
 
     def in_hypercube(self, samples):
 
@@ -691,54 +728,6 @@ class STS:
             in_cube = np.logical_and(in_cube, np.logical_and(0 <= samples[:, i], samples[:, i] <= 1))
 
         return in_cube
-
-    def init_sts(self):
-        """Preliminary error checks."""
-
-        # Check for dimensional consistency
-        if self.dimension is None and self.sts_design is not None:
-            self.dimension = len(self.sts_design)
-        elif self.sts_design is not None:
-            if self.dimension != len(self.sts_design):
-                raise NotImplementedError("Exit code: Incompatible dimensions.")
-        elif self.sts_design is None and self.dimension is None:
-            raise NotImplementedError("Exit code: Dimension must be specified.")
-
-        # Check dist_name
-        if type(self.dist_name).__name__ != 'list':
-            self.dist_name = [self.dist_name]
-        if len(self.dist_name) == 1 and self.dimension != 1:
-            self.dist_name = self.dist_name * self.dimension
-        elif len(self.dist_name) != self.dimension:
-            raise NotImplementedError("Length of i_cdf should be 1 or equal to dimension.")
-
-        # Check dist_params
-        if type(self.dist_params).__name__ != 'list':
-            self.dist_params = [self.dist_params]
-        if len(self.dist_params) == 1 and self.dimension != 1:
-            self.dist_params = self.dist_params * self.dimension
-        elif len(self.dist_params) != self.dimension:
-            raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension.")
-
-        # Ensure that distribution parameters are assigned
-        if self.dist_params is None:
-            raise NotImplementedError("Exit code: Distribution parameters not defined.")
-
-        if self.stype == 'Rectangular':
-            if self.sts_design is None:
-                if self.input_file is None:
-                    raise NotImplementedError("Exit code: Stratum design is not defined.")
-                else:
-                    self.strata = Strata(input_file=self.input_file)
-            else:
-                if len(self.sts_design) != self.dimension:
-                    raise NotImplementedError("Exit code: Incompatible dimensions in 'sts_design'.")
-                else:
-                    self.strata = Strata(n_strata=self.sts_design)
-
-        # Check sampling criterion
-        if self.sts_criterion not in ['random', 'centered']:
-            raise NotImplementedError("Exit code: Supported sts criteria: 'random', 'centered'")
 
 ########################################################################################################################
 ########################################################################################################################
@@ -904,8 +893,8 @@ class RSS:
 
     **Input:**
 
-    :param run_model_object: A RunModel object, which is used to evaluate the function value
-    :type run_model_object: class
+    :param runmodel_object: A RunModel object, which is used to evaluate the function value
+    :type runmodel_object: class
 
     :param sample_object: A SampleMethods class object, which contains information about existing samples
     :type sample_object: class
@@ -940,14 +929,14 @@ class RSS:
     Last modified: 01/07/2020 by Mohit S. Chauhan
     """
 
-    def __init__(self, sample_object=None, run_model_object=None, krig_object=None, local=False, max_train_size=None,
-                 step_size=0.005, qoi_name=None, n_add=1, verbose=False):
+    def __init__(self, sample_object=None, runmodel_object=None, krig_object=None, local=False, max_train_size=None,
+                 step_size=0.005, qoi_name=None, n_add=1, nsamples=None, verbose=False):
 
         # Initialize attributes that are common to all approaches
         self.sample_object = sample_object
-        self.run_model_object = run_model_object
+        self.runmodel_object = runmodel_object
         self.verbose = verbose
-        self.nsamples = 0
+        self.nsamples = nsamples
 
         self.cell = self.sample_object.stype
         self.dimension = np.shape(self.sample_object.samples)[1]
@@ -959,25 +948,40 @@ class RSS:
             self.mesh_vertices, self.vertices_in_U01 = [], []
             self.points_to_samplesU01, self.training_points = [], []
 
-        # Run Initial Error Checks
-        self.init_rss()
+        # Initial Error Checks
+        if type(self.sample_object).__name__ not in ['STS', 'RSS']:
+            raise NotImplementedError("UQpy Error: sample_object must be an object of the STS or RSS class.")
 
-        if run_model_object is not None:
+        if self.runmodel_object is not None:
+            if type(self.runmodel_object).__name__ not in ['RunModel']:
+                raise NotImplementedError("UQpy Error: runmodel_object must be an object of the RunModel class.")
+
+        if runmodel_object is not None:
             self.local = local
             self.max_train_size = max_train_size
-            self.krig_object = krig_object
+            if krig_object is not None:
+                if hasattr(krig_object, 'fit') and hasattr(krig_object, 'predict'):
+                    self.krig_object = krig_object
+                else:
+                    raise NotImplementedError("UQpy Error: krig_object must have 'fit' and 'predict' methods.")
             self.qoi_name = qoi_name
             self.step_size = step_size
             if self.verbose:
                 print('UQpy: GE-RSS - Running the initial sample set.')
-            self.run_model_object.run(samples=self.sample_object.samples)
+            self.runmodel_object.run(samples=self.sample_object.samples)
             if self.verbose:
                 print('UQpy: GE-RSS - A RSS class object has been initiated.')
         else:
             if self.verbose:
                 print('UQpy: RSS - A RSS class object has been initiated.')
 
-    def sample(self, nsamples=0, n_add=None):
+        if self.nsamples is not None:
+            if isinstance(self.nsamples, int) and self.nsamples > 0:
+                self.run(nsamples=self.nsamples)
+            else:
+                raise NotImplementedError("UQpy Error: nsamples should be a positive integer.")
+
+    def run(self, nsamples=0):
         """
         Execute refined stratified sampling.
 
@@ -988,18 +992,13 @@ class RSS:
 
         :param nsamples: Final size of the samples.
         :type nsamples: int
-
-        :param n_add: Number of samples to generate with each iteration.
-        :type n_add: int
         """
         self.nsamples = nsamples
         self.nexist = self.sample_object.samples.shape[0]
-        if n_add is not None:
-            self.n_add = n_add
         if self.nsamples <= self.nexist:
             raise NotImplementedError('UQpy Error: The number of requested samples must be larger than the existing '
                                       'sample set.')
-        if self.run_model_object is not None:
+        if self.runmodel_object is not None:
             self.run_gerss()
         else:
             self.run_rss()
@@ -1030,17 +1029,17 @@ class RSS:
                 p = min(self.n_add, self.nsamples - i)  # Number of points to add in this iteration
 
                 # If the quantity of interest is a dictionary, convert it to a list
-                qoi = [None] * len(self.run_model_object.qoi_list)
-                if type(self.run_model_object.qoi_list[0]) is dict:
-                    for j in range(len(self.run_model_object.qoi_list)):
-                        qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
+                qoi = [None] * len(self.runmodel_object.qoi_list)
+                if type(self.runmodel_object.qoi_list[0]) is dict:
+                    for j in range(len(self.runmodel_object.qoi_list)):
+                        qoi[j] = self.runmodel_object.qoi_list[j][self.qoi_name]
                 else:
-                    qoi = self.run_model_object.qoi_list
+                    qoi = self.runmodel_object.qoi_list
 
                 # ---------------------------------------------------
                 # Compute the gradients at the existing sample points
                 # ---------------------------------------------------
-
+                print(i)
                 # Use the entire sample set to train the surrogate model (more expensive option)
                 if self.max_train_size is None or len(self.training_points) <= self.max_train_size or i == self.nexist:
                     dy_dx[:i] = self.estimate_gradient(np.atleast_2d(self.training_points),
@@ -1128,12 +1127,11 @@ class RSS:
                 self.training_points = np.vstack([self.training_points, new_point])
                 self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
                 for j in range(0, self.dimension):
-                    i_cdf = self.sample_object.distribution[j].icdf
-                    new_point[:, j] = i_cdf(np.atleast_2d(new_point[:, j]).T, self.sample_object.dist_params[j])
+                    new_point[:, j] = self.sample_object.dist_object[j].icdf(new_point[:, j])
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 # Run the model at the new sample point
-                self.run_model_object.run(samples=np.atleast_2d(new_point))
+                self.runmodel_object.run(samples=np.atleast_2d(new_point), append_samples=True)
 
                 if self.verbose:
                     print("Iteration:", i)
@@ -1184,12 +1182,12 @@ class RSS:
                         compute_Delaunay_centroid_volume(points[self.mesh.vertices[j]])
 
                 # If the quantity of interest is a dictionary, convert it to a list
-                qoi = [None] * len(self.run_model_object.qoi_list)
-                if type(self.run_model_object.qoi_list[0]) is dict:
-                    for j in range(len(self.run_model_object.qoi_list)):
-                        qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
+                qoi = [None] * len(self.runmodel_object.qoi_list)
+                if type(self.runmodel_object.qoi_list[0]) is dict:
+                    for j in range(len(self.runmodel_object.qoi_list)):
+                        qoi[j] = self.runmodel_object.qoi_list[j][self.qoi_name]
                 else:
-                    qoi = self.run_model_object.qoi_list
+                    qoi = self.runmodel_object.qoi_list
 
                 # ---------------------------------------------------
                 # Compute the gradients at the existing sample points
@@ -1321,7 +1319,7 @@ class RSS:
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 # Run the mode at the new point.
-                self.run_model_object.run(samples=new_point)
+                self.runmodel_object.run(samples=new_point)
 
                 # Compute the strata weights.
                 self.sample_object.strata = voronoi_unit_hypercube(self.sample_object.samplesU01)
@@ -1413,8 +1411,8 @@ class RSS:
                 self.training_points = np.vstack([self.training_points, new_point])
                 self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
                 for k in range(self.dimension):
-                    i_cdf = self.sample_object.distribution[k].icdf
-                    new_point[:, k] = i_cdf(np.atleast_2d(new_point[:, k]).T, self.sample_object.dist_params[k])
+                    i_cdf = self.sample_object.dist_object[k].icdf
+                    new_point[:, k] = i_cdf(new_point[:, k])
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 if self.verbose:
@@ -1509,8 +1507,7 @@ class RSS:
 
                 # Identify the new point in the parameter space and update the sample array to include the new point.
                 for j in range(self.dimension):
-                    new_point[:, j] = self.sample_object.distribution[j].icdf(np.atleast_2d(new_point[:, j]).T,
-                                                                              self.sample_object.dist_params[j])
+                    new_point[:, j] = self.sample_object.dist_object[j].icdf(new_point[:, j])
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 # Compute the strata weights.
@@ -1548,29 +1545,16 @@ class RSS:
         :return gr: First-order gradient evaluated at the points 'xt'.
         :rtype gr: numpy array
         """
-        from UQpy.Reliability import TaylorSeries
-        if type(self.krig_object).__name__ == 'Krig':
+        from UQpy.Reliability import FORM
+        if self.krig_object is not None:
             self.krig_object.fit(samples=x, values=y)
-            tck = self.krig_object
-        elif type(self.krig_object).__name__ == 'GaussianProcessRegressor':
-            self.krig_object.fit(x, y)
             tck = self.krig_object.predict
         else:
             from scipy.interpolate import LinearNDInterpolator
             tck = LinearNDInterpolator(x, y, fill_value=0).__call__
 
-        gr = TaylorSeries.gradient(samples=xt, model=tck, dimension=self.dimension, order='first',
-                                   df_step=self.step_size, scale=False)
+        gr = FORM.gradient(point=xt, model=tck, order='first', df_step=self.step_size)
         return gr
-
-    def init_rss(self):
-        """Preliminary error checks."""
-        if type(self.sample_object).__name__ not in ['STS', 'RSS']:
-            raise NotImplementedError("UQpy Error: sample_object must be an object of the STS or RSS class.")
-
-        if self.run_model_object is not None:
-            if type(self.run_model_object).__name__ not in ['RunModel']:
-                raise NotImplementedError("UQpy Error: run_model_object must be an object of the RunModel class.")
 
 
 ########################################################################################################################
@@ -1590,7 +1574,7 @@ class Simplex:
     **Input:**
 
     :param nodes: The vertices of the simplex
-    :type nodes: ndarray
+    :type nodes: ndarray/list
 
     :param nsamples: The number of samples to be generated inside the simplex
     :type nsamples: int
@@ -1609,13 +1593,20 @@ class Simplex:
     # Authors: Dimitris G.Giovanis
     # Last modified: 11/28/2018 by Mohit S. Chauhan
 
-    def __init__(self, nodes=None, nsamples=1):
+    def __init__(self, nodes=None, nsamples=None):
         self.nodes = np.atleast_2d(nodes)
         self.nsamples = nsamples
-        self.init_sis()
-        self.samples = self.run_sis()
 
-    def run_sis(self):
+        if self.nodes.shape[0] != self.nodes.shape[1] + 1:
+            raise NotImplementedError("UQpy: Size of simplex (nodes) is not consistent.")
+
+        if nsamples is not None:
+            if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
+                raise NotImplementedError("UQpy: Number of samples to be generated 'nsamples' should be a positive "
+                                          "integer.")
+            self.samples = self.run(nsamples=nsamples)
+
+    def run(self, nsamples):
         """
         Generates uniformly distributed random samples inside the simplex.
 
@@ -1627,6 +1618,7 @@ class Simplex:
         :return sample: Random samples
         :rtype sample: numpy array
         """
+        self.nsamples = nsamples
         dimension = self.nodes.shape[1]
         if dimension > 1:
             sample = np.zeros([self.nsamples, dimension])
@@ -1649,15 +1641,6 @@ class Simplex:
             sample = a + (b - a) * np.random.rand(dimension, self.nsamples).reshape(self.nsamples, dimension)
         return sample
 
-    def init_sis(self):
-        """Preliminary error checks."""
-        if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
-            raise NotImplementedError("Exit code: Number of samples to be generated 'nsamples' should be a positive "
-                                      "integer.")
-
-        if self.nodes.shape[0] != self.nodes.shape[1] + 1:
-            raise NotImplementedError("Size of simplex (nodes) is not consistent.")
-
 
 ########################################################################################################################
 ########################################################################################################################
@@ -1675,179 +1658,150 @@ class AKMCS:
 
     **Input:**
 
-    :param run_model_object: A RunModel object, which is used to evaluate the function value
-    :type run_model_object: class
+    * **dist_object** ((list of) ``Distribution`` object(s)):
+            List of ``Distribution`` objects corresponding to each random variable.
 
-    :param samples: A 2d-array of samples
-    :type samples: ndarray
+    * **runmodel_object** (``RunModel`` object):
+            A RunModel object, which is used to evaluate the function value.
 
-    :param krig_object: A kriging class object
-    :type krig_object: class
+    * **samples** (`ndarray`):
+            `ndarray` containing the samples.
 
-    :param population: Sample which are used as learning set by AKMCS class.
-    :type population: ndarray
+    * **krig_object** (``Kriging`` object):
+            A kriging class object
 
-    :param nlearn: Number of sample generated using MCS, which are used as learning set by AKMCS. Only required
-                   if population is not defined.
-    :type nlearn: int
+    * **nsamples** (`int`):
+            Number of samples to be drawn from each distribution.
 
-    :param nstart: Number of initial samples generated using LHS. Only required if sample_object is not defined.
-    :type nstart: int
+    * **nlearn** (`int`):
+            Number of sample generated using LHS, which are used as learning set by AKMCS.
 
-    :param dist_name: A list containing the names of the distributions of the random variables. This is only
-                      required if sample_object is not defined.
-                      Distribution names must match those in the Distributions module.
-                      If the distribution does not match one from the Distributions module, the user must
-                      provide custom_dist.py.
-                      The length of the string must be 1 (if all distributions are the same) or equal to
-                      dimension.
-    :type dist_name: string list
+    * **nstart** (`int`):
+            Number of initial samples, randomly generated using LHS.
 
-    :param dist_params: Parameters of the distribution
-                        Parameters for each random variable are defined as ndarrays.
-                        Each item in the list, dist_params[i], specifies the parameters for the corresponding
-                        distribution, dist[i].
-    :type dist_params: list
+    * **qoi_name** (`dict`):
+            If the quantity of interest is a dictionary, convert it to a list
 
-    :param lf: Learning function used as selection criteria to identify the new samples.
-               Options: U, Weighted-U, EFF, EIF and EGIF
-    :type lf: str/function
+    * **learning_function** (`str` or `callable`):
+            Learning function used as the selection criteria to identify new samples.
+                Options:
+                    1. 'U' - U-function \n
+                    2. 'EFF' - Expected Feasibility Function \n
+                    3. 'Weighted-U' - Weighted-U function \n
+                    4. 'EIF' - Expected Improvement Function \n
+                    5. 'EGIF' - Expected Global Improvement Fit \n
 
-    :param n_add: Number of samples to be selected per iteration.
-    :type n_add: int
+                Default: 'U'.
 
-    :param min_cov: Minimum Covariance used as the stopping criteria of AKMCS method in case of reliability
-                    analysis.
-    :type min_cov: float
+    * **n_add** (`int'):
+            Number of samples to be selected per iteration.
 
-    :param max_p: Maximum possible value of probability density function of samples. Only required with
-                  'Weighted-U' learning function.
-    :type max_p: float
+            Default: 1.
 
-    :param save_pf: Indicator to estimate probability of failure after each iteration. Only required if
-                    user-defined learning function is used.
-    :type save_pf: boolean
+    * **save_pf** (`boolean'):
+            Indicator to estimate probability of failure after each iteration. Only required if user-defined learning
+            function is used.
 
-    :param verbose: A boolean declaring whether to write text to the terminal.
-    :type verbose: bool
+    * **random_state** (None or `int` or `np.random.RandomState` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
+
+    * **verbose** (`Boolean`):
+            A boolean declaring whether to write text to the terminal.
+
+            Default value: False.
 
     **Attributes:**
 
-    :param: AKMCS.sample_object.samples: Final/expanded samples.
-    :type: AKMCS..sample_object.samples: ndarray
+    * **samples** (`ndarray`):
+            `ndarray` containing the generated samples.
 
-    :param: AKMCS.krig_model: Prediction function for the final surrogate model.
-    :type: AKMCS.krig_model: function
+    * **pf** (`list`):
+            Probability of failure after every iteration of AKMCS. Available as an output only for Reliability Analysis.
 
-    :param: AKMCS.pf: Probability of failure after every iteration of AKMCS. Available as an output only for
-                       Reliability Analysis.
-    :type: AKMCS.pf: float list
+    * **cov_pf** (`list`):
+            Covariance of probability of failure after every iteration of AKMCS. Available as an output only for
+            Reliability Analysis.
 
-    :param: AKMCS.cov_pf: Covariance of probability of failure after every iteration of AKMCS. Available as an
-                           output only for Reliability Analysis.
-    :type: AKMCS.pf: float list
-
-    **Authors:**
-
-    Authors: Mohit S. Chauhan
-    Last modified: 01/07/2020 by Mohit S. Chauhan
     """
 
-    def __init__(self, run_model_object=None, samples=None, krig_object=None, nlearn=10000, nstart=None,
-                 population=None, dist_name=None, dist_params=None, qoi_name=None, lf='U', n_add=1,
-                 min_cov=0.05, max_p=None, verbose=False, kriging='UQpy', save_pf=None):
+    def __init__(self, dist_object, runmodel_object, krig_object, samples=None, nsamples=None, nlearn=10000,
+                 nstart=None, qoi_name=None, learning_function='U', n_add=1, random_state=None, save_pf=None,
+                 verbose=False, **kwargs):
 
         # Initialize the internal variables of the class.
-        self.run_model_object = run_model_object
+        self.runmodel_object = runmodel_object
         self.samples = np.array(samples)
-        self.krig_object = krig_object
         self.nlearn = nlearn
         self.nstart = nstart
         self.verbose = verbose
         self.qoi_name = qoi_name
 
-        self.lf = lf
-        self.min_cov = min_cov
-        self.max_p = max_p
-        self.dist_name = dist_name
-        self.dist_params = dist_params
-        self.nsamples = []
+        self.learning_function, self.lf = learning_function, None
+        self.dist_object = dist_object
+        self.nsamples = nsamples
 
         self.moments = None
-        self.distribution = None
-        self.training_points = None
         self.n_add = n_add
         self.indicator = False
         self.pf = []
         self.cov_pf = []
-        self.population = population
-        self.kriging = kriging
         self.save_pf = save_pf
         self.dimension = 0
         self.qoi = None
         self.krig_model = None
+        self.kwargs = kwargs
 
         # Initialize and run preliminary error checks.
         self.init_akmcs()
 
-        # Run AKMCS
-        self.run_akmcs()
+        from UQpy.Distributions import DistributionContinuous1D, JointInd
 
-    def run_akmcs(self):
-        """
-        Executes Adaptive Kriging - Monte Carlo Method.
+        if isinstance(dist_object, list):
+            for i in range(len(dist_object)):
+                if not isinstance(dist_object[i], DistributionContinuous1D):
+                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
+        else:
+            if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
+                raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
-        This is an instance method that check initial sample design an evaluate model at the training points. It is
-        automatically called when the STS class is instantiated.
-        """
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
+        if hasattr(krig_object, 'fit') and hasattr(krig_object, 'predict'):
+            self.krig_object = krig_object
+        else:
+            raise NotImplementedError("UQpy Error: krig_object must have 'fit' and 'predict' methods.")
 
         # If the initial sample design does not exists, run the initial calculations.
         if self.samples is None:
             if self.verbose:
                 print('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
-            self.samples = LHS(dist_name=self.dist_name, dist_params=self.dist_params, nsamples=self.nstart).samples
+            self.samples = LHS(dist_object=self.dist_object, nsamples=self.nstart, random_state=random_state).samples
 
         if self.verbose:
             print('UQpy: AKMCS - Running the initial sample set using RunModel.')
 
         # Evaluate model at the training points
-        self.run_model_object.run(samples=self.samples)
+        self.runmodel_object.run(samples=self.samples)
 
-    def sample(self, samples=None, n_add=1, append_samples=True, nsamples=0, lf=None):
+        if self.nsamples is not None:
+            if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
+                raise NotImplementedError("UQpy: Number of samples to be generated 'nsamples' should be a positive "
+                                          "integer.")
+            self.run(nsamples=self.nsamples)
+
+    def run(self, samples=None, append_samples=True, nsamples=0):
         """
-        Iterative procedure is applied to learn samples based on metamodel and learning function, and then metamodel is
-        updated based on new samples.
+        The ``run`` method of the ``AKMCS`` class can be invoked many times and the generated samples are appended to
+        the existing samples. Iterative procedure is applied to learn samples based on metamodel and learning function,
+        and then metamodel is updated based on new samples.
 
-        **Inputs:**
-
-        :param samples: A 2d-array of samples
-        :type samples: ndarray
-
-        :param n_add: Number of samples to be selected per iteration.
-        :type n_add: int
-
-        :param append_samples: If 'True', new samples are append to existing samples in sample_object. Otherwise,
-                               existing samples are discarded.
-        :type append_samples: boolean
-
-        :param nsamples: Number of samples to generate. No Default Value: nsamples must be prescribed.
-        :type nsamples: int
-
-        :param lf: Learning function used as selection criteria to identify the new samples. Only required, if
-                   samples are generated using multiple criterion
-                   Options: U, Weighted-U, EFF, EIF and EGIF
-        :type lf: str/function
         """
-
-        if self.kriging != 'UQpy':
-            from sklearn.gaussian_process import GaussianProcessRegressor
 
         self.nsamples = nsamples
-        if n_add is not None:
-            self.n_add = n_add
-        if lf is not None:
-            self.lf = lf
-            self.learning()
 
         if samples is not None:
             # New samples are appended to existing samples, if append_samples is TRUE
@@ -1855,93 +1809,80 @@ class AKMCS:
                 self.samples = np.vstack([self.samples, samples])
             else:
                 self.samples = samples
-                self.run_model_object.qoi_list = []
+                self.runmodel_object.qoi_list = []
 
             if self.verbose:
-                print('UQpy: AKMCS - Running the provided sample set using RunModel.')
+                print('UQpy: AKMCS - Evaluating the model at the sample set using RunModel.')
 
-            self.run_model_object.run(samples=samples, append_samples=append_samples)
+            self.runmodel_object.run(samples=samples, append_samples=append_samples)
 
         if self.verbose:
             print('UQpy: Performing AK-MCS design...')
 
-        # Initialize the population of samples at which to evaluate the learning function and from which to draw in the
-        # sampling.
-        if self.population is None:
-            self.population = MCS(dist_name=self.dist_name, dist_params=self.dist_params,
-                                  nsamples=self.nlearn)
-
         # If the quantity of interest is a dictionary, convert it to a list
-        self.qoi = [None] * len(self.run_model_object.qoi_list)
-        if type(self.run_model_object.qoi_list[0]) is dict:
-            for j in range(len(self.run_model_object.qoi_list)):
-                self.qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
+        self.qoi = [None] * len(self.runmodel_object.qoi_list)
+        if type(self.runmodel_object.qoi_list[0]) is dict:
+            for j in range(len(self.runmodel_object.qoi_list)):
+                self.qoi[j] = self.runmodel_object.qoi_list[j][self.qoi_name]
         else:
-            self.qoi = self.run_model_object.qoi_list
+            self.qoi = self.runmodel_object.qoi_list
 
         # Train the initial Kriging model.
-        if self.kriging == 'UQpy':
-            with suppress_stdout():  # disable printing output comments
-                self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(self.qoi)))
-            self.krig_model = self.krig_object.interpolate
-        else:
-            from sklearn.gaussian_process import GaussianProcessRegressor
-            gp = GaussianProcessRegressor(kernel=self.krig_object, n_restarts_optimizer=0)
-            gp.fit(self.training_points, self.qoi)
-            self.krig_model = gp.predict
+        self.krig_object.fit(self.samples, self.qoi)
+        self.krig_model = self.krig_object.predict
 
         # ---------------------------------------------
         # Primary loop for learning and adding samples.
         # ---------------------------------------------
 
         for i in range(self.samples.shape[0], self.nsamples):
+            # Initialize the population of samples at which to evaluate the learning function and from which to draw
+            # in the sampling.
+
+            learning_set = LHS(dist_object=self.dist_object, nsamples=self.nlearn,
+                               random_state=self.random_state).samples
+
             # Find all of the points in the population that have not already been integrated into the training set
-            rest_pop = np.array([x for x in self.population.samples.tolist() if x not in self.samples.tolist()])
+            rest_pop = np.array([x for x in learning_set.tolist() if x not in self.samples.tolist()])
 
             # Apply the learning function to identify the new point to run the model.
 
-            new_ind = self.lf(self.krig_model, rest_pop)
+            new_ind, ind = self.lf(self.krig_model, rest_pop)
             new_point = np.atleast_2d(rest_pop[new_ind])
 
             # Add the new points to the training set and to the sample set.
             self.samples = np.vstack([self.samples, new_point])
 
             # Run the model at the new points
-            self.run_model_object.run(samples=np.atleast_2d(new_point))
+            self.runmodel_object.run(samples=np.atleast_2d(new_point))
 
             # If the quantity of interest is a dictionary, convert it to a list
-            self.qoi = [None] * len(self.run_model_object.qoi_list)
-            if type(self.run_model_object.qoi_list[0]) is dict:
-                for j in range(len(self.run_model_object.qoi_list)):
-                    self.qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
+            self.qoi = [None] * len(self.runmodel_object.qoi_list)
+            if type(self.runmodel_object.qoi_list[0]) is dict:
+                for j in range(len(self.runmodel_object.qoi_list)):
+                    self.qoi[j] = self.runmodel_object.qoi_list[j][self.qoi_name]
             else:
-                self.qoi = self.run_model_object.qoi_list
+                self.qoi = self.runmodel_object.qoi_list
 
-            # Retrain the Kriging surrogate model
-            if self.kriging == 'UQpy':
-                with suppress_stdout():
-                    # disable printing output comments
-                    self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(self.qoi)))
-                self.krig_model = self.krig_object.interpolate
-            else:
-                from sklearn.gaussian_process import GaussianProcessRegressor
-                gp = GaussianProcessRegressor(kernel=self.krig_object, n_restarts_optimizer=0)
-                gp.fit(self.training_points, self.qoi)
-                self.krig_model = gp.predict
-
-            if self.verbose:
-                print("Iteration:", i)
+            # Retrain the surrogate model
+            self.krig_object.fit(self.samples, self.qoi)
+            self.krig_model = self.krig_object.predict
 
             if self.save_pf:
-                if self.kriging == 'UQpy':
-                    g = self.krig_model(rest_pop)
-                else:
-                    g = self.krig_model(rest_pop, return_std=False)
-
+                g = self.krig_model(learning_set, False)
                 n_ = g.shape[0] + len(self.qoi)
                 pf = (sum(g < 0) + sum(np.array(self.qoi) < 0)) / n_
                 self.pf.append(pf)
                 self.cov_pf.append(np.sqrt((1 - pf) / (pf * n_)))
+
+            # Exit the loop, if error criteria is satisfied
+            if ind:
+                if self.verbose:
+                    print("UQpy: Learning stops at iteration: ", i)
+                break
+            else:
+                if self.verbose:
+                    print("Iteration:", i)
 
         if self.verbose:
             print('UQpy: AKMCS complete')
@@ -1949,7 +1890,7 @@ class AKMCS:
     # ------------------
     # LEARNING FUNCTIONS
     # ------------------
-    def eigf(self, pop):
+    def eigf(self, surr, pop):
         """
         Learns new samples based on Expected Improvement for Global Fit (EIGF) as learning function
 
@@ -1957,24 +1898,15 @@ class AKMCS:
 
         1. J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
            (Link: https://arxiv.org/pdf/1905.05345.pdf)
-
-        **Inputs:**
-        :param pop: Remaining sample population (new samples are learn from this population)
-        :type pop
         """
-        if self.kriging == 'UQpy':
-            g, sig = self.krig_model(pop, dy=True)
-            sig = np.sqrt(sig)
-        else:
-            g, sig = self.krig_model(pop, return_std=True)
-            sig = sig.reshape(sig.size, 1)
-        sig[sig == 0.] = 0.00001
+        g, sig = surr(pop, True)
+        sig = sig.reshape(sig.size, 1)
 
         # Evaluation of the learning function
         # First, find the nearest neighbor in the training set for each point in the population.
         from sklearn.neighbors import NearestNeighbors
         knn = NearestNeighbors(n_neighbors=1)
-        knn.fit(np.atleast_2d(self.training_points))
+        knn.fit(np.atleast_2d(self.samples))
         neighbors = knn.kneighbors(np.atleast_2d(pop), return_distance=False)
 
         # noinspection PyTypeChecker
@@ -1984,10 +1916,9 @@ class AKMCS:
         u = np.square(np.squeeze(g) - qoi_array) + np.square(np.squeeze(sig))
 
         rows = np.argmax(u)
-        return rows
+        return rows, False
 
-    # This learning function has not yet been tested.
-    def u(self, pop):
+    def u(self, surr, pop):
         """
         Learns new samples based on U-function as learning function.
 
@@ -1995,19 +1926,9 @@ class AKMCS:
 
         1. B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
         Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
-
-        **Inputs:**
-
-        :param pop: Remaining sample population (new samples are learn from this population)
-        :type pop
         """
-        if self.kriging == 'UQpy':
-            g, sig = self.krig_model(pop, dy=True)
-            sig = np.sqrt(sig)
-        else:
-            g, sig = self.krig_model(pop, return_std=True)
-            sig = sig.reshape(sig.size, 1)
-        sig[sig == 0.] = 0.00001
+        g, sig = surr(pop, True)
+        sig = sig.reshape(sig.size, 1)
 
         u = abs(g) / sig
         rows = u[:, 0].argsort()[:self.n_add]
@@ -2015,10 +1936,9 @@ class AKMCS:
         if min(u[:, 0]) >= 2:
             self.indicator = True
 
-        return rows
+        return rows, self.indicator
 
-    # This learning function has not yet been tested.
-    def weighted_u(self, pop):
+    def weighted_u(self, surr, pop):
         """
         Learns new samples based on Probability Weighted U-function as learning function.
 
@@ -2026,38 +1946,26 @@ class AKMCS:
 
         1. V.S. Sundar and M.S. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH MULTIMODEL
            INFERENCE".
-
-        **Inputs:**
-
-        :param pop: Remaining sample population (new samples are learn from this population)
-        :type pop: numpy array
         """
-        if self.kriging == 'UQpy':
-            g, sig = self.krig_model(pop, dy=True)
-            sig = np.sqrt(sig)
-        else:
-            g, sig = self.krig_model(pop, return_std=True)
-            sig = sig.reshape(sig.size, 1)
-        sig[sig == 0.] = 0.00001
+        max_p = self.kwargs['max_p']
+        g, sig = surr(pop, True)
+        sig = sig.reshape(sig.size, 1)
 
         u = abs(g) / sig
         p1, p2 = np.ones([pop.shape[0], pop.shape[1]]), np.ones([pop.shape[0], pop.shape[1]])
         for j in range(self.dimension):
-            p2[:, j] = self.population.distribution[j].icdf(np.atleast_2d(pop[:, j]).T, self.dist_params[j])
-            p1[:, j] = self.population.distribution[j].pdf(np.atleast_2d(p2[:, j]).T, self.dist_params[j])
+            p1[:, j] = self.dist_object[j].pdf(np.atleast_2d(pop[:, j]).T)
 
         p1 = p1.prod(1).reshape(u.size, 1)
-        u_ = u * ((self.max_p - p1) / self.max_p)
-        # u_ = u * p1/max(p1)
+        u_ = u * ((max_p - p1) / max_p)
         rows = u_[:, 0].argsort()[:self.n_add]
 
         if min(u[:, 0]) >= 2:
             self.indicator = True
 
-        return rows
+        return rows, self.indicator
 
-    # This learning function has not yet been tested.
-    def eff(self, pop):
+    def eff(self, surr, pop):
         """
         Learns new samples based on Expected Feasibilty Function (EFF) as learning function.
 
@@ -2065,23 +1973,14 @@ class AKMCS:
 
         1. B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, "Efficient Global Reliability Analysis
            for Nonlinear Implicit Performance Functions", AIAA JOURNAL, Volume 46, 2008.
-
-        **Inputs:**
-
-        :param pop: Remaining sample population (new samples are learn from this population)
-        :type pop: numpy array
         """
-        if self.kriging == 'UQpy':
-            g, sig = self.krig_model(pop, dy=True)
-            sig = np.sqrt(sig)
-        else:
-            g, sig = self.krig_model(pop, return_std=True)
-            g = g.reshape(g.size, 1)
-            sig = sig.reshape(sig.size, 1)
+        g, sig = surr(pop, True)
+        g = g.reshape(g.size, 1)
+        sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
         # Reliability threshold: a_ = 0
         # EGRA method: epshilon = 2*sigma(x)
-        a_, ep = 0, 2 * sig
+        a_, ep = self.kwargs['a'], self.kwargs['epsilon']*sig
         t1 = (a_ - g) / sig
         t2 = (a_ - ep - g) / sig
         t3 = (a_ + ep - g) / sig
@@ -2093,15 +1992,9 @@ class AKMCS:
         if max(eff[:, 0]) <= 0.001:
             self.indicator = True
 
-        n_ = g.shape[0] + len(self.qoi)
-        pf = (np.sum(g < 0) + sum(iin < 0 for iin in self.qoi)) / n_
-        self.pf.append(pf)
-        self.cov_pf.append(np.sqrt((1 - pf) / (pf * n_)))
+        return rows, self.indicator
 
-        return rows
-
-    # This learning function has not yet been tested.
-    def eif(self, pop):
+    def eif(self, surr, pop):
         """
         Learns new samples based on Expected Improvement Function (EIF) as learning function.
 
@@ -2109,62 +2002,51 @@ class AKMCS:
 
         1. D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box Functions",
            Journal of Global Optimization, Pages 455–492, 1998.
-
-        **Inputs:**
-
-        :param pop: Remaining sample population (new samples are learn from this population)
-        :type pop: numpy array
         """
-
-        if self.kriging == 'UQpy':
-            g, sig = self.krig_model(pop, dy=True)
-            sig = np.sqrt(sig)
-        else:
-            g, sig = self.krig_model(pop, return_std=True)
-            sig = sig.reshape(sig.size, 1)
+        g, sig = surr(pop, True)
+        sig = sig.reshape(sig.size, 1)
         sig[sig == 0.] = 0.00001
+
         fm = min(self.qoi)
         u = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf((fm - g) / sig)
         rows = u[:, 0].argsort()[(np.size(g) - self.n_add):]
 
-        return rows
-
-    def learning(self):
-        """
-        Defines the leaning function used to generate new samples.
-        """
-        if type(self.lf).__name__ == 'function':
-            self.lf = self.lf
-        elif self.lf not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
-            raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
-        elif self.lf == 'EIGF':
-            self.lf = self.eigf
-        elif self.lf == 'EIF':
-            self.lf = self.eif
-        elif self.lf == 'U':
-            self.lf = self.u
-        elif self.lf == 'Weighted-U':
-            self.lf = self.weighted_u
-        else:
-            self.lf = self.eff
+        return rows, False
 
     def init_akmcs(self):
         """Preliminary error checks."""
-        if self.run_model_object is None:
-            raise NotImplementedError('UQpy: AKMCS requires a predefined RunModel object.')
 
         if self.samples is not None:
             self.dimension = np.shape(self.samples)[1]
         else:
-            self.dimension = np.shape(self.dist_name)[0]
+            self.dimension = len(self.dist_object)
 
         if self.save_pf is None:
-            if self.lf not in ['EFF', 'U', 'Weighted-U']:
+            if self.learning_function not in ['EFF', 'U', 'Weighted-U']:
                 self.save_pf = False
             else:
                 self.save_pf = True
 
-        self.learning()
+        if type(self.learning_function).__name__ == 'function':
+            self.lf = self.learning_function
+        elif self.learning_function not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
+            raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
+        elif self.learning_function == 'EIGF':
+            self.lf = self.eigf
+        elif self.learning_function == 'EIF':
+            self.lf = self.eif
+        elif self.learning_function == 'U':
+            self.lf = self.u
+        elif self.learning_function == 'Weighted-U':
+            if 'max_p' not in self.kwargs:
+                raise NotImplementedError("UQpy Error: Weighted-U learning function requires the parameter 'max_p'.")
+            self.lf = self.weighted_u
+        else:
+            if 'a' not in self.kwargs:
+                self.kwargs['a'] = 0
+            if 'epsilon' not in self.kwargs:
+                self.kwargs['epsilon'] = 2
+            self.lf = self.eff
 
 ########################################################################################################################
 ########################################################################################################################

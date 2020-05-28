@@ -20,7 +20,7 @@ This module contains functionality for all the surrogate methods supported in UQ
 
 * SROM: Estimate a discrete approximation for a continuous random variable using Stochastic Reduced Order Model.
 
-* Krig: Generates an approximates surrogate model using Kriging.
+* Kriging: Generates an approximates surrogate model using Kriging.
 """
 
 from UQpy.Distributions import *
@@ -114,9 +114,9 @@ class SROM:
     Last modified: 6/7/18 by Dimitris G. Giovanis
     """
 
-    def __init__(self, samples=None, cdf_target=None, moments=None, weights_errors=None,
+    def __init__(self, samples=None, target_dist_object=None, moments=None, weights_errors=None,
                  weights_distribution=None, weights_moments=None, weights_correlation=None,
-                 properties=None, cdf_target_params=None, correlation=None):
+                 properties=None, correlation=None, verbose=False):
 
         if type(weights_distribution) is list:
             self.weights_distribution = np.array(weights_distribution)
@@ -152,9 +152,9 @@ class SROM:
             self.weights_correlation = weights_correlation
 
         self.weights_errors = weights_errors
-        self.cdf_target = cdf_target
+        self.target_dist_object = target_dist_object
         self.properties = properties
-        self.cdf_target_params = cdf_target_params
+        self.verbose = verbose
         self.init_srom()
         self.sample_weights = self.run_srom()
 
@@ -169,10 +169,12 @@ class SROM:
         :return p_.x: Weights associated with each sample
         :rtype p_.x: numpy array
         """
-        print('UQpy: Performing SROM...')
         from scipy import optimize
 
-        def f(p0, samples, wd, wm, wc, mar, n, d, m, alpha, para, prop, correlation):
+        if self.verbose:
+            print('UQpy: Performing SROM...')
+
+        def f(p0, samples, wd, wm, wc, mar, n, d, m, alpha, prop, correlation):
             e1 = 0.
             e2 = 0.
             e22 = 0.
@@ -183,11 +185,11 @@ class SROM:
                 s = srt[0, :, j]
                 a = srt[0, :, d]
                 a0 = np.cumsum(a)
-                marginal = mar[j]
+                marginal = mar[j].cdf
 
                 if prop[0] is True:
                     for i in range(n):
-                        e1 += wd[i, j] * (a0[0, i] - marginal(s[0, i], para[j])) ** 2
+                        e1 += wd[i, j] * (a0[0, i] - marginal(s[0, i])) ** 2
 
                 if prop[1] is True:
                     e2 += wm[0, j] * (np.sum(np.array(p0) * samples[:, j]) - m[0, j]) ** 2
@@ -223,12 +225,12 @@ class SROM:
 
         p_ = optimize.minimize(f, np.zeros(self.nsamples),
                                args=(self.samples, self.weights_distribution, self.weights_moments,
-                                     self.weights_correlation, self.cdf_target, self.nsamples, self.dimension,
-                                     self.moments, self.weights_errors, self.cdf_target_params, self.properties,
-                                     self.correlation),
+                                     self.weights_correlation, self.target_dist_object, self.nsamples, self.dimension,
+                                     self.moments, self.weights_errors, self.properties, self.correlation),
                                constraints=cons, method='SLSQP')
 
-        print('Done!')
+        if self.verbose:
+            print('UQpy: SROM completed!')
         return p_.x
 
     def init_srom(self):
@@ -236,12 +238,17 @@ class SROM:
         Initialization and preliminary error checks.
         """
 
-        if self.cdf_target is None:
-            raise NotImplementedError("Exit code: Distribution not defined.")
+        if self.target_dist_object is None:
+            raise NotImplementedError("UQpy: Target Distribution is not defined.")
+
+        if isinstance(self.target_dist_object, list):
+            for i in range(len(self.target_dist_object)):
+                if not isinstance(self.target_dist_object[i], DistributionContinuous1D):
+                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
 
         # Check samples
         if self.samples is None:
-            raise NotImplementedError('Samples not provided for SROM')
+            raise NotImplementedError('UQpy: Samples not provided for SROM')
 
         # Check properties to match
         if self.properties is None:
@@ -250,20 +257,20 @@ class SROM:
         # Check moments and correlation
         if self.properties[1] is True or self.properties[2] is True or self.properties[3] is True:
             if self.moments is None:
-                raise NotImplementedError("'moments' are required")
+                raise NotImplementedError("UQpy: 'moments' are required")
         # Both moments are required, if correlation property is required to be match
         if self.properties[3] is True:
             if self.moments.shape != (2, self.dimension):
-                raise NotImplementedError("1. Size of 'moments' is not correct")
+                raise NotImplementedError("UQpy: 1. Size of 'moments' is not correct")
             if self.correlation is None:
                 self.correlation = np.identity(self.dimension)
         # moments.shape[0] should be 1 or 2
         if self.moments.shape != (1, self.dimension) and self.moments.shape != (2, self.dimension):
-            raise NotImplementedError("2. Size of 'moments' is not correct")
+            raise NotImplementedError("UQpy: 2. Size of 'moments' is not correct")
         # If both the moments are to be included in objective function, then moments.shape[0] should be 2
         if self.properties[1] is True and self.properties[2] is True:
             if self.moments.shape != (2, self.dimension):
-                raise NotImplementedError("3. Size of 'moments' is not correct")
+                raise NotImplementedError("UQpy: 3. Size of 'moments' is not correct")
         # If only second order moment is to be included in objective function and moments.shape[0] is 1. Then
         # self.moments is converted shape = (2, self.dimension) where is second row contain second order moments.
         if self.properties[1] is False and self.properties[2] is True:
@@ -285,7 +292,7 @@ class SROM:
             self.weights_distribution = self.weights_distribution * np.ones(shape=(self.samples.shape[0],
                                                                                    self.dimension))
         elif self.weights_distribution.shape != (self.samples.shape[0], self.dimension):
-            raise NotImplementedError("Size of 'weights for distribution' is not correct")
+            raise NotImplementedError("UQpy: Size of 'weights for distribution' is not correct")
 
         # Check weights corresponding to moments and it's default list
         if self.weights_moments is None:
@@ -295,7 +302,7 @@ class SROM:
         if self.weights_moments.shape == (1, self.dimension):
             self.weights_moments = self.weights_moments * np.ones(shape=(2, self.dimension))
         elif self.weights_moments.shape != (2, self.dimension):
-            raise NotImplementedError("Size of 'weights for moments' is not correct")
+            raise NotImplementedError("UQpy: Size of 'weights for moments' is not correct")
 
         # Check weights corresponding to correlation and it's default list
         if self.weights_correlation is None:
@@ -303,34 +310,18 @@ class SROM:
 
         self.weights_correlation = np.array(self.weights_correlation)
         if self.weights_correlation.shape != (self.dimension, self.dimension):
-            raise NotImplementedError("Size of 'weights for correlation' is not correct")
-
-        # Check cdf_target
-        if len(self.cdf_target) == 1:
-            self.cdf_target = self.cdf_target * self.dimension
-            self.cdf_target_params = [self.cdf_target_params] * self.dimension
-        elif len(self.cdf_target) != self.dimension:
-            raise NotImplementedError("Size of cdf_type should be 1 or equal to dimension")
-
-        # Assign cdf_target function for each dimension
-        for i in range(len(self.cdf_target)):
-            if type(self.cdf_target[i]).__name__ == 'function':
-                self.cdf_target[i] = self.cdf_target[i]
-            elif type(self.cdf_target[i]).__name__ == 'str':
-                self.cdf_target[i] = Distribution(self.cdf_target[i]).cdf
-            else:
-                raise NotImplementedError("Distribution type should be either 'function' or 'list'")
+            raise NotImplementedError("UQpy: Size of 'weights for correlation' is not correct")
 
 
 ########################################################################################################################
 ########################################################################################################################
-#                                         Kriging Interpolation  (Krig)                                                #
+#                                         Kriging Interpolation  (Kriging)                                             #
 ########################################################################################################################
 ########################################################################################################################
 
-class Krig:
+class Kriging:
     """
-    Krig generates an approximate surrogate model to predict the function value at unknown/new samples.
+    Kriging generates an approximate surrogate model to predict the function value at unknown/new samples.
 
     A Surrogate is generated using training data and information about regression and correlation model. A Maximum
     Likelihood Estimator (MLE) is computed for hyperparameter of correlation model. This class create a method,
@@ -338,7 +329,6 @@ class Krig:
     unknown/new samples.
 
     **References:**
-
     1. S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, "DACE -- A MATLAB Kriging Toolbox", Informatics and
        Mathematical Modelling, Version 2.0, 2002.
 
@@ -354,7 +344,7 @@ class Krig:
     :type corr_model: str or function
 
     :param corr_model_params: Initial values corresponding to hyperparameters/scale parameters.
-    :type corr_model_params: numpy array
+    :type corr_model_params: list/numpy array
 
     :param bounds: Bounds for hyperparameters used to solve optimization problem to estimate maximum
                    likelihood estimator. This should be a closed bound.
@@ -388,85 +378,61 @@ class Krig:
 
     Authors: Mohit Chauhan, Matthew Lombardo
     Last modified: 3/30/2020 by Mohit S. Chauhan
+
     """
 
-    def __init__(self, reg_model='Linear', corr_model='Exponential', corr_model_params=None, bounds=None, op=True,
-                 n_opt=1, dimension=None, verbose=False):
+    def __init__(self, reg_model='Linear', corr_model='Exponential', bounds=None, op=True, nopt=1, normalize=True,
+                 verbose=False, corr_model_params=None, optimizer=None, **kwargs_optimizer):
 
         self.reg_model = reg_model
         self.corr_model = corr_model
-        self.corr_model_params = corr_model_params
-        self.dim = dimension
+        self.corr_model_params = np.array(corr_model_params)
         self.bounds = bounds
-        self.n_opt = n_opt
+        self.optimizer = optimizer
+        self.nopt = nopt
         self.op = op
+        self.normalize = normalize
         self.verbose = verbose
-
-        # Initialize and run preliminary error checks.
-        self.init_krig()
+        self.kwargs_optimizer = kwargs_optimizer
 
         # Variables are used outside the __init__
         self.samples = None
         self.values = None
-        self.mean_s, self.std_s = None, None
-        self.mean_y, self.std_y = None, None
+        self.sample_mean, self.sample_std = None, None
+        self.value_mean, self.value_std = None, None
         self.rmodel, self.cmodel = None, None
-        self.beta, self.gamma, self.sig = None, None, None
+        self.beta, self.gamma, self.err_var = None, None, None
         self.F_dash, self.C_inv, self.G = None, None, None
+        self.F, self.R = None, None
+
+        # Initialize and run preliminary error checks.
+        self.init_krig()
 
     def fit(self, samples, values):
-        """
-        Fit the surrogate model using training points.
+        from scipy.linalg import cholesky
 
-        This method estimate the maximum likelihood estimator of hyperparameters of correlation model and the regression
-        coefficient.
-
-        :param samples: An array/list of samples corresponding to each variables
-        :type samples: list or numpy array
-
-        :param values: Function value at the sample points.
-        :type values: list or numpy array
-        :return:
-        """
         if self.verbose:
-            print('UQpy: Performing Krig...')
-        from scipy import optimize
-        from scipy.linalg import cholesky, cho_solve
+            print('UQpy: Running Kriging.fit')
 
-        self.samples = np.array(samples)
-        self.values = np.array(values)
-
-        # Normalizing the data
-        self.mean_s, self.std_s = np.mean(self.samples, 0), np.std(self.samples, 0)
-        self.mean_y, self.std_y = np.mean(self.values, 0), np.std(self.values, 0)
-        s_ = (self.samples - self.mean_s)/self.std_s
-        y_ = (self.values - self.mean_y)/self.std_y
-        # Number of samples and dimensions of samples and values
-        m_, n_ = s_.shape
-        q = int(np.size(y_)/m_)
-
-        f_, jf_ = self.reg_model(s_)
-
-        def log_likelihood(p0, s, m, n, f, y, re=0):
+        def log_likelihood(p0, s, f, y):
             # Return the log-likelihood function and it's gradient. Gradient is calculate using Central Difference
+            m = s.shape[0]
+            n = s.shape[1]
             r__, dr_ = self.corr_model(x=s, s=s, params=p0, dt=True)
             try:
                 cc = cholesky(r__ + 2**(-52) * np.eye(m), lower=True)
             except np.linalg.LinAlgError:
-                if re == 0:
-                    return np.inf, np.zeros(n)
-                else:
-                    return np.inf
+                return np.inf, np.zeros(n)
 
             # Product of diagonal terms is negligible sometimes, even when cc exists.
             if np.prod(np.diagonal(cc)) == 0:
-                if re == 0:
-                    return np.inf, np.zeros(n)
-                else:
-                    return np.inf
+                return np.inf, np.zeros(n)
 
-            f__ = cho_solve((cc, True), f)
-            y__ = cho_solve((cc, True), y)
+            cc_inv = np.linalg.inv(cc)
+            r_inv = np.matmul(cc_inv.T, cc_inv)
+            f__ = cc_inv.dot(f)
+            y__ = cc_inv.dot(y)
+
             q__, g__ = np.linalg.qr(f__)  # Eq: 3.11, DACE
 
             # Check if F is a full rank matrix
@@ -477,82 +443,100 @@ class Krig:
             beta_ = np.linalg.solve(g__, np.matmul(np.transpose(q__), y__))
 
             # Computing the process variance (Eq: 3.13, DACE)
-            sigma_ = np.zeros(q)
-            for lj in range(q):
-                sigma_[lj] = (1 / m) * (np.linalg.norm(y__[:, lj] - np.matmul(f__, beta_[:, lj])) ** 2)
+            sigma_ = np.zeros(y.shape[1])
 
-            # Objective function:= log(det(R)) + Y^T inv(R) Y + constant
-            ll = (np.log(np.prod(np.diagonal(cc))) + m * (np.log(2 * np.pi * np.prod(sigma_))) + 1)/2
+            ll = 0
+            for out_dim in range(y.shape[1]):
+                sigma_[out_dim] = (1 / m) * (np.linalg.norm(y__[:, out_dim] - np.matmul(f__, beta_[:, out_dim])) ** 2)
+                # Objective function:= log(det(sigma**2 * R)) + constant
+                ll = ll + (np.log(np.linalg.det(sigma_[out_dim] * r__)) + m * (np.log(2 * np.pi) + 1))/2
 
-            if re == 1:
-                return ll
+            # Gradient of loglikelihood
+            # Reference: C. E. Rasmussen & C. K. I. Williams, Gaussian Processes for Machine Learning, the MIT Press,
+            # 2006, ISBN 026218253X. (Page 114, Eq.(5.9))
+            residual = y - np.matmul(f, beta_)
+            gamma = np.matmul(r_inv, residual)
+            grad_mle = np.zeros(n)
+            for in_dim in range(n):
+                r_inv_derivative = np.matmul(r_inv, np.matmul(dr_[:, :, in_dim], r_inv))
+                tmp = np.matmul(residual.T, np.matmul(r_inv_derivative, residual))
+                for out_dim in range(y.shape[1]):
+                    alpha = gamma / sigma_[out_dim]
+                    tmp1 = np.matmul(alpha, alpha.T) - r_inv / sigma_[out_dim]
+                    cov_der = sigma_[out_dim] * dr_[:, :, in_dim] + tmp * r__ / m
+                    grad_mle[in_dim] = grad_mle[in_dim] - 0.5 * np.trace(np.matmul(tmp1, cov_der))
 
-            grad1 = np.zeros(n)
-            h = 0.005
-            for dr in range(n):
-                temp = np.zeros(n)
-                temp[dr] = 1
-                low = p0 - h / 2 * temp
-                hi = p0 + h / 2 * temp
-                f_hi = log_likelihood(hi, s, m, n, f, y, 1)
-                f_low = log_likelihood(low, s, m, n, f, y, 1)
-                if f_hi == np.inf or f_low == np.inf:
-                    grad1[dr] = 0
-                else:
-                    grad1[dr] = (f_hi - f_low) / h
+            return ll, grad_mle
 
-            return ll, grad1
+        self.samples = np.array(samples)
+
+        # Number of samples and dimensions of samples and values
+        nsamples, input_dim = self.samples.shape
+        output_dim = int(np.size(values) / nsamples)
+
+        self.values = np.array(values).reshape(nsamples, output_dim)
+
+        # Normalizing the data
+        if self.normalize:
+            self.sample_mean, self.sample_std = np.mean(self.samples, 0), np.std(self.samples, 0)
+            self.value_mean, self.value_std = np.mean(self.values, 0), np.std(self.values, 0)
+            s_ = (self.samples - self.sample_mean)/self.sample_std
+            y_ = (self.values - self.value_mean)/self.value_std
+        else:
+            s_ = self.samples
+            y_ = self.values
+
+        self.F, jf_ = self.reg_model(s_)
 
         # Maximum Likelihood Estimation : Solving optimization problem to calculate hyperparameters
         if self.op:
-            sp = self.corr_model_params
-            p = np.zeros([self.n_opt, n_])
-            pf = np.zeros([self.n_opt, 1])
-            for i__ in range(self.n_opt):
-                # print("----------------------------------", i__, "-------------------------------------")
-                p_ = optimize.fmin_l_bfgs_b(log_likelihood, sp, args=(s_, m_, n_, f_, y_), bounds=self.bounds)
-                p[i__, :] = p_[0]
-                pf[i__, 0] = p_[1]
-                # print(i__, p_[0], p_[1])
+            starting_point = self.corr_model_params
+            minimizer, fun_value = np.zeros([self.nopt, input_dim]), np.zeros([self.nopt, 1])
+            for i__ in range(self.nopt):
+                p_ = self.optimizer(log_likelihood, starting_point, args=(s_, self.F, y_), **self.kwargs_optimizer)
+                minimizer[i__, :] = p_[0]
+                fun_value[i__, 0] = p_[1]
                 # Generating new starting points using log-uniform distribution
-                if i__ != self.n_opt - 1:
-                    sp = stats.reciprocal.rvs([j[0] for j in self.bounds], [j[1] for j in self.bounds], 1)
-            if min(pf) == np.inf:
+                if i__ != self.nopt - 1:
+                    starting_point = stats.reciprocal.rvs([j[0] for j in self.bounds], [j[1] for j in self.bounds], 1)
+            if min(fun_value) == np.inf:
                 raise NotImplementedError("Maximum likelihood estimator failed: Choose different starting point or "
-                                          "increase n_opt")
-            t = np.argmin(pf)
-            self.corr_model_params = p[t, :]
+                                          "increase nopt")
+            t = np.argmin(fun_value)
+            self.corr_model_params = minimizer[t, :]
+        self.nopt = 1
 
-        self.n_opt = 1
+        # Updated Correlation matrix corresponding to MLE estimates of hyperparameters
+        self.R = self.corr_model(x=s_, s=s_, params=self.corr_model_params)
 
-        r_ = self.corr_model(x=s_, s=s_, params=self.corr_model_params)
-        c = np.linalg.cholesky(r_)                   # Eq: 3.8, DACE
+        # Compute the regression coefficient (solving this linear equation: F * beta = Y)
+        c = np.linalg.cholesky(self.R)                   # Eq: 3.8, DACE
         c_inv = np.linalg.inv(c)
-        f_dash = np.matmul(c_inv, f_)
+        f_dash = np.matmul(c_inv, self.F)
         y_dash = np.matmul(c_inv, y_)
         q_, g_ = np.linalg.qr(f_dash)                 # Eq: 3.11, DACE
-
         # Check if F is a full rank matrix
-        if np.linalg.matrix_rank(g_) != min(np.size(f_, 0), np.size(f_, 1)):
+        if np.linalg.matrix_rank(g_) != min(np.size(self.F, 0), np.size(self.F, 1)):
             raise NotImplementedError("Chosen regression functions are not sufficiently linearly independent")
+        # Design parameters (beta: regression coefficient)
+        self.beta = np.linalg.solve(g_, np.matmul(np.transpose(q_), y_dash))
 
-        # Design parameters
-        beta = np.linalg.solve(g_, np.matmul(np.transpose(q_), y_dash))
-        gamma = np.matmul(np.matmul(np.transpose(c_inv), c_inv), (y_ - np.matmul(f_, beta)))
+        # Design parameter (R * gamma = Y - F * beta = residual)
+        self.gamma = np.matmul(np.matmul(c_inv.T, c_inv), (y_ - np.matmul(self.F, self.beta)))
 
         # Computing the process variance (Eq: 3.13, DACE)
-        sigma = np.zeros(q)
-        for l in range(q):
-            sigma[l] = (1 / m_) * (np.linalg.norm(y_dash[:, l] - np.matmul(f_dash, beta[:, l])) ** 2)
+        self.err_var = np.zeros(output_dim)
+        for l in range(output_dim):
+            self.err_var[l] = (1 / nsamples) * (np.linalg.norm(y_dash[:, l] - np.matmul(f_dash, self.beta[:, l])) ** 2)
 
-        self.beta, self.gamma, self.sig = beta, gamma, sigma
         self.F_dash, self.C_inv, self.G = f_dash, c_inv, g_
-        if self.verbose:
-            print('Done!')
 
-    def interpolate(self, x, dy=False):
+        if self.verbose:
+            print('UQpy: Kriging fit complete.')
+
+    def predict(self, x, return_std=False):
         """
-        Predict the function value at new points.
+        Predict the function value at new points
 
         This method evaluates the regression and correlation model at new sample point. Then, it predicts the function
         value and mean square error using regression coefficients and training data.
@@ -562,40 +546,36 @@ class Krig:
         :param x: nD-array (2 dimensional) corresponding to the new points.
         :type  x: list or array
 
-        :param dy: Contains the keyword for the user defined rank. If a list or numpy ndarray containing the rank of
-               each matrix is not provided, the code will compute them using numpy.linalg.matrix_rank.
-        :type dy: dictionary of arguments
+        :param return_std: Indicator to estimate standard deviation.
+        :type return_std: boolean
 
-        **Output:**
-
-        :return y: Kriging prediction at new samples 'x'.
-        :rtype y: numpy array
-
-        :return mse: Mean square error in the kriging prediction.
-        :rtype mse: numpy array
         """
         x = np.atleast_2d(x)
-        x = (x - self.mean_s)/self.std_s
-        s_ = (self.samples - self.mean_s) / self.std_s
+        if self.normalize:
+            x = (x - self.sample_mean)/self.sample_std
+            s_ = (self.samples - self.sample_mean) / self.sample_std
+        else:
+            s_ = self.samples
         fx, jf = self.reg_model(x)
         rx = self.corr_model(x=x, s=s_, params=self.corr_model_params)
         y = np.einsum('ij,jk->ik', fx, self.beta) + np.einsum('ij,jk->ik', rx, self.gamma)
-        y = self.mean_y + y * self.std_y
-        if dy:
-            # print(self.C_inv.shape)
-            # print(rx.shape)
+        if self.normalize:
+            y = self.value_mean + y * self.value_std
+        if return_std:
             r_dash = np.einsum('ij,jk->ik', self.C_inv, rx.T)
             u = np.einsum('ij,jk->ik', self.F_dash.T, r_dash)-fx.T
             norm1 = np.sum(r_dash**2, 0)**0.5
             norm2 = np.sum(np.linalg.solve(self.G, u)**2, 0)**0.5
-            mse = (self.std_y**2)*(self.sig ** 2) * (1 + norm2**2 - norm1**2)
+            mse = self.err_var * (1 + norm2**2 - norm1**2)
+            if self.normalize:
+                mse = self.value_std * np.sqrt(mse)
             return y, mse.reshape(y.shape)
         else:
             return y
 
     def jacobian(self, x):
         """
-        Predict the gradient of the function at new points.
+        Predict the gradient of the function at new points
 
         This method evaluates the regression and correlation model at new sample point. Then, it predicts the gradient
         using regression coefficients and training data.
@@ -605,34 +585,35 @@ class Krig:
         :param x: nD-array (2 dimensional) corresponding to the new points.
         :type  x: list or array
 
-        **Output:**
-
-        :return y_grad: Kriging gradient prediction at new samples 'x'.
-        :rtype y_grad: numpy array
         """
         x = np.atleast_2d(x)
-        x = (x - self.mean_s) / self.std_s
-        s_ = (self.samples - self.mean_s) / self.std_s
+        if self.normalize:
+            x = (x - self.sample_mean) / self.sample_std
+            s_ = (self.samples - self.sample_mean) / self.sample_std
+        else:
+            s_ = self.samples
+
         fx, jf = self.reg_model(x)
         rx, drdx = self.corr_model(x=x, s=s_, params=self.corr_model_params, dx=True)
-        a = np.einsum('ikj,jm->ik', jf, self.beta)
-        b = np.einsum('ijk,jm->ki', drdx.T, self.gamma)
-        y_grad = (a + b)*self.std_y/self.std_s
+        y_grad = np.einsum('ikj,jm->ik', jf, self.beta) + np.einsum('ijk,jm->ki', drdx.T, self.gamma)
+        if self.normalize:
+            y_grad = y_grad * self.value_std/self.sample_std
         return y_grad
 
     # Defining Regression model (Linear)
     @staticmethod
-    def regress(model=None):
+    def regress(model):
         """
-        Defines a function to evaluate basis functions.
+        Defines a function to evaluate basis functions
 
         This method defines a function based on the choice of regression model, which computes the basis functions
         for provided samples.
 
         **Input:**
 
-        :param model: nD-array (2 dimensional) corresponding to the new points.
+        :param model: Name of the regression model.
         :type  model: str
+
         """
         def r(s):
             s = np.atleast_2d(s)
@@ -674,19 +655,20 @@ class Krig:
     @staticmethod
     def corr(model):
         """
-        Defines a function to compute correlation matrix.
+        Defines a function to compute correlation matrix
 
         This method defines a function based on the choice of correlation model, which computes the correlation matrix
         for provided samples.
 
         **Input:**
 
-        :param model: nD-array (2 dimensional) corresponding to the new points.
+        :param model: Name of the correlation model.
         :type  model: str
+
         """
         def c(x, s, params, dt=False, dx=False):
             rx, drdt, drdx = [0.], [0.], [0.]
-            x = np.atleast_2d(x)
+            x, s = np.atleast_2d(x), np.atleast_2d(s)
             # Create stack matrix, where each block is x_i with all s
             stack = - np.tile(np.swapaxes(np.atleast_3d(x), 1, 2), (1, np.size(s, 0), 1)) + np.tile(s, (
                 np.size(x, 0),
@@ -842,39 +824,41 @@ class Krig:
         return c
 
     def init_krig(self):
-        """
-        Initialization and preliminary error checks.
-        """
         if self.reg_model is None:
-            raise NotImplementedError("Exit code: Regression model is not defined.")
+            raise NotImplementedError("UQpy: Regression model is not defined.")
 
         if self.corr_model is None:
-            raise NotImplementedError("Exit code: Correlation model is not defined.")
-
-        if self.corr_model_params is None and self.dim is None:
-            raise NotImplementedError("Exit code: Either define corr_model_params or dimension.")
+            raise NotImplementedError("Uqpy: Correlation model is not defined.")
 
         if self.corr_model_params is None:
-            self.corr_model_params = np.ones(self.dim)
+            raise NotImplementedError("UQpy: corr_model_params is not defined.")
 
         if self.bounds is None:
-            if self.dim is None:
-                self.bounds = [[0.001, 10**7]]*self.corr_model_params.shape[0]
-            else:
-                self.bounds = [[0.001, 10 ** 7]] * self.dim
+            self.bounds = [[0.001, 10**7]]*self.corr_model_params.shape[0]
+
+        if self.optimizer is None:
+            from scipy.optimize import fmin_l_bfgs_b
+            self.optimizer = fmin_l_bfgs_b
+            self.kwargs_optimizer = {'bounds': self.bounds}
+        elif callable(self.optimizer):
+            self.optimizer = self.optimizer
+        else:
+            raise TypeError('UQpy: Input optimizer should be None (set to scipy.optimize.minimize) or a callable.')
 
         if type(self.reg_model).__name__ == 'function':
+            self.rmodel = 'User defined'
             self.reg_model = self.reg_model
         elif self.reg_model in ['Constant', 'Linear', 'Quadratic']:
             self.rmodel = self.reg_model
             self.reg_model = self.regress(model=self.reg_model)
         else:
-            raise NotImplementedError("Exit code: Doesn't recognize the Regression model.")
+            raise NotImplementedError("UQpy: Doesn't recognize the Regression model.")
 
         if type(self.corr_model).__name__ == 'function':
+            self.cmodel = 'User defined'
             self.corr_model = self.corr_model
         elif self.corr_model in ['Exponential', 'Gaussian', 'Linear', 'Spherical', 'Cubic', 'Spline', 'Other']:
             self.cmodel = self.corr_model
             self.corr_model = self.corr(model=self.corr_model)
         else:
-            raise NotImplementedError("Exit code: Doesn't recognize the Correlation model.")
+            raise NotImplementedError("UQpy: Doesn't recognize the Correlation model.")

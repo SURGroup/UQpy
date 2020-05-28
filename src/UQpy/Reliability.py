@@ -25,7 +25,7 @@ simulation. The module currently contains the following classes:
 
 from UQpy.RunModel import RunModel
 from UQpy.SampleMethods import MCMC
-from UQpy.Surrogates import Krig
+from UQpy.Surrogates import Kriging
 from UQpy.Transformations import *
 import warnings
 
@@ -1065,7 +1065,7 @@ class TaylorSeries:
                      ``DistributionContinuous1D`` or ``JointInd``.
 
     * **model** (Object or a `callable` ):
-         The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or ``Krig`` (see ``Surrogates``
+         The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or ``Kriging`` (see ``Surrogates``
          class) object or a `callable`.
 
     * **seed** (`ndarray`):
@@ -1290,7 +1290,7 @@ class FORM(TaylorSeries):
             self.g_check = g_check
 
     @staticmethod
-    def gradient(dist_object, point, model, order='first', cov=None, df_step=0.001, run_form=False, read_qoi=None):
+    def gradient(point, model, dist_object=None, order='first', cov=None, df_step=0.001, run_form=False, read_qoi=None):
         """
         A method to estimate the gradients (1st, 2nd, mixed) of a function using a finite difference scheme. First
         order gradients are calculated using forward finite differences. This is a static method, part of the
@@ -1302,9 +1302,10 @@ class FORM(TaylorSeries):
                 Probability distribution of each random variable. Must be an object of type
                 ``DistributionContinuous1D`` or ``JointInd``.
 
+                Default: None
+
         * **model** (Object or a `callable` ):
-            The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or ``Krig`` (see ``Surrogates``
-            class) object or a `callable`.
+            The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.
 
         * **run_form** (Boolean):
             If the ``gradient`` method is used in the framework of FORM, then the input point is in the standard
@@ -1359,22 +1360,18 @@ class FORM(TaylorSeries):
             if len(df_step) == 1:
                 df_step = [df_step[0]] * dimension
 
-        if isinstance(model, Krig):
-            qoi = model.interpolate(samples)
-        elif isinstance(model, RunModel) and read_qoi is None:
+        if isinstance(model, RunModel) and read_qoi is None:
             qoi = model.qoi_list[0]
         elif isinstance(model, RunModel) and read_qoi is not None:
             qoi = read_qoi
-        elif isinstance(model, callable):
-            qoi = model(samples)
+        elif callable(model):
+            qoi = model(point).tolist()
         else:
-            raise RuntimeError('UQpy: A RunModel/Krig/callable object must be provided as model.')
+            raise RuntimeError('UQpy: A RunModel/callable object must be provided as model.')
 
         def func(m):
             def func_eval(x):
-                if isinstance(m, Krig):
-                    return m.interpolate(x=x)
-                elif isinstance(m, RunModel):
+                if isinstance(m, RunModel):
                     m.run(samples=x, append_samples=False)
                     return np.array(m.qoi_list)
                 else:
@@ -1401,7 +1398,7 @@ class FORM(TaylorSeries):
                 else:
                     qoi_plus = f_eval(u_i1_j)
 
-                du_dj[:, ii] = ((qoi_plus[0] - qoi) / eps_i)
+                du_dj[:, ii] = ((qoi_plus[0] - qoi) / eps_i)[:, 0]
 
             return du_dj
 
@@ -1569,7 +1566,7 @@ class SORM(TaylorSeries):
                 ``DistributionContinuous1D`` or ``JointInd``.
 
         * **model** (Object or a `callable` ):
-            The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or ``Krig`` (see ``Surrogates``
+            The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or ``Kriging`` (see ``Surrogates``
             class) object or a `callable`.
 
         * **run_form** (Boolean):
