@@ -15,7 +15,8 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""This module contains functionality for all the surrogate methods supported in UQpy.
+"""
+This module contains functionality for all the surrogate methods supported in UQpy.
 
 * SROM: Estimate a discrete approximation for a continuous random variable using Stochastic Reduced Order Model.
 
@@ -103,15 +104,14 @@ class SROM:
 
     **Attributes:**
 
-    :return: SROM.samples: Last column contains the probabilities/weights defining discrete approximation of
-                           continuous random variables.
-    :rtype: SROM.samples: ndarray
+    :return: SROM.sample_weights: The probabilities/weights defining discrete approximation of continuous random
+             variables.
+    :rtype: SROM.sample_weights: ndarray
 
     **Authors:**
 
     Authors: Mohit Chauhan
     Last modified: 6/7/18 by Dimitris G. Giovanis
-
     """
 
     def __init__(self, samples=None, cdf_target=None, moments=None, weights_errors=None,
@@ -159,6 +159,16 @@ class SROM:
         self.sample_weights = self.run_srom()
 
     def run_srom(self):
+        """
+        Runs stochastic reduced order model.
+
+        This is an instance method that runs SROM. It is automatically called when the SROM class is instantiated.
+
+        **Output:**
+
+        :return p_.x: Weights associated with each sample
+        :rtype p_.x: numpy array
+        """
         print('UQpy: Performing SROM...')
         from scipy import optimize
 
@@ -222,6 +232,9 @@ class SROM:
         return p_.x
 
     def init_srom(self):
+        """
+        Initialization and preliminary error checks.
+        """
 
         if self.cdf_target is None:
             raise NotImplementedError("Exit code: Distribution not defined.")
@@ -325,6 +338,7 @@ class Krig:
     unknown/new samples.
 
     **References:**
+
     1. S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, "DACE -- A MATLAB Kriging Toolbox", Informatics and
        Mathematical Modelling, Version 2.0, 2002.
 
@@ -374,11 +388,10 @@ class Krig:
 
     Authors: Mohit Chauhan, Matthew Lombardo
     Last modified: 3/30/2020 by Mohit S. Chauhan
-
     """
 
     def __init__(self, reg_model='Linear', corr_model='Exponential', corr_model_params=None, bounds=None, op=True,
-                 n_opt=1, dimension=None, normalize=True, verbose=False):
+                 n_opt=1, dimension=None, verbose=False):
 
         self.reg_model = reg_model
         self.corr_model = corr_model
@@ -387,8 +400,10 @@ class Krig:
         self.bounds = bounds
         self.n_opt = n_opt
         self.op = op
-        self.normalize = normalize
         self.verbose = verbose
+
+        # Initialize and run preliminary error checks.
+        self.init_krig()
 
         # Variables are used outside the __init__
         self.samples = None
@@ -396,14 +411,23 @@ class Krig:
         self.mean_s, self.std_s = None, None
         self.mean_y, self.std_y = None, None
         self.rmodel, self.cmodel = None, None
-        self.beta, self.gamma, self.err_var = None, None, None
+        self.beta, self.gamma, self.sig = None, None, None
         self.F_dash, self.C_inv, self.G = None, None, None
-        self.F, self.R = None, None
-
-        # Initialize and run preliminary error checks.
-        self.init_krig()
 
     def fit(self, samples, values):
+        """
+        Fit the surrogate model using training points.
+
+        This method estimate the maximum likelihood estimator of hyperparameters of correlation model and the regression
+        coefficient.
+
+        :param samples: An array/list of samples corresponding to each variables
+        :type samples: list or numpy array
+
+        :param values: Function value at the sample points.
+        :type values: list or numpy array
+        :return:
+        """
         if self.verbose:
             print('UQpy: Performing Krig...')
         from scipy import optimize
@@ -413,14 +437,10 @@ class Krig:
         self.values = np.array(values)
 
         # Normalizing the data
-        if self.normalize:
-            self.mean_s, self.std_s = np.mean(self.samples, 0), np.std(self.samples, 0)
-            self.mean_y, self.std_y = np.mean(self.values, 0), np.std(self.values, 0)
-            s_ = (self.samples - self.mean_s)/self.std_s
-            y_ = (self.values - self.mean_y)/self.std_y
-        else:
-            s_ = self.samples
-            y_ = self.values
+        self.mean_s, self.std_s = np.mean(self.samples, 0), np.std(self.samples, 0)
+        self.mean_y, self.std_y = np.mean(self.values, 0), np.std(self.values, 0)
+        s_ = (self.samples - self.mean_s)/self.std_s
+        y_ = (self.values - self.mean_y)/self.std_y
         # Number of samples and dimensions of samples and values
         m_, n_ = s_.shape
         q = int(np.size(y_)/m_)
@@ -445,10 +465,8 @@ class Krig:
                 else:
                     return np.inf
 
-            cc_inv = np.linalg.inv(cc)
-            f__ = cc_inv.dot(f)
-            y__ = cc_inv.dot(y)
-
+            f__ = cho_solve((cc, True), f)
+            y__ = cho_solve((cc, True), y)
             q__, g__ = np.linalg.qr(f__)  # Eq: 3.11, DACE
 
             # Check if F is a full rank matrix
@@ -463,7 +481,7 @@ class Krig:
             for lj in range(q):
                 sigma_[lj] = (1 / m) * (np.linalg.norm(y__[:, lj] - np.matmul(f__, beta_[:, lj])) ** 2)
 
-            # Objective function:= log(det(R)) + (Y-F*beta)^T inv(R) (Y-F*beta) + constant
+            # Objective function:= log(det(R)) + Y^T inv(R) Y + constant
             ll = (np.log(np.prod(np.diagonal(cc))) + m * (np.log(2 * np.pi * np.prod(sigma_))) + 1)/2
 
             if re == 1:
@@ -504,6 +522,7 @@ class Krig:
                                           "increase n_opt")
             t = np.argmin(pf)
             self.corr_model_params = p[t, :]
+
         self.n_opt = 1
 
         r_ = self.corr_model(x=s_, s=s_, params=self.corr_model_params)
@@ -528,13 +547,12 @@ class Krig:
 
         self.beta, self.gamma, self.sig = beta, gamma, sigma
         self.F_dash, self.C_inv, self.G = f_dash, c_inv, g_
-        self.F, self.R = f_, r_
         if self.verbose:
             print('Done!')
 
     def interpolate(self, x, dy=False):
         """
-        Predict the function value at new points
+        Predict the function value at new points.
 
         This method evaluates the regression and correlation model at new sample point. Then, it predicts the function
         value and mean square error using regression coefficients and training data.
@@ -548,33 +566,36 @@ class Krig:
                each matrix is not provided, the code will compute them using numpy.linalg.matrix_rank.
         :type dy: dictionary of arguments
 
+        **Output:**
+
+        :return y: Kriging prediction at new samples 'x'.
+        :rtype y: numpy array
+
+        :return mse: Mean square error in the kriging prediction.
+        :rtype mse: numpy array
         """
         x = np.atleast_2d(x)
-        if self.normalize:
-            x = (x - self.mean_s)/self.std_s
-            s_ = (self.samples - self.mean_s) / self.std_s
-        else:
-            s_ = self.samples
+        x = (x - self.mean_s)/self.std_s
+        s_ = (self.samples - self.mean_s) / self.std_s
         fx, jf = self.reg_model(x)
         rx = self.corr_model(x=x, s=s_, params=self.corr_model_params)
         y = np.einsum('ij,jk->ik', fx, self.beta) + np.einsum('ij,jk->ik', rx, self.gamma)
-        if self.normalize:
-            y = self.mean_y + y * self.std_y
+        y = self.mean_y + y * self.std_y
         if dy:
+            # print(self.C_inv.shape)
+            # print(rx.shape)
             r_dash = np.einsum('ij,jk->ik', self.C_inv, rx.T)
             u = np.einsum('ij,jk->ik', self.F_dash.T, r_dash)-fx.T
             norm1 = np.sum(r_dash**2, 0)**0.5
             norm2 = np.sum(np.linalg.solve(self.G, u)**2, 0)**0.5
-            mse = (self.sig ** 2) * (1 + norm2**2 - norm1**2)
-            if self.normalize:
-                mse = (self.std_y**2) * mse
+            mse = (self.std_y**2)*(self.sig ** 2) * (1 + norm2**2 - norm1**2)
             return y, mse.reshape(y.shape)
         else:
             return y
 
     def jacobian(self, x):
         """
-        Predict the gradient of the function at new points
+        Predict the gradient of the function at new points.
 
         This method evaluates the regression and correlation model at new sample point. Then, it predicts the gradient
         using regression coefficients and training data.
@@ -584,28 +605,26 @@ class Krig:
         :param x: nD-array (2 dimensional) corresponding to the new points.
         :type  x: list or array
 
+        **Output:**
+
+        :return y_grad: Kriging gradient prediction at new samples 'x'.
+        :rtype y_grad: numpy array
         """
         x = np.atleast_2d(x)
-        if self.normalize:
-            x = (x - self.mean_s) / self.std_s
-            s_ = (self.samples - self.mean_s) / self.std_s
-        else:
-            s_ = self.samples
-
+        x = (x - self.mean_s) / self.std_s
+        s_ = (self.samples - self.mean_s) / self.std_s
         fx, jf = self.reg_model(x)
         rx, drdx = self.corr_model(x=x, s=s_, params=self.corr_model_params, dx=True)
         a = np.einsum('ikj,jm->ik', jf, self.beta)
         b = np.einsum('ijk,jm->ki', drdx.T, self.gamma)
-        y_grad = a + b
-        if self.normalize:
-            y_grad = (a + b)*self.std_y/self.std_s
+        y_grad = (a + b)*self.std_y/self.std_s
         return y_grad
 
     # Defining Regression model (Linear)
     @staticmethod
     def regress(model=None):
         """
-        Defines a function to evaluate basis functions
+        Defines a function to evaluate basis functions.
 
         This method defines a function based on the choice of regression model, which computes the basis functions
         for provided samples.
@@ -614,7 +633,6 @@ class Krig:
 
         :param model: nD-array (2 dimensional) corresponding to the new points.
         :type  model: str
-
         """
         def r(s):
             s = np.atleast_2d(s)
@@ -656,7 +674,7 @@ class Krig:
     @staticmethod
     def corr(model):
         """
-        Defines a function to compute correlation matrix
+        Defines a function to compute correlation matrix.
 
         This method defines a function based on the choice of correlation model, which computes the correlation matrix
         for provided samples.
@@ -665,11 +683,10 @@ class Krig:
 
         :param model: nD-array (2 dimensional) corresponding to the new points.
         :type  model: str
-
         """
         def c(x, s, params, dt=False, dx=False):
             rx, drdt, drdx = [0.], [0.], [0.]
-            x, s = np.atleast_2d(x), np.atleast_2d(s)
+            x = np.atleast_2d(x)
             # Create stack matrix, where each block is x_i with all s
             stack = - np.tile(np.swapaxes(np.atleast_3d(x), 1, 2), (1, np.size(s, 0), 1)) + np.tile(s, (
                 np.size(x, 0),
@@ -825,6 +842,9 @@ class Krig:
         return c
 
     def init_krig(self):
+        """
+        Initialization and preliminary error checks.
+        """
         if self.reg_model is None:
             raise NotImplementedError("Exit code: Regression model is not defined.")
 
@@ -844,7 +864,6 @@ class Krig:
                 self.bounds = [[0.001, 10 ** 7]] * self.dim
 
         if type(self.reg_model).__name__ == 'function':
-            self.rmodel = 'User defined'
             self.reg_model = self.reg_model
         elif self.reg_model in ['Constant', 'Linear', 'Quadratic']:
             self.rmodel = self.reg_model
@@ -853,7 +872,6 @@ class Krig:
             raise NotImplementedError("Exit code: Doesn't recognize the Regression model.")
 
         if type(self.corr_model).__name__ == 'function':
-            self.cmodel = 'User defined'
             self.corr_model = self.corr_model
         elif self.corr_model in ['Exponential', 'Gaussian', 'Linear', 'Spherical', 'Cubic', 'Spline', 'Other']:
             self.cmodel = self.corr_model

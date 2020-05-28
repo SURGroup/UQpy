@@ -26,7 +26,7 @@ from scipy.special import gamma
 from scipy.stats import chi2, norm
 
 
-def _run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
+def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
     """
     Execute the python model in parallel
     :param sample: One sample point where the model has to be evaluated
@@ -135,14 +135,11 @@ def compute_Voronoi_centroid_volume(vertices):
 
 def compute_Delaunay_centroid_volume(vertices):
 
-    from scipy.spatial import ConvexHull, qhull
+    from scipy.spatial import ConvexHull
+    import math
 
-    try:
-        ch = ConvexHull(vertices)
-        volume = ch.volume
-    except qhull.QhullError:
-        volume = 0
-
+    ch = ConvexHull(vertices)
+    volume = ch.volume
     centroid = np.mean(vertices, axis=0)
 
     # v1 = np.concatenate((np.ones([np.size(vertices, 0), 1]), vertices), 1)
@@ -151,7 +148,7 @@ def compute_Delaunay_centroid_volume(vertices):
     return centroid, volume
 
 
-def correlation_distortion(marginal, params, rho_norm):
+def correlation_distortion(marginal, rho_norm):
 
     """
         Description:
@@ -198,32 +195,55 @@ def correlation_distortion(marginal, params, rho_norm):
     rho = np.ones_like(rho_norm)
 
     print('UQpy: Computing Nataf correlation distortion...')
-    for i in range(len(marginal)):
-        i_cdf_i = marginal[i].icdf
-        moments_i = marginal[i].moments
-        mi = moments_i(params[i])
-        if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
-            raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+    from UQpy.Distributions import JointInd, DistributionContinuous1D
+    if isinstance(marginal, JointInd):
+        if all(hasattr(m, 'moments') for m in marginal.marginals) and \
+                all(hasattr(m, 'icdf') for m in marginal.marginals):
+            for i in range(len(marginal.marginals)):
+                i_cdf_i = marginal.marginals[i].icdf
+                mi = marginal.marginals[i].moments()
+                if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
+                    raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+                for j in range(i + 1, len(marginal.marginals)):
+                    i_cdf_j = marginal.marginals[j].icdf
+                    mj = marginal.marginals[j].moments()
+                    if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
+                        raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
 
-        for j in range(i + 1, len(marginal)):
-            i_cdf_j = marginal[j].icdf
-            moments_j = marginal[j].moments
-            mj = moments_j(params[j])
-            if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
-                raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+                    tmp_f_xi = ((i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T) - mj[0]) / np.sqrt(mj[1]))
+                    tmp_f_eta = ((i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T) - mi[0]) / np.sqrt(mi[1]))
+                    coef = tmp_f_xi * tmp_f_eta * w2d
 
-            tmp_f_xi = ((i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T, params[j]) - mj[0]) / np.sqrt(mj[1]))
-            tmp_f_eta = ((i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T, params[i]) - mi[0]) / np.sqrt(mi[1]))
-            coef = tmp_f_xi * tmp_f_eta * w2d
+                    rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
+                    rho[j, i] = rho[i, j]
 
-            rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
-            rho[j, i] = rho[i, j]
+    elif isinstance(marginal, list):
+        if all(hasattr(m, 'moments') for m in marginal) and \
+                all(hasattr(m, 'icdf') for m in marginal):
+            for i in range(len(marginal)):
+                i_cdf_i = marginal[i].icdf
+                mi = marginal[i].moments()
+                if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
+                    raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+
+                for j in range(i + 1, len(marginal)):
+                    i_cdf_j = marginal[j].icdf
+                    mj = marginal[j].moments()
+                    if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
+                        raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+
+                    tmp_f_xi = ((i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T) - mj[0]) / np.sqrt(mj[1]))
+                    tmp_f_eta = ((i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T) - mi[0]) / np.sqrt(mi[1]))
+                    coef = tmp_f_xi * tmp_f_eta * w2d
+
+                    rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
+                    rho[j, i] = rho[i, j]
 
     print('UQpy: Done.')
     return rho
 
 
-def itam(marginal, params, corr, beta, thresh1, thresh2):
+def itam(marginal, corr, beta, thresh1, thresh2):
 
     """
         Description:
@@ -245,7 +265,7 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
             :type corr: ndarray
 
             :param beta:  A variable selected to optimize convergence speed and desired accuracy.
-            :type beta: int
+            :type beta: float
 
             :param thresh1: Threshold
             :type thresh1: float
@@ -260,7 +280,7 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
     """
 
     if beta is None:
-        beta = 1
+        beta = 1.0
     if thresh1 is None:
         thresh1 = 0.0001
     if thresh2 is None:
@@ -278,7 +298,7 @@ def itam(marginal, params, corr, beta, thresh1, thresh2):
     print("UQpy: Initializing Iterative Translation Approximation Method (ITAM)")
     while iter_ < max_iter and error1 > thresh1 and abs(error1-error0)/error0 > thresh2:
         error0 = error1
-        corr0 = correlation_distortion(marginal, params, corr_norm0)
+        corr0 = correlation_distortion(marginal, corr_norm0)
         error1 = np.linalg.norm(corr - corr0)
 
         max_ratio = np.amax(np.ones((len(corr), len(corr))) / abs(corr_norm0))
@@ -580,47 +600,34 @@ def R_to_r(R):
             :rtype: ndarray
 
     """
-    r = R/R[0]
+    r = R/np.max(R)
     return r
 
 
-def eval_hessian(dimension, mixed_der, der):
-
-    """
-    Calculate the hessian matrix with finite differences
-    Parameters:
-
-    """
-    hessian = np.diag(der)
-    import itertools
-    range_ = list(range(dimension))
-    add_ = 0
-    for i in itertools.combinations(range_, 2):
-        hessian[i[0], i[1]] = mixed_der[add_]
-        hessian[i[1], i[0]] = hessian[i[0], i[1]]
-        add_ += 1
-    return hessian
-
-
 def IS_diagnostics(sampling_outputs=None, weights=None, graphics=False, figsize=(8, 3), ):
+    """
+    Diagnostics for IS.
+
+    These diagnostics are qualitative, they can help the user in understanding how the IS algorithm is performing.
+    This function returns printouts and plots.
+
+    **Inputs:**
+
+    :param sampling_outputs: output object of a sampling method
+    :type sampling_outputs: object of class MCMC
+
+    :param weights: output weights (alternative to giving sampling_outputs)
+    :type weights: ndarray
+
+    :param graphics: indicates whether or not to do a plot
+
+                     Default: False
+    :type graphics: boolean
+
+    :param figsize: size of the figure for output plots
+    :type figsize: tuple (width, height)
 
     """
-         Input:
-             :param sampling_outputs: output object of a sampling method
-             :type sampling_outputs: object of class MCMC or IS
-
-             :param weights: output weights of IS (alternative to giving sampling_outputs for IS)
-             :type weights: ndarray
-
-             :param graphics: indicates whether or not to do a plot
-             :type graphics: boolean, default False
-
-             :param figsize: size of the figure for output plots
-             :type figsize: tuple (width, height)
-
-         Output:
-             returns various diagnostics values/plots to evaluate importance sampling outputs
-     """
 
     if (sampling_outputs is None) and (weights is None):
         raise ValueError('UQpy error: sampling_outputs or weights should be provided')
@@ -643,30 +650,36 @@ def IS_diagnostics(sampling_outputs=None, weights=None, graphics=False, figsize=
 
 def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ESS=0.05,
                      graphics=False, figsize=None):
+    """
+    Diagnostics for MCMC.
+
+    These diagnostics are qualitative, they can help the user in understanding how the MCMC algorithm is performing.
+    These diagnostics are not intended to give a quantitative assessment of MCMC algorithms. This function returns
+    printouts and plots.
+
+    **Inputs:**
+
+    :param sampling_outputs: output object of a sampling method
+    :type sampling_outputs: object of class MCMC
+
+    :param samples: output samples of a sampling method, alternative to giving sampling_outputs
+    :type samples: ndarray
+
+    :param eps_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
+    :type eps_ESS: float in [0,1]
+
+    :param alpha_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
+    :type alpha_ESS: float in [0,1]
+
+    :param graphics: indicates whether or not to do a plot
+
+                     Default: False
+    :type graphics: boolean
+
+    :param figsize: size of the figure for output plots
+    :type figsize: tuple (width, height)
 
     """
-         Input:
-             :param sampling_outputs: output object of a sampling method
-             :type sampling_outputs: object of class MCMC or IS
-
-             :param samples: output samples of a sampling method (alternative to giving sampling_outputs for MCMC)
-             :type samples: ndarray
-
-             :param eps_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
-             :type eps_ESS: float in [0,1]
-
-             :param alpha_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
-             :type alpha_ESS: float in [0,1]
-
-             :param graphics: indicates whether or not to do a plot
-             :type graphics: boolean, default False
-
-             :param figsize: size of the figure for output plots
-             :type figsize: tuple (width, height)
-
-         Output:
-             returns various diagnostics values/plots to evaluate MCMC sampling outputs
-     """
 
     if (eps_ESS < 0) or (eps_ESS > 1):
         raise ValueError('eps_ESS should be a float between 0 and 1.')
@@ -680,7 +693,7 @@ def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ES
 
     if len(samples.shape) == 2:
         print('Diagnostics for a single chain of MCMC \n')
-        print('!!! Warning !!! These diagnostics are purely qualtive and should be used with caution \n')
+        print('!!! Warning !!! These diagnostics are purely qualitative and should be used with caution \n')
         nsamples, dim = samples.shape
 
         # Acceptance rate
@@ -759,6 +772,33 @@ def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ES
 
 
 def resample(samples, weights, method='multinomial', size=None):
+    """
+    Resample to get a set of un-weighted samples that represent a density in place of a set of weighted samples.
+
+    **Inputs:**
+
+    :param samples: Existing weighted samples
+    :type samples: ndarray (nsamples, dim)
+
+    :param weights: Weights of samples.
+    :type pdf: ndarray (nsamples,)
+
+    :param method: resampling method, as of V3 only multinomial resampling is supported
+
+                   Default: 'multinomial'
+    :type method: str
+
+    :param size: Number of un-weighted samples to generate.
+
+                 Default: None (same number of samples is generated as number of existing samples).
+    :type pdf: int
+
+    **Output/Returns:**
+
+    :param unweighted_samples: Un-weighted samples that represent the target pdf
+    :type unweighted_samples: ndarray
+
+    """
     nsamples = samples.shape[0]
     if size is None:
         size = nsamples
@@ -787,6 +827,15 @@ def suppress_stdout():
 
 
 def check_input_dims(x):
+    """
+    Check that x is a 2D ndarray.
+
+    **Inputs:**
+
+    :param x: Existing samples
+    :type x: ndarray (nsamples, dim)
+
+    """
     if not isinstance(x, np.ndarray):
         try:
             x = np.array(x)
@@ -796,20 +845,6 @@ def check_input_dims(x):
         raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
     return x
 
-
-def recursive_update_mean_covariance(n, new_sample, previous_mean, previous_covariance=None):
-    """ Iterative formula to compute a new mean, covariance based on previous ones and new sample.
-     n is the number of samples used to compute the current mean """
-    new_mean = (n - 1) / n * previous_mean + 1 / n * new_sample
-    if previous_covariance is None:
-        return new_mean
-    dim = new_sample.size
-    if n == 1:
-        new_covariance = np.zeros((dim, dim))
-    else:
-        delta_n = (new_sample - previous_mean).reshape((dim, 1))
-        new_covariance = (n - 2) / (n - 1) * previous_covariance + 1 / n * np.matmul(delta_n, delta_n.T)
-    return new_mean, new_covariance
 
 # Grassmann: svd
 def svd(matrix, value):

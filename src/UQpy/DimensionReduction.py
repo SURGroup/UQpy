@@ -21,9 +21,9 @@ reduction via projection onto the Grassmann manifold and Diffusion Maps, respect
 tangent space centered at a given point on the Grassmann manifold can be performed.
 
 * Grassmann: This class contains methods to perform the projection of matrices onto the Grassmann manifold where their
-             dimensionality are reduced and where standard interpolation can be performed on a tangent space.
+  dimensionality are reduced and where standard interpolation can be performed on a tangent space.
 * DiffusionMaps: In this class the diffusion maps create a connection between the spectral properties of the diffusion
-                 process and the intrinsic geometry of the data resulting in a multiscale representation of the data.
+  process and the intrinsic geometry of the data resulting in a multiscale representation of the data.
 """
 
 from UQpy.Surrogates import Krig
@@ -69,35 +69,41 @@ class Grassmann:
     **Input:**
 
     :param distance_object: It specifies the name of a function or class implementing the distance on the manifold.
+
                             Default: None
     :type distance_object: str
 
     :param distance_script: The filename (with extension) of a Python script implementing dist_object
                             (only for user defined metrics).
+
                             Default: None
     :type distance_script: str
 
     :param kernel_object: It specifies the name of a function or class implementing the Grassmann kernel.
                           Default: None
-    :type distance_object: str
+    :type kernel_object: str
 
     :param kernel_script: The filename (with extension) of a Python script implementing kernel_object
                           (only for user defined metrics).
+
                           Default: None
     :type distance_script: str
 
     :param interp_object: It specifies the name of the function or class implementing the interpolator.
+
                           Default: None
     :type interp_object: str
 
     :param interp_script: The filename (with extension) of the Python script implementing of interp_object
                           (only for user defined interpolator).
+
                           Default: None
     :type interp_script: str
 
     **Authors:**
 
-    Authors: Ketson R. M. dos Santos, Dimitris G. Giovanis
+    Ketson R. M. dos Santos, Dimitris G. Giovanis
+
     Last modified: 03/26/20 by Ketson R. M. dos Santos
     """
 
@@ -165,7 +171,7 @@ class Grassmann:
     def distance(self, *argv, **kwargs):
 
         """
-        Estimate the distance of points on the Grassmann manifold.
+        Estimate the distance between points on the Grassmann manifold.
 
         This method computes the pairwise distance of points projected on the Grassmann manifold. The input arguments
         are passed through a list of arguments (argv) containing a list of lists or a list of numpy arrays. Further,
@@ -991,7 +997,7 @@ class Grassmann:
         """
         Compute Frechet variance.
 
-        the Frechet variance corresponds to the summation of the square distances, defined on a manifold, to a given
+        The Frechet variance corresponds to the summation of the square distances, defined on a manifold, to a given
         point also on the manifold. Thie method is employed in the minimization scheme used to find the Karcher mean.
 
         **Input:**
@@ -1229,24 +1235,32 @@ class DiffusionMaps:
 
     **Input:**
 
-    :param alpha: Assumes a value between 0 and 1 (default values is 0.5) and corresponding to different diffusion
-                  operators.
+    :param alpha: Assumes a value between 0 and 1 and corresponding to different diffusion operators.
+
+                  Default: 0.5
     :type alpha: float
 
     :param n_evecs: the number of eigenvectors and eigenvalues used in the representation of the diffusion coordinates.
+
+                    Default: 2
     :type n_evecs: int
 
     :param sparse: Is a boolean variable defining the sparsity of the graph generated when data is provided to estimate
                    the diffusion coordinates using the standard approach.
+
+                   Default: False
     :type sparse: bool
 
     :param k_neighbors: Used when sparse is True to define the number of samples close to a given sample
                         used in the construction of the affinity matrix.
+
+                        Default: 1
     :type k_neighbors: int
 
     **Authors:**
 
-    Authors: Ketson R. M. dos Santos, Dimitris G. Giovanis
+    Ketson R. M. dos Santos, Dimitris G. Giovanis
+
     Last modified: 03/26/20 by Ketson R. M. dos Santos
     """
 
@@ -1289,8 +1303,8 @@ class DiffusionMaps:
         method, the users either provide the input data or they provide the affinity matrix. If the input data is
         provided the standard diffusion maps is performed where the parameter 'epsilon' of the Gaussian kernel is either
         provided by the user or estimated based on the median of the square of the euclidian distances between data
-        points. On the other hand, the user can compute the affinity matrix externaly (e.g., using the Grassmann kernel)
-        in order to pass it to the method.
+        points. On the other hand, the user can compute the affinity matrix externally (e.g., using the Grassmann
+        kernel) in order to pass it to the method.
 
         **Input:**
 
@@ -1392,8 +1406,8 @@ class DiffusionMaps:
         """
         Compute the Kernel matrix for the standard diffusion maps technique.
 
-        If a dataset is provided and no kernel matrix is computed externaly one can use this method to estimate the
-        affinity matrix using the Gaussian kernel. In this regard, if no 'epsilon' is provided the method estimate a
+        If a dataset is provided and no kernel matrix is computed externally one can use this method to estimate the
+        affinity matrix using the Gaussian kernel. In this regard, if no 'epsilon' is provided the method estimates a
         suitable value taking the median of the square value of the pairwise euclidean distances of the points in the
         input dataset.
 
@@ -1403,6 +1417,7 @@ class DiffusionMaps:
         :type data: list of numpy array
 
         :param epsilon: Parameter of the Gaussian kernel.
+
                         Default: None
         :type epsilon: float
 
@@ -1517,7 +1532,7 @@ class DiffusionMaps:
     def l_alpha_normalize(self, kernel_mat, D_inv):
 
         """
-        Compute the normalize the kernel matrix with the matrix D.
+        Compute and normalize the kernel matrix with the matrix D.
 
         In the normalization process we have to estimate matrix D(i,i) = sum(Kernel(i,j)^alpha,j) and its inverse.
         We now use this information to normalize the kernel matrix.
