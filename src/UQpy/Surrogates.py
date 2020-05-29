@@ -707,7 +707,7 @@ class Krig:
                 # Taking stack and turning each d value into 1-theta*dij
                 after_parameters = 1 - params * abs(stack)
                 # Define matrix of zeros to compare against (not necessary to be defined separately,
-                # but the line is bulky if this isn't defined first, and it is used more than once)
+                # but the line is bulky if this isn'time defined first, and it is used more than once)
                 comp_zero = np.zeros((np.size(x, 0), np.size(s, 0), np.size(s, 1)))
                 # Compute matrix of max{0,1-theta*d}
                 max_matrix = np.maximum(after_parameters, comp_zero)
@@ -748,7 +748,7 @@ class Krig:
                 # Initial matrices containing derivates for all values in array. Note since
                 # dtheta_s and dx_s already accounted for where derivative should be zero, all
                 # that must be done is multiplying the |dij| or thetaj matrix on top of a
-                # matrix of derivates w.r.t zeta (in this case, dzeta = -1.5+1.5zeta**2)
+                # matrix of derivates frequency.r.time zeta (in this case, dzeta = -1.5+1.5zeta**2)
                 drdt = (-1.5 + 1.5 * zeta_matrix ** 2) * dtheta_derivs
                 drdx = (-1.5 + 1.5 * zeta_matrix ** 2) * dx_derivs
                 # Also, create matrix for values of equation, 1 - 1.5zeta + 0.5zeta**3, for loop
@@ -779,7 +779,7 @@ class Krig:
                 # Initial matrices containing derivates for all values in array. Note since
                 # dtheta_s and dx_s already accounted for where derivative should be zero, all
                 # that must be done is multiplying the |dij| or thetaj matrix on top of a
-                # matrix of derivates w.r.t zeta (in this case, dzeta = -6zeta+6zeta**2)
+                # matrix of derivates frequency.r.time zeta (in this case, dzeta = -6zeta+6zeta**2)
                 drdt = (-6 * zeta_matrix + 6 * zeta_matrix ** 2) * dtheta_derivs
                 drdx = (-6 * zeta_matrix + 6 * zeta_matrix ** 2) * dx_derivs
                 # Also, create matrix for values of equation, 1 - 1.5zeta + 0.5zeta**3, for loop
@@ -869,7 +869,7 @@ class Krig:
             self.rmodel = self.reg_model
             self.reg_model = self.regress(model=self.reg_model)
         else:
-            raise NotImplementedError("Exit code: Doesn't recognize the Regression model.")
+            raise NotImplementedError("Exit code: Doesn'time recognize the Regression model.")
 
         if type(self.corr_model).__name__ == 'function':
             self.corr_model = self.corr_model
@@ -877,4 +877,4 @@ class Krig:
             self.cmodel = self.corr_model
             self.corr_model = self.corr(model=self.corr_model)
         else:
-            raise NotImplementedError("Exit code: Doesn't recognize the Correlation model.")
+            raise NotImplementedError("Exit code: Doesn'time recognize the Correlation model.")

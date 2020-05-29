@@ -2,7 +2,7 @@
 
 # This code was adapted from http://sfepy.org/doc-devel/mat_optim.html.
 """
-Compare various elastic materials w.r.t. uniaxial tension/compression test.
+Compare various elastic materials frequency.r.time. uniaxial tension/compression test.
 
 Requires Matplotlib.
 """

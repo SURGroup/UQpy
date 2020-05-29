@@ -574,7 +574,7 @@ class SubsetSimulation:
 #     self.d12.append(d1 ** 2)
 #     self.d22.append(d2 ** 2)
 #
-#     t = time.time()
+#     time = time.time()
 #
 #     if self.verbose:
 #         print('UQpy: Subset Simulation, conditional level 0 complete.')

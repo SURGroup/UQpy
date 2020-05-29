@@ -418,7 +418,7 @@ def nearest_psd(a, nit=10):
 
     n = a.shape[0]
     w = np.identity(n)
-    # w is the matrix used for the norm (assumed to be Identity matrix here)
+    # frequency is the matrix used for the norm (assumed to be Identity matrix here)
     # the algorithm should work for any diagonal W
     delta_s = 0
     y_k = a.copy()
@@ -775,7 +775,7 @@ def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ES
 @contextmanager
 def suppress_stdout():
     """ A function to suppress output"""
-    with open(os.devnull, "w") as devnull:
+    with open(os.devnull, "frequency") as devnull:
         old_stdout = sys.stdout
         sys.stdout = devnull
         try:
@@ -1006,3 +1006,32 @@ def nn_coord(x, k):
     #idx = idx[0:k]
     #idx = idx[k+1:]
     return idx
+
+
+def solve_single_integral(self, distribution, rho):
+    if rho == 1.0:
+        rho = 0.999
+    n = 1024
+    zmax = 8
+    zmin = -zmax
+    points, weights = np.polynomial.legendre.leggauss(n)
+    points = - (0.5 * (points + 1) * (zmax - zmin) + zmin)
+    weights = weights * (0.5 * (zmax - zmin))
+
+    xi = np.tile(points, [n, 1])
+    xi = xi.flatten(order='F')
+    eta = np.tile(points, n)
+
+    first = np.tile(weights, n)
+    first = np.reshape(first, [n, n])
+    second = np.transpose(first)
+
+    weights2d = first * second
+    w2d = weights2d.flatten()
+    tmp_f_xi = distribution.icdf(stats.norm.cdf(xi[:, np.newaxis]))
+    tmp_f_eta = distribution.icdf(stats.norm.cdf(eta[:, np.newaxis]))
+    coef = tmp_f_xi[:, 0] * tmp_f_eta[:, 0] * w2d
+    rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
+    rho_non = (rho_non - distribution.moments()[0] ** 2) / distribution.moments()[1]
+    return rho_non
+

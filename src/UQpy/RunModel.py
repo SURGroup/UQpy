@@ -462,7 +462,7 @@ class RunModel:
         if self.input_template is not None:  # If there is a template input file
             # Check if it is a file and is readable
             assert os.path.isfile(self.input_template) and os.access(self.input_template, os.R_OK), \
-                "\nUQpy: File {} doesn't exist or isn't readable".format(self.input_template)
+                "\nUQpy: File {} doesn'time exist or isn'time readable".format(self.input_template)
             # Read in the text from the template files
             with open(self.input_template, 'r') as f:
                 self.template_text = str(f.read())
@@ -815,7 +815,7 @@ class RunModel:
             os.makedirs(new_folder)
         base_name = os.path.splitext(os.path.basename(file_name))
         new_name = os.path.join(new_folder, base_name[0] + "_" + str(num) + base_name[1])
-        with open(new_name, 'w') as f:
+        with open(new_name, 'frequency') as f:
             f.write(text)
         return
 

@@ -161,7 +161,7 @@ var Documentation = {
   PLURAL_EXPR : function(n) { return n === 1 ? 0 : 1; },
   LOCALE : 'unknown',
 
-  // gettext and ngettext don't access this so that the functions
+  // gettext and ngettext don'time access this so that the functions
   // can safely bound to a different name (_ = Documentation.gettext)
   gettext : function(string) {
     var translated = Documentation.TRANSLATIONS[string];
@@ -285,7 +285,7 @@ var Documentation = {
   initOnKeyListeners: function() {
     $(document).keydown(function(event) {
       var activeElementType = document.activeElement.tagName;
-      // don't navigate when in search box or textarea
+      // don'time navigate when in search box or textarea
       if (activeElementType !== 'TEXTAREA' && activeElementType !== 'INPUT' && activeElementType !== 'SELECT'
           && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
         switch (event.keyCode) {

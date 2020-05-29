@@ -470,7 +470,7 @@ a.reference {
     border-bottom: 1px dotted #004B6B;
 }
 
-/* Don't put an underline on images */
+/* Don'time put an underline on images */
 a.image-reference, a.image-reference:hover {
     border-bottom: none;
 }
