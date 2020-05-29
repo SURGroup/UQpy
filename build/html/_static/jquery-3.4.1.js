@@ -585,7 +585,7 @@ var i,
 	// Regular expressions
 
 	// http://www.w3.org/TR/css3-selectors/#whitespace
-	whitespace = "[\\x20\\t\\r\\n\\f]",
+	whitespace = "[\\x20\\t\\r\\number_of_dimensions\\f]",
 
 	// http://www.w3.org/TR/CSS21/syndata.html#value-def-identifier
 	identifier = "(?:\\\\.|[\\w-]|[^\0-\\xa0])+",
@@ -626,7 +626,7 @@ var i,
 		"ATTR": new RegExp( "^" + attributes ),
 		"PSEUDO": new RegExp( "^" + pseudos ),
 		"CHILD": new RegExp( "^:(only|first|last|nth|nth-last)-(child|of-type)(?:\\(" + whitespace +
-			"*(even|odd|(([+-]|)(\\d*)n|)" + whitespace + "*(?:([+-]|)" + whitespace +
+			"*(even|odd|(([+-]|)(\\d*)number_of_dimensions|)" + whitespace + "*(?:([+-]|)" + whitespace +
 			"*(\\d+)|))" + whitespace + "*\\)|)", "i" ),
 		"bool": new RegExp( "^(?:" + booleans + ")$", "i" ),
 		// For use in libraries implementing .is()
@@ -982,7 +982,7 @@ function createButtonPseudo( type ) {
  */
 function createDisabledPseudo( disabled ) {
 
-	// Known :disabled false positives: fieldset[disabled] > legend:nth-of-type(n+2) :can-disable
+	// Known :disabled false positives: fieldset[disabled] > legend:nth-of-type(number_of_dimensions+2) :can-disable
 	return function( elem ) {
 
 		// Only certain elements can match :enabled or :disabled
@@ -1666,8 +1666,8 @@ Expr = Sizzle.selectors = {
 			/* matches from matchExpr["CHILD"]
 				1 type (only|nth|...)
 				2 what (child|of-type)
-				3 argument (even|odd|\d*|\d*n([+-]\d+)?|...)
-				4 xn-component of xn+y argument ([+-]?\d*n|)
+				3 argument (even|odd|\d*|\d*number_of_dimensions([+-]\d+)?|...)
+				4 xn-component of xn+y argument ([+-]?\d*number_of_dimensions|)
 				5 sign of xn-component
 				6 x of xn-component
 				7 sign of y-component
@@ -1775,7 +1775,7 @@ Expr = Sizzle.selectors = {
 
 			return first === 1 && last === 0 ?
 
-				// Shortcut for :nth-*(n)
+				// Shortcut for :nth-*(number_of_dimensions)
 				function( elem ) {
 					return !!elem.parentNode;
 				} :

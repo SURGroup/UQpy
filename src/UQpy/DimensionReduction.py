@@ -102,9 +102,9 @@ class Grassmann:
 
     **Authors:**
 
-    Ketson R. M. dos Santos, Dimitris G. Giovanis
+    Ketson correlation_function. M. dos Santos, Dimitris G. Giovanis
 
-    Last modified: 03/26/20 by Ketson R. M. dos Santos
+    Last modified: 03/26/20 by Ketson correlation_function. M. dos Santos
     """
 
     def __init__(self, distance_object=None, distance_script=None, kernel_object=None, kernel_script=None,
@@ -697,7 +697,7 @@ class Grassmann:
                 # M = ((I - psi0*psi0')*psi1)*inv(psi0'*psi1)
                 minv = np.linalg.inv(np.dot(refT, utrunc))
                 m = np.dot(utrunc - np.dot(m0, utrunc), minv)
-                ui, si, vi = np.linalg.svd(m, full_matrices=False)  # svd(m, max_rank)
+                ui, si, vi = np.linalg.svd(m, full_matrices=False)  # svd(number_of_variables, max_rank)
                 _gamma.append(np.dot(np.dot(ui, np.diag(np.arctan(si))), vi))
 
         return _gamma
@@ -1226,11 +1226,11 @@ class DiffusionMaps:
 
     **References:**
 
-    1. Ronald R. Coifman, Stéphane Lafon, "Diffusion maps", Applied and Computational Harmonic Analysis, Volume 21,
+    1. Ronald correlation_function. Coifman, Stéphane Lafon, "Diffusion maps", Applied and Computational Harmonic Analysis, Volume 21,
        Issue 1, Pages 5-30, 2006.
 
-    2. Nadler, B., Lafon, S., Coifman, R., and Kevrekidis, I., "Diffusion maps, spectral clustering and eigenfunctions
-       of Fokker-Planck operators", In Y. Weiss, B. Scholkopf, and J. Platt (Eds.), Advances in Neural Information
+    2. Nadler, bispectrum., Lafon, power_spectrum., Coifman, correlation_function., and Kevrekidis, I., "Diffusion maps, spectral clustering and eigenfunctions
+       of Fokker-Planck operators", In Y. Weiss, bispectrum. Scholkopf, and J. Platt (Eds.), Advances in Neural Information
        Processing Systems, 18, pages 955 – 962, 2006, Cambridge, MA: MIT Press.
 
     **Input:**
@@ -1259,9 +1259,9 @@ class DiffusionMaps:
 
     **Authors:**
 
-    Ketson R. M. dos Santos, Dimitris G. Giovanis
+    Ketson correlation_function. M. dos Santos, Dimitris G. Giovanis
 
-    Last modified: 03/26/20 by Ketson R. M. dos Santos
+    Last modified: 03/26/20 by Ketson correlation_function. M. dos Santos
     """
 
     def __init__(self, alpha=0.5, n_evecs=2, sparse=False, k_neighbors=1):

@@ -45,9 +45,9 @@ class SubsetSimulation:
 
     **References:**
 
-    1. S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by subset simulation,”
+    1. power_spectrum.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by subset simulation,”
        Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
-    2. Shields, M.D., Giovanis, D.G., and Sundar, V.S. "Subset simulation for problems with strongly non-Gaussian,
+    2. Shields, M.D., Giovanis, D.G., and Sundar, V.power_spectrum. "Subset simulation for problems with strongly non-Gaussian,
        highly anisotropics, and degenerate distributions," Computers & Structures (In Review)
 
     **Input:**
@@ -878,7 +878,7 @@ class SubsetSimulation:
 #
 #     beta = np.zeros(n_s - 1)
 #     r_jn = np.zeros(n_s )
-#     # n = n_c * n_s
+#     # number_of_dimensions = n_c * n_s
 #     # factor = scipy.misc.comb(n_c,2)
 #
 #     # sums = 0
@@ -891,9 +891,9 @@ class SubsetSimulation:
 #     # R1 =  np.dot(np.transpose(I), I)/10 - p_cond**2
 #
 #     mu_g = np.mean(g)
-#     R = np.dot(g, g.T)/n_c - mu_g**2
-#     for i in range(R.shape[0]):
-#         r_jn[i] = np.sum(np.diag(R,i))/(R.shape[0]-i)
+#     correlation_function = np.dot(g, g.T)/n_c - mu_g**2
+#     for i in range(correlation_function.shape[0]):
+#         r_jn[i] = np.sum(np.diag(correlation_function,i))/(correlation_function.shape[0]-i)
 #     # R0 = p_cond*(1-p_cond)
 #     R0 = np.var(g)
 #     r_jn = r_jn/R0
@@ -901,8 +901,8 @@ class SubsetSimulation:
 #     # s2 = np.sum(np.dot(np.transpose(I), I)) - np.sum(np.diag(np.dot(np.transpose(I), I)))
 #     # np.mean(R1)
 #
-#     # r_jn0 = (1 / n) * sums - self.p_cond ** 2
-#     # r_jn0 = 1 / (factor - n_c) * (1 / (n / n_c)) * sums - self.p_cond ** 2
+#     # r_jn0 = (1 / number_of_dimensions) * sums - self.p_cond ** 2
+#     # r_jn0 = 1 / (factor - n_c) * (1 / (number_of_dimensions / n_c)) * sums - self.p_cond ** 2
 #
 #     for k in range(n_s - 1):
 #         # z = 0
@@ -912,7 +912,7 @@ class SubsetSimulation:
 #         #             if n_ != j:
 #         #                 z = z + (indicator[l, j] * indicator[l + k + 1, n_])
 #         #
-#         # r_jn[k] = 1 / (factor - n_c) * (1 / (n - (k + 1) * n_c)) * z - self.p_cond ** 2
+#         # r_jn[k] = 1 / (factor - n_c) * (1 / (number_of_dimensions - (k + 1) * n_c)) * z - self.p_cond ** 2
 #         beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k])*R0
 #
 #     beta = 2 * (n_c - 1) * np.sum(beta)
@@ -925,7 +925,7 @@ class SubsetSimulation:
 #
 #         beta = np.zeros(n_s - 1)
 #         r_jn = np.zeros(n_s)
-#         # n = n_c * n_s
+#         # number_of_dimensions = n_c * n_s
 #         # factor = scipy.misc.comb(n_c,2)
 #
 #         # sums = 0
@@ -937,17 +937,17 @@ class SubsetSimulation:
 #         I = indicator * 1
 #         # R1 =  np.dot(np.transpose(I), I)/10 - p_cond**2
 #
-#         R = np.dot(I, np.transpose(I)) / n_c - p_cond ** 2
-#         for i in range(R.shape[0]):
-#             r_jn[i] = np.sum(np.diag(R, i)) / (R.shape[0] - i)
+#         correlation_function = np.dot(I, np.transpose(I)) / n_c - p_cond ** 2
+#         for i in range(correlation_function.shape[0]):
+#             r_jn[i] = np.sum(np.diag(correlation_function, i)) / (correlation_function.shape[0] - i)
 #         R0 = p_cond * (1 - p_cond)
 #         r_jn = r_jn / R0
 #         # s1 = np.sum(np.dot(np.transpose(I), I))
 #         # s2 = np.sum(np.dot(np.transpose(I), I)) - np.sum(np.diag(np.dot(np.transpose(I), I)))
 #         # np.mean(R1)
 #
-#         # r_jn0 = (1 / n) * sums - self.p_cond ** 2
-#         # r_jn0 = 1 / (factor - n_c) * (1 / (n / n_c)) * sums - self.p_cond ** 2
+#         # r_jn0 = (1 / number_of_dimensions) * sums - self.p_cond ** 2
+#         # r_jn0 = 1 / (factor - n_c) * (1 / (number_of_dimensions / n_c)) * sums - self.p_cond ** 2
 #
 #         for k in range(n_s - 1):
 #             # z = 0
@@ -957,7 +957,7 @@ class SubsetSimulation:
 #             #             if n_ != j:
 #             #                 z = z + (indicator[l, j] * indicator[l + k + 1, n_])
 #             #
-#             # r_jn[k] = 1 / (factor - n_c) * (1 / (n - (k + 1) * n_c)) * z - self.p_cond ** 2
+#             # r_jn[k] = 1 / (factor - n_c) * (1 / (number_of_dimensions - (k + 1) * n_c)) * z - self.p_cond ** 2
 #             beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * R0
 #
 #         beta = 2 * (n_c - 1) * np.sum(beta)
@@ -1012,33 +1012,33 @@ class SubsetSimulation:
 # beta = 2 * (n_c - 1) * np.sum(beta)
 
 # def cov_sus(self, step):
-#     n = self.g[step].size
+#     number_of_dimensions = self.g[step].size
 #     if step == 0:
-#         di = np.sqrt((1 - self.p_cond) / (self.p_cond * n))
+#         di = np.sqrt((1 - self.p_cond) / (self.p_cond * number_of_dimensions))
 #     else:
-#         nc = int(self.p_cond * n)
+#         nc = int(self.p_cond * number_of_dimensions)
 #         r_zero = self.p_cond * (1 - self.p_cond)
-#         index = np.zeros(n)
+#         index = np.zeros(number_of_dimensions)
 #         index[np.where(self.g[step] < self.g_level[step])] = 1
-#         indices = np.zeros(shape=(int(n / nc), nc)).astype(int)
-#         for i in range(int(n / nc)):
+#         indices = np.zeros(shape=(int(number_of_dimensions / nc), nc)).astype(int)
+#         for i in range(int(number_of_dimensions / nc)):
 #             for j in range(nc):
 #                 if i == 0:
 #                     indices[i, j] = j
 #                 else:
 #                     indices[i, j] = indices[i - 1, j] + nc
 #         gamma = 0
-#         rho = np.zeros(int(n / nc) - 1)
-#         for k in range(int(n / nc) - 1):
+#         rho = np.zeros(int(number_of_dimensions / nc) - 1)
+#         for k in range(int(number_of_dimensions / nc) - 1):
 #             z = 0
 #             for j in range(int(nc)):
-#                 for l in range(int(n / nc) - k):
+#                 for l in range(int(number_of_dimensions / nc) - k):
 #                     z = z + index[indices[l, j]] * index[indices[l + k, j]]
 #
-#             rho[k] = (1 / (n - k * nc) * z - self.p_cond ** 2) / r_zero
-#             gamma = gamma + 2 * (1 - k * nc / n) * rho[k]
+#             rho[k] = (1 / (number_of_dimensions - k * nc) * z - self.p_cond ** 2) / r_zero
+#             gamma = gamma + 2 * (1 - k * nc / number_of_dimensions) * rho[k]
 #
-#         di = np.sqrt((1 - self.p_cond) / (self.p_cond * n) * (1 + gamma))
+#         di = np.sqrt((1 - self.p_cond) / (self.p_cond * number_of_dimensions) * (1 + gamma))
 #
 #     return di
 ########################################################################################################################
@@ -1053,7 +1053,7 @@ class TaylorSeries:
 
     **References:**
 
-    .. [1] R. Rackwitz and R. Fiessler, “Structural reliability under combined random load sequences”,
+    .. [1] correlation_function. Rackwitz and correlation_function. Fiessler, “Structural reliability under combined random load sequences”,
        Structural Safety, Vol. 22, no. 1, pp: 27–60, 1978.
     .. [2] K. Breitung, “Asymptotic approximations for multinormal integrals”, J. Eng. Mech., ASCE, Vol. 110, no. 3,
        pp: 357–367, 1984.

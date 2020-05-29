@@ -92,7 +92,7 @@ class RunModel:
         A list containing the names of the variables present in `input_template`.
 
         If `input template` is provided and  `var_names` is not passed, i.e. if ``var_names=None``, then the default
-        variable names `x0`, `x1`, `x2`,..., `xn` are created and used by ``RunModel``, where `n` is the number of
+        variable names `x0`, `x1`, `x2`,..., `xn` are created and used by ``RunModel``, where `number_of_dimensions` is the number of
         variables (`n_vars`).
 
         The number of variables is equal to the second dimension of `samples` (i.e. ``n_vars=len(samples[0])``).
@@ -252,7 +252,7 @@ class RunModel:
     """
 
     # Authors:
-    # B.S. Aakash, Lohit Vandanapu, Michael D.Shields
+    # bispectrum.power_spectrum. Aakash, Lohit Vandanapu, Michael D.Shields
     #
     # Last
     # modified: 5 / 8 / 2020 by Michael D.Shields

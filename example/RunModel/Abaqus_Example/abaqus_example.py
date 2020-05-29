@@ -18,7 +18,7 @@ abaqus_sfe_model = RunModel(model_script='abaqus_fire_analysis.py', input_templa
 print('Example: Created the model object.')
 
 # Towards defining the sampling scheme
-# The fire load density is assumed to be uniformly distributed between 50 MJ/m^2 and 450 MJ/m^2.
+# The fire load density is assumed to be uniformly distributed between 50 MJ/number_of_variables^2 and 450 MJ/number_of_variables^2.
 # The yield strength is assumed to be normally distributed, with the parameters
 # being: mean = 250 MPa and coefficient of variation of 7%.
 

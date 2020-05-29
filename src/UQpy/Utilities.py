@@ -730,9 +730,9 @@ def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ES
 
         # Computation of the autocorrelation time in each dimension
         #def auto_window(taus, c):    # Automated windowing procedure following Sokal (1989)
-        #    m = np.arange(len(taus)) < c * taus
-        #    if np.any(m):
-        #        return np.argmin(m)
+        #    number_of_variables = np.arange(len(taus)) < c * taus
+        #    if np.any(number_of_variables):
+        #        return np.argmin(number_of_variables)
         #    return len(taus) - 1
         #autocorrelation_time = []
         #for j in range(samples.shape[1]):

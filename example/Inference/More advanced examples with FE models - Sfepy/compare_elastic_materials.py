@@ -113,8 +113,8 @@ def define( K=8.333, mu_nh=3.846, mu_mr=1.923, kappa=1.923, lam=5.769, mu=3.846 
         'ts' : ('ts.simple', {
             't0'    : 0,
             't1'    : 1,
-            'dt'    : None,
-            'n_step' : 26, # has precedence over dt!
+            'time_duration'    : None,
+            'n_step' : 26, # has precedence over time_duration!
             'verbose' : 1,
         }),
     }

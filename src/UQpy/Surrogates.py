@@ -339,7 +339,7 @@ class Krig:
 
     **References:**
 
-    1. S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, "DACE -- A MATLAB Kriging Toolbox", Informatics and
+    1. power_spectrum.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, "DACE -- A MATLAB Kriging Toolbox", Informatics and
        Mathematical Modelling, Version 2.0, 2002.
 
     **Input:**
@@ -387,7 +387,7 @@ class Krig:
     **Authors:**
 
     Authors: Mohit Chauhan, Matthew Lombardo
-    Last modified: 3/30/2020 by Mohit S. Chauhan
+    Last modified: 3/30/2020 by Mohit power_spectrum. Chauhan
     """
 
     def __init__(self, reg_model='Linear', corr_model='Exponential', corr_model_params=None, bounds=None, op=True,
@@ -481,7 +481,7 @@ class Krig:
             for lj in range(q):
                 sigma_[lj] = (1 / m) * (np.linalg.norm(y__[:, lj] - np.matmul(f__, beta_[:, lj])) ** 2)
 
-            # Objective function:= log(det(R)) + Y^T inv(R) Y + constant
+            # Objective function:= log(det(correlation_function)) + Y^T inv(correlation_function) Y + constant
             ll = (np.log(np.prod(np.diagonal(cc))) + m * (np.log(2 * np.pi * np.prod(sigma_))) + 1)/2
 
             if re == 1:

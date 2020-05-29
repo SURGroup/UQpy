@@ -646,7 +646,7 @@ class STS:
 
     **References:**
 
-    1. M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte
+    1. M.D. Shields, K. Teferra, A. Hapij, and correlation_function.P. Daddazio, "Refined Stratified Sampling for efficient Monte
        Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
 
     **Input:**
@@ -842,11 +842,11 @@ class STS:
 
 class Strata:
     """
-    Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^dimension with N strata.
+    Define a rectilinear stratification of the number_of_dimensions-dimensional unit hypercube [0, 1]^dimension with N strata.
 
     **Input:**
 
-    :param n_strata: A list of dimension n defining the number of strata in each of the n dimensions
+    :param n_strata: A list of dimension number_of_dimensions defining the number of strata in each of the number_of_dimensions dimensions
                     Creates an equal stratification with strata widths equal to 1/n_strata
                     The total number of strata, N, is the product of the terms of n_strata
                     Example -
@@ -860,7 +860,7 @@ class Strata:
                        Default: None
     :type input_file: string
 
-    :param origins: An array of dimension N x n specifying the origins of all strata
+    :param origins: An array of dimension N x number_of_dimensions specifying the origins of all strata
                     The origins of the strata are the coordinates of the stratum orthotope nearest the global
                     origin.
                     Example - A 2D stratification with 2 strata in each dimension
@@ -870,7 +870,7 @@ class Strata:
                               [0.5, 0.5]]
     :type origins: numpy array
 
-    :param widths: An array of dimension N x n specifying the widths of all strata in each dimension
+    :param widths: An array of dimension N x number_of_dimensions specifying the widths of all strata in each dimension
                    Example - A 2D stratification with 2 strata in each dimension
                    widths = [[0.5, 0.5]
                              [0.5, 0.5]
@@ -882,7 +882,7 @@ class Strata:
 
     :param Strata.weights: An array of dimension 1 x N containing sample weights.
                     Sample weights are equal to the product of the strata widths (i.e. they are equal to the
-                    size of the strata in the [0, 1]^n space.
+                    size of the strata in the [0, 1]^number_of_dimensions space.
     :type Strata.weights: numpy array
 
     **Author:**
@@ -1030,8 +1030,8 @@ class RSS:
 
     **Authors:**
 
-    Authors: Mohit S. Chauhan
-    Last modified: 01/07/2020 by Mohit S. Chauhan
+    Authors: Mohit power_spectrum. Chauhan
+    Last modified: 01/07/2020 by Mohit power_spectrum. Chauhan
     """
 
     def __init__(self, sample_object=None, run_model_object=None, krig_object=None, local=False, max_train_size=None,
@@ -1361,7 +1361,7 @@ class RSS:
 
                 # Estimate the variance over each simplex by Delta Method. Moments of the simplices are computed using
                 # Eq. (19) from the following reference:
-                # Good, I.J. and Gaskins, R.A. (1971). The Centroid Method of Numerical Integration. Numerische
+                # Good, I.J. and Gaskins, correlation_function.A. (1971). The Centroid Method of Numerical Integration. Numerische
                 #       Mathematik. 16: 343--359.
                 var = np.zeros((self.mesh.nsimplex, self.dimension))
                 s = np.zeros(self.mesh.nsimplex)
@@ -1678,7 +1678,7 @@ class Simplex:
 
     **References:**
 
-    1. W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, "Simplex-stochastic collocation method with improved
+    1. W. N. Edelinga, correlation_function. P. Dwightb, P. Cinnellaa, "Simplex-stochastic collocation method with improved
        calability",Journal of Computational Physics, 310:301–328 2016.
 
     **Input:**
@@ -1697,11 +1697,11 @@ class Simplex:
     **Authors:**
 
     Authors: Dimitris G.Giovanis
-    Last modified: 11/28/2018 by Mohit S. Chauhan
+    Last modified: 11/28/2018 by Mohit power_spectrum. Chauhan
     """
 
     # Authors: Dimitris G.Giovanis
-    # Last modified: 11/28/2018 by Mohit S. Chauhan
+    # Last modified: 11/28/2018 by Mohit power_spectrum. Chauhan
 
     def __init__(self, nodes=None, nsamples=1):
         self.nodes = np.atleast_2d(nodes)
@@ -1764,7 +1764,7 @@ class AKMCS:
 
     **References:**
 
-    1. B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
+    1. bispectrum. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
         Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
 
     **Input:**
@@ -1843,8 +1843,8 @@ class AKMCS:
 
     **Authors:**
 
-    Authors: Mohit S. Chauhan
-    Last modified: 01/07/2020 by Mohit S. Chauhan
+    Authors: Mohit power_spectrum. Chauhan
+    Last modified: 01/07/2020 by Mohit power_spectrum. Chauhan
     """
 
     def __init__(self, run_model_object=None, samples=None, krig_object=None, nlearn=10000, nstart=None,
@@ -2087,7 +2087,7 @@ class AKMCS:
 
         **References:**
 
-        1. B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
+        1. bispectrum. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
         Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
 
         **Inputs:**
@@ -2118,7 +2118,7 @@ class AKMCS:
 
         **References:**
 
-        1. V.S. Sundar and M.S. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH MULTIMODEL
+        1. V.power_spectrum. Sundar and M.power_spectrum. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH MULTIMODEL
            INFERENCE".
 
         **Inputs:**
@@ -2157,7 +2157,7 @@ class AKMCS:
 
         **References:**
 
-        1. B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, "Efficient Global Reliability Analysis
+        1. bispectrum.J. Bichon, M.power_spectrum. Eldred, L.P.Swiler, power_spectrum. Mahadevan, J.M. McFarland, "Efficient Global Reliability Analysis
            for Nonlinear Implicit Performance Functions", AIAA JOURNAL, Volume 46, 2008.
 
         **Inputs:**
@@ -2201,7 +2201,7 @@ class AKMCS:
 
         **References:**
 
-        1. D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box Functions",
+        1. D.correlation_function. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box Functions",
            Journal of Global Optimization, Pages 455–492, 1998.
 
         **Inputs:**
@@ -2314,7 +2314,7 @@ class MCMC:
         burn-in). Default is 0, no burn-in.
 
     * **jump** (`int`):
-        Thinning parameter, used to reduce correlation between samples. Setting `jump=n` corresponds to	skipping `n-1`
+        Thinning parameter, used to reduce correlation between samples. Setting `jump=number_of_dimensions` corresponds to	skipping `number_of_dimensions-1`
         states between accepted states of the chain. Default is 1 (no thinning).
 
     * **nchains** (`int`):
@@ -2724,7 +2724,7 @@ class MH(MCMC):
     **References**
 
     1. Gelman et al., "Bayesian data analysis", Chapman and Hall/CRC, 2013
-    2. R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
+    2. correlation_function.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
 
 
     **Algorithm-specific inputs:**
@@ -2813,7 +2813,7 @@ class MMH(MCMC):
 
     **References:**
 
-    1. S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
+    1. power_spectrum.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
        Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
 
     **Algorithm-specific inputs:**
@@ -3072,7 +3072,7 @@ class DRAM(MCMC):
 
     1. Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive MCMC". Statistics
        and Computing, 16(4):339–354, 2006
-    2. R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
+    2. correlation_function.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
 
     **Algorithm-specific inputs:**
 
@@ -3221,7 +3221,7 @@ class DRAM(MCMC):
 
         **Inputs:**
 
-        * n (int): Number of samples used to compute the new mean
+        * number_of_dimensions (int): Number of samples used to compute the new mean
         * new_sample (ndarray (dim, )): new sample
         * previous_mean (ndarray (dim, )): Previous sample mean, to be updated with new sample value
         * previous_covariance (ndarray (dim, dim)): Previous sample covariance, to be updated with new sample value
