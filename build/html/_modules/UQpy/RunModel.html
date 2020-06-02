@@ -7,12 +7,12 @@
     <title>UQpy.RunModel &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -64,6 +64,7 @@
 
 <span class="kn">import</span> <span class="nn">collections</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">pathlib</span>
 <span class="kn">import</span> <span class="nn">platform</span>
@@ -235,6 +236,11 @@
 
 <span class="sd">        `vec` is not used in the third-party model workflow.</span>
 
+<span class="sd">    * **delete_files** (`boolean`)</span>
+<span class="sd">        Specifies whether or not to delete individual run output files after model execution and output processing.</span>
+
+<span class="sd">        If `delete_files = True`, ``RunModel`` will remove all `run_i...` directories in the `model_dir`.</span>
+
 <span class="sd">    * **kwargs** (`dict`)</span>
 <span class="sd">        Additional inputs to the Python object specified by `model_object_name` in the Python model workflow.</span>
 
@@ -288,7 +294,7 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_script</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_object_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">input_template</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_script</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_object_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ntasks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                  <span class="n">cores_per_task</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cluster</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">resume</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">model_dir</span><span class="o">=</span><span class="s1">&#39;Model_Runs&#39;</span><span class="p">,</span>
-                 <span class="n">fmt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s1">&#39;, &#39;</span><span class="p">,</span> <span class="n">vec</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                 <span class="n">fmt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s1">&#39;, &#39;</span><span class="p">,</span> <span class="n">vec</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">delete_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="c1"># Check the platform and build appropriate call to Python</span>
         <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Windows&#39;</span><span class="p">]:</span>
@@ -314,6 +320,8 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">UQpy: fmt should be a string in brackets indicating a standard Python format.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">UQpy: fmt should be a str.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_files</span> <span class="o">=</span> <span class="n">delete_files</span>
 
         <span class="c1"># kwargs options, used only for python runs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">python_kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
@@ -522,6 +530,12 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">UQpy: Returning to the parent directory:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_dir</span><span class="p">)</span>
         <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent_dir</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delete_files</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;UQpy: Deleting individual run files.&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">dirname</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span><span class="p">,</span> <span class="s2">&quot;run*&quot;</span><span class="p">)):</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="kc">None</span></div>
 
     <span class="c1">####################################################################################################################</span>
@@ -649,9 +663,9 @@
             <span class="c1"># If the Python model is vectorized to accept many samples.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model_output</span> <span class="o">=</span> <span class="n">model_object</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">nexist</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">nexist</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsim</span><span class="p">],</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">python_kwargs</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_is_class</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">qoi_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_output</span><span class="o">.</span><span class="n">qoi</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">qoi_list</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">nexist</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">nexist</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">nsim</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_output</span><span class="o">.</span><span class="n">qoi</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">qoi_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_output</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">qoi_list</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">nexist</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">nexist</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">nsim</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_output</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># If the Python model is not vectorized and accepts only a single sample.</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nexist</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nexist</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsim</span><span class="p">):</span>
@@ -1111,7 +1125,7 @@
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1120,7 +1134,7 @@
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

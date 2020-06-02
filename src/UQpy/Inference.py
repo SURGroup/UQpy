@@ -45,22 +45,6 @@ class InferenceModel:
     """
     Define a probabilistic model for inference.
 
-    This class defines an inference model that will serve as input for all remaining inference classes. A model can be
-    defined in various ways:
-
-    * case 1a: Gaussian error model powered by RunModel, i.e., `data ~ h(theta) + eps`, where `eps` is iid Gaussian and
-      `h` consists in running RunModel. Data is a 1D ndarray in this setting.
-    * case 1b: non-Gaussian error model powered by RunModel, the user must provide the likelihood function in addition
-      to a RunModel object. The data type is user-defined and must be consistent with the likelihood function definition
-    * case 2: the likelihood function is user-defined and does not leverage RunModel. The data type must be consistent
-      with the likelihood function definition.
-    * case 3: Learn parameters of a probability distribution pi (in dimension dim). Data is an ndarray of shape
-      (ndata, dim) and consists in ndata iid samples from pi. The user must define the distribution_object input. The
-      following lines of code show how to create an object for case 3:
-
-    >>> dist = Normal(loc=None, scale=None)
-    >>> candidate_model = InferenceModel(nparams=2, distribution_object=dist)
-
     **Input:**
 
     * **nparams** (`int`):
@@ -69,30 +53,31 @@ class InferenceModel:
     * **name** (`string`):
         Name of model - optional but useful in a model selection setting.
 
-    * **run_model_object** (object of class ``RunModel``):
+    * **runmodel_object** (object of class ``RunModel``):
         ``RunModel`` class object that defines the forward model. This input is required for cases 1a and 1b.
 
     * **log_likelihood** (callable):
-        Function that defines the log-likelihood model, possibly in conjunction with the run_model_object (cases 1b and
-        2). Default is None, then a Gaussian-error model is considered (case 1a).
+        Function that defines the log-likelihood model, possibly in conjunction with the `runmodel_object` (cases 1b
+        and 2). Default is None, and a Gaussian-error model is considered (case 1a).
 
-        |  If a run_model_object is also defined (case 1b), this function is called as:
-        |  `model_outputs = run_model_object.run(samples=params).qoi_list`
+        |  If a `runmodel_object` is also defined (case 1b), this function is called as:
+        |  `model_outputs = runmodel_object.run(samples=params).qoi_list`
         |  `log_likelihood(params, model_outputs, data, **kwargs_likelihood)`
 
-        |  If no run_model_object is defined (case 2), this function is called as:
+        |  If no `runmodel_object` is defined (case 2), this function is called as:
         |  `log_likelihood(params, data, **kwargs_likelihood)`
 
     * **kwargs_likelihood**:
-        Key-word arguments transferred to the log-likelihood function.
+        Keyword arguments transferred to the log-likelihood function.
 
     * **dist_object** (object of class ``Distribution``):
-        Distribution :math:`\pi` for which to learn parameters from iid data (case 3). When creating this
-        ``Distribution`` object, the parameters to be learnt should be set to None.
+        Distribution :math:`\pi` for which to learn parameters from iid data (case 3).
+
+        When creating this ``Distribution`` object, the parameters to be learned should be set to `None`.
 
     * **error_covariance** (`ndarray` or `float`):
         Covariance for Gaussian error model (case 1a). It can be a scalar (in which case the covariance matrix is the
-        identity times that value), a 1d `ndarray` in which case the covariance is assumed to be diagonal or a full
+        identity times that value), a 1d `ndarray` in which case the covariance is assumed to be diagonal, or a full
         covariance matrix (2D `ndarray`). Default value is 1.
 
     * **prior** (object of class ``Distribution``):
@@ -103,7 +88,7 @@ class InferenceModel:
     """
     # Last Modified: 05/13/2020 by Audrey Olivier
 
-    def __init__(self, nparams, run_model_object=None, log_likelihood=None, dist_object=None, name='',
+    def __init__(self, nparams, runmodel_object=None, log_likelihood=None, dist_object=None, name='',
                  error_covariance=1.0, prior=None, verbose=False, **kwargs_likelihood
                  ):
 
@@ -116,22 +101,22 @@ class InferenceModel:
             raise TypeError('Input name must be a string.')
         self.verbose = verbose
 
-        self.run_model_object = run_model_object
+        self.runmodel_object = runmodel_object
         self.error_covariance = error_covariance
         self.log_likelihood = log_likelihood
         self.dist_object = dist_object
         self.kwargs_likelihood = kwargs_likelihood
-        # Perform checks on inputs run_model_object, log_likelihood, distribution_object that define the inference model
-        if (self.run_model_object is None) and (self.log_likelihood is None) and (self.dist_object is None):
-            raise ValueError('UQpy: One of run_model_object, log_likelihood or dist_object inputs must be provided.')
-        if self.run_model_object is not None and (not isinstance(self.run_model_object, RunModel)):
-            raise TypeError('UQpy: Input run_model_object should be an object of class RunModel.')
+        # Perform checks on inputs runmodel_object, log_likelihood, distribution_object that define the inference model
+        if (self.runmodel_object is None) and (self.log_likelihood is None) and (self.dist_object is None):
+            raise ValueError('UQpy: One of runmodel_object, log_likelihood or dist_object inputs must be provided.')
+        if self.runmodel_object is not None and (not isinstance(self.runmodel_object, RunModel)):
+            raise TypeError('UQpy: Input runmodel_object should be an object of class RunModel.')
         if (self.log_likelihood is not None) and (not callable(self.log_likelihood)):
             raise TypeError('UQpy: Input log_likelihood should be a callable.')
         if self.dist_object is not None:
-            if (self.run_model_object is not None) or (self.log_likelihood is not None):
+            if (self.runmodel_object is not None) or (self.log_likelihood is not None):
                 raise ValueError('UQpy: Input dist_object cannot be provided concurrently with log_likelihood '
-                                 'or run_model_object.')
+                                 'or runmodel_object.')
             if not isinstance(self.dist_object, Distribution):
                 raise TypeError('UQpy: Input dist_object should be an object of class Distribution.')
             if not hasattr(self.dist_object, 'log_pdf'):
@@ -156,27 +141,28 @@ class InferenceModel:
 
     def evaluate_log_likelihood(self, params, data):
         """
-        Evaluate the log likelihood `log p(data|params)`.
+        Evaluate the log likelihood, `log p(data|params)`.
 
-        This method is the central piece for the Inference module, it is being called repeatedly by all other inference
-        classes to evaluate the likelihood of the data. The log-likelihood can be evaluated at several parameter vectors
-        at once, i.e., `params` is a `ndarray` of shape (nsamples, nparams). If the inference model is powered by
-        ``RunModel`` the `RunModel.run` method is called here, possibly leveraging its serial/parallel execution.
+        This method is the central piece of the ``Inference`` module, it is being called repeatedly by all other
+        ``Inference`` classes to evaluate the likelihood of the data. The log-likelihood can be evaluated at several
+        parameter vectors at once, i.e., `params` is an `ndarray` of shape (nsamples, nparams). If the
+        ``InferenceModel`` is powered by ``RunModel`` the ``RunModel.run`` method is called here, possibly leveraging
+        its parallel execution.
 
         **Inputs:**
 
         * **params** (`ndarray`):
-            Parameter vector(s) at which to evaluate the likelihood function, `ndarray` of shape (nsamples, nparams).
+            Parameter vector(s) at which to evaluate the likelihood function, `ndarray` of shape `(nsamples, nparams)`.
 
         * **data** (`ndarray`):
-            Data from which to learn. For case 1b, this should be a `ndarray` of shape (ndata, ). For case 3, it must
-            be a `ndarray` of shape (ndata, dimension). For other cases it must be consistent with the definition of
-            the log_likelihood callable input.
+            Data from which to learn. For case 1b, this should be an `ndarray` of shape `(ndata, )`. For case 3, it must
+            be an `ndarray` of shape `(ndata, dimension)`. For other cases it must be consistent with the definition of
+            the ``log_likelihood`` callable input.
 
         **Output/Returns:**
 
         * (`ndarray`):
-            Log-likelihood evaluated at all nsamples parameter vector values, `ndarray` of shape (nsamples, ).
+            Log-likelihood evaluated at all `nsamples` parameter vector values, `ndarray` of shape (nsamples, ).
 
         """
 
@@ -185,9 +171,9 @@ class InferenceModel:
             raise ValueError('Wrong dimensions in params.')
 
         # Case 1 - Forward model is given by RunModel
-        if self.run_model_object is not None:
-            self.run_model_object.run(samples=params, append_samples=False)
-            model_outputs = self.run_model_object.qoi_list
+        if self.runmodel_object is not None:
+            self.runmodel_object.run(samples=params, append_samples=False)
+            model_outputs = self.runmodel_object.qoi_list
 
             # Case 1.a: Gaussian error model
             if self.log_likelihood is None:
@@ -237,7 +223,7 @@ class InferenceModel:
         Evaluate the scaled log posterior `log(p(data|params)p(params))`.
 
         This method is called by classes that perform Bayesian inference. If the ``InferenceModel`` object does not
-        possess a prior, an uninformative prior `p(params)=1` is assumed.
+        possess a prior, an uninformative prior `p(params)=1` is assumed. Warning: This is an improper prior.
 
         **Inputs:**
 
@@ -250,7 +236,7 @@ class InferenceModel:
         **Output/Returns:**
 
         * (`ndarray`):
-            Log-posterior evaluated at all nsamples parameter vector values, `ndarray` of shape (nsamples, ).
+            Log-posterior evaluated at all `nsamples` parameter vector values, `ndarray` of shape (nsamples, ).
 
         """
         # Compute log likelihood
@@ -273,15 +259,7 @@ class InferenceModel:
 
 class MLEstimation:
     """
-    Evaluate the maximum likelihood estimate of a model given some data.
-
-    >>> candidate_model = InferenceModel(nparams=2, dist_object=Normal(loc=None, scale=None))
-    >>> data = np.array([0.2, -0.3, 0.01]).reshape((-1, 1))
-    >>> ml_estimator = MLEstimation(inference_model=candidate_model, data=data, nopt=2)
-    >>> print(ml_estimator.mle)
-    [-0.03        0.20607442]
-    >>> print(ml_estimator.max_log_like)
-    0.4817381371542576
+    Estimate the maximum likelihood parameters of a model given some data.
 
     **Inputs:**
 
@@ -299,22 +277,28 @@ class MLEstimation:
           the code as:
         | `optimizer(func, x0, **kwargs_optimizer)`
 
-        It must return an object with attributes x (minimizer) and fun (minimum function value).
+        It must return an object with attributes `x` (minimizer) and `fun` (minimum function value).
 
-        Default is scipy.optimize.minimize.
+        Default is `scipy.optimize.minimize`.
 
     * **kwargs_optimizer**:
-        Key-word arguments that will be transferred to the optimizer.
+        Keyword arguments that will be transferred to the optimizer.
+
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
 
     * **x0** (`ndarray`):
-        Starting point(s) for optimization, see `run_estimation`. Default is None.
+        Starting point(s) for optimization, see `run_estimation`. Default is `None`.
 
     * **nopt** (`int`):
-        Number of iterations that the optimization is run, starting at random initial guesses. See `run_estiamtion`.
-        Default is None.
+        Number of iterations that the optimization is run, starting at random initial guesses. See `run_estimation`.
+        Default is `None`.
 
-    If both `x0` and `nopt` are None, the object is created but the optimization procedure is not run, one must
-    call the run method.
+    If both `x0` and `nopt` are `None`, the object is created but the optimization procedure is not run, one must
+    call the ``run`` method.
 
     **Attributes:**
 
@@ -330,7 +314,7 @@ class MLEstimation:
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
 
-    def __init__(self, inference_model, data, verbose=False, nopt=None, x0=None, optimizer=None,
+    def __init__(self, inference_model, data, verbose=False, nopt=None, x0=None, optimizer=None, random_state=None,
                  **kwargs_optimizer):
 
         # Initialize variables
@@ -339,6 +323,11 @@ class MLEstimation:
             raise TypeError('UQpy: Input inference_model should be of type InferenceModel')
         self.data = data
         self.kwargs_optimizer = kwargs_optimizer
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
         self.verbose = verbose
         if optimizer is None:
             from scipy.optimize import minimize
@@ -360,25 +349,25 @@ class MLEstimation:
         """
         Run the maximum likelihood estimation procedure.
 
-        This function runs the optimization and updates the mle and max_log_like attributes of the class. When learning
-        the parameters of a distribution, if dist_object possesses an mle method this method is leveraged. If `x0` or
-        `nopt` are given when creating the MLEstimation object, this method is called directly when the object is
-        created.
+        This function runs the optimization and updates the `mle` and `max_log_like` attributes of the class. When
+        learning the parameters of a distribution, if `dist_object` possesses an ``mle`` method this method is used. If
+        `x0` or `nopt` are given when creating the ``MLEstimation`` object, this method is called automatically when the
+        object is created.
 
         **Inputs:**
 
         * **x0** (`ndarray`):
-            Initial guess(es) for optimization, ndarray of shape (nstarts, nparams) or (nparams, ), where nstarts is
-            the number of times the optimizer will be called. Alternatively, the user can provide input nopt to
-            randomly samples initial guess(es). The identified MLE is the one that yields the maximum log likelihood
-            over all calls of the optimizer.
+            Initial guess(es) for optimization, `ndarray` of shape `(nstarts, nparams)` or `(nparams, )`, where
+            `nstarts` is the number of times the optimizer will be called. Alternatively, the user can provide input
+            `nopt` to randomly sample initial guess(es). The identified MLE is the one that yields the maximum log
+            likelihood over all calls of the optimizer.
 
         * **nopt** (`int`):
             Number of iterations that the optimization is run, starting at random initial guesses. It is only used if
             `x0` is not provided. Default is 1.
 
             The random initial guesses are sampled uniformly between 0 and 1, or uniformly between user-defined bounds
-            if an input bounds is provided to the ``MLEstimation`` object.
+            if an input bounds is provided as a keyword argument to the ``MLEstimation`` object.
 
         """
         # Run optimization (use x0 if provided, otherwise sample starting point from [0, 1] or bounds)
@@ -388,7 +377,7 @@ class MLEstimation:
         # Case 3: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization below.
         if (self.inference_model.dist_object is not None) and hasattr(self.inference_model.dist_object, 'fit'):
             if not (isinstance(nopt, int) and nopt >= 1):
-                raise ValueError('nopt should be an integer >= 1.')
+                raise ValueError('UQpy: nopt should be an integer >= 1.')
             for _ in range(nopt):
                 self.inference_model.dist_object.update_params(
                     **{key: None for key in self.inference_model.list_params})
@@ -409,7 +398,10 @@ class MLEstimation:
             if x0 is None:
                 if not (isinstance(nopt, int) and nopt >= 1):
                     raise ValueError('UQpy: nopt should be an integer >= 1.')
-                x0 = np.random.rand(nopt, self.inference_model.nparams)
+                from UQpy.Distributions import Uniform
+                x0 = Uniform().rvs(
+                    nsamples=nopt * self.inference_model.nparams, random_state=self.random_state).reshape(
+                    (nopt, self.inference_model.nparams))
                 if 'bounds' in self.kwargs_optimizer.keys():
                     bounds = np.array(self.kwargs_optimizer['bounds'])
                     x0 = bounds[:, 0].reshape((1, -1)) + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) * x0
@@ -420,7 +412,7 @@ class MLEstimation:
             for x0_ in x0:
                 res = self.optimizer(self._evaluate_func_to_minimize, x0_, **self.kwargs_optimizer)
                 mle_tmp = res.x
-                max_log_like_tmp = (-1) * res.fun
+                max_log_like_tmp = (-1.) * res.fun
                 # Save result
                 if self.mle is None:
                     self.mle = mle_tmp
@@ -462,37 +454,34 @@ class BayesParameterEstimation:
     """
     Estimate the parameter posterior density given some data.
 
-    This class generates samples from the parameter posterior distribution, using MCMC or IS. It leverages the MCMC and
-    IS classes from the SampleMethods module.
+    This class generates samples from the parameter posterior distribution using Markov Chain Monte Carlo or Importance
+    Sampling. It leverages the ``MCMC`` and ``IS`` classes from the ``SampleMethods`` module.
 
-    >>> from UQpy.Distributions import JointInd, Uniform, Lognormal
-    >>> prior = JointInd(marginals=[Uniform(loc=0., scale=15), Lognormal(s=1., loc=0., scale=1.)])
-    >>> candidate_model = InferenceModel(dist_object=Normal(loc=None, scale=None), nparams=2, prior=prior)
-    >>> from UQpy.SampleMethods import MH
-    >>> data = np.array([0.2, -0.3, 0.01]).reshape((-1, 1))
-    >>> bayes_estimator = BayesParameterEstimation(data=data, inference_model=candidate_model, sampling_class=MH)
-    >>> bayes_estimator.run(nsamples=5)
-    >>> print(bayes_estimator.sampler.samples.shape)
-    (5, 2)
 
     **Inputs:**
 
-    * **model** (object of class ``InferenceModel``):
+    * **inference_model** (object of class ``InferenceModel``):
         The inference model that defines the likelihood function.
 
     * **data** (`ndarray`):
-        Available data, `ndarray` of shape consistent with log-likelihood function in InferenceModel
+        Available data, `ndarray` of shape consistent with log-likelihood function in ``InferenceModel``
 
     * **sampling_class** (class instance):
         Class instance, must be a subclass of ``MCMC`` or ``IS``.
 
     * **kwargs_sampler**:
-        Key-word arguments of the sampling class, see ``SampleMethods.MCMC`` or ``SampleMethods.IS``.
+        Keyword arguments of the sampling class, see ``SampleMethods.MCMC`` or ``SampleMethods.IS``.
 
-        Note on the seed for MCMC: if input `seed` is not provided, a seed (`ndarray` of shape (nchains, dimension)) is
-        sampled from the prior pdf, which must have an `rvs` method.
+        Note on the seed for ``MCMC``: if input `seed` is not provided, a seed (`ndarray` of shape
+        `(nchains, dimension)`) is sampled from the prior pdf, which must have an `rvs` method.
 
-        Note on the proposal for IS: if no input `proposal` is provided, the prior is used as proposal.
+        Note on the proposal for ``IS``: if no input `proposal` is provided, the prior is used as proposal.
+
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
 
     * **nsamples** (`int`):
         Number of samples used in MCMC/IS, see `run` method.
@@ -500,12 +489,12 @@ class BayesParameterEstimation:
     * **samples_per_chain** (`int`):
         Number of samples per chain used in MCMC, see `run` method.
 
-    If both `nsamples` and `nsamples_per_chain` are None, the object is created but the sampling procedure is not run,
-    one must call the run method.
+    If both `nsamples` and `nsamples_per_chain` are `None`, the object is created but the sampling procedure is not run,
+    one must call the ``run`` method.
 
     **Attributes:**
 
-    * **sampler** (object of sampling_class):
+    * **sampler** (object of ``SampleMethods`` class specified by `sampling_class`):
         Sampling method object, contains e.g. the posterior samples.
 
         This object is created along with the ``BayesParameterEstimation`` object, and its `run` method is called
@@ -517,12 +506,17 @@ class BayesParameterEstimation:
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
     def __init__(self, inference_model, data, sampling_class=None, nsamples=None, nsamples_per_chain=None,
-                 verbose=False, **kwargs_sampler):
+                 random_state=None, verbose=False, **kwargs_sampler):
 
         self.inference_model = inference_model
         if not isinstance(self.inference_model, InferenceModel):
             raise TypeError('UQpy: Input inference_model should be of type InferenceModel')
         self.data = data
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
         self.verbose = verbose
 
         from UQpy.SampleMethods import MCMC, IS
@@ -533,11 +527,12 @@ class BayesParameterEstimation:
                 if self.inference_model.prior is None or not hasattr(self.inference_model.prior, 'rvs'):
                     raise NotImplementedError('UQpy: A prior with a rvs method or a seed must be provided for MCMC.')
                 else:
-                    kwargs_sampler['seed'] = self.inference_model.prior.rvs(nsamples=kwargs_sampler['nchains'])
+                    kwargs_sampler['seed'] = self.inference_model.prior.rvs(
+                        nsamples=kwargs_sampler['nchains'], random_state=self.random_state)
             self.sampler = sampling_class(
-                dimension=self.inference_model.nparams, verbose=self.verbose,
+                dimension=self.inference_model.nparams, verbose=self.verbose, random_state=self.random_state,
                 log_pdf_target=self.inference_model.evaluate_log_posterior, args_target=(self.data, ),
-                **kwargs_sampler)
+                nsamples=None, nsamples_per_chain=None, **kwargs_sampler)
 
         elif issubclass(sampling_class, IS):
             # Importance distribution is either given by the user, or it is set as the prior of the model
@@ -548,7 +543,7 @@ class BayesParameterEstimation:
 
             self.sampler = sampling_class(
                 log_pdf_target=self.inference_model.evaluate_log_posterior, args_target=(self.data, ),
-                verbose=self.verbose, **kwargs_sampler)
+                random_state=self.random_state, verbose=self.verbose, nsamples=None, **kwargs_sampler)
 
         else:
             raise ValueError('UQpy: Sampling_class should be either a MCMC algorithm or IS.')
@@ -561,16 +556,16 @@ class BayesParameterEstimation:
         """
         Run the Bayesian inference procedure, i.e., sample from the parameter posterior distribution.
 
-        This function calls the `run` method of the `sampler` attribute to generate samples from the parameter posterior
-        distribution.
+        This function calls the ``run`` method of the `sampler` attribute to generate samples from the parameter
+        posterior distribution.
 
         **Inputs:**
 
         * **nsamples** (`int`):
-            Number of samples used in MCMC/IS
+            Number of samples used in ``MCMC``/``IS``
 
         * **samples_per_chain** (`int`):
-            Number of samples per chain used in MCMC
+            Number of samples per chain used in ``MCMC``
 
         """
 
@@ -602,16 +597,6 @@ class InfoModelSelection:
     likelihood estimation, thus inputs to ``MLEstimation`` can also be provided to ``InfoModelSelection``, as lists of
     length equal to the number of models.
 
-    >>> from UQpy.Distributions import Gamma, Exponential
-    >>> m0 = InferenceModel(dist_object=Gamma(a=None, loc=None, scale=None), nparams=3, name='gamma')
-    >>> m1 = InferenceModel(dist_object=Exponential(loc=None, scale=None), nparams=2, name='exponential')
-    >>> data = np.array([[0.98948677], [1.68020571], [2.45840788]])
-    >>> selector = InfoModelSelection(candidate_models=[m0, m1], data=data, criterion='BIC')
-    >>> selector.run(nopt=3)
-    >>> print(selector.ml_estimators[0].mle)
-    [ 3.95134934e+02 -1.01996273e+01  3.01344306e-02]
-    >>> print(selector.ml_estimators[1].mle)
-    [0.98948677 0.71988002]
 
     **Inputs:**
 
@@ -622,30 +607,36 @@ class InfoModelSelection:
         Available data
 
     * **criterion** (`str`):
-        Criterion to be used (AIC, BIC, AICc). Default is 'AIC'
+        Criterion to be used ('AIC', 'BIC', 'AICc'). Default is 'AIC'
 
     * **kwargs**:
-        Additional key-word inputs to the maximum likelihood estimators.
+        Additional keyword inputs to the maximum likelihood estimators.
 
-        Keys must refer to input names to the ``MLEstimation`` class, and values must be lists of length nmodels,
+        Keys must refer to input names to the ``MLEstimation`` class, and values must be lists of length `nmodels`,
         ordered in the same way as input `candidate_models`. For example, setting
         `kwargs={`method': [`Nelder-Mead', `Powell']}` means that the Nelder-Mead minimization algorithm will be used
         for ML estimation of the first candidate model, while the Powell method will be used for the second candidate
         model.
 
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
+
     * **x0** (`list` of `ndarrays`):
-        Starting points for optimization - see MLEstimation
+        Starting points for optimization - see ``MLEstimation``
 
     * **nopt** (`list` of `int`):
-        Number of iterations for the maximization procedure - see MLEstimation
+        Number of iterations for the maximization procedure - see ``MLEstimation``
 
-    If `x0` and `nopt` are both None, the object is created but the model selection procedure is not run, one
-    must then call the `run` method.
+    If `x0` and `nopt` are both `None`, the object is created but the model selection procedure is not run, one
+    must then call the ``run`` method.
 
     **Attributes:**
 
     * **ml_estimators** (`list` of `MLEstimation` objects):
-        MLEstimation results for each model (contains e.g. fitted parameters)
+        ``MLEstimation`` results for each model (contains e.g. fitted parameters)
 
     * **criterion_values** (`list` of `floats`):
         Value of the criterion for all models.
@@ -654,14 +645,19 @@ class InfoModelSelection:
         Value of the penalty term for all models. Data fit term is then criterion_value - penalty_term.
 
     * **probabilities** (`list` of `floats`):
-        Value of the model probabilities, computed as `P = exp(-criterion/2)`.
+        Value of the model probabilities, computed as
+
+        .. math:: P(M_i|d) = \dfrac{\exp(-\Delta_i/2)}{\sum_i \exp(-\Delta_i/2)}
+
+        where :math:`\Delta_i = criterion_i - min_i(criterion)`
 
     **Methods:**
 
     """
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
-    def __init__(self, candidate_models, data, criterion='AIC', verbose=False, nopt=None, x0=None, **kwargs):
+    def __init__(self, candidate_models, data, criterion='AIC', random_state=None, verbose=False, nopt=None, x0=None,
+                 **kwargs):
 
         # Check inputs
         # candidate_models is a list of InferenceModel objects
@@ -674,6 +670,11 @@ class InfoModelSelection:
         if criterion not in ['AIC', 'BIC', 'AICc']:
             raise ValueError('UQpy: Criterion should be AIC (default), BIC or AICc')
         self.criterion = criterion
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
         self.verbose = verbose
 
         # Instantiate the ML estimators
@@ -684,7 +685,7 @@ class InfoModelSelection:
         for i, inference_model in enumerate(self.candidate_models):
             kwargs_i = dict([(key, value[i]) for (key, value) in kwargs.items()])
             ml_estimator = MLEstimation(inference_model=inference_model, data=self.data, verbose=self.verbose,
-                                        x0=None, nopt=None, **kwargs_i, )
+                                        random_state=self.random_state, x0=None, nopt=None, **kwargs_i)
             self.ml_estimators.append(ml_estimator)
 
         # Initialize the outputs
@@ -700,13 +701,13 @@ class InfoModelSelection:
         """
         Run the model selection procedure, i.e. compute criterion value for all models.
 
-        This function calls the `run` method of the MLEstimation object for each model to compute the maximum
+        This function calls the ``run`` method of the ``MLEstimation`` object for each model to compute the maximum
         log-likelihood, then computes the criterion value and probability for each model.
 
         **Inputs:**
 
         * **x0** (`list` of `ndarrays`):
-            Starting point(s) for optimization for all models. Default is None. If not provided, see `nopt`. See
+            Starting point(s) for optimization for all models. Default is `None`. If not provided, see `nopt`. See
             ``MLEstimation`` class.
 
         * **nopt** (`int` or `list` of `ints`):
@@ -739,7 +740,7 @@ class InfoModelSelection:
 
     def sort_models(self):
         """
-        Sort models in descending order of model probability (increasing order of criterion value).
+        Sort models in descending order of model probability (increasing order of `criterion` value).
 
         This function sorts - in place - the attribute lists `candidate_models, ml_estimators, criterion_values,
         penalty_terms` and `probabilities` so that they are sorted from most probable to least probable model. It is a
@@ -843,8 +844,8 @@ class BayesModelSelection:
     """
     Perform model selection via Bayesian inference, i.e., compute model posterior probabilities given data.
 
-    This class leverages the BayesParameterEstimation class to get samples from the parameter posterior densities. These
-    samples are then used to compute the model evidence `p(data|model)` for all models and the model posterior
+    This class leverages the ``BayesParameterEstimation`` class to get samples from the parameter posterior densities.
+    These samples are then used to compute the model evidence `p(data|model)` for all models and the model posterior
     probabilities.
 
     **References:**
@@ -867,21 +868,27 @@ class BayesModelSelection:
         as of v3, only the harmonic mean method is supported
 
     * **kwargs**:
-        Key-word inputs to the ``BayesParameterEstimation`` class, for each model.
+        Keyword arguments to the ``BayesParameterEstimation`` class, for each model.
 
-        Keys must refer to names of inputs to the ``MLEstimation`` class, and values should be lists of length nmodels,
-        ordered in the same way as input candidate_models. For example, setting
+        Keys must refer to names of inputs to the ``MLEstimation`` class, and values should be lists of length
+        `nmodels`, ordered in the same way as input candidate_models. For example, setting
         `kwargs={`sampling_class': [MH, Stretch]}` means that the MH algorithm will be used for sampling from the
         parameter posterior pdf of the 1st candidate model, while the Stretch algorithm will be used for the 2nd model.
 
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
+
     * **nsamples** (`list` of `int`):
-        Number of samples used in MCMC/IS, for each model
+        Number of samples used in ``MCMC``/``IS``, for each model
 
     * **samples_per_chain** (`list` of `int`):
-        Number of samples per chain used in MCMC, for each model
+        Number of samples per chain used in ``MCMC``, for each model
 
-    If `nsamples` and `nsamples_per_chain` are both None, the object is created but the model selection procedure is not
-    run, one must then call the `run` method.
+    If `nsamples` and `nsamples_per_chain` are both `None`, the object is created but the model selection procedure is
+    not run, one must then call the ``run`` method.
 
     **Attributes:**
 
@@ -900,7 +907,7 @@ class BayesModelSelection:
     # Authors: Audrey Olivier, Yuchen Zhou
     # Last modified: 01/24/2020 by Audrey Olivier
     def __init__(self, candidate_models, data, prior_probabilities=None, method_evidence_computation='harmonic_mean',
-                 verbose=False, nsamples=None, nsamples_per_chain=None, **kwargs):
+                 random_state=None, verbose=False, nsamples=None, nsamples_per_chain=None, **kwargs):
 
         # Check inputs: candidate_models is a list of instances of Model, data must be provided, and input arguments
         # for MCMC must be provided as a list of length len(candidate_models)
@@ -911,6 +918,11 @@ class BayesModelSelection:
         self.nmodels = len(candidate_models)
         self.data = data
         self.method_evidence_computation = method_evidence_computation
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
         self.verbose = verbose
 
         if prior_probabilities is None:
@@ -928,7 +940,7 @@ class BayesModelSelection:
             kwargs_i.update({'concat_chains': True, 'save_log_pdf': True})
             bayes_estimator = BayesParameterEstimation(
                 inference_model=inference_model, data=self.data, verbose=self.verbose,
-                nsamples=None, nsamples_per_chain=None, **kwargs_i)
+                random_state=self.random_state, nsamples=None, nsamples_per_chain=None, **kwargs_i)
             self.bayes_estimators.append(bayes_estimator)
 
         # Initialize the outputs
@@ -943,19 +955,19 @@ class BayesModelSelection:
         """
         Run the Bayesian model selection procedure, i.e., compute model posterior probabilities.
 
-        This function calls the run_estimation method of the BayesParameterEstimation object for each model to sample
-        from the parameter posterior probability, then computes the model evidence and model posterior probability.
-        This function updates attributes bayes_estimators, evidences and probabilities. If nsamples or
-        nsamples_per_chain are given when creating the object, this method is called directly when the object is
+        This function calls the ``run_estimation`` method of the ``BayesParameterEstimation`` object for each model to
+        sample from the parameter posterior probability, then computes the model evidence and model posterior
+        probability. This function updates attributes `bayes_estimators`, `evidences` and `probabilities`. If `nsamples`
+        or `nsamples_per_chain` are given when creating the object, this method is called directly when the object is
         created. It can also be called separately.
 
         **Inputs:**
 
         * **nsamples** (`list` of `int`):
-            Number of samples used in MCMC/IS, for each model
+            Number of samples used in ``MCMC``/``IS``, for each model
 
         * **samples_per_chain** (`list` of `int`):
-            Number of samples per chain used in MCMC, for each model
+            Number of samples per chain used in ``MCMC``, for each model
 
         """
 
@@ -994,9 +1006,9 @@ class BayesModelSelection:
         """
         Sort models in descending order of model probability (increasing order of criterion value).
 
-        This function sorts - in place - the attribute lists candidate_models, prior_probabilities, probabilities and
-        evidences so that they are sorted from most probable to least probable model. It is a stand-alone function that
-        is provided to help the user to easily visualize which model is the best.
+        This function sorts - in place - the attribute lists `candidate_models`, `prior_probabilities`, `probabilities`
+        and `evidences` so that they are sorted from most probable to least probable model. It is a stand-alone function
+        that is provided to help the user to easily visualize which model is the best.
 
         No inputs/outputs.
 

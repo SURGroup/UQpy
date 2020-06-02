@@ -2555,6 +2555,7 @@ class MCMC:
                     self.log_pdf_values[0, :] = current_log_pdf
                 self.nsamples_per_chain += 1
                 self.nsamples += self.nchains
+            final_nsamples, final_nsamples_per_chain = nsamples, nsamples_per_chain
 
         else:    # fetch previous samples to start the new run, current state is last saved sample
             if len(self.samples.shape) == 2:   # the chains were previously concatenated
@@ -2566,8 +2567,10 @@ class MCMC:
             if self.save_log_pdf:
                 self.log_pdf_values = np.concatenate(
                     [self.log_pdf_values, np.zeros((nsamples_per_chain, self.nchains))], axis=0)
+            final_nsamples = nsamples + self.nsamples
+            final_nsamples_per_chain = nsamples_per_chain + self.nsamples_per_chain
 
-        return nsamples, nsamples_per_chain, current_state, current_log_pdf
+        return final_nsamples, final_nsamples_per_chain, current_state, current_log_pdf
 
     def _update_acceptance_rate(self, new_accept=None):
         """
@@ -3017,7 +3020,7 @@ class Stretch(MCMC):
         # Start the loop over nsamples - this code uses the parallel version of the stretch algorithm
         all_inds = np.arange(self.nchains)
         inds = all_inds % 2
-        accept_vec = np.zeros((self.nchains,))
+        accept_vec = np.zeros((self.nchains, ))
         # Separate the full ensemble into two sets, use one as a complementary ensemble to the other and vice-versa
         for split in range(2):
             set1 = (inds == split)
@@ -3027,9 +3030,9 @@ class Stretch(MCMC):
             curr_set, comp_set = sets[split], sets[1 - split]  # current and complementary sets respectively
             ns, nc = len(curr_set), len(comp_set)
 
-            # Sample new state for S1 based on S0 and vice versa
+            # Sample new state for S1 based on S0
             unif_rvs = Uniform().rvs(nsamples=ns, random_state=self.random_state)
-            zz = ((self.scale - 1.) * unif_rvs + 1) ** 2. / self.scale  # sample Z
+            zz = ((self.scale - 1.) * unif_rvs + 1.) ** 2. / self.scale  # sample Z
             factors = (self.dimension - 1.) * np.log(zz)  # compute log(Z ** (d - 1))
             multi_rvs = Multinomial(n=1, p=[1. / nc, ] * nc).rvs(nsamples=ns, random_state=self.random_state)
             rint = np.nonzero(multi_rvs)[1]    # sample X_{j} from complementary set
