@@ -26,7 +26,7 @@ tangent space centered at a given point on the Grassmann manifold can be perform
   process and the intrinsic geometry of the data resulting in a multiscale representation of the data.
 """
 
-from UQpy.Surrogates import Krig
+from UQpy.Surrogates import Kriging
 from UQpy.Utilities import *
 import scipy as sp
 import numpy as np
@@ -1198,8 +1198,9 @@ class Grassmann:
                     y = val[0]
                 else:
                     val = np.array(val_data)
-                    K = Krig(samples=coordinates, values=val, reg_model=reg_model, corr_model=corr_model, n_opt=n_opt)
-                    y, mse = K.interpolate(point, dy=True)
+                    K = Kriging(samples=coordinates, values=val, reg_model=reg_model, corr_model=corr_model,
+                                n_opt=n_opt)
+                    y, mse = K.predict(point, return_std=True)
 
                 val_data.clear()
 
