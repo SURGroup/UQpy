@@ -19,7 +19,7 @@
 import os
 import sys
 from contextlib import contextmanager
-
+from UQpy.RunModel import RunModel
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
