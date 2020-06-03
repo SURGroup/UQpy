@@ -25,7 +25,6 @@ simulation. The module currently contains the following classes:
 
 from UQpy.RunModel import RunModel
 from UQpy.SampleMethods import MCMC
-from UQpy.Surrogates import Krig
 from UQpy.Transformations import *
 import warnings
 
