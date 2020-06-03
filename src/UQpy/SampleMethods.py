@@ -2026,7 +2026,8 @@ class AKMCS:
            (Link: https://arxiv.org/pdf/1905.05345.pdf)
         """
         g, sig = surr(pop, True)
-        sig = sig.reshape(sig.size, 1)
+        g = g.reshape([pop.shape[0], 1])
+        sig = sig.reshape([pop.shape[0], 1])
 
         # Evaluation of the learning function
         # First, find the nearest neighbor in the training set for each point in the population.
@@ -2054,7 +2055,8 @@ class AKMCS:
         Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
         """
         g, sig = surr(pop, True)
-        sig = sig.reshape(sig.size, 1)
+        g = g.reshape([pop.shape[0], 1])
+        sig = sig.reshape([pop.shape[0], 1])
 
         u = abs(g) / sig
         rows = u[:, 0].argsort()[:self.n_add]
@@ -2075,7 +2077,8 @@ class AKMCS:
         """
         max_p = self.kwargs['max_p']
         g, sig = surr(pop, True)
-        sig = sig.reshape(sig.size, 1)
+        g = g.reshape([pop.shape[0], 1])
+        sig = sig.reshape([pop.shape[0], 1])
 
         u = abs(g) / sig
         p1, p2 = np.ones([pop.shape[0], pop.shape[1]]), np.ones([pop.shape[0], pop.shape[1]])
@@ -2101,9 +2104,8 @@ class AKMCS:
            for Nonlinear Implicit Performance Functions", AIAA JOURNAL, Volume 46, 2008.
         """
         g, sig = surr(pop, True)
-        g = g.reshape(g.size, 1)
-        sig = sig.reshape(sig.size, 1)
-        sig[sig == 0.] = 0.00001
+        g = g.reshape([pop.shape[0], 1])
+        sig = sig.reshape([pop.shape[0], 1])
         # Reliability threshold: a_ = 0
         # EGRA method: epshilon = 2*sigma(x)
         a_, ep = self.kwargs['a'], self.kwargs['epsilon']*sig
@@ -2130,8 +2132,8 @@ class AKMCS:
            Journal of Global Optimization, Pages 455–492, 1998.
         """
         g, sig = surr(pop, True)
-        sig = sig.reshape(sig.size, 1)
-        sig[sig == 0.] = 0.00001
+        g = g.reshape([pop.shape[0], 1])
+        sig = sig.reshape([pop.shape[0], 1])
 
         fm = min(self.qoi)
         u = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf((fm - g) / sig)
