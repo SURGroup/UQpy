@@ -23,11 +23,12 @@ simulation. The module currently contains the following classes:
 * TaylorSeries: Estimate probability of failure using FORM or SORM.
 """
 
-from UQpy.RunModel import RunModel
-from UQpy.SampleMethods import MCMC
-from UQpy.Surrogates import Krig
-from UQpy.Transformations import *
 import warnings
+from inspect import isclass
+
+from UQpy.RunModel import RunModel
+from UQpy.SampleMethods import MCMC, MMH
+from UQpy.Transformations import *
 
 
 ########################################################################################################################
@@ -60,17 +61,10 @@ class SubsetSimulation:
                         Default: None
     :type mcmc_object: object
 
-    :param runmodel_object: An instance of the UQpy.RunModel.RunModel class that is used to specify the computational
-                            model for which probability of failure is to be estimated.
-
-                            This object must be specified.
-
-                            Default: None
-    :type runmodel_object: object
 
     :param samples_init: A set of samples from the specified probability distribution. These are the samples from the
                          original distribution. They are not conditional samples. The samples must be an array of size
-                         nsamples_ss x dimension.
+                         nsamples_per_ssx dimension.
 
                          If samples_init is not specified, the Subset_Simulation class will use the mcmc_object to
                          draw the initial samples.
@@ -84,10 +78,10 @@ class SubsetSimulation:
                    Default: 0.1
     :type p_cond: float
 
-    :param nsamples_ss: Number of samples to draw in each conditional level.
+    :param nsamples_per_ss: Number of samples to draw in each conditional level.
 
                         Default: 1000
-    :type nsamples_ss: int
+    :type nsamples_per_ss: int
 
     :param max_level: Maximum number of allowable conditional levels.
 
@@ -104,8 +98,8 @@ class SubsetSimulation:
     :param self.samples: A list of arrays containing the samples in each conditional level.
     :type self.samples: list of numpy arrays
 
-    :param self.g: A list of arrays containing the evaluation of the performance function at each sample in each conditional
-              level.
+    :param self.g: A list of arrays containing the evaluation of the performance function at each sample in each
+                    conditional level.
     :type self.g: list of numpy arrays
 
     :param self.g_level: Threshold value of the performance function for each conditional level
@@ -131,20 +125,38 @@ class SubsetSimulation:
     Last Modified: 1/23/20 by Michael D. Shields
     """
 
-    def __init__(self, mcmc_object=None, runmodel_object=None, samples_init=None, p_cond=0.1, nsamples_ss=1000,
-                 max_level=10, verbose=False):
+    def __init__(self, runmodel_object, mcmc_class=MMH, samples_init=None, p_cond=0.1, nsamples_per_ss=1000,
+                 max_level=10, verbose=False, **mcmc_kwargs):
 
-        # Initialize internal attributes from information passed in
-        self.mcmc_objects = [mcmc_object]
+        # Store the MCMC object to create a new object of this type for each subset
+        self.mcmc_kwargs = mcmc_kwargs
+        self.mcmc_class = mcmc_class
+
+        # Initialize other attributes
         self.runmodel_object = runmodel_object
         self.samples_init = samples_init
         self.p_cond = p_cond
-        self.nsamples_ss = nsamples_ss
+        self.nsamples_per_ss = nsamples_per_ss
         self.max_level = max_level
         self.verbose = verbose
 
+        # Check that a RunModel object is being passed in.
+        if not isinstance(self.runmodel_object, RunModel):
+            raise AttributeError(
+                'UQpy: Subset simulation requires the user to pass a RunModel object')
+
+        self.random_state = self.mcmc_kwargs['random_state']
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
         # Perform initial error checks
-        self.init_sus()
+        self._init_sus()
+
+        # Initialize the mcmc_object from the specified class.
+        mcmc_object = self.mcmc_class(**self.mcmc_kwargs)
+        self.mcmc_objects = [mcmc_object]
 
         # Initialize new attributes/variables
         self.samples = list()
@@ -152,16 +164,7 @@ class SubsetSimulation:
         self.g_level = list()
 
         if self.verbose:
-            if self.mcmc_objects[0].algorithm == 'MH':
-                print('UQpy: Running Subset Simulation with Metropolis Hastings....')
-            elif self.mcmc_objects[0].algorithm == 'MMH':
-                print('UQpy: Running Subset Simulation with Modified Metropolis Hastings....')
-            elif self.mcmc_objects[0].algorithm == 'DRAM':
-                print('UQpy: Running Subset Simulation with DRAM....')
-            elif self.mcmc_objects[0].algorithm == 'Stretch':
-                print('UQpy: Running Subset Simulation with Stretch....')
-            elif self.mcmc_objects[0].algorithm == 'DREAM':
-                print('UQpy: Running Subset Simulation with DREAM....')
+            print('UQpy: Running Subset Simulation with MCMC of type: ' + str(type(mcmc_object)))
 
         [self.pf, self.cov1, self.cov2] = self.run()
 
@@ -190,7 +193,7 @@ class SubsetSimulation:
         """
 
         step = 0
-        n_keep = int(self.p_cond * self.nsamples_ss)
+        n_keep = int(self.p_cond * self.nsamples_per_ss)
         d12 = list()
         d22 = list()
 
@@ -202,7 +205,7 @@ class SubsetSimulation:
                           '- Provide an initial set of samples (samples_init) known to follow the distribution; or\n'
                           '- Provide a robust MCMC object that will draw independent initial samples from the '
                           'distribution.')
-            self.mcmc_objects[0].run(nsamples=self.nsamples_ss)
+            self.mcmc_objects[0].run(nsamples=self.nsamples_per_ss)
             self.samples.append(self.mcmc_objects[0].samples)
         else:
             self.samples.append(self.samples_init)
@@ -210,12 +213,12 @@ class SubsetSimulation:
         # Run the model for the initial samples, sort them by their performance function, and identify the
         # conditional level
         self.runmodel_object.run(samples=np.atleast_2d(self.samples[step]))
-        self.g.append(np.asarray(self.runmodel_object.qoi_list))
-        g_ind = np.argsort(self.g[step][:, 0])
+        self.g.append(np.squeeze(self.runmodel_object.qoi_list))
+        g_ind = np.argsort(self.g[step])
         self.g_level.append(self.g[step][g_ind[n_keep - 1]])
 
         # Estimate coefficient of variation of conditional probability of first level
-        d1, d2 = self.cov_sus(step)
+        d1, d2 = self._cov_sus(step)
         d12.append(d1 ** 2)
         d22.append(d2 ** 2)
 
@@ -233,23 +236,21 @@ class SubsetSimulation:
             self.g.append(np.zeros_like(self.g[step - 1]))
             self.g[step][:n_keep] = self.g[step - 1][g_ind[:n_keep]]
 
+            # Unpack the attributes
+
             # Initialize a new MCMC object for each conditional level
-            new_mcmc_object = MCMC(dimension=self.mcmc_objects[0].dimension,
-                                   algorithm=self.mcmc_objects[0].algorithm,
-                                   pdf_target=self.mcmc_objects[0].pdf_target,
-                                   args_target=self.mcmc_objects[0].args_target,
-                                   log_pdf_target=self.mcmc_objects[0].log_pdf_target,
-                                   seed=np.atleast_2d(self.samples[step][:n_keep, :]))
-            new_mcmc_object.algorithm_inputs = self.mcmc_objects[0].algorithm_inputs
+            self.mcmc_kwargs['seed'] = np.atleast_2d(self.samples[step][:n_keep, :])
+            self.mcmc_kwargs['random_state'] = self.random_state
+            new_mcmc_object = self.mcmc_class(**self.mcmc_kwargs)
             self.mcmc_objects.append(new_mcmc_object)
 
             # Set the number of samples to propagate each chain (n_prop) in the conditional level
-            n_prop_test = self.nsamples_ss / self.mcmc_objects[step].nchains
+            n_prop_test = self.nsamples_per_ss / self.mcmc_objects[step].nchains
             if n_prop_test.is_integer():
-                n_prop = self.nsamples_ss // self.mcmc_objects[step].nchains
+                n_prop = self.nsamples_per_ss // self.mcmc_objects[step].nchains
             else:
                 raise AttributeError(
-                    'UQpy: The number of samples per subset (nsamples_ss) must be an integer multiple of '
+                    'UQpy: The number of samples per subset (nsamples_per_ss) must be an integer multiple of '
                     'the number of MCMC chains.')
 
             # Propagate each chain n_prop times and evaluate the model to accept or reject.
@@ -275,7 +276,7 @@ class SubsetSimulation:
                 # Do not run the model for those samples where the MCMC state remains unchanged.
                 self.samples[step][[x + (i + 1) * n_keep for x in ind_true], :] = \
                     self.mcmc_objects[step].samples[ind_true, :]
-                self.g[step][[x + (i + 1) * n_keep for x in ind_true], :] = self.g[step][ind_true, :]
+                self.g[step][[x + (i + 1) * n_keep for x in ind_true]] = self.g[step][ind_true]
 
                 # Run the model at each of the new sample points
                 x_run = self.mcmc_objects[step].samples[[x + (i + 1) * n_keep for x in ind_false], :]
@@ -286,23 +287,23 @@ class SubsetSimulation:
                     g_temp = np.asarray(self.runmodel_object.qoi_list[-len(x_run):])
 
                     # Accept the states with g <= g_level
-                    ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
+                    ind_accept = np.where(g_temp <= self.g_level[step - 1])[0]
                     for ii in ind_accept:
                         self.samples[step][(i + 1) * n_keep + ind_false[ii]] = x_run[ii]
                         self.g[step][(i + 1) * n_keep + ind_false[ii]] = g_temp[ii]
 
                     # Reject the states with g > g_level
-                    ind_reject = np.where(g_temp[:, 0] > self.g_level[step - 1])[0]
+                    ind_reject = np.where(g_temp > self.g_level[step - 1])[0]
                     for ii in ind_reject:
                         self.samples[step][(i + 1) * n_keep + ind_false[ii]] = \
                             self.samples[step][i * n_keep + ind_false[ii]]
                         self.g[step][(i + 1) * n_keep + ind_false[ii]] = self.g[step][i * n_keep + ind_false[ii]]
 
-            g_ind = np.argsort(self.g[step][:, 0])
+            g_ind = np.argsort(self.g[step])
             self.g_level.append(self.g[step][g_ind[n_keep]])
 
             # Estimate coefficient of variation of conditional probability of first level
-            d1, d2 = self.cov_sus(step)
+            d1, d2 = self._cov_sus(step)
             d12.append(d1 ** 2)
             d22.append(d2 ** 2)
 
@@ -311,7 +312,7 @@ class SubsetSimulation:
 
         n_fail = len([value for value in self.g[step] if value < 0])
 
-        pf = self.p_cond ** step * n_fail / self.nsamples_ss
+        pf = self.p_cond ** step * n_fail / self.nsamples_per_ss
         cov1 = np.sqrt(np.sum(d12))
         cov2 = np.sqrt(np.sum(d22))
 
@@ -320,7 +321,7 @@ class SubsetSimulation:
     # -----------------------------------------------------------------------------------------------------------------------
     # Support functions for subset simulation
 
-    def init_sus(self):
+    def _init_sus(self):
         """
         Check for errors in the SubsetSimulation class input
 
@@ -330,13 +331,16 @@ class SubsetSimulation:
         No inputs or returns.
         """
 
-        # Check that an MCMC object is being passed in.
-        if self.mcmc_objects[0] is None:
-            raise AttributeError('UQpy: Subset simulation requires the user to pass an MCMC object.')
-        if self.runmodel_object is None:
+        # Check that an MCMC class is being passed in.
+        if not isclass(self.mcmc_class):
+            raise ValueError('UQpy: mcmc_class must be a child class of MCMC. Note it is not an instance of the class.')
+        if not issubclass(self.mcmc_class, MCMC):
+            raise ValueError('UQpy: mcmc_class must be a child class of MCMC.')
+
+        # Check that a RunModel object is being passed in.
+        if not isinstance(self.runmodel_object, RunModel):
             raise AttributeError(
-                'UQpy: No model is defined. Subset simulation requires the user to pass a RunModel '
-                'object')
+                'UQpy: Subset simulation requires the user to pass a RunModel object')
 
         # Check that a valid conditional probability is specified.
         if type(self.p_cond).__name__ != 'float':
@@ -345,14 +349,14 @@ class SubsetSimulation:
             raise AttributeError('UQpy: Invalid conditional probability. p_cond must be in (0, 1).')
 
         # Check that the number of samples per subset is properly defined.
-        if type(self.nsamples_ss).__name__ != 'int':
-            raise AttributeError('UQpy: Number of samples per subset (nsamples_ss) must be integer valued.')
+        if type(self.nsamples_per_ss).__name__ != 'int':
+            raise AttributeError('UQpy: Number of samples per subset (nsamples_per_ss) must be integer valued.')
 
         # Check that max_level is an integer
         if type(self.max_level).__name__ != 'int':
             raise AttributeError('UQpy: The maximum subset level (max_level) must be integer valued.')
 
-    def cov_sus(self, step):
+    def _cov_sus(self, step):
 
         """
         Compute the coefficient of variation of the samples in a conditional level
@@ -377,31 +381,31 @@ class SubsetSimulation:
         # Here, we assume that the initial samples are drawn to be uncorrelated such that the correction factors do not
         # need to be computed.
         if step == 0:
-            d1 = np.sqrt((1 - self.p_cond) / (self.p_cond * self.nsamples_ss))
-            d2 = np.sqrt((1 - self.p_cond) / (self.p_cond * self.nsamples_ss))
+            d1 = np.sqrt((1 - self.p_cond) / (self.p_cond * self.nsamples_per_ss))
+            d2 = np.sqrt((1 - self.p_cond) / (self.p_cond * self.nsamples_per_ss))
 
             return d1, d2
         else:
-            n_c = int(self.p_cond * self.nsamples_ss)
+            n_c = int(self.p_cond * self.nsamples_per_ss)
             n_s = int(1 / self.p_cond)
             indicator = np.reshape(self.g[step] < self.g_level[step], (n_s, n_c))
-            gamma = self.corr_factor_gamma(indicator, n_s, n_c)
+            gamma = self._corr_factor_gamma(indicator, n_s, n_c)
             g_temp = np.reshape(self.g[step], (n_s, n_c))
-            beta_hat = self.corr_factor_beta(g_temp, step)
+            beta_hat = self._corr_factor_beta(g_temp, step)
 
-            d1 = np.sqrt(((1 - self.p_cond) / (self.p_cond * self.nsamples_ss)) * (1 + gamma))
-            d2 = np.sqrt(((1 - self.p_cond) / (self.p_cond * self.nsamples_ss)) * (1 + gamma + beta_hat))
+            d1 = np.sqrt(((1 - self.p_cond) / (self.p_cond * self.nsamples_per_ss)) * (1 + gamma))
+            d2 = np.sqrt(((1 - self.p_cond) / (self.p_cond * self.nsamples_per_ss)) * (1 + gamma + beta_hat))
 
             return d1, d2
 
     # Computes the conventional correlation factor gamma from Au and Beck
-    def corr_factor_gamma(self, indicator, n_s, n_c):
+    def _corr_factor_gamma(self, indicator, n_s, n_c):
         """
         Compute the conventional correlation factor gamma from Au and Beck (Reference [1])
 
         This is an instance method that computes the correlation factor gamma used to estimate the coefficient of
         variation of the conditional probability estimate from a given conditional level. This method is called
-        automatically within the cov_sus method.
+        automatically within the _cov_sus method.
 
         **Input:**
 
@@ -440,13 +444,13 @@ class SubsetSimulation:
         return gam
 
     # Computes the updated correlation factor beta from Shields et al.
-    def corr_factor_beta(self, g, step):
+    def _corr_factor_beta(self, g, step):
         """
         Compute the additional correlation factor beta from Shields et al. (Reference [2])
 
         This is an instance method that computes the correlation factor beta used to estimate the coefficient of
         variation of the conditional probability estimate from a given conditional level. This method is called
-        automatically within the cov_sus method.
+        automatically within the _cov_sus method.
 
         **Input:**
 
@@ -480,7 +484,6 @@ class SubsetSimulation:
         factor = factor * 2 + 1
 
         beta = beta / np.shape(g)[1] * factor
-        r_jn = 0
 
         return beta
 
@@ -548,15 +551,15 @@ class SubsetSimulation:
 # Run Subset Simulation using Modified Metropolis Hastings
 # def run_subsim_mmh(self):
 #     step = 0
-#     n_keep = int(self.p_cond * self.nsamples_ss)
+#     n_keep = int(self.p_cond * self.nsamples_per_ss)
 #
 #     # Generate the initial samples - Level 0
 #     if self.samples_init is None:
-#         self.mcmc_object.run(nsamples=self.nsamples_ss)
+#         self.mcmc_object.run(nsamples=self.nsamples_per_ss)
 #         self.samples.append(self.mcmc_object.samples)
 #         if self.verbose:
 #             print('UQpy: If the target distribution is other than standard normal, it is highly recommended that '
-#                   'the user provide a set of nsamples_ss samples that follow the target distribution using the '
+#                   'the user provide a set of nsamples_per_sssamples that follow the target distribution using the '
 #                   'argument samples_init.')
 #     else:
 #         self.samples.append(self.samples_init)
@@ -570,7 +573,7 @@ class SubsetSimulation:
 #     self.g_level.append(self.g[step][g_ind[n_keep-1]])
 #
 #     # Estimate coefficient of variation of conditional probability of first level
-#     d1, d2 = self.cov_sus(step)
+#     d1, d2 = self._cov_sus(step)
 #     self.d12.append(d1 ** 2)
 #     self.d22.append(d2 ** 2)
 #
@@ -587,7 +590,7 @@ class SubsetSimulation:
 #         self.g.append(np.zeros_like(self.g[step-1]))
 #         self.g[step][:n_keep] = self.g[step - 1][g_ind[:n_keep]]
 #
-#         for i in range(int(self.nsamples_ss/n_keep)-1):
+#         for i in range(int(self.nsamples_per_ss/n_keep)-1):
 #
 #             ind = np.arange(0, n_keep)
 #             # while np.size(ind) != 0:
@@ -640,13 +643,13 @@ class SubsetSimulation:
 #         self.g_level.append(self.g[step][g_ind[n_keep]])
 #
 #         # Estimate coefficient of variation of conditional probability of first level
-#         d1, d2 = self.cov_sus(step)
+#         d1, d2 = self._cov_sus(step)
 #         self.d12.append(d1 ** 2)
 #         self.d22.append(d2 ** 2)
 #
 #     n_fail = len([value for value in self.g[step] if value < 0])
 #
-#     pf = self.p_cond ** step * n_fail / self.nsamples_ss
+#     pf = self.p_cond ** step * n_fail / self.nsamples_per_ss
 #     cov1 = np.sqrt(np.sum(self.d12))
 #     cov2 = np.sqrt(np.sum(self.d22))
 #
@@ -655,7 +658,7 @@ class SubsetSimulation:
 #         # Accept or reject each sample
 #
 #
-#     for i in range(int(self.nsamples_ss / n_keep) - 1):
+#     for i in range(int(self.nsamples_per_ss/ n_keep) - 1):
 #
 #         ind = np.arange(0, n_keep)
 #         # while np.size(ind) != 0:
@@ -711,13 +714,13 @@ class SubsetSimulation:
 #     self.g_level.append(self.g[step][g_ind[n_keep]])
 #
 #     # Estimate coefficient of variation of conditional probability of first level
-#     d1, d2 = self.cov_sus(step)
+#     d1, d2 = self._cov_sus(step)
 #     self.d12.append(d1 ** 2)
 #     self.d22.append(d2 ** 2)
 #
 # n_fail = len([value for value in self.g[step] if value < 0])
 #
-# pf = self.p_cond ** step * n_fail / self.nsamples_ss
+# pf = self.p_cond ** step * n_fail / self.nsamples_per_ss
 # cov1 = np.sqrt(np.sum(self.d12))
 # cov2 = np.sqrt(np.sum(self.d22))
 #
@@ -734,7 +737,7 @@ class SubsetSimulation:
 #                   pdf_target_copula=self.pdf_target_copula,
 #                   pdf_target_copula_params=self.pdf_target_copula_params,
 #                   pdf_target_type=self.pdf_target_type,
-#                   algorithm='MMH', jump=self.jump, nsamples=self.nsamples_ss, seed=self.seed,
+#                   algorithm='MMH', jump=self.jump, nsamples=self.nsamples_per_ss, seed=self.seed,
 #                   nburn=self.nburn, verbose=self.verbose)
 #     self.samples.append(x_init.samples)
 # else:
@@ -753,7 +756,7 @@ class SubsetSimulation:
 # self.g_level.append(self.g[step][g_ind[n_keep]])
 
 # Estimate coefficient of variation of conditional probability of first level
-# d1, d2 = self.cov_sus(step)
+# d1, d2 = self._cov_sus(step)
 # self.d12.append(d1 ** 2)
 # self.d22.append(d2 ** 2)
 
@@ -763,7 +766,7 @@ class SubsetSimulation:
 #     self.samples.append(self.samples[step - 1][g_ind[0:n_keep]])
 #     self.g.append(self.g[step - 1][g_ind[:n_keep]])
 #
-#     for i in range(self.nsamples_ss - n_keep):
+#     for i in range(self.nsamples_per_ss- n_keep):
 #
 #         x0 = self.samples[step][i:i+n_keep]
 #
@@ -798,12 +801,12 @@ class SubsetSimulation:
 #
 #     g_ind = np.argsort(self.g[step])
 #     self.g_level.append(self.g[step][g_ind[n_keep]])
-#     d1, d2 = self.cov_sus(step)
+#     d1, d2 = self._cov_sus(step)
 #     self.d12.append(d1 ** 2)
 #     self.d22.append(d2 ** 2)
 #
 # n_fail = len([value for value in self.g[step] if value < 0])
-# pf = self.p_cond ** step * n_fail / self.nsamples_ss
+# pf = self.p_cond ** step * n_fail / self.nsamples_per_ss
 # cov1 = np.sqrt(np.sum(self.d12))
 # cov2 = np.sqrt(np.sum(self.d22))
 #
@@ -828,7 +831,7 @@ class SubsetSimulation:
 
 # -------------------
 
-# def corr_factor_beta(self, indicator, n_s, n_c, p_cond):
+# def _corr_factor_beta(self, indicator, n_s, n_c, p_cond):
 #
 #     beta = np.zeros(n_s - 1)
 #     r_jn = np.zeros(n_s)
@@ -850,7 +853,7 @@ class SubsetSimulation:
 #     return beta, r_jn[0]
 
 
-# def corr_factor_beta(self, g, n_s, n_c, p_cond):
+# def _corr_factor_beta(self, g, n_s, n_c, p_cond):
 #
 #     beta = np.zeros(n_s - 1)
 #     r_jn = np.zeros(n_s)
@@ -874,7 +877,7 @@ class SubsetSimulation:
 
 
 # Version where cross-correlations are computed from g
-# def corr_factor_beta(self, g, n_s, n_c, p_cond):
+# def _corr_factor_beta(self, g, n_s, n_c, p_cond):
 #
 #     beta = np.zeros(n_s - 1)
 #     r_jn = np.zeros(n_s )
@@ -921,7 +924,7 @@ class SubsetSimulation:
 #     return beta, r_jn[0]
 
 # Version where cross-correlations are computed just from indicator
-# def corr_factor_beta(self, indicator, n_s, n_c, p_cond):
+# def _corr_factor_beta(self, indicator, n_s, n_c, p_cond):
 #
 #         beta = np.zeros(n_s - 1)
 #         r_jn = np.zeros(n_s)
@@ -1011,7 +1014,7 @@ class SubsetSimulation:
 #
 # beta = 2 * (n_c - 1) * np.sum(beta)
 
-# def cov_sus(self, step):
+# def _cov_sus(self, step):
 #     n = self.g[step].size
 #     if step == 0:
 #         di = np.sqrt((1 - self.p_cond) / (self.p_cond * n))
