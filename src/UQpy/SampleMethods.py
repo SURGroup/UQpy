@@ -697,8 +697,8 @@ class STS:
     * **samplesU01** (`ndarray`):
             `ndarray` containing the generated samples on [0, 1]^dimension.
 
-    * **samples** (`class object`):
-            Instance of the class SampleMethods.Strata
+    * **strata** (`class` object):
+            Instance of the class SampleMethods.Strata.
 
     **Methods:**
 
@@ -778,8 +778,8 @@ class STS:
                 i_cdf = self.dist_object[j].icdf
                 if self.sts_criterion == "random":
                     for i in range(0, self.strata.origins.shape[0]):
-                        samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
-                                                          + self.strata.widths[i, j])
+                        samples[i, j] = stats.uniform.rvs(loc=self.strata.origins[i, j], scale=self.strata.widths[i, j],
+                                                          random_state=self.random_state)
                 elif self.sts_criterion == "centered":
                     for i in range(0, self.strata.origins.shape[0]):
                         samples[i, j] = self.strata.origins[i, j] + self.strata.widths[i, j] / 2.
@@ -791,7 +791,7 @@ class STS:
         elif self.stype == 'Voronoi':
             from UQpy.Utilities import compute_Voronoi_centroid_volume, voronoi_unit_hypercube
 
-            samples_init = np.random.rand(self.nsamples, self.dimension)
+            samples_init = stats.uniform.rvs(size=[self.nsamples, self.dimension], random_state=self.random_state)
 
             for i in range(self.n_iters):
                 self.strata = voronoi_unit_hypercube(samples_init)
@@ -835,48 +835,43 @@ class Strata:
 
     **Input:**
 
-    :param n_strata: A list of dimension n defining the number of strata in each of the n dimensions
-                    Creates an equal stratification with strata widths equal to 1/n_strata
-                    The total number of strata, N, is the product of the terms of n_strata
-                    Example -
-                    n_strata = [2, 3, 2] creates a 3d stratification with:
-                    2 strata in dimension 0 with stratum widths 1/2
-                    3 strata in dimension 1 with stratum widths 1/3
-                    2 strata in dimension 2 with stratum widths 1/2
-    :type n_strata int list
+    * **n_strata** (`list` of `int`):
+            A list of dimension n defining the number of strata in each of the n dimensions. Creates an equal
+            stratification with strata widths equal to 1/n_strata. The total number of strata, N, is the product of the
+            terms of n_strata.
+            Example:
+                n_strata = [2, 3, 2] creates a 3d stratification with:
+                2 strata in dimension 0 with stratum widths 1/2
+                3 strata in dimension 1 with stratum widths 1/3
+                2 strata in dimension 2 with stratum widths 1/2
 
-    :param input_file: File path to input file specifying stratum origins and stratum widths.
-                       Default: None
-    :type input_file: string
+    * **input_file** (`str`):
+            File path to input file specifying stratum origins and stratum widths.
 
-    :param origins: An array of dimension N x n specifying the origins of all strata
-                    The origins of the strata are the coordinates of the stratum orthotope nearest the global
-                    origin.
-                    Example - A 2D stratification with 2 strata in each dimension
-                    origins = [[0, 0]
-                              [0, 0.5]
-                              [0.5, 0]
-                              [0.5, 0.5]]
-    :type origins: numpy array
+    * **origins** (`ndarray`):
+            An array of dimension N x n specifying the origins of all strata. The origins of the strata are the
+            coordinates of the stratum orthotope nearest the global origin.
+            Example:
+                A 2D stratification with 2 strata in each dimension
+                origins = [[0, 0]
+                           [0, 0.5]
+                           [0.5, 0]
+                           [0.5, 0.5]]
 
-    :param widths: An array of dimension N x n specifying the widths of all strata in each dimension
-                   Example - A 2D stratification with 2 strata in each dimension
+    * **widths** (`ndarray`):
+            An array of dimension N x n specifying the widths of all strata in each dimension
+            Example: A 2D stratification with 2 strata in each dimension
                    widths = [[0.5, 0.5]
                              [0.5, 0.5]
                              [0.5, 0.5]
                              [0.5, 0.5]]
-    :type widths: numpy array
 
     **Attributes:**
 
-    :param Strata.weights: An array of dimension 1 x N containing sample weights.
-                    Sample weights are equal to the product of the strata widths (i.e. they are equal to the
-                    size of the strata in the [0, 1]^n space.
-    :type Strata.weights: numpy array
+    * **weights** (`ndarray`):
+            An array of dimension 1 x N containing sample weights. Sample weights are equal to the product of the
+            strata widths (i.e. they are equal to the size of the strata in the [0, 1]^n space.
 
-    **Author:**
-
-    Michael D. Shields
     """
     def __init__(self, n_strata=None, input_file=None, origins=None, widths=None):
 
@@ -934,17 +929,13 @@ class Strata:
 
         **Input:**
 
-        :param levels: A list of integers that indicate the number of levels of each input design factor.
-        :type levels: list
+        * **levels** (`list`):
+                A list of integers that indicate the number of levels of each input design factor.
 
         **Output:**
 
-        :return ff: Full-factorial design matrix.
-        :rtype ff: ndarray
-
-        **Author:**
-
-        Michael D. Shields
+        * **ff** (`ndarray`):
+                Full-factorial design matrix.
         """
         # Number of factors
         n_factors = len(levels)
@@ -987,44 +978,40 @@ class RSS:
 
     **Input:**
 
-    :param runmodel_object: A RunModel object, which is used to evaluate the function value
-    :type runmodel_object: class
+    * **runmodel_object** (``Uqpy.RunModel`` object):
+            A RunModel object, which is used to evaluate the function value.
 
-    :param sample_object: A SampleMethods class object, which contains information about existing samples
-    :type sample_object: class
+    * **sample_object** (``Uqpy.SampleMethodes.STS`` or ``UQpy.SampleMethods.RSS`` object):
+            A SampleMethods class object, which contains information about existing samples.
 
-    :param krig_object: A kriging class object, only  required if meta is 'Kriging'.
-    :type krig_object: class
+    * **krig_object** (`class` object):
+            A surrogate model, which should have fit and predict as methods.
 
-    :param local: Indicator to update surrogate locally.
-    :type local: boolean
+    * **local** (`boolean`):
+            Indicator to update surrogate locally.
 
-    :param max_train_size: Minimum size of training data around new sample used to update surrogate.
-                           Default: nsamples
-    :type max_train_size: int
-    :param step_size: Step size to calculate the gradient using central difference. Only required if Delaunay is
-                      used as surrogate approximation.
-    :type step_size: float
+    * **max_train_size** (`int`):
+            Minimum size of training data around new sample used to update surrogate.
 
-    :param n_add: Number of samples generated in each iteration
-    :type n_add: int
+            Default: nsamples.
 
-    :param verbose: A boolean declaring whether to write text to the terminal.
-    :type verbose: bool
+    * **step_size** (`float`):
+            Step size to calculate the gradient using central difference.
 
-    **Attributes:**
+    * **n_add** (`int`):
+            Number of samples generated in each iteration.
 
-    :param: RSS.sample_object.samples: Final/expanded samples.
-    :type: RSS.sample_object.samples: ndarray
+    * **random_state** (None or `int` or `np.random.RandomState` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
 
-    **Authors:**
+    * **verbose** (`Boolean`):
+            A boolean declaring whether to write text to the terminal.
 
-    Authors: Mohit S. Chauhan
-    Last modified: 01/07/2020 by Mohit S. Chauhan
+            Default value: False
     """
 
     def __init__(self, sample_object=None, runmodel_object=None, krig_object=None, local=False, max_train_size=None,
-                 step_size=0.005, qoi_name=None, n_add=1, nsamples=None, verbose=False):
+                 step_size=0.005, qoi_name=None, n_add=1, nsamples=None, random_state=None, verbose=False):
 
         # Initialize attributes that are common to all approaches
         self.sample_object = sample_object
@@ -1036,6 +1023,14 @@ class RSS:
         self.dimension = np.shape(self.sample_object.samples)[1]
         self.nexist = 0
         self.n_add = n_add
+
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif isinstance(self.random_state, type(None)):
+            self.random_state = np.random.RandomState()
+        elif not isinstance(self.random_state, np.random.RandomState):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if self.cell == 'Voronoi':
             self.mesh = []
@@ -1133,7 +1128,6 @@ class RSS:
                 # ---------------------------------------------------
                 # Compute the gradients at the existing sample points
                 # ---------------------------------------------------
-                print(i)
                 # Use the entire sample set to train the surrogate model (more expensive option)
                 if self.max_train_size is None or len(self.training_points) <= self.max_train_size or i == self.nexist:
                     dy_dx[:i] = self.estimate_gradient(np.atleast_2d(self.training_points),
@@ -1179,8 +1173,9 @@ class RSS:
                     bin2break = np.hstack([bin2break, t])
                     s[t] = 0
                     p_left -= t.shape[0]
-                bin2break = np.hstack(
-                    [bin2break, np.random.choice(np.where(s == s.max())[0], p_left, replace=False)])
+
+                rest_of_the_bins = self.random_state.choice(np.where(s == s.max())[0], p_left, replace=False)
+                bin2break = np.hstack([bin2break, rest_of_the_bins])
                 bin2break = list(map(int, bin2break))
 
                 new_point = np.zeros([p, self.dimension])
@@ -1213,9 +1208,9 @@ class RSS:
                                                                   self.sample_object.strata.weights[bin2break[j]])
 
                     # Add a uniform random sample inside the new stratum
-                    new_point[j, :] = np.random.uniform(self.sample_object.strata.origins[i+j, :],
-                                                        self.sample_object.strata.origins[i+j, :] +
-                                                        self.sample_object.strata.widths[i+j, :])
+                    new_point[j, :] = stats.uniform.rvs(loc=self.sample_object.strata.origins[i + j, :],
+                                                        scale=self.sample_object.strata.widths[i + j, :],
+                                                        random_state=self.random_state)
 
                 # Adding new sample to training points, samplesU01 and samples attributes
                 self.training_points = np.vstack([self.training_points, new_point])
@@ -1290,8 +1285,7 @@ class RSS:
                 # Use the entire sample set to train the surrogate model (more expensive option)
                 if self.max_train_size is None or len(self.training_points) <= self.max_train_size or \
                         i == self.nexist:
-                    dy_dx = self.estimate_gradient(np.atleast_2d(self.training_points), np.atleast_2d(np.array(qoi)),
-                                                   self.mesh.centroids)
+                    dy_dx = self.estimate_gradient(np.atleast_2d(self.training_points), qoi, self.mesh.centroids)
 
                 # Use only max_train_size points to train the surrogate model (more economical option)
                 else:
@@ -1378,7 +1372,8 @@ class RSS:
                     bin2add = np.hstack([bin2add, t])
                     s[t] = 0
                     p_left -= t.shape[0]
-                bin2add = np.hstack([bin2add, np.random.choice(np.where(s == s.max())[0], p_left, replace=False)])
+                bin2add = np.hstack([bin2add, self.random_state.choice(np.where(s == s.max())[0], p_left,
+                                                                       replace=False)])
 
                 # Create 'p' sub-simplex within the simplex with maximum variance
                 new_point = np.zeros([p, self.dimension])
@@ -1391,7 +1386,8 @@ class RSS:
                         self.mesh.sub_simplex[m, :] = np.sum(tmp_vertices[col_one[m] - 1, :], 0) / self.dimension
 
                     # Using the Simplex class to generate a new sample in the sub-simplex
-                    new_point[j, :] = Simplex(nodes=self.mesh.sub_simplex, nsamples=1).samples
+                    new_point[j, :] = Simplex(nodes=self.mesh.sub_simplex, nsamples=1,
+                                              random_state=self.random_state).samples
 
                 # Update the matrices to have recognize the new point
                 self.points_to_samplesU01 = np.hstack([self.points_to_samplesU01, np.arange(i, i+p)])
@@ -1408,8 +1404,7 @@ class RSS:
 
                 # Identify the new point in the parameter space and update the sample array to include the new point.
                 for j in range(self.dimension):
-                    new_point[:, j] = self.sample_object.distribution[j].icdf(np.atleast_2d(new_point[:, j]).T,
-                                                                              self.sample_object.dist_params[j])
+                    new_point[:, j] = self.sample_object.dist_object[j].icdf(new_point[:, j])
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 # Run the mode at the new point.
@@ -1465,7 +1460,8 @@ class RSS:
                     bin2break = np.hstack([bin2break, t])
                     s[t] = 0
                     p_left -= t.shape[0]
-                bin2break = np.hstack([bin2break, np.random.choice(np.where(s == s.max())[0], p_left, replace=False)])
+                bin2break = np.hstack([bin2break, self.random_state.choice(np.where(s == s.max())[0], p_left,
+                                                                           replace=False)])
                 bin2break = list(map(int, bin2break))
 
                 new_point = np.zeros([p, self.dimension])
@@ -1497,9 +1493,9 @@ class RSS:
                                                                   self.sample_object.strata.weights[bin2break[j]])
 
                     # Add a uniform random sample inside the new stratum
-                    new_point[j, :] = np.random.uniform(self.sample_object.strata.origins[i+j, :],
-                                                        self.sample_object.strata.origins[i+j, :] +
-                                                        self.sample_object.strata.widths[i+j, :])
+                    new_point[j, :] = stats.uniform.rvs(loc=self.sample_object.strata.origins[i + j, :],
+                                                        scale=self.sample_object.strata.widths[i + j, :],
+                                                        random_state=self.random_state)
 
                 # Adding new sample to training points, samplesU01 and samples attributes
                 self.training_points = np.vstack([self.training_points, new_point])
@@ -1571,7 +1567,8 @@ class RSS:
                     bin2add = np.hstack([bin2add, t])
                     s[t] = 0
                     p_left -= t.shape[0]
-                bin2add = np.hstack([bin2add, np.random.choice(np.where(s == s.max())[0], p_left, replace=False)])
+                bin2add = np.hstack([bin2add, self.random_state.choice(np.where(s == s.max())[0], p_left,
+                                                                       replace=False)])
 
                 # Create 'p' sub-simplex within the simplex with maximum weight
                 new_point = np.zeros([p, self.dimension])
@@ -1584,7 +1581,8 @@ class RSS:
                         self.mesh.sub_simplex[m, :] = np.sum(tmp_vertices[col_one[m] - 1, :], 0) / self.dimension
 
                     # Using the Simplex class to generate a new sample in the sub-simplex
-                    new_point[j, :] = Simplex(nodes=self.mesh.sub_simplex, nsamples=1).samples
+                    new_point[j, :] = Simplex(nodes=self.mesh.sub_simplex, nsamples=1,
+                                              random_state=self.random_state).samples
 
                 # Update the matrices to have recognize the new point
                 self.points_to_samplesU01 = np.hstack([self.points_to_samplesU01, np.arange(i, i+p)])
@@ -1626,28 +1624,28 @@ class RSS:
 
         **Inputs:**
 
-        :param x: Samples in the training data.
-        :type x: numpy array
+        * **x** (`ndarray`):
+                Samples in the training data.
 
-        :param y: Function values evaluated at the samples in the training data.
-        :type y: numpy array
+        * **y** (`ndarray`):
+                Function values evaluated at the samples in the training data.
 
-        :param xt: Samples where gradients are computed.
-        :type xt: numpy array
+        * **xt** (`ndarray`):
+                Samples where gradients need to be evaluated.
 
         **Outputs:**
-        :return gr: First-order gradient evaluated at the points 'xt'.
-        :rtype gr: numpy array
+
+        * **gr** (`ndarray`):
+                First-order gradient evaluated at the points 'xt' using central difference.
         """
-        from UQpy.Reliability import FORM
         if self.krig_object is not None:
-            self.krig_object.fit(samples=x, values=y)
+            self.krig_object.fit(x, y)
             tck = self.krig_object.predict
         else:
             from scipy.interpolate import LinearNDInterpolator
             tck = LinearNDInterpolator(x, y, fill_value=0).__call__
 
-        gr = FORM.gradient(point=xt, model=tck, order='first', df_step=self.step_size)
+        gr = gradient(point=xt, runmodel_object=tck, order='first', df_step=self.step_size)
         return gr
 
 
@@ -1667,32 +1665,36 @@ class Simplex:
 
     **Input:**
 
-    :param nodes: The vertices of the simplex
-    :type nodes: ndarray/list
+    * **nodes** (`ndarray` or `list`):
+             The vertices of the simplex.
 
-    :param nsamples: The number of samples to be generated inside the simplex
-    :type nsamples: int
+    * **nsamples** (`int`):
+             The number of samples to be generated inside the simplex.
 
-    **Attributes:**
+    * **random_state** (None or `int` or `np.random.RandomState` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
 
-    :return Simplex.samples: New random samples distributed uniformly inside the simplex.
-    :rtype Simplex.samples: ndarray
+    **Output:**
 
-    **Authors:**
-
-    Authors: Dimitris G.Giovanis
-    Last modified: 11/28/2018 by Mohit S. Chauhan
+    * **samples** (`ndarray`):
+             New random samples distributed uniformly inside the simplex.
     """
 
     # Authors: Dimitris G.Giovanis
     # Last modified: 11/28/2018 by Mohit S. Chauhan
 
-    def __init__(self, nodes=None, nsamples=None):
+    def __init__(self, nodes=None, nsamples=None, random_state=None):
         self.nodes = np.atleast_2d(nodes)
         self.nsamples = nsamples
 
         if self.nodes.shape[0] != self.nodes.shape[1] + 1:
             raise NotImplementedError("UQpy: Size of simplex (nodes) is not consistent.")
+
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if nsamples is not None:
             if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
@@ -1706,11 +1708,6 @@ class Simplex:
 
         This is an instance method that generates samples. It is automatically called when the Simplex class is
         instantiated.
-
-        **Output:**
-
-        :return sample: Random samples
-        :rtype sample: numpy array
         """
         self.nsamples = nsamples
         dimension = self.nodes.shape[1]
@@ -1725,14 +1722,14 @@ class Simplex:
                         ai = self.nodes[k, j] - self.nodes[k - 1, j]
                         b_.append(ai)
                     ad[j] = np.hstack((self.nodes[0, j], b_))
-                    r[j] = np.random.uniform(0.0, 1.0, 1) ** (1 / (dimension - j))
+                    r[j] = stats.uniform.rvs(loc=0, scale=1, random_state=self.random_state) ** (1 / (dimension - j))
                 d = np.cumprod(r)
                 r_ = np.hstack((1, d))
                 sample[i, :] = np.dot(ad, r_)
         else:
             a = min(self.nodes)
             b = max(self.nodes)
-            sample = a + (b - a) * np.random.rand(dimension, self.nsamples).reshape(self.nsamples, dimension)
+            sample = a + (b - a) * stats.uniform.rvs(size=[self.nsamples, dimension], random_state=self.random_state)
         return sample
 
 
@@ -1761,8 +1758,8 @@ class AKMCS:
     * **samples** (`ndarray`):
             `ndarray` containing the samples.
 
-    * **krig_object** (``Kriging`` object):
-            A kriging class object
+    * **krig_object** (`class` object):
+            A surrogate model, this object must have fit and predict methods.
 
     * **nsamples** (`int`):
             Number of samples to be drawn from each distribution.
@@ -1776,7 +1773,7 @@ class AKMCS:
     * **qoi_name** (`dict`):
             If the quantity of interest is a dictionary, convert it to a list
 
-    * **learning_function** (`str` or `callable`):
+    * **learning_function** (`str` or `function`):
             Learning function used as the selection criteria to identify new samples.
                 Options:
                     1. 'U' - U-function \n
@@ -1830,7 +1827,7 @@ class AKMCS:
         self.verbose = verbose
         self.qoi_name = qoi_name
 
-        self.learning_function, self.lf = learning_function, None
+        self.learning_function = learning_function
         self.dist_object = dist_object
         self.nsamples = nsamples
 
@@ -1846,7 +1843,37 @@ class AKMCS:
         self.kwargs = kwargs
 
         # Initialize and run preliminary error checks.
-        self.init_akmcs()
+        if self.samples is not None:
+            self.dimension = np.shape(self.samples)[1]
+        else:
+            self.dimension = len(self.dist_object)
+
+        if self.save_pf is None:
+            if self.learning_function not in ['EFF', 'U', 'Weighted-U']:
+                self.save_pf = False
+            else:
+                self.save_pf = True
+
+        if type(self.learning_function).__name__ == 'function':
+            self.learning_function = self.learning_function
+        elif self.learning_function not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
+            raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
+        elif self.learning_function == 'EIGF':
+            self.learning_function = self.eigf
+        elif self.learning_function == 'EIF':
+            self.learning_function = self.eif
+        elif self.learning_function == 'U':
+            self.learning_function = self.u
+        elif self.learning_function == 'Weighted-U':
+            if 'max_p' not in self.kwargs:
+                raise NotImplementedError("UQpy Error: Weighted-U learning function requires the parameter 'max_p'.")
+            self.learning_function = self.weighted_u
+        else:
+            if 'a' not in self.kwargs:
+                self.kwargs['a'] = 0
+            if 'epsilon' not in self.kwargs:
+                self.kwargs['epsilon'] = 2
+            self.learning_function = self.eff
 
         from UQpy.Distributions import DistributionContinuous1D, JointInd
 
@@ -1879,7 +1906,12 @@ class AKMCS:
             print('UQpy: AKMCS - Running the initial sample set using RunModel.')
 
         # Evaluate model at the training points
-        self.runmodel_object.run(samples=self.samples)
+        if len(self.runmodel_object.qoi_list) == 0:
+            self.runmodel_object.run(samples=self.samples)
+        else:
+            if len(self.runmodel_object.qoi_list) != self.samples.shape[0]:
+                raise NotImplementedError("UQpy: There should be no model evaluation or Number of samples and model "
+                                          "evaluation in RunModel object should be same.")
 
         if self.nsamples is not None:
             if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
@@ -1941,14 +1973,14 @@ class AKMCS:
 
             # Apply the learning function to identify the new point to run the model.
 
-            new_ind, ind = self.lf(self.krig_model, rest_pop)
+            new_ind, ind = self.learning_function(self.krig_model, rest_pop)
             new_point = np.atleast_2d(rest_pop[new_ind])
 
             # Add the new points to the training set and to the sample set.
             self.samples = np.vstack([self.samples, new_point])
 
             # Run the model at the new points
-            self.runmodel_object.run(samples=np.atleast_2d(new_point))
+            self.runmodel_object.run(samples=new_point, append_samples=True)
 
             # If the quantity of interest is a dictionary, convert it to a list
             self.qoi = [None] * len(self.runmodel_object.qoi_list)
@@ -2106,41 +2138,6 @@ class AKMCS:
         rows = u[:, 0].argsort()[(np.size(g) - self.n_add):]
 
         return rows, False
-
-    def init_akmcs(self):
-        """Preliminary error checks."""
-
-        if self.samples is not None:
-            self.dimension = np.shape(self.samples)[1]
-        else:
-            self.dimension = len(self.dist_object)
-
-        if self.save_pf is None:
-            if self.learning_function not in ['EFF', 'U', 'Weighted-U']:
-                self.save_pf = False
-            else:
-                self.save_pf = True
-
-        if type(self.learning_function).__name__ == 'function':
-            self.lf = self.learning_function
-        elif self.learning_function not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
-            raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
-        elif self.learning_function == 'EIGF':
-            self.lf = self.eigf
-        elif self.learning_function == 'EIF':
-            self.lf = self.eif
-        elif self.learning_function == 'U':
-            self.lf = self.u
-        elif self.learning_function == 'Weighted-U':
-            if 'max_p' not in self.kwargs:
-                raise NotImplementedError("UQpy Error: Weighted-U learning function requires the parameter 'max_p'.")
-            self.lf = self.weighted_u
-        else:
-            if 'a' not in self.kwargs:
-                self.kwargs['a'] = 0
-            if 'epsilon' not in self.kwargs:
-                self.kwargs['epsilon'] = 2
-            self.lf = self.eff
 
 ########################################################################################################################
 ########################################################################################################################
