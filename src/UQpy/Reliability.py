@@ -1112,6 +1112,14 @@ class TaylorSeries:
         if not isinstance(model, RunModel):
             raise ValueError('UQpy: A RunModel object is required for the model.')
 
+    @classmethod
+    def gradient(cls, order, point, runmodel_object, cov, dist_object):
+        pass
+
+    @classmethod
+    def hessian(cls, point, model, cov, dist_object, param):
+        pass
+
 
 class FORM(TaylorSeries):
     """
@@ -1290,7 +1298,7 @@ class FORM(TaylorSeries):
             self.g_check = g_check
 
     @staticmethod
-    def gradient(dist_object, point, runmodel_object, order='first', cov=None, df_step=0.001, **kwargs):
+    def gradient(order, point, runmodel_object, dist_object, cov=None, df_step=0.001, **kwargs):
         """
         A method to estimate the gradients (1st, 2nd, mixed) of a function using a finite difference scheme in the
         standard normal space. First order gradients are calculated using central finite differences. This is a static
@@ -1351,7 +1359,9 @@ class FORM(TaylorSeries):
             if len(df_step) == 1:
                 df_step = [df_step[0]] * dimension
 
-        if not isinstance(runmodel_object, RunModel) or not callable(runmodel_object):
+        if isinstance(runmodel_object, RunModel) or callable(runmodel_object):
+            pass
+        else:
             raise RuntimeError('UQpy: A RunModel/callable object must be provided as model.')
 
         def func(m):
@@ -1367,6 +1377,7 @@ class FORM(TaylorSeries):
         f_eval = func(m=runmodel_object)
 
         if order.lower() == 'first':
+
             du_dj = np.zeros([point.shape[0], dimension])
 
             for ii in range(dimension):
@@ -1571,8 +1582,8 @@ class SORM(TaylorSeries):
         dimension = point.shape[1]
 
         dg_second = FORM.gradient(order='second', point=point.reshape(1, -1),
-                                  df_step=df_step, runmodel_object=runmodel_object, dist_object=dist_obj,
-                                  cov=cov, qoi=qoi)
+                                  runmodel_object=runmodel_object, dist_object=dist_obj, cov=cov,
+                                  df_step=df_step, qoi=qoi)
 
         dg_mixed = FORM.gradient(order='mixed', point=point.reshape(1, -1),
                                  df_step=df_step, runmodel_object=runmodel_object, dist_object=dist_obj, cov=cov)

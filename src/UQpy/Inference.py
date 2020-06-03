@@ -53,18 +53,18 @@ class InferenceModel:
     * **name** (`string`):
         Name of model - optional but useful in a model selection setting.
 
-    * **run_model_object** (object of class ``RunModel``):
+    * **runmodel_object** (object of class ``RunModel``):
         ``RunModel`` class object that defines the forward model. This input is required for cases 1a and 1b.
 
     * **log_likelihood** (callable):
-        Function that defines the log-likelihood model, possibly in conjunction with the `run_model_object` (cases 1b
+        Function that defines the log-likelihood model, possibly in conjunction with the `runmodel_object` (cases 1b
         and 2). Default is None, and a Gaussian-error model is considered (case 1a).
 
-        |  If a `run_model_object` is also defined (case 1b), this function is called as:
-        |  `model_outputs = run_model_object.run(samples=params).qoi_list`
+        |  If a `runmodel_object` is also defined (case 1b), this function is called as:
+        |  `model_outputs = runmodel_object.run(samples=params).qoi_list`
         |  `log_likelihood(params, model_outputs, data, **kwargs_likelihood)`
 
-        |  If no `run_model_object` is defined (case 2), this function is called as:
+        |  If no `runmodel_object` is defined (case 2), this function is called as:
         |  `log_likelihood(params, data, **kwargs_likelihood)`
 
     * **kwargs_likelihood**:
@@ -88,7 +88,7 @@ class InferenceModel:
     """
     # Last Modified: 05/13/2020 by Audrey Olivier
 
-    def __init__(self, nparams, run_model_object=None, log_likelihood=None, dist_object=None, name='',
+    def __init__(self, nparams, runmodel_object=None, log_likelihood=None, dist_object=None, name='',
                  error_covariance=1.0, prior=None, verbose=False, **kwargs_likelihood
                  ):
 
@@ -101,22 +101,22 @@ class InferenceModel:
             raise TypeError('Input name must be a string.')
         self.verbose = verbose
 
-        self.run_model_object = run_model_object
+        self.runmodel_object = runmodel_object
         self.error_covariance = error_covariance
         self.log_likelihood = log_likelihood
         self.dist_object = dist_object
         self.kwargs_likelihood = kwargs_likelihood
-        # Perform checks on inputs run_model_object, log_likelihood, distribution_object that define the inference model
-        if (self.run_model_object is None) and (self.log_likelihood is None) and (self.dist_object is None):
-            raise ValueError('UQpy: One of run_model_object, log_likelihood or dist_object inputs must be provided.')
-        if self.run_model_object is not None and (not isinstance(self.run_model_object, RunModel)):
-            raise TypeError('UQpy: Input run_model_object should be an object of class RunModel.')
+        # Perform checks on inputs runmodel_object, log_likelihood, distribution_object that define the inference model
+        if (self.runmodel_object is None) and (self.log_likelihood is None) and (self.dist_object is None):
+            raise ValueError('UQpy: One of runmodel_object, log_likelihood or dist_object inputs must be provided.')
+        if self.runmodel_object is not None and (not isinstance(self.runmodel_object, RunModel)):
+            raise TypeError('UQpy: Input runmodel_object should be an object of class RunModel.')
         if (self.log_likelihood is not None) and (not callable(self.log_likelihood)):
             raise TypeError('UQpy: Input log_likelihood should be a callable.')
         if self.dist_object is not None:
-            if (self.run_model_object is not None) or (self.log_likelihood is not None):
+            if (self.runmodel_object is not None) or (self.log_likelihood is not None):
                 raise ValueError('UQpy: Input dist_object cannot be provided concurrently with log_likelihood '
-                                 'or run_model_object.')
+                                 'or runmodel_object.')
             if not isinstance(self.dist_object, Distribution):
                 raise TypeError('UQpy: Input dist_object should be an object of class Distribution.')
             if not hasattr(self.dist_object, 'log_pdf'):
@@ -171,9 +171,9 @@ class InferenceModel:
             raise ValueError('Wrong dimensions in params.')
 
         # Case 1 - Forward model is given by RunModel
-        if self.run_model_object is not None:
-            self.run_model_object.run(samples=params, append_samples=False)
-            model_outputs = self.run_model_object.qoi_list
+        if self.runmodel_object is not None:
+            self.runmodel_object.run(samples=params, append_samples=False)
+            model_outputs = self.runmodel_object.qoi_list
 
             # Case 1.a: Gaussian error model
             if self.log_likelihood is None:
@@ -284,6 +284,12 @@ class MLEstimation:
     * **kwargs_optimizer**:
         Keyword arguments that will be transferred to the optimizer.
 
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
+
     * **x0** (`ndarray`):
         Starting point(s) for optimization, see `run_estimation`. Default is `None`.
 
@@ -308,7 +314,7 @@ class MLEstimation:
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
 
-    def __init__(self, inference_model, data, verbose=False, nopt=None, x0=None, optimizer=None,
+    def __init__(self, inference_model, data, verbose=False, nopt=None, x0=None, optimizer=None, random_state=None,
                  **kwargs_optimizer):
 
         # Initialize variables
@@ -317,6 +323,11 @@ class MLEstimation:
             raise TypeError('UQpy: Input inference_model should be of type InferenceModel')
         self.data = data
         self.kwargs_optimizer = kwargs_optimizer
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
         self.verbose = verbose
         if optimizer is None:
             from scipy.optimize import minimize
@@ -366,7 +377,7 @@ class MLEstimation:
         # Case 3: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization below.
         if (self.inference_model.dist_object is not None) and hasattr(self.inference_model.dist_object, 'fit'):
             if not (isinstance(nopt, int) and nopt >= 1):
-                raise ValueError('nopt should be an integer >= 1.')
+                raise ValueError('UQpy: nopt should be an integer >= 1.')
             for _ in range(nopt):
                 self.inference_model.dist_object.update_params(
                     **{key: None for key in self.inference_model.list_params})
@@ -387,7 +398,10 @@ class MLEstimation:
             if x0 is None:
                 if not (isinstance(nopt, int) and nopt >= 1):
                     raise ValueError('UQpy: nopt should be an integer >= 1.')
-                x0 = np.random.rand(nopt, self.inference_model.nparams)
+                from UQpy.Distributions import Uniform
+                x0 = Uniform().rvs(
+                    nsamples=nopt * self.inference_model.nparams, random_state=self.random_state).reshape(
+                    (nopt, self.inference_model.nparams))
                 if 'bounds' in self.kwargs_optimizer.keys():
                     bounds = np.array(self.kwargs_optimizer['bounds'])
                     x0 = bounds[:, 0].reshape((1, -1)) + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) * x0
@@ -398,7 +412,7 @@ class MLEstimation:
             for x0_ in x0:
                 res = self.optimizer(self._evaluate_func_to_minimize, x0_, **self.kwargs_optimizer)
                 mle_tmp = res.x
-                max_log_like_tmp = (-1) * res.fun
+                max_log_like_tmp = (-1.) * res.fun
                 # Save result
                 if self.mle is None:
                     self.mle = mle_tmp
@@ -463,6 +477,12 @@ class BayesParameterEstimation:
 
         Note on the proposal for ``IS``: if no input `proposal` is provided, the prior is used as proposal.
 
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
+
     * **nsamples** (`int`):
         Number of samples used in MCMC/IS, see `run` method.
 
@@ -486,12 +506,17 @@ class BayesParameterEstimation:
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
     def __init__(self, inference_model, data, sampling_class=None, nsamples=None, nsamples_per_chain=None,
-                 verbose=False, **kwargs_sampler):
+                 random_state=None, verbose=False, **kwargs_sampler):
 
         self.inference_model = inference_model
         if not isinstance(self.inference_model, InferenceModel):
             raise TypeError('UQpy: Input inference_model should be of type InferenceModel')
         self.data = data
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
         self.verbose = verbose
 
         from UQpy.SampleMethods import MCMC, IS
@@ -502,11 +527,12 @@ class BayesParameterEstimation:
                 if self.inference_model.prior is None or not hasattr(self.inference_model.prior, 'rvs'):
                     raise NotImplementedError('UQpy: A prior with a rvs method or a seed must be provided for MCMC.')
                 else:
-                    kwargs_sampler['seed'] = self.inference_model.prior.rvs(nsamples=kwargs_sampler['nchains'])
+                    kwargs_sampler['seed'] = self.inference_model.prior.rvs(
+                        nsamples=kwargs_sampler['nchains'], random_state=self.random_state)
             self.sampler = sampling_class(
-                dimension=self.inference_model.nparams, verbose=self.verbose,
+                dimension=self.inference_model.nparams, verbose=self.verbose, random_state=self.random_state,
                 log_pdf_target=self.inference_model.evaluate_log_posterior, args_target=(self.data, ),
-                **kwargs_sampler)
+                nsamples=None, nsamples_per_chain=None, **kwargs_sampler)
 
         elif issubclass(sampling_class, IS):
             # Importance distribution is either given by the user, or it is set as the prior of the model
@@ -517,7 +543,7 @@ class BayesParameterEstimation:
 
             self.sampler = sampling_class(
                 log_pdf_target=self.inference_model.evaluate_log_posterior, args_target=(self.data, ),
-                verbose=self.verbose, **kwargs_sampler)
+                random_state=self.random_state, verbose=self.verbose, nsamples=None, **kwargs_sampler)
 
         else:
             raise ValueError('UQpy: Sampling_class should be either a MCMC algorithm or IS.')
@@ -592,6 +618,12 @@ class InfoModelSelection:
         for ML estimation of the first candidate model, while the Powell method will be used for the second candidate
         model.
 
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
+
     * **x0** (`list` of `ndarrays`):
         Starting points for optimization - see ``MLEstimation``
 
@@ -624,7 +656,8 @@ class InfoModelSelection:
     """
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
-    def __init__(self, candidate_models, data, criterion='AIC', verbose=False, nopt=None, x0=None, **kwargs):
+    def __init__(self, candidate_models, data, criterion='AIC', random_state=None, verbose=False, nopt=None, x0=None,
+                 **kwargs):
 
         # Check inputs
         # candidate_models is a list of InferenceModel objects
@@ -637,6 +670,11 @@ class InfoModelSelection:
         if criterion not in ['AIC', 'BIC', 'AICc']:
             raise ValueError('UQpy: Criterion should be AIC (default), BIC or AICc')
         self.criterion = criterion
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
         self.verbose = verbose
 
         # Instantiate the ML estimators
@@ -647,7 +685,7 @@ class InfoModelSelection:
         for i, inference_model in enumerate(self.candidate_models):
             kwargs_i = dict([(key, value[i]) for (key, value) in kwargs.items()])
             ml_estimator = MLEstimation(inference_model=inference_model, data=self.data, verbose=self.verbose,
-                                        x0=None, nopt=None, **kwargs_i, )
+                                        random_state=self.random_state, x0=None, nopt=None, **kwargs_i)
             self.ml_estimators.append(ml_estimator)
 
         # Initialize the outputs
@@ -837,6 +875,12 @@ class BayesModelSelection:
         `kwargs={`sampling_class': [MH, Stretch]}` means that the MH algorithm will be used for sampling from the
         parameter posterior pdf of the 1st candidate model, while the Stretch algorithm will be used for the 2nd model.
 
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
+
     * **nsamples** (`list` of `int`):
         Number of samples used in ``MCMC``/``IS``, for each model
 
@@ -863,7 +907,7 @@ class BayesModelSelection:
     # Authors: Audrey Olivier, Yuchen Zhou
     # Last modified: 01/24/2020 by Audrey Olivier
     def __init__(self, candidate_models, data, prior_probabilities=None, method_evidence_computation='harmonic_mean',
-                 verbose=False, nsamples=None, nsamples_per_chain=None, **kwargs):
+                 random_state=None, verbose=False, nsamples=None, nsamples_per_chain=None, **kwargs):
 
         # Check inputs: candidate_models is a list of instances of Model, data must be provided, and input arguments
         # for MCMC must be provided as a list of length len(candidate_models)
@@ -874,6 +918,11 @@ class BayesModelSelection:
         self.nmodels = len(candidate_models)
         self.data = data
         self.method_evidence_computation = method_evidence_computation
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
         self.verbose = verbose
 
         if prior_probabilities is None:
@@ -891,7 +940,7 @@ class BayesModelSelection:
             kwargs_i.update({'concat_chains': True, 'save_log_pdf': True})
             bayes_estimator = BayesParameterEstimation(
                 inference_model=inference_model, data=self.data, verbose=self.verbose,
-                nsamples=None, nsamples_per_chain=None, **kwargs_i)
+                random_state=self.random_state, nsamples=None, nsamples_per_chain=None, **kwargs_i)
             self.bayes_estimators.append(bayes_estimator)
 
         # Initialize the outputs
