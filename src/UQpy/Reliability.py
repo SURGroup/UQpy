@@ -45,85 +45,62 @@ class SubsetSimulation:
     This class estimates probability of failure for a user-defined model using Subset Simulation. The class can
     use one of several MCMC algorithms to draw conditional samples.
 
-    **References:**
-
-    1. S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by subset simulation,”
-       Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
-    2. Shields, M.D., Giovanis, D.G., and Sundar, V.S. "Subset simulation for problems with strongly non-Gaussian,
-       highly anisotropics, and degenerate distributions," Computers & Structures (In Review)
-
     **Input:**
 
-    :param mcmc_object: An instance of the UQpy.SampleMethods.MCMC class that is used to specify the MCMC algorithm
-                        used for conditional sampling
+    * **runmodel_object** (``RunModel`` object):
+        The computational model. It should be of type `RunModel` (see ``RunModel`` class).
 
-                        This object must be specified.
+    * **mcmc_class** (Class of type ``SampleMethods.MCMC``)
+        Specifies the MCMC algorithm.
 
-                        Default: None
-    :type mcmc_object: object
+        Must be a child class of the ``SampleMethods.MCMC`` parent class. Note: This is `not` and object of the class.
+        This input specifies the class itself.
 
+    * **samples_init** (`ndarray`)
+        A set of samples from the specified probability distribution. These are the samples from the original
+        distribution. They are not conditional samples. The samples must be an array of size
+        `nsamples_per_ss x dimension`.
 
-    :param samples_init: A set of samples from the specified probability distribution. These are the samples from the
-                         original distribution. They are not conditional samples. The samples must be an array of size
-                         nsamples_per_ssx dimension.
+        If `samples_init` is not specified, the Subset_Simulation class will use the `mcmc_class` to draw the initial
+        samples.
 
-                         If samples_init is not specified, the Subset_Simulation class will use the mcmc_object to
-                         draw the initial samples.
+    * **p_cond** (`float`):
+        Conditional probability for each conditional level.
 
-                         Default: None
+    * **nsamples_per_ss** (`int`)
+        Number of samples to draw in each conditional level.
 
-    :type samples_init: numpy array
+    * **max_level** (`int`)
+        Maximum number of allowable conditional levels.
 
-    :param p_cond: Conditional probability for each conditional level
+    * **verbose** (Boolean):
+        A boolean declaring whether to write text to the terminal.
 
-                   Default: 0.1
-    :type p_cond: float
-
-    :param nsamples_per_ss: Number of samples to draw in each conditional level.
-
-                        Default: 1000
-    :type nsamples_per_ss: int
-
-    :param max_level: Maximum number of allowable conditional levels.
-
-                      Default: 10
-    :type max_level: int
-
-    :param verbose: Specifies whether algorithm progress is reported in the terminal.
-
-                    Default: False
-    :type verbose: boolean
+    * **mcmc_kwargs** (`dict`)
+        Any additional keyword arguments needed for the specific ``MCMC`` class.
 
     **Attributes:**
 
-    :param self.samples: A list of arrays containing the samples in each conditional level.
-    :type self.samples: list of numpy arrays
+    * **samples** (`list` of `ndarrays`)
+         A list of arrays containing the samples in each conditional level.
 
-    :param self.g: A list of arrays containing the evaluation of the performance function at each sample in each
-                    conditional level.
-    :type self.g: list of numpy arrays
+    * **g** (`list` of `ndarrays`)
+        A list of arrays containing the evaluation of the performance function at each sample in each conditional level.
 
-    :param self.g_level: Threshold value of the performance function for each conditional level
-    :type self.g_level: list
+    * **g_level** (`list`)
+        Threshold value of the performance function for each conditional level
 
-    :param self.pf: Probability of failure estimate
-    :type self.pf: float
+    * **pf** (`float`)
+        Probability of failure estimate
 
-    :param self.cov1: Coefficient of variation of the probability of failure estimate assuming independent chains
+    * **cov1** (`float`)
+        Coefficient of variation of the probability of failure estimate assuming independent chains
 
-                      From Reference [1]
-    :type self.cov1: float
+    * **cov2** (`float`)
+        Coefficient of variation of the probability of failure estimate with dependent chains. From [4]_
 
-    :param self.cov2: Coefficient of variation of the probability of failure estimate with dependent chains
 
-                      From Reference [2]
-    :type self.cov2: float
-
-    **Authors:**
-
-    Michael D. Shields
-
-    Last Modified: 1/23/20 by Michael D. Shields
+    **Methods:**
     """
 
     def __init__(self, runmodel_object, mcmc_class=MMH, samples_init=None, p_cond=0.1, nsamples_per_ss=1000,
@@ -183,14 +160,15 @@ class SubsetSimulation:
 
         **Output/Returns:**
 
-        :param pf: Probability of failure estimate
-        :type pf: float
+        * **pf** (`float`)
+            Probability of failure estimate
 
-        :param cov1: Coefficient of variation of the probability of failure estimate assuming independent chains
-        :type cov1: float
+        * **cov1** (`float`)
+            Coefficient of variation of the probability of failure estimate assuming independent chains
 
-        :param cov2: Coefficient of variation of the probability of failure estimate with dependent chains
-        :type cov2: float
+        * **cov2** (`float`)
+            Coefficient of variation of the probability of failure estimate with dependent chains. From [4]_
+
         """
 
         step = 0
@@ -499,7 +477,7 @@ class TaylorSeries:
 
     This is the parent class to all Taylor series expansion algorithms.
 
-    **Inputs:**
+    **Input:**
 
     * **dist_object** ((list of ) ``Distribution`` object(s)):
         Marginal probability distributions of each random variable. Must be an object of type
@@ -568,7 +546,7 @@ class FORM(TaylorSeries):
 
     This is a child class of the ``TaylorSeries`` class.
 
-    **Inputs:**
+    **Input:**
 
     See ``TaylorSeries`` class.
 
@@ -917,7 +895,7 @@ class SORM(TaylorSeries):
 
     ``SORM`` is a child class of the ``TaylorSeries`` class.
 
-    **Inputs:**
+    **Input:**
 
     The ``SORM`` class has the same inputs as the ``TaylorSeries`` class.
 

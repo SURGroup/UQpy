@@ -60,6 +60,7 @@
 
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">inspect</span> <span class="k">import</span> <span class="n">isclass</span>
+
 <span class="kn">from</span> <span class="nn">UQpy.RunModel</span> <span class="k">import</span> <span class="n">RunModel</span>
 <span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">MCMC</span><span class="p">,</span> <span class="n">MMH</span>
 <span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="o">*</span>
@@ -71,92 +72,69 @@
 <span class="c1">########################################################################################################################</span>
 
 
-<span class="k">class</span> <span class="nc">SubsetSimulation</span><span class="p">:</span>
+<div class="viewcode-block" id="SubsetSimulation"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.SubsetSimulation">[docs]</a><span class="k">class</span> <span class="nc">SubsetSimulation</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform Subset Simulation to estimate probability of failure.</span>
 
 <span class="sd">    This class estimates probability of failure for a user-defined model using Subset Simulation. The class can</span>
 <span class="sd">    use one of several MCMC algorithms to draw conditional samples.</span>
 
-<span class="sd">    **References:**</span>
-
-<span class="sd">    1. S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by subset simulation,”</span>
-<span class="sd">       Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.</span>
-<span class="sd">    2. Shields, M.D., Giovanis, D.G., and Sundar, V.S. &quot;Subset simulation for problems with strongly non-Gaussian,</span>
-<span class="sd">       highly anisotropics, and degenerate distributions,&quot; Computers &amp; Structures (In Review)</span>
-
 <span class="sd">    **Input:**</span>
 
-<span class="sd">    :param mcmc_object: An instance of the UQpy.SampleMethods.MCMC class that is used to specify the MCMC algorithm</span>
-<span class="sd">                        used for conditional sampling</span>
+<span class="sd">    * **runmodel_object** (``RunModel`` object):</span>
+<span class="sd">        The computational model. It should be of type `RunModel` (see ``RunModel`` class).</span>
 
-<span class="sd">                        This object must be specified.</span>
+<span class="sd">    * **mcmc_class** (Class of type ``SampleMethods.MCMC``)</span>
+<span class="sd">        Specifies the MCMC algorithm.</span>
 
-<span class="sd">                        Default: None</span>
-<span class="sd">    :type mcmc_object: object</span>
+<span class="sd">        Must be a child class of the ``SampleMethods.MCMC`` parent class. Note: This is `not` and object of the class.</span>
+<span class="sd">        This input specifies the class itself.</span>
 
+<span class="sd">    * **samples_init** (`ndarray`)</span>
+<span class="sd">        A set of samples from the specified probability distribution. These are the samples from the original</span>
+<span class="sd">        distribution. They are not conditional samples. The samples must be an array of size</span>
+<span class="sd">        `nsamples_per_ss x dimension`.</span>
 
-<span class="sd">    :param samples_init: A set of samples from the specified probability distribution. These are the samples from the</span>
-<span class="sd">                         original distribution. They are not conditional samples. The samples must be an array of size</span>
-<span class="sd">                         nsamples_per_ssx dimension.</span>
+<span class="sd">        If `samples_init` is not specified, the Subset_Simulation class will use the `mcmc_class` to draw the initial</span>
+<span class="sd">        samples.</span>
 
-<span class="sd">                         If samples_init is not specified, the Subset_Simulation class will use the mcmc_object to</span>
-<span class="sd">                         draw the initial samples.</span>
+<span class="sd">    * **p_cond** (`float`):</span>
+<span class="sd">        Conditional probability for each conditional level.</span>
 
-<span class="sd">                         Default: None</span>
+<span class="sd">    * **nsamples_per_ss** (`int`)</span>
+<span class="sd">        Number of samples to draw in each conditional level.</span>
 
-<span class="sd">    :type samples_init: numpy array</span>
+<span class="sd">    * **max_level** (`int`)</span>
+<span class="sd">        Maximum number of allowable conditional levels.</span>
 
-<span class="sd">    :param p_cond: Conditional probability for each conditional level</span>
+<span class="sd">    * **verbose** (Boolean):</span>
+<span class="sd">        A boolean declaring whether to write text to the terminal.</span>
 
-<span class="sd">                   Default: 0.1</span>
-<span class="sd">    :type p_cond: float</span>
-
-<span class="sd">    :param nsamples_per_ss: Number of samples to draw in each conditional level.</span>
-
-<span class="sd">                        Default: 1000</span>
-<span class="sd">    :type nsamples_per_ss: int</span>
-
-<span class="sd">    :param max_level: Maximum number of allowable conditional levels.</span>
-
-<span class="sd">                      Default: 10</span>
-<span class="sd">    :type max_level: int</span>
-
-<span class="sd">    :param verbose: Specifies whether algorithm progress is reported in the terminal.</span>
-
-<span class="sd">                    Default: False</span>
-<span class="sd">    :type verbose: boolean</span>
+<span class="sd">    * **mcmc_kwargs** (`dict`)</span>
+<span class="sd">        Any additional keyword arguments needed for the specific ``MCMC`` class.</span>
 
 <span class="sd">    **Attributes:**</span>
 
-<span class="sd">    :param self.samples: A list of arrays containing the samples in each conditional level.</span>
-<span class="sd">    :type self.samples: list of numpy arrays</span>
+<span class="sd">    * **samples** (`list` of `ndarrays`)</span>
+<span class="sd">         A list of arrays containing the samples in each conditional level.</span>
 
-<span class="sd">    :param self.g: A list of arrays containing the evaluation of the performance function at each sample in each</span>
-<span class="sd">                    conditional level.</span>
-<span class="sd">    :type self.g: list of numpy arrays</span>
+<span class="sd">    * **g** (`list` of `ndarrays`)</span>
+<span class="sd">        A list of arrays containing the evaluation of the performance function at each sample in each conditional level.</span>
 
-<span class="sd">    :param self.g_level: Threshold value of the performance function for each conditional level</span>
-<span class="sd">    :type self.g_level: list</span>
+<span class="sd">    * **g_level** (`list`)</span>
+<span class="sd">        Threshold value of the performance function for each conditional level</span>
 
-<span class="sd">    :param self.pf: Probability of failure estimate</span>
-<span class="sd">    :type self.pf: float</span>
+<span class="sd">    * **pf** (`float`)</span>
+<span class="sd">        Probability of failure estimate</span>
 
-<span class="sd">    :param self.cov1: Coefficient of variation of the probability of failure estimate assuming independent chains</span>
+<span class="sd">    * **cov1** (`float`)</span>
+<span class="sd">        Coefficient of variation of the probability of failure estimate assuming independent chains</span>
 
-<span class="sd">                      From Reference [1]</span>
-<span class="sd">    :type self.cov1: float</span>
+<span class="sd">    * **cov2** (`float`)</span>
+<span class="sd">        Coefficient of variation of the probability of failure estimate with dependent chains. From [4]_</span>
 
-<span class="sd">    :param self.cov2: Coefficient of variation of the probability of failure estimate with dependent chains</span>
 
-<span class="sd">                      From Reference [2]</span>
-<span class="sd">    :type self.cov2: float</span>
-
-<span class="sd">    **Authors:**</span>
-
-<span class="sd">    Michael D. Shields</span>
-
-<span class="sd">    Last Modified: 1/23/20 by Michael D. Shields</span>
+<span class="sd">    **Methods:**</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">mcmc_class</span><span class="o">=</span><span class="n">MMH</span><span class="p">,</span> <span class="n">samples_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">p_cond</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">nsamples_per_ss</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
@@ -207,7 +185,7 @@
 
     <span class="c1"># -----------------------------------------------------------------------------------------------------------------------</span>
     <span class="c1"># The run function executes the chosen subset simulation algorithm</span>
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SubsetSimulation.run"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.SubsetSimulation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Execute subset simulation</span>
 
@@ -216,14 +194,15 @@
 
 <span class="sd">        **Output/Returns:**</span>
 
-<span class="sd">        :param pf: Probability of failure estimate</span>
-<span class="sd">        :type pf: float</span>
+<span class="sd">        * **pf** (`float`)</span>
+<span class="sd">            Probability of failure estimate</span>
 
-<span class="sd">        :param cov1: Coefficient of variation of the probability of failure estimate assuming independent chains</span>
-<span class="sd">        :type cov1: float</span>
+<span class="sd">        * **cov1** (`float`)</span>
+<span class="sd">            Coefficient of variation of the probability of failure estimate assuming independent chains</span>
 
-<span class="sd">        :param cov2: Coefficient of variation of the probability of failure estimate with dependent chains</span>
-<span class="sd">        :type cov2: float</span>
+<span class="sd">        * **cov2** (`float`)</span>
+<span class="sd">            Coefficient of variation of the probability of failure estimate with dependent chains. From [4]_</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">step</span> <span class="o">=</span> <span class="mi">0</span>
@@ -350,7 +329,7 @@
         <span class="n">cov1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">d12</span><span class="p">))</span>
         <span class="n">cov2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">d22</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="n">pf</span><span class="p">,</span> <span class="n">cov1</span><span class="p">,</span> <span class="n">cov2</span>
+        <span class="k">return</span> <span class="n">pf</span><span class="p">,</span> <span class="n">cov1</span><span class="p">,</span> <span class="n">cov2</span></div>
 
     <span class="c1"># -----------------------------------------------------------------------------------------------------------------------</span>
     <span class="c1"># Support functions for subset simulation</span>
@@ -519,7 +498,7 @@
 
         <span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">g</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">factor</span>
 
-        <span class="k">return</span> <span class="n">beta</span>
+        <span class="k">return</span> <span class="n">beta</span></div>
 
 
 <span class="c1">########################################################################################################################</span>
@@ -532,7 +511,7 @@
 
 <span class="sd">    This is the parent class to all Taylor series expansion algorithms.</span>
 
-<span class="sd">    **Inputs:**</span>
+<span class="sd">    **Input:**</span>
 
 <span class="sd">    * **dist_object** ((list of ) ``Distribution`` object(s)):</span>
 <span class="sd">        Marginal probability distributions of each random variable. Must be an object of type</span>
@@ -601,7 +580,7 @@
 
 <span class="sd">    This is a child class of the ``TaylorSeries`` class.</span>
 
-<span class="sd">    **Inputs:**</span>
+<span class="sd">    **Input:**</span>
 
 <span class="sd">    See ``TaylorSeries`` class.</span>
 
@@ -950,7 +929,7 @@
 
 <span class="sd">    ``SORM`` is a child class of the ``TaylorSeries`` class.</span>
 
-<span class="sd">    **Inputs:**</span>
+<span class="sd">    **Input:**</span>
 
 <span class="sd">    The ``SORM`` class has the same inputs as the ``TaylorSeries`` class.</span>
 

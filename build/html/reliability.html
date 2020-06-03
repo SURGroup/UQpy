@@ -46,9 +46,139 @@ The module currently contains the following classes:</p>
 Reliability Method (SORM).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">SubsetSimulation</span></code>: Class to perform reliability analysis using subset simulation.</p></li>
 </ul>
+<div class="section" id="subset-simulation">
+<h2>Subset Simulation<a class="headerlink" href="#subset-simulation" title="Permalink to this headline">¶</a></h2>
+<p>In the subset simulation method <a class="footnote-reference brackets" href="#id10" id="id2">3</a> the probability of failure <span class="math notranslate nohighlight">\(P_f\)</span>  is approximated by a product of probabilities of more frequent events. That is, the failure event <span class="math notranslate nohighlight">\(G = \{\textbf{u} \in \mathbb{R}^n:G(\textbf{u}) \leq 0\}\)</span>, is expressed as the of union of <cite>M</cite> nested intermediate events <span class="math notranslate nohighlight">\(G_1,G_2,\cdots,G_M\)</span> such that <span class="math notranslate nohighlight">\(G_1 \supset G_2 \supset \cdots \supset G_M\)</span>, and <span class="math notranslate nohighlight">\(G = \cap_{i=1}^{M} G_i\)</span>. The intermediate failure events are defined as <span class="math notranslate nohighlight">\(G_i=\{G(\textbf{u})\le b_i\}\)</span>, where <span class="math notranslate nohighlight">\(b_1&gt;b_2&gt;\cdots&gt;b_i=0\)</span> are positive thresholds selected such that each conditional probability <span class="math notranslate nohighlight">\(P(G_i | G_{i-1}), ~i=2,3,\cdots,M-1\)</span> equals a target probability value <span class="math notranslate nohighlight">\(p_0\)</span>. The probability of failure <span class="math notranslate nohighlight">\(P_f\)</span> is estimated as:</p>
+<div class="math notranslate nohighlight">
+\[P_f = P\left(\cap_{i=1}^M G_i\right) = P(G_1)\prod_{i=2}^M P(G_i | G_{i-1})\]</div>
+<p>where the probability <span class="math notranslate nohighlight">\(P(G_1)\)</span> is computed through Monte Carlo simulations. In order to estimate the conditional probabilities <span class="math notranslate nohighlight">\(P(G_i|G_{i-1}),~j=2,3,\cdots,M\)</span> generation of Markov Chain Monte Carlo (MCMC) samples from the conditional pdf <span class="math notranslate nohighlight">\(p_{\textbf{U}}(\textbf{u}|G_{i-1})\)</span> is required. In the context of subset simulation, the Markov chains are constructed through a two-step acceptance/rejection criterion. Starting from a Markov chain state <span class="math notranslate nohighlight">\(\textbf{x}\)</span> and a proposal distribution <span class="math notranslate nohighlight">\(q(\cdot|\textbf{x})\)</span>, a candidate sample <span class="math notranslate nohighlight">\(\textbf{y}\)</span> is generated. In the first stage, the sample <span class="math notranslate nohighlight">\(\textbf{y}\)</span> is accepted/rejected with probability</p>
+<div class="math notranslate nohighlight">
+\[\alpha=\min\bigg\{1, \frac{p(\textbf{y})q(\textbf{x}|\textbf{y})}{p(\textbf{x})q(\textbf{y}|\textbf{x})}\bigg\}\]</div>
+<p>and in the second stage is accepted/rejected based on whether the sample belongs to the failure region <span class="math notranslate nohighlight">\(G_j\)</span>. <code class="docutils literal notranslate"><span class="pre">SubSetSimulation</span></code> can be used with any of the available (or custom) <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> classes in the <code class="docutils literal notranslate"><span class="pre">SampleMethods</span></code> module.</p>
+<div class="section" id="class-descriptions">
+<h3>Class Descriptions<a class="headerlink" href="#class-descriptions" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.Reliability.SubsetSimulation">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">SubsetSimulation</code><span class="sig-paren">(</span><em class="sig-param">runmodel_object</em>, <em class="sig-param">mcmc_class=&lt;class 'UQpy.SampleMethods.MMH'&gt;</em>, <em class="sig-param">samples_init=None</em>, <em class="sig-param">p_cond=0.1</em>, <em class="sig-param">nsamples_per_ss=1000</em>, <em class="sig-param">max_level=10</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">**mcmc_kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#SubsetSimulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.SubsetSimulation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform Subset Simulation to estimate probability of failure.</p>
+<p>This class estimates probability of failure for a user-defined model using Subset Simulation. The class can
+use one of several MCMC algorithms to draw conditional samples.</p>
+<p><strong>Input:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>runmodel_object</strong> (<code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object):</dt><dd><p>The computational model. It should be of type <cite>RunModel</cite> (see <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> class).</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>mcmc_class</strong> (Class of type <code class="docutils literal notranslate"><span class="pre">SampleMethods.MCMC</span></code>)</dt><dd><p>Specifies the MCMC algorithm.</p>
+<p>Must be a child class of the <code class="docutils literal notranslate"><span class="pre">SampleMethods.MCMC</span></code> parent class. Note: This is <cite>not</cite> and object of the class.
+This input specifies the class itself.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>samples_init</strong> (<cite>ndarray</cite>)</dt><dd><p>A set of samples from the specified probability distribution. These are the samples from the original
+distribution. They are not conditional samples. The samples must be an array of size
+<cite>nsamples_per_ss x dimension</cite>.</p>
+<p>If <cite>samples_init</cite> is not specified, the Subset_Simulation class will use the <cite>mcmc_class</cite> to draw the initial
+samples.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>p_cond</strong> (<cite>float</cite>):</dt><dd><p>Conditional probability for each conditional level.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nsamples_per_ss</strong> (<cite>int</cite>)</dt><dd><p>Number of samples to draw in each conditional level.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>max_level</strong> (<cite>int</cite>)</dt><dd><p>Maximum number of allowable conditional levels.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>verbose</strong> (Boolean):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>mcmc_kwargs</strong> (<cite>dict</cite>)</dt><dd><p>Any additional keyword arguments needed for the specific <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> class.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Attributes:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>samples</strong> (<cite>list</cite> of <cite>ndarrays</cite>)</dt><dd><p>A list of arrays containing the samples in each conditional level.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>g</strong> (<cite>list</cite> of <cite>ndarrays</cite>)</dt><dd><p>A list of arrays containing the evaluation of the performance function at each sample in each conditional level.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>g_level</strong> (<cite>list</cite>)</dt><dd><p>Threshold value of the performance function for each conditional level</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>pf</strong> (<cite>float</cite>)</dt><dd><p>Probability of failure estimate</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>cov1</strong> (<cite>float</cite>)</dt><dd><p>Coefficient of variation of the probability of failure estimate assuming independent chains</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>cov2</strong> (<cite>float</cite>)</dt><dd><p>Coefficient of variation of the probability of failure estimate with dependent chains. From <a class="footnote-reference brackets" href="#id11" id="id3">4</a></p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<dl class="method">
+<dt id="UQpy.Reliability.SubsetSimulation.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#SubsetSimulation.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.SubsetSimulation.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute subset simulation</p>
+<p>This is an instance method that runs subset simulation. It is automatically called when the SubsetSimulation
+class is instantiated.</p>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>pf</strong> (<cite>float</cite>)</dt><dd><p>Probability of failure estimate</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>cov1</strong> (<cite>float</cite>)</dt><dd><p>Coefficient of variation of the probability of failure estimate assuming independent chains</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>cov2</strong> (<cite>float</cite>)</dt><dd><p>Coefficient of variation of the probability of failure estimate with dependent chains. From <a class="footnote-reference brackets" href="#id11" id="id4">4</a></p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
 <div class="section" id="taylor-series">
 <h2>Taylor Series<a class="headerlink" href="#taylor-series" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> is a class that calculates the reliability  of a model using the First Order Reliability Method (FORM) or the Second Order Reliability Method (SORM) based on the first-order and second-order Taylor series expansion approximation of the performance function, respectively (<a class="footnote-reference brackets" href="#id4" id="id2">1</a>, <a class="footnote-reference brackets" href="#id5" id="id3">2</a>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> is a class that calculates the reliability  of a model using the First Order Reliability Method (FORM) or the Second Order Reliability Method (SORM) based on the first-order and second-order Taylor series expansion approximation of the performance function, respectively (<a class="footnote-reference brackets" href="#id8" id="id5">1</a>, <a class="footnote-reference brackets" href="#id9" id="id6">2</a>).</p>
 <p>In FORM, the performance function is linearized according to</p>
 <div class="math notranslate nohighlight">
 \[G(\textbf{U})  \approx  G(\textbf{U}^\star) + \nabla G_{|_{\textbf{U}^\star}}(\textbf{U}-\textbf{U}^\star)^\intercal\]</div>
@@ -68,14 +198,14 @@ Reliability Method (SORM).</p></li>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Reliability</span> <span class="k">import</span> <span class="n">FORM</span><span class="p">,</span> <span class="n">SORM</span>
 </pre></div>
 </div>
-<div class="section" id="class-descriptions">
-<h3>Class Descriptions<a class="headerlink" href="#class-descriptions" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id7">
+<h3>Class Descriptions<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.Reliability.TaylorSeries">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">TaylorSeries</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">runmodel_object</em>, <em class="sig-param">seed</em>, <em class="sig-param">cov</em>, <em class="sig-param">n_iter</em>, <em class="sig-param">tol</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#TaylorSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.TaylorSeries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform First and Second Order Reliability (FORM/SORM) methods.</p>
 <p>This is the parent class to all Taylor series expansion algorithms.</p>
-<p><strong>Inputs:</strong></p>
+<p><strong>Input:</strong></p>
 <ul>
 <li><dl class="simple">
 <dt><strong>dist_object</strong> ((list of ) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>Marginal probability distributions of each random variable. Must be an object of type
@@ -129,7 +259,7 @@ vector <strong>U</strong> .</p>
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">FORM</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">runmodel_object</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">cov=None</em>, <em class="sig-param">n_iter=100</em>, <em class="sig-param">tol=0.001</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#FORM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.FORM" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class perform the First Order Reliability Method.</p>
 <p>This is a child class of the <code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> class.</p>
-<p><strong>Inputs:</strong></p>
+<p><strong>Input:</strong></p>
 <p>See <code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> class.</p>
 <p><strong>Attributes:</strong></p>
 <ul class="simple">
@@ -269,7 +399,7 @@ scheme after transformation to the standard normal space.</p>
 <dd><p>A class to perform the Second Order Reliability Method.</p>
 <p><code class="docutils literal notranslate"><span class="pre">SORM</span></code> class first performs FORM and then corrects the estimated FORM probability using second-order information.</p>
 <p><code class="docutils literal notranslate"><span class="pre">SORM</span></code> is a child class of the <code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> class.</p>
-<p><strong>Inputs:</strong></p>
+<p><strong>Input:</strong></p>
 <p>The <code class="docutils literal notranslate"><span class="pre">SORM</span></code> class has the same inputs as the <code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> class.</p>
 <p><strong>Output/Returns:</strong></p>
 <p>The <code class="docutils literal notranslate"><span class="pre">SORM</span></code> class has the same outputs as the <code class="docutils literal notranslate"><span class="pre">FORM</span></code> class plus</p>
@@ -342,15 +472,21 @@ of second-order partial derivatives of a scalar-valued function. This is a stati
 </dd></dl>
 
 <dl class="footnote brackets">
-<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
+<dt class="label" id="id8"><span class="brackets"><a class="fn-backref" href="#id5">1</a></span></dt>
 <dd><ol class="upperalpha simple" start="18">
 <li><p>Rackwitz and R. Fiessler, “Structural reliability under combined random load sequences”, Structural Safety, Vol. 22, no. 1, pp: 27–60, 1978.</p></li>
 </ol>
 </dd>
-<dt class="label" id="id5"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
+<dt class="label" id="id9"><span class="brackets"><a class="fn-backref" href="#id6">2</a></span></dt>
 <dd><ol class="upperalpha simple" start="11">
 <li><p>Breitung, “Asymptotic approximations for multinormal integrals”, J. Eng. Mech., ASCE, Vol. 110, no. 3, pp: 357–367, 1984.</p></li>
 </ol>
+</dd>
+<dt class="label" id="id10"><span class="brackets"><a class="fn-backref" href="#id2">3</a></span></dt>
+<dd><p>S.K.  Au  and  J.L.  Beck. “Estimation  of  small  failure  probabilities  in  high  dimensions  by  subset  simulation”, Probabilistic  Engineering Mechanics, 16(4):263–277, 2001.</p>
+</dd>
+<dt class="label" id="id11"><span class="brackets">4</span><span class="fn-backref">(<a href="#id3">1</a>,<a href="#id4">2</a>)</span></dt>
+<dd><p>Shields, M.D., Giovanis, D.G., and Sundar, V.S. “Subset simulation for problems with strongly non-Gaussian, highly anisotropics, and degenerate distributions,” Computers &amp; Structures (Accepted with Revisions)</p>
 </dd>
 </dl>
 <div class="toctree-wrapper compound">
@@ -400,6 +536,7 @@ of second-order partial derivatives of a scalar-valued function. This is a stati
 <li class="toctree-l1"><a class="reference internal" href="stochastic_process.html">StochasticProcess</a></li>
 <li class="toctree-l1"><a class="reference internal" href="surrogates.html">Surrogates</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Reliability</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#subset-simulation">Subset Simulation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#taylor-series">Taylor Series</a></li>
 </ul>
 </li>
