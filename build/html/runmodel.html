@@ -273,7 +273,7 @@ the command line as</p>
 <h2>RunModel Class<a class="headerlink" href="#runmodel-class" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="UQpy.RunModel.RunModel">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.RunModel.</code><code class="sig-name descname">RunModel</code><span class="sig-paren">(</span><em class="sig-param">samples=None</em>, <em class="sig-param">model_script=None</em>, <em class="sig-param">model_object_name=None</em>, <em class="sig-param">input_template=None</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">output_script=None</em>, <em class="sig-param">output_object_name=None</em>, <em class="sig-param">ntasks=1</em>, <em class="sig-param">cores_per_task=1</em>, <em class="sig-param">nodes=1</em>, <em class="sig-param">cluster=False</em>, <em class="sig-param">resume=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">model_dir='Model_Runs'</em>, <em class="sig-param">fmt=None</em>, <em class="sig-param">separator='</em>, <em class="sig-param">'</em>, <em class="sig-param">vec=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/RunModel.html#RunModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.RunModel.RunModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.RunModel.</code><code class="sig-name descname">RunModel</code><span class="sig-paren">(</span><em class="sig-param">samples=None</em>, <em class="sig-param">model_script=None</em>, <em class="sig-param">model_object_name=None</em>, <em class="sig-param">input_template=None</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">output_script=None</em>, <em class="sig-param">output_object_name=None</em>, <em class="sig-param">ntasks=1</em>, <em class="sig-param">cores_per_task=1</em>, <em class="sig-param">nodes=1</em>, <em class="sig-param">cluster=False</em>, <em class="sig-param">resume=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">model_dir='Model_Runs'</em>, <em class="sig-param">fmt=None</em>, <em class="sig-param">separator='</em>, <em class="sig-param">'</em>, <em class="sig-param">vec=True</em>, <em class="sig-param">delete_files=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/RunModel.html#RunModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.RunModel.RunModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a computational model at specified sample points.</p>
 <p>This class is the interface between <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> and computational models. The model is called in a Python script whose
 name must be passed as one the arguments to the <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> call. If the model is in Python, <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> import the
@@ -430,6 +430,12 @@ time. If it is written to accept a single sample, set <code class="docutils lite
 loop over the number of samples. If <cite>model_script</cite> is written to accept multiple samples, set <code class="docutils literal notranslate"><span class="pre">vec</span> <span class="pre">=</span> <span class="pre">True</span></code> and
 <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> will pass all of the samples to the model for vectorized computation.</p>
 <p><cite>vec</cite> is not used in the third-party model workflow.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>delete_files</strong> (<cite>boolean</cite>)</dt><dd><p>Specifies whether or not to delete individual run output files after model execution and output processing.</p>
+<p>If <cite>delete_files = True</cite>, <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> will remove all <cite>run_i…</cite> directories in the <cite>model_dir</cite>.</p>
 </dd>
 </dl>
 </li>

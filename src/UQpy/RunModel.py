@@ -30,6 +30,7 @@ The module currently contains the following classes:
 
 import collections
 import datetime
+import glob
 import os
 import pathlib
 import platform
@@ -201,6 +202,11 @@ class RunModel:
 
         `vec` is not used in the third-party model workflow.
 
+    * **delete_files** (`boolean`)
+        Specifies whether or not to delete individual run output files after model execution and output processing.
+
+        If `delete_files = True`, ``RunModel`` will remove all `run_i...` directories in the `model_dir`.
+
     * **kwargs** (`dict`)
         Additional inputs to the Python object specified by `model_object_name` in the Python model workflow.
 
@@ -254,7 +260,7 @@ class RunModel:
     def __init__(self, samples=None, model_script=None, model_object_name=None,
                  input_template=None, var_names=None, output_script=None, output_object_name=None, ntasks=1,
                  cores_per_task=1, nodes=1, cluster=False, resume=False, verbose=False, model_dir='Model_Runs',
-                 fmt=None, separator=', ', vec=True, **kwargs):
+                 fmt=None, separator=', ', vec=True, delete_files=False, **kwargs):
 
         # Check the platform and build appropriate call to Python
         if platform.system() in ['Windows']:
@@ -280,6 +286,8 @@ class RunModel:
                 raise ValueError('\nUQpy: fmt should be a string in brackets indicating a standard Python format.\n')
         else:
             raise TypeError('\nUQpy: fmt should be a str.\n')
+
+        self.delete_files = delete_files
 
         # kwargs options, used only for python runs
         self.python_kwargs = kwargs
@@ -488,6 +496,12 @@ class RunModel:
             print("\nUQpy: Returning to the parent directory:\n" + self.parent_dir)
         os.chdir(self.parent_dir)
 
+        if self.delete_files:
+            if self.verbose:
+                print("UQpy: Deleting individual run files.")
+            for dirname in glob.glob(os.path.join(self.model_dir, "run*")):
+                shutil.rmtree(dirname)
+
         return None
 
     ####################################################################################################################
@@ -615,9 +629,9 @@ class RunModel:
             # If the Python model is vectorized to accept many samples.
             self.model_output = model_object(self.samples[self.nexist:self.nexist + self.nsim], **self.python_kwargs)
             if self.model_is_class:
-                self.qoi_list = list(self.model_output.qoi)
+                self.qoi_list[self.nexist:self.nexist+self.nsim] = list(self.model_output.qoi)
             else:
-                self.qoi_list = list(self.model_output)
+                self.qoi_list[self.nexist:self.nexist+self.nsim] = list(self.model_output)
         else:
             # If the Python model is not vectorized and accepts only a single sample.
             for i in range(self.nexist, self.nexist + self.nsim):

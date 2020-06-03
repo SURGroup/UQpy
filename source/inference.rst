@@ -25,11 +25,31 @@ The capabilities of ``UQpy`` and associated classes are summarized in the follow
 InferenceModel
 --------------------------------
 
-For any inference task, the user must first create, for each model studied, an instance of the class ``InferenceModel`` that defines the problem at hand. The following figure summarizes the four types of inference models that are supported by ``UQpy``.
+For any inference task, the user must first create, for each model studied, an instance of the class ``InferenceModel`` that defines the problem at hand. This class defines an inference model that will serve as input for all remaining inference classes. A model can be defined in various ways. The following summarizes the four types of inference models that are supported by ``UQpy``. These four types are further summarized in the figure below.
 
+* **Case 1a** - `Gaussian error model powered by` ``RunModel``: In this case, the data is assumed to come form a model of the following
+  form,  `data ~ h(theta) + eps`, where `eps` is iid Gaussian and `h` consists of a computational
+  model executed using ``RunModel``. Data is a 1D ndarray in this setting.
+* **Case 1b** - `non-Gaussian error model powered by` ``RunModel``: In this case, the user must provide the likelihood
+  function in addition to a ``RunModel`` object. The data type is user-defined and must be consistent with the
+  likelihood function definition.
+* **Case 2:** - `User-defined likelihood without` ``RunModel``: Here, the likelihood function is user-defined and
+  does not leverage ``RunModel``. The data type must be consistent with the likelihood function definition.
+* **Case 3:** `Learn parameters of a probability distribution:` Here, the user must define an object of the
+  ``Distribution`` class. Data is an ndarray of shape `(ndata, dim)` and consists in `ndata` iid samples from the
+  probability distribution.
+	  
 .. image:: _static/Inference_models.png
    :scale: 30 %
    :align: left
+   
+
+Defining a Log-likelihood function
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The critical component of the ``InferenceModel`` class is the evaluation of the log-likelihood function. ``InferenceModel`` has been constructed to be flexible in how the user specifies the log-likelihood function. The log-likelihood function can be specified as a user-defined callable method that is passed directly into the ``InferenceModel`` class. As the cases suggest, a user-defined log-likelihood function must take as input, at minimum, both the parameters of the model and the data points at which to evaluate the log-likelihood. It may also take additional keyword arguments. The method may compute the log-likelihood at the data points on its own, or it may rely on a computational model defined through the ``RunModel`` class. If the log-likelihood function relies on a ``RunModel`` object, this object is also passed into ``InferenceModel`` and the log-likelihood method should also take as input, the output (`qoi_list`) of the ``RunModel`` object evaluated at the specified parameter values. 
+   
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
    
 .. autoclass:: UQpy.Inference.InferenceModel
    :members:
@@ -50,10 +70,13 @@ Note: for a Gaussian-error model of the form :math:`\mathcal{D}=h(\theta)+\epsil
 
 A numerical optimization procedure is performed to compute the MLE. By default, the `minimize` function of the ``scipy.optimize`` module is used, however other optimizers can be leveraged via the `optimizer` input of the  ``MLEstimation`` class.
 
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
+
 .. autoclass:: UQpy.Inference.MLEstimation
    :members:
    
-**Note on subclassing MLEstimation**
+**Note on subclassing** ``MLEstimation``
 
 More generally, the user may want to compute a parameter estimate by minimizing an error function between the data and model outputs. This can be easily done by subclassing the ``MLEstimation`` class and overwriting the method `_evaluate_func_to_minimize`.
 
@@ -68,6 +91,10 @@ Given some data :math:`\mathcal{D}`, a parameterized model for the data, and a p
 Note that if no prior is defined in the model, the prior pdf is chosen as uninformative, i.e., :math:`p(\theta) = 1` (cautionary note, this is an improper prior).
 
 The ``BayesParameterEstimation`` leverages the ``MCMC`` or ``IS`` classes of the ``SampleMethods`` module of ``UQpy``. When creating a ``BayesParameterEstimation`` object, an object of class ``MCMC`` or ``IS`` is created and saved as an attribute `sampler`. The ``run`` method of the ``BayesParameterEstimation`` class then calls the ``run`` method of that sampler, thus the user can add samples as they wish by calling the ``run`` method several times.
+
+
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.Inference.BayesParameterEstimation
     :members: 
@@ -90,6 +117,9 @@ where :math:`k` is the number of parameters characterizing the model, :math:`\ha
 
 A probability can be defined for each model as :math:`P(m_{i}) \propto \exp\left(  -\frac{\text{criterion}}{2} \right)`.
 
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
+
 .. autoclass:: UQpy.Inference.InfoModelSelection
     :members: 
 	
@@ -109,6 +139,9 @@ Currently, calculation of the evidence is performed using the method of the harm
 .. math:: p(\mathcal{D} \vert m_{i}) = \left[ \frac{1}{B} \sum_{b=1}^{B} \frac{1}{p(\mathcal{D} \vert m_{i}, \theta_{b})} \right]^{-1}
 
 where :math:`\theta_{1,\cdots,B}` are samples from the posterior pdf of :math:`\theta`. In UQpy, these samples are obtained via the ``BayesParameterEstimation`` class. However, note that this method is known to yield evidence estimates with large variance. Future releases of ``UQpy`` will include more robust methods for computation of model evidences. Also, it is known that results of such Bayesian model selection procedure usually highly depends on the choice of prior for the parameters of the competing models, thus the user should carefully define such priors when creating instances of the ``InferenceModel`` class.
+
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.Inference.BayesModelSelection
     :members: 
