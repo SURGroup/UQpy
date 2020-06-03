@@ -16,11 +16,12 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 """
-This module contains classes and functions for reliability analysis, probability of failure estimation, and rare event
-simulation. The module currently contains the following classes:
+This module contains functionality for all reliability methods supported in ``UQpy``.
+The module currently contains the following classes:
 
-* SubsetSimulation: Estimate probability of failure using subset simulation.
-* TaylorSeries: Estimate probability of failure using FORM or SORM.
+- ``TaylorSeries``: Class to perform reliability analysis using First Order Reliability Method (FORM) and Second Order
+  Reliability Method (SORM).
+- ``SubsetSimulation``: Class to perform reliability analysis using subset simulation.
 """
 
 import warnings
@@ -488,621 +489,57 @@ class SubsetSimulation:
         return beta
 
 
-# ######### OLD Subset simulation code #################################################################################
-
-# dimension=None,
-#
-#
-# pdf_proposal_type=None, pdf_proposal_scale=None,
-# pdf_target=None, log_pdf_target=None, pdf_target_params=None, pdf_target_copula=None,
-# pdf_target_copula_params=None, pdf_target_type='joint_pdf', seed=None,
-# algorithm='MH', jump=1,  nburn=0,
-# model_object=None):
-#
-#
-# # model_script=None, model_object_name=None, input_template=None, var_names=None,
-# # output_script=None, output_object_name=None, n_tasks=1, cores_per_task=1, nodes=1, resume=False,
-# # model_dir=None, cluster=False):
-
-# self.dimension = dimension
-# self.pdf_proposal_type = pdf_proposal_type
-# self.pdf_proposal_scale = pdf_proposal_scale
-#
-# self.log_pdf_target = log_pdf_target
-# self.pdf_target_copula = pdf_target_copula
-#
-# self.pdf_target_copula_params = pdf_target_copula_params
-# self.jump = jump
-# self.nburn = nburn
-#
-# self.pdf_target_type = pdf_target_type
-# self.pdf_target = pdf_target
-# self.pdf_target_params = pdf_target_params
-# self.algorithm = algorithm
-#
-# if seed is None:
-#     self.seed = np.zeros(self.dimension)
-# else:
-#     self.seed = seed
-# # Hard-wire the maximum number of conditional levels.
-
-# Select the appropriate Subset Simulation Algorithm
-# if self.mcmc_object.algorithm == 'MMH':
-#     # if self.verbose:
-#     #     print('UQpy: Running Subset Simulation with MMH....')
-#     # [self.pf, self.cov1, self.cov2] = self.run_subsim_mmh()
-#     if self.verbose:
-#         print('UQpy: Running Subset Simulation with Stretch....')
-#     [self.pf, self.cov1, self.cov2] = self.run()
-# elif self.mcmc_object.algorithm == 'Stretch':
-#     if self.verbose:
-#         print('UQpy: Running Subset Simulation with Stretch....')
-#     [self.pf, self.cov1, self.cov2] = self.run()
-# elif self.mcmc_object.algorithm == 'DRAM':
-#     # if self.verbose:
-#     #     print('UQpy: Running Subset Simulation with MMH....')
-#     # [self.pf, self.cov1, self.cov2] = self.run_subsim_mmh()
-#     if self.verbose:
-#         print('UQpy: Running Subset Simulation with Stretch....')
-#     [self.pf, self.cov1, self.cov2] = self.run()
-# # **** Add calls to new methods here.****
-
-# ------------------------------------------------------------------------------------------------------------------
-# Run Subset Simulation using Modified Metropolis Hastings
-# def run_subsim_mmh(self):
-#     step = 0
-#     n_keep = int(self.p_cond * self.nsamples_per_ss)
-#
-#     # Generate the initial samples - Level 0
-#     if self.samples_init is None:
-#         self.mcmc_object.run(nsamples=self.nsamples_per_ss)
-#         self.samples.append(self.mcmc_object.samples)
-#         if self.verbose:
-#             print('UQpy: If the target distribution is other than standard normal, it is highly recommended that '
-#                   'the user provide a set of nsamples_per_sssamples that follow the target distribution using the '
-#                   'argument samples_init.')
-#     else:
-#         self.samples.append(self.samples_init)
-#
-#     # Run the model for the initial samples,
-#     # sort them by their performance function, and
-#     # identify the conditional level
-#     self.runmodel_object.run(samples=np.atleast_2d(self.samples[step]))
-#     self.g.append(np.asarray(self.runmodel_object.qoi_list))
-#     g_ind = np.argsort(self.g[step][:, 0])
-#     self.g_level.append(self.g[step][g_ind[n_keep-1]])
-#
-#     # Estimate coefficient of variation of conditional probability of first level
-#     d1, d2 = self._cov_sus(step)
-#     self.d12.append(d1 ** 2)
-#     self.d22.append(d2 ** 2)
-#
-#     t = time.time()
-#
-#     if self.verbose:
-#         print('UQpy: Subset Simulation, conditional level 0 complete.')
-#
-#     while self.g_level[step] > 0 and step < self.max_level:
-#
-#         step = step + 1
-#         self.samples.append(np.zeros_like(self.samples[step-1]))
-#         self.samples[step][:n_keep] = self.samples[step - 1][g_ind[0:n_keep], :]
-#         self.g.append(np.zeros_like(self.g[step-1]))
-#         self.g[step][:n_keep] = self.g[step - 1][g_ind[:n_keep]]
-#
-#         for i in range(int(self.nsamples_per_ss/n_keep)-1):
-#
-#             ind = np.arange(0, n_keep)
-#             # while np.size(ind) != 0:
-#             x_mcmc = np.zeros([np.size(ind), self.samples[step].shape[1]])
-#             x_run = []
-#
-#             k = 0
-#             for j in ind:
-#
-#                 # Generate new candidate states
-#                 self.mcmc_object.samples = None
-#                 self.mcmc_object.seed = np.atleast_2d(self.samples[step][i*n_keep+j, :])
-#                 self.mcmc_object.run(nsamples=1)
-#                 x_mcmc[k] = self.mcmc_object.samples[0, :]
-#
-#                 # Decide whether a new simulation is needed for the proposed state
-#                 if np.array_equal(np.atleast_2d(x_mcmc[k]), self.mcmc_object.seed) is False:
-#                     x_run.append(x_mcmc[k])
-#                 else:
-#                     self.samples[step][(i+1)*n_keep+j] = x_mcmc[k]
-#                     self.g[step][(i+1)*n_keep+j] = self.g[step][i*n_keep+j]
-#
-#                 k += 1
-#
-#             ind = np.where(self.g[step][(i+1)*n_keep:(i+2)*n_keep, 0] == 0)[0]
-#             if np.size(ind) == 0:
-#                 break
-#
-#             # Run the model for the new states.
-#             self.runmodel_object.run(samples=x_run)
-#
-#             # Temporarily save the latest model runs
-#             g_temp = np.asarray(self.runmodel_object.qoi_list[-len(x_run):])
-#
-#             # Accept the states with g < g_level
-#             ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
-#             for ii in ind_accept:
-#                 self.samples[step][(i+1)*n_keep+ind[ii]] = x_mcmc[ind[ii]]
-#                 self.g[step][(i+1)*n_keep+ind[ii]] = g_temp[ii]
-#
-#             ind_reject = np.where(g_temp[:, 0] > self.g_level[step - 1])[0]
-#             for ii in ind_reject:
-#                 self.samples[step][(i+1)*n_keep+ind[ii]] = self.samples[step][i*n_keep+ind[ii]]
-#                 self.g[step][(i+1)*n_keep+ind[ii]] = self.g[step][i*n_keep+ind[ii]]
-#
-#         if self.verbose:
-#             print('UQpy: Subset Simulation, conditional level ' + step + 'complete.')
-#
-#         g_ind = np.argsort(self.g[step][:, 0])
-#         self.g_level.append(self.g[step][g_ind[n_keep]])
-#
-#         # Estimate coefficient of variation of conditional probability of first level
-#         d1, d2 = self._cov_sus(step)
-#         self.d12.append(d1 ** 2)
-#         self.d22.append(d2 ** 2)
-#
-#     n_fail = len([value for value in self.g[step] if value < 0])
-#
-#     pf = self.p_cond ** step * n_fail / self.nsamples_per_ss
-#     cov1 = np.sqrt(np.sum(self.d12))
-#     cov2 = np.sqrt(np.sum(self.d22))
-#
-#     return pf, cov1, cov2
-
-#         # Accept or reject each sample
-#
-#
-#     for i in range(int(self.nsamples_per_ss/ n_keep) - 1):
-#
-#         ind = np.arange(0, n_keep)
-#         # while np.size(ind) != 0:
-#         x_mcmc = np.zeros([np.size(ind), self.samples[step].shape[1]])
-#         x_run = []
-#
-#         k = 0
-#         for j in ind:
-#
-#             # Generate new candidate states
-#             ######### Create a new MCMC object for each conditional level. ########
-#
-#             self.mcmc_object.seed = np.atleast_2d(self.samples[step][:n_keep, :])
-#             # self.mcmc_object.samples = self.mcmc_object.seed
-#             self.mcmc_object.nchains = self.mcmc_object.seed.shape[0]
-#             self.mcmc_object.run(nsamples=2)
-#             x_mcmc[k] = self.mcmc_object.samples[0, :]
-#
-#             # Decide whether a new simulation is needed for the proposed state
-#             if np.array_equal(np.atleast_2d(x_mcmc[k]), self.mcmc_object.seed) is False:
-#                 x_run.append(x_mcmc[k])
-#             else:
-#                 self.samples[step][(i + 1) * n_keep + j] = x_mcmc[k]
-#                 self.g[step][(i + 1) * n_keep + j] = self.g[step][i * n_keep + j]
-#
-#             k += 1
-#
-#         ind = np.where(self.g[step][(i + 1) * n_keep:(i + 2) * n_keep, 0] == 0)[0]
-#         if np.size(ind) == 0:
-#             break
-#
-#         # Run the model for the new states.
-#         self.runmodel_object.run(samples=x_run)
-#
-#         # Temporarily save the latest model runs
-#         g_temp = np.asarray(self.runmodel_object.qoi_list[-len(x_run):])
-#
-#         # Accept the states with g < g_level
-#         ind_accept = np.where(g_temp[:, 0] <= self.g_level[step - 1])[0]
-#         for ii in ind_accept:
-#             self.samples[step][(i + 1) * n_keep + ind[ii]] = x_mcmc[ind[ii]]
-#             self.g[step][(i + 1) * n_keep + ind[ii]] = g_temp[ii]
-#
-#         ind_reject = np.where(g_temp[:, 0] > self.g_level[step - 1])[0]
-#         for ii in ind_reject:
-#             self.samples[step][(i + 1) * n_keep + ind[ii]] = self.samples[step][i * n_keep + ind[ii]]
-#             self.g[step][(i + 1) * n_keep + ind[ii]] = self.g[step][i * n_keep + ind[ii]]
-#
-#     if self.verbose:
-#         print('UQpy: Subset Simulation, conditional level ' + step + 'complete.')
-#
-#     g_ind = np.argsort(self.g[step][:, 0])
-#     self.g_level.append(self.g[step][g_ind[n_keep]])
-#
-#     # Estimate coefficient of variation of conditional probability of first level
-#     d1, d2 = self._cov_sus(step)
-#     self.d12.append(d1 ** 2)
-#     self.d22.append(d2 ** 2)
-#
-# n_fail = len([value for value in self.g[step] if value < 0])
-#
-# pf = self.p_cond ** step * n_fail / self.nsamples_per_ss
-# cov1 = np.sqrt(np.sum(self.d12))
-# cov2 = np.sqrt(np.sum(self.d22))
-#
-# return pf, cov1, cov2
-
-# def run_subsim_stretch(self):
-
-
-# Generate the initial samples - Level 0
-# if self.samples_init is None:
-#     x_init = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-#                   pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
-#                   log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
-#                   pdf_target_copula=self.pdf_target_copula,
-#                   pdf_target_copula_params=self.pdf_target_copula_params,
-#                   pdf_target_type=self.pdf_target_type,
-#                   algorithm='MMH', jump=self.jump, nsamples=self.nsamples_per_ss, seed=self.seed,
-#                   nburn=self.nburn, verbose=self.verbose)
-#     self.samples.append(x_init.samples)
-# else:
-#     self.samples.append(self.samples_init)
-
-# g_init = RunModel(samples=self.samples[step], model_script=self.model_script,
-#                   model_object_name=self.model_object_name,
-#                   input_template=self.input_template, var_names=self.var_names,
-#                   output_script=self.output_script,
-#                   output_object_name=self.output_object_name,
-#                   ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes, resume=self.resume,
-#                   verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
-
-# self.g.append(np.asarray(g_init.qoi_list))
-# g_ind = np.argsort(self.g[step])
-# self.g_level.append(self.g[step][g_ind[n_keep]])
-
-# Estimate coefficient of variation of conditional probability of first level
-# d1, d2 = self._cov_sus(step)
-# self.d12.append(d1 ** 2)
-# self.d22.append(d2 ** 2)
-
-# while self.g_level[step] > 0:
-#
-#     step = step + 1
-#     self.samples.append(self.samples[step - 1][g_ind[0:n_keep]])
-#     self.g.append(self.g[step - 1][g_ind[:n_keep]])
-#
-#     for i in range(self.nsamples_per_ss- n_keep):
-#
-#         x0 = self.samples[step][i:i+n_keep]
-#
-#         x_mcmc = MCMC(dimension=self.dimension, pdf_proposal_type=self.pdf_proposal_type,
-#                       pdf_proposal_scale=self.pdf_proposal_scale, pdf_target=self.pdf_target,
-#                       log_pdf_target=self.log_pdf_target, pdf_target_params=self.pdf_target_params,
-#                       pdf_target_copula=self.pdf_target_copula,
-#                       pdf_target_copula_params=self.pdf_target_copula_params,
-#                       pdf_target_type=self.pdf_target_type,
-#                       algorithm= self.algorithm, jump=self.jump, nsamples=n_keep+1, seed=x0,
-#                       nburn=self.nburn, verbose=self.verbose)
-#
-#         x_temp = x_mcmc.samples[n_keep].reshape((1, self.dimension))
-#         g_model = RunModel(samples=x_temp, model_script=self.model_script,
-#                            model_object_name=self.model_object_name,
-#                            input_template=self.input_template, var_names=self.var_names,
-#                            output_script=self.output_script,
-#                            output_object_name=self.output_object_name,
-#                            ntasks=self.n_tasks, cores_per_task=self.cores_per_task, nodes=self.nodes,
-#                            resume=self.resume,
-#                            verbose=self.verbose, model_dir=self.model_dir, cluster=self.cluster)
-#
-#         g_temp = g_model.qoi_list
-#
-#         # Accept or reject the sample
-#         if g_temp < self.g_level[step - 1]:
-#             self.samples[step] = np.vstack((self.samples[step], x_temp))
-#             self.g[step] = np.hstack((self.g[step], g_temp[0]))
-#         else:
-#             self.samples[step] = np.vstack((self.samples[step], self.samples[step][i]))
-#             self.g[step] = np.hstack((self.g[step], self.g[step][i]))
-#
-#     g_ind = np.argsort(self.g[step])
-#     self.g_level.append(self.g[step][g_ind[n_keep]])
-#     d1, d2 = self._cov_sus(step)
-#     self.d12.append(d1 ** 2)
-#     self.d22.append(d2 ** 2)
-#
-# n_fail = len([value for value in self.g[step] if value < 0])
-# pf = self.p_cond ** step * n_fail / self.nsamples_per_ss
-# cov1 = np.sqrt(np.sum(self.d12))
-# cov2 = np.sqrt(np.sum(self.d22))
-#
-# return pf, cov1, cov2
-
-
-# -------------------
-# Incomplete Code
-
-# # Set default dimension to 1
-# if self.dimension is None:
-#     self.dimension = 1
-#
-#
-#
-# # Check that the MCMC algorithm is properly defined.
-# if self.algorithm is None:
-#     self.algorithm = 'MMH'
-# elif self.algorithm not in ['Stretch', 'MMH']:
-#     raise NotImplementedError('Invalid MCMC algorithm. Select from: MMH, Stretch')
-
-
-# -------------------
-
-# def _corr_factor_beta(self, indicator, n_s, n_c, p_cond):
-#
-#     beta = np.zeros(n_s - 1)
-#     r_jn = np.zeros(n_s)
-#     I = indicator * 1
-#
-#     for i in range(n_s):
-#         Rx = I[0:n_s-i, :].T @ I[i:, :]
-#         # np.fill_diagonal(Rx, 0)
-#         r_jn[i] = np.sum(Rx) / ((n_c * (n_c)) * (n_s - i)) - p_cond ** 2
-#         # r_jn[i] = np.sum(Rx) / ((n_c * n_c) * (n_s - i)) - p_cond ** 2
-#     r0 = p_cond * (1 - p_cond)
-#     r_jn = r_jn / r0
-#
-#     for k in range(n_s - 1):
-#         beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * r_jn[0]
-#
-#     beta = 2 * (n_c - 1) * np.sum(beta)
-#
-#     return beta, r_jn[0]
-
-
-# def _corr_factor_beta(self, g, n_s, n_c, p_cond):
-#
-#     beta = np.zeros(n_s - 1)
-#     r_jn = np.zeros(n_s)
-#     I = g
-#
-#     for i in range(n_s):
-#         Rx = I[0:n_s-i, :].T @ I[i:, :]
-#         np.fill_diagonal(Rx, 0)
-#         r_jn[i] = np.sum(Rx) / ((n_c * (n_c-1)) * (n_s - i)) - np.mean(g) ** 2
-#         print(r_jn)
-#         # r_jn[i] = np.sum(Rx) / ((n_c * n_c) * (n_s - i)) - p_cond ** 2
-#     r0 = np.var(g)
-#     r_jn = r_jn / r0
-#
-#     for k in range(n_s - 1):
-#         beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * r_jn[0]
-#
-#     beta = 2 * (n_c - 1) * np.sum(beta)
-#
-#     return beta, r_jn[0]
-
-
-# Version where cross-correlations are computed from g
-# def _corr_factor_beta(self, g, n_s, n_c, p_cond):
-#
-#     beta = np.zeros(n_s - 1)
-#     r_jn = np.zeros(n_s )
-#     # n = n_c * n_s
-#     # factor = scipy.misc.comb(n_c,2)
-#
-#     # sums = 0
-#     # for j in range(n_c):
-#     #     for n_ in range(n_c):
-#     #         for l in range(n_s):
-#     #             if n_ != j:
-#     #                 sums = sums + (indicator[l, n_] * indicator[l, j])
-#     # I = indicator*1
-#     # R1 =  np.dot(np.transpose(I), I)/10 - p_cond**2
-#
-#     mu_g = np.mean(g)
-#     R = np.dot(g, g.T)/n_c - mu_g**2
-#     for i in range(R.shape[0]):
-#         r_jn[i] = np.sum(np.diag(R,i))/(R.shape[0]-i)
-#     # R0 = p_cond*(1-p_cond)
-#     R0 = np.var(g)
-#     r_jn = r_jn/R0
-#     # s1 = np.sum(np.dot(np.transpose(I), I))
-#     # s2 = np.sum(np.dot(np.transpose(I), I)) - np.sum(np.diag(np.dot(np.transpose(I), I)))
-#     # np.mean(R1)
-#
-#     # r_jn0 = (1 / n) * sums - self.p_cond ** 2
-#     # r_jn0 = 1 / (factor - n_c) * (1 / (n / n_c)) * sums - self.p_cond ** 2
-#
-#     for k in range(n_s - 1):
-#         # z = 0
-#         # for j in range(n_c):
-#         #     for n_ in range(n_c - k):
-#         #         for l in range(n_s - k - 1):
-#         #             if n_ != j:
-#         #                 z = z + (indicator[l, j] * indicator[l + k + 1, n_])
-#         #
-#         # r_jn[k] = 1 / (factor - n_c) * (1 / (n - (k + 1) * n_c)) * z - self.p_cond ** 2
-#         beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k])*R0
-#
-#     beta = 2 * (n_c - 1) * np.sum(beta)
-#     # beta = 2 * np.sum(beta)
-#
-#     return beta, r_jn[0]
-
-# Version where cross-correlations are computed just from indicator
-# def _corr_factor_beta(self, indicator, n_s, n_c, p_cond):
-#
-#         beta = np.zeros(n_s - 1)
-#         r_jn = np.zeros(n_s)
-#         # n = n_c * n_s
-#         # factor = scipy.misc.comb(n_c,2)
-#
-#         # sums = 0
-#         # for j in range(n_c):
-#         #     for n_ in range(n_c):
-#         #         for l in range(n_s):
-#         #             if n_ != j:
-#         #                 sums = sums + (indicator[l, n_] * indicator[l, j])
-#         I = indicator * 1
-#         # R1 =  np.dot(np.transpose(I), I)/10 - p_cond**2
-#
-#         R = np.dot(I, np.transpose(I)) / n_c - p_cond ** 2
-#         for i in range(R.shape[0]):
-#             r_jn[i] = np.sum(np.diag(R, i)) / (R.shape[0] - i)
-#         R0 = p_cond * (1 - p_cond)
-#         r_jn = r_jn / R0
-#         # s1 = np.sum(np.dot(np.transpose(I), I))
-#         # s2 = np.sum(np.dot(np.transpose(I), I)) - np.sum(np.diag(np.dot(np.transpose(I), I)))
-#         # np.mean(R1)
-#
-#         # r_jn0 = (1 / n) * sums - self.p_cond ** 2
-#         # r_jn0 = 1 / (factor - n_c) * (1 / (n / n_c)) * sums - self.p_cond ** 2
-#
-#         for k in range(n_s - 1):
-#             # z = 0
-#             # for j in range(n_c):
-#             #     for n_ in range(n_c - k):
-#             #         for l in range(n_s - k - 1):
-#             #             if n_ != j:
-#             #                 z = z + (indicator[l, j] * indicator[l + k + 1, n_])
-#             #
-#             # r_jn[k] = 1 / (factor - n_c) * (1 / (n - (k + 1) * n_c)) * z - self.p_cond ** 2
-#             beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * R0
-#
-#         beta = 2 * (n_c - 1) * np.sum(beta)
-#         # beta = 2 * np.sum(beta)
-#
-#         # r_jn[0] = 0.
-#         return beta, r_jn[0]
-
-# for i in range(u.size):
-#     ii = indicator[:, g[0, :] == u[i]]
-#     r_jn = r_jn + ii.shape[1]*(ii.shape[1]-1)/2
-#
-# beta = 0
-
-# total = 0
-# r_jn = 0
-# if U.size < n_c:
-#     for i in range(U.size):
-#         I = indicator[:, g[0, :] == U[i]]
-#         I = I * 1
-#
-#         r_temp = I.T @ I
-#         r0 = np.sum(r_temp) / (((r_temp.shape[0] * r_temp.shape[0])) * n_s) - p_cond ** 2
-#         r0 = r0 * r_temp.shape[0] * (r_temp.shape[0] - 1) / 2
-#         r0 = r0
-#         r_jn = r_jn + r0
-#         # r = r_temp / (I.shape[1] * (I.shape[1]-1))
-#         total = total + I.shape[1]
-#
-#     r_jn = r_jn / total
-#     print(r_jn)
-#
-# # for i in range(n_c):
-#
-#
-# beta = np.zeros(n_s - 1)
-# r_jn = np.zeros(n_s)
-# I = g
-#
-# for i in range(n_s):
-#     Rx = I[0:n_s-i, :].T @ I[i:, :]
-#     np.fill_diagonal(Rx, 0)
-#     r_jn[i] = np.sum(Rx) / ((n_c * (n_c-1)) * (n_s - i)) - np.mean(g) ** 2
-#     print(r_jn)
-#     # r_jn[i] = np.sum(Rx) / ((n_c * n_c) * (n_s - i)) - p_cond ** 2
-# r0 = np.var(g)
-# r_jn = r_jn / r0
-#
-# for k in range(n_s - 1):
-#     beta[k] = (1 - ((k + 1) / n_s)) * (r_jn[k]) * r_jn[0]
-#
-# beta = 2 * (n_c - 1) * np.sum(beta)
-
-# def _cov_sus(self, step):
-#     n = self.g[step].size
-#     if step == 0:
-#         di = np.sqrt((1 - self.p_cond) / (self.p_cond * n))
-#     else:
-#         nc = int(self.p_cond * n)
-#         r_zero = self.p_cond * (1 - self.p_cond)
-#         index = np.zeros(n)
-#         index[np.where(self.g[step] < self.g_level[step])] = 1
-#         indices = np.zeros(shape=(int(n / nc), nc)).astype(int)
-#         for i in range(int(n / nc)):
-#             for j in range(nc):
-#                 if i == 0:
-#                     indices[i, j] = j
-#                 else:
-#                     indices[i, j] = indices[i - 1, j] + nc
-#         gamma = 0
-#         rho = np.zeros(int(n / nc) - 1)
-#         for k in range(int(n / nc) - 1):
-#             z = 0
-#             for j in range(int(nc)):
-#                 for l in range(int(n / nc) - k):
-#                     z = z + index[indices[l, j]] * index[indices[l + k, j]]
-#
-#             rho[k] = (1 / (n - k * nc) * z - self.p_cond ** 2) / r_zero
-#             gamma = gamma + 2 * (1 - k * nc / n) * rho[k]
-#
-#         di = np.sqrt((1 - self.p_cond) / (self.p_cond * n) * (1 + gamma))
-#
-#     return di
 ########################################################################################################################
 ########################################################################################################################
 #                                        First/Second order reliability method
 ########################################################################################################################
 class TaylorSeries:
     """
-    Perform First and Second Order Reliability (FORM/SORM) methods ([1]_, [2]_).
+    Perform First and Second Order Reliability (FORM/SORM) methods.
 
     This is the parent class to all Taylor series expansion algorithms.
-
-    **References:**
-
-    .. [1] R. Rackwitz and R. Fiessler, “Structural reliability under combined random load sequences”,
-       Structural Safety, Vol. 22, no. 1, pp: 27–60, 1978.
-    .. [2] K. Breitung, “Asymptotic approximations for multinormal integrals”, J. Eng. Mech., ASCE, Vol. 110, no. 3,
-       pp: 357–367, 1984.
 
     **Inputs:**
 
     * **dist_object** ((list of ) ``Distribution`` object(s)):
-                     Probability distribution of each random variable. Must be an object of type
-                     ``DistributionContinuous1D`` or ``JointInd``.
+        Marginal probability distributions of each random variable. Must be an object of type
+        ``DistributionContinuous1D`` or ``JointInd``.
 
-    * **runmodel_object** (``RunModel`` object or a `callable` ):
-         The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.
+    * **runmodel_object** (``RunModel`` object):
+        The computational model. It should be of type `RunModel` (see ``RunModel`` class).
 
-    * **seed** (`ndarray`):
-         The initial starting point for the `Hasofer-Lind` algorithm. If provided, it should be a point in the parameter
-         space **X**. Otherwise, the algorithm starts from point :math:`(0, 0, \ldots, 0)` in the uncorrelated
-         standard normal space **U**.
+    * **seed_u** or **seed_x** (`ndarray`):
+        The initial starting point for the `Hasofer-Lind` algorithm.
 
-         Default: :math:`(0, 0, \ldots, 0)`
+        If `seed_u` is provided, it should be a point in the standard normal space of **U**.
 
-    * **cov** (`ndarray`):
-         The distorted correlation  structure (:math:`\mathbf{C_z}`) of the standard normal random vector **Z**. If the
-         correlation structure in the parameter space is given (:math:`\mathbf{C_x}`)  then the method
-         ``distortion_x_to_z`` from the ``Forward`` class in the ``Nataf`` class should be used  before running FORM to
-         obtain :math:`\mathbf{C_z}`.
+        If `seed_x` is provided, it should be a point in the parameter space of **X**.
 
-         Default: The ``identity`` matrix.
+        Default: `seed_u = (0, 0, \ldots, 0)`
 
-    * **cov** (`ndarray`):
-         The correlation  structure (:math:`\mathbf{C_X}`) of the random vector **X** .
+    * **corr_u** or **corr_x** (`ndarray`):
+        Covariance matrix
 
-         Default: The ``identity`` matrix.
+        If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
+
+        If `corr_u` is provided, it is the correlation matrix (:math:`\mathbf{C_U}`) of the standard normal random
+        vector **U** .
+
+         Default: `cov_u` is specified as the identity matrix.
 
     * **tol** (`float`):
-         Convergence threshold for the `Hasofer-Lind` algorithm.
+         Convergence threshold for the `HLRF` algorithm.
 
          Default: 0.001
 
     * **n_iter** (`int`):
-         Maximum number of iterations for the `Hasofer-Lind` algorithm.
+         Maximum number of iterations for the `HLRF` algorithm.
 
          Default: 100
 
     """
 
-    def __init__(self, dist_object, runmodel_object):
+    def __init__(self, dist_object, runmodel_object, seed, cov, n_iter, tol):
 
         if isinstance(dist_object, list):
             for i in range(len(dist_object)):
@@ -1115,71 +552,6 @@ class TaylorSeries:
         if not isinstance(runmodel_object, RunModel):
             raise ValueError('UQpy: A RunModel object is required for the model.')
 
-
-class FORM(TaylorSeries):
-    """
-    A class perform the First Order reliability method. This is a an child class of the ``TaylorSeries`` class.
-
-    **Inputs:**
-
-    The same as ``TaylorSeries`` class.
-
-    **Attributes:**
-
-    * **Prob_FORM** (`float`):
-         First Order probability of failure.
-
-    * **HL_beta** (`float`):
-         Hasofer-Lind reliability index.
-
-    * **DesignPoint_U** (`ndarray`):
-        Design point in the uncorrelated standard normal space **U**.
-
-    * **DesignPoint_X** (`ndarray`):
-        Design point in the parameter space **X**.
-
-    * **alpha** (`ndarray`):
-         Direction cosine.
-
-    * **iterations** (`int`):
-         Number of model evaluations.
-
-    * **u_record** (`list`):
-         Record of all iteration points in the standard normal space **U**.
-
-    * **x_record** (`list`):
-         Record of all iteration points in the parameter space **X**.
-
-    * **dg_record** (`list`):
-         Record of the model's gradient.
-
-    * **alpha_record** (`list`):
-         Record of the alpha (directional cosine).
-
-    * **u_check** (`list`):
-         Record of the `u` checks in the standard normal space **U**.
-
-    * **g_check** (`list`):
-        Record of the model checks.
-
-    * **g_record** (`list`):
-        Record of the performance function.
-
-     **Methods:**
-
-     """
-
-    def __init__(self, dist_object, runmodel_object, seed=None, cov=None, n_iter=100,  tol=1e-3):
-
-        super().__init__(dist_object, runmodel_object)
-
-        if cov is None:
-            if isinstance(dist_object, list):
-                cov = np.eye(len(dist_object))
-            elif isinstance(dist_object, DistributionContinuous1D):
-                cov = np.eye(1)
-            elif isinstance(dist_object, JointInd):
-                cov = np.eye(len(dist_object.marginals))
         self.cov = cov
         self.dimension = self.cov.shape[0]
 
@@ -1188,6 +560,68 @@ class FORM(TaylorSeries):
         self.runmodel_object = runmodel_object
         self.tol = tol
         self.seed = seed
+
+
+class FORM(TaylorSeries):
+    """
+    A class perform the First Order Reliability Method.
+
+    This is a child class of the ``TaylorSeries`` class.
+
+    **Inputs:**
+
+    See ``TaylorSeries`` class.
+
+    **Attributes:**
+
+    * **Pf_form** (`float`):
+        First-order probability of failure estimate.
+
+    * **HL_beta** (`float`):
+        Hasofer-Lind reliability index.
+
+    * **DesignPoint_U** (`ndarray`):
+        Design point in the uncorrelated standard normal space **U**.
+
+    * **DesignPoint_X** (`ndarray`):
+        Design point in the parameter space **X**.
+
+    * **alpha** (`ndarray`):
+        Direction cosine.
+
+    * **iterations** (`int`):
+        Number of model evaluations.
+
+    * **u_record** (`list`):
+        Record of all iteration points in the standard normal space **U**.
+
+    * **x_record** (`list`):
+        Record of all iteration points in the parameter space **X**.
+
+    * **dg_record** (`list`):
+        Record of the model's gradient.
+
+    * **alpha_record** (`list`):
+        Record of the alpha (directional cosine).
+
+    * **g_record** (`list`):
+        Record of the performance function.
+
+    **Methods:**
+
+     """
+
+    def __init__(self, dist_object, runmodel_object, seed=None, cov=None, n_iter=100,  tol=1e-3):
+
+        super().__init__(dist_object, runmodel_object, seed, cov, n_iter, tol)
+
+        if cov is None:
+            if isinstance(dist_object, list):
+                cov = np.eye(len(dist_object))
+            elif isinstance(dist_object, DistributionContinuous1D):
+                cov = np.eye(1)
+            elif isinstance(dist_object, JointInd):
+                cov = np.eye(len(dist_object.marginals))
 
         # Initialize output
         self.HL_beta = None
@@ -1293,50 +727,53 @@ class FORM(TaylorSeries):
             self.g_check = g_check
 
     @staticmethod
-    def gradient(dist_object, point, runmodel_object, order='first', cov=None, df_step=0.001, **kwargs):
+    def gradient(dist_object, point, runmodel_object, order='first', cov=None, df_step=0.001, point_qoi=None):
         """
-        A method to estimate the gradients (1st, 2nd, mixed) of a function using a finite difference scheme in the
-        standard normal space. First order gradients are calculated using central finite differences. This is a static
-        method, part of the ``Form`` class.
+        A method to estimate the derivatives (1st-order, 2nd-order, mixed) of a function using a central difference
+        scheme after transformation to the standard normal space.
+
+        This is a static method of the ``FORM`` class.
 
         **Inputs:**
 
         * **dist_object** ((list of ) ``Distribution`` object(s)):
-                Probability distribution of each random variable. Must be an object of type
-                ``DistributionContinuous1D`` or ``JointInd``.
+            Marginal probability distribution of each random variable. Must be an object of type
+            ``DistributionContinuous1D`` or ``JointInd``.
 
-        * **runmodel_object** (``RunModel`` object or a `callable` ):
-            The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.
+        * **runmodel_object** (``RunModel`` object):
+            The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
 
-        * **cov** (`ndarray`):
-            The correlation  structure (:math:`\mathbf{C_X}`) of the random vector **X** (optional).
+        * **corr_u** (`ndarray`):
+            Correlation matrix of the standard normal random vector :math:`\mathbf{C_U}`).
 
-        * **point** (`ndarray`):
-            The point to evaluate the gradient with shape ``samples.shape=(1, dimension)
+        * **point_u** (`ndarray`):
+            Point in the uncorrelated standard normal space at which to evaluate the gradient with shape
+            `samples.shape=(1, dimension)`
+
+        * **point_qoi** (`float`):
+            Value of the model evaluated at point_u. Used only for second derivatives.
 
         * **order** (`str`):
-            Order of the gradient. Available options: 'first', 'second', 'mixed'.
+            Order of the derivative. Available options: 'first', 'second', 'mixed'.
 
-            Default: 'First'.
+            Default: 'first'.
 
         * **df_step** (`float`):
             Finite difference step.
 
             Default: 0.001.
 
-        * **read_qoi** (`float`):
-            Value of the model provided manually.
 
         **Output/Returns:**
 
         * **du_dj** (`ndarray`):
-            Vector of first-order gradients (if order = 'first').
+            Vector of first-order derivatives (if order = 'first').
 
         * **d2u_dj** (`ndarray`):
-            Vector of second-order gradients (if order = 'second').
+            Vector of second-order derivatives (if order = 'second').
 
         * **d2u_dij** (`ndarray`):
-            Vector of mixed gradients (if order = 'mixed').
+            Vector of mixed derivatives (if order = 'mixed').
 
         """
 
@@ -1474,27 +911,30 @@ class FORM(TaylorSeries):
 
 class SORM(TaylorSeries):
     """
-    A class perform the Second Order reliability method. ``Sorm`` class performs  FORM and then corrects the estimated
-    FORM probability using second-order information. This is a an child class of the ``TaylorSeries`` class.
+    A class to perform the Second Order Reliability Method.
+
+    ``SORM`` class first performs FORM and then corrects the estimated FORM probability using second-order information.
+
+    ``SORM`` is a child class of the ``TaylorSeries`` class.
 
     **Inputs:**
 
-    The ``Sorm`` class has the same inputs with the ``TaylorSeries`` class.
+    The ``SORM`` class has the same inputs as the ``TaylorSeries`` class.
 
     **Output/Returns:**
 
-    The ``Sorm`` class has the same outputs with the ``Form`` class plus
+    The ``SORM`` class has the same outputs as the ``FORM`` class plus
 
-    * **Prob_FORM** (`float`):
-        Second Order probability of failure.
+    * **Pf_sorm** (`float`):
+        Second-order probability of failure estimate.
 
-     **Methods:**
+    **Methods:**
 
     """
 
     def __init__(self, dist_object, runmodel_object, seed=None, cov=None, n_iter=100, tol=1e-3):
 
-        super().__init__(dist_object, runmodel_object)
+        super().__init__(dist_object, runmodel_object, seed, cov, n_iter, tol)
 
         obj = FORM(dist_object=dist_object, seed=seed, runmodel_object=runmodel_object, cov=cov, n_iter=n_iter, tol=tol)
         self.dimension = obj.dimension
@@ -1545,20 +985,26 @@ class SORM(TaylorSeries):
         **Inputs:**
 
         * **dist_object** ((list of ) ``Distribution`` object(s)):
-                Probability distribution of each random variable. Must be an object of type
-                ``DistributionContinuous1D`` or ``JointInd``.
+            Marginal probability distribution of each random variable. Must be an object of type
+            ``DistributionContinuous1D`` or ``JointInd``.
 
-        * **runmodel_object** (Object or a `callable` ):
-            The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.
+        * **runmodel_object** (``RunModel`` object):
+            The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
 
-        * **cov** (`ndarray`):
-            The correlation  structure (:math:`\mathbf{C_X}`) of the random vector **X** (optional).
+        * **corr_u** (`ndarray`):
+            Correlation matrix of the standard normal random vector :math:`\mathbf{C_U}`).
 
-        * **point** (`ndarray`):
-            The point to evaluate the gradient with shape ``samples.shape=(1, dimension)
+        * **point_u** (`ndarray`):
+            Point in the uncorrelated standard normal space at which to evaluate the gradient with shape
+            `samples.shape=(1, dimension)`
 
-        * **read_qoi** (`float`):
-            Value of the model provided manually..
+        * **point_qoi** (`float`):
+            Value of the model evaluated at point_u. Used only for second derivatives.
+
+        * **order** (`str`):
+            Order of the derivative. Available options: 'first', 'second', 'mixed'.
+
+            Default: 'first'.
 
         * **df_step** (`float`):
             Finite difference step.
@@ -1568,7 +1014,7 @@ class SORM(TaylorSeries):
         **Output/Returns:**
 
         * **hessian** (`ndarray`):
-            The hessian matrix.
+            The Hessian matrix.
 
         """
         point = np.atleast_2d(point)
