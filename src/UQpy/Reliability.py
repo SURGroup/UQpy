@@ -1102,7 +1102,7 @@ class TaylorSeries:
 
     """
 
-    def __init__(self, dist_object, model, cov=None, n_iter=100,  tol=1e-3):
+    def __init__(self, dist_object, runmodel_object):
 
         if isinstance(dist_object, list):
             for i in range(len(dist_object)):
@@ -1112,7 +1112,7 @@ class TaylorSeries:
             if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
                 raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
 
-        if not isinstance(model, RunModel):
+        if not isinstance(runmodel_object, RunModel):
             raise ValueError('UQpy: A RunModel object is required for the model.')
 
 
@@ -1171,7 +1171,7 @@ class FORM(TaylorSeries):
 
     def __init__(self, dist_object, runmodel_object, seed=None, cov=None, n_iter=100,  tol=1e-3):
 
-        super().__init__(dist_object, runmodel_object, cov=None, n_iter=100,  tol=1e-3)
+        super().__init__(dist_object, runmodel_object)
 
         if cov is None:
             if isinstance(dist_object, list):
@@ -1246,7 +1246,7 @@ class FORM(TaylorSeries):
             dg = self.gradient(order='first', point=u,  runmodel_object=self.runmodel_object, cov=self.cov,
                                dist_object=self.dist_object)
 
-            # dg_record.append(np.dot(dg[0, :], jacobi_x_to_u)) # use this if the input in gradient function is x
+            # dg_record.append(np.dot(dg[0, :], Jxu))# use this if the input in gradient function is x
             dg_record.append(dg[0, :])
             norm_grad = np.linalg.norm(dg_record[k])
             self.alpha = - dg_record[k] / norm_grad
@@ -1494,7 +1494,7 @@ class SORM(TaylorSeries):
 
     def __init__(self, dist_object, runmodel_object, seed=None, cov=None, n_iter=100, tol=1e-3):
 
-        super().__init__(dist_object, runmodel_object, cov=None, n_iter=100, tol=1e-3)
+        super().__init__(dist_object, runmodel_object)
 
         obj = FORM(dist_object=dist_object, seed=seed, runmodel_object=runmodel_object, cov=cov, n_iter=n_iter, tol=tol)
         self.dimension = obj.dimension
