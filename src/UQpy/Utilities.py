@@ -242,7 +242,7 @@ def correlation_distortion(marginal, rho_norm):
     print('UQpy: Done.')
     return rho
 
-
+# TODO: rename itam_correlation
 def itam(marginal, corr, beta, thresh1, thresh2):
 
     """
@@ -530,7 +530,7 @@ def estimate_psd(samples, nt, t):
 
     return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
 
-
+# TODO: push them to UQpy.StochasticProcesses (static methods); renamed as Weiner Khintchine transform
 def S_to_R(S, w, t):
 
     """
@@ -1007,8 +1007,9 @@ def nn_coord(x, k):
     #idx = idx[k+1:]
     return idx
 
-
-def solve_single_integral(self, distribution, rho):
+# TODO: rename function to correlation distortion
+# TODO: put doc_string around this
+def solve_single_integral(dist_object, rho):
     if rho == 1.0:
         rho = 0.999
     n = 1024
@@ -1028,10 +1029,10 @@ def solve_single_integral(self, distribution, rho):
 
     weights2d = first * second
     w2d = weights2d.flatten()
-    tmp_f_xi = distribution.icdf(stats.norm.cdf(xi[:, np.newaxis]))
-    tmp_f_eta = distribution.icdf(stats.norm.cdf(eta[:, np.newaxis]))
-    coef = tmp_f_xi[:, 0] * tmp_f_eta[:, 0] * w2d
+    tmp_f_xi = dist_object.icdf(stats.norm.cdf(xi[:, np.newaxis]))
+    tmp_f_eta = dist_object.icdf(stats.norm.cdf(eta[:, np.newaxis]))
+    coef = tmp_f_xi * tmp_f_eta * w2d
     rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
-    rho_non = (rho_non - distribution.moments()[0] ** 2) / distribution.moments()[1]
+    rho_non = (rho_non - dist_object.moments(moments2return='m') ** 2) / dist_object.moments(moments2return='v')
     return rho_non
 

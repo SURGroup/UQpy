@@ -9,67 +9,100 @@ import itertools
 
 class SRM:
     """
-    A class to simulate Stochastic Processes from a given power spectrum density based on the Spectral Representation
-    Method. This class can simulate both uni-variate and multi-variate multi-dimensional Stochastic Processes. Uses
-    Singular Value Decomposition as opposed to Cholesky Decomposition to be more robust with near-Positive Definite
-    multi-dimensional Power Spectra.
+    Perform Monte Carlo sampling (MCS) of random variables.
 
     **Input:**
-    
-    :param nsamples: Number of Stochastic Processes to be generated
-    :type nsamples: int
 
-    :param power_spectrum: Power spectrum to be used for generating the samples
-    :type power_spectrum: numpy.ndarray
+    * **nsamples** (`int`):
+        Number of samples to be generated from power spectrum.
 
-    :param frequency_length: List of frequency discretizations across dimensions
-    :type frequency_length: list
+        The ``run`` method is automatically called if `nsamples` is provided. If `nsamples` is not provided, then the
+        ``SRM`` object is created but samples are not generated.
 
-    :param number_time_intervals: List of number of time discretizations across dimensions
-    :type number_time_intervals: list
+    * **power_spectrum** (`numpy.ndarray`):
+        The prescribed power spectrum.
 
-    :param number_frequency_intervals: List of number of frequency discretizations across dimensions
-    :type number_frequency_intervals: list
+    * **time_duration** (`list or numpy.ndarray`):
+        List of time discretizations across dimensions.
 
-    :param case: Uni-variate or Multivariate options.
-                    1. 'uni' - Uni-variate
-                    2. 'multi' - Multi-variate
-    :type case: str
+        The length of the list needs to be the same as the number of dimensions.
+
+    * **frequency_interval** (`list or numpy.ndarray`):
+        List of frequency discretizations across dimensions.
+
+        The length of the list needs to be the same as the number opf dimensions.
+
+    * **dist_object** ((list of) ``Distribution`` object(s)):
+        Probability distribution of each random variable. Must be an object (or a list of objects) of the
+        ``Distribution`` class.
+
+
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
+
+    * **verbose** (Boolean):
+        A boolean declaring whether to write text to the terminal.
+
 
     **Attributes:**
 
-    :param self.phi: Random Phase angles used in the simulation
-    :type: self.phi: ndarray
+    * **samples** (`ndarray` or `list`):
+        Generated samples.
 
-    :param self.number_of_dimensions: Dimension of the Stochastic process
-    :type: self.number_of_dimensions: int
+        If a list of ``DistributionContinuous1D`` objects is provided for ``dist_object``, then `samples` is an
+        `ndarray` with ``samples.shape=(nsamples, len(dist_object))``.
 
-    :param self.number_of_variables: Number of variables in the Stochastic process
-    :type: self.number_of_variables: int
+        If a ``DistributionContinuous1D`` object is provided for ``dist_object`` then `samples` is an array with
+        `samples.shape=(nsamples, 1)``.
 
-    :param: samples: Generated Stochastic Process
-    :rtype: samples: numpy.ndarray
-    
-    **Author:**
+        If a ``DistributionContinuousND`` object is provided for ``dist_object`` then `samples` is an array with
+        ``samples.shape=(nsamples, ND)``.
 
-    Lohit Vandanapu
+        If a list of mixed ``DistributionContinuous1D`` and ``DistributionContinuousND`` objects is provided then
+        `samples` is a list with ``len(samples)=nsamples`` and ``len(samples[i]) = len(dist_object)``.
+
+    * **samplesU01** (`ndarray` (`list`)):
+        Generated samples transformed to the unit hypercube.
+
+        This attribute exists only if the ``transform_u01`` method is invoked by the user.
+
+
+    **Methods**
+
     """
 
-    # Created by Lohit Vandanapu
-    # Last Modified:04/08/2020 Lohit Vandanapu
-
-    def __init__(self, nsamples, power_spectrum, frequency_length, number_time_intervals, number_frequency_intervals,
-                 random_state=None, case='uni'):
+    def __init__(self, nsamples, power_spectrum, time_duration, frequency_length, number_time_intervals,
+                 number_frequency_intervals, case='uni', random_state=None, verbose=False):
         self.power_spectrum = power_spectrum
-        self.frequency_length = frequency_length
-        self.number_time_intervals = number_time_intervals
-        self.number_frequency_intervals = number_frequency_intervals
+        self.time_duration = np.array(time_duration)
+        self.frequency_length = np.array(frequency_length)
+        self.number_time_intervals = np.array(number_time_intervals)
+        self.number_frequency_intervals = np.array(number_frequency_intervals)
         self.nsamples = nsamples
-        if random_state:
-            np.random.seed(random_state)
+
+        # Error checks
+        t_u = 2 * np.pi / (2 * self.number_frequency_intervals * self.frequency_length)
+        if (self.time_duration > t_u).any():
+            raise RuntimeError('UQpy: Aliasing might occur during execution')
+
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
+        self.samples = None
         self.case = case
+
         if self.case == 'uni':
+            if verbose:
+                print('UQpy: Starting simulation of uni-variate Stochastic Processes.')
             self.number_of_dimensions = len(self.power_spectrum.shape)
+            if verbose:
+                print('UQpy: The number of dimensions is :.', self.number_of_dimensions)
             self.phi = np.random.uniform(
                 size=np.append(self.nsamples,
                                np.ones(self.number_of_dimensions,
@@ -84,6 +117,92 @@ class SRM:
                                    np.ones(self.number_of_dimensions, dtype=np.int32) * self.number_frequency_intervals,
                                    self.number_of_variables))) * 2 * np.pi
             self.samples = self._simulate_multi(self.phi)
+
+        # Run Spectral Representation Method
+        if self.nsamples is not None:
+            self.run(nsamples=self.nsamples, random_state=self.random_state)
+
+    def run(self, nsamples, random_state=None):
+        """
+        Execute the random sampling in the ``MCS`` class.
+
+        The ``run`` method is the function that performs random sampling in the ``MCS`` class. If `nsamples` is
+        provided, the ``run`` method is automatically called when the ``MCS`` object is defined. The user may also call
+        the ``run`` method directly to generate samples. The ``run`` method of the ``MCS`` class can be invoked many
+        times and each time the generated samples are appended to the existing samples.
+
+        ** Input:**
+
+        * **nsamples** (`int`):
+            Number of samples to be drawn from each distribution.
+
+            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+            existing samples.
+
+        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
+
+            If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+            object itself can be passed directly.
+
+        **Output/Returns:**
+
+        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``MCS``
+        class.
+
+        """
+        # Check if a random_state is provided.
+        if random_state is None:
+            random_state = self.random_state
+        else:
+            if isinstance(random_state, int):
+                random_state = np.random.RandomState(random_state)
+            elif not isinstance(random_state, (type(None), np.random.RandomState)):
+                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
+        if nsamples is None:
+            raise ValueError('UQpy: Number of samples must be defined.')
+        if not isinstance(nsamples, int):
+            raise ValueError('UQpy: nsamples should be an integer.')
+
+        if self.verbose:
+            print('UQpy: Running Monte Carlo Sampling.')
+
+        if isinstance(self.dist_object, list):
+            temp_samples = list()
+            for i in range(len(self.dist_object)):
+                if hasattr(self.dist_object[i], 'rvs'):
+                    temp_samples.append(self.dist_object[i].rvs(nsamples=nsamples, random_state=random_state))
+                else:
+                    ValueError('UQpy: rvs method is missing.')
+            self.x = list()
+            for j in range(nsamples):
+                y = list()
+                for k in range(len(self.dist_object)):
+                    y.append(temp_samples[k][j])
+                self.x.append(np.array(y))
+        else:
+            if hasattr(self.dist_object, 'rvs'):
+                temp_samples = self.dist_object.rvs(nsamples=nsamples, random_state=random_state)
+                self.x = temp_samples
+
+        if self.samples is None:
+            if isinstance(self.dist_object, list) and self.array is True:
+                self.samples = np.hstack(np.array(self.x)).T
+            else:
+                self.samples = np.array(self.x)
+        else:
+            # If self.samples already has existing samples, append the new samples to the existing attribute.
+            if isinstance(self.dist_object, list) and self.array is True:
+                self.samples = np.concatenate([self.samples, np.hstack(np.array(self.x)).T], axis=0)
+            elif isinstance(self.dist_object, Distribution):
+                self.samples = np.vstack([self.samples, self.x])
+            else:
+                self.samples = np.vstack([self.samples, self.x])
+        self.nsamples = len(self.samples)
+
+        if self.verbose:
+            print('UQpy: Monte Carlo Sampling Complete.')
 
     def _simulate_uni(self, phi):
         fourier_coefficient = np.exp(phi * 1.0j) * np.sqrt(
@@ -103,7 +222,8 @@ class SRM:
                                                       power_spectrum_decomposed, np.exp(phi * 1.0j))
         fourier_coefficient[np.isnan(fourier_coefficient)] = 0
         samples = np.real(
-            np.fft.fftn(fourier_coefficient, s=[self.number_time_intervals for _ in range(self.number_of_dimensions)],
+            np.fft.fftn(fourier_coefficient,
+                        s=[self.number_time_intervals[i] for i in range(self.number_of_dimensions)],
                         axes=tuple(np.arange(1, 1 + self.number_of_dimensions))))
         samples = np.einsum('number_of_dimensions...number_of_variables->nm...', samples)
         return samples
@@ -127,17 +247,17 @@ class BSRM:
     :param bispectrum: BiSpectral Density to be used for generating the samples
     :type bispectrum: numpy.ndarray
 
-    :param time_duration: Array of time discretizations across dimensions
-    :type time_duration: numpy.ndarray
+    :param time_duration: List of time discretizations across dimensions
+    :type time_duration: list or numpy.ndarray
 
-    :param frequency_length: Array of frequency discretizations across dimensions
-    :type frequency_length: numpy.ndarray
+    :param frequency_length: List of frequency discretizations across dimensions
+    :type frequency_length: list or numpy.ndarray
 
-    :param number_time_intervals: Array of number of time discretizations across dimensions
-    :type number_time_intervals: numpy.ndarray
+    :param number_time_intervals: List of number of time discretizations across dimensions
+    :type number_time_intervals: list or numpy.ndarray
 
-    :param number_frequency_intervals: Array of number of frequency discretizations across dimensions
-    :type number_frequency_intervals: numpy.ndarray
+    :param number_frequency_intervals: List of number of frequency discretizations across dimensions
+    :type number_frequency_intervals: list or numpy.ndarray
 
     **Attributes:**
 
@@ -191,14 +311,28 @@ class BSRM:
         self.number_of_dimensions = len(power_spectrum.shape)
         self.power_spectrum = power_spectrum
         self.bispectrum = bispectrum
-        if random_state: np.random.seed(random_state)
+
+        # Error checks
+        t_u = 2 * np.pi / (2 * self.number_frequency_intervals * self.frequency_length)
+        if (self.time_duration > t_u).any():
+            raise RuntimeError('UQpy: Aliasing might occur during execution')
+
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
+        # TODO: run methods as well
+        if random_state:
+            np.random.seed(random_state)
         self.b_ampl = np.absolute(bispectrum)
         self.b_real = np.real(bispectrum)
         self.b_imag = np.imag(bispectrum)
         self.biphase = np.arctan2(self.b_imag, self.b_real)
         self.biphase[np.isnan(self.biphase)] = 0
-        self.phi = np.random.uniform(size=np.append(self.nsamples, np.ones(self.number_of_dimensions,
-                                                                           dtype=np.int32) * self.number_frequency_intervals)) * 2 * np.pi
+        self.phi = np.random.uniform(size=np.append(self.nsamples, np.ones(self.number_of_dimensions, dtype=np.int32) *
+                                                    self.number_frequency_intervals)) * 2 * np.pi
         self._compute_bicoherence()
         self.samples = self._simulate_bsrm_uni()
 
@@ -225,23 +359,23 @@ class BSRM:
             self.PP[:, :, 0] = self.power_spectrum[:, :, 0]
             self.PP[:, 0, 1] = self.power_spectrum[:, :, 1]
 
-        self.ranges = [range(self.number_frequency_intervals) for _ in range(self.number_of_dimensions)]
+        self.ranges = [range(self.number_frequency_intervals[i]) for i in range(self.number_of_dimensions)]
 
         for i in itertools.product(*self.ranges):
             wk = np.array(i)
-            for j in itertools.product(*[range(k) for k in np.int32(np.ceil((wk + 1) / 2))]):
+            for j in itertools.product(*[range(k) for k in np.ceil((wk + 1) / 2, dtype=np.int32)]):
                 wj = np.array(j)
                 wi = wk - wj
                 if self.b_ampl[(*wi, *wj)] > 0 and self.PP[(*wi, *[])] * self.PP[(*wj, *[])] != 0:
                     self.Bc2[(*wi, *wj)] = self.b_ampl[(*wi, *wj)] ** 2 / (
-                            self.PP[(*wi, *[])] * self.PP[(*wj, *[])] * self.power_spectrum[
-                        (*wk, *[])]) * self.frequency_length ** self.number_of_dimensions
+                            self.PP[(*wi, *[])] * self.PP[(*wj, *[])] * self.power_spectrum[(*wk, *[])]) * \
+                                           self.frequency_length ** self.number_of_dimensions
                     self.sum_Bc2[(*wk, *[])] = self.sum_Bc2[(*wk, *[])] + self.Bc2[(*wi, *wj)]
                 else:
                     self.Bc2[(*wi, *wj)] = 0
             if self.sum_Bc2[(*wk, *[])] > 1:
                 print('Results may not be as expected as sum of partial bicoherences is greater than 1')
-                for j in itertools.product(*[range(k) for k in np.int32(np.ceil((wk + 1) / 2))]):
+                for j in itertools.product(*[range(k) for k in np.ceil((wk + 1) / 2, dtype=np.int32)]):
                     wj = np.array(j)
                     wi = wk - wj
                     self.Bc2[(*wi, *wj)] = self.Bc2[(*wi, *wj)] / self.sum_Bc2[(*wk, *[])]
@@ -249,29 +383,30 @@ class BSRM:
             self.PP[(*wk, *[])] = self.power_spectrum[(*wk, *[])] * (1 - self.sum_Bc2[(*wk, *[])])
 
     def _simulate_bsrm_uni(self):
-        Coeff = np.sqrt((2 ** (
-                self.number_of_dimensions + 1)) * self.power_spectrum * self.frequency_length ** self.number_of_dimensions)
-        Phi_e = np.exp(self.phi * 1.0j)
-        Biphase_e = np.exp(self.biphase * 1.0j)
-        B = np.sqrt(1 - self.sum_Bc2) * Phi_e
-        Bc = np.sqrt(self.Bc2)
+        coeff = np.sqrt((2 ** (
+                self.number_of_dimensions + 1)) * self.power_spectrum *
+                        self.frequency_length ** self.number_of_dimensions)
+        phi_e = np.exp(self.phi * 1.0j)
+        biphase_e = np.exp(self.biphase * 1.0j)
+        b = np.sqrt(1 - self.sum_Bc2) * phi_e
+        bc = np.sqrt(self.Bc2)
 
-        Phi_e = np.einsum('i...->...i', Phi_e)
-        B = np.einsum('i...->...i', B)
+        phi_e = np.einsum('i...->...i', phi_e)
+        b = np.einsum('i...->...i', b)
 
         for i in itertools.product(*self.ranges):
             wk = np.array(i)
-            for j in itertools.product(*[range(k) for k in np.int32(np.ceil((wk + 1) / 2))]):
+            for j in itertools.product(*[range(k) for k in np.ceil((wk + 1) / 2, dtype=np.int32)]):
                 wj = np.array(j)
                 wi = wk - wj
-                B[(*wk, *[])] = B[(*wk, *[])] + Bc[(*wi, *wj)] * Biphase_e[(*wi, *wj)] * Phi_e[(*wi, *[])] * \
-                                Phi_e[(*wj, *[])]
+                b[(*wk, *[])] = b[(*wk, *[])] + bc[(*wi, *wj)] * biphase_e[(*wi, *wj)] * phi_e[(*wi, *[])] * \
+                                phi_e[(*wj, *[])]
 
-        B = np.einsum('...i->i...', B)
-        Phi_e = np.einsum('...i->i...', Phi_e)
-        B = B * Coeff
-        B[np.isnan(B)] = 0
-        samples = np.fft.fftn(B, [self.number_time_intervals for _ in range(self.number_of_dimensions)])
+        b = np.einsum('...i->i...', b)
+        phi_e = np.einsum('...i->i...', phi_e)
+        b = b * coeff
+        b[np.isnan(b)] = 0
+        samples = np.fft.fftn(b, [self.number_time_intervals[i] for i in range(self.number_of_dimensions)])
         samples = samples[:, np.newaxis]
         return np.real(samples)
 
@@ -312,8 +447,13 @@ class KLE:
             self.number_eigen_values = threshold
         else:
             self.number_eigen_values = len(self.correlation_function[0])
-        if random_state:
-            np.random.seed(random_state)
+
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
         self.samples = self._simulate(nsamples)
 
     def _simulate(self, nsamples):
@@ -343,8 +483,8 @@ class Translation:
     :param: power_spectrum_gaussian: Power Spectrum of the Gaussian Stochastic Processes
     :rtype: power_spectrum_gaussian: numpy.ndarray
 
-    :param: distribution: UQpy Distribution object
-    :rtype: distribution: UQpy.Distribution
+    :param: dist_object: UQpy Distribution object
+    :rtype: dist_object: UQpy.Distribution
 
     **Output:**
 
@@ -365,16 +505,17 @@ class Translation:
     # Created by Lohit Vandanapu
     # Last Modified:04/08/2020 Lohit Vandanapu
 
-    def __init__(self, distribution, time_duration, frequency_interval, number_time_intervals,
+    def __init__(self, dist_object, time_duration, frequency_interval, number_time_intervals,
                  number_frequency_intervals, power_spectrum_gaussian=None, auto_correlation_function_gaussian=None,
                  samples_gaussian=None):
-        self.distribution = distribution
-        if auto_correlation_function_gaussian and power_spectrum_gaussian is None:
+        self.dist_object = dist_object
+        if auto_correlation_function_gaussian is None and power_spectrum_gaussian is None:
             print('Either the Power Spectrum or the Autocorrelation function should be specified')
         if auto_correlation_function_gaussian is None:
             self.power_spectrum_gaussian = power_spectrum_gaussian
-            self.auto_correlation_function_gaussian = S_to_R(power_spectrum_gaussian, np.arange(0,
-                                                                                                number_frequency_intervals) * frequency_interval,
+            self.auto_correlation_function_gaussian = S_to_R(power_spectrum_gaussian,
+                                                             np.arange(0, number_frequency_intervals) *
+                                                             frequency_interval,
                                                              np.arange(0, number_time_intervals) * time_duration)
         elif power_spectrum_gaussian is None:
             self.auto_correlation_function_gaussian = auto_correlation_function_gaussian
@@ -386,7 +527,8 @@ class Translation:
         if samples_gaussian is not None:
             self.samples_gaussian = samples_gaussian
             self.samples_non_gaussian = self.translate_gaussian_samples()
-        self.correlation_function_non_gaussian, self.auto_correlation_function_non_gaussian = self.autocorrealtion_distortion()
+        self.correlation_function_non_gaussian, self.auto_correlation_function_non_gaussian = \
+            self.autocorrelation_distortion()
         self.S_ng = R_to_S(self.auto_correlation_function_non_gaussian,
                            np.arange(0, number_frequency_intervals) * frequency_interval,
                            np.arange(0, number_time_intervals) * time_duration)
@@ -394,25 +536,28 @@ class Translation:
     def translate_gaussian_samples(self):
         standard_deviation = np.sqrt(self.auto_correlation_function_gaussian[0])
         samples_cdf = norm.cdf(self.samples_gaussian, scale=standard_deviation)
-        samples_non_gaussian = 0
-        if hasattr(self.distribution, 'icdf'):
-            non_gaussian_icdf = self.distribution.icdf
+        samples_non_gaussian = None
+        if hasattr(self.dist_object, 'icdf'):
+            non_gaussian_icdf = getattr(self.dist_object, 'icdf')
             samples_non_gaussian = non_gaussian_icdf(samples_cdf)
         else:
-            print('Distribution does not have an inverse cdf defined')
+            raise AttributeError('UQpy: The marginal distribution needs to have an inverse cdf defined.')
         return samples_non_gaussian
 
-    def autocorrealtion_distortion(self):
+    def autocorrelation_distortion(self):
         correlation_function_gaussian = R_to_r(self.auto_correlation_function_gaussian)
         correlation_function_gaussian = np.clip(correlation_function_gaussian, -0.999, 0.999)
         correlation_function_non_gaussian = np.zeros_like(correlation_function_gaussian)
+        non_gaussian_moments = None
         for i in itertools.product(*[range(s) for s in self.shape]):
-            correlation_function_non_gaussian[i] = solve_single_integral(self.distribution, correlation_function_gaussian[i])
-        if hasattr(self.distribution, 'moments'):
-            non_gaussian_moments = self.distribution.moments()
+            correlation_function_non_gaussian[i] = solve_single_integral(self.dist_object,
+                                                                         correlation_function_gaussian[i])
+        if hasattr(self.dist_object, 'moments'):
+            non_gaussian_moments = getattr(self.dist_object, 'moments')()
         else:
-            print('Distribution does not have an inverse cdf defined')
+            raise AttributeError('UQpy: The marginal distribution needs to have defined moments.')
         auto_correlation_function_non_gaussian = correlation_function_non_gaussian * non_gaussian_moments[1]
+        # TODO: change correlation_function... to auto_correlation_..._standard
         return correlation_function_non_gaussian, auto_correlation_function_non_gaussian
 
 
@@ -457,11 +602,13 @@ class InverseTranslation:
     # Created by Lohit Vandanapu
     # Last Modified:04/08/2020 Lohit Vandanapu
 
-    def __init__(self, distribution, time_duration, frequency_interval, number_time_intervals, number_frequency_intervals, auto_correlation_function_non_gaussian=None, power_spectrum_non_gaussian=None, samples_non_gaussian=None):
+    def __init__(self, distribution, time_duration, frequency_interval, number_time_intervals,
+                 number_frequency_intervals, auto_correlation_function_non_gaussian=None,
+                 power_spectrum_non_gaussian=None, samples_non_gaussian=None):
         self.distribution = distribution
         self.frequency = np.arange(0, number_frequency_intervals) * frequency_interval
         self.time = np.arange(0, number_time_intervals) * time_duration
-        if auto_correlation_function_non_gaussian and power_spectrum_non_gaussian is None:
+        if auto_correlation_function_non_gaussian is None and power_spectrum_non_gaussian is None:
             print('Either the Power Spectrum or the Autocorrelation function should be specified')
         if auto_correlation_function_non_gaussian is None:
             self.power_spectrum_non_gaussian = power_spectrum_non_gaussian
@@ -476,13 +623,16 @@ class InverseTranslation:
             self.samples_gaussian = self.inverse_translate_non_gaussian_samples()
         self.power_spectrum_gaussian = self.itam()
         self.auto_correlation_function_gaussian = S_to_R(self.power_spectrum_gaussian, self.frequency, self.time)
-        self.correlation_function_gaussian = self.auto_correlation_function_gaussian / self.auto_correlation_function_gaussian[0]
+        self.correlation_function_gaussian = self.auto_correlation_function_gaussian / \
+                                             self.auto_correlation_function_gaussian[0]
 
     def inverse_translate_non_gaussian_samples(self):
+        # TODO: error checks
         samples_cdf = self.distribution.cdf(self.samples_non_gaussian)
         samples_g = Normal(loc=0.0, scale=1.0).icdf(samples_cdf)
         return samples_g
 
+    # TODO: rename to itam_power_spectrum
     def itam(self):
         # Initial Guess
         target_s = self.power_spectrum_non_gaussian
@@ -500,7 +650,8 @@ class InverseTranslation:
             r_g_iterate = S_to_R(s_g_iterate, self.frequency, self.time)
             # for i in itertools.product(*[range(self.num) for _ in range(self.dim)]):
             for i in range(len(target_r)):
-                r_ng_iterate[i] = solve_single_integral(r_g_iterate[i] / r_g_iterate[0])
+                r_ng_iterate[i] = solve_single_integral(dist_object=self.distribution,
+                                                        rho=r_g_iterate[i] / r_g_iterate[0])
             s_ng_iterate = R_to_S(r_ng_iterate, self.frequency, self.time)
 
             # compute the relative difference between the computed NGACF & the target correlation_function(Normalized)
@@ -520,4 +671,4 @@ class InverseTranslation:
                 s_g_iterate = s_g_next_iterate
                 error0 = error1
 
-        return s_g_iterate / self.distribution.moments()[1]
+        return s_g_iterate
