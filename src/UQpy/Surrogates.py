@@ -620,6 +620,8 @@ class Kriging:
 
         if self.normalize:
             y = self.value_mean + y * self.value_std
+        if x.shape[1] == 1:
+            y = y.flatten()
         if return_std:
             r_dash = np.matmul(self.C_inv, rx.T)
             u = np.matmul(self.F_dash.T, r_dash) - fx.T
@@ -628,6 +630,8 @@ class Kriging:
             mse = self.err_var * np.atleast_2d(1 + norm2 - norm1).T
             if self.normalize:
                 mse = self.value_std * np.sqrt(mse)
+            if x.shape[1] == 1:
+                mse = mse.flatten()
             return y, mse
         else:
             return y
@@ -657,6 +661,8 @@ class Kriging:
         y_grad = np.einsum('ikj,jm->ik', jf, self.beta) + np.einsum('ijk,jm->ki', drdx.T, self.gamma)
         if self.normalize:
             y_grad = y_grad * self.value_std/self.sample_std
+        if x.shape[1] == 1:
+            y_grad = y_grad.flatten()
         return y_grad
 
     # Defining Regression model (Linear)

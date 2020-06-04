@@ -995,6 +995,9 @@ class RSS:
 
             Default: nsamples.
 
+    * **qoi_name** (`dict`):
+            If the quantity of interest is a dictionary, convert it to a list
+
     * **step_size** (`float`):
             Step size to calculate the gradient using central difference.
 
@@ -1973,11 +1976,10 @@ class AKMCS:
 
             # Apply the learning function to identify the new point to run the model.
 
-            new_ind, ind = self.learning_function(self.krig_model, rest_pop)
-            new_point = np.atleast_2d(rest_pop[new_ind])
+            new_point, ind = self.learning_function(self.krig_model, rest_pop)
 
             # Add the new points to the training set and to the sample set.
-            self.samples = np.vstack([self.samples, new_point])
+            self.samples = np.vstack([self.samples, np.atleast_2d(new_point)])
 
             # Run the model at the new points
             self.runmodel_object.run(samples=new_point, append_samples=True)
@@ -2026,6 +2028,8 @@ class AKMCS:
            (Link: https://arxiv.org/pdf/1905.05345.pdf)
         """
         g, sig = surr(pop, True)
+
+        # Remove the inconsistency in the shape of 'g' and 'sig' array
         g = g.reshape([pop.shape[0], 1])
         sig = sig.reshape([pop.shape[0], 1])
 
@@ -2043,7 +2047,7 @@ class AKMCS:
         u = np.square(np.squeeze(g) - qoi_array) + np.square(np.squeeze(sig))
 
         rows = np.argmax(u)
-        return rows, False
+        return pop[rows, :], False
 
     def u(self, surr, pop):
         """
@@ -2064,7 +2068,7 @@ class AKMCS:
         if min(u[:, 0]) >= 2:
             self.indicator = True
 
-        return rows, self.indicator
+        return pop[rows, :], self.indicator
 
     def weighted_u(self, surr, pop):
         """
@@ -2077,6 +2081,8 @@ class AKMCS:
         """
         max_p = self.kwargs['max_p']
         g, sig = surr(pop, True)
+
+        # Remove the inconsistency in the shape of 'g' and 'sig' array
         g = g.reshape([pop.shape[0], 1])
         sig = sig.reshape([pop.shape[0], 1])
 
@@ -2092,7 +2098,7 @@ class AKMCS:
         if min(u[:, 0]) >= 2:
             self.indicator = True
 
-        return rows, self.indicator
+        return pop[rows, :], self.indicator
 
     def eff(self, surr, pop):
         """
@@ -2104,6 +2110,8 @@ class AKMCS:
            for Nonlinear Implicit Performance Functions", AIAA JOURNAL, Volume 46, 2008.
         """
         g, sig = surr(pop, True)
+
+        # Remove the inconsistency in the shape of 'g' and 'sig' array
         g = g.reshape([pop.shape[0], 1])
         sig = sig.reshape([pop.shape[0], 1])
         # Reliability threshold: a_ = 0
@@ -2120,7 +2128,7 @@ class AKMCS:
         if max(eff[:, 0]) <= 0.001:
             self.indicator = True
 
-        return rows, self.indicator
+        return pop[rows, :], self.indicator
 
     def eif(self, surr, pop):
         """
@@ -2132,6 +2140,8 @@ class AKMCS:
            Journal of Global Optimization, Pages 455–492, 1998.
         """
         g, sig = surr(pop, True)
+
+        # Remove the inconsistency in the shape of 'g' and 'sig' array
         g = g.reshape([pop.shape[0], 1])
         sig = sig.reshape([pop.shape[0], 1])
 
@@ -2139,7 +2149,7 @@ class AKMCS:
         u = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf((fm - g) / sig)
         rows = u[:, 0].argsort()[(np.size(g) - self.n_add):]
 
-        return rows, False
+        return pop[rows, :], False
 
 ########################################################################################################################
 ########################################################################################################################
