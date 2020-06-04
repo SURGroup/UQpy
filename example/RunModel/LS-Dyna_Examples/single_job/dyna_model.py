@@ -16,7 +16,7 @@ d7 = Uniform(loc=0.02, scale=0.01)
 d8 = Uniform(loc=0.0025, scale=0.0075)
 
 # Draw a single sample using MCS
-x = MCS(dist_object=[d1, d2, d3, d4, d5, d6, d7, d8], nsamples=1)
+x = MCS(dist_object=[d1, d2, d3, d4, d5, d6, d7, d8], nsamples=1, random_state=349857)
 
 ########################################################################################################################
 

@@ -133,6 +133,7 @@ class MCS:
 
         # Instantiate the output attributes.
         self.samples = None
+        self.x = None
         self.samplesU01 = None
 
         # Set printing options
@@ -196,30 +197,30 @@ class MCS:
                     temp_samples.append(self.dist_object[i].rvs(nsamples=nsamples, random_state=random_state))
                 else:
                     ValueError('UQpy: rvs method is missing.')
-            x = list()
+            self.x = list()
             for j in range(nsamples):
                 y = list()
                 for k in range(len(self.dist_object)):
                     y.append(temp_samples[k][j])
-                x.append(np.array(y))
+                self.x.append(np.array(y))
         else:
             if hasattr(self.dist_object, 'rvs'):
                 temp_samples = self.dist_object.rvs(nsamples=nsamples, random_state=random_state)
-                x = temp_samples
+                self.x = temp_samples
 
         if self.samples is None:
             if isinstance(self.dist_object, list) and self.array is True:
-                self.samples = np.hstack(np.array(x)).T
+                self.samples = np.hstack(np.array(self.x)).T
             else:
-                self.samples = np.array(x)
+                self.samples = np.array(self.x)
         else:
             # If self.samples already has existing samples, append the new samples to the existing attribute.
             if isinstance(self.dist_object, list) and self.array is True:
-                self.samples = np.concatenate([self.samples, np.hstack(np.array(x)).T], axis=0)
+                self.samples = np.concatenate([self.samples, np.hstack(np.array(self.x)).T], axis=0)
             elif isinstance(self.dist_object, Distribution):
-                self.samples = np.vstack([self.samples, x])
+                self.samples = np.vstack([self.samples, self.x])
             else:
-                self.samples = np.vstack([self.samples, x])
+                self.samples = np.vstack([self.samples, self.x])
         self.nsamples = len(self.samples)
 
         if self.verbose:
@@ -263,7 +264,7 @@ class MCS:
                 raise ValueError('UQpy: All Distributions must have a cdf method.')
 
         elif isinstance(self.dist_object, list) and self.list is True:
-            temp_samples_u01 = [None] * self.nsamples
+            temp_samples_u01 = list()
             for i in range(self.nsamples):
                 z = self.samples[i][:]
                 y = [None] * len(self.dist_object)
@@ -273,7 +274,7 @@ class MCS:
                     else:
                         raise ValueError('UQpy: All Distributions must have a cdf method.')
                     y[j] = zi
-                temp_samples_u01[i] = np.array(y)
+                temp_samples_u01.append(np.array(y))
             self.samplesU01 = temp_samples_u01
 
 ########################################################################################################################
@@ -287,62 +288,48 @@ class LHS:
     """
     Perform Latin hypercube sampling (MCS) of random variables.
 
-    **Attributes:**
-
     **Input:**
 
     * **dist_object** ((list of) ``Distribution`` object(s)):
-            List of ``Distribution`` objects corresponding to each random variable.
+        List of ``Distribution`` objects corresponding to each random variable.
+
+        All distributions in ``LHS`` must be independent. ``LHS`` does not generate correlated random variables.
+        Therefore, for multi-variate designs the `dist_object` must be a list of ``DistributionContinuous1D`` objects
+        or an object of the ``JointInd`` class.
 
     * **nsamples** (`int`):
-            Number of samples to be drawn from each distribution.
-
+        Number of samples to be drawn from each distribution.
 
     * **criterion** (`str` or `callable`):
-            The criterion for generating sample points
-                Options:
-                    1. 'random' - completely random. \n
-                    2. centered' - points only at the centre. \n
-                    3. 'maximin - maximizing the minimum distance between points. \n
-                    4. 'correlate' - minimizing the correlation between the points. \n
-                    5. `callable` - User-defined method.
+        The criterion for pairing the generating sample points
+            Options:
+                1. 'random' - completely random. \n
+                2. 'centered' - points only at the centre. \n
+                3. 'maximin' - maximizing the minimum distance between points. \n
+                4. 'correlate' - minimizing the correlation between the points. \n
+                5. `callable` - User-defined method.
 
-            Default: 'random'
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
 
-    * **metric** (`str` or `callable`):
-            The distance metric to use.
-                Options:
-                    1. `str` - Available options are: `braycurtis`, `canberra`, `chebyshev`, `cityblock`,
-                    `correlation`, `cosine`, `dice`, `euclidean`, `hamming`, `jaccard`, `jensenshannon`,
-                    `kulsinski`, `mahalanobis`, `matching`, `minkowski`, `rogerstanimoto`, `russellrao`,
-                    `seuclidean`, `sokalmichener`, `sokalsneath`, `sqeuclidean`, `yule`.
-
-                2. User-defined function.
-
-            Default: `euclidean`.
-
-    * **iterations** (`int`):
-            The number of iteration to run. Required only for ``maximin`` and ``correlate`` criterion.
-
-            Default: 100.
-
-    * random_state (None or `int` or `np.random.RandomState` object):
-            Random seed used to initialize the pseudo-random number generator. Default is None.
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
 
     * **verbose** (`Boolean`):
-            A boolean declaring whether to write text to the terminal.
+        A boolean declaring whether to write text to the terminal.
 
-            Default value: False
-
+    * ****kwargs**
+        Additional arguments to be passed to the method specified by `criterion`
 
     **Attributes:**
 
     * **samples** (`ndarray`):
-            `ndarray` containing the generated samples.
+        The generated LHS samples.
+
+    * **samples_U01** (`ndarray`):
+        The generated LHS samples on the unit hypercube.
 
     **Methods**
-
-    The LHS class supports the following LHS design methods:
 
     """
 
@@ -395,9 +382,33 @@ class LHS:
 
         self.samplesU01 = np.zeros_like(self.samples)
 
-        self.run(self.nsamples)
+        if self.nsamples is not None:
+            self.run(self.nsamples)
 
     def run(self, nsamples):
+
+        """
+        Execute the random sampling in the ``LHS`` class.
+
+        The ``run`` method is the function that performs random sampling in the ``LHS`` class. If `nsamples` is
+        provided, the ``run`` method is automatically called when the ``LHS`` object is defined. The user may also call
+        the ``run`` method directly to generate samples. The ``run`` method of the ``LHS`` class cannot be invoked
+        multiple times for sample size extension.
+
+        **Input:**
+
+        * **nsamples** (`int`):
+            Number of samples to be drawn from each distribution.
+
+            If the ``run`` method is invoked multiple times, the newly generated samples will be overwrite the
+            existing samples.
+
+        **Output/Returns:**
+
+        The ``run`` method has no returns, although it creates and/or appends the `samples` and `samples_U01` attributes
+        of the ``LHS`` object.
+
+        """
 
         if self.nsamples is None:
             self.nsamples = nsamples
@@ -415,21 +426,18 @@ class LHS:
             u[:, i] = stats.uniform.rvs(size=self.samples.shape[0], random_state=self.random_state)
             samples[:, i] = u[:, i] * (b - a) + a
 
-        if self.criterion is not None:
-            if self.criterion == 'random':
-                u_lhs = self.random(samples)
-            elif self.criterion == 'centered':
-                u_lhs = self.centered(samples, a=a, b=b)
-            elif self.criterion == 'maximin':
-                u_lhs = self.max_min(samples, self.kwargs)
-            elif self.criterion == 'correlate':
-                u_lhs = self.correlate(samples, self.kwargs)
-            elif callable(self.criterion):
-                u_lhs = self.criterion(samples)
-            else:
-                raise ValueError('UQpy: A valid criterion is required.')
-        elif self.criterion is None:
-            u_lhs = self.random(samples)
+        if self.criterion == 'random' or self.criterion is None:
+            u_lhs = self.random(samples, random_state=self.random_state)
+        elif self.criterion == 'centered':
+            u_lhs = self.centered(samples, random_state=self.random_state, a=a, b=b)
+        elif self.criterion == 'maximin':
+            u_lhs = self.max_min(samples, random_state=self.random_state, **self.kwargs)
+        elif self.criterion == 'correlate':
+            u_lhs = self.correlate(samples, random_state=self.random_state, **self.kwargs)
+        elif callable(self.criterion):
+            u_lhs = self.criterion(samples, random_state=self.random_state, **self.kwargs)
+        else:
+            raise ValueError('UQpy: A valid criterion is required.')
 
         self.samplesU01 = u_lhs
 
@@ -450,58 +458,94 @@ class LHS:
         if self.verbose:
             print('Successful execution of LHS design.')
 
-    def random(self, samples):
+    @staticmethod
+    def random(samples, random_state=None):
         """
-        A Latin hypercube design based on sampling randomly inside each bin.
+        Method for generating a Latin hypercube design by sampling randomly inside each bin.
+
+        The ``random`` method takes a set of samples drawn randomly from within the Latin hypercube bins and performs a
+        random shuffling of them to pair the variables.
+
+        **Input:**
+
+        * **samples** (`ndarray`):
+            A set of samples drawn from within each bin.
+
+        * **random_state** (``numpy.random.RandomState`` object):
+            A ``numpy.RandomState`` object that fixes the seed of the pseudo random number generation.
+
+        **Output/Returns:**
+
+        * **lhs_samples** (`ndarray`)
+            The randomly shuffled set of LHS samples.
         """
 
         lhs_samples = np.zeros_like(samples)
+        nsamples = len(samples)
         for j in range(samples.shape[1]):
-            if self.random_state is not None:
-                order = self.random_state.permutation(self.nsamples)
+            if random_state is not None:
+                order = random_state.permutation(nsamples)
             else:
-                order = np.random.permutation(self.nsamples)
+                order = np.random.permutation(nsamples)
             lhs_samples[:, j] = samples[order, j]
 
         return lhs_samples
 
-    def max_min(self, samples, parameters):
+    def max_min(self, samples, random_state=None, iterations=100, metric='euclidean'):
         """
-        A Latin hypercube design based on maximizing the inter-site distances.
+        Method for generating a Latin hypercube design that aims to maximize the minimum sample distance.
+
+        **Input:**
+
+        * **samples** (`ndarray`):
+            A set of samples drawn from within each LHS bin.
+
+        * **random_state** (``numpy.random.RandomState`` object):
+            A ``numpy.RandomState`` object that fixes the seed of the pseudo random number generation.
+
+        * **iterations** (`int`):
+            The number of iteration to run in the search for a maximin design.
+
+        * **metric** (`str` or `callable`):
+            The distance metric to use.
+                Options:
+                    1. `str` - Available options are those supported by ``scipy.spatial.distance``
+                    2. User-defined function to compute the distance between samples. This function replaces the
+                       ``scipy.spatial.distance.pdist`` method.
+
+        **Output/Returns:**
+
+        * **lhs_samples** (`ndarray`)
+            The maximin set of LHS samples.
+
         """
 
-        if "metric" in parameters:
-            metric = parameters["metric"]
-            if isinstance(metric, str):
-                if metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
-                                  'dice', 'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis',
-                                  'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean',
-                                  'sokalmichener', 'sokalsneath', 'sqeuclidean']:
-                    raise NotImplementedError("Exit code: Supported lhs distances: 'braycurtis', 'canberra',"
-                                              " 'chebyshev', "
-                                              "'cityblock'," " 'correlation', 'cosine','dice', 'euclidean', 'hamming', "
-                                              "'jaccard', " "'kulsinski', 'mahalanobis', 'matching', 'minkowski', "
-                                              "'rogerstanimoto'," "'russellrao', 'seuclidean','sokalmichener', "
-                                              "'sokalsneath', 'sqeuclidean'.")
-        else:
-            metric = "euclidean"
+        if isinstance(metric, str):
+            if metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice',
+                              'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski',
+                              'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath',
+                              'sqeuclidean']:
+                raise NotImplementedError("UQpy Exit code: Please provide a string corresponding to a distance metric"
+                                          "supported by scipy.spatial.distance or provide a method to compute a user-"
+                                          "defined distance.")
 
-        if "iterations" not in parameters:
-            iterations = 100
-        else:
-            iterations = parameters["iterations"]
-            if not isinstance(iterations, int):
-                raise ValueError('UQpy: number of iterations must be an integer.')
+        if not isinstance(iterations, int):
+            raise ValueError('UQpy: number of iterations must be an integer.')
 
-        max_min_dist = 0
+        if isinstance(metric, str):
+            def d_func(x): return pdist(x, metric=metric)
+        elif callable(metric):
+            d_func = metric
+        else:
+            raise ValueError("UQpy: Please provide a valid metric.")
+
         i = 0
+        lhs_samples = LHS.random(samples, random_state)
+        d = d_func(lhs_samples)
+        max_min_dist = np.min(d)
         while i < iterations:
-            samples_try = self.random(samples)
-            if isinstance(metric, str):
-                d = pdist(samples_try, metric=metric)
-            elif callable(metric):
-                d = metric(samples_try)
-
+            samples_try = LHS.random(samples, random_state)
+            d = d_func(samples_try)
             if max_min_dist < np.min(d):
                 max_min_dist = np.min(d)
                 lhs_samples = copy.deepcopy(samples_try)
@@ -512,22 +556,39 @@ class LHS:
 
         return lhs_samples
 
-    def correlate(self, samples, parameters):
+    def correlate(self, samples, random_state=None, iterations=100):
         """
-        A Latin hypercube design based on minimizing the pairwise correlations.
+        Method for generating a Latin hypercube design that aims to minimize spurious correlations.
+
+        **Input:**
+
+        * **samples** (`ndarray`):
+            A set of samples drawn from within each LHS bin.
+
+        * **random_state** (``numpy.random.RandomState`` object):
+            A ``numpy.RandomState`` object that fixes the seed of the pseudo random number generation.
+
+        * **iterations** (`int`):
+            The number of iteration to run in the search for a maximin design.
+
+        **Output/Returns:**
+
+        * **lhs_samples** (`ndarray`)
+            The minimum correlation set of LHS samples.
+
         """
 
-        if "iterations" not in parameters:
-            iterations = 100
-        else:
-            iterations = parameters["iterations"]
-            if not isinstance(iterations, int):
-                raise ValueError('UQpy: number of iterations must be an integer.')
+        if not isinstance(iterations, int):
+            raise ValueError('UQpy: number of iterations must be an integer.')
 
-        min_corr = np.inf
         i = 0
+        lhs_samples = LHS.random(samples, random_state)
+        r = np.corrcoef(np.transpose(lhs_samples))
+        np.fill_diagonal(r, 1)
+        r1 = r[r != 1]
+        min_corr = np.max(np.abs(r1))
         while i < iterations:
-            samples_try = self.random(samples)
+            samples_try = LHS.random(samples, random_state)
             r = np.corrcoef(np.transpose(samples_try))
             np.fill_diagonal(r, 1)
             r1 = r[r != 1]
@@ -540,147 +601,195 @@ class LHS:
 
         return lhs_samples
 
-    def centered(self, samples, **kwargs):
+    @staticmethod
+    def centered(samples, random_state=None, a=None, b=None):
         """
-        A Latin hypercube design based on sampling the centers of the bins.
-        """
+        Method for generating a Latin hypercube design with samples centered in the bins.
 
-        a = kwargs["a"]
-        b = kwargs["b"]
+        **Input:**
+
+        * **samples** (`ndarray`):
+            A set of samples drawn from within each LHS bin. In this method, the samples passed in are not used.
+
+        * **random_state** (``numpy.random.RandomState`` object):
+            A ``numpy.RandomState`` object that fixes the seed of the pseudo random number generation.
+
+        * **a** (`ndarray`)
+            An array of the bin lower-bounds.
+
+        * **b** (`ndarray`)
+            An array of the bin upper-bounds
+
+        **Output/Returns:**
+
+        * **lhs_samples** (`ndarray`)
+            The centered set of LHS samples.
+        """
 
         u_temp = (a + b) / 2
         lhs_samples = np.zeros([samples.shape[0], samples.shape[1]])
         for i in range(samples.shape[1]):
-            if self.random_state is not None:
-                lhs_samples[:, i] = self.random_state.permutation(u_temp)
+            if random_state is not None:
+                lhs_samples[:, i] = random_state.permutation(u_temp)
             else:
                 lhs_samples[:, i] = np.random.permutation(u_temp)
 
         return lhs_samples
 
+
 ########################################################################################################################
 ########################################################################################################################
 #                                         Stratified Sampling  (STS)
 ########################################################################################################################
+
 class STS:
     """
     Generate samples from an assigned probability density function using Stratified Sampling.
-
     **References:**
-
     1. M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte
        Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
-
     **Input:**
 
-    :param dimension: A scalar value defining the dimension of target density function.
-                      Default: Length of sts_design.
-    :type dimension: int
+    * **dist_object** ((list of) ``Distribution`` object(s)):
+            List of ``Distribution`` objects corresponding to each random variable.
 
-    :param dist_name: A list containing the names of the distributions of the random variables.
-                      Distribution names must match those in the Distributions module.
-                      If the distribution does not match one from the Distributions module, the user must
-                      provide custom_dist.py.
-                      The length of the string must be 1 (if all distributions are the same) or equal to
-                      dimension.
-    :type dist_name: string list
+    * **nsamples** (`int`):
+            Total number of samples. Required for voronoi stratification.
 
-    :param dist_params: Parameters of the distribution
-                        Parameters for each random variable are defined as ndarrays.
-                        Each item in the list, dist_params[i], specifies the parameters for the corresponding
-                        distribution, dist[i].
-    :type dist_params: list
+    * **sts_design** (`list`):
+            List of integers specifiying the number of strata in each dimension. Required for rectangular
+            stratification.
 
-    param: distribution: An object list containing the distributions of the random variables.
-                         Each item in the list is an object of the Distribution class (see Distributions.py).
-                         The list has length equal to dimension.
-    :type distribution: list
+    * **sts_criterion** (`str`):
+            Random or Centered samples inside a rectangular strata.
+            Options:
+                    1. 'random' - completely random. \n
+                    2. 'centered' - points only at the centre. \n
 
-    :param sts_design: Specifies the number of strata in each dimension
-    :type sts_design: int list
+            Default: 'random'
 
-    :param input_file: File path to input file specifying stratum origins and stratum widths.
-                       Default: None.
-    :type input_file: string
+    * **stype** (`str`):
+            Type of the strata (Rectangular or Voronoi).
+
+    * **n_iters** (`int`):
+            Default: 20
+
+    * **input_file** (`str`):
+            File path to input file specifying stratum origins and stratum widths.
+
+            Default: None.
+
+    * **random_state** (None or `int` or `np.random.RandomState` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
+
+    * **verbose** (`Boolean`):
+            A boolean declaring whether to write text to the terminal.
+
+            Default value: False
 
     **Attributes:**
 
-    :return: STS.samples: Set of stratified samples.
-    :rtype: STS.samples: ndarray
+    * **samples** (`ndarray`):
+            `ndarray` containing the generated samples.
 
-    :return: STS.samplesU01: Set of uniform stratified samples on [0, 1]^dimension
-    :rtype: STS.samplesU01: ndarray
+    * **samplesU01** (`ndarray`):
+            `ndarray` containing the generated samples on [0, 1]^dimension.
 
-    :return: STS.strata: Instance of the class SampleMethods.Strata
-    :rtype: STS.strata: ndarray
+    * **strata** (`class` object):
+            Instance of the class SampleMethods.Strata.
 
-    **Authors:**
-
-    Authors: Michael Shields
-    Last modified: 6/7/2018 by Dimitris Giovanis & Michael Shields
+    **Methods:**
     """
-    def __init__(self, dimension=None, dist_name=None, dist_params=None, sts_design=None, input_file=None,
-                 sts_criterion="random", stype='Rectangular', nsamples=None, n_iters=20):
+    def __init__(self, dist_object, nsamples=None, sts_design=None, sts_criterion="random", stype='Rectangular',
+                 input_file=None, n_iters=20, random_state=None, verbose=False):
 
-        if dimension is None:
-            self.dimension = len(dist_name)
-        else:
-            self.dimension = dimension
         self.stype = stype
-        self.sts_design = sts_design
         self.input_file = input_file
-        self.dist_name = dist_name
-        self.dist_params = dist_params
         self.strata = None
         self.sts_criterion = sts_criterion
+        self.verbose = verbose
         self.nsamples = nsamples
+        self.sts_design = sts_design
+        self.n_iters = n_iters
+        self.samplesU01, self.samples = None, None
 
-        if self.stype == 'Voronoi':
-            self.n_iters = n_iters
+        # Check if a Distribution object is provided.
+        from UQpy.Distributions import DistributionContinuous1D, JointInd
 
-        self.init_sts()
-        self.distribution = [None] * self.dimension
-        for i in range(self.dimension):
-            self.distribution[i] = Distribution(self.dist_name[i])
+        if isinstance(dist_object, list):
+            self.dimension = len(dist_object)
+            for i in range(len(dist_object)):
+                if not isinstance(dist_object[i], DistributionContinuous1D):
+                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
+        else:
+            self.dimension = 1
+            if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
+                raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
-        if self.stype == 'Voronoi':
-            self.run_sts()
-        elif self.stype == 'Rectangular':
-            self.samplesU01, self.samples = self.run_sts()
+        self.dist_object = dist_object
 
-    def run_sts(self):
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
+        # Check sampling criterion
+        if self.sts_criterion not in ['random', 'centered']:
+            raise NotImplementedError("Exit code: Supported sts criteria: 'random', 'centered'")
+
+        if self.stype == 'Rectangular':
+            if sts_design is not None:
+                self.run(sts_design=sts_design)
+            if input_file is not None:
+                self.run(input_file=input_file)
+        elif self.stype == 'Voronoi' and nsamples is not None:
+            self.run(nsamples=nsamples)
+
+    def run(self, nsamples=None, sts_design=None, input_file=None):
         """
         Execute stratified sampling
-
         This is an instance method that runs stratified sampling. It is automatically called when the STS class is
         instantiated.
         """
+        self.nsamples = nsamples
+        self.sts_design = sts_design
+        self.input_file = input_file
+
+        if self.verbose:
+            print('UQpy: Running Stratified Sampling...')
 
         if self.stype == 'Rectangular':
+            if self.sts_design is None:
+                if self.input_file is None:
+                    raise NotImplementedError("UQpy: Stratum design is not defined.")
+                else:
+                    self.strata = Strata(input_file=self.input_file)
+            else:
+                self.strata = Strata(n_strata=self.sts_design)
+
             samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
             samples_u_to_x = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
             for j in range(0, self.strata.origins.shape[1]):
-                i_cdf = self.distribution[j].icdf
+                i_cdf = self.dist_object[j].icdf
                 if self.sts_criterion == "random":
                     for i in range(0, self.strata.origins.shape[0]):
-                        samples[i, j] = np.random.uniform(self.strata.origins[i, j], self.strata.origins[i, j]
-                                                          + self.strata.widths[i, j])
+                        samples[i, j] = stats.uniform.rvs(loc=self.strata.origins[i, j], scale=self.strata.widths[i, j],
+                                                          random_state=self.random_state)
                 elif self.sts_criterion == "centered":
                     for i in range(0, self.strata.origins.shape[0]):
                         samples[i, j] = self.strata.origins[i, j] + self.strata.widths[i, j] / 2.
 
-                samples_u_to_x[:, j] = i_cdf(np.atleast_2d(samples[:, j]).T, self.dist_params[j])
+                samples_u_to_x[:, j] = i_cdf(samples[:, j])
 
-            print('UQpy: Successful execution of STS design..')
-            return samples, samples_u_to_x
+            self.samples, self.samplesU01 = samples_u_to_x, samples
 
         elif self.stype == 'Voronoi':
             from UQpy.Utilities import compute_Voronoi_centroid_volume, voronoi_unit_hypercube
 
-            samples_init = np.random.rand(self.nsamples, self.dimension)
+            samples_init = stats.uniform.rvs(size=[self.nsamples, self.dimension], random_state=self.random_state)
 
             for i in range(self.n_iters):
-                # x = self.in_hypercube(samples_init)
                 self.strata = voronoi_unit_hypercube(samples_init)
 
                 self.strata.centroids = []
@@ -696,9 +805,11 @@ class STS:
             self.samplesU01 = self.strata.bounded_points
 
             self.samples = np.zeros(np.shape(self.samplesU01))
-            for i in range(self.dimension):
-                self.samples[:, i] = self.distribution[i].icdf(np.atleast_2d(self.samplesU01[:, i]).T,
-                                                               self.dist_params[i]).T
+            for i in range(self.samples.shape[1]):
+                self.samples[:, i] = self.dist_object[i].icdf(np.atleast_2d(self.samplesU01[:, i]).T).T
+
+        if self.verbose:
+            print('Successful execution of STS design.')
 
     def in_hypercube(self, samples):
 
@@ -707,54 +818,6 @@ class STS:
             in_cube = np.logical_and(in_cube, np.logical_and(0 <= samples[:, i], samples[:, i] <= 1))
 
         return in_cube
-
-    def init_sts(self):
-        """Preliminary error checks."""
-
-        # Check for dimensional consistency
-        if self.dimension is None and self.sts_design is not None:
-            self.dimension = len(self.sts_design)
-        elif self.sts_design is not None:
-            if self.dimension != len(self.sts_design):
-                raise NotImplementedError("Exit code: Incompatible dimensions.")
-        elif self.sts_design is None and self.dimension is None:
-            raise NotImplementedError("Exit code: Dimension must be specified.")
-
-        # Check dist_name
-        if type(self.dist_name).__name__ != 'list':
-            self.dist_name = [self.dist_name]
-        if len(self.dist_name) == 1 and self.dimension != 1:
-            self.dist_name = self.dist_name * self.dimension
-        elif len(self.dist_name) != self.dimension:
-            raise NotImplementedError("Length of i_cdf should be 1 or equal to dimension.")
-
-        # Check dist_params
-        if type(self.dist_params).__name__ != 'list':
-            self.dist_params = [self.dist_params]
-        if len(self.dist_params) == 1 and self.dimension != 1:
-            self.dist_params = self.dist_params * self.dimension
-        elif len(self.dist_params) != self.dimension:
-            raise NotImplementedError("Length of dist_params list should be 1 or equal to dimension.")
-
-        # Ensure that distribution parameters are assigned
-        if self.dist_params is None:
-            raise NotImplementedError("Exit code: Distribution parameters not defined.")
-
-        if self.stype == 'Rectangular':
-            if self.sts_design is None:
-                if self.input_file is None:
-                    raise NotImplementedError("Exit code: Stratum design is not defined.")
-                else:
-                    self.strata = Strata(input_file=self.input_file)
-            else:
-                if len(self.sts_design) != self.dimension:
-                    raise NotImplementedError("Exit code: Incompatible dimensions in 'sts_design'.")
-                else:
-                    self.strata = Strata(n_strata=self.sts_design)
-
-        # Check sampling criterion
-        if self.sts_criterion not in ['random', 'centered']:
-            raise NotImplementedError("Exit code: Supported sts criteria: 'random', 'centered'")
 
 ########################################################################################################################
 ########################################################################################################################
@@ -765,51 +828,45 @@ class STS:
 class Strata:
     """
     Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^dimension with N strata.
-
     **Input:**
 
-    :param n_strata: A list of dimension n defining the number of strata in each of the n dimensions
-                    Creates an equal stratification with strata widths equal to 1/n_strata
-                    The total number of strata, N, is the product of the terms of n_strata
-                    Example -
-                    n_strata = [2, 3, 2] creates a 3d stratification with:
-                    2 strata in dimension 0 with stratum widths 1/2
-                    3 strata in dimension 1 with stratum widths 1/3
-                    2 strata in dimension 2 with stratum widths 1/2
-    :type n_strata int list
+    * **n_strata** (`list` of `int`):
+            A list of dimension n defining the number of strata in each of the n dimensions. Creates an equal
+            stratification with strata widths equal to 1/n_strata. The total number of strata, N, is the product of the
+            terms of n_strata.
+            Example:
+                n_strata = [2, 3, 2] creates a 3d stratification with:
+                2 strata in dimension 0 with stratum widths 1/2
+                3 strata in dimension 1 with stratum widths 1/3
+                2 strata in dimension 2 with stratum widths 1/2
 
-    :param input_file: File path to input file specifying stratum origins and stratum widths.
-                       Default: None
-    :type input_file: string
+    * **input_file** (`str`):
+            File path to input file specifying stratum origins and stratum widths.
 
-    :param origins: An array of dimension N x n specifying the origins of all strata
-                    The origins of the strata are the coordinates of the stratum orthotope nearest the global
-                    origin.
-                    Example - A 2D stratification with 2 strata in each dimension
-                    origins = [[0, 0]
-                              [0, 0.5]
-                              [0.5, 0]
-                              [0.5, 0.5]]
-    :type origins: numpy array
+    * **origins** (`ndarray`):
+            An array of dimension N x n specifying the origins of all strata. The origins of the strata are the
+            coordinates of the stratum orthotope nearest the global origin.
+            Example:
+                A 2D stratification with 2 strata in each dimension
+                origins = [[0, 0]
+                           [0, 0.5]
+                           [0.5, 0]
+                           [0.5, 0.5]]
 
-    :param widths: An array of dimension N x n specifying the widths of all strata in each dimension
-                   Example - A 2D stratification with 2 strata in each dimension
+    * **widths** (`ndarray`):
+            An array of dimension N x n specifying the widths of all strata in each dimension
+            Example: A 2D stratification with 2 strata in each dimension
                    widths = [[0.5, 0.5]
                              [0.5, 0.5]
                              [0.5, 0.5]
                              [0.5, 0.5]]
-    :type widths: numpy array
 
     **Attributes:**
 
-    :param Strata.weights: An array of dimension 1 x N containing sample weights.
-                    Sample weights are equal to the product of the strata widths (i.e. they are equal to the
-                    size of the strata in the [0, 1]^n space.
-    :type Strata.weights: numpy array
+    * **weights** (`ndarray`):
+            An array of dimension 1 x N containing sample weights. Sample weights are equal to the product of the
+            strata widths (i.e. they are equal to the size of the strata in the [0, 1]^n space.
 
-    **Author:**
-
-    Michael D. Shields
     """
     def __init__(self, n_strata=None, input_file=None, origins=None, widths=None):
 
@@ -851,7 +908,6 @@ class Strata:
 
         """
         Create a full-factorial design
-
         Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
         Copyright (C) 2012 - 2013 - Michael Baudin
         Copyright (C) 2012 - Maria Christopoulou
@@ -867,17 +923,13 @@ class Strata:
 
         **Input:**
 
-        :param levels: A list of integers that indicate the number of levels of each input design factor.
-        :type levels: list
+        * **levels** (`list`):
+                A list of integers that indicate the number of levels of each input design factor.
 
         **Output:**
 
-        :return ff: Full-factorial design matrix.
-        :rtype ff: ndarray
-
-        **Author:**
-
-        Michael D. Shields
+        * **ff** (`ndarray`):
+                Full-factorial design matrix.
         """
         # Number of factors
         n_factors = len(levels)
@@ -915,107 +967,122 @@ class RSS:
     1. Michael D. Shields, Kirubel Teferra, Adam Hapij and Raymond P. Daddazio, "Refined Stratified Sampling for
        efficient Monte Carlo based uncertainty quantification", Reliability Engineering & System Safety,
        ISSN: 0951-8320, Vol: 142, Page: 310-325, 2015.
+
     2. M. D. Shields, "Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems",
        Reliability Engineering & System Safety, ISSN: 0951-8320, Vol: 175, Page: 207-224, 2018.
 
     **Input:**
 
-    :param run_model_object: A RunModel object, which is used to evaluate the function value
-    :type run_model_object: class
+    * **runmodel_object** (``Uqpy.RunModel`` object):
+            A RunModel object, which is used to evaluate the function value.
 
-    :param sample_object: A SampleMethods class object, which contains information about existing samples
-    :type sample_object: class
+    * **sample_object** (``Uqpy.SampleMethodes.STS`` or ``UQpy.SampleMethods.RSS`` object):
+            A SampleMethods class object, which contains information about existing samples.
 
-    :param krig_object: A kriging class object, only  required if meta is 'Kriging'.
-    :type krig_object: class
+    * **krig_object** (`class` object):
+            A surrogate model, which should have fit and predict as methods.
 
-    :param local: Indicator to update surrogate locally.
-    :type local: boolean
+    * **local** (`boolean`):
+            Indicator to update surrogate locally.
 
-    :param max_train_size: Minimum size of training data around new sample used to update surrogate.
-                           Default: nsamples
-    :type max_train_size: int
-    :param step_size: Step size to calculate the gradient using central difference. Only required if Delaunay is
-                      used as surrogate approximation.
-    :type step_size: float
+    * **max_train_size** (`int`):
+            Minimum size of training data around new sample used to update surrogate.
 
-    :param n_add: Number of samples generated in each iteration
-    :type n_add: int
+            Default: nsamples.
 
-    :param verbose: A boolean declaring whether to write text to the terminal.
-    :type verbose: bool
+    * **qoi_name** (`dict`):
+            If the quantity of interest is a dictionary, convert it to a list
 
-    **Attributes:**
+    * **step_size** (`float`):
+            Step size to calculate the gradient using central difference.
 
-    :param: RSS.sample_object.samples: Final/expanded samples.
-    :type: RSS.sample_object.samples: ndarray
+    * **n_add** (`int`):
+            Number of samples generated in each iteration.
 
-    **Authors:**
+    * **random_state** (None or `int` or `np.random.RandomState` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
 
-    Authors: Mohit S. Chauhan
-    Last modified: 01/07/2020 by Mohit S. Chauhan
+    * **verbose** (`Boolean`):
+            A boolean declaring whether to write text to the terminal.
+
+            Default value: False
     """
 
-    def __init__(self, sample_object=None, run_model_object=None, krig_object=None, local=False, max_train_size=None,
-                 step_size=0.005, qoi_name=None, n_add=1, verbose=False):
+    def __init__(self, sample_object=None, runmodel_object=None, krig_object=None, local=False, max_train_size=None,
+                 step_size=0.005, qoi_name=None, n_add=1, nsamples=None, random_state=None, verbose=False):
 
         # Initialize attributes that are common to all approaches
         self.sample_object = sample_object
-        self.run_model_object = run_model_object
+        self.runmodel_object = runmodel_object
         self.verbose = verbose
-        self.nsamples = 0
+        self.nsamples = nsamples
 
         self.cell = self.sample_object.stype
         self.dimension = np.shape(self.sample_object.samples)[1]
         self.nexist = 0
         self.n_add = n_add
 
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif isinstance(self.random_state, type(None)):
+            self.random_state = np.random.RandomState()
+        elif not isinstance(self.random_state, np.random.RandomState):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
         if self.cell == 'Voronoi':
             self.mesh = []
             self.mesh_vertices, self.vertices_in_U01 = [], []
             self.points_to_samplesU01, self.training_points = [], []
 
-        # Run Initial Error Checks
-        self.init_rss()
+        # Initial Error Checks
+        if type(self.sample_object).__name__ not in ['STS', 'RSS']:
+            raise NotImplementedError("UQpy Error: sample_object must be an object of the STS or RSS class.")
 
-        if run_model_object is not None:
+        if self.runmodel_object is not None:
+            if type(self.runmodel_object).__name__ not in ['RunModel']:
+                raise NotImplementedError("UQpy Error: runmodel_object must be an object of the RunModel class.")
+
+        if runmodel_object is not None:
             self.local = local
             self.max_train_size = max_train_size
-            self.krig_object = krig_object
+            if krig_object is not None:
+                if hasattr(krig_object, 'fit') and hasattr(krig_object, 'predict'):
+                    self.krig_object = krig_object
+                else:
+                    raise NotImplementedError("UQpy Error: krig_object must have 'fit' and 'predict' methods.")
             self.qoi_name = qoi_name
             self.step_size = step_size
             if self.verbose:
                 print('UQpy: GE-RSS - Running the initial sample set.')
-            self.run_model_object.run(samples=self.sample_object.samples)
+            self.runmodel_object.run(samples=self.sample_object.samples)
             if self.verbose:
                 print('UQpy: GE-RSS - A RSS class object has been initiated.')
         else:
             if self.verbose:
                 print('UQpy: RSS - A RSS class object has been initiated.')
 
-    def sample(self, nsamples=0, n_add=None):
+        if self.nsamples is not None:
+            if isinstance(self.nsamples, int) and self.nsamples > 0:
+                self.run(nsamples=self.nsamples)
+            else:
+                raise NotImplementedError("UQpy Error: nsamples should be a positive integer.")
+
+    def run(self, nsamples=0):
         """
         Execute refined stratified sampling.
-
         This is an instance method that runs refined stratified sampling. It is automatically called when the RSS class
         is instantiated.
-
         **Inputs:**
-
         :param nsamples: Final size of the samples.
         :type nsamples: int
-
-        :param n_add: Number of samples to generate with each iteration.
-        :type n_add: int
         """
         self.nsamples = nsamples
         self.nexist = self.sample_object.samples.shape[0]
-        if n_add is not None:
-            self.n_add = n_add
         if self.nsamples <= self.nexist:
             raise NotImplementedError('UQpy Error: The number of requested samples must be larger than the existing '
                                       'sample set.')
-        if self.run_model_object is not None:
+        if self.runmodel_object is not None:
             self.run_gerss()
         else:
             self.run_rss()
@@ -1046,17 +1113,16 @@ class RSS:
                 p = min(self.n_add, self.nsamples - i)  # Number of points to add in this iteration
 
                 # If the quantity of interest is a dictionary, convert it to a list
-                qoi = [None] * len(self.run_model_object.qoi_list)
-                if type(self.run_model_object.qoi_list[0]) is dict:
-                    for j in range(len(self.run_model_object.qoi_list)):
-                        qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
+                qoi = [None] * len(self.runmodel_object.qoi_list)
+                if type(self.runmodel_object.qoi_list[0]) is dict:
+                    for j in range(len(self.runmodel_object.qoi_list)):
+                        qoi[j] = self.runmodel_object.qoi_list[j][self.qoi_name]
                 else:
-                    qoi = self.run_model_object.qoi_list
+                    qoi = self.runmodel_object.qoi_list
 
                 # ---------------------------------------------------
                 # Compute the gradients at the existing sample points
                 # ---------------------------------------------------
-
                 # Use the entire sample set to train the surrogate model (more expensive option)
                 if self.max_train_size is None or len(self.training_points) <= self.max_train_size or i == self.nexist:
                     dy_dx[:i] = self.estimate_gradient(np.atleast_2d(self.training_points),
@@ -1102,8 +1168,9 @@ class RSS:
                     bin2break = np.hstack([bin2break, t])
                     s[t] = 0
                     p_left -= t.shape[0]
-                bin2break = np.hstack(
-                    [bin2break, np.random.choice(np.where(s == s.max())[0], p_left, replace=False)])
+
+                rest_of_the_bins = self.random_state.choice(np.where(s == s.max())[0], p_left, replace=False)
+                bin2break = np.hstack([bin2break, rest_of_the_bins])
                 bin2break = list(map(int, bin2break))
 
                 new_point = np.zeros([p, self.dimension])
@@ -1136,20 +1203,19 @@ class RSS:
                                                                   self.sample_object.strata.weights[bin2break[j]])
 
                     # Add a uniform random sample inside the new stratum
-                    new_point[j, :] = np.random.uniform(self.sample_object.strata.origins[i+j, :],
-                                                        self.sample_object.strata.origins[i+j, :] +
-                                                        self.sample_object.strata.widths[i+j, :])
+                    new_point[j, :] = stats.uniform.rvs(loc=self.sample_object.strata.origins[i + j, :],
+                                                        scale=self.sample_object.strata.widths[i + j, :],
+                                                        random_state=self.random_state)
 
                 # Adding new sample to training points, samplesU01 and samples attributes
                 self.training_points = np.vstack([self.training_points, new_point])
                 self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
                 for j in range(0, self.dimension):
-                    i_cdf = self.sample_object.distribution[j].icdf
-                    new_point[:, j] = i_cdf(np.atleast_2d(new_point[:, j]).T, self.sample_object.dist_params[j])
+                    new_point[:, j] = self.sample_object.dist_object[j].icdf(new_point[:, j])
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 # Run the model at the new sample point
-                self.run_model_object.run(samples=np.atleast_2d(new_point))
+                self.runmodel_object.run(samples=np.atleast_2d(new_point), append_samples=True)
 
                 if self.verbose:
                     print("Iteration:", i)
@@ -1200,12 +1266,12 @@ class RSS:
                         compute_Delaunay_centroid_volume(points[self.mesh.vertices[j]])
 
                 # If the quantity of interest is a dictionary, convert it to a list
-                qoi = [None] * len(self.run_model_object.qoi_list)
-                if type(self.run_model_object.qoi_list[0]) is dict:
-                    for j in range(len(self.run_model_object.qoi_list)):
-                        qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
+                qoi = [None] * len(self.runmodel_object.qoi_list)
+                if type(self.runmodel_object.qoi_list[0]) is dict:
+                    for j in range(len(self.runmodel_object.qoi_list)):
+                        qoi[j] = self.runmodel_object.qoi_list[j][self.qoi_name]
                 else:
-                    qoi = self.run_model_object.qoi_list
+                    qoi = self.runmodel_object.qoi_list
 
                 # ---------------------------------------------------
                 # Compute the gradients at the existing sample points
@@ -1214,8 +1280,7 @@ class RSS:
                 # Use the entire sample set to train the surrogate model (more expensive option)
                 if self.max_train_size is None or len(self.training_points) <= self.max_train_size or \
                         i == self.nexist:
-                    dy_dx = self.estimate_gradient(np.atleast_2d(self.training_points), np.atleast_2d(np.array(qoi)),
-                                                   self.mesh.centroids)
+                    dy_dx = self.estimate_gradient(np.atleast_2d(self.training_points), qoi, self.mesh.centroids)
 
                 # Use only max_train_size points to train the surrogate model (more economical option)
                 else:
@@ -1302,7 +1367,8 @@ class RSS:
                     bin2add = np.hstack([bin2add, t])
                     s[t] = 0
                     p_left -= t.shape[0]
-                bin2add = np.hstack([bin2add, np.random.choice(np.where(s == s.max())[0], p_left, replace=False)])
+                bin2add = np.hstack([bin2add, self.random_state.choice(np.where(s == s.max())[0], p_left,
+                                                                       replace=False)])
 
                 # Create 'p' sub-simplex within the simplex with maximum variance
                 new_point = np.zeros([p, self.dimension])
@@ -1315,7 +1381,8 @@ class RSS:
                         self.mesh.sub_simplex[m, :] = np.sum(tmp_vertices[col_one[m] - 1, :], 0) / self.dimension
 
                     # Using the Simplex class to generate a new sample in the sub-simplex
-                    new_point[j, :] = Simplex(nodes=self.mesh.sub_simplex, nsamples=1).samples
+                    new_point[j, :] = Simplex(nodes=self.mesh.sub_simplex, nsamples=1,
+                                              random_state=self.random_state).samples
 
                 # Update the matrices to have recognize the new point
                 self.points_to_samplesU01 = np.hstack([self.points_to_samplesU01, np.arange(i, i+p)])
@@ -1332,12 +1399,11 @@ class RSS:
 
                 # Identify the new point in the parameter space and update the sample array to include the new point.
                 for j in range(self.dimension):
-                    new_point[:, j] = self.sample_object.distribution[j].icdf(np.atleast_2d(new_point[:, j]).T,
-                                                                              self.sample_object.dist_params[j])
+                    new_point[:, j] = self.sample_object.dist_object[j].icdf(new_point[:, j])
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 # Run the mode at the new point.
-                self.run_model_object.run(samples=new_point)
+                self.runmodel_object.run(samples=new_point)
 
                 # Compute the strata weights.
                 self.sample_object.strata = voronoi_unit_hypercube(self.sample_object.samplesU01)
@@ -1389,7 +1455,8 @@ class RSS:
                     bin2break = np.hstack([bin2break, t])
                     s[t] = 0
                     p_left -= t.shape[0]
-                bin2break = np.hstack([bin2break, np.random.choice(np.where(s == s.max())[0], p_left, replace=False)])
+                bin2break = np.hstack([bin2break, self.random_state.choice(np.where(s == s.max())[0], p_left,
+                                                                           replace=False)])
                 bin2break = list(map(int, bin2break))
 
                 new_point = np.zeros([p, self.dimension])
@@ -1421,16 +1488,16 @@ class RSS:
                                                                   self.sample_object.strata.weights[bin2break[j]])
 
                     # Add a uniform random sample inside the new stratum
-                    new_point[j, :] = np.random.uniform(self.sample_object.strata.origins[i+j, :],
-                                                        self.sample_object.strata.origins[i+j, :] +
-                                                        self.sample_object.strata.widths[i+j, :])
+                    new_point[j, :] = stats.uniform.rvs(loc=self.sample_object.strata.origins[i + j, :],
+                                                        scale=self.sample_object.strata.widths[i + j, :],
+                                                        random_state=self.random_state)
 
                 # Adding new sample to training points, samplesU01 and samples attributes
                 self.training_points = np.vstack([self.training_points, new_point])
                 self.sample_object.samplesU01 = np.vstack([self.sample_object.samplesU01, new_point])
                 for k in range(self.dimension):
-                    i_cdf = self.sample_object.distribution[k].icdf
-                    new_point[:, k] = i_cdf(np.atleast_2d(new_point[:, k]).T, self.sample_object.dist_params[k])
+                    i_cdf = self.sample_object.dist_object[k].icdf
+                    new_point[:, k] = i_cdf(new_point[:, k])
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 if self.verbose:
@@ -1495,7 +1562,8 @@ class RSS:
                     bin2add = np.hstack([bin2add, t])
                     s[t] = 0
                     p_left -= t.shape[0]
-                bin2add = np.hstack([bin2add, np.random.choice(np.where(s == s.max())[0], p_left, replace=False)])
+                bin2add = np.hstack([bin2add, self.random_state.choice(np.where(s == s.max())[0], p_left,
+                                                                       replace=False)])
 
                 # Create 'p' sub-simplex within the simplex with maximum weight
                 new_point = np.zeros([p, self.dimension])
@@ -1508,7 +1576,8 @@ class RSS:
                         self.mesh.sub_simplex[m, :] = np.sum(tmp_vertices[col_one[m] - 1, :], 0) / self.dimension
 
                     # Using the Simplex class to generate a new sample in the sub-simplex
-                    new_point[j, :] = Simplex(nodes=self.mesh.sub_simplex, nsamples=1).samples
+                    new_point[j, :] = Simplex(nodes=self.mesh.sub_simplex, nsamples=1,
+                                              random_state=self.random_state).samples
 
                 # Update the matrices to have recognize the new point
                 self.points_to_samplesU01 = np.hstack([self.points_to_samplesU01, np.arange(i, i+p)])
@@ -1525,8 +1594,7 @@ class RSS:
 
                 # Identify the new point in the parameter space and update the sample array to include the new point.
                 for j in range(self.dimension):
-                    new_point[:, j] = self.sample_object.distribution[j].icdf(np.atleast_2d(new_point[:, j]).T,
-                                                                              self.sample_object.dist_params[j])
+                    new_point[:, j] = self.sample_object.dist_object[j].icdf(new_point[:, j])
                 self.sample_object.samples = np.vstack([self.sample_object.samples, new_point])
 
                 # Compute the strata weights.
@@ -1548,45 +1616,31 @@ class RSS:
     def estimate_gradient(self, x, y, xt):
         """
         Estimating gradients with a metamodel (surrogate).
-
         **Inputs:**
 
-        :param x: Samples in the training data.
-        :type x: numpy array
+        * **x** (`ndarray`):
+                Samples in the training data.
 
-        :param y: Function values evaluated at the samples in the training data.
-        :type y: numpy array
+        * **y** (`ndarray`):
+                Function values evaluated at the samples in the training data.
 
-        :param xt: Samples where gradients are computed.
-        :type xt: numpy array
+        * **xt** (`ndarray`):
+                Samples where gradients need to be evaluated.
 
         **Outputs:**
-        :return gr: First-order gradient evaluated at the points 'xt'.
-        :rtype gr: numpy array
+
+        * **gr** (`ndarray`):
+                First-order gradient evaluated at the points 'xt' using central difference.
         """
-        from UQpy.Reliability import TaylorSeries
-        if type(self.krig_object).__name__ == 'Krig':
-            self.krig_object.fit(samples=x, values=y)
-            tck = self.krig_object
-        elif type(self.krig_object).__name__ == 'GaussianProcessRegressor':
+        if self.krig_object is not None:
             self.krig_object.fit(x, y)
             tck = self.krig_object.predict
         else:
             from scipy.interpolate import LinearNDInterpolator
             tck = LinearNDInterpolator(x, y, fill_value=0).__call__
 
-        gr = TaylorSeries.gradient(samples=xt, model=tck, dimension=self.dimension, order='first',
-                                   df_step=self.step_size, scale=False)
+        gr = gradient(point=xt, runmodel_object=tck, order='first', df_step=self.step_size)
         return gr
-
-    def init_rss(self):
-        """Preliminary error checks."""
-        if type(self.sample_object).__name__ not in ['STS', 'RSS']:
-            raise NotImplementedError("UQpy Error: sample_object must be an object of the STS or RSS class.")
-
-        if self.run_model_object is not None:
-            if type(self.run_model_object).__name__ not in ['RunModel']:
-                raise NotImplementedError("UQpy Error: run_model_object must be an object of the RunModel class.")
 
 
 ########################################################################################################################
@@ -1605,44 +1659,50 @@ class Simplex:
 
     **Input:**
 
-    :param nodes: The vertices of the simplex
-    :type nodes: ndarray
+    * **nodes** (`ndarray` or `list`):
+             The vertices of the simplex.
 
-    :param nsamples: The number of samples to be generated inside the simplex
-    :type nsamples: int
+    * **nsamples** (`int`):
+             The number of samples to be generated inside the simplex.
 
-    **Attributes:**
+    * **random_state** (None or `int` or `np.random.RandomState` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
 
-    :return Simplex.samples: New random samples distributed uniformly inside the simplex.
-    :rtype Simplex.samples: ndarray
+    **Output:**
 
-    **Authors:**
-
-    Authors: Dimitris G.Giovanis
-    Last modified: 11/28/2018 by Mohit S. Chauhan
+    * **samples** (`ndarray`):
+             New random samples distributed uniformly inside the simplex.
     """
 
     # Authors: Dimitris G.Giovanis
     # Last modified: 11/28/2018 by Mohit S. Chauhan
 
-    def __init__(self, nodes=None, nsamples=1):
+    def __init__(self, nodes=None, nsamples=None, random_state=None):
         self.nodes = np.atleast_2d(nodes)
         self.nsamples = nsamples
-        self.init_sis()
-        self.samples = self.run_sis()
 
-    def run_sis(self):
+        if self.nodes.shape[0] != self.nodes.shape[1] + 1:
+            raise NotImplementedError("UQpy: Size of simplex (nodes) is not consistent.")
+
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
+        if nsamples is not None:
+            if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
+                raise NotImplementedError("UQpy: Number of samples to be generated 'nsamples' should be a positive "
+                                          "integer.")
+            self.samples = self.run(nsamples=nsamples)
+
+    def run(self, nsamples):
         """
         Generates uniformly distributed random samples inside the simplex.
-
         This is an instance method that generates samples. It is automatically called when the Simplex class is
         instantiated.
-
-        **Output:**
-
-        :return sample: Random samples
-        :rtype sample: numpy array
         """
+        self.nsamples = nsamples
         dimension = self.nodes.shape[1]
         if dimension > 1:
             sample = np.zeros([self.nsamples, dimension])
@@ -1655,24 +1715,15 @@ class Simplex:
                         ai = self.nodes[k, j] - self.nodes[k - 1, j]
                         b_.append(ai)
                     ad[j] = np.hstack((self.nodes[0, j], b_))
-                    r[j] = np.random.uniform(0.0, 1.0, 1) ** (1 / (dimension - j))
+                    r[j] = stats.uniform.rvs(loc=0, scale=1, random_state=self.random_state) ** (1 / (dimension - j))
                 d = np.cumprod(r)
                 r_ = np.hstack((1, d))
                 sample[i, :] = np.dot(ad, r_)
         else:
             a = min(self.nodes)
             b = max(self.nodes)
-            sample = a + (b - a) * np.random.rand(dimension, self.nsamples).reshape(self.nsamples, dimension)
+            sample = a + (b - a) * stats.uniform.rvs(size=[self.nsamples, dimension], random_state=self.random_state)
         return sample
-
-    def init_sis(self):
-        """Preliminary error checks."""
-        if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
-            raise NotImplementedError("Exit code: Number of samples to be generated 'nsamples' should be a positive "
-                                      "integer.")
-
-        if self.nodes.shape[0] != self.nodes.shape[1] + 1:
-            raise NotImplementedError("Size of simplex (nodes) is not consistent.")
 
 
 ########################################################################################################################
@@ -1681,8 +1732,7 @@ class Simplex:
 ########################################################################################################################
 class AKMCS:
     """
-    Generate new samples using different active learning method and properties of kriging surrogate along with
-    MCS.
+    Generate new samples using different active learning method and properties of kriging surrogate along with MCS.
 
     **References:**
 
@@ -1691,179 +1741,185 @@ class AKMCS:
 
     **Input:**
 
-    :param run_model_object: A RunModel object, which is used to evaluate the function value
-    :type run_model_object: class
+    * **dist_object** ((list of) ``Distribution`` object(s)):
+            List of ``Distribution`` objects corresponding to each random variable.
 
-    :param samples: A 2d-array of samples
-    :type samples: ndarray
+    * **runmodel_object** (``RunModel`` object):
+            A RunModel object, which is used to evaluate the function value.
 
-    :param krig_object: A kriging class object
-    :type krig_object: class
+    * **samples** (`ndarray`):
+            `ndarray` containing the samples.
 
-    :param population: Sample which are used as learning set by AKMCS class.
-    :type population: ndarray
+    * **krig_object** (`class` object):
+            A surrogate model, this object must have fit and predict methods.
 
-    :param nlearn: Number of sample generated using MCS, which are used as learning set by AKMCS. Only required
-                   if population is not defined.
-    :type nlearn: int
+    * **nsamples** (`int`):
+            Number of samples to be drawn from each distribution.
 
-    :param nstart: Number of initial samples generated using LHS. Only required if sample_object is not defined.
-    :type nstart: int
+    * **nlearn** (`int`):
+            Number of sample generated using LHS, which are used as learning set by AKMCS.
 
-    :param dist_name: A list containing the names of the distributions of the random variables. This is only
-                      required if sample_object is not defined.
-                      Distribution names must match those in the Distributions module.
-                      If the distribution does not match one from the Distributions module, the user must
-                      provide custom_dist.py.
-                      The length of the string must be 1 (if all distributions are the same) or equal to
-                      dimension.
-    :type dist_name: string list
+    * **nstart** (`int`):
+            Number of initial samples, randomly generated using LHS.
 
-    :param dist_params: Parameters of the distribution
-                        Parameters for each random variable are defined as ndarrays.
-                        Each item in the list, dist_params[i], specifies the parameters for the corresponding
-                        distribution, dist[i].
-    :type dist_params: list
+    * **qoi_name** (`dict`):
+            If the quantity of interest is a dictionary, convert it to a list
 
-    :param lf: Learning function used as selection criteria to identify the new samples.
-               Options: U, Weighted-U, EFF, EIF and EGIF
-    :type lf: str/function
+    * **learning_function** (`str` or `function`):
+            Learning function used as the selection criteria to identify new samples.
+                Options:
+                    1. 'U' - U-function \n
+                    2. 'EFF' - Expected Feasibility Function \n
+                    3. 'Weighted-U' - Weighted-U function \n
+                    4. 'EIF' - Expected Improvement Function \n
+                    5. 'EGIF' - Expected Global Improvement Fit \n
 
-    :param n_add: Number of samples to be selected per iteration.
-    :type n_add: int
+                Default: 'U'.
 
-    :param min_cov: Minimum Covariance used as the stopping criteria of AKMCS method in case of reliability
-                    analysis.
-    :type min_cov: float
+    * **n_add** (`int'):
+            Number of samples to be selected per iteration.
 
-    :param max_p: Maximum possible value of probability density function of samples. Only required with
-                  'Weighted-U' learning function.
-    :type max_p: float
+            Default: 1.
 
-    :param save_pf: Indicator to estimate probability of failure after each iteration. Only required if
-                    user-defined learning function is used.
-    :type save_pf: boolean
+    * **save_pf** (`boolean'):
+            Indicator to estimate probability of failure after each iteration. Only required if user-defined learning
+            function is used.
 
-    :param verbose: A boolean declaring whether to write text to the terminal.
-    :type verbose: bool
+    * **random_state** (None or `int` or `np.random.RandomState` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
+
+    * **verbose** (`Boolean`):
+            A boolean declaring whether to write text to the terminal.
+
+            Default value: False.
 
     **Attributes:**
 
-    :param: AKMCS.sample_object.samples: Final/expanded samples.
-    :type: AKMCS..sample_object.samples: ndarray
+    * **samples** (`ndarray`):
+            `ndarray` containing the generated samples.
 
-    :param: AKMCS.krig_model: Prediction function for the final surrogate model.
-    :type: AKMCS.krig_model: function
+    * **pf** (`list`):
+            Probability of failure after every iteration of AKMCS. Available as an output only for Reliability Analysis.
 
-    :param: AKMCS.pf: Probability of failure after every iteration of AKMCS. Available as an output only for
-                       Reliability Analysis.
-    :type: AKMCS.pf: float list
+    * **cov_pf** (`list`):
+            Covariance of probability of failure after every iteration of AKMCS. Available as an output only for
+            Reliability Analysis.
 
-    :param: AKMCS.cov_pf: Covariance of probability of failure after every iteration of AKMCS. Available as an
-                           output only for Reliability Analysis.
-    :type: AKMCS.pf: float list
-
-    **Authors:**
-
-    Authors: Mohit S. Chauhan
-    Last modified: 01/07/2020 by Mohit S. Chauhan
     """
 
-    def __init__(self, run_model_object=None, samples=None, krig_object=None, nlearn=10000, nstart=None,
-                 population=None, dist_name=None, dist_params=None, qoi_name=None, lf='U', n_add=1,
-                 min_cov=0.05, max_p=None, verbose=False, kriging='UQpy', save_pf=None):
+    def __init__(self, dist_object, runmodel_object, krig_object, samples=None, nsamples=None, nlearn=10000,
+                 nstart=None, qoi_name=None, learning_function='U', n_add=1, random_state=None, save_pf=None,
+                 verbose=False, **kwargs):
 
         # Initialize the internal variables of the class.
-        self.run_model_object = run_model_object
+        self.runmodel_object = runmodel_object
         self.samples = np.array(samples)
-        self.krig_object = krig_object
         self.nlearn = nlearn
         self.nstart = nstart
         self.verbose = verbose
         self.qoi_name = qoi_name
 
-        self.lf = lf
-        self.min_cov = min_cov
-        self.max_p = max_p
-        self.dist_name = dist_name
-        self.dist_params = dist_params
-        self.nsamples = []
+        self.learning_function = learning_function
+        self.dist_object = dist_object
+        self.nsamples = nsamples
 
         self.moments = None
-        self.distribution = None
-        self.training_points = None
         self.n_add = n_add
         self.indicator = False
         self.pf = []
         self.cov_pf = []
-        self.population = population
-        self.kriging = kriging
         self.save_pf = save_pf
         self.dimension = 0
         self.qoi = None
         self.krig_model = None
+        self.kwargs = kwargs
 
         # Initialize and run preliminary error checks.
-        self.init_akmcs()
+        if self.samples is not None:
+            self.dimension = np.shape(self.samples)[1]
+        else:
+            self.dimension = len(self.dist_object)
 
-        # Run AKMCS
-        self.run_akmcs()
+        if self.save_pf is None:
+            if self.learning_function not in ['EFF', 'U', 'Weighted-U']:
+                self.save_pf = False
+            else:
+                self.save_pf = True
 
-    def run_akmcs(self):
-        """
-        Executes Adaptive Kriging - Monte Carlo Method.
+        if type(self.learning_function).__name__ == 'function':
+            self.learning_function = self.learning_function
+        elif self.learning_function not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
+            raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
+        elif self.learning_function == 'EIGF':
+            self.learning_function = self.eigf
+        elif self.learning_function == 'EIF':
+            self.learning_function = self.eif
+        elif self.learning_function == 'U':
+            self.learning_function = self.u
+        elif self.learning_function == 'Weighted-U':
+            if 'max_p' not in self.kwargs:
+                raise NotImplementedError("UQpy Error: Weighted-U learning function requires the parameter 'max_p'.")
+            self.learning_function = self.weighted_u
+        else:
+            if 'a' not in self.kwargs:
+                self.kwargs['a'] = 0
+            if 'epsilon' not in self.kwargs:
+                self.kwargs['epsilon'] = 2
+            self.learning_function = self.eff
 
-        This is an instance method that check initial sample design an evaluate model at the training points. It is
-        automatically called when the STS class is instantiated.
-        """
+        from UQpy.Distributions import DistributionContinuous1D, JointInd
+
+        if isinstance(dist_object, list):
+            for i in range(len(dist_object)):
+                if not isinstance(dist_object[i], DistributionContinuous1D):
+                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
+        else:
+            if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
+                raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
+
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
+        if hasattr(krig_object, 'fit') and hasattr(krig_object, 'predict'):
+            self.krig_object = krig_object
+        else:
+            raise NotImplementedError("UQpy Error: krig_object must have 'fit' and 'predict' methods.")
 
         # If the initial sample design does not exists, run the initial calculations.
         if self.samples is None:
             if self.verbose:
                 print('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
-            self.samples = LHS(dist_name=self.dist_name, dist_params=self.dist_params, nsamples=self.nstart).samples
+            self.samples = LHS(dist_object=self.dist_object, nsamples=self.nstart, random_state=random_state).samples
 
         if self.verbose:
             print('UQpy: AKMCS - Running the initial sample set using RunModel.')
 
         # Evaluate model at the training points
-        self.run_model_object.run(samples=self.samples)
+        if len(self.runmodel_object.qoi_list) == 0:
+            self.runmodel_object.run(samples=self.samples)
+        else:
+            if len(self.runmodel_object.qoi_list) != self.samples.shape[0]:
+                raise NotImplementedError("UQpy: There should be no model evaluation or Number of samples and model "
+                                          "evaluation in RunModel object should be same.")
 
-    def sample(self, samples=None, n_add=1, append_samples=True, nsamples=0, lf=None):
+        if self.nsamples is not None:
+            if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
+                raise NotImplementedError("UQpy: Number of samples to be generated 'nsamples' should be a positive "
+                                          "integer.")
+            self.run(nsamples=self.nsamples)
+
+    def run(self, samples=None, append_samples=True, nsamples=0):
         """
-        Iterative procedure is applied to learn samples based on metamodel and learning function, and then metamodel is
-        updated based on new samples.
+        The ``run`` method of the ``AKMCS`` class can be invoked many times and the generated samples are appended to
+        the existing samples. Iterative procedure is applied to learn samples based on metamodel and learning function,
+        and then metamodel is updated based on new samples.
 
-        **Inputs:**
-
-        :param samples: A 2d-array of samples
-        :type samples: ndarray
-
-        :param n_add: Number of samples to be selected per iteration.
-        :type n_add: int
-
-        :param append_samples: If 'True', new samples are append to existing samples in sample_object. Otherwise,
-                               existing samples are discarded.
-        :type append_samples: boolean
-
-        :param nsamples: Number of samples to generate. No Default Value: nsamples must be prescribed.
-        :type nsamples: int
-
-        :param lf: Learning function used as selection criteria to identify the new samples. Only required, if
-                   samples are generated using multiple criterion
-                   Options: U, Weighted-U, EFF, EIF and EGIF
-        :type lf: str/function
         """
-
-        if self.kriging != 'UQpy':
-            from sklearn.gaussian_process import GaussianProcessRegressor
 
         self.nsamples = nsamples
-        if n_add is not None:
-            self.n_add = n_add
-        if lf is not None:
-            self.lf = lf
-            self.learning()
 
         if samples is not None:
             # New samples are appended to existing samples, if append_samples is TRUE
@@ -1871,93 +1927,79 @@ class AKMCS:
                 self.samples = np.vstack([self.samples, samples])
             else:
                 self.samples = samples
-                self.run_model_object.qoi_list = []
+                self.runmodel_object.qoi_list = []
 
             if self.verbose:
-                print('UQpy: AKMCS - Running the provided sample set using RunModel.')
+                print('UQpy: AKMCS - Evaluating the model at the sample set using RunModel.')
 
-            self.run_model_object.run(samples=samples, append_samples=append_samples)
+            self.runmodel_object.run(samples=samples, append_samples=append_samples)
 
         if self.verbose:
             print('UQpy: Performing AK-MCS design...')
 
-        # Initialize the population of samples at which to evaluate the learning function and from which to draw in the
-        # sampling.
-        if self.population is None:
-            self.population = MCS(dist_name=self.dist_name, dist_params=self.dist_params,
-                                  nsamples=self.nlearn)
-
         # If the quantity of interest is a dictionary, convert it to a list
-        self.qoi = [None] * len(self.run_model_object.qoi_list)
-        if type(self.run_model_object.qoi_list[0]) is dict:
-            for j in range(len(self.run_model_object.qoi_list)):
-                self.qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
+        self.qoi = [None] * len(self.runmodel_object.qoi_list)
+        if type(self.runmodel_object.qoi_list[0]) is dict:
+            for j in range(len(self.runmodel_object.qoi_list)):
+                self.qoi[j] = self.runmodel_object.qoi_list[j][self.qoi_name]
         else:
-            self.qoi = self.run_model_object.qoi_list
+            self.qoi = self.runmodel_object.qoi_list
 
         # Train the initial Kriging model.
-        if self.kriging == 'UQpy':
-            with suppress_stdout():  # disable printing output comments
-                self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(self.qoi)))
-            self.krig_model = self.krig_object.interpolate
-        else:
-            from sklearn.gaussian_process import GaussianProcessRegressor
-            gp = GaussianProcessRegressor(kernel=self.krig_object, n_restarts_optimizer=0)
-            gp.fit(self.training_points, self.qoi)
-            self.krig_model = gp.predict
+        self.krig_object.fit(self.samples, self.qoi)
+        self.krig_model = self.krig_object.predict
 
         # ---------------------------------------------
         # Primary loop for learning and adding samples.
         # ---------------------------------------------
 
         for i in range(self.samples.shape[0], self.nsamples):
+            # Initialize the population of samples at which to evaluate the learning function and from which to draw
+            # in the sampling.
+
+            learning_set = LHS(dist_object=self.dist_object, nsamples=self.nlearn,
+                               random_state=self.random_state).samples
+
             # Find all of the points in the population that have not already been integrated into the training set
-            rest_pop = np.array([x for x in self.population.samples.tolist() if x not in self.samples.tolist()])
+            rest_pop = np.array([x for x in learning_set.tolist() if x not in self.samples.tolist()])
 
             # Apply the learning function to identify the new point to run the model.
 
-            new_ind = self.lf(self.krig_model, rest_pop)
-            new_point = np.atleast_2d(rest_pop[new_ind])
+            new_point, ind = self.learning_function(self.krig_model, rest_pop)
 
             # Add the new points to the training set and to the sample set.
-            self.samples = np.vstack([self.samples, new_point])
+            self.samples = np.vstack([self.samples, np.atleast_2d(new_point)])
 
             # Run the model at the new points
-            self.run_model_object.run(samples=np.atleast_2d(new_point))
+            self.runmodel_object.run(samples=new_point, append_samples=True)
 
             # If the quantity of interest is a dictionary, convert it to a list
-            self.qoi = [None] * len(self.run_model_object.qoi_list)
-            if type(self.run_model_object.qoi_list[0]) is dict:
-                for j in range(len(self.run_model_object.qoi_list)):
-                    self.qoi[j] = self.run_model_object.qoi_list[j][self.qoi_name]
+            self.qoi = [None] * len(self.runmodel_object.qoi_list)
+            if type(self.runmodel_object.qoi_list[0]) is dict:
+                for j in range(len(self.runmodel_object.qoi_list)):
+                    self.qoi[j] = self.runmodel_object.qoi_list[j][self.qoi_name]
             else:
-                self.qoi = self.run_model_object.qoi_list
+                self.qoi = self.runmodel_object.qoi_list
 
-            # Retrain the Kriging surrogate model
-            if self.kriging == 'UQpy':
-                with suppress_stdout():
-                    # disable printing output comments
-                    self.krig_object.fit(samples=self.samples, values=np.atleast_2d(np.array(self.qoi)))
-                self.krig_model = self.krig_object.interpolate
-            else:
-                from sklearn.gaussian_process import GaussianProcessRegressor
-                gp = GaussianProcessRegressor(kernel=self.krig_object, n_restarts_optimizer=0)
-                gp.fit(self.training_points, self.qoi)
-                self.krig_model = gp.predict
-
-            if self.verbose:
-                print("Iteration:", i)
+            # Retrain the surrogate model
+            self.krig_object.fit(self.samples, self.qoi)
+            self.krig_model = self.krig_object.predict
 
             if self.save_pf:
-                if self.kriging == 'UQpy':
-                    g = self.krig_model(rest_pop)
-                else:
-                    g = self.krig_model(rest_pop, return_std=False)
-
+                g = self.krig_model(learning_set, False)
                 n_ = g.shape[0] + len(self.qoi)
                 pf = (sum(g < 0) + sum(np.array(self.qoi) < 0)) / n_
                 self.pf.append(pf)
                 self.cov_pf.append(np.sqrt((1 - pf) / (pf * n_)))
+
+            # Exit the loop, if error criteria is satisfied
+            if ind:
+                if self.verbose:
+                    print("UQpy: Learning stops at iteration: ", i)
+                break
+            else:
+                if self.verbose:
+                    print("Iteration:", i)
 
         if self.verbose:
             print('UQpy: AKMCS complete')
@@ -1965,32 +2007,26 @@ class AKMCS:
     # ------------------
     # LEARNING FUNCTIONS
     # ------------------
-    def eigf(self, pop):
+    def eigf(self, surr, pop):
         """
-        Learns new samples based on Expected Improvement for Global Fit (EIGF) as learning function
+        Learns new samples based on Expected Improvement for Global Fit (EIGF) as learning function.
 
         **References:**
 
         1. J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
            (Link: https://arxiv.org/pdf/1905.05345.pdf)
-
-        **Inputs:**
-        :param pop: Remaining sample population (new samples are learn from this population)
-        :type pop
         """
-        if self.kriging == 'UQpy':
-            g, sig = self.krig_model(pop, dy=True)
-            sig = np.sqrt(sig)
-        else:
-            g, sig = self.krig_model(pop, return_std=True)
-            sig = sig.reshape(sig.size, 1)
-        sig[sig == 0.] = 0.00001
+        g, sig = surr(pop, True)
+
+        # Remove the inconsistency in the shape of 'g' and 'sig' array
+        g = g.reshape([pop.shape[0], 1])
+        sig = sig.reshape([pop.shape[0], 1])
 
         # Evaluation of the learning function
         # First, find the nearest neighbor in the training set for each point in the population.
         from sklearn.neighbors import NearestNeighbors
         knn = NearestNeighbors(n_neighbors=1)
-        knn.fit(np.atleast_2d(self.training_points))
+        knn.fit(np.atleast_2d(self.samples))
         neighbors = knn.kneighbors(np.atleast_2d(pop), return_distance=False)
 
         # noinspection PyTypeChecker
@@ -2000,10 +2036,10 @@ class AKMCS:
         u = np.square(np.squeeze(g) - qoi_array) + np.square(np.squeeze(sig))
 
         rows = np.argmax(u)
-        return rows
 
-    # This learning function has not yet been tested.
-    def u(self, pop):
+        return pop[rows, :], False
+
+    def u(self, surr, pop):
         """
         Learns new samples based on U-function as learning function.
 
@@ -2011,19 +2047,12 @@ class AKMCS:
 
         1. B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
         Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
-
-        **Inputs:**
-
-        :param pop: Remaining sample population (new samples are learn from this population)
-        :type pop
         """
-        if self.kriging == 'UQpy':
-            g, sig = self.krig_model(pop, dy=True)
-            sig = np.sqrt(sig)
-        else:
-            g, sig = self.krig_model(pop, return_std=True)
-            sig = sig.reshape(sig.size, 1)
-        sig[sig == 0.] = 0.00001
+        g, sig = surr(pop, True)
+
+        # Remove the inconsistency in the shape of 'g' and 'sig' array
+        g = g.reshape([pop.shape[0], 1])
+        sig = sig.reshape([pop.shape[0], 1])
 
         u = abs(g) / sig
         rows = u[:, 0].argsort()[:self.n_add]
@@ -2031,10 +2060,9 @@ class AKMCS:
         if min(u[:, 0]) >= 2:
             self.indicator = True
 
-        return rows
+        return pop[rows, :], self.indicator
 
-    # This learning function has not yet been tested.
-    def weighted_u(self, pop):
+    def weighted_u(self, surr, pop):
         """
         Learns new samples based on Probability Weighted U-function as learning function.
 
@@ -2042,38 +2070,29 @@ class AKMCS:
 
         1. V.S. Sundar and M.S. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH MULTIMODEL
            INFERENCE".
-
-        **Inputs:**
-
-        :param pop: Remaining sample population (new samples are learn from this population)
-        :type pop: numpy array
         """
-        if self.kriging == 'UQpy':
-            g, sig = self.krig_model(pop, dy=True)
-            sig = np.sqrt(sig)
-        else:
-            g, sig = self.krig_model(pop, return_std=True)
-            sig = sig.reshape(sig.size, 1)
-        sig[sig == 0.] = 0.00001
+        max_p = self.kwargs['max_p']
+        g, sig = surr(pop, True)
+
+        # Remove the inconsistency in the shape of 'g' and 'sig' array
+        g = g.reshape([pop.shape[0], 1])
+        sig = sig.reshape([pop.shape[0], 1])
 
         u = abs(g) / sig
         p1, p2 = np.ones([pop.shape[0], pop.shape[1]]), np.ones([pop.shape[0], pop.shape[1]])
         for j in range(self.dimension):
-            p2[:, j] = self.population.distribution[j].icdf(np.atleast_2d(pop[:, j]).T, self.dist_params[j])
-            p1[:, j] = self.population.distribution[j].pdf(np.atleast_2d(p2[:, j]).T, self.dist_params[j])
+            p1[:, j] = self.dist_object[j].pdf(np.atleast_2d(pop[:, j]).T)
 
         p1 = p1.prod(1).reshape(u.size, 1)
-        u_ = u * ((self.max_p - p1) / self.max_p)
-        # u_ = u * p1/max(p1)
+        u_ = u * ((max_p - p1) / max_p)
         rows = u_[:, 0].argsort()[:self.n_add]
 
         if min(u[:, 0]) >= 2:
             self.indicator = True
 
-        return rows
+        return pop[rows, :], self.indicator
 
-    # This learning function has not yet been tested.
-    def eff(self, pop):
+    def eff(self, surr, pop):
         """
         Learns new samples based on Expected Feasibilty Function (EFF) as learning function.
 
@@ -2081,23 +2100,15 @@ class AKMCS:
 
         1. B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, "Efficient Global Reliability Analysis
            for Nonlinear Implicit Performance Functions", AIAA JOURNAL, Volume 46, 2008.
-
-        **Inputs:**
-
-        :param pop: Remaining sample population (new samples are learn from this population)
-        :type pop: numpy array
         """
-        if self.kriging == 'UQpy':
-            g, sig = self.krig_model(pop, dy=True)
-            sig = np.sqrt(sig)
-        else:
-            g, sig = self.krig_model(pop, return_std=True)
-            g = g.reshape(g.size, 1)
-            sig = sig.reshape(sig.size, 1)
-        sig[sig == 0.] = 0.00001
+        g, sig = surr(pop, True)
+
+        # Remove the inconsistency in the shape of 'g' and 'sig' array
+        g = g.reshape([pop.shape[0], 1])
+        sig = sig.reshape([pop.shape[0], 1])
         # Reliability threshold: a_ = 0
         # EGRA method: epshilon = 2*sigma(x)
-        a_, ep = 0, 2 * sig
+        a_, ep = self.kwargs['a'], self.kwargs['epsilon']*sig
         t1 = (a_ - g) / sig
         t2 = (a_ - ep - g) / sig
         t3 = (a_ + ep - g) / sig
@@ -2109,15 +2120,9 @@ class AKMCS:
         if max(eff[:, 0]) <= 0.001:
             self.indicator = True
 
-        n_ = g.shape[0] + len(self.qoi)
-        pf = (np.sum(g < 0) + sum(iin < 0 for iin in self.qoi)) / n_
-        self.pf.append(pf)
-        self.cov_pf.append(np.sqrt((1 - pf) / (pf * n_)))
+        return pop[rows, :], self.indicator
 
-        return rows
-
-    # This learning function has not yet been tested.
-    def eif(self, pop):
+    def eif(self, surr, pop):
         """
         Learns new samples based on Expected Improvement Function (EIF) as learning function.
 
@@ -2125,62 +2130,18 @@ class AKMCS:
 
         1. D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box Functions",
            Journal of Global Optimization, Pages 455–492, 1998.
-
-        **Inputs:**
-
-        :param pop: Remaining sample population (new samples are learn from this population)
-        :type pop: numpy array
         """
+        g, sig = surr(pop, True)
 
-        if self.kriging == 'UQpy':
-            g, sig = self.krig_model(pop, dy=True)
-            sig = np.sqrt(sig)
-        else:
-            g, sig = self.krig_model(pop, return_std=True)
-            sig = sig.reshape(sig.size, 1)
-        sig[sig == 0.] = 0.00001
+        # Remove the inconsistency in the shape of 'g' and 'sig' array
+        g = g.reshape([pop.shape[0], 1])
+        sig = sig.reshape([pop.shape[0], 1])
+
         fm = min(self.qoi)
         u = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf((fm - g) / sig)
         rows = u[:, 0].argsort()[(np.size(g) - self.n_add):]
 
-        return rows
-
-    def learning(self):
-        """
-        Defines the leaning function used to generate new samples.
-        """
-        if type(self.lf).__name__ == 'function':
-            self.lf = self.lf
-        elif self.lf not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
-            raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
-        elif self.lf == 'EIGF':
-            self.lf = self.eigf
-        elif self.lf == 'EIF':
-            self.lf = self.eif
-        elif self.lf == 'U':
-            self.lf = self.u
-        elif self.lf == 'Weighted-U':
-            self.lf = self.weighted_u
-        else:
-            self.lf = self.eff
-
-    def init_akmcs(self):
-        """Preliminary error checks."""
-        if self.run_model_object is None:
-            raise NotImplementedError('UQpy: AKMCS requires a predefined RunModel object.')
-
-        if self.samples is not None:
-            self.dimension = np.shape(self.samples)[1]
-        else:
-            self.dimension = np.shape(self.dist_name)[0]
-
-        if self.save_pf is None:
-            if self.lf not in ['EFF', 'U', 'Weighted-U']:
-                self.save_pf = False
-            else:
-                self.save_pf = True
-
-        self.learning()
+        return pop[rows, :], False
 
 ########################################################################################################################
 ########################################################################################################################
@@ -2192,37 +2153,30 @@ class MCMC:
     """
     Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
 
-    This is the base class for all MCMC algorithms. This base class only provides the framework for MCMC and cannot be
-    used directly for sampling. Sampling is done by calling a subclass - see example in class ``MH``.
+    This is the parent class for all MCMC algorithms. This parent class only provides the framework for MCMC and cannot
+    be used directly for sampling. Sampling is done by calling the child class for the specific MCMC algorithm.
 
-    **References:**
-
-    * Gelman et al., "Bayesian data analysis", Chapman and Hall/CRC, 2013
-    * R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
 
     **Inputs:**
 
     * **dimension** (`int`):
-        A scalar value defining the dimension of target density function. Either dimension or seed must be provided.
+        A scalar value defining the dimension of target density function. Either `dimension` and `nchains` or `seed`
+        must be provided.
 
     * **pdf_target** ((`list` of) callables):
         Target density function from which to draw random samples. Either `pdf_target` or `log_pdf_target` must be
         provided (the latter should be preferred for better numerical stability).
 
         If `pdf_target` is a callable, it refers to the joint pdf to sample from, it must take at least one input `x`,
-        the point(s) where to evaluate the pdf. Within MCMC the target is evaluated as:
+        which are the point(s) at which to evaluate the pdf. Within MCMC the `pdf_target` is evaluated as:
+        ``p(x) = pdf_target(x, *args_target)``
 
-        `p(x) = pdf_target(x, *args_target)`
-
-        where `x` is a ndarray of shape (npoints, dimension) and `args_target` are additional positional arguments that
+        where `x` is a ndarray of shape (nsamples, dimension) and `args_target` are additional positional arguments that
         are provided to MCMC via its `args_target` input.
 
-        If `pdf_target` is a list of callables, it refers to independent marginals to sample from, marginal in dimension
-        `j` is evaluated as:
-
-        `p_j(xj) = pdf_target[j](xj, *args_target[j])`
-
-        where `x` is a ndarray of shape (npoints, dimension)
+        If `pdf_target` is a list of callables, it refers to independent marginals to sample from. The marginal in
+        dimension `j` is evaluated as: ``p_j(xj) = pdf_target[j](xj, *args_target[j])`` where `x` is a ndarray of shape
+        (nsamples, dimension)
 
     * **log_pdf_target** ((`list` of) callables):
         Logarithm of the target density function from which to draw random samples. Either `pdf_target` or
@@ -2233,52 +2187,56 @@ class MCMC:
     * **args_target** ((`list` of) `tuple`):
         Positional arguments of the pdf / log-pdf target function. See `pdf_target`
 
-    * **jump** (`int`):
-        Thinning parameter, used to reduce correlation between samples. Setting `jump=n` corresponds to	skipping `n-1`
-        states between accepted states of the chain. Default is 1 (no thinning).
+    * **seed** (`ndarray`):
+        Seed of the Markov chain(s), shape ``(nchains, dimension)``. Default: zeros(`nchains` x `dimension`).
+
+        If `seed` is not provided, both `nchains` and `dimension` must be provided.
 
     * **nburn** (`int`):
         Length of burn-in - i.e., number of samples at the beginning of the chain to discard (note: no thinning during
         burn-in). Default is 0, no burn-in.
 
-    * **seed** (`ndarray`):
-        Seed of the Markov chain(s), shape ``(nchains, dimension)``. Default: zeros(1 x dimension).
+    * **jump** (`int`):
+        Thinning parameter, used to reduce correlation between samples. Setting `jump=n` corresponds to	skipping `n-1`
+        states between accepted states of the chain. Default is 1 (no thinning).
+
+    * **nchains** (`int`):
+        The number of Markov chains to generate. Either `dimension` and `nchains` or `seed` must be provided.
 
     * **save_log_pdf** (`bool`):
         Boolean that indicates whether to save log-pdf values along with the samples. Default: False
+
+    * **verbose** (`boolean`)
+        Set ``verbose = True`` to print status messages to the terminal during execution.
 
     * **concat_chains** (`bool`):
         Boolean that indicates whether to concatenate the chains after a run, i.e., samples are stored as an `ndarray`
         of shape (nsamples * nchains, dimension) if True, (nsamples, nchains, dimension) if False. Default: True
 
-    * **nsamples** (`int`):
-        Number of samples to generate - see `run` method. If not None, the `run` method is called when the object is
-        created. Default: None
-
-    * **nsamples_per_chain** (`int`):
-        Number of samples to generate per chain - see `run` method. If not None, the `run` method is called when the
-        object is created. Default: None
-
-    * random_state (None or `int` or `np.random.RandomState` object):
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
         Random seed used to initialize the pseudo-random number generator. Default is None.
 
-    * **verbose** (`boolean`)
-        Set ``verbose = True`` to print status messages to the terminal during execution.
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
+
 
     **Attributes:**
 
     * **samples** (`ndarray`)
-        Set of MCMC samples following the target distribution, `ndarray` of shape (nsamples * nchains, dimension) or
-        (nsamples, nchains, dimension) (see input `concat_chains`).
+        Set of MCMC samples following the target distribution, `ndarray` of shape (`nsamples` * `nchains`, `dimension`)
+        or (nsamples, nchains, dimension) (see input `concat_chains`).
 
     * **log_pdf_values** (`ndarray`)
         Values of the log pdf for the accepted samples, `ndarray` of shape (nchains * nsamples,) or (nsamples, nchains)
 
     * **nsamples** (`list`)
-        Total number of samples; it is updated during iterations as new samples as saved.
+        Total number of samples; The `nsamples` attribute tallies the total number of generated samples. After each
+        iteration, it is updated by 1. At the end of the simulation, the `nsamples` attribute equals the user-specified
+        value for input `nsamples` given to the child class.
 
     * **nsamples_per_chain** (`list`)
-        Total number of samples per chain; it is updated during iterations as new samples as saved.
+        Total number of samples per chain; Similar to the attribute `nsamples`, it is updated during iterations as new
+        samples are saved.
 
     * **niterations** (`list`)
         Total number of iterations, updated on-the-fly as the algorithm proceeds. It is related to number of samples as
@@ -2292,19 +2250,19 @@ class MCMC:
     # Last Modified: 10/05/20 by Audrey Olivier
 
     def __init__(self, dimension=None, pdf_target=None, log_pdf_target=None, args_target=None, seed=None, nburn=0,
-                 jump=1, save_log_pdf=False, verbose=False, concat_chains=True, random_state=None):
+                 jump=1, nchains=None, save_log_pdf=False, verbose=False, concat_chains=True, random_state=None):
 
         if not (isinstance(nburn, int) and nburn >= 0):
             raise TypeError('UQpy: nburn should be an integer >= 0')
         if not (isinstance(jump, int) and jump >= 1):
             raise TypeError('UQpy: jump should be an integer >= 1')
         self.nburn, self.jump = nburn, jump
-        self.seed = self._preprocess_seed(seed=seed, dim=dimension)    # check type and assign default [0.s]
+        self.seed = self._preprocess_seed(seed=seed, dim=dimension, nchains=nchains)
         self.nchains, self.dimension = self.seed.shape
 
         # Check target pdf
         self.evaluate_log_target, self.evaluate_log_target_marginals = self._preprocess_target(
-            pdf=pdf_target, log_pdf=log_pdf_target, args=args_target)
+            pdf_=pdf_target, log_pdf_=log_pdf_target, args=args_target)
         self.save_log_pdf = save_log_pdf
         self.concat_chains = concat_chains
         self.random_state = random_state
@@ -2313,7 +2271,7 @@ class MCMC:
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
         self.verbose = verbose
-        ##### ADDED MDS 1/21/20
+
         self.log_pdf_target = log_pdf_target
         self.pdf_target = pdf_target
         self.args_target = args_target
@@ -2327,10 +2285,10 @@ class MCMC:
 
     def run(self, nsamples=None, nsamples_per_chain=None):
         """
-        Run the MCMC chain.
+        Run the MCMC algorithm.
 
-        This function samples from the MCMC chains and append samples to existing ones (if any). This method leverages
-        the run_iterations method that is specific to each algorithm.
+        This function samples from the MCMC chains and appends samples to existing ones (if any). This method leverages
+        the ``run_iterations`` method that is specific to each algorithm.
 
         **Inputs:**
 
@@ -2340,8 +2298,8 @@ class MCMC:
         * **nsamples_per_chain** (`int`)
             Number of samples to generate per chain.
 
-        Either nsamples or nsamples_per_chain must be provided (not both). Not that if nsamples is not a multiple of
-        nchains, nsamples is set to the next integer that is a multiple of nchains.
+        Either `nsamples` or `nsamples_per_chain` must be provided (not both). Not that if `nsamples` is not a multiple
+        of `nchains`, `nsamples` is set to the next largest integer that is a multiple of `nchains`.
 
         """
         # Initialize the runs: allocate space for the new samples and log pdf values
@@ -2375,10 +2333,10 @@ class MCMC:
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
-        Run one iteration of the MCMC algorithm, starting at current_state.
+        Run one iteration of the MCMC algorithm, starting at `current_state`.
 
         This method is over-written for each different MCMC algorithm. It must return the new state and associated
-        log-pdf, which will be passed as inputs to the `run_one_iteration` method at the next iteration.
+        log-pdf, which will be passed as inputs to the ``run_one_iteration`` method at the next iteration.
 
         **Inputs:**
 
@@ -2480,9 +2438,7 @@ class MCMC:
                     self.log_pdf_values[0, :] = current_log_pdf
                 self.nsamples_per_chain += 1
                 self.nsamples += self.nchains
-                #nsims = self.jump * nsamples_per_chain - 1
-            #else:
-                #nsims = self.nburn + self.jump * nsamples_per_chain
+            final_nsamples, final_nsamples_per_chain = nsamples, nsamples_per_chain
 
         else:    # fetch previous samples to start the new run, current state is last saved sample
             if len(self.samples.shape) == 2:   # the chains were previously concatenated
@@ -2494,8 +2450,10 @@ class MCMC:
             if self.save_log_pdf:
                 self.log_pdf_values = np.concatenate(
                     [self.log_pdf_values, np.zeros((nsamples_per_chain, self.nchains))], axis=0)
-            #nsims = self.jump * nsamples_per_chain
-        return nsamples, nsamples_per_chain, current_state, current_log_pdf
+            final_nsamples = nsamples + self.nsamples
+            final_nsamples_per_chain = nsamples_per_chain + self.nsamples_per_chain
+
+        return final_nsamples, final_nsamples_per_chain, current_state, current_log_pdf
 
     def _update_acceptance_rate(self, new_accept=None):
         """
@@ -2513,7 +2471,7 @@ class MCMC:
                                 for (na, a) in zip(new_accept, self.acceptance_rate)]
 
     @staticmethod
-    def _preprocess_target(log_pdf, pdf, args):
+    def _preprocess_target(log_pdf_, pdf_, args):
         """
         Preprocess the target pdf inputs.
 
@@ -2523,9 +2481,9 @@ class MCMC:
 
         **Inputs:**
 
-        * log_pdf ((list of) callables): Log of the target density function from which to draw random samples. Either
+        * log_pdf_ ((list of) callables): Log of the target density function from which to draw random samples. Either
           pdf_target or log_pdf_target must be provided.
-        * pdf ((list of) callables): Target density function from which to draw random samples. Either pdf_target or
+        * pdf_ ((list of) callables): Target density function from which to draw random samples. Either pdf_target or
           log_pdf_target must be provided.
         * args (tuple): Positional arguments of the pdf target.
 
@@ -2536,45 +2494,45 @@ class MCMC:
 
         """
         # log_pdf is provided
-        if log_pdf is not None:
-            if callable(log_pdf):
+        if log_pdf_ is not None:
+            if callable(log_pdf_):
                 if args is None:
                     args = ()
-                evaluate_log_pdf = (lambda x: log_pdf(x, *args))
+                evaluate_log_pdf = (lambda x: log_pdf_(x, *args))
                 evaluate_log_pdf_marginals = None
-            elif isinstance(log_pdf, list) and (all(callable(p) for p in log_pdf)):
+            elif isinstance(log_pdf_, list) and (all(callable(p) for p in log_pdf_)):
                 if args is None:
-                    args = [()] * len(log_pdf)
-                if not (isinstance(args, list) and len(args) == len(log_pdf)):
+                    args = [()] * len(log_pdf_)
+                if not (isinstance(args, list) and len(args) == len(log_pdf_)):
                     raise ValueError('UQpy: When log_pdf_target is a list, args should be a list (of tuples) of same '
                                      'length.')
-                evaluate_log_pdf_marginals = list(map(lambda i: lambda x: log_pdf[i](x, *args[i]), range(len(log_pdf))))
-                #evaluate_log_pdf_marginals = [partial(log_pdf_, *args_) for (log_pdf_, args_) in zip(log_pdf, args)]
+                evaluate_log_pdf_marginals = list(
+                    map(lambda i: lambda x: log_pdf_[i](x, *args[i]), range(len(log_pdf_))))
                 evaluate_log_pdf = (lambda x: np.sum(
-                    [log_pdf[i](x[:, i, np.newaxis], *args[i]) for i in range(len(log_pdf))]))
+                    [log_pdf_[i](x[:, i, np.newaxis], *args[i]) for i in range(len(log_pdf_))]))
             else:
                 raise TypeError('UQpy: log_pdf_target must be a callable or list of callables')
         # pdf is provided
-        elif pdf is not None:
-            if callable(pdf):
+        elif pdf_ is not None:
+            if callable(pdf_):
                 if args is None:
                     args = ()
-                evaluate_log_pdf = (lambda x: np.log(np.maximum(pdf(x, *args), 10 ** (-320) * np.ones((x.shape[0],)))))
+                evaluate_log_pdf = (lambda x: np.log(np.maximum(pdf_(x, *args), 10 ** (-320) * np.ones((x.shape[0],)))))
                 evaluate_log_pdf_marginals = None
-            elif isinstance(pdf, (list, tuple)) and (all(callable(p) for p in pdf)):
+            elif isinstance(pdf_, (list, tuple)) and (all(callable(p) for p in pdf_)):
                 if args is None:
-                    args = [()] * len(pdf)
-                if not (isinstance(args, (list, tuple)) and len(args) == len(pdf)):
-                    raise ValueError('UQpy: When pdf_target is given as a list, args should also be a list of same length.')
+                    args = [()] * len(pdf_)
+                if not (isinstance(args, (list, tuple)) and len(args) == len(pdf_)):
+                    raise ValueError('UQpy: When pdf_target is given as a list, args should also be a list of same '
+                                     'length.')
                 evaluate_log_pdf_marginals = list(
-                    map(lambda i: lambda x: np.log(np.maximum(pdf[i](x, *args[i]),
+                    map(lambda i: lambda x: np.log(np.maximum(pdf_[i](x, *args[i]),
                                                               10 ** (-320) * np.ones((x.shape[0],)))),
-                        range(len(pdf))
+                        range(len(pdf_))
                         ))
                 evaluate_log_pdf = (lambda x: np.sum(
-                    [np.log(np.maximum(pdf[i](x[:, i, np.newaxis], *args[i]), 10**(-320)*np.ones((x.shape[0],))))
-                     for i in range(len(log_pdf))]))
-                #evaluate_log_pdf = None
+                    [np.log(np.maximum(pdf_[i](x[:, i, np.newaxis], *args[i]), 10**(-320)*np.ones((x.shape[0],))))
+                     for i in range(len(log_pdf_))]))
             else:
                 raise TypeError('UQpy: pdf_target must be a callable or list of callables')
         else:
@@ -2582,7 +2540,7 @@ class MCMC:
         return evaluate_log_pdf, evaluate_log_pdf_marginals
 
     @staticmethod
-    def _preprocess_seed(seed, dim):
+    def _preprocess_seed(seed, dim, nchains):
         """
         Preprocess input seed.
 
@@ -2600,9 +2558,9 @@ class MCMC:
 
         """
         if seed is None:
-            if dim is None:
-                raise ValueError('UQpy: One of inputs seed or dimension must be provided.')
-            seed = np.zeros((1, dim))
+            if dim is None or nchains is None:
+                raise ValueError('UQpy: Either `seed` or `dimension` and `nchains` must be provided.')
+            seed = np.zeros((nchains, dim))
         else:
             seed = np.atleast_1d(seed)
             if len(seed.shape) == 1:
@@ -2611,6 +2569,8 @@ class MCMC:
                 raise ValueError('UQpy: Input seed should be an array of shape (dimension, ) or (nchains, dimension).')
             if dim is not None and seed.shape[1] != dim:
                 raise ValueError('UQpy: Wrong dimensions between seed and dimension.')
+            if nchains is not None and seed.shape[0] != nchains:
+                raise ValueError('UQpy: The number of chains and the seed shape are inconsistent.')
         return seed
 
     @staticmethod
@@ -2644,18 +2604,11 @@ class MH(MCMC):
     """
     Metropolis-Hastings algorithm
 
-    >>> from UQpy.Distributions import Normal, Gumbel, JointCopula
-    >>> dist_true = JointCopula(marginals=[Normal(), Normal()], copula=Gumbel(theta=2.))
-    >>> proposal = JointInd(marginals=[Normal(scale=0.2), Normal(scale=0.2)])
-    >>> sampler = MH(log_pdf_target=dist_true.log_pdf, nsamples=500, proposal=proposal, seed=[0., 0.], random_state=123)
-    >>> print(sampler.samples.shape)
-    (500, 2)
-    >>> print(np.round(sampler.samples[-5:], 4))
-    [[-0.1966  0.1831]
-     [-0.2325  0.2526]
-     [ 0.2104  0.0748]
-     [ 0.0091  0.1651]
-     [ 0.1693  0.2409]]
+    **References**
+
+    1. Gelman et al., "Bayesian data analysis", Chapman and Hall/CRC, 2013
+    2. R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
+
 
     **Algorithm-specific inputs:**
 
@@ -2663,19 +2616,19 @@ class MH(MCMC):
         Proposal distribution, must have a log_pdf/pdf and rvs method. Default: standard multivariate normal
 
     * **proposal_is_symmetric** (`bool`):
-        indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
-        Default: False
+        Indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
+        Default: False, set to True if default proposal is used
 
     **Methods:**
 
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 proposal=None, proposal_is_symmetric=False, verbose=False, random_state=None):
+                 nchains=None, proposal=None, proposal_is_symmetric=False, verbose=False, random_state=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose, random_state=random_state)
+                         concat_chains=concat_chains, verbose=verbose, random_state=random_state, nchains=nchains)
 
         # Initialize algorithm specific inputs
         self.proposal = proposal
@@ -2735,24 +2688,27 @@ class MH(MCMC):
 class MMH(MCMC):
     """
 
-    Modified Metropolis-Hastings algorithm.
+    Component-wise Modified Metropolis-Hastings algorithm.
 
-    In this algorithm, candidate samples are drawn separately in each dimension, thus the proposal consists in a list
+    In this algorithm, candidate samples are drawn separately in each dimension, thus the proposal consists of a list
     of 1d distributions. The target pdf can be given as a joint pdf or a list of marginal pdfs in all dimensions. This
     will trigger two different algorithms.
 
     **References:**
 
-    * S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
-      Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+    1. S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
+       Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
 
     **Algorithm-specific inputs:**
 
     * **proposal** ((`list` of) ``Distribution`` object(s)):
-        Proposal distribution(s) in dimension 1, must have a log_pdf/pdf and rvs method. Default: standard normal
+        Proposal distribution(s) in one dimension, must have a log_pdf/pdf and rvs method.
+
+        The proposal object may be a list of ``DistributionContinuous1D`` objects or a ``JointInd`` object.
+        Default: standard normal
 
     * **proposal_is_symmetric** ((`list` of) `bool`):
-        indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
+        Indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
         Default: False, set to True if default proposal is used
 
     **Methods:**
@@ -2760,11 +2716,11 @@ class MMH(MCMC):
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 proposal=None, proposal_is_symmetric=False, verbose=False, random_state=None):
+                 proposal=None, proposal_is_symmetric=False, verbose=False, random_state=None, nchains=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose, random_state=random_state)
+                         concat_chains=concat_chains, verbose=verbose, random_state=random_state, nchains=nchains)
 
         # If proposal is not provided: set it as a list of standard gaussians
         from UQpy.Distributions import Normal
@@ -2778,7 +2734,12 @@ class MMH(MCMC):
         # Proposal is provided, check it
         else:
             # only one Distribution is provided, check it and transform it to a list
-            if not isinstance(self.proposal, list):
+            if isinstance(self.proposal, JointInd):
+                self.proposal = [m for m in self.proposal.marginals]
+                if len(self.proposal) != self.dimension:
+                    raise ValueError('UQpy: Proposal given as a list should be of length dimension')
+                [self._check_methods_proposal(p) for p in self.proposal]
+            elif not isinstance(self.proposal, list):
                 self._check_methods_proposal(self.proposal)
                 self.proposal = [self.proposal] * self.dimension
             else:  # a list of proposals is provided
@@ -2832,8 +2793,8 @@ class MMH(MCMC):
                     log_ratios = log_p_candidate_j - self.current_log_pdf_marginals[j]
                 else:  # If the proposal is non-symmetric, one needs to account for it in computing acceptance ratio
                     log_prop_j = self.proposal[j].log_pdf
-                    log_proposal_ratio = log_prop_j(candidate_j - current_state[:, j, np.newaxis]) - \
-                                         log_prop_j(current_state[:, j, np.newaxis] - candidate_j)
+                    log_proposal_ratio = (log_prop_j(candidate_j - current_state[:, j, np.newaxis]) -
+                                          log_prop_j(current_state[:, j, np.newaxis] - candidate_j))
                     log_ratios = log_p_candidate_j - self.current_log_pdf_marginals[j] - log_proposal_ratio
 
                 # Compare candidate with current sample and decide or not to keep the candidate
@@ -2849,7 +2810,6 @@ class MMH(MCMC):
 
         # The target pdf is provided as a joint pdf
         else:
-            current_log_pdf_marginals = ()
             candidate = np.copy(current_state)
             for j in range(self.dimension):
                 candidate_j = current_state[:, j, np.newaxis] + self.proposal[j].rvs(
@@ -2864,8 +2824,8 @@ class MMH(MCMC):
                     log_ratios = log_p_candidate - current_log_pdf
                 else:  # If the proposal is non-symmetric, one needs to account for it in computing acceptance ratio
                     log_prop_j = self.proposal[j].log_pdf
-                    log_proposal_ratio = log_prop_j(candidate_j - current_state[:, j, np.newaxis]) - \
-                                         log_prop_j(current_state[:, j, np.newaxis] - candidate_j)
+                    log_proposal_ratio = (log_prop_j(candidate_j - current_state[:, j, np.newaxis]) -
+                                          log_prop_j(current_state[:, j, np.newaxis] - candidate_j))
                     log_ratios = log_p_candidate - current_log_pdf - log_proposal_ratio
                 unif_rvs = Uniform().rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1,))
                 for nc, (cand, log_p_cand, r_) in enumerate(zip(candidate_j, log_p_candidate, log_ratios)):
@@ -2889,10 +2849,10 @@ class Stretch(MCMC):
 
     **References:**
 
-    * J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
-      no. 1, pp. 65–80, 2010.
-    * Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. "emcee: The MCMC Hammer".
-      Publications of the Astronomical Society of the Pacific, 125(925):306–312,2013.
+    1. J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
+       no. 1, pp. 65–80, 2010.
+    2. Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. "emcee: The MCMC Hammer".
+       Publications of the Astronomical Society of the Pacific, 125(925):306–312,2013.
 
     **Algorithm-specific inputs:**
 
@@ -2904,13 +2864,23 @@ class Stretch(MCMC):
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 scale=2., verbose=False, random_state=None):
+                 scale=2., verbose=False, random_state=None, nchains=None):
+
+        flag_seed = False
+        if seed is None:
+            if dimension is None or nchains is None:
+                raise ValueError('UQpy: Either `seed` or `dimension` and `nchains` must be provided.')
+            flag_seed = True
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose, random_state=random_state)
+                         concat_chains=concat_chains, verbose=verbose, random_state=random_state, nchains=nchains)
 
         # Check nchains = ensemble size for the Stretch algorithm
+        if flag_seed:
+            self.seed = Uniform().rvs(nsamples=self.dimension * self.nchains, random_state=self.random_state).reshape(
+                (self.nchains, self.dimension)
+            )
         if self.nchains < 2:
             raise ValueError('UQpy: For the Stretch algorithm, a seed must be provided with at least two samples.')
 
@@ -2933,31 +2903,32 @@ class Stretch(MCMC):
         # Start the loop over nsamples - this code uses the parallel version of the stretch algorithm
         all_inds = np.arange(self.nchains)
         inds = all_inds % 2
-        accept_vec = np.zeros((self.nchains,))
+        accept_vec = np.zeros((self.nchains, ))
         # Separate the full ensemble into two sets, use one as a complementary ensemble to the other and vice-versa
         for split in range(2):
-            S1 = (inds == split)
+            set1 = (inds == split)
 
             # Get current and complementary sets
             sets = [current_state[inds == j, :] for j in range(2)]
-            s, c = sets[split], sets[1 - split]  # current and complementary sets respectively
-            Ns, Nc = len(s), len(c)
+            curr_set, comp_set = sets[split], sets[1 - split]  # current and complementary sets respectively
+            ns, nc = len(curr_set), len(comp_set)
 
-            # Sample new state for S1 based on S0 and vice versa
-            unif_rvs = Uniform().rvs(nsamples=Ns, random_state=self.random_state)
-            zz = ((self.scale - 1.) * unif_rvs + 1) ** 2. / self.scale  # sample Z
+            # Sample new state for S1 based on S0
+            unif_rvs = Uniform().rvs(nsamples=ns, random_state=self.random_state)
+            zz = ((self.scale - 1.) * unif_rvs + 1.) ** 2. / self.scale  # sample Z
             factors = (self.dimension - 1.) * np.log(zz)  # compute log(Z ** (d - 1))
-            #rint = np.random.choice(Nc, size=(Ns,), replace=True)  # sample X_{j} from complementary set
-            multi_rvs = Multinomial(n=1, p=[1. / Nc, ] * Nc).rvs(nsamples=Ns, random_state=self.random_state)
+            multi_rvs = Multinomial(n=1, p=[1. / nc, ] * nc).rvs(nsamples=ns, random_state=self.random_state)
             rint = np.nonzero(multi_rvs)[1]    # sample X_{j} from complementary set
-            candidates = c[rint, :] - (c[rint, :] - s) * np.tile(zz, [1, self.dimension])  # new candidates
+            candidates = comp_set[rint, :] - (comp_set[rint, :] - curr_set) * np.tile(
+                zz, [1, self.dimension])  # new candidates
 
             # Compute new likelihood, can be done in parallel :)
             logp_candidates = self.evaluate_log_target(candidates)
 
             # Compute acceptance rate
-            unif_rvs = Uniform().rvs(nsamples=len(all_inds[S1]), random_state=self.random_state).reshape((-1,))
-            for j, f, lpc, candidate, u_rv in zip(all_inds[S1], factors, logp_candidates, candidates, unif_rvs):
+            unif_rvs = Uniform().rvs(nsamples=len(all_inds[set1]), random_state=self.random_state).reshape((-1,))
+            for j, f, lpc, candidate, u_rv in zip(
+                    all_inds[set1], factors, logp_candidates, candidates, unif_rvs):
                 accept = np.log(u_rv) < f + lpc - current_log_pdf[j]
                 if accept:
                     current_state[j] = candidate
@@ -2978,30 +2949,30 @@ class DRAM(MCMC):
 
     In this algorithm, the proposal density is Gaussian and its covariance C is being updated from samples as
     C = sp * C_sample where C_sample is the sample covariance. Also, the delayed rejection scheme is applied, i.e,
-    if a candidate is not accepted another one is generated from proposal with covariance gamma_2 ** 2 * C.
+    if a candidate is not accepted another one is generated from the proposal with covariance gamma_2 ** 2 * C.
 
     **References:**
 
-    * Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive MCMC". Statistics
-      and Computing, 16(4):339–354, 2006
-    * R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
+    1. Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive MCMC". Statistics
+       and Computing, 16(4):339–354, 2006
+    2. R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
 
     **Algorithm-specific inputs:**
 
     * **initial_cov** (`ndarray`):
-        initial covariance for the gaussian proposal distribution. Default: I(dim)
+        Initial covariance for the gaussian proposal distribution. Default: I(dim)
 
     * **k0** (`int`):
-        rate at which covariance is being updated, i.e., every k0 iterations. Default: 100
+        Rate at which covariance is being updated, i.e., every k0 iterations. Default: 100
 
     * **sp** (`float`):
-        scale parameter for covariance updating. Default: 2.38 ** 2 / dim
+        Scale parameter for covariance updating. Default: 2.38 ** 2 / dim
 
     * **gamma_2** (`float`):
-        scale parameter for delayed rejection. Default: 1 / 5
+        Scale parameter for delayed rejection. Default: 1 / 5
 
     * **save_cov** (`bool`):
-        if True, updated covariance is saved in attribute adaptive_covariance. Default: False
+        If True, updated covariance is saved in attribute `adaptive_covariance`. Default: False
 
     **Methods:**
 
@@ -3010,11 +2981,11 @@ class DRAM(MCMC):
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
                  initial_covariance=None, k0=100, sp=None, gamma_2=1/5, save_covariance=False, verbose=False,
-                 random_state=None):
+                 random_state=None, nchains=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose, random_state=random_state)
+                         concat_chains=concat_chains, verbose=verbose, random_state=random_state, nchains=nchains)
 
         # Check the initial covariance
         self.initial_covariance = initial_covariance
@@ -3067,7 +3038,7 @@ class DRAM(MCMC):
 
         # Compare candidate with current sample and decide or not to keep the candidate (loop over nc chains)
         accept_vec = np.zeros((self.nchains, ))
-        inds_DR = []   # indices of chains that will undergo delayed rejection
+        inds_delayed = []   # indices of chains that will undergo delayed rejection
         unif_rvs = Uniform().rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1,))
         for nc, (cand, log_p_cand, log_p_curr) in enumerate(zip(candidate, log_p_candidate, current_log_pdf)):
             accept = np.log(unif_rvs[nc]) < log_p_cand - log_p_curr
@@ -3076,32 +3047,33 @@ class DRAM(MCMC):
                 current_log_pdf[nc] = log_p_cand
                 accept_vec[nc] += 1.
             else:    # enter delayed rejection
-                inds_DR.append(nc)    # these indices will enter the delayed rejection part
+                inds_delayed.append(nc)    # these indices will enter the delayed rejection part
 
         # Delayed rejection
-        if len(inds_DR) > 0:   # performed delayed rejection for some samples
-            current_states_DR = np.zeros((len(inds_DR), self.dimension))
-            candidates_DR = np.zeros((len(inds_DR), self.dimension))
-            candidate2 = np.zeros((len(inds_DR), self.dimension))
+        if len(inds_delayed) > 0:   # performed delayed rejection for some chains
+            current_states_delayed = np.zeros((len(inds_delayed), self.dimension))
+            candidates_delayed = np.zeros((len(inds_delayed), self.dimension))
+            candidate2 = np.zeros((len(inds_delayed), self.dimension))
             # Sample other candidates closer to the current one
-            for i, nc in enumerate(inds_DR):
-                current_states_DR[i, :] = current_state[nc, :]
-                candidates_DR[i, :] = candidate[nc, :]
+            for i, nc in enumerate(inds_delayed):
+                current_states_delayed[i, :] = current_state[nc, :]
+                candidates_delayed[i, :] = candidate[nc, :]
                 mvp.update_params(cov=self.gamma_2 ** 2 * self.current_covariance[nc])
-                candidate2[i, :] = current_states_DR[nc, :] + mvp.rvs(nsamples=1).reshape((self.dimension, ))
+                candidate2[i, :] = current_states_delayed[i, :] + mvp.rvs(
+                    nsamples=1, random_state=self.random_state).reshape((self.dimension, ))
             # Evaluate their log_target
             log_p_candidate2 = self.evaluate_log_target(candidate2)
-            log_prop_cand_cand2 = mvp.log_pdf(candidates_DR - candidate2)
-            log_prop_cand_curr = mvp.log_pdf(candidates_DR - current_states_DR)
+            log_prop_cand_cand2 = mvp.log_pdf(candidates_delayed - candidate2)
+            log_prop_cand_curr = mvp.log_pdf(candidates_delayed - current_states_delayed)
             # Accept or reject
-            unif_rvs = Uniform().rvs(nsamples=len(inds_DR), random_state=self.random_state).reshape((-1,))
-            for (nc, cand2, log_p_cand2, J1, J2, u_rv) in zip(inds_DR, candidate2, log_p_candidate2, log_prop_cand_cand2,
-                                                        log_prop_cand_curr, unif_rvs):
+            unif_rvs = Uniform().rvs(nsamples=len(inds_delayed), random_state=self.random_state).reshape((-1,))
+            for (nc, cand2, log_p_cand2, j1, j2, u_rv) in zip(inds_delayed, candidate2, log_p_candidate2,
+                                                              log_prop_cand_cand2, log_prop_cand_curr, unif_rvs):
                 alpha_cand_cand2 = min(1., np.exp(log_p_candidate[nc] - log_p_cand2))
                 alpha_cand_curr = min(1., np.exp(log_p_candidate[nc] - current_log_pdf[nc]))
-                log_alpha2 = log_p_cand2 - current_log_pdf[nc] + J1 - J2 + \
-                             np.log(max(1. - alpha_cand_cand2, 10 ** (-320))) \
-                             - np.log(max(1. - alpha_cand_curr, 10 ** (-320)))
+                log_alpha2 = (log_p_cand2 - current_log_pdf[nc] + j1 - j2 +
+                              np.log(max(1. - alpha_cand_cand2, 10 ** (-320))) -
+                              np.log(max(1. - alpha_cand_curr, 10 ** (-320))))
                 accept = np.log(u_rv) < min(0., log_alpha2)
                 if accept:
                     current_state[nc, :] = cand2
@@ -3163,31 +3135,31 @@ class DREAM(MCMC):
 
     **References:**
 
-    * J.A. Vrugt et al. "Accelerating Markov chain Monte Carlo simulation by differential evolution with
-      self-adaptive randomized subspace sampling". International Journal of Nonlinear Sciences and Numerical
-      Simulation, 10(3):273–290, 2009.[68]
-    * J.A. Vrugt. "Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and
-      MATLAB implementation". Environmental Modelling & Software, 75:273–316, 2016.
+    1. J.A. Vrugt et al. "Accelerating Markov chain Monte Carlo simulation by differential evolution with
+       self-adaptive randomized subspace sampling". International Journal of Nonlinear Sciences and Numerical
+       Simulation, 10(3):273–290, 2009.[68]
+    2. J.A. Vrugt. "Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and
+       MATLAB implementation". Environmental Modelling & Software, 75:273–316, 2016.
 
     **Algorithm-specific inputs:**
 
     * **delta** (`int`):
-        jump rate. Default: 3
+        Jump rate. Default: 3
 
     * **c** (`float`):
-        differential evolution parameter. Default: 0.1
+        Differential evolution parameter. Default: 0.1
 
     * **c_star** (`float`):
-        differential evolution parameter, should be small compared to width of target. Default: 1e-6
+        Differential evolution parameter, should be small compared to width of target. Default: 1e-6
 
-    * **n_CR** (`int`):
-        number of crossover probabilities. Default: 3
+    * **n_cr** (`int`):
+        Number of crossover probabilities. Default: 3
 
     * **p_g** (`float`):
-        prob(gamma=1). Default: 0.2
+        Prob(gamma=1). Default: 0.2
 
-    * **adapt_CR** (`tuple`):
-        (iter_max, rate) governs adapation of crossover probabilities (adapts every rate iterations if iter<iter_max).
+    * **adapt_cr** (`tuple`):
+        (iter_max, rate) governs adaptation of crossover probabilities (adapts every rate iterations if iter<iter_max).
         Default: (-1, 1), i.e., no adaptation
 
     * **check_chains** (`tuple`):
@@ -3200,12 +3172,12 @@ class DREAM(MCMC):
 
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 delta=3, c=0.1, c_star=1e-6, n_CR=3, p_g=0.2, adapt_CR=(-1, 1), check_chains=(-1, 1), verbose=False,
-                 random_state=None):
+                 delta=3, c=0.1, c_star=1e-6, n_cr=3, p_g=0.2, adapt_cr=(-1, 1), check_chains=(-1, 1), verbose=False,
+                 random_state=None, nchains=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose, random_state=random_state)
+                         concat_chains=concat_chains, verbose=verbose, random_state=random_state, nchains=nchains)
 
         # Check nb of chains
         if self.nchains < 2:
@@ -3215,17 +3187,17 @@ class DREAM(MCMC):
         self.delta = delta
         self.c = c
         self.c_star = c_star
-        self.n_CR = n_CR
+        self.n_cr = n_cr
         self.p_g = p_g
-        self.adapt_CR = adapt_CR
+        self.adapt_cr = adapt_cr
         self.check_chains = check_chains
 
-        for key, typ in zip(['delta', 'c', 'c_star', 'n_CR', 'p_g'], [int, float, float, int, float]):
+        for key, typ in zip(['delta', 'c', 'c_star', 'n_cr', 'p_g'], [int, float, float, int, float]):
             if not isinstance(getattr(self, key), typ):
                 raise TypeError('Input ' + key + ' must be of type ' + typ.__name__)
-        if self.dimension is not None and self.n_CR > self.dimension:
-            self.n_CR = self.dimension
-        for key in ['adapt_CR', 'check_chains']:
+        if self.dimension is not None and self.n_cr > self.dimension:
+            self.n_cr = self.dimension
+        for key in ['adapt_cr', 'check_chains']:
             p = getattr(self, key)
             if not (isinstance(p, tuple) and len(p) == 2 and all(isinstance(i, (int, float)) for i in p)):
                 raise TypeError('Inputs ' + key + ' must be a tuple of 2 integers.')
@@ -3233,8 +3205,8 @@ class DREAM(MCMC):
             raise ValueError('UQpy: Input save_log_pdf must be True in order to check outlier chains')
 
         # Initialize a few other variables
-        self.J, self.n_id = np.zeros((self.n_CR,)), np.zeros((self.n_CR,))
-        self.pCR = np.ones((self.n_CR,)) / self.n_CR
+        self.j_ind, self.n_id = np.zeros((self.n_cr,)), np.zeros((self.n_cr,))
+        self.cross_prob = np.ones((self.n_cr,)) / self.n_cr
 
         if self.verbose:
             print('UQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.\n')
@@ -3247,46 +3219,43 @@ class DREAM(MCMC):
         """
         Run one iteration of the MCMC chain for DREAM algorithm, starting at current state - see ``MCMC`` class.
         """
-        R = np.array([np.setdiff1d(np.arange(self.nchains), j) for j in range(self.nchains)])
-        CR = np.arange(1, self.n_CR + 1) / self.n_CR
+        r_diff = np.array([np.setdiff1d(np.arange(self.nchains), j) for j in range(self.nchains)])
+        cross = np.arange(1, self.n_cr + 1) / self.n_cr
 
         # Dynamic part: evolution of chains
         unif_rvs = Uniform().rvs(nsamples=self.nchains * (self.nchains-1),
                                  random_state=self.random_state).reshape((self.nchains - 1, self.nchains))
         draw = np.argsort(unif_rvs, axis=0)
-        dX = np.zeros_like(current_state)
+        dx = np.zeros_like(current_state)
         lmda = Uniform(scale=2 * self.c).rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1, ))
         std_x_tmp = np.std(current_state, axis=0)
 
         multi_rvs = Multinomial(n=1, p=[1./self.delta, ] * self.delta).rvs(
             nsamples=self.nchains, random_state=self.random_state)
-        D = np.nonzero(multi_rvs)[1]
-        #D = np.random.choice(self.delta, size=(self.nchains,), replace=True)
-        as_ = [R[j, draw[slice(D[j]), j]] for j in range(self.nchains)]
-        bs_ = [R[j, draw[slice(D[j], 2 * D[j], 1), j]] for j in range(self.nchains)]
-        multi_rvs = Multinomial(n=1, p=self.pCR).rvs(nsamples=self.nchains, random_state=self.random_state)
-        id = np.nonzero(multi_rvs)[1]
+        d_ind = np.nonzero(multi_rvs)[1]
+        as_ = [r_diff[j, draw[slice(d_ind[j]), j]] for j in range(self.nchains)]
+        bs_ = [r_diff[j, draw[slice(d_ind[j], 2 * d_ind[j], 1), j]] for j in range(self.nchains)]
+        multi_rvs = Multinomial(n=1, p=self.cross_prob).rvs(nsamples=self.nchains, random_state=self.random_state)
+        id_ = np.nonzero(multi_rvs)[1]
         # id = np.random.choice(self.n_CR, size=(self.nchains, ), replace=True, p=self.pCR)
         z = Uniform().rvs(nsamples=self.nchains * self.dimension,
                           random_state=self.random_state).reshape((self.nchains, self.dimension))
-        A = [np.where(z_j < CR[id_j])[0] for (z_j, id_j) in zip(z, id)]  # subset A of selected dimensions
-        d_star = np.array([len(A_j) for A_j in A])
+        subset_a = [np.where(z_j < cross[id_j])[0] for (z_j, id_j) in zip(z, id_)]  # subset A of selected dimensions
+        d_star = np.array([len(a_j) for a_j in subset_a])
         for j in range(self.nchains):
             if d_star[j] == 0:
-                A[j] = np.array([np.argmin(z[j])])
+                subset_a[j] = np.array([np.argmin(z[j])])
                 d_star[j] = 1
-        gamma_d = 2.38 / np.sqrt(2 * (D + 1) * d_star)
+        gamma_d = 2.38 / np.sqrt(2 * (d_ind + 1) * d_star)
         g = Binomial(n=1, p=self.p_g).rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1, ))
         g[g == 0] = gamma_d[g == 0]
-        #g = [np.random.choice([gamma_d[j], 1], size=1, replace=True, p=[1 - self.p_g, self.p_g])
-        #     for j in range(self.nchains)]
         norm_vars = Normal(loc=0., scale=1.).rvs(nsamples=self.nchains ** 2,
                                                  random_state=self.random_state).reshape((self.nchains, self.nchains))
         for j in range(self.nchains):
-            for i in A[j]:
-                dX[j, i] = self.c_star * norm_vars[j, i] + \
+            for i in subset_a[j]:
+                dx[j, i] = self.c_star * norm_vars[j, i] + \
                            (1 + lmda[j]) * g[j] * np.sum(current_state[as_[j], i] - current_state[bs_[j], i])
-        candidates = current_state + dX
+        candidates = current_state + dx
 
         # Evaluate log likelihood of candidates
         logp_candidates = self.evaluate_log_target(candidates)
@@ -3301,17 +3270,17 @@ class DREAM(MCMC):
                 current_log_pdf[nc] = lpc
                 accept_vec[nc] = 1.
             else:
-                dX[nc, :] = 0
-            self.J[id[nc]] = self.J[id[nc]] + np.sum((dX[nc, :] / std_x_tmp) ** 2)
-            self.n_id[id[nc]] += 1
+                dx[nc, :] = 0
+            self.j_ind[id_[nc]] = self.j_ind[id_[nc]] + np.sum((dx[nc, :] / std_x_tmp) ** 2)
+            self.n_id[id_[nc]] += 1
 
         # Save the acceptance rate
         self._update_acceptance_rate(accept_vec)
 
         # update selection cross prob
-        if self.niterations < self.adapt_CR[0] and self.niterations % self.adapt_CR[1] == 0:
-            self.pCR = self.J / self.n_id
-            self.pCR /= sum(self.pCR)
+        if self.niterations < self.adapt_cr[0] and self.niterations % self.adapt_cr[1] == 0:
+            self.cross_prob = self.j_ind / self.n_id
+            self.cross_prob /= sum(self.cross_prob)
         # check outlier chains (only if you have saved at least 100 values already)
         if (self.nsamples >= 100) and (self.niterations < self.check_chains[0]) and \
                 (self.niterations % self.check_chains[1] == 0):
@@ -3323,14 +3292,14 @@ class DREAM(MCMC):
         """
         Check outlier chains in DREAM algorithm.
 
-        This function check for outlier chains as part of the DREAM algorithm, potentially replacing outlier chains
+        This function checks for outlier chains as part of the DREAM algorithm, potentially replacing outlier chains
         (i.e. the samples and log_pdf_values) with 'good' chains. The function does not have any returned output but it
         prints out the number of outlier chains.
 
         **Inputs:**
 
         * **replace_with_best** (`bool`):
-            indicates whether to replace outlier chains with the best (most probable) chain. Default: False
+            Indicates whether to replace outlier chains with the best (most probable) chain. Default: False
 
         """
         if not self.save_log_pdf:
@@ -3365,45 +3334,37 @@ class IS:
     """
     Sample from a user-defined target density using importance sampling.
 
-    >>> from UQpy.Distributions import Normal, Gumbel, JointCopula
-    >>> dist_true = JointCopula(marginals=[Normal(), Normal()], copula=Gumbel(theta=2.))
-    >>> proposal = JointInd(marginals=[Normal(), Normal()])
-    >>> sampler = IS(log_pdf_target=dist_true.log_pdf, nsamples=500, proposal=proposal, random_state=123)
-    >>> print(sampler.samples.shape)
-    (500, 2)
-    >>> print(sampler.weights.shape)
-    (500,)
-    >>> print(np.round(sampler.samples[-5:], 4))
-    [[ 0.5679  0.6348]
-     [ 0.513   1.0699]
-     [-0.0269 -0.9093]
-     [ 0.3116  0.4703]
-     [-0.1421 -1.1114]]
 
     **Inputs:**
 
-    * **proposal** (``Distribution`` object):
-        Proposal to sample from. This Distribution object must have an rvs method and a log_pdf (or pdf) methods
-
-    * **log_pdf_target** (callable)
-        Callable that evaluates the target log-pdf. One of log_pdf_target or pdf_target must be specified (the former
-        is preferred).
-
-    * **pdf_target** (callable):
-        Callable that evaluates the target pdf
-
-    * **args_target** (`tuple`):
-        Positional arguments of the target log_pdf / pdf callable
-
     * **nsamples** (`int`):
-        Number of samples to generate - see `run` method. If not None, the `run` method is called when the object is
+        Number of samples to generate - see ``run`` method. If not `None`, the `run` method is called when the object is
         created. Default is None.
 
-    * random_state (None or `int` or `np.random.RandomState` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
+    * **pdf_target** (callable):
+        Callable that evaluates the pdf of the target distribution. Either log_pdf_target or pdf_target must be
+        specified (the former is preferred).
+
+    * **log_pdf_target** (callable)
+        Callable that evaluates the log-pdf of the target distribution. Either log_pdf_target or pdf_target must be
+        specified (the former is preferred).
+
+    * **args_target** (`tuple`):
+        Positional arguments of the target log_pdf / pdf callable.
+
+    * **proposal** (``Distribution`` object):
+        Proposal to sample from. This ``UQpy.Distributions`` object must have an rvs method and a log_pdf (or pdf)
+        method.
 
     * **verbose** (`boolean`)
         Set ``verbose = True`` to print status messages to the terminal during execution.
+
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
+
 
     **Attributes:**
 
@@ -3434,7 +3395,7 @@ class IS:
                                                                 10 ** (-320) * np.ones((x.shape[0],))))
 
         # Initialize target
-        self.evaluate_log_target = self._preprocess_target(log_pdf=log_pdf_target, pdf=pdf_target, args=args_target)
+        self.evaluate_log_target = self._preprocess_target(log_pdf_=log_pdf_target, pdf_=pdf_target, args=args_target)
 
         self.verbose = verbose
         self.random_state = random_state
@@ -3447,6 +3408,7 @@ class IS:
         self.samples = None
         self.unnormalized_log_weights = None
         self.weights = None
+        self.unweighted_samples = None
 
         # Run IS if nsamples is provided
         if nsamples is not None and nsamples != 0:
@@ -3456,14 +3418,18 @@ class IS:
         """
         Generate and weight samples.
 
-        This function samples from the proposal and append samples to existing ones (if any). It then weights the 
-        samples as log_w_unnormalized) = log(target)-log(proposal). This function updates the output attributes 
-        samples, unnormalized_log_weights and weights.
+        This function samples from the proposal and appends samples to existing ones (if any). It then weights the
+        samples as log_w_unnormalized) = log(target)-log(proposal).
 
         **Inputs:**
 
         * **nsamples** (`int`)
             Number of weighted samples to generate.
+
+        * **Output/Returns:**
+
+        This function has no returns, but it updates the output attributes `samples`, `unnormalized_log_weights` and
+        `weights` of the ``IS`` object.
         """
 
         if self.verbose:
@@ -3489,32 +3455,71 @@ class IS:
         if self.verbose:
             print('UQpy: Importance Sampling performed successfully')
 
+    # def resample(self, method='multinomial', nsamples=None):
+    #     """
+    #     Resample to get a set of un-weighted samples that represent the target pdf.
+    #
+    #     Utility function that creates a set of un-weighted samples from a set of weighted samples. Can be useful for
+    #     plotting for instance.
+    #
+    #     **Inputs:**
+    #
+    #     * **method** (`str`)
+    #         Resampling method, as of V3 only multinomial resampling is supported. Default: 'multinomial'.
+    #     * **nsamples** (`int`)
+    #         Number of un-weighted samples to generate. Default: None (same number of samples is generated as number of
+    #         existing samples).
+    #
+    #     **Output/Returns:**
+    #
+    #     * (`ndarray`)
+    #         Un-weighted samples that represent the target pdf, `ndarray` of shape (nsamples, dimension)
+    #
+    #     """
+    #     from .Utilities import resample
+    #     return resample(self.samples, self.weights, method=method, size=nsamples)
+
     def resample(self, method='multinomial', nsamples=None):
-        """ 
+        """
         Resample to get a set of un-weighted samples that represent the target pdf.
-        
-        Utility function that create a set of un-weighted samples from a set of weighted samples. Can be useful for
+
+        Utility function that creates a set of un-weighted samples from a set of weighted samples. Can be useful for
         plotting for instance.
-        
+
+        The ``resample`` method is not called automatically when instantiating the ``IS`` class or when invoking its
+        ``run`` method.
+
         **Inputs:**
 
         * **method** (`str`)
             Resampling method, as of V3 only multinomial resampling is supported. Default: 'multinomial'.
         * **nsamples** (`int`)
-            Number of un-weighted samples to generate. Default: None (same number of samples is generated as number of
+            Number of un-weighted samples to generate. Default: None (sets `nsamples` equal to the number of
             existing samples).
 
         **Output/Returns:**
 
-        * (`ndarray`)
+        The method has no returns, but it creates the attribute following attribute of the ``IS`` object.
+
+        * **unweighted_samples** (`ndarray`)
             Un-weighted samples that represent the target pdf, `ndarray` of shape (nsamples, dimension)
 
         """
-        from .Utilities import resample
-        return resample(self.samples, self.weights, method=method, size=nsamples)
+
+        if nsamples is None:
+            nsamples = self.samples.shape[0]
+        if method == 'multinomial':
+            multinomial_run = np.random.multinomial(nsamples, self.weights, size=1)[0]
+            idx = list()
+            for j in range(self.samples.shape[0]):
+                if multinomial_run[j] > 0:
+                    idx.extend([j for _ in range(multinomial_run[j])])
+            self.unweighted_samples = self.samples[idx, :]
+        else:
+            raise ValueError('Exit code: Current available method: multinomial')
 
     @staticmethod
-    def _preprocess_target(log_pdf, pdf, args):
+    def _preprocess_target(log_pdf_, pdf_, args):
         """
         Preprocess the target pdf inputs.
 
@@ -3523,9 +3528,9 @@ class IS:
 
         **Inputs:**
 
-        * log_pdf ((list of) callables): Log of the target density function from which to draw random samples. Either
+        * log_pdf_ ((list of) callables): Log of the target density function from which to draw random samples. Either
           pdf_target or log_pdf_target must be provided
-        * pdf ((list of) callables): Target density function from which to draw random samples.
+        * pdf_ ((list of) callables): Target density function from which to draw random samples.
         * args (tuple): Positional arguments of the pdf target
 
         **Output/Returns:**
@@ -3534,19 +3539,19 @@ class IS:
 
         """
         # log_pdf is provided
-        if log_pdf is not None:
-            if callable(log_pdf):
+        if log_pdf_ is not None:
+            if callable(log_pdf_):
                 if args is None:
                     args = ()
-                evaluate_log_pdf = (lambda x: log_pdf(x, *args))
+                evaluate_log_pdf = (lambda x: log_pdf_(x, *args))
             else:
                 raise TypeError('UQpy: log_pdf_target must be a callable')
         # pdf is provided
-        elif pdf is not None:
-            if callable(pdf):
+        elif pdf_ is not None:
+            if callable(pdf_):
                 if args is None:
                     args = ()
-                evaluate_log_pdf = (lambda x: np.log(np.maximum(pdf(x, *args), 10 ** (-320) * np.ones((x.shape[0],)))))
+                evaluate_log_pdf = (lambda x: np.log(np.maximum(pdf_(x, *args), 10 ** (-320) * np.ones((x.shape[0],)))))
             else:
                 raise TypeError('UQpy: pdf_target must be a callable')
         else:

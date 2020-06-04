@@ -5,19 +5,17 @@ Distributions
 
 .. automodule:: UQpy.Distributions
 
+Note that the various classes of the ``Distributions`` module are written to be consistent with distribuitons in the
+``scipy.stats`` package [1]_, to the extent possible while maintaining an extensible, object oriented architecture that is
+convenient for operating with the other ``UQpy`` modules. All existing distributions and their methods in ``UQpy`` are restructured from the ``scipy.stats`` package. 
+
+
 Parent Distribution Class
 ----------------------------------
-
-In ``UQpy``, the ``Distribution`` class is the parent class to all probability distributions. Any distribution possesses a `get_params` and `update_params` methods, along with one or several of the other methods described below:
 
 .. autoclass:: UQpy.Distributions.Distribution
 	:members:
 	
-Any distribution further inherits from one of the following classes:
-
-- ``DistributionContinuous1D``: Parent class to 1-dimensional continuous probability distributions.
-- ``DistributionDiscrete1D``: Parent class to 1-dimensional discrete probability distributions.
-- ``DistributionND``: Parent class to multivariate probability distributions.
 	
 1D Continuous Distributions
 ---------------------------------------
@@ -26,47 +24,11 @@ In ``UQpy``, univariate continuous distributions inherit from the ``Distribution
 
 .. autoclass:: UQpy.Distributions.DistributionContinuous1D
     :members: 
-
-1D Discrete Distributions
-----------------------------------
-
-In ``UQpy``, univariate discrete distributions inherit from the ``DistributionDiscrete1D`` class:
-
-.. autoclass:: UQpy.Distributions.DistributionDiscrete1D
-    :members: 
 	
-Multivariate Distributions
-----------------------------------
-
-In ``UQpy``, multivariate distributions inherit from the ``DistributionND`` class:
-
-.. autoclass:: UQpy.Distributions.DistributionND
-
-Furthermore, joint distributions can be built from their marginals through the use of the ``JointInd`` and ``JointCopula`` classes described below.
-    
-Joint from independent marginals
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: UQpy.Distributions.JointInd
-
-Joint from marginals and copula
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: UQpy.Distributions.JointCopula	
-
-
-Copula
------------
-
-.. autoclass:: UQpy.Distributions.Copula
-	:members:
-	
-
 List of Distributions
---------------------------
-
-Univariate continuous
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
+	
+The following is a list of all 1D continuous distributions currently available in ``UQpy``.
 
 .. autoclass:: UQpy.Distributions.Beta
 
@@ -78,7 +40,7 @@ Univariate continuous
 
 .. autoclass:: UQpy.Distributions.Gamma
 
-.. autoclass:: UQpy.Distributions.Genextreme
+.. autoclass:: UQpy.Distributions.GenExtreme
 
 .. autoclass:: UQpy.Distributions.InvGauss
 
@@ -102,23 +64,61 @@ Univariate continuous
 
 .. autoclass:: UQpy.Distributions.Uniform
 
-Univariate discrete
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1D Discrete Distributions
+----------------------------------
+
+In ``UQpy``, univariate discrete distributions inherit from the ``DistributionDiscrete1D`` class:
+
+.. autoclass:: UQpy.Distributions.DistributionDiscrete1D
+    :members: 
+	
+List of Distributions
+~~~~~~~~~~~~~~~~~~~~~~~~
+	
+The following is a list of all 1D continuous distributions currently available in ``UQpy``.
 
 .. autoclass:: UQpy.Distributions.Binomial
 
 .. autoclass:: UQpy.Distributions.Poisson
+	
+Multivariate Distributions
+----------------------------------
 
-Multivariate
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In ``UQpy``, multivariate distributions inherit from the ``DistributionND`` class:
+
+.. autoclass:: UQpy.Distributions.DistributionND
+
+
+``UQpy`` has some inbuilt multivariate distributions, which are directly child classes of ``DistributionND``. Additionally, joint distributions can be built from their marginals through the use of the ``JointInd`` and ``JointCopula`` classes described below.
+
+List of Distributions
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: UQpy.Distributions.Multinomial
 
 .. autoclass:: UQpy.Distributions.MVNormal
+    
+Joint from independent marginals
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: UQpy.Distributions.JointInd
+
+Joint from marginals and copula
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: UQpy.Distributions.JointCopula	
 
 
-List of Copula
----------------
+Copula
+-----------
+
+.. autoclass:: UQpy.Distributions.Copula
+	:members:
+	
+
+
+List of Copulas
+~~~~~~~~~~~~~~~~
 
 .. autoclass:: UQpy.Distributions.Gumbel
 
@@ -127,33 +127,17 @@ List of Copula
 .. autoclass:: UQpy.Distributions.Frank
 
 
-User-defined Distributions and Copula
+User-defined Distributions and Copulas
 ---------------------------------------------------
 
-Defining custom distributions in ``UQpy`` can be done by sub-classing the appropriate parent class. For example, to define the ``bivariate Rosenbrock`` distribution model that it is not part of the available ``scipy`` distribution models one can do:
+Defining custom distributions in ``UQpy`` can be done by sub-classing the appropriate parent class. The subclasses must possess the desired methods, per the parent ``Distribution`` class. 
 
-    >>> from UQpy.Distributions import DistributionND
-    >>> class Rosenbrock(DistributionND):
-    >>>     def __init__(self, p=20.):
-    >>>         super().__init__(p=p)
-    >>>     def pdf(self, x):
-    >>>         return np.exp(-(100*(x[:, 1]-x[:, 0]**2)**2+(1-x[:, 0])**2)/self.params['p'])
-    >>>     def log_pdf(self, x):
-    >>>          return -(100*(x[:, 1]-x[:, 0]**2)**2+(1-x[:, 0])**2)/self.params['p']
-    >>> dist = Rosenbrock(p=20)
-    >>> print(hasattr(dist, 'pdf'))
-        True
-    >>> print(hasattr(dist, 'rvs'))
-        False
-    >>> print(hasattr(dist, 'update_params'))
-        True
-        
-Custom copula can be similarly defined by subclassing the ``Copula`` class.
+Custom copulas can be similarly defined by subclassing the ``Copula`` class and defining the appropriate methods.
 
 .. toctree::
     :maxdepth: 2
 
-
+.. [1] https://docs.scipy.org/doc/scipy/reference/stats.html
 
 	
 	
