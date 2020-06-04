@@ -25,6 +25,7 @@ import numpy as np
 import scipy.stats as stats
 from scipy.special import gamma
 from scipy.stats import chi2, norm
+from UQpy.RunModel import RunModel
 
 
 def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
@@ -67,26 +68,37 @@ def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=Non
 def gradient(runmodel_object=None, point=None, order='first', df_step=None):
     """
     A method to estimate the gradients (1st, 2nd, mixed) of a function using a finite difference scheme in the
-    standard normal space. First order gradients are calculated using central finite differences. This is a static
-    method, part of the ``Form`` class.
+    standard normal space. First order gradients are calculated using central finite differences.
+
     **Inputs:**
+
     * **runmodel_object** (``RunModel`` object or a `callable` ):
         The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.
+
     * **point** (`ndarray`):
         The point to evaluate the gradient with shape ``samples.shape=(1, dimension)
+
     * **order** (`str`):
         Order of the gradient. Available options: 'first', 'second', 'mixed'.
+
         Default: 'First'.
+
     * **df_step** (`float`):
         Finite difference step.
+
         Default: 0.001.
+
     **Output/Returns:**
+
     * **du_dj** (`ndarray`):
         Vector of first-order gradients (if order = 'first').
+
     * **d2u_dj** (`ndarray`):
         Vector of second-order gradients (if order = 'second').
+
     * **d2u_dij** (`ndarray`):
         Vector of mixed gradients (if order = 'mixed').
+
     """
     point = np.atleast_2d(point)
 

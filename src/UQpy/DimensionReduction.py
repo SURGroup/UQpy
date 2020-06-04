@@ -206,7 +206,7 @@ class Grassmann:
             ranks = None
 
         # Initial tests
-        #-----------------------------------------------------------
+        # -----------------------------------------------------------
         if ranks is None:
             ranks = []
             for i in range(nargs):
@@ -218,7 +218,7 @@ class Grassmann:
             raise ValueError('Two matrices or more MUST be provided.')
         elif len(ranks) != nargs:
             raise ValueError('The number of elements in rank and in the input data MUST be the same.')
-        #------------------------------------------------------------
+        # ------------------------------------------------------------
             
         # Define the pairs of points to compute the Grassmann distance.
         indices = range(nargs)
@@ -228,7 +228,7 @@ class Grassmann:
             if self.distance_script is None:
                 raise TypeError('distance_script cannot be None')
 
-            exec('from ' + self.distance_script[:-3] + ' import ' + self.distance_object)
+            exec('from ' +  self.distance_script[:-3] + ' import ' + self.distance_object)
             distance_fun = eval(self.distance_object)
         else:
             if self.distance_object is None:
