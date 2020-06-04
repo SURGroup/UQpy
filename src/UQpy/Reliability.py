@@ -497,6 +497,7 @@ class TaylorSeries:
 
     * **corr_u** or **corr_x** (`ndarray`):
         Covariance matrix
+
         If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
 
         If `corr_u` is provided, it is the correlation matrix (:math:`\mathbf{C_U}`) of the standard normal random
@@ -505,7 +506,6 @@ class TaylorSeries:
          Default: `cov_u` is specified as the identity matrix.
 
     * **tol** (`float`):
-
          Convergence threshold for the `HLRF` algorithm.
 
          Default: 0.001
@@ -587,7 +587,7 @@ class FORM(TaylorSeries):
 
     **Methods:**
 
-    """
+     """
 
     def __init__(self, dist_object, runmodel_object, seed=None, cov=None, n_iter=100,  tol=1e-3):
 
@@ -737,10 +737,10 @@ class FORM(TaylorSeries):
             Default: 'first'.
 
         * **df_step** (`float`):
-
             Finite difference step.
 
             Default: 0.001.
+
 
         **Output/Returns:**
 
