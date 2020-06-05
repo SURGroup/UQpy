@@ -20,7 +20,7 @@ This module contains functionality for all the surrogate methods supported in UQ
 
 * SROM: Estimate a discrete approximation for a continuous random variable using Stochastic Reduced Order Model.
 
-* Krig: Generates an approximates surrogate model using Kriging.
+* Kriging: Generates an approximates surrogate model using Kriging.
 """
 
 from UQpy.Distributions import *
@@ -37,29 +37,41 @@ class SROM:
     """
     Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random
     quantity.
+
     SROM generates a discrete approximation of continuous random variables. The probabilities/weights are
     considered to be the parameters for the SROM and they can be obtained by minimizing the error between the
     marginal distributions, first and second order moments about origin and correlation between random variables.
+
     **References:**
+
     1. M. Grigoriu, "Reduced order models for random functions. Application to stochastic problems",
        Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.
+
     **Input:**
+
     * **samples** (`ndarray`):
             An array/list of samples corresponding to each random variables.
+
     * **target_dist_object** ((list of) ``Distribution`` object(s)):
             A list of distribution objects of random variables.
+
     * **moments** (`list` of `float`):
             A list containing first and second order moment about origin of all random variables.
+
     * **weights_errors** (`list` of `float`):
             Weights associated with error in distribution, moments and correlation.
+
             Default: weights_errors = [1, 0.2, 0]
+
     * **properties** (`list` of `booleans`):
             A list of booleans representing properties, which are required to match in reduce order model. This class
             focus on reducing errors in distribution, first order moment about origin, second order moment about origin
             and correlation of samples.
             Example: properties = [True, True, False, False] will minimize errors in distribution and errors in first
             order moment about origin in reduce order model.
+
             Default: weights_errors = [1, 0.2, 0]
+
     * **weights_distribution** (`ndarray` or `list` of `float`):
             An list or array containing weights associated with different samples.
             Options:
@@ -67,7 +79,9 @@ class SROM:
                 If size of weights_distribution is 1xd, then it is assigned as dot product of weights_distribution and
                 default value.
                 Otherwise size of weights_distribution should be equal to Nxd.
+
             Default: weights_distribution = An array of shape Nxd with all elements equal to 1.
+
     * **weights_moments** (`ndarray` or `list` of `float`):
             An array of dimension 2xd, where 'd' is number of random variables. It contain weights associated with
             moments.
@@ -76,16 +90,23 @@ class SROM:
                 If size of weights_moments is 1xd, then it is assigned as dot product of weights_moments and default
                 value.
                 Otherwise size of weights_distribution should be equal to 2xd.
+
             Default: weights_moments = Square of reciprocal of elements of moments.
+
     * **weights_correlation** (`ndarray` or `list` of `float`):
             An array of dimension dxd, where 'd' is number of random variables. It contain weights associated with
             correlation of random variables.
+
             Default: weights_correlation = dxd dimensional array with all elements equal to 1.
+
     * **correlation** (`ndarray` or `list of floats`):
             Correlation matrix between random variables.
+
     **Attributes:**
+
     * **sample_weights** (`ndarray`):
             The probabilities/weights defining discrete approximation of continuous random variables.
+
     """
 
     def __init__(self, samples=None, target_dist_object=None, moments=None, weights_errors=None,
@@ -290,21 +311,26 @@ class SROM:
 class Kriging:
     """
     Kriging generates an approximate surrogate model to predict the function value at unknown/new samples.
+
     A Surrogate is generated using training data and information about regression and correlation model. A Maximum
     Likelihood Estimator (MLE) is computed for hyperparameter of correlation model. This class create a method,
     i.e. Krig.interpolate. This functions estimates the approximate functional value and mean square error at
     unknown/new samples.
+
     **References:**
+
     1. S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, "DACE -- A MATLAB Kriging Toolbox", Informatics and
        Mathematical Modelling, Version 2.0, 2002.
+
     **Input:**
-    **Attributes:**
+
     * **reg_model** (`str` or `function`):
             Regression model contains the basis function, which defines the trend of the model.
             Options:
                     1. Constant \n
                     2. Linear \n
                     3. Quadratic \n
+
     * **corr_model** (`str` or `function`):
             Correlation model contains the correlation function, which uses sample distance to define similarity between
             samples.
@@ -315,35 +341,52 @@ class Kriging:
                     4. Spherical \n
                     5. Cubic \n
                     6. Spline \n
+
     * **corr_model_params** (`ndarray` or `list of floats`):
             List of array of initial value of hyperparameters/scale parameters.
+
     * **bounds** (`list` of `float`):
             Bounds for hyperparameters used to solve optimization problem to estimate maximum likelihood estimator.
             This should be a closed bound.
+
             Default: [0.001, 10**7] for each hyperparamter.
+
     * **op** (`boolean`):
             Indicator to solve MLE problem or not. If 'True' corr_model_params will be used as initial solution for
             optimization problem. Otherwise, corr_model_params will be directly use as hyperparamter.
+
             Default: True.
+
     * **nopt** (`int`):
             Number of times optimization problem is to be solved with a random starting point.
+
             Default: 1.
+
     * **verbose** (`Boolean`):
             A boolean declaring whether to write text to the terminal.
+
             Default value: False
+
     **Attributes:**
+
     * **beta** (`ndarray`):
             Regression coefficients
+
     * **err_var** (`ndarray`):
             Variance in the error (assumed to be gaussian process)
+
     * **C_inv** (`ndarray`):
             Inverse of cholesky decomposition of the Correlation matrix
+
     **Methods:**
+
     * **predict** (`function`):
             This methods returns the model estimate and standard deviation (if return_std is 'True') of estimate at
             a new samples point.
+
     * **jacobian** (`function`):
             This methods returns the gradient of model estimate at a new samples point.
+
     """
 
     def __init__(self, reg_model='Linear', corr_model='Exponential', bounds=None, op=True, nopt=1, normalize=True,
@@ -549,11 +592,13 @@ class Kriging:
     def predict(self, x, return_std=False):
         """
         Predict the function value at new points
+
         This method evaluates the regression and correlation model at new sample point. Then, it predicts the function
         value and mean square error using regression coefficients and training data.
         **Input:**
         :param x: nD-array (2 dimensional) corresponding to the new points.
         :type  x: list or array
+
         :param return_std: Indicator to estimate standard deviation.
         :type return_std: boolean
         """
@@ -569,6 +614,9 @@ class Kriging:
 
         if self.normalize:
             y = self.value_mean + y * self.value_std
+        if x.shape[1] == 1:
+            y = y.flatten()
+
         if return_std:
             r_dash = np.matmul(self.C_inv, rx.T)
             u = np.matmul(self.F_dash.T, r_dash) - fx.T
@@ -577,6 +625,8 @@ class Kriging:
             mse = self.err_var * np.atleast_2d(1 + norm2 - norm1).T
             if self.normalize:
                 mse = self.value_std * np.sqrt(mse)
+            if x.shape[1] == 1:
+                mse = mse.flatten()
             return y, mse
         else:
             return y
@@ -584,6 +634,7 @@ class Kriging:
     def jacobian(self, x):
         """
         Predict the gradient of the function at new points
+
         This method evaluates the regression and correlation model at new sample point. Then, it predicts the gradient
         using regression coefficients and training data.
         **Input:**
@@ -602,6 +653,9 @@ class Kriging:
         y_grad = np.einsum('ikj,jm->ik', jf, self.beta) + np.einsum('ijk,jm->ki', drdx.T, self.gamma)
         if self.normalize:
             y_grad = y_grad * self.value_std/self.sample_std
+        if x.shape[1] == 1:
+            y_grad = y_grad.flatten()
+
         return y_grad
 
     # Defining Regression model (Linear)
@@ -609,11 +663,14 @@ class Kriging:
     def regress(model):
         """
         Defines a function to evaluate basis functions
+
         This method defines a function based on the choice of regression model, which computes the basis functions
         for provided samples.
         **Input:**
+
         :param model: Name of the regression model.
         :type  model: str
+
         """
         def r(s):
             s = np.atleast_2d(s)
@@ -659,11 +716,15 @@ class Kriging:
         This method defines a function based on the choice of correlation model, which computes the correlation matrix
         for provided samples.
         **Input:**
+
         :param model: Name of the correlation model.
         :type  model: str
+
         ** Methods:**
+
         * **c** (`callable`):
                 Returns a callable function, which returns the correlation matrix.
+
         """
         def c(x, s, params, dt=False, dx=False):
             rx, drdt, drdx = [0.], [0.], [0.]
