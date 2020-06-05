@@ -88,6 +88,9 @@ class SRM:
         if (self.time_duration > t_u).any():
             raise RuntimeError('UQpy: Aliasing might occur during execution')
 
+        self.case = case
+        self.verbose = verbose
+
         self.random_state = random_state
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
@@ -95,28 +98,15 @@ class SRM:
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         self.samples = None
-        self.case = case
+        self.number_of_variables = None
+        self.number_of_dimensions = None
+        self.phi = None
 
         if self.case == 'uni':
-            if verbose:
-                print('UQpy: Starting simulation of uni-variate Stochastic Processes.')
             self.number_of_dimensions = len(self.power_spectrum.shape)
-            if verbose:
-                print('UQpy: The number of dimensions is :.', self.number_of_dimensions)
-            self.phi = np.random.uniform(
-                size=np.append(self.nsamples,
-                               np.ones(self.number_of_dimensions,
-                                       dtype=np.int32) * self.number_frequency_intervals)) * 2 * np.pi
-            self.samples = self._simulate_uni(self.phi)
         elif self.case == 'multi':
             self.number_of_variables = self.power_spectrum.shape[0]
             self.number_of_dimensions = len(self.power_spectrum.shape[2:])
-            self.phi = np.random.uniform(
-                size=np.append(self.nsamples,
-                               np.append(
-                                   np.ones(self.number_of_dimensions, dtype=np.int32) * self.number_frequency_intervals,
-                                   self.number_of_variables))) * 2 * np.pi
-            self.samples = self._simulate_multi(self.phi)
 
         # Run Spectral Representation Method
         if self.nsamples is not None:
@@ -152,63 +142,48 @@ class SRM:
 
         """
         # Check if a random_state is provided.
-        if random_state is None:
-            random_state = self.random_state
-        else:
-            if isinstance(random_state, int):
-                random_state = np.random.RandomState(random_state)
-            elif not isinstance(random_state, (type(None), np.random.RandomState)):
-                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if nsamples is None:
-            raise ValueError('UQpy: Number of samples must be defined.')
+            raise ValueError('UQpy: Stochastic Process: Number of samples must be defined.')
         if not isinstance(nsamples, int):
-            raise ValueError('UQpy: nsamples should be an integer.')
+            raise ValueError('UQpy: Stochastic Process: nsamples should be an integer.')
 
         if self.verbose:
-            print('UQpy: Running Monte Carlo Sampling.')
+            print('UQpy: Stochastic Process: Running Spectral Representation Method.')
 
-        if isinstance(self.dist_object, list):
-            temp_samples = list()
-            for i in range(len(self.dist_object)):
-                if hasattr(self.dist_object[i], 'rvs'):
-                    temp_samples.append(self.dist_object[i].rvs(nsamples=nsamples, random_state=random_state))
-                else:
-                    ValueError('UQpy: rvs method is missing.')
-            self.x = list()
-            for j in range(nsamples):
-                y = list()
-                for k in range(len(self.dist_object)):
-                    y.append(temp_samples[k][j])
-                self.x.append(np.array(y))
-        else:
-            if hasattr(self.dist_object, 'rvs'):
-                temp_samples = self.dist_object.rvs(nsamples=nsamples, random_state=random_state)
-                self.x = temp_samples
+        samples = None
+
+        if self.case == 'uni':
+            if self.verbose:
+                print('UQpy: Stochastic Process: Starting simulation of uni-variate Stochastic Processes.')
+                print('UQpy: The number of dimensions is :', self.number_of_dimensions)
+            self.phi = np.random.uniform(
+                size=np.append(self.nsamples, np.ones(self.number_of_dimensions, dtype=np.int32)
+                               * self.number_frequency_intervals)) * 2 * np.pi
+            samples = self._simulate_uni(self.phi)
+
+        elif self.case == 'multi':
+            if self.verbose:
+                print('UQpy: Stochastic Process: Starting simulation of multi-variate Stochastic Processes.')
+                print('UQpy: Stochastic Process: The number of variables is :', self.number_of_variables)
+                print('UQpy: Stochastic Process: The number of dimensions is :', self.number_of_dimensions)
+            self.phi = np.random.uniform(size=np.append(self.nsamples, np.append(
+                np.ones(self.number_of_dimensions, dtype=np.int32) * self.number_frequency_intervals,
+                self.number_of_variables))) * 2 * np.pi
+            samples = self._simulate_multi(self.phi)
 
         if self.samples is None:
-            if isinstance(self.dist_object, list) and self.array is True:
-                self.samples = np.hstack(np.array(self.x)).T
-            else:
-                self.samples = np.array(self.x)
+            self.samples = samples
         else:
-            # If self.samples already has existing samples, append the new samples to the existing attribute.
-            if isinstance(self.dist_object, list) and self.array is True:
-                self.samples = np.concatenate([self.samples, np.hstack(np.array(self.x)).T], axis=0)
-            elif isinstance(self.dist_object, Distribution):
-                self.samples = np.vstack([self.samples, self.x])
-            else:
-                self.samples = np.vstack([self.samples, self.x])
-        self.nsamples = len(self.samples)
+            self.samples = np.concatenate((self.samples, samples), axis=0)
 
         if self.verbose:
-            print('UQpy: Monte Carlo Sampling Complete.')
+            print('UQpy: Stochastic Process: Spectral Representation Method Complete.')
 
     def _simulate_uni(self, phi):
         fourier_coefficient = np.exp(phi * 1.0j) * np.sqrt(
             2 ** (self.number_of_dimensions + 1) * self.power_spectrum * np.prod(self.frequency_length))
-        samples = np.fft.fftn(fourier_coefficient,
-                              np.ones(self.number_of_dimensions, dtype=np.int32) * self.number_time_intervals)
+        samples = np.fft.fftn(fourier_coefficient, self.number_time_intervals)
         samples = np.real(samples)
         samples = samples[:, np.newaxis]
         return samples
@@ -218,14 +193,12 @@ class SRM:
         coefficient = np.sqrt(2 ** (self.number_of_dimensions + 1)) * np.sqrt(np.prod(self.frequency_length))
         u, s, v = np.linalg.svd(power_spectrum)
         power_spectrum_decomposed = np.einsum('...ij,...j->...ij', u, np.sqrt(s))
-        fourier_coefficient = coefficient * np.einsum('...ij,number_of_dimensions...j -> number_of_dimensions...i',
+        fourier_coefficient = coefficient * np.einsum('...ij,n...j -> n...i',
                                                       power_spectrum_decomposed, np.exp(phi * 1.0j))
         fourier_coefficient[np.isnan(fourier_coefficient)] = 0
-        samples = np.real(
-            np.fft.fftn(fourier_coefficient,
-                        s=[self.number_time_intervals[i] for i in range(self.number_of_dimensions)],
-                        axes=tuple(np.arange(1, 1 + self.number_of_dimensions))))
-        samples = np.einsum('number_of_dimensions...number_of_variables->nm...', samples)
+        samples = np.real(np.fft.fftn(fourier_coefficient, s=self.number_time_intervals,
+                                      axes=tuple(np.arange(1, 1 + self.number_of_dimensions))))
+        samples = np.einsum('n...m->nm...', samples)
         return samples
 
 
@@ -302,12 +275,12 @@ class BSRM:
     # Last Modified:04/08/2020 Lohit Vandanapu
 
     def __init__(self, nsamples, power_spectrum, bispectrum, time_duration, frequency_length, number_time_intervals,
-                 number_frequency_intervals, random_state=None, case='uni'):
+                 number_frequency_intervals, random_state=None, case='uni', verbose=False):
         self.nsamples = nsamples
-        self.number_frequency_intervals = number_frequency_intervals
-        self.number_time_intervals = number_time_intervals
-        self.frequency_length = frequency_length
-        self.time_duration = time_duration
+        self.number_frequency_intervals = np.array(number_frequency_intervals)
+        self.number_time_intervals = np.array(number_time_intervals)
+        self.frequency_length = np.array(frequency_length)
+        self.time_duration = np.array(time_duration)
         self.number_of_dimensions = len(power_spectrum.shape)
         self.power_spectrum = power_spectrum
         self.bispectrum = bispectrum
@@ -323,20 +296,29 @@ class BSRM:
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
-        # TODO: run methods as well
-        if random_state:
-            np.random.seed(random_state)
         self.b_ampl = np.absolute(bispectrum)
         self.b_real = np.real(bispectrum)
         self.b_imag = np.imag(bispectrum)
         self.biphase = np.arctan2(self.b_imag, self.b_real)
         self.biphase[np.isnan(self.biphase)] = 0
+
+        self.case = case
+        self.verbose = verbose
+
+        if self.case == 'uni':
+            self.number_of_dimensions = len(self.power_spectrum.shape)
+            self._compute_bicoherence_uni()
+        elif self.case == 'multi':
+            self.number_of_variables = self.power_spectrum.shape[0]
+            self.number_of_dimensions = len(self.power_spectrum.shape[2:])
+
         self.phi = np.random.uniform(size=np.append(self.nsamples, np.ones(self.number_of_dimensions, dtype=np.int32) *
                                                     self.number_frequency_intervals)) * 2 * np.pi
-        self._compute_bicoherence()
         self.samples = self._simulate_bsrm_uni()
 
-    def _compute_bicoherence(self):
+    def _compute_bicoherence_uni(self):
+        if self.verbose:
+            print('UQpy: Stochastic Process: Computing the partial bicoherence values.')
         self.Bc2 = np.zeros_like(self.b_real)
         self.PP = np.zeros_like(self.power_spectrum)
         self.sum_Bc2 = np.zeros_like(self.power_spectrum)
@@ -374,7 +356,8 @@ class BSRM:
                 else:
                     self.Bc2[(*wi, *wj)] = 0
             if self.sum_Bc2[(*wk, *[])] > 1:
-                print('Results may not be as expected as sum of partial bicoherences is greater than 1')
+                print('UQpy: Stochastic Process: Results may not be as expected as sum of partial bicoherences is '
+                      'greater than 1')
                 for j in itertools.product(*[range(k) for k in np.ceil((wk + 1) / 2, dtype=np.int32)]):
                     wj = np.array(j)
                     wi = wk - wj
@@ -382,11 +365,11 @@ class BSRM:
                 self.sum_Bc2[(*wk, *[])] = 1
             self.PP[(*wk, *[])] = self.power_spectrum[(*wk, *[])] * (1 - self.sum_Bc2[(*wk, *[])])
 
-    def _simulate_bsrm_uni(self):
+    def _simulate_bsrm_uni(self, phi):
         coeff = np.sqrt((2 ** (
                 self.number_of_dimensions + 1)) * self.power_spectrum *
                         self.frequency_length ** self.number_of_dimensions)
-        phi_e = np.exp(self.phi * 1.0j)
+        phi_e = np.exp(phi * 1.0j)
         biphase_e = np.exp(self.biphase * 1.0j)
         b = np.sqrt(1 - self.sum_Bc2) * phi_e
         bc = np.sqrt(self.Bc2)
@@ -406,9 +389,77 @@ class BSRM:
         phi_e = np.einsum('...i->i...', phi_e)
         b = b * coeff
         b[np.isnan(b)] = 0
-        samples = np.fft.fftn(b, [self.number_time_intervals[i] for i in range(self.number_of_dimensions)])
+        samples = np.fft.fftn(b, self.number_time_intervals)
         samples = samples[:, np.newaxis]
         return np.real(samples)
+
+    def run(self, nsamples, random_state=None):
+        """
+        Execute the random sampling in the ``MCS`` class.
+
+        The ``run`` method is the function that performs random sampling in the ``MCS`` class. If `nsamples` is
+        provided, the ``run`` method is automatically called when the ``MCS`` object is defined. The user may also call
+        the ``run`` method directly to generate samples. The ``run`` method of the ``MCS`` class can be invoked many
+        times and each time the generated samples are appended to the existing samples.
+
+        ** Input:**
+
+        * **nsamples** (`int`):
+            Number of samples to be drawn from each distribution.
+
+            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+            existing samples.
+
+        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
+
+            If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+            object itself can be passed directly.
+
+        **Output/Returns:**
+
+        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``MCS``
+        class.
+
+        """
+        # Check if a random_state is provided.
+
+        if nsamples is None:
+            raise ValueError('UQpy: Stochastic Process: Number of samples must be defined.')
+        if not isinstance(nsamples, int):
+            raise ValueError('UQpy: Stochastic Process: nsamples should be an integer.')
+
+        if self.verbose:
+            print('UQpy: Stochastic Process: Running 3rd-order Spectral Representation Method.')
+
+        samples = None
+
+        if self.case == 'uni':
+            if self.verbose:
+                print('UQpy: Stochastic Process: Starting simulation of uni-variate Stochastic Processes.')
+                print('UQpy: The number of dimensions is :', self.number_of_dimensions)
+            self.phi = np.random.uniform(
+                size=np.append(self.nsamples, np.ones(self.number_of_dimensions, dtype=np.int32)
+                               * self.number_frequency_intervals)) * 2 * np.pi
+            samples = self._simulate_bsrm_uni(self.phi)
+
+        # elif self.case == 'multi':
+        #     if self.verbose:
+        #         print('UQpy: Stochastic Process: Starting simulation of multi-variate Stochastic Processes.')
+        #         print('UQpy: Stochastic Process: The number of variables is :', self.number_of_variables)
+        #         print('UQpy: Stochastic Process: The number of dimensions is :', self.number_of_dimensions)
+        #     self.phi = np.random.uniform(size=np.append(self.nsamples, np.append(
+        #         np.ones(self.number_of_dimensions, dtype=np.int32) * self.number_frequency_intervals,
+        #         self.number_of_variables))) * 2 * np.pi
+        #     samples = self._simulate_multi(self.phi)
+
+        if self.samples is None:
+            self.samples = samples
+        else:
+            self.samples = np.concatenate((self.samples, samples), axis=0)
+
+        if self.verbose:
+            print('UQpy: Stochastic Process: 3rd-order Spectral Representation Method Complete.')
 
 
 class KLE:
