@@ -486,29 +486,35 @@ class TaylorSeries:
     * **runmodel_object** (``RunModel`` object):
         The computational model. It should be of type `RunModel` (see ``RunModel`` class).
 
-    * **seed_u** or **seed_x** (`ndarray`):
+    * **seed_y** or **seed_x** (`ndarray`):
         The initial starting point for the `Hasofer-Lind` algorithm.
 
-        If `seed_u` is provided, it should be a point in the standard normal space of **U**.
+        If `seed_y` is provided, it should be a point in the standard normal space of **Y**.
 
         If `seed_x` is provided, it should be a point in the parameter space of **X**.
 
-        Default: `seed_u = (0, 0, \ldots, 0)`
+        Default: `seed_y = (0, 0, \ldots, 0)`
 
-    * **corr_u** or **corr_x** (`ndarray`):
+    * **corr_z** or **corr_x** (`ndarray`):
         Covariance matrix
 
         If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
 
-        If `corr_u` is provided, it is the correlation matrix (:math:`\mathbf{C_U}`) of the standard normal random
+        If `corr_z` is provided, it is the correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal random
         vector **U** .
 
-         Default: `cov_u` is specified as the identity matrix.
+         Default: `corr_z` is specified as the identity matrix.
 
-    * **tol** (`float`):
+    * **tol1** (`float`):
          Convergence threshold for the `HLRF` algorithm.
 
          Default: 0.001
+
+    * **tol2** (`float`):
+         Convergence threshold for the `HLRF` algorithm.
+
+         Default: 1.0e-6
+
 
     * **n_iter** (`int`):
          Maximum number of iterations for the `HLRF` algorithm.
@@ -517,27 +523,33 @@ class TaylorSeries:
 
     """
 
-    def __init__(self, dist_object, runmodel_object, seed, cov, n_iter, tol):
+    def __init__(self, dist_object, runmodel_object, seed_x, seed_y, corr_x, corr_z, n_iter, tol1, tol2):
 
         if isinstance(dist_object, list):
+            self.dimension = len(dist_object)
             for i in range(len(dist_object)):
                 if not isinstance(dist_object[i], (DistributionContinuous1D, JointInd)):
                     raise TypeError('UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be provided.')
         else:
-            if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
+            if isinstance(dist_object, DistributionContinuous1D):
+                self.dimension = 1
+            elif isinstance(dist_object, JointInd):
+                self.dimension = len(dist_object.marginals)
+            else:
                 raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
 
         if not isinstance(runmodel_object, RunModel):
             raise ValueError('UQpy: A RunModel object is required for the model.')
 
-        self.cov = cov
-        self.dimension = self.cov.shape[0]
-
+        self.seed_x = seed_x
+        self.seed_y = seed_y
+        self.corr_x = corr_x
+        self.corr_z = corr_z
         self.dist_object = dist_object
         self.n_iter = n_iter
         self.runmodel_object = runmodel_object
-        self.tol = tol
-        self.seed = seed
+        self.tol1 = tol1
+        self.tol2 = tol2
 
 
 class FORM(TaylorSeries):
@@ -555,11 +567,11 @@ class FORM(TaylorSeries):
     * **Pf_form** (`float`):
         First-order probability of failure estimate.
 
-    * **HL_beta** (`float`):
+    * **beta_form** (`float`):
         Hasofer-Lind reliability index.
 
-    * **DesignPoint_U** (`ndarray`):
-        Design point in the uncorrelated standard normal space **U**.
+    * **DesignPoint_Y** (`ndarray`):
+        Design point in the uncorrelated standard normal space **Y**.
 
     * **DesignPoint_X** (`ndarray`):
         Design point in the parameter space **X**.
@@ -570,8 +582,8 @@ class FORM(TaylorSeries):
     * **iterations** (`int`):
         Number of model evaluations.
 
-    * **u_record** (`list`):
-        Record of all iteration points in the standard normal space **U**.
+    * **y_record** (`list`):
+        Record of all iteration points in the standard normal space **Y**.
 
     * **x_record** (`list`):
         Record of all iteration points in the parameter space **X**.
@@ -589,123 +601,130 @@ class FORM(TaylorSeries):
 
      """
 
-    def __init__(self, dist_object, runmodel_object, seed=None, cov=None, n_iter=100,  tol=1e-3):
+    def __init__(self, dist_object, runmodel_object, seed_x=None, seed_y=None, corr_x=None, corr_z=None, n_iter=100,
+                 tol1=1e-3, tol2=1e-6):
 
-        super().__init__(dist_object, runmodel_object, seed, cov, n_iter, tol)
+        super().__init__(dist_object, runmodel_object, seed_x, seed_y, corr_x, corr_z, n_iter, tol1, tol2)
 
-        if cov is None:
-            if isinstance(dist_object, list):
-                cov = np.eye(len(dist_object))
-            elif isinstance(dist_object, DistributionContinuous1D):
-                cov = np.eye(1)
-            elif isinstance(dist_object, JointInd):
-                cov = np.eye(len(dist_object.marginals))
+        if corr_z is None and corr_x is None:
+            self.corr_z = corr_z
+            self.corr_x = corr_x
+        elif corr_z is not None and corr_x is None:
+            self.corr_u = corr_z
+            from UQpy.Transformations import InvNataf
+            self.corr_x = InvNataf.distortion_z_to_x(dist_object, corr_z)
+        elif corr_z is None and corr_x is not None:
+            self.corr_x = corr_x
+            from UQpy.Transformations import Nataf
+            self.corr_z = Nataf.distortion_x_to_z(dist_object, corr_x)
+
+        if seed_y is None and seed_x is None:
+            self.seed = np.zeros(self.dimension)
+        elif seed_y is None and seed_x is not None:
+            from UQpy.Transformations import Nataf
+            seed = Nataf(dist_object=self.dist_object, samples_x=seed_x.reshape(1, -1), corr_x=self.corr_x).samples_y
+            self.seed = np.squeeze(seed)
+        elif seed_y is not None and seed_x is None:
+            self.seed = np.squeeze(seed_y)
+        elif seed_y is not None and seed_x is not None:
+            raise ValueError('UQpy: Only one seed (seed_x or seed_u) must be provided')
 
         # Initialize output
-        self.HL_beta = None
-        self.DesignPoint_U = None
+        self.beta_form = None
+        self.DesignPoint_Y = None
         self.DesignPoint_X = None
         self.alpha = None
-        self.Prob_FORM = None
+        self.Pf_form = None
         self.iterations = None
-        self.u_record = None
-        self.x_record = None
-        self.dg_record = None
-        self.alpha_record = None
-        self.u_check = None
-        self.g_check = None
         self.g_record = None
         self.x = None
         self.alpha = None
+        self.g0 = None
 
-        self._run()
+        self.y_record = list()
+        self.x_record = list()
+        self.g_record = list()
+        self.dg_record = list()
+        self.alpha_record = list()
 
-    def _run(self):
+        self.run()
 
-        print('UQpy: Running First Order Reliability Method...')
+    def run(self):
+        """
+        Execute FORM
 
-        # initialization
-        u_record = list()
-        x_record = list()
-        g_record = list()
-        dg_record = list()
-        alpha_record = list()
-        g_check = list()
-        u_check = list()
+        This is an instance method that runs FORM. It is automatically called when the FORM class is instantiated.
+
+        """
+
+        print('UQpy: Running FORM...')
 
         conv_flag = 0
-        from UQpy.Transformations import Forward, Inverse
-        if self.seed is not None:
-            # transform the initial point from the original space x to standard normal space u
-            u = Forward(dist_object=self.dist_object, samples=self.seed.reshape(1, -1), cov=self.cov).u
-        else:
-            u = np.zeros(self.dimension).reshape(1, -1)
-
         k = 0
+        y = self.seed
         while conv_flag == 0:
+            from UQpy.Transformations import InvNataf
             # FORM always starts from the standard normal space
-            obj = Inverse(dist_object=self.dist_object, samples=u, cov=self.cov)
-            self.x = obj.x
-            # Jux = obj.Jux
-            # Jxu = np.linalg.inv(Jux)
+            if k == 0:
+                if self.seed_x is not None:
+                    self.x = self.seed_x
+                else:
+                    inv = InvNataf(dist_object=self.dist_object, samples_y=self.seed.reshape(1, -1), corr_z=self.corr_z)
+                    self.x = inv.samples_x
+            elif k > 0:
+                inv = InvNataf(dist_object=self.dist_object, samples_y=y.reshape(1, -1), corr_z=self.corr_z)
+                self.x = inv.samples_x
 
             # 1. evaluate Limit State Function at the point
             self.runmodel_object.run(self.x.reshape(1, -1), append_samples=False)
             qoi = self.runmodel_object.qoi_list[0]
-            g_record.append(qoi)
+            self.g_record.append(qoi)
 
             # 2. evaluate Limit State Function gradient at point u_k and direction cosines
-            dg = self.gradient(order='first', point=u,  runmodel_object=self.runmodel_object, cov=self.cov,
-                               dist_object=self.dist_object)
+            dg = self.gradient_form(point_y=y,  runmodel_object=self.runmodel_object,
+                                    dist_object=self.dist_object, order='first', corr_z=self.corr_z)
 
             # dg_record.append(np.dot(dg[0, :], Jxu))# use this if the input in gradient function is x
-            dg_record.append(dg[0, :])
-            norm_grad = np.linalg.norm(dg_record[k])
-            self.alpha = - dg_record[k] / norm_grad
-            alpha_record.append(self.alpha)
+            self.dg_record.append(dg)
+            norm_grad = np.linalg.norm(self.dg_record[k])
+            self.alpha = - self.dg_record[k] / norm_grad
+            self.alpha_record.append(self.alpha)
+
+            # Tolerance on how accurately the gradient point is towards the origin
+            u_check = np.linalg.norm(y.reshape(-1, 1) - np.dot(self.alpha.reshape(1, -1), y.reshape(-1, 1))
+                                     * self.alpha.reshape(-1, 1))
 
             if k == 0:
                 if qoi == 0:
-                    g0 = 1
+                    self.g0 = 1
                 else:
-                    g0 = qoi
+                    self.g0 = qoi
 
-            u_check.append(np.linalg.norm(u.reshape(-1, 1) - np.dot(self.alpha.reshape(1, -1), u.reshape(-1, 1))
-                                          * self.alpha.reshape(-1, 1)))
-            g_check.append(abs(qoi / g0))
+            # Tolerance on how close the design point is to limit-state surface
+            g_check = abs(qoi / self.g0)
 
-            if u_check[k] <= self.tol and g_check[k] <= self.tol:
+            self.y_record.append(y)
+            self.x_record.append(self.x)
+            if (u_check <= self.tol1 and g_check < self.tol2) or k == self.n_iter:
                 conv_flag = 1
-            if k == self.n_iter:
-                conv_flag = 1
-
-            u_record.append(u)
-            x_record.append(self.x)
-            if conv_flag == 0:
-                direction = (qoi / norm_grad + np.dot(self.alpha.reshape(1, -1), u.reshape(-1, 1))) * \
-                            self.alpha.reshape(-1, 1) - u.reshape(-1, 1)
-                u_new = (u.reshape(-1, 1) + direction).T
-                u = u_new
+            else:
+                direction = (qoi / norm_grad + np.dot(self.alpha.reshape(1, -1), y.reshape(-1, 1))) * \
+                            self.alpha.reshape(-1, 1) - y.reshape(-1, 1)
+                y_new = (y.reshape(-1, 1) + direction).T
+                y = np.squeeze(y_new)
                 k = k + 1
 
         if k == self.n_iter:
             print('UQpy: Maximum number of iterations {0} was reached before convergence.'.format(self.n_iter))
         else:
-            self.HL_beta = np.dot(u, self.alpha.T)
-            self.DesignPoint_U = u
+            self.beta_form = np.dot(y, self.alpha.T)
+            self.DesignPoint_Y = y
             self.DesignPoint_X = self.x
-            self.Prob_FORM = stats.norm.cdf(-self.HL_beta)
+            self.Pf_form = stats.norm.cdf(-self.beta_form)
             self.iterations = k
-            self.g_record = g_record
-            self.u_record = u_record
-            self.x_record = x_record
-            self.dg_record = dg_record
-            self.alpha_record = alpha_record
-            self.u_check = u_check
-            self.g_check = g_check
 
     @staticmethod
-    def gradient(dist_object, point, runmodel_object, order='first', cov=None, df_step=0.001, point_qoi=None):
+    def gradient_form(point_y, runmodel_object, dist_object, order='first', corr_z=None, df_step=0.001, point_qoi=None):
         """
         A method to estimate the derivatives (1st-order, 2nd-order, mixed) of a function using a central difference
         scheme after transformation to the standard normal space.
@@ -721,15 +740,15 @@ class FORM(TaylorSeries):
         * **runmodel_object** (``RunModel`` object):
             The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
 
-        * **corr_u** (`ndarray`):
-            Correlation matrix of the standard normal random vector :math:`\mathbf{C_U}`).
+        * **corr_z** (`ndarray`):
+            Correlation matrix of the standard normal random vector :math:`\mathbf{C_Z}`).
 
-        * **point_u** (`ndarray`):
+        * **point_y** (`ndarray`):
             Point in the uncorrelated standard normal space at which to evaluate the gradient with shape
             `samples.shape=(1, dimension)`
 
         * **point_qoi** (`float`):
-            Value of the model evaluated at point_u. Used only for second derivatives.
+            Value of the model evaluated at point_y. Used only for second derivatives.
 
         * **order** (`str`):
             Order of the derivative. Available options: 'first', 'second', 'mixed'.
@@ -744,147 +763,119 @@ class FORM(TaylorSeries):
 
         **Output/Returns:**
 
-        * **du_dj** (`ndarray`):
+        * **dy_dj** (`ndarray`):
             Vector of first-order derivatives (if order = 'first').
 
-        * **d2u_dj** (`ndarray`):
+        * **d2y_dj** (`ndarray`):
             Vector of second-order derivatives (if order = 'second').
 
-        * **d2u_dij** (`ndarray`):
+        * **d2y_dij** (`ndarray`):
             Vector of mixed derivatives (if order = 'mixed').
 
         """
-
-        point = np.atleast_2d(point)
-        dimension = point.shape[1]
-
-        if dimension is None:
-            raise ValueError('Error: Dimension must be defined')
-
-        if isinstance(df_step, float):
-            df_step = [df_step] * dimension
-        elif isinstance(df_step, list):
-            if len(df_step) != 1 and len(df_step) != dimension:
-                raise ValueError('UQpy: Inconsistent dimensions.')
-            if len(df_step) == 1:
-                df_step = [df_step[0]] * dimension
-
-        if not isinstance(runmodel_object, RunModel) or not callable(runmodel_object):
-            raise RuntimeError('UQpy: A RunModel/callable object must be provided as model.')
-
-        def func(m):
-            def func_eval(x):
-                if callable(m):
-                    return m(x)
-                elif isinstance(m, RunModel):
-                    m.run(samples=x, append_samples=False)
-                    return np.array(m.qoi_list)
-
-            return func_eval
-
-        f_eval = func(m=runmodel_object)
-
+        from UQpy.Transformations import InvNataf
         if order.lower() == 'first':
-            du_dj = np.zeros([point.shape[0], dimension])
+            dy_dj = np.zeros(point_y.shape[0])
+            for ii in range(point_y.shape[0]):
+                y_i1_j = point_y.tolist()
+                y_i1_j[ii] = y_i1_j[ii] + df_step
+                y_1i_j = point_y.tolist()
+                y_1i_j[ii] = y_1i_j[ii] - df_step
 
-            for ii in range(dimension):
-                eps_i = df_step[ii]
-                u_i1_j = point.copy()
-                u_i1_j[:, ii] = u_i1_j[:, ii] + eps_i
-                u_1i_j = point.copy()
-                u_1i_j[:, ii] = u_1i_j[:, ii] - eps_i
-
-                obj_plus = Inverse(dist_object=dist_object, samples=u_i1_j, cov=cov)
-                temp_x_i1_j = obj_plus.x
+                obj_plus = InvNataf(dist_object=dist_object, samples_y=np.array(y_i1_j).reshape(1, -1), corr_z=corr_z)
+                temp_x_i1_j = obj_plus.samples_x
                 x_i1_j = temp_x_i1_j.reshape(1, -1)
-                qoi_plus = f_eval(x_i1_j)
+                runmodel_object.run(samples=x_i1_j, append_samples=False)
+                qoi_plus = runmodel_object.qoi_list[0]
 
-                obj_minus = Inverse(dist_object=dist_object, samples=u_1i_j, cov=cov)
-                temp_x_1i_j = obj_minus.x
+                obj_minus = InvNataf(dist_object=dist_object, samples_y=np.array(y_1i_j).reshape(1, -1), corr_z=corr_z)
+                temp_x_1i_j = obj_minus.samples_x
                 x_1i_j = temp_x_1i_j.reshape(1, -1)
-                qoi_minus = f_eval(x_1i_j)
+                runmodel_object.run(samples=x_1i_j, append_samples=False)
+                qoi_minus = runmodel_object.qoi_list[0]
 
-                du_dj[:, ii] = ((qoi_plus[0] - qoi_minus[0]) / (2 * eps_i))
-
-            return du_dj
+                dy_dj[ii] = ((qoi_plus - qoi_minus) / (2 * df_step))
+            return dy_dj
 
         elif order.lower() == 'second':
             print('Calculating second order derivatives..')
-            qoi = kwargs["qoi"]
-            d2u_dj = np.zeros([point.shape[0], dimension])
-            for ii in range(dimension):
-                u_i1_j = point.copy()
-                u_i1_j[:, ii] = u_i1_j[:, ii] + df_step[ii]
-                u_1i_j = point.copy()
-                u_1i_j[:, ii] = u_1i_j[:, ii] - df_step[ii]
+            qoi = point_qoi
+            d2y_dj = np.zeros([point_y.shape[0]])
+            for ii in range(point_y.shape[0]):
+                y_i1_j = point_y.tolist()
+                y_i1_j[ii] = y_i1_j[ii] + df_step
+                y_1i_j = point_y.tolist()
+                y_1i_j[ii] = y_1i_j[ii] - df_step
 
-                obj = Inverse(dist_object=dist_object, samples=u_i1_j, cov=cov)
-                temp_x_i1_j = obj.x
+                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_i1_j).reshape(1, -1), corr_z=corr_z)
+                temp_x_i1_j = obj.samples_x
                 x_i1_j = temp_x_i1_j.reshape(1, -1)
 
-                obj = Inverse(dist_object=dist_object, samples=u_1i_j, cov=cov)
-                temp_x_1i_j = obj.x
+                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_1i_j).reshape(1, -1), corr_z=corr_z)
+                temp_x_1i_j = obj.samples_x
                 x_1i_j = temp_x_1i_j.reshape(1, -1)
 
-                qoi_plus = f_eval(x_i1_j)
-                qoi_minus = f_eval(x_1i_j)
+                runmodel_object.run(samples=x_i1_j, append_samples=False)
+                qoi_plus = runmodel_object.qoi_list[0]
+                runmodel_object.run(samples=x_1i_j, append_samples=False)
+                qoi_minus = runmodel_object.qoi_list[0]
+                d2y_dj[ii] = ((qoi_plus - 2 * qoi + qoi_minus) / (df_step**2))
 
-                d2u_dj[:, ii] = ((qoi_plus[0] - 2 * qoi + qoi_minus[0]) / (df_step[ii] * df_step[ii]))
-
-            return d2u_dj
+            return d2y_dj
 
         elif order.lower() == 'mixed':
 
             import itertools
-            range_ = list(range(dimension))
-            d2u_dij = np.zeros([point.shape[0], int(dimension * (dimension - 1) / 2)])
+            range_ = list(range(point_y.shape[0]))
+            d2y_dij = np.zeros([int(point_y.shape[0] * (point_y.shape[0] - 1) / 2)])
             count = 0
             for i in itertools.combinations(range_, 2):
-                u_i1_j1 = point.copy()
-                u_i1_1j = point.copy()
-                u_1i_j1 = point.copy()
-                u_1i_1j = point.copy()
+                y_i1_j1 = point_y.tolist()
+                y_i1_1j = point_y.tolist()
+                y_1i_j1 = point_y.tolist()
+                y_1i_1j = point_y.tolist()
 
-                eps_i1_0 = df_step[i[0]]
-                eps_i1_1 = df_step[i[1]]
+                y_i1_j1[i[0]] += df_step
+                y_i1_j1[i[1]] += df_step
 
-                u_i1_j1[:, i[0]] += eps_i1_0
-                u_i1_j1[:, i[1]] += eps_i1_1
+                y_i1_1j[i[0]] += df_step
+                y_i1_1j[i[1]] -= df_step
 
-                u_i1_1j[:, i[0]] += eps_i1_0
-                u_i1_1j[:, i[1]] -= eps_i1_1
+                y_1i_j1[i[0]] -= df_step
+                y_1i_j1[i[1]] += df_step
 
-                u_1i_j1[:, i[0]] -= eps_i1_0
-                u_1i_j1[:, i[1]] += eps_i1_1
+                y_1i_1j[i[0]] -= df_step
+                y_1i_1j[i[1]] -= df_step
 
-                u_1i_1j[:, i[0]] -= eps_i1_0
-                u_1i_1j[:, i[1]] -= eps_i1_1
-
-                obj = Inverse(dist_object=dist_object, samples=u_i1_j1, cov=cov)
-                temp_x_i1_j1 = obj.x
+                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_i1_j1).reshape(1, -1), corr_z=corr_z)
+                temp_x_i1_j1 = obj.samples_x
                 x_i1_j1 = temp_x_i1_j1.reshape(1, -1)
 
-                obj = Inverse(dist_object=dist_object, samples=u_i1_1j, cov=cov)
-                temp_x_i1_1j = obj.x
+                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_i1_1j).reshape(1, -1), corr_z=corr_z)
+                temp_x_i1_1j = obj.samples_x
                 x_i1_1j = temp_x_i1_1j[0].reshape(1, -1)
 
-                obj = Inverse(dist_object=dist_object, samples=u_1i_j1, cov=cov)
-                temp_x_1i_j1 = obj.x
+                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_1i_j1).reshape(1, -1), corr_z=corr_z)
+                temp_x_1i_j1 = obj.samples_x
                 x_1i_j1 = temp_x_1i_j1[0].reshape(1, -1)
 
-                obj = Inverse(dist_object=dist_object, samples=u_1i_1j, cov=cov)
-                temp_x_1i_1j = obj.x
+                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_1i_1j).reshape(1, -1), corr_z=corr_z)
+                temp_x_1i_1j = obj.samples_x
                 x_1i_1j = temp_x_1i_1j.reshape(1, -1)
 
-                qoi_0 = f_eval(x_i1_j1)
-                qoi_1 = f_eval(x_i1_1j)
-                qoi_2 = f_eval(x_1i_j1)
-                qoi_3 = f_eval(x_1i_1j)
+                runmodel_object.run(samples=x_i1_j1, append_samples=False)
+                qoi_0 = runmodel_object.qoi_list[0]
+                runmodel_object.run(samples=x_i1_1j, append_samples=False)
+                qoi_1 = runmodel_object.qoi_list[0]
+                runmodel_object.run(samples=x_1i_j1, append_samples=False)
+                qoi_2 = runmodel_object.qoi_list[0]
+                runmodel_object.run(samples=x_1i_1j, append_samples=False)
+                qoi_3 = runmodel_object.qoi_list[0]
 
-                d2u_dij[:, count] = ((qoi_0[0] + qoi_3[0] - qoi_1[0] - qoi_2[0]) / (4 * eps_i1_0 * eps_i1_1))
+                d2y_dij[count] = ((qoi_0 + qoi_3 - qoi_1 - qoi_2) / (4 * df_step * df_step))
 
                 count += 1
-            return d2u_dij
+            return d2y_dij
 
 
 class SORM(TaylorSeries):
@@ -906,25 +897,33 @@ class SORM(TaylorSeries):
     * **Pf_sorm** (`float`):
         Second-order probability of failure estimate.
 
+     * **beta_sorm** (`float`):
+        Second-order reliability index.
+
     **Methods:**
 
     """
 
-    def __init__(self, dist_object, runmodel_object, seed=None, cov=None, n_iter=100, tol=1e-3):
+    def __init__(self, dist_object, runmodel_object, seed_x=None, seed_y=None, corr_x=None, corr_z=None, n_iter=100,
+                 tol1=1e-3, tol2=1e-6):
 
-        super().__init__(dist_object, runmodel_object, seed, cov, n_iter, tol)
+        super().__init__(dist_object, runmodel_object, seed_x, seed_y, corr_x, corr_z, n_iter, tol1, tol2)
 
-        obj = FORM(dist_object=dist_object, seed=seed, runmodel_object=runmodel_object, cov=cov, n_iter=n_iter, tol=tol)
+        obj = FORM(dist_object=dist_object, runmodel_object=runmodel_object, seed_x=seed_x, seed_y=seed_y,
+                   corr_x=corr_x,  corr_z=corr_z, n_iter=n_iter, tol1=tol1, tol2=tol2)
+
         self.dimension = obj.dimension
         self.alpha = obj.alpha
-        self.DesignPoint_U = obj.DesignPoint_U
+        self.DesignPoint_Y = obj.DesignPoint_Y
         self.model = obj.runmodel_object
-        self.cov = obj.cov
+        self.corr_z = obj.corr_z
+        self.corr_x = obj.corr_x
         self.dist_object = dist_object
         self.dg_record = obj.dg_record
         self.g_record = obj.g_record
-        self.HL_beta = obj.HL_beta
-        self.Prob_FORM = obj.Prob_FORM
+        self.y_record = obj.y_record
+        self.beta_form = obj.beta_form
+        self.Pf_form = obj.Pf_form
 
         print('UQpy: Running SORM...')
 
@@ -946,15 +945,15 @@ class SORM(TaylorSeries):
             q[:, i] = normalize(ai)
 
         r1 = np.fliplr(q).T
-        hessian_g = self.hessian(self.DesignPoint_U, self.model,
-                                 self.cov, self.dist_object, self.g_record[-1])
+        hessian_g = self.hessian_sorm(self.DesignPoint_Y, self.dist_object, self.model,
+                                      self.corr_z,  self.g_record[-1])
         matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(self.dg_record[-1])
         kappa = np.linalg.eig(matrix_b[:self.dimension-1, :self.dimension-1])
-        self.Prob_SORM = stats.norm.cdf(-self.HL_beta) * np.prod(1 / (1 + self.HL_beta * kappa[0]) ** 0.5)
-        self.beta_SORM = -stats.norm.ppf(self.Prob_SORM)
+        self.Pf_sorm = stats.norm.cdf(-self.beta_form) * np.prod(1 / (1 + self.beta_form * kappa[0]) ** 0.5)
+        self.beta_sorm = -stats.norm.ppf(self.Pf_sorm)
 
     @staticmethod
-    def hessian(point, runmodel_object, cov, dist_obj, qoi, df_step=0.001):
+    def hessian_sorm(point_y, dist_obj, runmodel_object, corr_z,  point_qoi):
         """
         A function to calculate the hessian matrix  using finite differences. The Hessian matrix is a  square matrix
         of second-order partial derivatives of a scalar-valued function. This is a static method, part of the
@@ -969,25 +968,15 @@ class SORM(TaylorSeries):
         * **runmodel_object** (``RunModel`` object):
             The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
 
-        * **corr_u** (`ndarray`):
-            Correlation matrix of the standard normal random vector :math:`\mathbf{C_U}`).
+        * **corr_z** (`ndarray`):
+            Correlation matrix of the standard normal random vector :math:`\mathbf{C_Z}`).
 
-        * **point_u** (`ndarray`):
+        * **point_y** (`ndarray`):
             Point in the uncorrelated standard normal space at which to evaluate the gradient with shape
             `samples.shape=(1, dimension)`
 
         * **point_qoi** (`float`):
             Value of the model evaluated at point_u. Used only for second derivatives.
-
-        * **order** (`str`):
-            Order of the derivative. Available options: 'first', 'second', 'mixed'.
-
-            Default: 'first'.
-
-        * **df_step** (`float`):
-            Finite difference step.
-
-            Default: 0.001.
 
         **Output/Returns:**
 
@@ -995,19 +984,18 @@ class SORM(TaylorSeries):
             The Hessian matrix.
 
         """
-        point = np.atleast_2d(point)
-        dimension = point.shape[1]
 
-        dg_second = FORM.gradient(order='second', point=point.reshape(1, -1),
-                                  df_step=df_step, runmodel_object=runmodel_object, dist_object=dist_obj,
-                                  cov=cov, qoi=qoi)
+        dg_second = FORM.gradient_form(order='second', point_y=point_y,
+                                       runmodel_object=runmodel_object, dist_object=dist_obj,
+                                       corr_z=corr_z, point_qoi=point_qoi)
 
-        dg_mixed = FORM.gradient(order='mixed', point=point.reshape(1, -1),
-                                 df_step=df_step, runmodel_object=runmodel_object, dist_object=dist_obj, cov=cov)
+        dg_mixed = FORM.gradient_form(order='mixed', point_y=point_y,
+                                      runmodel_object=runmodel_object, dist_object=dist_obj,
+                                      corr_z=corr_z, point_qoi=point_qoi)
 
-        hessian = np.diag(dg_second[0, :])
+        hessian = np.diag(dg_second)
         import itertools
-        range_ = list(range(dimension))
+        range_ = list(range(point_y.shape[0]))
         add_ = 0
         for i in itertools.combinations(range_, 2):
             hessian[i[0], i[1]] = dg_mixed[add_]
