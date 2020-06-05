@@ -551,6 +551,176 @@ class TaylorSeries:
         self.tol1 = tol1
         self.tol2 = tol2
 
+    @staticmethod
+    def derivatives(point_y, point_x, runmodel_object, dist_object, order='first', corr_z=None, df_step=0.001,
+                    point_qoi=None):
+        """
+        A method to estimate the derivatives (1st-order, 2nd-order, mixed) of a function using a central difference
+        scheme after transformation to the standard normal space.
+
+        This is a static method of the ``FORM`` class.
+
+        **Inputs:**
+
+        * **dist_object** ((list of ) ``Distribution`` object(s)):
+            Marginal probability distribution of each random variable. Must be an object of type
+            ``DistributionContinuous1D`` or ``JointInd``.
+
+        * **runmodel_object** (``RunModel`` object):
+            The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
+
+        * **corr_z** (`ndarray`):
+            Correlation matrix of the standard normal random vector :math:`\mathbf{C_Z}`).
+
+        * **point_y** (`ndarray`):
+            Point in the uncorrelated standard normal space at which to evaluate the gradient with shape
+            `samples.shape=(1, dimension)`
+
+        * **point_x** (`ndarray`):
+            Point in the parameter space at which to evaluate the model with shape
+            `samples.shape=(1, dimension)`
+
+        * **point_qoi** (`float`):
+            Value of the model evaluated at point_y. Used only for second derivatives.
+
+        * **order** (`str`):
+            Order of the derivative. Available options: 'first', 'second', 'mixed'.
+
+            Default: 'first'.
+
+        * **df_step** (`float`):
+            Finite difference step.
+
+            Default: 0.001.
+
+
+        **Output/Returns:**
+
+        * **dy_dj** (`ndarray`):
+            Vector of first-order derivatives (if order = 'first').
+
+        * **d2y_dj** (`ndarray`):
+            Vector of second-order derivatives (if order = 'second').
+
+        * **d2y_dij** (`ndarray`):
+            Vector of mixed derivatives (if order = 'mixed').
+
+        """
+        from UQpy.Transformations import InvNataf
+        list_of_samples = list()
+        if order.lower() == 'first' or (order.lower() == 'second' and point_qoi is None):
+            list_of_samples.append(point_x.reshape(1, -1))
+
+        for ii in range(point_y.shape[0]):
+            y_i1_j = point_y.tolist()
+            y_i1_j[ii] = y_i1_j[ii] + df_step
+            y_1i_j = point_y.tolist()
+            y_1i_j[ii] = y_1i_j[ii] - df_step
+
+            obj_plus = InvNataf(dist_object=dist_object, samples_y=np.array(y_i1_j).reshape(1, -1), corr_z=corr_z)
+            temp_x_i1_j = obj_plus.samples_x
+            x_i1_j = temp_x_i1_j
+            list_of_samples.append(x_i1_j)
+
+            obj_minus = InvNataf(dist_object=dist_object, samples_y=np.array(y_1i_j).reshape(1, -1), corr_z=corr_z)
+            temp_x_1i_j = obj_minus.samples_x
+            x_1i_j = temp_x_1i_j
+            list_of_samples.append(x_1i_j)
+
+        runmodel_object.run(samples=list_of_samples, append_samples=False)
+
+        if order.lower() == 'first':
+            gradient = np.zeros(point_y.shape[0])
+
+            for jj in range(point_y.shape[0]):
+                qoi_plus = runmodel_object.qoi_list[2 * jj + 1]
+                qoi_minus = runmodel_object.qoi_list[2 * jj + 2]
+                gradient[jj] = ((qoi_plus - qoi_minus) / (2 * df_step))
+
+            return gradient, runmodel_object.qoi_list[0]
+
+        elif order.lower() == 'second':
+            print('Calculating second order derivatives..')
+            d2y_dj = np.zeros([point_y.shape[0]])
+
+            if point_qoi is None:
+                qoi = [runmodel_object.qoi_list[0]]
+                output_list = runmodel_object.qoi_list
+            else:
+                qoi = [point_qoi]
+                output_list = qoi + runmodel_object.qoi_list
+
+            for jj in range(point_y.shape[0]):
+                qoi_plus = output_list[2 * jj + 1]
+                qoi_minus = output_list[2 * jj + 2]
+
+                d2y_dj[jj] = ((qoi_plus[0] - 2 * qoi[0] + qoi_minus[0]) / (df_step ** 2))
+
+            list_of_mixed_points = list()
+            import itertools
+            range_ = list(range(point_y.shape[0]))
+            d2y_dij = np.zeros([int(point_y.shape[0] * (point_y.shape[0] - 1) / 2)])
+            count = 0
+            for i in itertools.combinations(range_, 2):
+                y_i1_j1 = point_y.tolist()
+                y_i1_1j = point_y.tolist()
+                y_1i_j1 = point_y.tolist()
+                y_1i_1j = point_y.tolist()
+
+                y_i1_j1[i[0]] += df_step
+                y_i1_j1[i[1]] += df_step
+
+                y_i1_1j[i[0]] += df_step
+                y_i1_1j[i[1]] -= df_step
+
+                y_1i_j1[i[0]] -= df_step
+                y_1i_j1[i[1]] += df_step
+
+                y_1i_1j[i[0]] -= df_step
+                y_1i_1j[i[1]] -= df_step
+
+                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_i1_j1).reshape(1, -1), corr_z=corr_z)
+                temp_x_i1_j1 = obj.samples_x
+                x_i1_j1 = temp_x_i1_j1
+                list_of_mixed_points.append(x_i1_j1)
+
+                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_i1_1j).reshape(1, -1), corr_z=corr_z)
+                temp_x_i1_1j = obj.samples_x
+                x_i1_1j = temp_x_i1_1j
+                list_of_mixed_points.append(x_i1_1j)
+
+                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_1i_j1).reshape(1, -1), corr_z=corr_z)
+                temp_x_1i_j1 = obj.samples_x
+                x_1i_j1 = temp_x_1i_j1
+                list_of_mixed_points.append(x_1i_j1)
+
+                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_1i_1j).reshape(1, -1), corr_z=corr_z)
+                temp_x_1i_1j = obj.samples_x
+                x_1i_1j = temp_x_1i_1j
+                list_of_mixed_points.append(x_1i_1j)
+
+                count = count + 1
+
+            runmodel_object.run(samples=list_of_mixed_points, append_samples=False)
+
+            for j in range(count):
+                qoi_0 = runmodel_object.qoi_list[4 * j]
+                qoi_1 = runmodel_object.qoi_list[4 * j + 1]
+                qoi_2 = runmodel_object.qoi_list[4 * j + 2]
+                qoi_3 = runmodel_object.qoi_list[4 * j + 3]
+                d2y_dij[j] = ((qoi_0 + qoi_3 - qoi_1 - qoi_2) / (4 * df_step * df_step))
+
+            hessian = np.diag(d2y_dj)
+            import itertools
+            range_ = list(range(point_y.shape[0]))
+            add_ = 0
+            for i in itertools.combinations(range_, 2):
+                hessian[i[0], i[1]] = d2y_dij[add_]
+                hessian[i[1], i[0]] = hessian[i[0], i[1]]
+                add_ += 1
+
+            return hessian
+
 
 class FORM(TaylorSeries):
     """
@@ -627,7 +797,7 @@ class FORM(TaylorSeries):
         elif seed_y is not None and seed_x is None:
             self.seed = np.squeeze(seed_y)
         elif seed_y is not None and seed_x is not None:
-            raise ValueError('UQpy: Only one seed (seed_x or seed_u) must be provided')
+            raise ValueError('UQpy: Only one seed (seed_x or seed_y) must be provided')
 
         # Initialize output
         self.beta_form = None
@@ -675,14 +845,11 @@ class FORM(TaylorSeries):
                 inv = InvNataf(dist_object=self.dist_object, samples_y=y.reshape(1, -1), corr_z=self.corr_z)
                 self.x = inv.samples_x
 
-            # 1. evaluate Limit State Function at the point
-            self.runmodel_object.run(self.x.reshape(1, -1), append_samples=False)
-            qoi = self.runmodel_object.qoi_list[0]
-            self.g_record.append(qoi)
+            # 2. evaluate Limit State Function and the gradient at point u_k and direction cosines
+            dg, qoi = self.derivatives(point_y=y, point_x=self.x, runmodel_object=self.runmodel_object,
+                                       dist_object=self.dist_object, order='first', corr_z=self.corr_z)
 
-            # 2. evaluate Limit State Function gradient at point u_k and direction cosines
-            dg = self.gradient_form(point_y=y,  runmodel_object=self.runmodel_object,
-                                    dist_object=self.dist_object, order='first', corr_z=self.corr_z)
+            self.g_record.append(qoi)
 
             # dg_record.append(np.dot(dg[0, :], Jxu))# use this if the input in gradient function is x
             self.dg_record.append(dg)
@@ -723,160 +890,6 @@ class FORM(TaylorSeries):
             self.Pf_form = stats.norm.cdf(-self.beta_form)
             self.iterations = k
 
-    @staticmethod
-    def gradient_form(point_y, runmodel_object, dist_object, order='first', corr_z=None, df_step=0.001, point_qoi=None):
-        """
-        A method to estimate the derivatives (1st-order, 2nd-order, mixed) of a function using a central difference
-        scheme after transformation to the standard normal space.
-
-        This is a static method of the ``FORM`` class.
-
-        **Inputs:**
-
-        * **dist_object** ((list of ) ``Distribution`` object(s)):
-            Marginal probability distribution of each random variable. Must be an object of type
-            ``DistributionContinuous1D`` or ``JointInd``.
-
-        * **runmodel_object** (``RunModel`` object):
-            The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
-
-        * **corr_z** (`ndarray`):
-            Correlation matrix of the standard normal random vector :math:`\mathbf{C_Z}`).
-
-        * **point_y** (`ndarray`):
-            Point in the uncorrelated standard normal space at which to evaluate the gradient with shape
-            `samples.shape=(1, dimension)`
-
-        * **point_qoi** (`float`):
-            Value of the model evaluated at point_y. Used only for second derivatives.
-
-        * **order** (`str`):
-            Order of the derivative. Available options: 'first', 'second', 'mixed'.
-
-            Default: 'first'.
-
-        * **df_step** (`float`):
-            Finite difference step.
-
-            Default: 0.001.
-
-
-        **Output/Returns:**
-
-        * **dy_dj** (`ndarray`):
-            Vector of first-order derivatives (if order = 'first').
-
-        * **d2y_dj** (`ndarray`):
-            Vector of second-order derivatives (if order = 'second').
-
-        * **d2y_dij** (`ndarray`):
-            Vector of mixed derivatives (if order = 'mixed').
-
-        """
-        from UQpy.Transformations import InvNataf
-        if order.lower() == 'first':
-            dy_dj = np.zeros(point_y.shape[0])
-            for ii in range(point_y.shape[0]):
-                y_i1_j = point_y.tolist()
-                y_i1_j[ii] = y_i1_j[ii] + df_step
-                y_1i_j = point_y.tolist()
-                y_1i_j[ii] = y_1i_j[ii] - df_step
-
-                obj_plus = InvNataf(dist_object=dist_object, samples_y=np.array(y_i1_j).reshape(1, -1), corr_z=corr_z)
-                temp_x_i1_j = obj_plus.samples_x
-                x_i1_j = temp_x_i1_j.reshape(1, -1)
-                runmodel_object.run(samples=x_i1_j, append_samples=False)
-                qoi_plus = runmodel_object.qoi_list[0]
-
-                obj_minus = InvNataf(dist_object=dist_object, samples_y=np.array(y_1i_j).reshape(1, -1), corr_z=corr_z)
-                temp_x_1i_j = obj_minus.samples_x
-                x_1i_j = temp_x_1i_j.reshape(1, -1)
-                runmodel_object.run(samples=x_1i_j, append_samples=False)
-                qoi_minus = runmodel_object.qoi_list[0]
-
-                dy_dj[ii] = ((qoi_plus - qoi_minus) / (2 * df_step))
-            return dy_dj
-
-        elif order.lower() == 'second':
-            print('Calculating second order derivatives..')
-            qoi = point_qoi
-            d2y_dj = np.zeros([point_y.shape[0]])
-            for ii in range(point_y.shape[0]):
-                y_i1_j = point_y.tolist()
-                y_i1_j[ii] = y_i1_j[ii] + df_step
-                y_1i_j = point_y.tolist()
-                y_1i_j[ii] = y_1i_j[ii] - df_step
-
-                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_i1_j).reshape(1, -1), corr_z=corr_z)
-                temp_x_i1_j = obj.samples_x
-                x_i1_j = temp_x_i1_j.reshape(1, -1)
-
-                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_1i_j).reshape(1, -1), corr_z=corr_z)
-                temp_x_1i_j = obj.samples_x
-                x_1i_j = temp_x_1i_j.reshape(1, -1)
-
-                runmodel_object.run(samples=x_i1_j, append_samples=False)
-                qoi_plus = runmodel_object.qoi_list[0]
-                runmodel_object.run(samples=x_1i_j, append_samples=False)
-                qoi_minus = runmodel_object.qoi_list[0]
-                d2y_dj[ii] = ((qoi_plus - 2 * qoi + qoi_minus) / (df_step**2))
-
-            return d2y_dj
-
-        elif order.lower() == 'mixed':
-
-            import itertools
-            range_ = list(range(point_y.shape[0]))
-            d2y_dij = np.zeros([int(point_y.shape[0] * (point_y.shape[0] - 1) / 2)])
-            count = 0
-            for i in itertools.combinations(range_, 2):
-                y_i1_j1 = point_y.tolist()
-                y_i1_1j = point_y.tolist()
-                y_1i_j1 = point_y.tolist()
-                y_1i_1j = point_y.tolist()
-
-                y_i1_j1[i[0]] += df_step
-                y_i1_j1[i[1]] += df_step
-
-                y_i1_1j[i[0]] += df_step
-                y_i1_1j[i[1]] -= df_step
-
-                y_1i_j1[i[0]] -= df_step
-                y_1i_j1[i[1]] += df_step
-
-                y_1i_1j[i[0]] -= df_step
-                y_1i_1j[i[1]] -= df_step
-
-                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_i1_j1).reshape(1, -1), corr_z=corr_z)
-                temp_x_i1_j1 = obj.samples_x
-                x_i1_j1 = temp_x_i1_j1.reshape(1, -1)
-
-                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_i1_1j).reshape(1, -1), corr_z=corr_z)
-                temp_x_i1_1j = obj.samples_x
-                x_i1_1j = temp_x_i1_1j[0].reshape(1, -1)
-
-                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_1i_j1).reshape(1, -1), corr_z=corr_z)
-                temp_x_1i_j1 = obj.samples_x
-                x_1i_j1 = temp_x_1i_j1[0].reshape(1, -1)
-
-                obj = InvNataf(dist_object=dist_object, samples_y=np.array(y_1i_1j).reshape(1, -1), corr_z=corr_z)
-                temp_x_1i_1j = obj.samples_x
-                x_1i_1j = temp_x_1i_1j.reshape(1, -1)
-
-                runmodel_object.run(samples=x_i1_j1, append_samples=False)
-                qoi_0 = runmodel_object.qoi_list[0]
-                runmodel_object.run(samples=x_i1_1j, append_samples=False)
-                qoi_1 = runmodel_object.qoi_list[0]
-                runmodel_object.run(samples=x_1i_j1, append_samples=False)
-                qoi_2 = runmodel_object.qoi_list[0]
-                runmodel_object.run(samples=x_1i_1j, append_samples=False)
-                qoi_3 = runmodel_object.qoi_list[0]
-
-                d2y_dij[count] = ((qoi_0 + qoi_3 - qoi_1 - qoi_2) / (4 * df_step * df_step))
-
-                count += 1
-            return d2y_dij
-
 
 class SORM(TaylorSeries):
     """
@@ -915,6 +928,7 @@ class SORM(TaylorSeries):
         self.dimension = obj.dimension
         self.alpha = obj.alpha
         self.DesignPoint_Y = obj.DesignPoint_Y
+        self.DesignPoint_X = obj.DesignPoint_X
         self.model = obj.runmodel_object
         self.corr_z = obj.corr_z
         self.corr_x = obj.corr_x
@@ -945,61 +959,11 @@ class SORM(TaylorSeries):
             q[:, i] = normalize(ai)
 
         r1 = np.fliplr(q).T
-        hessian_g = self.hessian_sorm(self.DesignPoint_Y, self.dist_object, self.model,
-                                      self.corr_z,  self.g_record[-1])
+        hessian_g = self.derivatives(self.DesignPoint_Y, self.DesignPoint_X, self.model, self.dist_object,
+                                     'second', self.corr_z,  0.001, self.g_record[-1])
+
         matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(self.dg_record[-1])
         kappa = np.linalg.eig(matrix_b[:self.dimension-1, :self.dimension-1])
         self.Pf_sorm = stats.norm.cdf(-self.beta_form) * np.prod(1 / (1 + self.beta_form * kappa[0]) ** 0.5)
         self.beta_sorm = -stats.norm.ppf(self.Pf_sorm)
 
-    @staticmethod
-    def hessian_sorm(point_y, dist_obj, runmodel_object, corr_z,  point_qoi):
-        """
-        A function to calculate the hessian matrix  using finite differences. The Hessian matrix is a  square matrix
-        of second-order partial derivatives of a scalar-valued function. This is a static method, part of the
-        ``Sorm`` class.
-
-        **Inputs:**
-
-        * **dist_object** ((list of ) ``Distribution`` object(s)):
-            Marginal probability distribution of each random variable. Must be an object of type
-            ``DistributionContinuous1D`` or ``JointInd``.
-
-        * **runmodel_object** (``RunModel`` object):
-            The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
-
-        * **corr_z** (`ndarray`):
-            Correlation matrix of the standard normal random vector :math:`\mathbf{C_Z}`).
-
-        * **point_y** (`ndarray`):
-            Point in the uncorrelated standard normal space at which to evaluate the gradient with shape
-            `samples.shape=(1, dimension)`
-
-        * **point_qoi** (`float`):
-            Value of the model evaluated at point_u. Used only for second derivatives.
-
-        **Output/Returns:**
-
-        * **hessian** (`ndarray`):
-            The Hessian matrix.
-
-        """
-
-        dg_second = FORM.gradient_form(order='second', point_y=point_y,
-                                       runmodel_object=runmodel_object, dist_object=dist_obj,
-                                       corr_z=corr_z, point_qoi=point_qoi)
-
-        dg_mixed = FORM.gradient_form(order='mixed', point_y=point_y,
-                                      runmodel_object=runmodel_object, dist_object=dist_obj,
-                                      corr_z=corr_z, point_qoi=point_qoi)
-
-        hessian = np.diag(dg_second)
-        import itertools
-        range_ = list(range(point_y.shape[0]))
-        add_ = 0
-        for i in itertools.combinations(range_, 2):
-            hessian[i[0], i[1]] = dg_mixed[add_]
-            hessian[i[1], i[0]] = hessian[i[0], i[1]]
-            add_ += 1
-
-        return hessian
