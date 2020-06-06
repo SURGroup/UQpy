@@ -894,7 +894,7 @@ class FORM(TaylorSeries):
                 y_check = np.linalg.norm(y - y_record[-1])
 
             # Tolerance on how close the design point is to limit-state surface
-            g_check = abs(qoi / self.g0)
+            g_check = abs(qoi)
 
             y_record.append(y)
             x_record.append(x)
