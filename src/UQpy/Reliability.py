@@ -627,7 +627,9 @@ class TaylorSeries:
             x_1i_j = temp_x_1i_j
             list_of_samples.append(x_1i_j)
 
-        runmodel_object.run(samples=list_of_samples, append_samples=False)
+        array_of_samples = np.array(list_of_samples)
+        array_of_samples = array_of_samples.reshape((len(array_of_samples), -1))
+        runmodel_object.run(samples=array_of_samples, append_samples=False)
 
         if order.lower() == 'first':
             gradient = np.zeros(point_y.shape[0])
@@ -701,7 +703,9 @@ class TaylorSeries:
 
                 count = count + 1
 
-            runmodel_object.run(samples=list_of_mixed_points, append_samples=False)
+            array_of_mixed_points = np.array(list_of_mixed_points)
+            array_of_mixed_points = array_of_mixed_points.reshape((len(array_of_mixed_points), -1))
+            runmodel_object.run(samples=array_of_mixed_points, append_samples=False)
 
             for j in range(count):
                 qoi_0 = runmodel_object.qoi_list[4 * j]
