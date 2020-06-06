@@ -859,6 +859,7 @@ class FORM(TaylorSeries):
             # FORM always starts from the standard normal space
             if k == 0:
                 if seed_x is not None:
+                    inv = InvNataf(dist_object=self.dist_object, samples_y=seed.reshape(1, -1), corr_z=self.corr_z)
                     x = seed_x
                 else:
                     inv = InvNataf(dist_object=self.dist_object, samples_y=seed.reshape(1, -1), corr_z=self.corr_z)
@@ -866,23 +867,20 @@ class FORM(TaylorSeries):
             else:
                 inv = InvNataf(dist_object=self.dist_object, samples_y=y.reshape(1, -1), corr_z=self.corr_z)
                 x = inv.samples_x
+
             self.x = x
             # 2. evaluate Limit State Function and the gradient at point u_k and direction cosines
             dg, qoi = self.derivatives(point_y=y, point_x=self.x, runmodel_object=self.runmodel_object,
                                        dist_object=self.dist_object, order='first', corr_z=self.corr_z)
 
             g_record.append(qoi)
-
-            # dg_record.append(np.dot(dg[0, :], Jxu))# use this if the input in gradient function is x
             dg_record.append(dg)
-            norm_grad = np.linalg.norm(dg_record[k])
+
+            p = np.linalg.solve(inv.Jyx, dg)
+            norm_grad = np.linalg.norm(p)
+            # norm_grad = np.linalg.norm(dg_record[k])
             self.alpha = - dg_record[k] / norm_grad
             alpha_record.append(self.alpha)
-
-            # Tolerance on how accurately the gradient point is towards the origin
-
-            # y_check = np.linalg.norm(y.reshape(-1, 1) - np.dot(self.alpha.reshape(1, -1), y.reshape(-1, 1))
-            #                         * self.alpha.reshape(-1, 1))
 
             if k == 0:
                 y_check = 1
@@ -901,9 +899,8 @@ class FORM(TaylorSeries):
             if (y_check <= self.tol1 and g_check < self.tol2) or k == self.n_iter:
                 conv_flag = 1
             else:
-                direction = (qoi / norm_grad + np.dot(self.alpha.reshape(1, -1), y.reshape(-1, 1))) * \
-                            self.alpha.reshape(-1, 1) - y.reshape(-1, 1)
-                y_new = (y.reshape(-1, 1) + direction).T
+                beta = (qoi / norm_grad + np.inner(y.reshape(-1, 1).T, self.alpha.reshape(1, -1)))
+                y_new = beta * self.alpha.reshape(-1, 1)
                 y = np.squeeze(y_new)
                 k = k + 1
 
@@ -1015,11 +1012,11 @@ class SORM(TaylorSeries):
         self.DesignPoint_X = self.obj.DesignPoint_X[-1]
         self.Pf_form = self.obj.Pf_form
         self.form_iterations = self.obj.form_iterations[-1]
-        self.y_record = self.obj.y_record[-1]
-        self.x_record = self.obj.x_record[-1]
-        self.g_record = self.obj.g_record[-1]
-        self.dg_record = self.obj.dg_record[-1]
-        self.alpha_record = self.obj.alpha_record[-1]
+        self.y_record = self.obj.y_record
+        self.x_record = self.obj.x_record
+        self.g_record = self.obj.g_record
+        self.dg_record = self.obj.dg_record
+        self.alpha_record = self.obj.alpha_record
 
         dimension = self.obj.dimension
         alpha = self.obj.alpha
@@ -1027,7 +1024,6 @@ class SORM(TaylorSeries):
         corr_z = self.obj.corr_z
         dist_object = self.obj.dist_object
         dg_record = self.obj.dg_record
-        g_record = self.obj.g_record
 
         matrix_a = np.fliplr(np.eye(dimension))
         matrix_a[:, 0] = alpha
@@ -1048,7 +1044,7 @@ class SORM(TaylorSeries):
 
         r1 = np.fliplr(q).T
         hessian_g = self.derivatives(self.DesignPoint_Y, self.DesignPoint_X, model, dist_object,
-                                     'second', corr_z,  0.001, g_record[-1][-1])
+                                     'second', corr_z,  0.001, self.g_record[-1][-1])
 
         matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(dg_record[-1])
         kappa = np.linalg.eig(matrix_b[:dimension-1, :dimension-1])
