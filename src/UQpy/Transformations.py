@@ -213,7 +213,6 @@ class Nataf(Isoprobabilistic):
             for j in range(n):
                 f_i = dist_object[j].cdf
                 samples_z[:, j] = stats.norm.ppf(f_i(np.atleast_2d(samples_x[:, j]).T))
-        print(corr_z)
         samples_y = Nataf.decorrelate(samples_z, corr_z)
 
         return samples_y
