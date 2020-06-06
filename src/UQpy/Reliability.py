@@ -725,7 +725,8 @@ class TaylorSeries:
 
 class FORM(TaylorSeries):
     """
-    A class perform the First Order Reliability Method.
+    A class perform the First Order Reliability Method. The ``run`` method of the ``FORM`` class can be invoked many
+        times and each time the results are appended to the existing ones.
 
     This is a child class of the ``TaylorSeries`` class.
 
@@ -811,9 +812,9 @@ class FORM(TaylorSeries):
 
     def run(self, seed_x=None, seed_y=None):
         """
-        Execute FORM
+        Run FORM
 
-        This is an instance method that runs FORM. It is automatically called when the FORM class is instantiated.
+        This is an instance method that runs FORM.
 
         **Input:**
 
@@ -862,12 +863,12 @@ class FORM(TaylorSeries):
                 else:
                     inv = InvNataf(dist_object=self.dist_object, samples_y=seed.reshape(1, -1), corr_z=self.corr_z)
                     x = inv.samples_x
-            elif k > 0:
+            else:
                 inv = InvNataf(dist_object=self.dist_object, samples_y=y.reshape(1, -1), corr_z=self.corr_z)
                 x = inv.samples_x
-
+            self.x = x
             # 2. evaluate Limit State Function and the gradient at point u_k and direction cosines
-            dg, qoi = self.derivatives(point_y=y, point_x=x, runmodel_object=self.runmodel_object,
+            dg, qoi = self.derivatives(point_y=y, point_x=self.x, runmodel_object=self.runmodel_object,
                                        dist_object=self.dist_object, order='first', corr_z=self.corr_z)
 
             g_record.append(qoi)
@@ -879,8 +880,9 @@ class FORM(TaylorSeries):
             alpha_record.append(self.alpha)
 
             # Tolerance on how accurately the gradient point is towards the origin
-            y_check = np.linalg.norm(y.reshape(-1, 1) - np.dot(self.alpha.reshape(1, -1), y.reshape(-1, 1))
-                                     * self.alpha.reshape(-1, 1))
+
+            # y_check = np.linalg.norm(y.reshape(-1, 1) - np.dot(self.alpha.reshape(1, -1), y.reshape(-1, 1))
+            #                         * self.alpha.reshape(-1, 1))
 
             if k == 0:
                 y_check = 1
@@ -908,11 +910,10 @@ class FORM(TaylorSeries):
         if k == self.n_iter:
             print('UQpy: Maximum number of iterations {0} was reached before convergence.'.format(self.n_iter))
         else:
-
             if self.call is None:
                 self.beta_form = [np.dot(y, self.alpha.T)]
                 self.DesignPoint_Y = [y]
-                self.DesignPoint_X = [np.squeeze(x)]
+                self.DesignPoint_X = [np.squeeze(self.x)]
                 self.Pf_form = [stats.norm.cdf(-self.beta_form[-1])]
                 self.form_iterations = [k]
                 self.y_record = [y_record]
@@ -923,7 +924,7 @@ class FORM(TaylorSeries):
             else:
                 self.beta_form = self.beta_form + [np.dot(y, self.alpha.T)]
                 self.DesignPoint_Y = self.DesignPoint_Y + [y]
-                self.DesignPoint_X = self.DesignPoint_X + [np.squeeze(x)]
+                self.DesignPoint_X = self.DesignPoint_X + [np.squeeze(self.x)]
                 self.Pf_form = self.Pf_form + [stats.norm.cdf(-self.beta_form[-1])]
                 self.form_iterations = self.form_iterations + [k]
                 self.y_record = self.y_record + [y_record]
@@ -936,7 +937,8 @@ class FORM(TaylorSeries):
 
 class SORM(TaylorSeries):
     """
-    A class to perform the Second Order Reliability Method.
+    A class to perform the Second Order Reliability Method. The ``run`` method of the ``FORM`` class can be invoked many
+    times and each time the results are appended to the existing ones.
 
     ``SORM`` class first performs FORM and then corrects the estimated FORM probability using second-order information.
 
@@ -984,6 +986,24 @@ class SORM(TaylorSeries):
         self.call = None
 
     def run(self, seed_x=None, seed_y=None):
+
+        """
+        Run SORM
+
+        This is an instance method that runs SORM.
+
+        **Input:**
+
+        * **seed_y** or **seed_x** (`ndarray`):
+        The initial starting point for the `Hasofer-Lind` algorithm.
+
+        If `seed_y` is provided, it should be a point in the standard normal space of **Y**.
+
+        If `seed_x` is provided, it should be a point in the parameter space of **X**.
+
+        Default: `seed_y = (0, 0, ..., 0)`
+
+        """
 
         if self.verbose:
             print('UQpy: Running SORM...')
