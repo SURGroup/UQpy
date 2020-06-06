@@ -906,6 +906,11 @@ class FORM(TaylorSeries):
 
         if k == self.n_iter:
             print('UQpy: Maximum number of iterations {0} was reached before convergence.'.format(self.n_iter))
+            self.y_record = [y_record]
+            self.x_record = [x_record]
+            self.g_record = [g_record]
+            self.dg_record = [dg_record]
+            self.alpha_record = [alpha_record]
         else:
             if self.call is None:
                 self.beta_form = [np.dot(y, self.alpha.T)]
