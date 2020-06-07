@@ -124,7 +124,7 @@ class Nataf(Isoprobabilistic):
         if np.all(np.equal(self.corr_x, np.eye(self.samples_x.shape[1]))):
             self.corr_z = self.corr_x
             self.samples_y = self.transform_x_to_y(self.samples_x, self.dist_object, self.corr_z)
-            self.Jxy = np.eye(self.samples_x.shape[1])
+            self.Jxy = [np.eye(self.samples_x.shape[1])]
         else:
             self.corr_z = self.distortion_x_to_z(self.dist_object, self.corr_x, self.beta, self.itam_error1,
                                                  self.itam_error2)
@@ -328,11 +328,11 @@ class InvNataf(Isoprobabilistic):
         if np.all(np.equal(self.corr_z, np.eye(self.samples_y.shape[1]))):
             self.corr_x = self.corr_z
             self.samples_x = self.transform_y_to_x(self.samples_y, self.dist_object, self.corr_z)
-            self.Jyx = np.eye(self.samples_x.shape[1])
-
+            self.Jyx = [np.eye(self.samples_y.shape[1])]
         else:
             self.corr_x = self.distortion_z_to_x(self.dist_object, self.corr_z)
             self.samples_x = self.transform_y_to_x(self.samples_y, self.dist_object, self.corr_z)
+
             self.Jyx = self.jacobian_y_x(self.dist_object, self.samples_y, self.samples_x, corr_z)
 
     @staticmethod
