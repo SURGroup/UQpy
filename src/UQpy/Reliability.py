@@ -499,12 +499,17 @@ class TaylorSeries:
     * **tol1** (`float`):
          Convergence threshold for the `HLRF` algorithm.
 
-         Default: 0.001
+         Default: 1.0e-3
 
     * **tol2** (`float`):
          Convergence threshold for the `HLRF` algorithm.
 
-         Default: 1.0e-6
+         Default: 1.0e-3
+
+    * **tol3** (`float`):
+         Convergence threshold for the `HLRF` algorithm.
+
+         Default: 1.0e-3
 
     * **n_iter** (`int`):
          Maximum number of iterations for the `HLRF` algorithm.
@@ -518,7 +523,7 @@ class TaylorSeries:
 
     """
 
-    def __init__(self, dist_object, runmodel_object, corr_x, corr_z, n_iter, tol1, tol2, df_step, verbose):
+    def __init__(self, dist_object, runmodel_object, corr_x, corr_z, n_iter, tol1, tol2, tol3, df_step, verbose):
 
         if isinstance(dist_object, list):
             self.dimension = len(dist_object)
@@ -543,6 +548,7 @@ class TaylorSeries:
         self.runmodel_object = runmodel_object
         self.tol1 = tol1
         self.tol2 = tol2
+        self.tol3 = tol3
         self.df_step = df_step
         self.verbose = verbose
 
@@ -776,9 +782,9 @@ class FORM(TaylorSeries):
      """
 
     def __init__(self, dist_object, runmodel_object, df_step=None, corr_x=None, corr_z=None, n_iter=100,
-                 tol1=1e-3, tol2=1e-6, verbose=False):
+                 tol1=1e-3, tol2=1e-3, tol3=1e-3, verbose=False):
 
-        super().__init__(dist_object, runmodel_object,  corr_x, corr_z, n_iter, tol1, tol2, df_step, verbose)
+        super().__init__(dist_object, runmodel_object, corr_x, corr_z, n_iter, tol1, tol2, tol3, df_step, verbose)
 
         self.verbose = verbose
 
@@ -861,7 +867,10 @@ class FORM(TaylorSeries):
 
         conv_flag = 0
         k = 0
-        y = seed
+        beta = np.zeros(shape=(self.n_iter,))
+        y = np.zeros([self.n_iter, self.dimension])
+        g_record.append(0.0)
+        dg_y_record.append(np.zeros(self.dimension))
         while conv_flag == 0:
             if self.verbose:
                 print('Number of iteration:', k)
@@ -872,48 +881,35 @@ class FORM(TaylorSeries):
                 else:
                     inv = InvNataf(dist_object=self.dist_object, samples_y=seed.reshape(1, -1), corr_z=self.corr_z)
                     x = inv.samples_x
-                    self.Jyx = inv.Jyx[0]
             else:
-                inv = InvNataf(dist_object=self.dist_object, samples_y=y.reshape(1, -1), corr_z=self.corr_z)
+                inv = InvNataf(dist_object=self.dist_object, samples_y=y[k, :].reshape(1, -1), corr_z=self.corr_z)
                 x = inv.samples_x
-                self.Jyx = inv.Jyx[0]
 
             self.x = x
+            y_record.append(y)
+            x_record.append(x)
             # 2. evaluate Limit State Function and the gradient at point u_k and direction cosines
-            dg_x, qoi = self.derivatives(point_y=y, point_x=self.x, runmodel_object=self.runmodel_object,
+            dg_y, qoi = self.derivatives(point_y=y[k, :], point_x=self.x, runmodel_object=self.runmodel_object,
                                          dist_object=self.dist_object, order='first',
                                          corr_z=self.corr_z)
             g_record.append(qoi)
-            dg_x_record.append(dg_x)
-            import scipy as sp
-            dg_y = sp.linalg.solve(self.Jyx, dg_x)
             dg_y_record.append(dg_y)
             norm_grad = np.linalg.norm(dg_y)
             alpha = - dg_y / norm_grad
             self.alpha = alpha.squeeze()
             alpha_record.append(self.alpha)
+            beta[k + 1] = beta[k] + qoi / norm_grad
+            y[k + 1, :] = beta[k + 1] * self.alpha
 
-            if k == 0:
-                y_check = 1
-                if qoi == 0:
-                    self.g0 = 1
+            if k > 0:
+
+                if np.linalg.norm(y[k + 1, :] - y[k, :]) <= 1e-3 or np.linalg.norm(g_record[k + 1] -
+                                                                                   g_record[k])\
+                        <= 1e-3 or np.linalg.norm(dg_y_record[k + 1] - dg_y_record[k]) < 1e-3:
+                    conv_flag = 1
                 else:
-                    self.g0 = qoi
-            else:
-                y_check = np.linalg.norm(y - y_record[-1])
-
-            # Tolerance on how close the design point is to limit-state surface
-            g_check = abs(qoi / self.g0)
-
-            y_record.append(y)
-            x_record.append(x)
-            if (y_check <= self.tol1 and g_check < self.tol2) or k == self.n_iter:
-                conv_flag = 1
-            else:
-                direction = (qoi / norm_grad + np.dot(self.alpha.reshape(1, -1), y.reshape(-1, 1))) * \
-                            self.alpha.reshape(-1, 1) - y.reshape(-1, 1)
-                y_new = (y.reshape(-1, 1) + direction).T
-                y = np.squeeze(y_new)
+                    k = k + 1
+            if k == 0:
                 k = k + 1
 
         if k == self.n_iter:
@@ -926,25 +922,25 @@ class FORM(TaylorSeries):
             self.alpha_record = [alpha_record]
         else:
             if self.call is None:
-                self.beta_form = [np.dot(y, self.alpha.T)]
-                self.DesignPoint_Y = [y]
+                self.beta_form = [beta[k + 1]]
+                self.DesignPoint_Y = [y[k + 1, :]]
                 self.DesignPoint_X = [np.squeeze(self.x)]
                 self.Pf_form = [stats.norm.cdf(-self.beta_form[-1])]
                 self.form_iterations = [k]
-                self.y_record = [y_record]
-                self.x_record = [x_record]
+                self.y_record = [y_record[:k + 1]]
+                self.x_record = [x_record[:k + 1]]
                 self.g_record = [g_record]
                 self.dg_x_record = [dg_x_record]
                 self.dg_y_record = [dg_y_record]
                 self.alpha_record = [alpha_record]
             else:
-                self.beta_form = self.beta_form + [np.dot(y, self.alpha.T)]
-                self.DesignPoint_Y = self.DesignPoint_Y + [y]
+                self.beta_form = self.beta_form + [beta[k + 1]]
+                self.DesignPoint_Y = self.DesignPoint_Y + [y[k + 1, :]]
                 self.DesignPoint_X = self.DesignPoint_X + [np.squeeze(self.x)]
-                self.Pf_form = self.Pf_form + [stats.norm.cdf(-self.beta_form[-1])]
+                self.Pf_form = self.Pf_form + [stats.norm.cdf(-self.beta_form[k + 1])]
                 self.form_iterations = self.form_iterations + [k]
-                self.y_record = self.y_record + [y_record]
-                self.x_record = self.x_record + [x_record]
+                self.y_record = self.y_record + [y_record[:k + 1]]
+                self.x_record = self.x_record + [x_record[:k + 1]]
                 self.g_record = self.g_record + [g_record]
                 self.dg_x_record = self.dg_x_record + [dg_y_record]
                 self.dg_y_record = self.dg_x_record + [dg_y_record]
@@ -980,9 +976,9 @@ class SORM(TaylorSeries):
     """
 
     def __init__(self, dist_object, runmodel_object, def_step=None, corr_x=None, corr_z=None, n_iter=100,
-                 tol1=1e-3, tol2=1e-6, verbose=False):
+                 tol1=1e-3, tol2=1e-3, tol3=1e-3, verbose=False):
 
-        super().__init__(dist_object, runmodel_object, corr_x, corr_z, n_iter, tol1, tol2, def_step, verbose)
+        super().__init__(dist_object, runmodel_object, corr_x, corr_z, n_iter, tol1, tol2, tol3, def_step, verbose)
 
         self.obj = FORM(dist_object=dist_object, runmodel_object=runmodel_object, df_step=def_step,
                         corr_x=corr_x,  corr_z=corr_z, n_iter=n_iter, tol1=tol1, tol2=tol2, verbose=verbose)
@@ -1049,7 +1045,6 @@ class SORM(TaylorSeries):
         dist_object = self.obj.dist_object
         dg_y_record = self.obj.dg_y_record
 
-
         matrix_a = np.fliplr(np.eye(dimension))
         matrix_a[:, 0] = alpha
 
@@ -1073,8 +1068,6 @@ class SORM(TaylorSeries):
                                      runmodel_object=model, dist_object=dist_object,
                                      order='second', corr_z=corr_z,  point_qoi=self.g_record[-1][-1])
 
-        print(hessian_g)
-
         matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(dg_y_record[-1])
         kappa = np.linalg.eig(matrix_b[:dimension-1, :dimension-1])
         if self.call is None:
@@ -1086,7 +1079,4 @@ class SORM(TaylorSeries):
             self.beta_sorm = self.beta_sorm + [-stats.norm.ppf(self.Pf_sorm)]
 
         self.call = True
-
-
-
 
