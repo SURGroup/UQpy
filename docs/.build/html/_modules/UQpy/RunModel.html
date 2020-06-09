@@ -1,0 +1,827 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>UQpy.RunModel &#8212; UQpy v3.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for UQpy.RunModel</h1><div class="highlight"><pre>
+<span></span><span class="c1"># UQpy is distributed under the MIT license.</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (C) 2018  -- Michael D. Shields</span>
+<span class="c1">#</span>
+<span class="c1"># Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated</span>
+<span class="c1"># documentation files (the &quot;Software&quot;), to deal in the Software without restriction, including without limitation the</span>
+<span class="c1"># rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit</span>
+<span class="c1"># persons to whom the Software is furnished to do so, subject to the following conditions:</span>
+<span class="c1">#</span>
+<span class="c1"># The above copyright notice and this permission notice shall be included in all copies or substantial portions of the</span>
+<span class="c1"># Software.</span>
+<span class="c1">#</span>
+<span class="c1"># THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE</span>
+<span class="c1"># WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR</span>
+<span class="c1"># COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR</span>
+<span class="c1"># OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</span>
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+
+
+<div class="viewcode-block" id="RunModel"><a class="viewcode-back" href="../../runmodel.html#UQpy.RunModel.RunModel">[docs]</a><span class="k">class</span> <span class="nc">RunModel</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run a computational model at specified sample points.</span>
+
+<span class="sd">    This class is the interface between UQpy and computational models. The model is called in a Python script whose</span>
+<span class="sd">    name must be passed as one the arguments to the RunModel call. If the model is in Python, UQpy can interface with</span>
+<span class="sd">    the model without the need for an input file. In this case, UQpy imports the model module and executes the model</span>
+<span class="sd">    object. If the model is not in Python, RunModel must be provided the name of a template input file and an output</span>
+<span class="sd">    Python script along with the name of the Python script that runs the model.</span>
+
+
+<span class="sd">    :param samples: Samples to be passed as inputs to the model. Samples can be passed either as an ndarray or a list.</span>
+<span class="sd">    If an ndarray is passed, each row of the ndarray contains one set of samples required for one execution of the</span>
+<span class="sd">    model. (The first dimension of the ndarray is considered to be the number of rows.)</span>
+<span class="sd">    If a list is passed, each item of the list contains one set of samples required for one execution of the model.</span>
+<span class="sd">    :type samples: ndarray or list</span>
+
+<span class="sd">    :param model_script: The filename (with extension) of the Python script which contains commands to execute the</span>
+<span class="sd">    model. The model script must be present in the current working directory from which RunModel is called.</span>
+<span class="sd">    :type model_script: str</span>
+
+<span class="sd">    :param model_object_name: In the Python model workflow, model_object_name specifies the name of the function or</span>
+<span class="sd">    class within model_script which executes the model. If there is only one function or class in the model_script, then</span>
+<span class="sd">    it is not necessary to specify the model_object_name. If there are multiple objects within the model_script, then</span>
+<span class="sd">    model_object_name must be specified.</span>
+<span class="sd">    model_object_name is not used in the third-party software model workflow.</span>
+<span class="sd">    :type model_object_name: str</span>
+
+<span class="sd">    :param input_template: The name of the template input file which will be used to generate input files for each</span>
+<span class="sd">    run of the model. When operating RunModel with a third-party software model, input_template must be specified.</span>
+<span class="sd">    input_template is not used in the Python model workflow.</span>
+<span class="sd">    :type input_template: str</span>
+
+<span class="sd">    :param var_names: A list containing the names of the variables present in the template input file. If an</span>
+<span class="sd">    input template is provided and a list of variable names is not passed, ie if var_names=None, then the default</span>
+<span class="sd">    variable names x0, x1, x2,...,xn are created and used by RunModel, where n is the number of variables. The</span>
+<span class="sd">    number of variables is equal to the shape of the first row if samples is passed as an ndarray or the shape of the</span>
+<span class="sd">    first item if samples is passed as a list.</span>
+<span class="sd">    varnamesis not used in the Python model workflow.</span>
+<span class="sd">    :type var_names: list of str or None</span>
+
+<span class="sd">    :param output_script: The filename of the Python script which contains the commands to process the output from</span>
+<span class="sd">    third-party software model evaluation. The output_script is used to return the output quantities of interest to</span>
+<span class="sd">    RunModel for subsequent UQpy processing (e.g. for adaptive methods that utilize the results of previous simualtions</span>
+<span class="sd">    to initialize new simulations).</span>
+<span class="sd">    output_script is not used in the Python model workflow. In the Python model workflow, all model postprocessing is</span>
+<span class="sd">    handled within model_script.</span>
+<span class="sd">    If, in the third-party software model workflow, output_script = None (the default), then RunModel.qoi_list is empty</span>
+<span class="sd">    and postprocessing must be handled outside of UQpy.</span>
+<span class="sd">    :type output_script: str</span>
+
+<span class="sd">    :param output_object_name: The name of the function or class that is used to collect the output values from</span>
+<span class="sd">    third-party software model output files.</span>
+<span class="sd">    If the object is aclass named cls, for example, the output must be saved as cls.qoi. If it is a function, it should</span>
+<span class="sd">    return the output quantity of interest. If there is only one function or only one class in output_script, then it is</span>
+<span class="sd">    not necessary to specify output_object_name. If there are multiple objects in output_script, then output_object_name</span>
+<span class="sd">    must be specified.</span>
+<span class="sd">    outputobjectname is not used in the Python model workflow.</span>
+<span class="sd">    :type output_object_name: str</span>
+
+<span class="sd">    :param ntasks: Number of tasks to be run in parallel.</span>
+<span class="sd">    By default, ntasks = 1 and the models are executed serially. Setting ntasks equal to a positive integer greater than</span>
+<span class="sd">    1 will trigger the parallel workflow.</span>
+<span class="sd">    RunModel uses GNU parallel to execute models which require an input template in parallel and the concurrent module</span>
+<span class="sd">    to execute Python models in parallel.</span>
+<span class="sd">    :type ntasks: int</span>
+
+<span class="sd">    :param cores_per_task: Number of cores to be used by each task.</span>
+<span class="sd">    In cases where a third-party model runs across multiple CPUs, this optional attribute allocates the necessary</span>
+<span class="sd">    resources to each model evaluation.</span>
+<span class="sd">    cores_per_task is not used in the Python model workflow</span>
+<span class="sd">    :type cores_per_task: int</span>
+
+<span class="sd">    :param nodes: Number of nodes across which to distribute parallel jobs on an HPC cluster in the third-party software</span>
+<span class="sd">    model workflow.</span>
+<span class="sd">    If more than one compute node is required to execute the runs in parallel, nodes must be specified. For example, on</span>
+<span class="sd">    the Maryland Advanced Research Computing Center (MARCC), an HPC shared by Johns Hopkins University and the</span>
+<span class="sd">    University of Maryland, each compute node has 24 cores. To run an analysis with more than 24 parallel jobs on MARCC</span>
+<span class="sd">    requires nodes &gt; 1.</span>
+<span class="sd">    nodes is not used in the Python model workflow.</span>
+
+<span class="sd">    :type nodes: int</span>
+
+<span class="sd">    :param resume: If resume = True, GNU parallel enables UQpy to resume execution of any model evaluations that failed</span>
+<span class="sd">    to execute in the third-party software model workflow.</span>
+<span class="sd">    To use this feature, execute the same call to RunModel which failed to complete but with resume = True.  The same</span>
+<span class="sd">    set of samples must be passed to resume processing from the last successful execution of the model.</span>
+<span class="sd">    resume is not used in the Python model workflow.</span>
+<span class="sd">    :type resume: Boolean</span>
+
+<span class="sd">    :param verbose: Set verbose = True if you want RunModel to print status messages to the terminal during execution.</span>
+<span class="sd">    verbose = False by default.</span>
+<span class="sd">    :type verbose: Boolean</span>
+
+<span class="sd">    :param model_dir: Specifies the name of the sub-directory from which the model will be executed and to which output</span>
+<span class="sd">    files will be saved.</span>
+<span class="sd">    model_dir = None by default, which results in model execution from the Python current working directory. If</span>
+<span class="sd">    model_dir is passed a string, then a new directory is created by RunModel within the current directory whose name is</span>
+<span class="sd">    model_dir appended with a timestamp.</span>
+<span class="sd">    :type model_dir: str</span>
+
+<span class="sd">    :param cluster: Set cluster = True if executing on an HPC cluster. Setting cluster = True enables RunModel to</span>
+<span class="sd">    execute the model using the necessary SLURM commands. cluster = False by default.</span>
+<span class="sd">    RunModel is configured for HPC clusters that operate with the SLURM scheduler. In order to execute a third-party</span>
+<span class="sd">    model with RunModel on an HPC cluster, the HPC must use SLURM.</span>
+<span class="sd">    cluster is not used for the Python model workflow.</span>
+<span class="sd">    :type cluster: Boolean</span>
+
+<span class="sd">    :param fmt: If the input file requires variables to be written in specific format, this format can be specified</span>
+<span class="sd">    here.</span>
+<span class="sd">    The default is fmt = None</span>
+<span class="sd">    Existing formats include:</span>
+<span class="sd">    fmt = &#39;ls-dyna&#39;: This format is used for ls-dyna .k files where each card is required to be exactly 10 characters</span>
+<span class="sd">    :type fmt: String</span>
+
+<span class="sd">    Output:</span>
+<span class="sd">    :return: RunModel.qoi_list: A list containing the output quantities of interest extracted from the model output</span>
+<span class="sd">    files by output_script. This is a list of length equal to the number of simulations. Each item of this list contains</span>
+<span class="sd">    the quantity of interest from the associated simulation.</span>
+<span class="sd">    :rtype: RunModel.qoi_list: list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_script</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_object_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">input_template</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_script</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_object_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">ntasks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cores_per_task</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">resume</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">model_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">cluster</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="c1"># Check the platform and build appropriate call to Python</span>
+        <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Windows&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">python_command</span> <span class="o">=</span> <span class="s2">&quot;python&quot;</span>
+        <span class="k">elif</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Darwin&#39;</span><span class="p">,</span> <span class="s1">&#39;Linux&#39;</span><span class="p">,</span> <span class="s1">&#39;Unix&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">python_command</span> <span class="o">=</span> <span class="s2">&quot;python3&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">python_command</span> <span class="o">=</span> <span class="s2">&quot;python3&quot;</span>
+
+        <span class="c1"># Verbose option</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="c1"># Check if samples are provided</span>
+        <span class="k">if</span> <span class="n">samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Samples must be provided as input to RunModel.&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">samples</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nsim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>  <span class="c1"># This assumes that the number of rows is the number of simulations.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Samples must be passed as a list or numpy ndarray&quot;</span><span class="p">)</span>
+
+        <span class="c1"># # Check if fixed params are passed in</span>
+        <span class="c1"># self.fixed_params = fixed_params</span>
+        <span class="c1"># if self.verbose:</span>
+        <span class="c1">#     if self.fixed_params is not None:</span>
+        <span class="c1">#         print(&#39;Fixed params passed in&#39;)</span>
+
+        <span class="c1"># Format option</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fmt</span> <span class="o">=</span> <span class="n">fmt</span>
+
+        <span class="c1"># Input related</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_template</span> <span class="o">=</span> <span class="n">input_template</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span> <span class="o">=</span> <span class="n">var_names</span>
+        <span class="c1"># Check if var_names is a list of strings</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_list_of_strings</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_vars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Variable names should be passed as a list of strings.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_template</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If var_names is not passed and there is an input template, create default variable names</span>
+            <span class="n">nvars</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nvars</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;x</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
+
+        <span class="c1"># Model related</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span> <span class="o">=</span> <span class="n">model_dir</span>
+        <span class="n">current_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_dir</span> <span class="o">=</span> <span class="n">current_dir</span>
+
+        <span class="c1"># Create a list of all of the files and directories in the working directory</span>
+        <span class="n">model_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">f_name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">current_dir</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_dir</span><span class="p">,</span> <span class="n">f_name</span><span class="p">)</span>
+            <span class="c1"># if not os.path.isdir(path):</span>
+            <span class="c1">#     model_files.append(path)</span>
+            <span class="n">model_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_files</span> <span class="o">=</span> <span class="n">model_files</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Create a new directory where the model will be executed</span>
+            <span class="n">ts</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y_%m_</span><span class="si">%d</span><span class="s2">_%I_%M_</span><span class="si">%f</span><span class="s2">_%p&quot;</span><span class="p">)</span>
+            <span class="n">work_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">ts</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">work_dir</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">return_dir</span> <span class="o">=</span> <span class="n">work_dir</span>
+
+            <span class="c1"># Copy files from the model list to model run directory</span>
+            <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">model_files</span><span class="p">:</span>
+                <span class="n">full_file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_dir</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">):</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">new_dir_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">))</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">,</span> <span class="n">new_dir_name</span><span class="p">)</span>
+
+            <span class="c1"># Change current working directory to model run directory</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_dir</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">))</span>
+
+        <span class="c1"># Check if the model script is a python script</span>
+        <span class="n">model_extension</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">model_script</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span>
+        <span class="k">if</span> <span class="n">model_extension</span> <span class="o">==</span> <span class="s1">&#39;.py&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_script</span> <span class="o">=</span> <span class="n">model_script</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The model script must be the name of a python script, with extension &#39;.py&#39;.&quot;</span><span class="p">)</span>
+        <span class="c1"># Save the model object name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span> <span class="o">=</span> <span class="n">model_object_name</span>
+        <span class="c1"># Save option for resuming parallel execution</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resume</span> <span class="o">=</span> <span class="n">resume</span>
+
+        <span class="c1"># Output related</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_script</span> <span class="o">=</span> <span class="n">output_script</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_object_name</span> <span class="o">=</span> <span class="n">output_object_name</span>
+        <span class="c1"># Initialize a list of nsim None values. The ith position in the list will hold the qoi of the ith simulation.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qoi_list</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsim</span>
+
+        <span class="c1"># Number of tasks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ntasks</span> <span class="o">=</span> <span class="n">ntasks</span>
+        <span class="c1"># Number of cores_per_task</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cores_per_task</span> <span class="o">=</span> <span class="n">cores_per_task</span>
+        <span class="c1"># Number of nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">nodes</span>
+
+        <span class="c1"># If running on cluster or not</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span> <span class="o">=</span> <span class="n">cluster</span>
+
+        <span class="c1"># Check if there is a template input file or not and execute the appropriate function</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_template</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># If there is a template input file</span>
+            <span class="c1"># Check if it is a file and is readable</span>
+            <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_template</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_template</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">R_OK</span><span class="p">),</span> \
+                <span class="s2">&quot;File </span><span class="si">{}</span><span class="s2"> doesn&#39;t exist or isn&#39;t readable&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_template</span><span class="p">)</span>
+            <span class="c1"># Read in the text from the template file</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_template</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">template_text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+            <span class="c1"># Import the output script</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_script</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">output_module</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_script</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span>
+                <span class="c1"># Run function which checks if the output module has the output object</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_check_output_module</span><span class="p">()</span>
+
+            <span class="c1"># Run the serial execution or parallel execution depending on ntasks</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ntasks</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_serial_execution</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_parallel_execution</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># If there is no template input file supplied</span>
+            <span class="c1"># Import the python module</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">python_model</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_script</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span>
+            <span class="c1"># Run function which checks if the python model has the model object</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_python_model</span><span class="p">()</span>
+
+            <span class="c1"># Run the serial execution or parallel execution depending on ntasks</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ntasks</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_serial_python_execution</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_parallel_python_execution</span><span class="p">()</span>
+
+        <span class="c1"># Return to current directory</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">current_dir</span><span class="p">)</span>
+
+    <span class="c1">####################################################################################################################</span>
+    <span class="k">def</span> <span class="nf">_serial_execution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform serial execution of the model when there is a template input file</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Performing serial execution of the model with template input.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Loop over the number of simulations, executing the model once per loop</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y_%m_</span><span class="si">%d</span><span class="s2">_%I_%M_</span><span class="si">%f</span><span class="s2">_%p&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsim</span><span class="p">):</span>
+            <span class="c1"># Create a directory for each model run</span>
+            <span class="n">work_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s2">&quot;run_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">ts</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">work_dir</span><span class="p">)</span>
+            <span class="c1"># Copy files from the model list to model run directory</span>
+            <span class="n">current_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_files</span><span class="p">:</span>
+                <span class="n">full_file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_dir</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">):</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">new_dir_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">))</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">,</span> <span class="n">new_dir_name</span><span class="p">)</span>
+            <span class="c1"># Change current working directory to model run directory</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_dir</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">))</span>
+
+            <span class="c1"># Call the input function</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_input_serial</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+            <span class="c1"># Execute the model</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_execute_serial</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+            <span class="c1"># Call the output function</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_script</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_output_serial</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+            <span class="c1"># Remove the copied files and folders</span>
+            <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_files</span><span class="p">:</span>
+                <span class="n">full_file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file_name</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">):</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">)</span>
+
+            <span class="c1"># Return to the previous directory</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">return_dir</span><span class="p">)</span>
+
+    <span class="c1">####################################################################################################################</span>
+    <span class="k">def</span> <span class="nf">_parallel_execution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute the model in parallel when there is a template input file</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Performing parallel execution of the model with template input.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="c1"># Call the input function</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Creating inputs in parallel execution of the model with template input.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y_%m_</span><span class="si">%d</span><span class="s2">_%I_%M_</span><span class="si">%f</span><span class="s2">_%p&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsim</span><span class="p">):</span>
+            <span class="c1"># Create a directory for each model run</span>
+            <span class="n">work_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s2">&quot;run_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">ts</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">work_dir</span><span class="p">)</span>
+            <span class="c1"># Copy files from the model list to model run directory</span>
+            <span class="n">current_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_files</span><span class="p">:</span>
+                <span class="n">full_file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_dir</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">):</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">new_dir_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">))</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">,</span> <span class="n">new_dir_name</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_input_parallel</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span>
+
+        <span class="c1"># Execute the model</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Executing the model in parallel with template input.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_execute_parallel</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span>
+
+        <span class="c1"># Call the output function</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Collecting outputs in parallel execution of the model with template input.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="n">current_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsim</span><span class="p">):</span>
+            <span class="c1"># Change current working directory to model run directory</span>
+            <span class="n">work_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s2">&quot;run_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">ts</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_dir</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">))</span>
+
+            <span class="c1"># Run output processing function</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_script</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_output_parallel</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+            <span class="c1"># Remove the copied files and folders</span>
+            <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_files</span><span class="p">:</span>
+                <span class="n">full_file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file_name</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">):</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">full_file_name</span><span class="p">)</span>
+
+            <span class="c1"># Change back to the upper directory</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">current_dir</span><span class="p">))</span>
+
+    <span class="c1">####################################################################################################################</span>
+    <span class="k">def</span> <span class="nf">_serial_python_execution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute the python model in serial when there is no template input file</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Performing serial execution of the model without template input.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Run python model</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsim</span><span class="p">):</span>
+            <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;from &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_script</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; import &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">sample_to_send</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="c1"># if self.fixed_params is not None:</span>
+                <span class="c1">#     sample_to_send = sample_to_send.append(self.fixed_params)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">sample_to_send</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="c1"># self.model_output = eval(self.model_object_name + &#39;(self.samples[i])&#39;)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_output</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span> <span class="o">+</span> <span class="s1">&#39;(sample_to_send)&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_is_class</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">qoi_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_output</span><span class="o">.</span><span class="n">qoi</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">qoi_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_output</span>
+
+    <span class="c1">####################################################################################################################</span>
+    <span class="k">def</span> <span class="nf">_parallel_python_execution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute the python model in parallel when there is no template input file</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Code updated to use the multiprocessing package by MDS, 7/24/19</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Performing parallel execution of the Python model.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="kn">import</span> <span class="nn">multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
+        <span class="kn">import</span> <span class="nn">UQpy.Utilities</span> <span class="k">as</span> <span class="nn">Utilities</span>
+
+        <span class="n">sample</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nsim</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsim</span><span class="p">):</span>
+            <span class="n">sample</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">model_script</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">starmap</span><span class="p">(</span><span class="n">Utilities</span><span class="o">.</span><span class="n">_run_parallel_python</span><span class="p">,</span> <span class="n">sample</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsim</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_is_class</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">qoi_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">qoi</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">qoi_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="c1">####################################################################################################################</span>
+    <span class="k">def</span> <span class="nf">_input_serial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create one input file using the template and attach the index to the filename</span>
+<span class="sd">        :param index: The simulation number</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Create new text to write to file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_and_replace_var_names_with_values</span><span class="p">(</span><span class="n">var_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">,</span>
+                                                                     <span class="n">samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="n">index</span><span class="p">],</span>
+                                                                     <span class="n">template_text</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">template_text</span><span class="p">,</span>
+                                                                     <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+                                                                     <span class="n">user_format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{:.4E}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="c1"># Write the new text to the input file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_input_files</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">input_template</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">new_text</span><span class="p">,</span>
+                                 <span class="n">new_folder</span><span class="o">=</span><span class="s1">&#39;InputFiles&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_execute_serial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute the model once using the input file of index number</span>
+<span class="sd">        :param index: The simulation number</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_command</span> <span class="o">=</span> <span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">python_command</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_script</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">index</span><span class="p">)])</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_command</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_output_serial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute the output script, obtain the output qoi and save it in qoi_list</span>
+<span class="sd">        :param index: The simulation number</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Run output module</span>
+        <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;from &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_script</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; import &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_object_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_output</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_object_name</span> <span class="o">+</span> <span class="s1">&#39;(index)&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_is_class</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">qoi_list</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_output</span><span class="o">.</span><span class="n">qoi</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">qoi_list</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_output</span>
+
+    <span class="k">def</span> <span class="nf">_input_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create all the input files required</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Loop over the number of samples and create input files in a folder in current directory</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsim</span><span class="p">):</span>
+            <span class="c1"># Create new text to write to file</span>
+            <span class="n">new_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_and_replace_var_names_with_values</span><span class="p">(</span><span class="n">var_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">,</span>
+                                                                    <span class="n">samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                                                    <span class="n">template_text</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">template_text</span><span class="p">,</span>
+                                                                    <span class="n">index</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                                                                    <span class="n">user_format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{:.4E}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">folder_to_write</span> <span class="o">=</span> <span class="s1">&#39;run_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">timestamp</span> <span class="o">+</span> <span class="s1">&#39;/InputFiles&#39;</span>
+            <span class="c1"># Write the new text to the input file</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_input_files</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">input_template</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">new_text</span><span class="p">,</span>
+                                     <span class="n">new_folder</span><span class="o">=</span><span class="n">folder_to_write</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Created &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsim</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; input files in the directory ./InputFiles. </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_execute_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the command string and execute the model in parallel using subprocess and gnu parallel</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check if logs folder exists, if not, create it</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;logs&quot;</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s2">&quot;logs&quot;</span><span class="p">)</span>
+        <span class="c1"># If the user sets resume=True, do not delete log file. Else, delete logfile before running</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resume</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;logs/runtask.log&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parallel_string</span> <span class="o">=</span> <span class="s2">&quot;parallel --delay 0.2 --joblog logs/runtask.log --resume -j &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ntasks</span><span class="p">)</span>
+
+        <span class="c1"># If running on MARCC cluster</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">srun_string</span> <span class="o">=</span> <span class="s2">&quot;srun -N &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; -n1 -c&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cores_per_task</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; --exclusive&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_command_string</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">parallel_string</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">srun_string</span> <span class="o">+</span> <span class="s2">&quot; &#39;cd run_</span><span class="si">{1}</span><span class="s2">_&quot;</span> <span class="o">+</span> <span class="n">timestamp</span> <span class="o">+</span> <span class="s2">&quot;&amp;&amp; &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">python_command</span>
+                    <span class="o">+</span> <span class="s2">&quot; -u &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_script</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;&#39; </span><span class="si">{1}</span><span class="s2">  ::: {0..&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># If running locally</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_command_string</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parallel_string</span> <span class="o">+</span> <span class="s2">&quot; &#39;cd run_</span><span class="si">{1}</span><span class="s2">_&quot;</span> <span class="o">+</span> <span class="n">timestamp</span> <span class="o">+</span> <span class="s2">&quot;&amp;&amp; &quot;</span> <span class="o">+</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">python_command</span> <span class="o">+</span> <span class="s2">&quot; -u &quot;</span> <span class="o">+</span>
+                                         <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_script</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;&#39; </span><span class="si">{1}</span><span class="s2">  ::: {0..&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span><span class="p">)</span>
+
+        <span class="c1"># self.model_command = shlex.split(self.model_command_string)</span>
+        <span class="c1"># subprocess.run(self.model_command)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_command_string</span><span class="p">)</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_command_string</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_output_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract output from parallel execution</span>
+<span class="sd">        :param index: The simulation number</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_serial</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="c1">####################################################################################################################</span>
+    <span class="c1"># Helper functions</span>
+    <span class="k">def</span> <span class="nf">_create_input_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">new_folder</span><span class="o">=</span><span class="s1">&#39;InputFiles&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">new_folder</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">new_folder</span><span class="p">)</span>
+        <span class="n">base_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file_name</span><span class="p">))</span>
+        <span class="n">new_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_folder</span><span class="p">,</span> <span class="n">base_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="o">+</span> <span class="n">base_name</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_find_and_replace_var_names_with_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_names</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">template_text</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">user_format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{:.4E}</span><span class="s1">&#39;</span><span class="p">):</span>
+        <span class="c1"># TODO: deal with cases which have both var1 and var11</span>
+        <span class="n">new_text</span> <span class="o">=</span> <span class="n">template_text</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">var_names</span><span class="p">)):</span>
+            <span class="c1"># string_regex = re.compile(r&quot;&lt;&quot; + var_names[j] + r&quot;.*?&gt;&quot;)</span>
+            <span class="n">string_regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+                <span class="sa">r</span><span class="s2">&quot;&lt;&quot;</span> <span class="o">+</span> <span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;[([{]*?&gt;&quot;</span><span class="p">)</span>  <span class="c1"># This regex looks for ([{ immediately after variable name</span>
+            <span class="c1"># string_regex = re.compile(r&quot;&lt;&quot; + var_names[j] + r&quot;[[]*?&gt;&quot;)</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">string</span> <span class="ow">in</span> <span class="n">string_regex</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">template_text</span><span class="p">):</span>
+                <span class="c1"># If the input file has specific formatting standards, this is where they can be added.</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fmt</span> <span class="o">==</span> <span class="s1">&#39;ls-dyna&#39;</span><span class="p">:</span>
+                    <span class="n">v_temp</span>  <span class="o">=</span> <span class="n">samples</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                    <span class="n">str_temp</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{:&gt;10.4f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v_temp</span><span class="p">)</span>
+                    <span class="n">temp</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span><span class="n">str_temp</span><span class="p">)</span>
+                    <span class="n">temp</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">11</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">temp</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="s2">&quot;samples[&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span><span class="p">)</span>
+                    <span class="n">temp</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Iterable</span><span class="p">):</span>
+                    <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+                    <span class="n">to_add</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                        <span class="n">to_add</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span>
+                    <span class="n">to_add</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">to_add</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+                <span class="n">new_text</span> <span class="o">=</span> <span class="n">new_text</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">new_text</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">string</span><span class="p">)]</span> <span class="o">+</span> <span class="n">to_add</span> \
+                           <span class="o">+</span> <span class="n">new_text</span><span class="p">[(</span><span class="n">new_text</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">string</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">string</span><span class="p">)):]</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="s2">&quot;Found &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; instances of variable: &#39;&quot;</span> <span class="o">+</span> <span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;&#39; in the input file.&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="s2">&quot;Found &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; instance of variable: &#39;&quot;</span> <span class="o">+</span> <span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;&#39; in the input file.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_text</span>
+
+    <span class="k">def</span> <span class="nf">_is_list_of_strings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lst</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_python_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Get the names of the classes and functions in the imported module</span>
+        <span class="kn">import</span> <span class="nn">inspect</span>
+        <span class="n">class_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">function_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">python_model</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+                <span class="n">class_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isfunction</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+                <span class="n">function_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="c1"># There should be at least one class or function in the module - if not there, exit with error.</span>
+        <span class="k">if</span> <span class="n">class_list</span> <span class="ow">is</span> <span class="p">[]</span> <span class="ow">and</span> <span class="n">function_list</span> <span class="ow">is</span> <span class="p">[]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;A python model should be defined as a function or class in the script.&quot;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># If there is at least one class or function in the module</span>
+            <span class="c1"># If the model object name is not given as input and there is only one class or function,</span>
+            <span class="c1"># take that class name or function name to run the model.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">class_list</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">function_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">class_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span> <span class="o">=</span> <span class="n">class_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">function_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span> <span class="o">=</span> <span class="n">function_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># If there is a model_object_name given, check if it is in the list.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span> <span class="ow">in</span> <span class="n">class_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The model class that will be run: &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model_is_class</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span> <span class="ow">in</span> <span class="n">function_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The model function that will be run: &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model_is_class</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;There are more than one objects in the module. Specify the name of the function &quot;</span>
+                                     <span class="s2">&quot;or class which has to be executed.&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;You specified the model object name as: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span><span class="p">))</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The file does not contain an object which was specified as the model.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_output_module</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Get the names of the classes and functions in the imported module</span>
+        <span class="kn">import</span> <span class="nn">inspect</span>
+        <span class="n">class_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">function_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_module</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+                <span class="n">class_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isfunction</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+                <span class="n">function_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="c1"># There should be at least one class or function in the module - if not there, exit with error.</span>
+        <span class="k">if</span> <span class="n">class_list</span> <span class="ow">is</span> <span class="p">[]</span> <span class="ow">and</span> <span class="n">function_list</span> <span class="ow">is</span> <span class="p">[]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;A python model should be defined as a function or class in the script.&quot;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># If there is at least one class or function in the module</span>
+            <span class="c1"># If the model object name is not given as input and there is only one class or function,</span>
+            <span class="c1"># take that class name or function name to run the model.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_object_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">class_list</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">function_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">class_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">output_object_name</span> <span class="o">=</span> <span class="n">class_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">function_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">output_object_name</span> <span class="o">=</span> <span class="n">function_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># If there is a model_object_name given, check if it is in the list.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_object_name</span> <span class="ow">in</span> <span class="n">class_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The output class that will be run: &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_object_name</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">output_is_class</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_object_name</span> <span class="ow">in</span> <span class="n">function_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The output function that will be run: &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_object_name</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">output_is_class</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_object_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;There are more than one objects in the module. Specify the name of the function &quot;</span>
+                                     <span class="s2">&quot;or class which has to be executed.&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;You specified the output object name as: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_object_name</span><span class="p">))</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The file does not contain an object which was specified as the output processor.&quot;</span><span class="p">)</span>
+
+    <span class="c1">####################################################################################################################</span>
+    <span class="c1"># Unused functions</span>
+    <span class="k">def</span> <span class="nf">_collect_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qoi_list</span><span class="p">,</span> <span class="n">qoi_output</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="n">qoi_list</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">qoi_output</span>
+        <span class="k">return</span> <span class="n">qoi_list</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../index.html">
+    <img class="logo" src="../../_static/logo.jpg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Uncertainty quantification with Python </p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=SURG&repo=UQpy&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../distributions.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samplemethods.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../transformations.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../surrogates.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reliability.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dimension_reduction.html">DimensionReduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, SURG, JHU.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/SURG/UQpy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>
