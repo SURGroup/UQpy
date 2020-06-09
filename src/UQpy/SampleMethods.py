@@ -193,7 +193,7 @@ class MCS:
         if isinstance(self.dist_object, list):
             temp_samples = list()
             for i in range(len(self.dist_object)):
-                if  (self.dist_object[i], 'rvs'):
+                if hasattr(self.dist_object[i], 'rvs'):
                     temp_samples.append(self.dist_object[i].rvs(nsamples=nsamples, random_state=random_state))
                 else:
                     ValueError('UQpy: rvs method is missing.')
