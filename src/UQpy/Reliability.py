@@ -782,7 +782,7 @@ class FORM(TaylorSeries):
      """
 
     def __init__(self, dist_object, runmodel_object, df_step=None, corr_x=None, corr_z=None, n_iter=100,
-                 tol1=1e-3, tol2=1e-3, tol3=1e-3, verbose=False):
+                 tol1=None, tol2=None, tol3=None, verbose=False):
 
         super().__init__(dist_object, runmodel_object, corr_x, corr_z, n_iter, tol1, tol2, tol3, df_step, verbose)
 
@@ -817,12 +817,46 @@ class FORM(TaylorSeries):
         self.Jyx = None
         self.df_step = df_step
 
+        if (tol1 is None) and (tol2 is None) and (tol3 is None):
+            self.tol1 = 1e-3
+            self.tol2 = 1e-3
+            self.tol3 = 1e-3
+        if (tol1 is not None) and (tol2 is not None) and (tol3 is not None):
+            self.tol1 = tol1
+            self.tol2 = tol2
+            self.tol3 = tol3
+        elif (tol1 is not None) and (tol2 is None) and (tol3 is None):
+            self.tol1 = tol1
+            self.tol2 = None
+            self.tol3 = None
+        elif (tol1 is None) and (tol2 is not None) and (tol3 is None):
+            self.tol1 = None
+            self.tol2 = tol2
+            self.tol3 = None
+        elif (tol1 is None) and (tol2 is None) and (tol3 is not None):
+            self.tol1 = None
+            self.tol2 = None
+            self.tol3 = tol3
+        elif (tol1 is not None) and (tol2 is not None) and (tol3 is None):
+            self.tol1 = tol1
+            self.tol2 = tol2
+            self.tol3 = None
+        elif (tol1 is not None) and (tol2 is None) and (tol3 is not None):
+            self.tol1 = tol1
+            self.tol2 = None
+            self.tol3 = tol3
+        elif (tol1 is None) and (tol2 is not None) and (tol3 is not None):
+            self.tol1 = None
+            self.tol2 = tol2
+            self.tol3 = tol3
+
         self.y_record = None
         self.x_record = None
         self.g_record = None
         self.dg_x_record = None
         self.dg_y_record = None
         self.alpha_record = None
+        self.beta_record = None
 
         self.call = None
 
@@ -870,7 +904,7 @@ class FORM(TaylorSeries):
         beta = np.zeros(shape=(self.n_iter,))
         y = np.zeros([self.n_iter, self.dimension])
         g_record.append(0.0)
-        dg_y_record.append(np.zeros(self.dimension))
+        dg_y_record = np.zeros([self.n_iter, self.dimension])
         while conv_flag == 0:
             if self.verbose:
                 print('Number of iteration:', k)
@@ -893,7 +927,7 @@ class FORM(TaylorSeries):
                                          dist_object=self.dist_object, order='first',
                                          corr_z=self.corr_z)
             g_record.append(qoi)
-            dg_y_record.append(dg_y)
+            dg_y_record[k + 1, :] = dg_y
             norm_grad = np.linalg.norm(dg_y)
             alpha = - dg_y / norm_grad
             self.alpha = alpha.squeeze()
@@ -902,13 +936,59 @@ class FORM(TaylorSeries):
             y[k + 1, :] = beta[k + 1] * self.alpha
 
             if k > 0:
+                if (self.tol1 is not None) and (self.tol2 is not None) and (self.tol3 is not None):
+                    if np.linalg.norm(y[k + 1, :] - y[k, :]) <= self.tol1 and np.linalg.norm(g_record[k + 1] -
+                                                                                             g_record[k]) \
+                            <= self.tol2 and np.linalg.norm(dg_y_record[k + 1, :] - dg_y_record[k, :]) < self.tol3:
+                        conv_flag = 1
+                    else:
+                        k = k + 1
+                if (self.tol1 is None) and (self.tol2 is None) and (self.tol3 is None):
+                    if np.linalg.norm(y[k + 1, :] - y[k, :]) <= self.tol1 or np.linalg.norm(g_record[k + 1] -
+                                                                                            g_record[k]) \
+                            <= self.tol2 or np.linalg.norm(dg_y_record[k + 1, :] - dg_y_record[k, :]) < self.tol3:
+                        conv_flag = 1
+                    else:
+                        k = k + 1
+                elif (self.tol1 is not None) and (self.tol2 is None) and (self.tol3 is None):
+                    if np.linalg.norm(y[k + 1, :] - y[k, :]) <= self.tol1:
+                        conv_flag = 1
+                    else:
+                        k = k + 1
 
-                if np.linalg.norm(y[k + 1, :] - y[k, :]) <= 1e-3 or np.linalg.norm(g_record[k + 1] -
-                                                                                   g_record[k])\
-                        <= 1e-3 or np.linalg.norm(dg_y_record[k + 1] - dg_y_record[k]) < 1e-3:
-                    conv_flag = 1
-                else:
-                    k = k + 1
+                elif (self.tol1 is None) and (self.tol2 is not None) and (self.tol3 is None):
+                    if np.linalg.norm(beta[k + 1] - beta[k]) <= self.tol2:
+                        conv_flag = 1
+                    else:
+                        k = k + 1
+
+                elif (self.tol1 is None) and (self.tol2 is None) and (self.tol3 is not None):
+                    if np.linalg.norm(dg_y_record[k + 1, :] - dg_y_record[k, :]) < self.tol3:
+                        conv_flag = 1
+                    else:
+                        k = k + 1
+
+                elif (self.tol1 is not None) and (self.tol2 is not None) and (self.tol3 is None):
+                    if np.linalg.norm(y[k + 1, :] - y[k, :]) <= self.tol1 and \
+                            np.linalg.norm(beta[k + 1] - beta[k]) <= self.tol1:
+                        conv_flag = 1
+                    else:
+                        k = k + 1
+
+                elif (self.tol1 is not None) and (self.tol2 is None) and (self.tol3 is not None):
+                    if np.linalg.norm(y[k + 1, :] - y[k, :]) <= self.tol1 \
+                            and np.linalg.norm(dg_y_record[k + 1, :] - dg_y_record[k, :]) < self.tol3:
+                        conv_flag = 1
+                    else:
+                        k = k + 1
+
+                elif (self.tol1 is None) and (self.tol2 is not None) and (self.tol3 is not None):
+                    if np.linalg.norm(beta[k + 1] - beta[k]) <= self.tol2 and \
+                            np.linalg.norm(dg_y_record[k + 1, :] - dg_y_record[k, :]) < self.tol3:
+                        conv_flag = 1
+                    else:
+                        k = k + 1
+
             if k == 0:
                 k = k + 1
 
@@ -918,10 +998,11 @@ class FORM(TaylorSeries):
             self.x_record = [x_record]
             self.g_record = [g_record]
             self.dg_x_record = [dg_x_record]
-            self.dg_y_record = [dg_y_record]
+            self.dg_y_record = [dg_y_record[:k]]
             self.alpha_record = [alpha_record]
         else:
             if self.call is None:
+                self.beta_record = [beta[:k + 1]]
                 self.beta_form = [beta[k + 1]]
                 self.DesignPoint_Y = [y[k + 1, :]]
                 self.DesignPoint_X = [np.squeeze(self.x)]
@@ -931,9 +1012,10 @@ class FORM(TaylorSeries):
                 self.x_record = [x_record[:k + 1]]
                 self.g_record = [g_record]
                 self.dg_x_record = [dg_x_record]
-                self.dg_y_record = [dg_y_record]
+                self.dg_y_record = [dg_y_record[:k]]
                 self.alpha_record = [alpha_record]
             else:
+                self.beta_record = self.beta_record + [beta[:k + 1]]
                 self.beta_form = self.beta_form + [beta[k + 1]]
                 self.DesignPoint_Y = self.DesignPoint_Y + [y[k + 1, :]]
                 self.DesignPoint_X = self.DesignPoint_X + [np.squeeze(self.x)]
@@ -943,7 +1025,7 @@ class FORM(TaylorSeries):
                 self.x_record = self.x_record + [x_record[:k + 1]]
                 self.g_record = self.g_record + [g_record]
                 self.dg_x_record = self.dg_x_record + [dg_y_record]
-                self.dg_y_record = self.dg_x_record + [dg_y_record]
+                self.dg_y_record = self.dg_x_record + [dg_y_record[:k]]
                 self.alpha_record = self.alpha_record + [alpha_record]
             self.call = True
 
@@ -992,6 +1074,7 @@ class SORM(TaylorSeries):
         self.x_record = None
         self.g_record = None
         self.dg_record = None
+        self.beta_record = None
         self.alpha_record = None
         self.dg_x_record = None
         self.dg_y_record = None
@@ -1033,6 +1116,7 @@ class SORM(TaylorSeries):
         self.form_iterations = self.obj.form_iterations[-1]
         self.y_record = self.obj.y_record
         self.x_record = self.obj.x_record
+        self.beta_record = self.obj.beta_record
         self.g_record = self.obj.g_record
         self.dg_x_record = self.obj.dg_x_record
         self.dg_y_record = self.obj.dg_y_record
