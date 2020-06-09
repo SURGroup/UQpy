@@ -341,12 +341,8 @@
 
 <div class="viewcode-block" id="Kriging"><a class="viewcode-back" href="../../surrogates.html#UQpy.Surrogates.Kriging">[docs]</a><span class="k">class</span> <span class="nc">Kriging</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Kriging generates an approximate surrogate model to predict the function value at unknown/new samples, see ([1]_)</span>
+<span class="sd">    Kriging generates an approximate surrogate model to predict the function value at unknown/new samples, see ([2]_)</span>
 <span class="sd">    for detailed explanation.</span>
-
-<span class="sd">    **References:**</span>
-<span class="sd">    1. S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, &quot;DACE -- A MATLAB Kriging Toolbox&quot;, Informatics and</span>
-<span class="sd">       Mathematical Modelling, Version 2.0, 2002.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -405,13 +401,6 @@
 <span class="sd">            Inverse of cholesky decomposition of the Correlation matrix</span>
 
 <span class="sd">    **Methods:**</span>
-
-<span class="sd">    * **predict** (`function`):</span>
-<span class="sd">            This methods returns the model estimate and standard deviation (if return_std is &#39;True&#39;) of estimate at</span>
-<span class="sd">            a new samples point.</span>
-
-<span class="sd">    * **jacobian** (`function`):</span>
-<span class="sd">            This methods returns the gradient of model estimate at a new samples point.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -485,7 +474,28 @@
         <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+<div class="viewcode-block" id="Kriging.fit"><a class="viewcode-back" href="../../surrogates.html#UQpy.Surrogates.Kriging.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method fit the surrogate model using the samples and values parameter.</span>
+
+<span class="sd">        User can run this method multiple time after initiating the ``Kriging`` class object. This method update the</span>
+<span class="sd">        samples and values parameter of ``Kriging`` object. This method changes `nopt` parameter to 1 after first run,</span>
+<span class="sd">        and then uses `corr_model_params` from previous run as the starting point for MLE problem.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **samples** ():</span>
+<span class="sd">                `ndarray` containing the training points.</span>
+
+<span class="sd">        * **values** ():</span>
+<span class="sd">                `ndarray` containing the model evaluations at the training points.</span>
+
+<span class="sd">        **Output/Return:**</span>
+
+<span class="sd">        The ``fit`` method has no returns, although it creates the `beta`, `err_var` and `C_inv` attributes of the</span>
+<span class="sd">        ``Kriging`` class.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">cholesky</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
@@ -613,7 +623,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">F_dash</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">C_inv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">f_dash</span><span class="p">,</span> <span class="n">c_inv</span><span class="p">,</span> <span class="n">g_</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Kriging fit complete.&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Kriging fit complete.&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Kriging.predict"><a class="viewcode-back" href="../../surrogates.html#UQpy.Surrogates.Kriging.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">return_std</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -622,13 +632,21 @@
 <span class="sd">        This method evaluates the regression and correlation model at new sample point. Then, it predicts the function</span>
 <span class="sd">        value and mean square error using regression coefficients and training data.</span>
 
-<span class="sd">        **Input:**</span>
+<span class="sd">        **Inputs:**</span>
 
-<span class="sd">        :param x: nD-array (2 dimensional) corresponding to the new points.</span>
-<span class="sd">        :type  x: list or array</span>
+<span class="sd">        * **x** (`list` or `numpy array`):</span>
+<span class="sd">                nD-array (2 dimensional) corresponding to the new points.</span>
 
-<span class="sd">        :param return_std: Indicator to estimate standard deviation.</span>
-<span class="sd">        :type return_std: boolean</span>
+<span class="sd">        * **return_std** (`list` or `numpy array`):</span>
+<span class="sd">                Indicator to estimate standard deviation.</span>
+
+<span class="sd">        **Outputs:**</span>
+
+<span class="sd">        * **f_x** (`numpy array`):</span>
+<span class="sd">                A 1-D/2-D array of predicted value at the new points.</span>
+
+<span class="sd">        * **std_f_x (`numpy array`):</span>
+<span class="sd">                A 1-D/2-D array of standard deviation of predicted value at the new points.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -668,8 +686,13 @@
 
 <span class="sd">        **Input:**</span>
 
-<span class="sd">        :param x: nD-array (2 dimensional) corresponding to the new points.</span>
-<span class="sd">        :type  x: list or array</span>
+<span class="sd">        * **x** (`list` or `numpy array`):</span>
+<span class="sd">                nD-array (2 dimensional) corresponding to the new points.</span>
+
+<span class="sd">        **Output:**</span>
+
+<span class="sd">        * **grad_x** (`list` or `numpy array`):</span>
+<span class="sd">                nD-array (1/2 dimensional) of gradient of surrogate model evaluated at the new points.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -699,8 +722,13 @@
 
 <span class="sd">        **Input:**</span>
 
-<span class="sd">        :param model: Name of the regression model.</span>
-<span class="sd">        :type  model: str</span>
+<span class="sd">        * **model** (`str`):</span>
+<span class="sd">                Name of the correlation model.</span>
+
+<span class="sd">        **Output:**</span>
+
+<span class="sd">        * **c** (`function`):</span>
+<span class="sd">                Returns a callable function, which returns the correlation matrix.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">def</span> <span class="nf">r</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
@@ -750,12 +778,12 @@
 
 <span class="sd">        **Input:**</span>
 
-<span class="sd">        :param model: Name of the correlation model.</span>
-<span class="sd">        :type  model: str</span>
+<span class="sd">        * **model** (`str`):</span>
+<span class="sd">                Name of the correlation model.</span>
 
-<span class="sd">        ** Methods:**</span>
+<span class="sd">        **Output:**</span>
 
-<span class="sd">        * **c** (`callable`):</span>
+<span class="sd">        * **c** (`function`):</span>
 <span class="sd">                Returns a callable function, which returns the correlation matrix.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>

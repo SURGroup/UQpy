@@ -449,10 +449,10 @@ class Kriging:
 
         **Inputs:**
 
-        * **samples** ():
+        * **samples** (`ndarray`):
                 `ndarray` containing the training points.
 
-        * **values** ():
+        * **values** (`ndarray`):
                 `ndarray` containing the model evaluations at the training points.
 
         **Output/Return:**

@@ -48,7 +48,7 @@
 </ul>
 <div class="section" id="srom">
 <h2>SROM<a class="headerlink" href="#srom" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">SROM</span></code> takes a set of samples and attributes of a distribution and optimizes the sample probability weights according to the method of Stochastic Reduced Order Models as defined by <a class="footnote-reference brackets" href="#id3" id="id2">1</a>. SROM constructs a reduce order model for arbitrary random variables.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">SROM</span></code> takes a set of samples and attributes of a distribution and optimizes the sample probability weights according to the method of Stochastic Reduced Order Models as defined by <a class="footnote-reference brackets" href="#id7" id="id2">1</a>. SROM constructs a reduce order model for arbitrary random variables.</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\tilde{X} =  \begin{cases} x_1 &amp; probability \text{  }p_1^{(opt)} \\ &amp; \vdots \\ x_m &amp; probability \text{  }p_m^{(opt)} \end{cases}\end{split}\]</div>
 <p>This class identify the probability/weights associated with sample, such that total error between distribution, moments and correlation of random variables is minimized. This optimization problem can be express as:</p>
@@ -162,13 +162,6 @@ correlation of random variables.</p>
 
 </dd></dl>
 
-<dl class="footnote brackets">
-<dt class="label" id="id3"><span class="brackets">1</span><span class="fn-backref">(<a href="#id2">1</a>,<a href="#id5">2</a>)</span></dt>
-<dd><ol class="upperalpha simple" start="13">
-<li><p>Grigoriu, “Reduced order models for random functions. Application to stochastic problems”, Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.</p></li>
-</ol>
-</dd>
-</dl>
 </div>
 </div>
 <div class="section" id="kriging">
@@ -196,33 +189,36 @@ correlation of random variables.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">Kriging</span></code> class offers a variety of model for fitting approximate surrogate model. These are specified by the <cite>reg_model</cite> parameter (i.e. ‘constant’, ‘linear’ and ‘quadratic’). However, adding a new model is straightforward. This is done by creating a new method that computes basis function and it’s jacobian. This method takes as input the samples points and returns two array containing the value of value of basis function and it’s jacobian at sample points. The first output of this function should be a two dimensional numpy array with the first dimension being the number of samples and the second dimension being the number of basis functions. The second output (i.e. jacobian of basis function) is a three dimensional numpy array with the first dimension being the number of samples, the second dimension being the number of variables and the third dimension being the number of basis functions. An example user-defined model is given below:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">constant</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">fx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">jf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">jf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">fx</span><span class="p">,</span> <span class="n">jf</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="adding-new-correlation-model">
 <h3>Adding New Correlation Model<a class="headerlink" href="#adding-new-correlation-model" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">Kriging</span></code> class offers a variety of model to minimize the error in surrogate model. These are specified by the <cite>corr_model</cite> parameter (i.e. ‘exponential’, ‘gaussian’, ‘linear’, ‘spherical’, ‘cubic’ and ‘spline’). However, adding a new model is straightforward. This is done by creating a new method that computes correlation matrix, it’s derivative w.r.t samples and it’s derivative w.r.t hyperparameters. This method takes as input the new points, training points, hyperparameters and two indicator for the computation of derivative of correlation matrix. returns two array containing the value of value of basis function and it’s jacobian at sample points. The first output of this function should be a two dimensional numpy array with the first dimension being the number of samples and the second dimension being the number of basis functions. The second output (i.e. jacobian of basis function) is a three dimensional numpy array with the first dimension being the number of samples, the second dimension being the number of variables and the third dimension being the number of basis functions. An example user-defined model is given below:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">constant</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">fx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">jf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">fx</span><span class="p">,</span> <span class="n">jf</span>
+<p>The <code class="docutils literal notranslate"><span class="pre">Kriging</span></code> class offers a variety of model to minimize the error in surrogate model. These are specified by the <cite>corr_model</cite> parameter (i.e. ‘exponential’, ‘gaussian’, ‘linear’, ‘spherical’, ‘cubic’ and ‘spline’). However, user can also add a new model. This is done by creating a new method that computes correlation matrix, it’s derivative w.r.t samples and it’s derivative w.r.t hyperparameters. This method takes as input the new points, training points, hyperparameters and two indicator for the computation of derivative of correlation matrix (i.e. <cite>dt</cite> and <cite>dx</cite>). If both indicators are false, then method should return correlation matrix, i.e. a 2-D array with first dimension being the number of points and second dimension being the number of training points. If <cite>dx</cite> parameter is True, then method should return correlation matrix and derivative of correlation matrix w.r.t variables, i.e. a 3-D array with first being the number of points, second dimension being the number of training points and third dimension being the number of variables. If <cite>dt</cite> is True, then method should return correlation matrix and it’s derivative w.r.t hyperparameters, i.e. a 3-D array with same shape as derivative of correlation matrix w.r.t. variables. An example user-defined model is given below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">Gaussian</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">x</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="c1"># Create stack matrix, where each block is x_i with all s</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">stack</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_3d</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">rx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="n">params</span> <span class="o">*</span> <span class="p">(</span><span class="n">stack</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="n">dt</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">drdt</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">stack</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">rx</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="n">rx</span><span class="p">,</span> <span class="n">drdt</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="n">dx</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">drdx</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">params</span> <span class="o">*</span> <span class="n">stack</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">rx</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="n">rx</span><span class="p">,</span> <span class="n">drdx</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">rx</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="id4">
-<h3>Class Descriptions<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id3">
+<h3>Class Descriptions<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="UQpy.Surrogates.Kriging">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Surrogates.</code><code class="sig-name descname">Kriging</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reg_model</span><span class="o">=</span><span class="default_value">'Linear'</span></em>, <em class="sig-param"><span class="n">corr_model</span><span class="o">=</span><span class="default_value">'Exponential'</span></em>, <em class="sig-param"><span class="n">bounds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">op</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">nopt</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">normalize</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">corr_model_params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">optimizer</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs_optimizer</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Surrogates.html#Kriging"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Surrogates.Kriging" title="Permalink to this definition">¶</a></dt>
-<dd><p>Kriging generates an approximate surrogate model to predict the function value at unknown/new samples, see (<a class="footnote-reference brackets" href="#id3" id="id5">1</a>)
+<dd><p>Kriging generates an approximate surrogate model to predict the function value at unknown/new samples, see (<a class="footnote-reference brackets" href="#id8" id="id4">2</a>)
 for detailed explanation.</p>
-<p><strong>References:</strong>
-1. S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, “DACE – A MATLAB Kriging Toolbox”, Informatics and</p>
-<blockquote>
-<div><p>Mathematical Modelling, Version 2.0, 2002.</p>
-</div></blockquote>
 <p><strong>Inputs:</strong></p>
 <ul>
 <li><dl>
@@ -306,19 +302,6 @@ optimization problem. Otherwise, corr_model_params will be directly use as hyper
 </li>
 </ul>
 <p><strong>Methods:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>predict</strong> (<cite>function</cite>):</dt><dd><p>This methods returns the model estimate and standard deviation (if return_std is ‘True’) of estimate at
-a new samples point.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>jacobian</strong> (<cite>function</cite>):</dt><dd><p>This methods returns the gradient of model estimate at a new samples point.</p>
-</dd>
-</dl>
-</li>
-</ul>
 <dl class="py method">
 <dt id="UQpy.Surrogates.Kriging.corr">
 <em class="property">static </em><code class="sig-name descname">corr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Surrogates.html#Kriging.corr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Surrogates.Kriging.corr" title="Permalink to this definition">¶</a></dt>
@@ -326,19 +309,46 @@ a new samples point.</p>
 <p>This method defines a function based on the choice of correlation model, which computes the correlation matrix
 for provided samples.</p>
 <p><strong>Input:</strong></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Name of the correlation model.</p>
-</dd>
-</dl>
-<p>** Methods:**</p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>c</strong> (<cite>callable</cite>):</dt><dd><p>Returns a callable function, which returns the correlation matrix.</p>
+<dt><strong>model</strong> (<cite>str</cite>):</dt><dd><p>Name of the correlation model.</p>
 </dd>
 </dl>
 </li>
 </ul>
+<p><strong>Output:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>c</strong> (<cite>function</cite>):</dt><dd><p>Returns a callable function, which returns the correlation matrix.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt id="UQpy.Surrogates.Kriging.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">samples</span></em>, <em class="sig-param"><span class="n">values</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Surrogates.html#Kriging.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Surrogates.Kriging.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method fit the surrogate model using the samples and values parameter.</p>
+<p>User can run this method multiple time after initiating the <code class="docutils literal notranslate"><span class="pre">Kriging</span></code> class object. This method update the
+samples and values parameter of <code class="docutils literal notranslate"><span class="pre">Kriging</span></code> object. This method changes <cite>nopt</cite> parameter to 1 after first run,
+and then uses <cite>corr_model_params</cite> from previous run as the starting point for MLE problem.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>samples</strong> ():</dt><dd><p><cite>ndarray</cite> containing the training points.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>values</strong> ():</dt><dd><p><cite>ndarray</cite> containing the model evaluations at the training points.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Return:</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">fit</span></code> method has no returns, although it creates the <cite>beta</cite>, <cite>err_var</cite> and <cite>C_inv</cite> attributes of the
+<code class="docutils literal notranslate"><span class="pre">Kriging</span></code> class.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -348,11 +358,21 @@ for provided samples.</p>
 <p>This method evaluates the regression and correlation model at new sample point. Then, it predicts the gradient
 using regression coefficients and training data.</p>
 <p><strong>Input:</strong></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>x</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em> or </em><em>array</em>) – nD-array (2 dimensional) corresponding to the new points.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>x</strong> (<cite>list</cite> or <cite>numpy array</cite>):</dt><dd><p>nD-array (2 dimensional) corresponding to the new points.</p>
 </dd>
 </dl>
+</li>
+</ul>
+<p><strong>Output:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>grad_x</strong> (<cite>list</cite> or <cite>numpy array</cite>):</dt><dd><p>nD-array (1/2 dimensional) of gradient of surrogate model evaluated at the new points.</p>
+</dd>
+</dl>
+</li>
+</ul>
 </dd></dl>
 
 <dl class="py method">
@@ -361,15 +381,32 @@ using regression coefficients and training data.</p>
 <dd><p>Predict the function value at new points</p>
 <p>This method evaluates the regression and correlation model at new sample point. Then, it predicts the function
 value and mean square error using regression coefficients and training data.</p>
-<p><strong>Input:</strong></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em> or </em><em>array</em>) – nD-array (2 dimensional) corresponding to the new points.</p></li>
-<li><p><strong>return_std</strong> (<em>boolean</em>) – Indicator to estimate standard deviation.</p></li>
-</ul>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>x</strong> (<cite>list</cite> or <cite>numpy array</cite>):</dt><dd><p>nD-array (2 dimensional) corresponding to the new points.</p>
 </dd>
 </dl>
+</li>
+<li><dl class="simple">
+<dt><strong>return_std</strong> (<cite>list</cite> or <cite>numpy array</cite>):</dt><dd><p>Indicator to estimate standard deviation.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Outputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>f_x</strong> (<cite>numpy array</cite>):</dt><dd><p>A 1-D/2-D array of predicted value at the new points.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a href="#id5"><span class="problematic" id="id6">**</span></a>std_f_x (<cite>numpy array</cite>):</dt><dd><p>A 1-D/2-D array of standard deviation of predicted value at the new points.</p>
+</dd>
+</dl>
+</li>
+</ul>
 </dd></dl>
 
 <dl class="py method">
@@ -379,15 +416,35 @@ value and mean square error using regression coefficients and training data.</p>
 <p>This method defines a function based on the choice of regression model, which computes the basis functions
 for provided samples.</p>
 <p><strong>Input:</strong></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Name of the regression model.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>model</strong> (<cite>str</cite>):</dt><dd><p>Name of the correlation model.</p>
 </dd>
 </dl>
+</li>
+</ul>
+<p><strong>Output:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>c</strong> (<cite>function</cite>):</dt><dd><p>Returns a callable function, which returns the correlation matrix.</p>
+</dd>
+</dl>
+</li>
+</ul>
 </dd></dl>
 
 </dd></dl>
 
+<dl class="footnote brackets">
+<dt class="label" id="id7"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
+<dd><ol class="upperalpha simple" start="13">
+<li><p>Grigoriu, “Reduced order models for random functions. Application to stochastic problems”, Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.</p></li>
+</ol>
+</dd>
+<dt class="label" id="id8"><span class="brackets"><a class="fn-backref" href="#id4">2</a></span></dt>
+<dd><p>S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, “DACE – A MATLAB Kriging Toolbox”, Informatics and Mathematical Modelling, Version 2.0, 2002.</p>
+</dd>
+</dl>
 <div class="toctree-wrapper compound">
 </div>
 </div>
