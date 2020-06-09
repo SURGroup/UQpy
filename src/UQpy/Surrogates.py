@@ -306,12 +306,8 @@ class SROM:
 
 class Kriging:
     """
-    Kriging generates an approximate surrogate model to predict the function value at unknown/new samples, see ([1]_)
+    Kriging generates an approximate surrogate model to predict the function value at unknown/new samples, see ([2]_)
     for detailed explanation.
-
-    **References:**
-    .. [1] S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, "DACE -- A MATLAB Kriging Toolbox", Informatics and
-       Mathematical Modelling, Version 2.0, 2002.
 
     **Inputs:**
 
@@ -370,13 +366,6 @@ class Kriging:
             Inverse of cholesky decomposition of the Correlation matrix
 
     **Methods:**
-
-    * **predict** (`function`):
-            This methods returns the model estimate and standard deviation (if return_std is 'True') of estimate at
-            a new samples point.
-
-    * **jacobian** (`function`):
-            This methods returns the gradient of model estimate at a new samples point.
 
     """
 
@@ -451,6 +440,27 @@ class Kriging:
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
     def fit(self, samples, values):
+        """
+        This method fit the surrogate model using the samples and values parameter.
+
+        User can run this method multiple time after initiating the ``Kriging`` class object. This method update the
+        samples and values parameter of ``Kriging`` object. This method changes `nopt` parameter to 1 after first run,
+        and then uses `corr_model_params` from previous run as the starting point for MLE problem.
+
+        **Inputs:**
+
+        * **samples** ():
+                `ndarray` containing the training points.
+
+        * **values** ():
+                `ndarray` containing the model evaluations at the training points.
+
+        **Output/Return:**
+
+        The ``fit`` method has no returns, although it creates the `beta`, `err_var` and `C_inv` attributes of the
+        ``Kriging`` class.
+
+        """
         from scipy.linalg import cholesky
 
         if self.verbose:
@@ -587,13 +597,21 @@ class Kriging:
         This method evaluates the regression and correlation model at new sample point. Then, it predicts the function
         value and mean square error using regression coefficients and training data.
 
-        **Input:**
+        **Inputs:**
 
-        :param x: nD-array (2 dimensional) corresponding to the new points.
-        :type  x: list or array
+        * **x** (`list` or `numpy array`):
+                nD-array (2 dimensional) corresponding to the new points.
 
-        :param return_std: Indicator to estimate standard deviation.
-        :type return_std: boolean
+        * **return_std** (`list` or `numpy array`):
+                Indicator to estimate standard deviation.
+
+        **Outputs:**
+
+        * **f_x** (`numpy array`):
+                A 1-D/2-D array of predicted value at the new points.
+
+        * **std_f_x (`numpy array`):
+                A 1-D/2-D array of standard deviation of predicted value at the new points.
 
         """
         x = np.atleast_2d(x)
@@ -633,8 +651,13 @@ class Kriging:
 
         **Input:**
 
-        :param x: nD-array (2 dimensional) corresponding to the new points.
-        :type  x: list or array
+        * **x** (`list` or `numpy array`):
+                nD-array (2 dimensional) corresponding to the new points.
+
+        **Output:**
+
+        * **grad_x** (`list` or `numpy array`):
+                nD-array (1/2 dimensional) of gradient of surrogate model evaluated at the new points.
 
         """
         x = np.atleast_2d(x)
@@ -664,8 +687,13 @@ class Kriging:
 
         **Input:**
 
-        :param model: Name of the regression model.
-        :type  model: str
+        * **model** (`str`):
+                Name of the correlation model.
+
+        **Output:**
+
+        * **c** (`function`):
+                Returns a callable function, which returns the correlation matrix.
 
         """
         def r(s):
@@ -715,12 +743,12 @@ class Kriging:
 
         **Input:**
 
-        :param model: Name of the correlation model.
-        :type  model: str
+        * **model** (`str`):
+                Name of the correlation model.
 
-        ** Methods:**
+        **Output:**
 
-        * **c** (`callable`):
+        * **c** (`function`):
                 Returns a callable function, which returns the correlation matrix.
 
         """

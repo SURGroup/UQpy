@@ -29,8 +29,6 @@ Class Descriptions
 .. autoclass:: UQpy.Surrogates.SROM
     :members:
 
-.. [1] M. Grigoriu, “Reduced order models for random functions. Application to stochastic problems”, Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.
-	
 
 Kriging
 -------
@@ -73,13 +71,21 @@ The ``Kriging`` class offers a variety of model for fitting approximate surrogat
 Adding New Correlation Model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``Kriging`` class offers a variety of model to minimize the error in surrogate model. These are specified by the `corr_model` parameter (i.e. 'exponential', 'gaussian', 'linear', 'spherical', 'cubic' and 'spline'). However, adding a new model is straightforward. This is done by creating a new method that computes correlation matrix, it's derivative w.r.t samples and it's derivative w.r.t hyperparameters. This method takes as input the new points, training points, hyperparameters and two indicator for the computation of derivative of correlation matrix. returns two array containing the value of value of basis function and it's jacobian at sample points. The first output of this function should be a two dimensional numpy array with the first dimension being the number of samples and the second dimension being the number of basis functions. The second output (i.e. jacobian of basis function) is a three dimensional numpy array with the first dimension being the number of samples, the second dimension being the number of variables and the third dimension being the number of basis functions. An example user-defined model is given below:
+The ``Kriging`` class offers a variety of model to minimize the error in surrogate model. These are specified by the `corr_model` parameter (i.e. 'exponential', 'gaussian', 'linear', 'spherical', 'cubic' and 'spline'). However, user can also add a new model. This is done by creating a new method that computes correlation matrix, it's derivative w.r.t samples and it's derivative w.r.t hyperparameters. This method takes as input the new points, training points, hyperparameters and two indicator for the computation of derivative of correlation matrix (i.e. `dt` and `dx`). If both indicators are false, then method should return correlation matrix, i.e. a 2-D array with first dimension being the number of points and second dimension being the number of training points. If `dx` parameter is True, then method should return correlation matrix and derivative of correlation matrix w.r.t variables, i.e. a 3-D array with first being the number of points, second dimension being the number of training points and third dimension being the number of variables. If `dt` is True, then method should return correlation matrix and it's derivative w.r.t hyperparameters, i.e. a 3-D array with same shape as derivative of correlation matrix w.r.t. variables. An example user-defined model is given below:
 
 
->>> def constant(points):
->>> 	fx = np.ones([points.shape[0], 1])
->>> 	jf = np.zeros([points.shape[0], 1, points.shape[0]])
->>> 	return fx, jf
+>>> def Gaussian(x, s, params, dt=False, dx=False):
+>>>     x, s = np.atleast_2d(x), np.atleast_2d(s)
+>>>     # Create stack matrix, where each block is x_i with all s
+>>>     stack = - np.tile(np.swapaxes(np.atleast_3d(x), 1, 2), (1, np.size(s, 0), 1)) + np.tile(s, (np.size(x, 0), 1, 1))
+>>>     rx = np.exp(np.sum(-params * (stack ** 2), axis=2))
+>>>     if dt:
+>>>         drdt = -(stack ** 2) * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
+>>>         return rx, drdt
+>>>     if dx:
+>>>         drdx = 2 * params * stack * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
+>>>         return rx, drdx
+>>>     return rx
 
 Class Descriptions
 ^^^^^^^^^^^^^^^^^^^
@@ -87,6 +93,8 @@ Class Descriptions
 .. autoclass:: UQpy.Surrogates.Kriging
 	:members:
 
+.. [1] M. Grigoriu, “Reduced order models for random functions. Application to stochastic problems”, Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.
+.. [2] S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, "DACE -- A MATLAB Kriging Toolbox", Informatics and Mathematical Modelling, Version 2.0, 2002.
 
 .. toctree::
     :maxdepth: 2
