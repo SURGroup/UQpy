@@ -1,9 +1,10 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transformations &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -12,7 +13,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="StochasticProcess" href="stochastic_process.html" />
@@ -66,12 +67,12 @@ According  to  the Nataf transformation theory, a <cite>n</cite>-dimensional dep
 <div class="math notranslate nohighlight">
 \[X_{i}=F_i^{-1}(\Phi(Z_{i}))\]</div>
 <p>The <code class="docutils literal notranslate"><span class="pre">Forward</span></code> and <code class="docutils literal notranslate"><span class="pre">Inverse</span></code>  classes can be imported in a python script using the following command:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="n">Forward</span><span class="p">,</span> <span class="n">Inverse</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="kn">import</span> <span class="n">Forward</span><span class="p">,</span> <span class="n">Inverse</span>
 </pre></div>
 </div>
-<dl class="class">
+<dl class="py class">
 <dt id="UQpy.Transformations.Nataf">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Transformations.</code><code class="sig-name descname">Nataf</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Nataf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Nataf" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Transformations.</code><code class="sig-name descname">Nataf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dist_object</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Nataf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Nataf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transform random variables  using the <cite>Nataf</cite> transformation  and  calculate  the  correlation  distortion.
 (<a class="footnote-reference brackets" href="#id4" id="id2">1</a>, <a class="footnote-reference brackets" href="#id5" id="id3">2</a>).</p>
 <p>This is the parent class to all Nataf algorithms.</p>
@@ -92,8 +93,8 @@ Prob. Eng. Mech.,  vol. 24, pp. 312-320, 2009.</p>
 <h3>Forward<a class="headerlink" href="#forward" title="Permalink to this headline">¶</a></h3>
 <p>This is the class that runs the forward Nataf transformation.</p>
 <p>Usage example:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="n">Forward</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">Lognormal</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="kn">import</span> <span class="n">Forward</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="kn">import</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">Lognormal</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Gamma</span><span class="p">(</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Lognormal</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
 </pre></div>
@@ -136,9 +137,9 @@ Prob. Eng. Mech.,  vol. 24, pp. 312-320, 2009.</p>
 <span class="go">        [0.0656519  0.03850003]]</span>
 </pre></div>
 </div>
-<dl class="class">
+<dl class="py class">
 <dt id="UQpy.Transformations.Forward">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Transformations.</code><code class="sig-name descname">Forward</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">samples=None</em>, <em class="sig-param">cov=None</em>, <em class="sig-param">beta=1.0</em>, <em class="sig-param">itam_error1=0.001</em>, <em class="sig-param">itam_error2=0.01</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Forward" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Transformations.</code><code class="sig-name descname">Forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dist_object</span></em>, <em class="sig-param"><span class="n">samples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cov</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">beta</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">itam_error1</span><span class="o">=</span><span class="default_value">0.001</span></em>, <em class="sig-param"><span class="n">itam_error2</span><span class="o">=</span><span class="default_value">0.01</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class perform the Nataf transformation, i.e. transform arbitrarily distributed random variables
 to independent standard normal variables. This is a an child class of the <code class="docutils literal notranslate"><span class="pre">Nataf</span></code> class.</p>
 <p><strong>Inputs:</strong></p>
@@ -200,9 +201,9 @@ to independent standard normal variables. This is a an child class of the <code 
 </li>
 </ul>
 <p><strong>Methods:</strong></p>
-<dl class="method">
+<dl class="py method">
 <dt id="UQpy.Transformations.Forward.distortion_x_to_z">
-<em class="property">static </em><code class="sig-name descname">distortion_x_to_z</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">cov</em>, <em class="sig-param">beta=1.0</em>, <em class="sig-param">itam_error1=0.001</em>, <em class="sig-param">itam_error2=0.01</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Forward.distortion_x_to_z"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Forward.distortion_x_to_z" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">distortion_x_to_z</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dist_object</span></em>, <em class="sig-param"><span class="n">cov</span></em>, <em class="sig-param"><span class="n">beta</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">itam_error1</span><span class="o">=</span><span class="default_value">0.001</span></em>, <em class="sig-param"><span class="n">itam_error2</span><span class="o">=</span><span class="default_value">0.01</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Forward.distortion_x_to_z"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Forward.distortion_x_to_z" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a method to calculate the correlation matrix <span class="math notranslate nohighlight">\(\mathbf{C_Z}\)</span> of the standard normal random vector
 <span class="math notranslate nohighlight">\(\mathbf{z}\)</span>  given the correlation matrix <span class="math notranslate nohighlight">\(\mathbf{C_x}\)</span> of the random vector <span class="math notranslate nohighlight">\(\mathbf{x}\)</span>
 using the <cite>ITAM</cite> method (see <code class="docutils literal notranslate"><span class="pre">Utilities</span></code> class).</p>
@@ -250,9 +251,9 @@ using the <cite>ITAM</cite> method (see <code class="docutils literal notranslat
 </ul>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="UQpy.Transformations.Forward.jacobian_x_u">
-<em class="property">static </em><code class="sig-name descname">jacobian_x_u</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">x</em>, <em class="sig-param">z</em>, <em class="sig-param">cov</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Forward.jacobian_x_u"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Forward.jacobian_x_u" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">jacobian_x_u</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dist_object</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">z</span></em>, <em class="sig-param"><span class="n">cov</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Forward.jacobian_x_u"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Forward.jacobian_x_u" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a method to calculate the jacobian of the transformation <span class="math notranslate nohighlight">\(\mathbf{J}_{\mathbf{xu}}\)</span>.</p>
 <p>This is a static method, part of the <code class="docutils literal notranslate"><span class="pre">Nataf</span></code> class.</p>
 <p><strong>Inputs:</strong></p>
@@ -286,9 +287,9 @@ using the <cite>ITAM</cite> method (see <code class="docutils literal notranslat
 </ul>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="UQpy.Transformations.Forward.transform_x_to_z">
-<em class="property">static </em><code class="sig-name descname">transform_x_to_z</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">dist_object</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Forward.transform_x_to_z"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Forward.transform_x_to_z" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">transform_x_to_z</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">dist_object</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Forward.transform_x_to_z"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Forward.transform_x_to_z" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a method to transform a vector <span class="math notranslate nohighlight">\(\mathbf{x}\)</span> of  samples with marginal distributions
 <span class="math notranslate nohighlight">\(f_i(x_i)\)</span> and cumulative distributions <span class="math notranslate nohighlight">\(F_i(x_i)\)</span> to a vector <span class="math notranslate nohighlight">\(\mathbf{z}\)</span> of standard normal
 samples  according to: <span class="math notranslate nohighlight">\(Z_{i}=\Phi^{-1}(F_i(X_{i}))\)</span>, where <span class="math notranslate nohighlight">\(\Phi\)</span> is the cumulative
@@ -325,8 +326,8 @@ distribution function of a standard  normal variable.</p>
 <h3>Inverse<a class="headerlink" href="#inverse" title="Permalink to this headline">¶</a></h3>
 <p>This is the class that runs the inverse Nataf transformation.</p>
 <p>Usage example:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="n">Inverse</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">Lognormal</span><span class="p">,</span> <span class="n">Normal</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="kn">import</span> <span class="n">Inverse</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="kn">import</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">Lognormal</span><span class="p">,</span> <span class="n">Normal</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Gamma</span><span class="p">(</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Lognormal</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
@@ -370,9 +371,9 @@ distribution function of a standard  normal variable.</p>
 <span class="go">         [-0.26714931  0.00499148]]</span>
 </pre></div>
 </div>
-<dl class="class">
+<dl class="py class">
 <dt id="UQpy.Transformations.Inverse">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Transformations.</code><code class="sig-name descname">Inverse</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">samples=None</em>, <em class="sig-param">cov=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Inverse" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Transformations.</code><code class="sig-name descname">Inverse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dist_object</span></em>, <em class="sig-param"><span class="n">samples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cov</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Inverse" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class perform the inverse Nataf transformation, i.e. transform independent standard normal variables to
 arbitrarily distributed random variables. This is a an child class of the <code class="docutils literal notranslate"><span class="pre">Nataf</span></code> class.</p>
 <p><strong>Inputs:</strong></p>
@@ -417,9 +418,9 @@ arbitrarily distributed random variables. This is a an child class of the <code 
 </li>
 </ul>
 <p><strong>Methods:</strong></p>
-<dl class="method">
+<dl class="py method">
 <dt id="UQpy.Transformations.Inverse.distortion_z_to_x">
-<em class="property">static </em><code class="sig-name descname">distortion_z_to_x</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">cov</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Inverse.distortion_z_to_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Inverse.distortion_z_to_x" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">distortion_z_to_x</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dist_object</span></em>, <em class="sig-param"><span class="n">cov</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Inverse.distortion_z_to_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Inverse.distortion_z_to_x" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a method to calculate the correlation matrix <span class="math notranslate nohighlight">\(\mathbf{C_x}\)</span> of the random vector
 <span class="math notranslate nohighlight">\(\mathbf{x}\)</span>  given the correlation matrix <span class="math notranslate nohighlight">\(\mathbf{C_z}\)</span> of the standard normal random vector
 <span class="math notranslate nohighlight">\(\mathbf{z}\)</span> using the <cite>correlation_distortion</cite> method (see <code class="docutils literal notranslate"><span class="pre">Utilities</span></code> class). This is a static
@@ -449,9 +450,9 @@ method, part of the <code class="docutils literal notranslate"><span class="pre"
 </ul>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="UQpy.Transformations.Inverse.jacobian_u_x">
-<em class="property">static </em><code class="sig-name descname">jacobian_u_x</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">z</em>, <em class="sig-param">x</em>, <em class="sig-param">cov</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Inverse.jacobian_u_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Inverse.jacobian_u_x" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">jacobian_u_x</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dist_object</span></em>, <em class="sig-param"><span class="n">z</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">cov</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Inverse.jacobian_u_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Inverse.jacobian_u_x" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a method to calculate the jacobian of the transformation <span class="math notranslate nohighlight">\(\mathbf{J}_{\mathbf{ux}}\)</span>.</p>
 <p>This is a static method, part of the <code class="docutils literal notranslate"><span class="pre">Nataf</span></code> class.</p>
 <p><strong>Inputs:</strong></p>
@@ -485,9 +486,9 @@ method, part of the <code class="docutils literal notranslate"><span class="pre"
 </ul>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="UQpy.Transformations.Inverse.transform_z_to_x">
-<em class="property">static </em><code class="sig-name descname">transform_z_to_x</code><span class="sig-paren">(</span><em class="sig-param">z</em>, <em class="sig-param">dist_object</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Inverse.transform_z_to_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Inverse.transform_z_to_x" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">transform_z_to_x</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">z</span></em>, <em class="sig-param"><span class="n">dist_object</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Inverse.transform_z_to_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Inverse.transform_z_to_x" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a method to transform a vector <span class="math notranslate nohighlight">\(\mathbf{z}\)</span> of  standard normal samples to a vector
 <span class="math notranslate nohighlight">\(\mathbf{x}\)</span> of  samples with marginal distributions <span class="math notranslate nohighlight">\(f_i(x_i)\)</span> and cumulative distributions
 <span class="math notranslate nohighlight">\(F_i(x_i)\)</span> according to: <span class="math notranslate nohighlight">\(Z_{i}=F_i^{-1}(\Phi(Z_{i}))\)</span>, where <span class="math notranslate nohighlight">\(\Phi\)</span> is the cumulative
@@ -528,8 +529,8 @@ distribution function of a standard  normal variable.</p>
 \[\mathbf{z}^\intercal = \mathbf{Hu}^\intercal\]</div>
 <p>where <span class="math notranslate nohighlight">\(\mathbf{u}\)</span> is the vector of uncorrelated standard normal samples and  <span class="math notranslate nohighlight">\(\mathbf{H}\)</span> is the lower triangular matrix obtained from the <cite>Cholesky</cite> decomposition of the covariance matrix <span class="math notranslate nohighlight">\(\mathbf{C_Z}\)</span>, i.e. <span class="math notranslate nohighlight">\(\mathbf{C_Z}=\mathbf{H}\mathbf{H}^\intercal\)</span>.</p>
 <p>For example, if we want to correlate standard normal samples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="n">Correlate</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Normal</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="kn">import</span> <span class="n">Correlate</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="kn">import</span> <span class="n">Normal</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist1</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dist2</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 </pre></div>
@@ -547,9 +548,9 @@ distribution function of a standard  normal variable.</p>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/Transformations_correlate.png"><img alt="Correlated standard normal samples obtained with the ``Correlate`` class." class="align-center" src="_images/Transformations_correlate.png" style="width: 426.0px; height: 285.0px;" /></a>
-<dl class="class">
+<dl class="py class">
 <dt id="UQpy.Transformations.Correlate">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Transformations.</code><code class="sig-name descname">Correlate</code><span class="sig-paren">(</span><em class="sig-param">samples</em>, <em class="sig-param">cov</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Correlate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Correlate" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Transformations.</code><code class="sig-name descname">Correlate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">samples</span></em>, <em class="sig-param"><span class="n">cov</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Correlate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Correlate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Induce correlation to uncorrelated standard normal random variables.</p>
 <p><strong>Inputs:</strong></p>
 <ul class="simple">
@@ -586,9 +587,9 @@ distribution function of a standard  normal variable.</p>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/Transformations_uncorrelate.png"><img alt="Unorrelated standard normal samples obtained with the ``Uncorrelate`` class." class="align-center" src="_images/Transformations_uncorrelate.png" style="width: 407.0px; height: 280.0px;" /></a>
-<dl class="class">
+<dl class="py class">
 <dt id="UQpy.Transformations.Uncorrelate">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Transformations.</code><code class="sig-name descname">Uncorrelate</code><span class="sig-paren">(</span><em class="sig-param">samples</em>, <em class="sig-param">corr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Uncorrelate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Uncorrelate" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Transformations.</code><code class="sig-name descname">Uncorrelate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">samples</span></em>, <em class="sig-param"><span class="n">corr</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Uncorrelate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Uncorrelate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove correlation from correlated standard normal random variables.</p>
 <p><strong>Inputs:</strong></p>
 <ul class="simple">
@@ -696,7 +697,7 @@ distribution function of a standard  normal variable.</p>
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

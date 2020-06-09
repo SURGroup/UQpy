@@ -15,12 +15,13 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""
-This module contains functionality for all the surrogate methods supported in UQpy.
+"""This module contains functionality for all the surrogate methods supported in UQpy.
 
-* SROM: Estimate a discrete approximation for a continuous random variable using Stochastic Reduced Order Model.
+The module currently contains the following classes:
 
-* Kriging: Generates an approximates surrogate model using Kriging.
+- ``SROM``: Class to estimate a discrete approximation for a continuous random variable using Stochastic Reduced Order
+            Model.
+- ``Kriging``: Class to generate an approximate surrogate model using Kriging.
 """
 
 from UQpy.Distributions import *
@@ -38,16 +39,7 @@ class SROM:
     Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random
     quantity.
 
-    SROM generates a discrete approximation of continuous random variables. The probabilities/weights are
-    considered to be the parameters for the SROM and they can be obtained by minimizing the error between the
-    marginal distributions, first and second order moments about origin and correlation between random variables.
-
-    **References:**
-
-    1. M. Grigoriu, "Reduced order models for random functions. Application to stochastic problems",
-       Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.
-
-    **Input:**
+    **Inputs:**
 
     * **samples** (`ndarray`):
             An array/list of samples corresponding to each random variables.
@@ -102,10 +94,12 @@ class SROM:
     * **correlation** (`ndarray` or `list of floats`):
             Correlation matrix between random variables.
 
-    **Attributes:**
+    **Attribute:**
 
     * **sample_weights** (`ndarray`):
             The probabilities/weights defining discrete approximation of continuous random variables.
+
+    **Methods:**
 
     """
 
@@ -312,20 +306,14 @@ class SROM:
 
 class Kriging:
     """
-    Kriging generates an approximate surrogate model to predict the function value at unknown/new samples.
-
-    A Surrogate is generated using training data and information about regression and correlation model. A Maximum
-    Likelihood Estimator (MLE) is computed for hyperparameter of correlation model. This class create a method,
-    i.e. Krig.interpolate. This functions estimates the approximate functional value and mean square error at
-    unknown/new samples.
+    Kriging generates an approximate surrogate model to predict the function value at unknown/new samples, see ([1]_)
+    for detailed explanation.
 
     **References:**
-    1. S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, "DACE -- A MATLAB Kriging Toolbox", Informatics and
+    .. [1] S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, "DACE -- A MATLAB Kriging Toolbox", Informatics and
        Mathematical Modelling, Version 2.0, 2002.
 
-    **Input:**
-
-    **Attributes:**
+    **Inputs:**
 
     * **reg_model** (`str` or `function`):
             Regression model contains the basis function, which defines the trend of the model.

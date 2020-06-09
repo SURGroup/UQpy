@@ -1,9 +1,10 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UQpy.Reliability &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -12,7 +13,7 @@
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -57,10 +58,10 @@
 <span class="sd">* TaylorSeries: Estimate probability of failure using FORM or SORM.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">UQpy.RunModel</span> <span class="k">import</span> <span class="n">RunModel</span>
-<span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">MCMC</span>
-<span class="kn">from</span> <span class="nn">UQpy.Surrogates</span> <span class="k">import</span> <span class="n">Krig</span>
-<span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">UQpy.RunModel</span> <span class="kn">import</span> <span class="n">RunModel</span>
+<span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="kn">import</span> <span class="n">MCMC</span>
+<span class="kn">from</span> <span class="nn">UQpy.Surrogates</span> <span class="kn">import</span> <span class="n">Kriging</span>
+<span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 
 
@@ -165,7 +166,7 @@
 <span class="sd">    Last Modified: 1/23/20 by Michael D. Shields</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mcmc_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">samples_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">p_cond</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">nsamples_ss</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mcmc_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">samples_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">p_cond</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">nsamples_ss</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
                  <span class="n">max_level</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
         <span class="c1"># Initialize internal attributes from information passed in</span>
@@ -1098,9 +1099,8 @@
 <span class="sd">                     Probability distribution of each random variable. Must be an object of type</span>
 <span class="sd">                     ``DistributionContinuous1D`` or ``JointInd``.</span>
 
-<span class="sd">    * **model** (Object or a `callable` ):</span>
-<span class="sd">         The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or ``Krig`` (see ``Surrogates``</span>
-<span class="sd">         class) object or a `callable`.</span>
+<span class="sd">    * **runmodel_object** (``RunModel`` object or a `callable` ):</span>
+<span class="sd">         The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.</span>
 
 <span class="sd">    * **seed** (`ndarray`):</span>
 <span class="sd">         The initial starting point for the `Hasofer-Lind` algorithm. If provided, it should be a point in the parameter</span>
@@ -1134,7 +1134,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>  <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>  <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)):</span>
@@ -1145,7 +1145,15 @@
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">RunModel</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: A RunModel object is required for the model.&#39;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: A RunModel object is required for the model.&#39;</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">hessian</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="k">pass</span></div>
 
 
 <span class="k">class</span> <span class="nc">FORM</span><span class="p">(</span><span class="n">TaylorSeries</span><span class="p">):</span>
@@ -1201,9 +1209,9 @@
 
 <span class="sd">     &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>  <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>  <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">):</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>  <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>  <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">cov</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -1217,7 +1225,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="o">=</span> <span class="n">dist_object</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">=</span> <span class="n">n_iter</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">runmodel_object</span> <span class="o">=</span> <span class="n">runmodel_object</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
 
@@ -1235,6 +1243,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">u_check</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">g_check</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">g_record</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">()</span>
 
@@ -1252,7 +1262,7 @@
         <span class="n">u_check</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
 
         <span class="n">conv_flag</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="n">Forward</span><span class="p">,</span> <span class="n">Inverse</span>
+        <span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="kn">import</span> <span class="n">Forward</span><span class="p">,</span> <span class="n">Inverse</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># transform the initial point from the original space x to standard normal space u</span>
             <span class="n">u</span> <span class="o">=</span> <span class="n">Forward</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">cov</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">)</span><span class="o">.</span><span class="n">u</span>
@@ -1263,24 +1273,24 @@
         <span class="k">while</span> <span class="n">conv_flag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="c1"># FORM always starts from the standard normal space</span>
             <span class="n">obj</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">)</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span>
             <span class="c1"># Jux = obj.Jux</span>
             <span class="c1"># Jxu = np.linalg.inv(Jux)</span>
 
             <span class="c1"># 1. evaluate Limit State Function at the point</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">append_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-            <span class="n">qoi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">qoi_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">runmodel_object</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">append_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">qoi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">runmodel_object</span><span class="o">.</span><span class="n">qoi_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">g_record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">qoi</span><span class="p">)</span>
 
             <span class="c1"># 2. evaluate Limit State Function gradient at point u_k and direction cosines</span>
-            <span class="n">dg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="n">u</span><span class="p">,</span>  <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">,</span> <span class="n">dist_object</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span>
-                               <span class="n">run_form</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">dg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="n">u</span><span class="p">,</span>  <span class="n">runmodel_object</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">runmodel_object</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">,</span>
+                               <span class="n">dist_object</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">)</span>
 
             <span class="c1"># dg_record.append(np.dot(dg[0, :], jacobi_x_to_u)) # use this if the input in gradient function is x</span>
             <span class="n">dg_record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dg</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:])</span>
             <span class="n">norm_grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">dg_record</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
-            <span class="n">alpha</span> <span class="o">=</span> <span class="o">-</span> <span class="n">dg_record</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">/</span> <span class="n">norm_grad</span>
-            <span class="n">alpha_record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="o">-</span> <span class="n">dg_record</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">/</span> <span class="n">norm_grad</span>
+            <span class="n">alpha_record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">qoi</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -1288,8 +1298,8 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">g0</span> <span class="o">=</span> <span class="n">qoi</span>
 
-            <span class="n">u_check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">alpha</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">u</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-                                          <span class="o">*</span> <span class="n">alpha</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+            <span class="n">u_check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">u</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                                          <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
             <span class="n">g_check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">qoi</span> <span class="o">/</span> <span class="n">g0</span><span class="p">))</span>
 
             <span class="k">if</span> <span class="n">u_check</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="ow">and</span> <span class="n">g_check</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
@@ -1298,10 +1308,10 @@
                 <span class="n">conv_flag</span> <span class="o">=</span> <span class="mi">1</span>
 
             <span class="n">u_record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-            <span class="n">x_record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x_record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">conv_flag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">direction</span> <span class="o">=</span> <span class="p">(</span><span class="n">qoi</span> <span class="o">/</span> <span class="n">norm_grad</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">alpha</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">u</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span> <span class="o">*</span> \
-                            <span class="n">alpha</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">u</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">direction</span> <span class="o">=</span> <span class="p">(</span><span class="n">qoi</span> <span class="o">/</span> <span class="n">norm_grad</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">u</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span> <span class="o">*</span> \
+                            <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">u</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
                 <span class="n">u_new</span> <span class="o">=</span> <span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">direction</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
                 <span class="n">u</span> <span class="o">=</span> <span class="n">u_new</span>
                 <span class="n">k</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span>
@@ -1309,12 +1319,11 @@
         <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Maximum number of iterations </span><span class="si">{0}</span><span class="s1"> was reached before convergence.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">HL_beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">alpha</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">HL_beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">DesignPoint_U</span> <span class="o">=</span> <span class="n">u</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">DesignPoint_X</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">DesignPoint_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">Prob_FORM</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">HL_beta</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span> <span class="o">=</span> <span class="n">k</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">g_record</span> <span class="o">=</span> <span class="n">g_record</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">u_record</span> <span class="o">=</span> <span class="n">u_record</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">x_record</span> <span class="o">=</span> <span class="n">x_record</span>
@@ -1324,11 +1333,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">g_check</span> <span class="o">=</span> <span class="n">g_check</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">df_step</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">run_form</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">read_qoi</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">df_step</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        A method to estimate the gradients (1st, 2nd, mixed) of a function using a finite difference scheme. First</span>
-<span class="sd">        order gradients are calculated using forward finite differences. This is a static method, part of the</span>
-<span class="sd">        ``Form`` class.</span>
+<span class="sd">        A method to estimate the gradients (1st, 2nd, mixed) of a function using a finite difference scheme in the</span>
+<span class="sd">        standard normal space. First order gradients are calculated using central finite differences. This is a static</span>
+<span class="sd">        method, part of the ``Form`` class.</span>
 
 <span class="sd">        **Inputs:**</span>
 
@@ -1336,16 +1345,8 @@
 <span class="sd">                Probability distribution of each random variable. Must be an object of type</span>
 <span class="sd">                ``DistributionContinuous1D`` or ``JointInd``.</span>
 
-<span class="sd">        * **model** (Object or a `callable` ):</span>
-<span class="sd">            The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or ``Krig`` (see ``Surrogates``</span>
-<span class="sd">            class) object or a `callable`.</span>
-
-<span class="sd">        * **run_form** (Boolean):</span>
-<span class="sd">            If the ``gradient`` method is used in the framework of FORM, then the input point is in the standard</span>
-<span class="sd">            normal space **U**. In this case, the ``Nataf`` class is used to transform the point in the parameter</span>
-<span class="sd">            space so it can be used with the model.</span>
-
-<span class="sd">            Default: False</span>
+<span class="sd">        * **runmodel_object** (``RunModel`` object or a `callable` ):</span>
+<span class="sd">            The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.</span>
 
 <span class="sd">        * **cov** (`ndarray`):</span>
 <span class="sd">            The correlation  structure (:math:`\mathbf{C_X}`) of the random vector **X** (optional).</span>
@@ -1393,49 +1394,45 @@
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">df_step</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">df_step</span> <span class="o">=</span> <span class="p">[</span><span class="n">df_step</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">*</span> <span class="n">dimension</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Krig</span><span class="p">):</span>
-            <span class="n">qoi</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">RunModel</span><span class="p">)</span> <span class="ow">and</span> <span class="n">read_qoi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">qoi</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">qoi_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">RunModel</span><span class="p">)</span> <span class="ow">and</span> <span class="n">read_qoi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">qoi</span> <span class="o">=</span> <span class="n">read_qoi</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">callable</span><span class="p">):</span>
-            <span class="n">qoi</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runmodel_object</span><span class="p">,</span> <span class="n">RunModel</span><span class="p">)</span> <span class="ow">or</span> <span class="n">callable</span><span class="p">(</span><span class="n">runmodel_object</span><span class="p">):</span>
+            <span class="k">pass</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A RunModel/Krig/callable object must be provided as model.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A RunModel/callable object must be provided as model.&#39;</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
             <span class="k">def</span> <span class="nf">func_eval</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">Krig</span><span class="p">):</span>
-                    <span class="k">return</span> <span class="n">m</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">m</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">RunModel</span><span class="p">):</span>
                     <span class="n">m</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">append_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">qoi_list</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="n">m</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
             <span class="k">return</span> <span class="n">func_eval</span>
 
-        <span class="n">f_eval</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">f_eval</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="n">runmodel_object</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">order</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;first&#39;</span><span class="p">:</span>
+
             <span class="n">du_dj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">point</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dimension</span><span class="p">])</span>
 
             <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dimension</span><span class="p">):</span>
                 <span class="n">eps_i</span> <span class="o">=</span> <span class="n">df_step</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
                 <span class="n">u_i1_j</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
                 <span class="n">u_i1_j</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">u_i1_j</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">+</span> <span class="n">eps_i</span>
+                <span class="n">u_1i_j</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">u_1i_j</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">u_1i_j</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">-</span> <span class="n">eps_i</span>
 
-                <span class="k">if</span> <span class="n">run_form</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-                    <span class="n">obj</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u_i1_j</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
-                    <span class="n">temp_x_i1_j</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span>
-                    <span class="n">x_i1_j</span> <span class="o">=</span> <span class="n">temp_x_i1_j</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">obj_plus</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u_i1_j</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
+                <span class="n">temp_x_i1_j</span> <span class="o">=</span> <span class="n">obj_plus</span><span class="o">.</span><span class="n">x</span>
+                <span class="n">x_i1_j</span> <span class="o">=</span> <span class="n">temp_x_i1_j</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">qoi_plus</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">x_i1_j</span><span class="p">)</span>
 
-                    <span class="n">qoi_plus</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">x_i1_j</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">qoi_plus</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">u_i1_j</span><span class="p">)</span>
+                <span class="n">obj_minus</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u_1i_j</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
+                <span class="n">temp_x_1i_j</span> <span class="o">=</span> <span class="n">obj_minus</span><span class="o">.</span><span class="n">x</span>
+                <span class="n">x_1i_j</span> <span class="o">=</span> <span class="n">temp_x_1i_j</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">qoi_minus</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">x_1i_j</span><span class="p">)</span>
 
-                <span class="n">du_dj</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">qoi_plus</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">qoi</span><span class="p">)</span> <span class="o">/</span> <span class="n">eps_i</span><span class="p">)</span>
+                <span class="n">du_dj</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">qoi_plus</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">qoi_minus</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">eps_i</span><span class="p">))</span>
 
             <span class="k">return</span> <span class="n">du_dj</span>
 
@@ -1448,21 +1445,18 @@
                 <span class="n">u_1i_j</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
                 <span class="n">u_1i_j</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">u_1i_j</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">-</span> <span class="n">df_step</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
 
-                <span class="k">if</span> <span class="n">run_form</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-                    <span class="n">obj</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u_i1_j</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
-                    <span class="n">temp_x_i1_j</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span>
-                    <span class="n">x_i1_j</span> <span class="o">=</span> <span class="n">temp_x_i1_j</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u_i1_j</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
+                <span class="n">temp_x_i1_j</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span>
+                <span class="n">x_i1_j</span> <span class="o">=</span> <span class="n">temp_x_i1_j</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
-                    <span class="n">obj</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u_1i_j</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
-                    <span class="n">temp_x_1i_j</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span>
-                    <span class="n">x_1i_j</span> <span class="o">=</span> <span class="n">temp_x_1i_j</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u_1i_j</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
+                <span class="n">temp_x_1i_j</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span>
+                <span class="n">x_1i_j</span> <span class="o">=</span> <span class="n">temp_x_1i_j</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
-                    <span class="n">qoi_plus</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">x_i1_j</span><span class="p">)</span>
-                    <span class="n">qoi_minus</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">x_1i_j</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">qoi_plus</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">u_i1_j</span><span class="p">)</span>
-                    <span class="n">qoi_minus</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">u_1i_j</span><span class="p">)</span>
-                <span class="n">d2u_dj</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">qoi_plus</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">qoi</span> <span class="o">+</span> <span class="n">qoi_minus</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">df_step</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">*</span><span class="n">df_step</span><span class="p">[</span><span class="n">ii</span><span class="p">]))</span>
+                <span class="n">qoi_plus</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">x_i1_j</span><span class="p">)</span>
+                <span class="n">qoi_minus</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">x_1i_j</span><span class="p">)</span>
+
+                <span class="n">d2u_dj</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">qoi_plus</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">qoi</span> <span class="o">+</span> <span class="n">qoi_minus</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">df_step</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">*</span> <span class="n">df_step</span><span class="p">[</span><span class="n">ii</span><span class="p">]))</span>
 
             <span class="k">return</span> <span class="n">d2u_dj</span>
 
@@ -1493,32 +1487,26 @@
                 <span class="n">u_1i_1j</span><span class="p">[:,</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">-=</span> <span class="n">eps_i1_0</span>
                 <span class="n">u_1i_1j</span><span class="p">[:,</span> <span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">-=</span> <span class="n">eps_i1_1</span>
 
-                <span class="k">if</span> <span class="n">run_form</span><span class="p">:</span>
-                    <span class="n">obj</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u_i1_j1</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
-                    <span class="n">temp_x_i1_j1</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span>
-                    <span class="n">x_i1_j1</span> <span class="o">=</span> <span class="n">temp_x_i1_j1</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u_i1_j1</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
+                <span class="n">temp_x_i1_j1</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span>
+                <span class="n">x_i1_j1</span> <span class="o">=</span> <span class="n">temp_x_i1_j1</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
-                    <span class="n">obj</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u_i1_1j</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
-                    <span class="n">temp_x_i1_1j</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span>
-                    <span class="n">x_i1_1j</span> <span class="o">=</span> <span class="n">temp_x_i1_1j</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u_i1_1j</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
+                <span class="n">temp_x_i1_1j</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span>
+                <span class="n">x_i1_1j</span> <span class="o">=</span> <span class="n">temp_x_i1_1j</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
-                    <span class="n">obj</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u_1i_j1</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
-                    <span class="n">temp_x_1i_j1</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span>
-                    <span class="n">x_1i_j1</span> <span class="o">=</span> <span class="n">temp_x_1i_j1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u_1i_j1</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
+                <span class="n">temp_x_1i_j1</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span>
+                <span class="n">x_1i_j1</span> <span class="o">=</span> <span class="n">temp_x_1i_j1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
-                    <span class="n">obj</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u_1i_1j</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
-                    <span class="n">temp_x_1i_1j</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span>
-                    <span class="n">x_1i_1j</span> <span class="o">=</span> <span class="n">temp_x_1i_1j</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">u_1i_1j</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
+                <span class="n">temp_x_1i_1j</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span>
+                <span class="n">x_1i_1j</span> <span class="o">=</span> <span class="n">temp_x_1i_1j</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
-                    <span class="n">qoi_0</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">x_i1_j1</span><span class="p">)</span>
-                    <span class="n">qoi_1</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">x_i1_1j</span><span class="p">)</span>
-                    <span class="n">qoi_2</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">x_1i_j1</span><span class="p">)</span>
-                    <span class="n">qoi_3</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">x_1i_1j</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">qoi_0</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">u_i1_j1</span><span class="p">)</span>
-                    <span class="n">qoi_1</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">u_i1_1j</span><span class="p">)</span>
-                    <span class="n">qoi_2</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">u_1i_j1</span><span class="p">)</span>
-                    <span class="n">qoi_3</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">u_1i_1j</span><span class="p">)</span>
+                <span class="n">qoi_0</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">x_i1_j1</span><span class="p">)</span>
+                <span class="n">qoi_1</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">x_i1_1j</span><span class="p">)</span>
+                <span class="n">qoi_2</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">x_1i_j1</span><span class="p">)</span>
+                <span class="n">qoi_3</span> <span class="o">=</span> <span class="n">f_eval</span><span class="p">(</span><span class="n">x_1i_1j</span><span class="p">)</span>
 
                 <span class="n">d2u_dij</span><span class="p">[:,</span> <span class="n">count</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">qoi_0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">qoi_3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">qoi_1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">qoi_2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">eps_i1_0</span> <span class="o">*</span> <span class="n">eps_i1_1</span><span class="p">))</span>
 
@@ -1546,15 +1534,15 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">):</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
 
-        <span class="n">obj</span> <span class="o">=</span> <span class="n">FORM</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="n">n_iter</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">FORM</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="o">=</span><span class="n">runmodel_object</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="n">n_iter</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">dimension</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">alpha</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">DesignPoint_U</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">DesignPoint_U</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">runmodel_object</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cov</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">cov</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="o">=</span> <span class="n">dist_object</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dg_record</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">dg_record</span>
@@ -1583,14 +1571,14 @@
 
         <span class="n">r1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fliplr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
         <span class="n">hessian_g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DesignPoint_U</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-                                 <span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">g_record</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">run_form</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">g_record</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">matrix_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span> <span class="n">hessian_g</span><span class="p">),</span> <span class="n">r1</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dg_record</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">kappa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">matrix_b</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Prob_SORM</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">HL_beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">HL_beta</span> <span class="o">*</span> <span class="n">kappa</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">beta_SORM</span> <span class="o">=</span> <span class="o">-</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Prob_SORM</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">hessian</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="n">dist_obj</span><span class="p">,</span> <span class="n">read_qoi</span><span class="p">,</span> <span class="n">df_step</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">run_form</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">hessian</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="n">dist_obj</span><span class="p">,</span> <span class="n">qoi</span><span class="p">,</span> <span class="n">df_step</span><span class="o">=</span><span class="mf">0.001</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A function to calculate the hessian matrix  using finite differences. The Hessian matrix is a  square matrix</span>
 <span class="sd">        of second-order partial derivatives of a scalar-valued function. This is a static method, part of the</span>
@@ -1602,16 +1590,8 @@
 <span class="sd">                Probability distribution of each random variable. Must be an object of type</span>
 <span class="sd">                ``DistributionContinuous1D`` or ``JointInd``.</span>
 
-<span class="sd">        * **model** (Object or a `callable` ):</span>
-<span class="sd">            The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or ``Krig`` (see ``Surrogates``</span>
-<span class="sd">            class) object or a `callable`.</span>
-
-<span class="sd">        * **run_form** (Boolean):</span>
-<span class="sd">            If the ``gradient`` method is used in the framework of FORM, then the input point is in the standard</span>
-<span class="sd">            normal space **U**. In this case, the ``Nataf`` class is used to transform the point in the parameter</span>
-<span class="sd">            space so it can be used with the model.</span>
-
-<span class="sd">            Default: False</span>
+<span class="sd">        * **runmodel_object** (Object or a `callable` ):</span>
+<span class="sd">            The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.</span>
 
 <span class="sd">        * **cov** (`ndarray`):</span>
 <span class="sd">            The correlation  structure (:math:`\mathbf{C_X}`) of the random vector **X** (optional).</span>
@@ -1637,12 +1617,11 @@
         <span class="n">dimension</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
         <span class="n">dg_second</span> <span class="o">=</span> <span class="n">FORM</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;second&#39;</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="n">point</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
-                                  <span class="n">df_step</span><span class="o">=</span><span class="n">df_step</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">dist_object</span><span class="o">=</span><span class="n">dist_obj</span><span class="p">,</span>
-                                  <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">,</span> <span class="n">read_qoi</span><span class="o">=</span><span class="n">read_qoi</span><span class="p">,</span> <span class="n">run_form</span><span class="o">=</span><span class="n">run_form</span><span class="p">)</span>
+                                  <span class="n">runmodel_object</span><span class="o">=</span><span class="n">runmodel_object</span><span class="p">,</span> <span class="n">dist_object</span><span class="o">=</span><span class="n">dist_obj</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">,</span>
+                                  <span class="n">df_step</span><span class="o">=</span><span class="n">df_step</span><span class="p">,</span> <span class="n">qoi</span><span class="o">=</span><span class="n">qoi</span><span class="p">)</span>
 
         <span class="n">dg_mixed</span> <span class="o">=</span> <span class="n">FORM</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;mixed&#39;</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="n">point</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
-                                 <span class="n">df_step</span><span class="o">=</span><span class="n">df_step</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">dist_object</span><span class="o">=</span><span class="n">dist_obj</span><span class="p">,</span>
-                                 <span class="n">read_qoi</span><span class="o">=</span><span class="n">read_qoi</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">,</span> <span class="n">run_form</span><span class="o">=</span><span class="n">run_form</span><span class="p">)</span>
+                                 <span class="n">df_step</span><span class="o">=</span><span class="n">df_step</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="o">=</span><span class="n">runmodel_object</span><span class="p">,</span> <span class="n">dist_object</span><span class="o">=</span><span class="n">dist_obj</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
 
         <span class="n">hessian</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">dg_second</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:])</span>
         <span class="kn">import</span> <span class="nn">itertools</span>
@@ -1728,7 +1707,7 @@
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
