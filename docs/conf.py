@@ -60,7 +60,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 language = None
 pygments_style = None
 
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 html_theme_options = {
     "github_user": "SURG",
