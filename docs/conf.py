@@ -64,6 +64,7 @@ html_theme = 'alabaster'
 
 html_theme_options = {
     "github_user": "SURG",
+    "display_github": True,
     "github_repo": "UQpy",
     "github_banner": True,
     "logo": "logo.jpg",
