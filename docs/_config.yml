@@ -1,10 +1,4 @@
 include:
-    - _images
-    - _sources
     - _static
-    - _modules
     - _templates
-
-
-theme: jekyll-theme-cayman
 
