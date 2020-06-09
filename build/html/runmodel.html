@@ -1,19 +1,18 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RunModel &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Distributions" href="distributions.html" />
@@ -158,7 +157,7 @@ the command line as</p>
                   <span class="s2">&quot;.m .&quot;</span>
    <span class="n">command2</span> <span class="o">=</span> <span class="s2">&quot;matlab -nosplash -nojvm -nodisplay -nodesktop -r</span>
                   <span class="s1">&#39;run matlab_model_&quot; + str(sample_index + 1) + &quot;.m;</span>
-                              <span class="n">exit</span><span class="s1">&#39;&quot;</span>
+                              <span class="nb">exit</span><span class="s1">&#39;&quot;</span>
    <span class="c1"># Rename the output file</span>
    <span class="n">command3</span> <span class="o">=</span> <span class="s2">&quot;mv y.txt y_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">sample_index</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.txt&quot;</span>
 
@@ -272,9 +271,9 @@ the command line as</p>
 </div>
 <div class="section" id="runmodel-class">
 <h2>RunModel Class<a class="headerlink" href="#runmodel-class" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.RunModel.RunModel">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.RunModel.</code><code class="sig-name descname">RunModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">samples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">model_script</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">model_object_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">input_template</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">var_names</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_script</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_object_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ntasks</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">cores_per_task</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">nodes</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">cluster</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">resume</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">model_dir</span><span class="o">=</span><span class="default_value">'Model_Runs'</span></em>, <em class="sig-param"><span class="n">fmt</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">separator</span><span class="o">=</span><span class="default_value">', '</span></em>, <em class="sig-param"><span class="n">vec</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">delete_files</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/RunModel.html#RunModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.RunModel.RunModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.RunModel.</code><code class="sig-name descname">RunModel</code><span class="sig-paren">(</span><em class="sig-param">samples=None</em>, <em class="sig-param">model_script=None</em>, <em class="sig-param">model_object_name=None</em>, <em class="sig-param">input_template=None</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">output_script=None</em>, <em class="sig-param">output_object_name=None</em>, <em class="sig-param">ntasks=1</em>, <em class="sig-param">cores_per_task=1</em>, <em class="sig-param">nodes=1</em>, <em class="sig-param">cluster=False</em>, <em class="sig-param">resume=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">model_dir='Model_Runs'</em>, <em class="sig-param">fmt=None</em>, <em class="sig-param">separator='</em>, <em class="sig-param">'</em>, <em class="sig-param">vec=True</em>, <em class="sig-param">delete_files=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/RunModel.html#RunModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.RunModel.RunModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a computational model at specified sample points.</p>
 <p>This class is the interface between <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> and computational models. The model is called in a Python script whose
 name must be passed as one the arguments to the <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> call. If the model is in Python, <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> import the
@@ -489,9 +488,9 @@ evaluations.</p>
 </li>
 </ul>
 <p><strong>Methods</strong></p>
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.RunModel.RunModel.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">samples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">append_samples</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/RunModel.html#RunModel.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.RunModel.RunModel.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">samples=None</em>, <em class="sig-param">append_samples=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/RunModel.html#RunModel.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.RunModel.RunModel.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Execute a computational model at given sample values.</p>
 <p>If <cite>samples</cite> are passed when defining the <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is called automatically.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method may also be called directly after defining the <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object.</p>
@@ -579,7 +578,7 @@ existing ones.</p>
 <li class="toctree-l1"><a class="reference internal" href="surrogates.html">Surrogates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reliability.html">Reliability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">Dimension reduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">DimensionReduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="news.html">News</a></li>
 </ul>
@@ -602,7 +601,7 @@ existing ones.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -611,7 +610,7 @@ existing ones.</p>
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

@@ -1,19 +1,18 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StochasticProcess &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Surrogates" href="surrogates.html" />
@@ -36,9 +35,9 @@
             
   <div class="section" id="stochasticprocess">
 <span id="stochastic-process"></span><h1>StochasticProcess<a class="headerlink" href="#stochasticprocess" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.StochasticProcess.SRM">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.StochasticProcess.</code><code class="sig-name descname">SRM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nsamples</span></em>, <em class="sig-param"><span class="n">S</span></em>, <em class="sig-param"><span class="n">dw</span></em>, <em class="sig-param"><span class="n">nt</span></em>, <em class="sig-param"><span class="n">nw</span></em>, <em class="sig-param"><span class="n">case</span><span class="o">=</span><span class="default_value">'uni'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/StochasticProcess.html#SRM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.StochasticProcess.SRM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.StochasticProcess.</code><code class="sig-name descname">SRM</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em>, <em class="sig-param">S</em>, <em class="sig-param">dw</em>, <em class="sig-param">nt</em>, <em class="sig-param">nw</em>, <em class="sig-param">case='uni'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/StochasticProcess.html#SRM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.StochasticProcess.SRM" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class to simulate Stochastic Processes from a given power spectrum density based on the Spectral Representation
 Method. This class can simulate both uni-variate and multi-variate multi-dimensional Stochastic Processes. Uses
 Singular Value Decomposition as opposed to Cholesky Decomposition to be more robust with near-Positive Definite
@@ -137,7 +136,7 @@ multi-dimensional Power Spectra.</p>
 <li class="toctree-l1"><a class="reference internal" href="surrogates.html">Surrogates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reliability.html">Reliability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">Dimension reduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">DimensionReduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="news.html">News</a></li>
 </ul>
@@ -160,7 +159,7 @@ multi-dimensional Power Spectra.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -169,7 +168,7 @@ multi-dimensional Power Spectra.</p>
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

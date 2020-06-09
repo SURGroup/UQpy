@@ -1,19 +1,18 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SampleMethods &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Transformations" href="transformations.html" />
@@ -49,9 +48,9 @@
 <p>The <code class="docutils literal notranslate"><span class="pre">MCS</span></code> class generates random samples from a specified probability distribution(s).  The <code class="docutils literal notranslate"><span class="pre">MCS</span></code> class utilizes the <code class="docutils literal notranslate"><span class="pre">Distributions</span></code> class to define probability distributions.  The advantage of using the <code class="docutils literal notranslate"><span class="pre">MCS</span></code> class for <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> operations, as opposed to simply generating samples with the <code class="docutils literal notranslate"><span class="pre">scipy.stats</span></code> package, is that it allows building an object containing the samples and their distributions for integration with other <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> modules.</p>
 <div class="section" id="class-descriptions">
 <h3>Class Descriptions<a class="headerlink" href="#class-descriptions" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.SampleMethods.MCS">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MCS</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dist_object</span></em>, <em class="sig-param"><span class="n">nsamples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MCS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform Monte Carlo sampling (MCS) of random variables.</p>
 <p><strong>Input:</strong></p>
 <ul>
@@ -104,9 +103,9 @@ object itself can be passed directly.</p>
 </li>
 </ul>
 <p><strong>Methods</strong></p>
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.MCS.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nsamples</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCS.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCS.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCS.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCS.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Execute the random sampling in the <code class="docutils literal notranslate"><span class="pre">MCS</span></code> class.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is the function that performs random sampling in the <code class="docutils literal notranslate"><span class="pre">MCS</span></code> class. If <cite>nsamples</cite> is
 provided, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically called when the <code class="docutils literal notranslate"><span class="pre">MCS</span></code> object is defined. The user may also call
@@ -134,7 +133,7 @@ object itself can be passed directly.</p>
 class.</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.MCS.transform_u01">
 <code class="sig-name descname">transform_u01</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCS.transform_u01"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCS.transform_u01" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transform random samples to uniform on the unit hypercube.</p>
@@ -156,7 +155,7 @@ the <code class="docutils literal notranslate"><span class="pre">MCS</span></cod
 <div class="section" id="adding-new-latin-hypercube-design-criteria">
 <h3>Adding New Latin Hypercube Design Criteria<a class="headerlink" href="#adding-new-latin-hypercube-design-criteria" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">LHS</span></code> class offers a variety of methods for pairing the samples in a Latin hypercube design. These are specified by the <cite>criterion</cite> parameter (i.e. ‘random’, ‘centered’, ‘minmax’, ‘correlate’). However, adding a new method is straightforward. This is done by creating a new method that contains the algorithm for pairing the samples. This method takes as input the randomly generated samples in equal probability bins in each dimension and returns a set of samples that is paired according to the user’s desired criterion. The user may also pass criterion-specific parameters into the custom method. These parameters are input to the <code class="docutils literal notranslate"><span class="pre">LHS</span></code> class through the <cite>**kwargs</cite>. The output of this function should be a numpy array of at least two-dimensions with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined criterion is given below:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">criterion</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">criterion</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">lhs_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
 <span class="gp">&gt;&gt;&gt; </span>            <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -167,9 +166,9 @@ the <code class="docutils literal notranslate"><span class="pre">MCS</span></cod
 </div>
 <div class="section" id="id2">
 <h3>Class Descriptions<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.SampleMethods.LHS">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">LHS</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dist_object</span></em>, <em class="sig-param"><span class="n">nsamples</span></em>, <em class="sig-param"><span class="n">criterion</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">LHS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">nsamples</em>, <em class="sig-param">criterion=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform Latin hypercube sampling (MCS) of random variables.</p>
 <p><strong>Input:</strong></p>
 <ul>
@@ -235,9 +234,9 @@ object itself can be passed directly.</p>
 </li>
 </ul>
 <p><strong>Methods</strong></p>
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.LHS.centered">
-<em class="property">static </em><code class="sig-name descname">centered</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">samples</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">a</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">b</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.centered"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.centered" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">centered</code><span class="sig-paren">(</span><em class="sig-param">samples</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">a=None</em>, <em class="sig-param">b=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.centered"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.centered" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method for generating a Latin hypercube design with samples centered in the bins.</p>
 <p><strong>Input:</strong></p>
 <ul class="simple">
@@ -272,9 +271,9 @@ object itself can be passed directly.</p>
 </ul>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.LHS.correlate">
-<code class="sig-name descname">correlate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">samples</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">iterations</span><span class="o">=</span><span class="default_value">100</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.correlate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.correlate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">correlate</code><span class="sig-paren">(</span><em class="sig-param">samples</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">iterations=100</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.correlate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.correlate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method for generating a Latin hypercube design that aims to minimize spurious correlations.</p>
 <p><strong>Input:</strong></p>
 <ul class="simple">
@@ -304,9 +303,9 @@ object itself can be passed directly.</p>
 </ul>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.LHS.max_min">
-<code class="sig-name descname">max_min</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">samples</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">iterations</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'euclidean'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.max_min"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.max_min" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">max_min</code><span class="sig-paren">(</span><em class="sig-param">samples</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">iterations=100</em>, <em class="sig-param">metric='euclidean'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.max_min"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.max_min" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method for generating a Latin hypercube design that aims to maximize the minimum sample distance.</p>
 <p><strong>Input:</strong></p>
 <ul class="simple">
@@ -351,9 +350,9 @@ object itself can be passed directly.</p>
 </ul>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.LHS.random">
-<em class="property">static </em><code class="sig-name descname">random</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">samples</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.random"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.random" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">random</code><span class="sig-paren">(</span><em class="sig-param">samples</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.random"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.random" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method for generating a Latin hypercube design by sampling randomly inside each bin.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">random</span></code> method takes a set of samples drawn randomly from within the Latin hypercube bins and performs a
 random shuffling of them to pair the variables.</p>
@@ -380,9 +379,9 @@ random shuffling of them to pair the variables.</p>
 </ul>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.LHS.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nsamples</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Execute the random sampling in the <code class="docutils literal notranslate"><span class="pre">LHS</span></code> class.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is the function that performs random sampling in the <code class="docutils literal notranslate"><span class="pre">LHS</span></code> class. If <cite>nsamples</cite> is
 provided, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically called when the <code class="docutils literal notranslate"><span class="pre">LHS</span></code> object is defined. The user may also call
@@ -407,851 +406,9 @@ of the <code class="docutils literal notranslate"><span class="pre">LHS</span></
 
 </div>
 </div>
-<div class="section" id="sts">
-<h2>STS<a class="headerlink" href="#sts" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">STS</span></code> class generates random samples from a specified probability distribution(s) using Stratified sampling. It is a variance reduction sampling technique. It aims to distribute random samples on the complete sample space. The sample space is divided into a set of space-filling and disjoint regions, called strata and samples are generated inside each strata.</p>
-<div class="section" id="id3">
-<h3>Class Descriptions<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
-<dt id="UQpy.SampleMethods.STS">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">STS</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dist_object</span></em>, <em class="sig-param"><span class="n">nsamples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sts_design</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sts_criterion</span><span class="o">=</span><span class="default_value">'random'</span></em>, <em class="sig-param"><span class="n">stype</span><span class="o">=</span><span class="default_value">'Rectangular'</span></em>, <em class="sig-param"><span class="n">input_file</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_iters</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#STS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.STS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate samples from an assigned probability density function using Stratified Sampling (<a href="#id32"><span class="problematic" id="id4">[1]_</span></a>).</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id5"><span class="brackets">1</span></dt>
-<dd><p>M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, “Refined Stratified Sampling for efficient Monte
-Carlo based uncertainty quantification,” Reliability Engineering and System Safety,vol.142, pp.310-325,2015.</p>
-</dd>
-</dl>
-<p><strong>Inputs:</strong></p>
-<ul>
-<li><dl class="simple">
-<dt><strong>dist_object</strong> ((list of) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>List of <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> objects corresponding to each random variable.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Total number of samples. Required for voronoi stratification.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>sts_design</strong> (<cite>list</cite>):</dt><dd><p>List of integers specifiying the number of strata in each dimension. Required for rectangular
-stratification.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>sts_criterion</strong> (<cite>str</cite>):</dt><dd><p>Random or Centered samples inside a rectangular strata.
-Options:</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>‘random’ - completely random.</p></li>
-<li><p>‘centered’ - points only at the centre.</p></li>
-</ol>
-</div></blockquote>
-<p>Default: ‘random’</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>stype</strong> (<cite>str</cite>):</dt><dd><p>Type of the strata (Rectangular or Voronoi).</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>n_iters</strong> (<cite>int</cite>):</dt><dd><p>Default: 20</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>input_file</strong> (<cite>str</cite>):</dt><dd><p>File path to input file specifying stratum origins and stratum widths.</p>
-<p>Default: None.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>random_state</strong> (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>verbose</strong> (<cite>Boolean</cite>):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
-<p>Default value: False</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Attributes:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the generated samples.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>samplesU01</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the generated samples on [0, 1]^dimension.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>strata</strong> (<cite>class</cite> object):</dt><dd><p>Instance of the class SampleMethods.Strata.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Methods:</strong></p>
-<dl class="py method">
-<dt id="UQpy.SampleMethods.STS.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nsamples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sts_design</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">input_file</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#STS.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.STS.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Execute the random sampling in the <code class="docutils literal notranslate"><span class="pre">STS</span></code> class.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is the function that performs random sampling in the <code class="docutils literal notranslate"><span class="pre">STS</span></code> class. If <cite>nsamples</cite>,
-<cite>sts_design</cite> or <cite>input_file</cite> is provided, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically called when the <code class="docutils literal notranslate"><span class="pre">STS</span></code> object is
-defined. The user may also call the <code class="docutils literal notranslate"><span class="pre">run</span></code> method directly to generate samples. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the
-<code class="docutils literal notranslate"><span class="pre">STS</span></code> class can be invoked many times and each time the generated samples are appended to the existing samples.</p>
-<p><strong>Inputs:</strong></p>
-<ul>
-<li><dl>
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be drawn from each distribution.</p>
-<p>If the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is invoked multiple times, the newly generated samples will be appended to the
-existing samples.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>sts_design</strong> (<cite>list</cite>):</dt><dd><p>List of integers specifiying the number of strata in each dimension. Required for rectangular
-stratification.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>input_file</strong> (<cite>str</cite>):</dt><dd><p>File path to input file specifying stratum origins and stratum widths.</p>
-<p>Default: None.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Output/Return:</strong></p>
-<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method has no returns, although it creates and/or appends the <cite>samples</cite> attribute of the <code class="docutils literal notranslate"><span class="pre">STS</span></code>
-class.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="strata">
-<h2>Strata<a class="headerlink" href="#strata" title="Permalink to this headline">¶</a></h2>
-<p>The <cite>Strata</cite> class is a supporting class for stratified sampling and its variants. The class defines a rectilinear stratification of the unit hypercube. Strata are defined by specifying a stratum origin as the coordinates of the stratum corner nearest to the global origin and a stratum width for each dimension.</p>
-<div class="section" id="id6">
-<h3>Class Descriptions<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
-<dt id="UQpy.SampleMethods.Strata">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">Strata</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_strata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">input_file</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">origins</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">widths</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Strata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Strata" title="Permalink to this definition">¶</a></dt>
-<dd><p>Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^dimension with N strata.</p>
-<p><strong>Inputs:</strong></p>
-<ul>
-<li><dl>
-<dt><strong>n_strata</strong> (<cite>list</cite> of <cite>int</cite>):</dt><dd><p>A list of dimension n defining the number of strata in each of the n dimensions. Creates an equal
-stratification with strata widths equal to 1/n_strata. The total number of strata, N, is the product of the
-terms of n_strata.
-Example:</p>
-<blockquote>
-<div><p>n_strata = [2, 3, 2] creates a 3d stratification with:
-2 strata in dimension 0 with stratum widths 1/2
-3 strata in dimension 1 with stratum widths 1/3
-2 strata in dimension 2 with stratum widths 1/2</p>
-</div></blockquote>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>input_file</strong> (<cite>str</cite>):</dt><dd><p>File path to input file specifying stratum origins and stratum widths.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>origins</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of dimension N x n specifying the origins of all strata. The origins of the strata are the
-coordinates of the stratum orthotope nearest the global origin.
-Example:</p>
-<blockquote>
-<div><p>A 2D stratification with 2 strata in each dimension
-origins = [[0, 0]</p>
-<blockquote>
-<div><p>[0, 0.5]
-[0.5, 0]
-[0.5, 0.5]]</p>
-</div></blockquote>
-</div></blockquote>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>widths</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of dimension N x n specifying the widths of all strata in each dimension
-Example: A 2D stratification with 2 strata in each dimension</p>
-<blockquote>
-<div><dl class="simple">
-<dt>widths = [[0.5, 0.5]</dt><dd><p>[0.5, 0.5]
-[0.5, 0.5]
-[0.5, 0.5]]</p>
-</dd>
-</dl>
-</div></blockquote>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Attributes:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>weights</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of dimension 1 x N containing sample weights. Sample weights are equal to the product of the
-strata widths (i.e. they are equal to the size of the strata in the [0, 1]^n space.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Methods:</strong></p>
-<dl class="py method">
-<dt id="UQpy.SampleMethods.Strata.fullfact">
-<em class="property">static </em><code class="sig-name descname">fullfact</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">levels</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Strata.fullfact"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Strata.fullfact" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a full-factorial design</p>
-<p>Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
-Copyright (C) 2012 - 2013 - Michael Baudin
-Copyright (C) 2012 - Maria Christopoulou
-Copyright (C) 2010 - 2011 - INRIA - Michael Baudin
-Copyright (C) 2009 - Yann Collette
-Copyright (C) 2009 - CEA - Jean-Marc Martinez
-Original source code can be found at:
-<a class="reference external" href="https://pythonhosted.org/pyDOE">https://pythonhosted.org/pyDOE</a>/#
-or
-<a class="reference external" href="https://pypi.org/project/pyDOE/">https://pypi.org/project/pyDOE/</a>
-or
-<a class="reference external" href="https://github.com/tisimst/pyDOE/">https://github.com/tisimst/pyDOE/</a></p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>levels</strong> (<cite>list</cite>):</dt><dd><p>A list of integers that indicate the number of levels of each input design factor.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Outputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>ff</strong> (<cite>ndarray</cite>):</dt><dd><p>Full-factorial design matrix.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="rss">
-<h2>RSS<a class="headerlink" href="#rss" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">RSS</span></code> class generated samples randomly or uses gradient-based adaptive approach to reduce the variance of output statistical estimates. The method used to generate samples is define by <cite>runmodel_object</cite> parameter. If, it is not defined then RSS class executes Refined Stratified sampling, otherwise Gradient Enhanced Refined Stratified sampling is executed. Refined Stratified sampling randomly selects the stratum to refine from the strata/cells with maximum weight. Whereas, Gradient Enhaced Refined Stratified sampling selects the strata/cells with maximum stratum variance. This class divides the sample domain using either rectangular stratification or voronoi cells, this is define by the <cite>sample_object</cite> parameter. In case of rectangular stratification, selected strata is divided along the maximum width to define new strata. In case of Voronoi cells, the new sample is drawn from a sub-simplex, which is used for refinement.</p>
-<div class="section" id="id7">
-<h3>Class Descriptions<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
-<dt id="UQpy.SampleMethods.RSS">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">RSS</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sample_object</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">runmodel_object</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">krig_object</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">local</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">max_train_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">step_size</span><span class="o">=</span><span class="default_value">0.005</span></em>, <em class="sig-param"><span class="n">qoi_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_add</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">nsamples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#RSS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.RSS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate new samples using adaptive sampling methods, i.e. Refined Stratified Sampling and Gradient
-Enhanced Refined Stratified Sampling (<a href="#id33"><span class="problematic" id="id8">[1]_</span></a>, <a href="#id34"><span class="problematic" id="id9">[2]_</span></a>).</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id10"><span class="brackets">1</span></dt>
-<dd><p>Michael D. Shields, Kirubel Teferra, Adam Hapij and Raymond P. Daddazio, “Refined Stratified Sampling for
-efficient Monte Carlo based uncertainty quantification”, Reliability Engineering &amp; System Safety,
-ISSN: 0951-8320, Vol: 142, Page: 310-325, 2015.</p>
-</dd>
-<dt class="label" id="id11"><span class="brackets">2</span></dt>
-<dd><p>M. D. Shields, “Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems”,
-Reliability Engineering &amp; System Safety, ISSN: 0951-8320, Vol: 175, Page: 207-224, 2018.</p>
-</dd>
-</dl>
-<p><strong>Inputs:</strong></p>
-<ul>
-<li><dl class="simple">
-<dt><strong>runmodel_object</strong> (<code class="docutils literal notranslate"><span class="pre">Uqpy.RunModel</span></code> object):</dt><dd><p>A RunModel object, which is used to evaluate the function value.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>sample_object</strong> (<code class="docutils literal notranslate"><span class="pre">Uqpy.SampleMethodes.STS</span></code> or <code class="docutils literal notranslate"><span class="pre">UQpy.SampleMethods.RSS</span></code> object):</dt><dd><p>A SampleMethods class object, which contains information about existing samples.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>krig_object</strong> (<cite>class</cite> object):</dt><dd><p>A surrogate model, which should have fit and predict as methods.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>local</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator to update surrogate locally.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>max_train_size</strong> (<cite>int</cite>):</dt><dd><p>Minimum size of training data around new sample used to update surrogate.</p>
-<p>Default: nsamples.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>qoi_name</strong> (<cite>dict</cite>):</dt><dd><p>If the quantity of interest is a dictionary, convert it to a list</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>step_size</strong> (<cite>float</cite>):</dt><dd><p>Step size to calculate the gradient using central difference.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>n_add</strong> (<cite>int</cite>):</dt><dd><p>Number of samples generated in each iteration.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>random_state</strong> (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator.</p>
-<p>Default is None.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>verbose</strong> (<cite>Boolean</cite>):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
-<p>Default value: False</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Methods:</strong></p>
-<dl class="py method">
-<dt id="UQpy.SampleMethods.RSS.estimate_gradient">
-<code class="sig-name descname">estimate_gradient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">xt</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#RSS.estimate_gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.RSS.estimate_gradient" title="Permalink to this definition">¶</a></dt>
-<dd><p>Estimating gradients with a metamodel (surrogate).</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>x</strong> (<cite>ndarray</cite>):</dt><dd><p>Samples in the training data.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>y</strong> (<cite>ndarray</cite>):</dt><dd><p>Function values evaluated at the samples in the training data.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>xt</strong> (<cite>ndarray</cite>):</dt><dd><p>Samples where gradients need to be evaluated.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Outputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>gr</strong> (<cite>ndarray</cite>):</dt><dd><p>First-order gradient evaluated at the points ‘xt’ using central difference.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
-
-<dl class="py method">
-<dt id="UQpy.SampleMethods.RSS.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nsamples</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#RSS.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.RSS.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Execute the random sampling in the <code class="docutils literal notranslate"><span class="pre">RSS</span></code> class.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is the function that performs random sampling in the <code class="docutils literal notranslate"><span class="pre">RSS</span></code> class. If <cite>nsamples</cite> is
-provided, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically called when the <code class="docutils literal notranslate"><span class="pre">RSS</span></code> object is defined. The user may also call
-the <code class="docutils literal notranslate"><span class="pre">run</span></code> method directly to generate samples. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">RSS</span></code> class can be invoked many
-times and each time the generated samples are appended to the existing samples.</p>
-<p><strong>Input:</strong></p>
-<ul>
-<li><dl>
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be drawn from each distribution.</p>
-<p>If the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is invoked multiple times, the newly generated samples will be appended to the
-existing samples.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Output/Return:</strong></p>
-<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method has no returns, although it creates and/or appends the <cite>sample_object.samples</cite> attribute of
-the <code class="docutils literal notranslate"><span class="pre">RSS</span></code> class.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="UQpy.SampleMethods.RSS.run_gerss">
-<code class="sig-name descname">run_gerss</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#RSS.run_gerss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.RSS.run_gerss" title="Permalink to this definition">¶</a></dt>
-<dd><p>This method generates samples using Gradient Enhanced Refined Stratified Sampling.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="UQpy.SampleMethods.RSS.run_rss">
-<code class="sig-name descname">run_rss</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#RSS.run_rss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.RSS.run_rss" title="Permalink to this definition">¶</a></dt>
-<dd><p>This method generates samples using Refined Stratified Sampling.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="simplex">
-<h2>Simplex<a class="headerlink" href="#simplex" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">Simplex</span></code> class generates uniformly distributed sample inside a simplex, whose coordinates are expressed by <span class="math notranslate nohighlight">\(\zeta_k\)</span> and <span class="math notranslate nohighlight">\(n_d\)</span> is the dimension. First, this class generates <span class="math notranslate nohighlight">\(n_d\)</span> independent uniform random variables on [0, 1], i.e. <span class="math notranslate nohighlight">\(r_q\)</span>, then compute samples inside simplex using following equation:</p>
-<div class="math notranslate nohighlight">
-\[\mathbf{M_{n_d}} = \zeta_0 + \sum_{i=1}^{n_d} \Big{[}\prod_{j=1}^{i} r_{n_d-j+1}^{\frac{1}{n_d-j+1}}\Big{]}(\zeta_i - \zeta_{i-1})\]</div>
-<p>The <span class="math notranslate nohighlight">\(M_{n_d}\)</span> is <span class="math notranslate nohighlight">\(n_d\)</span> dimensional array defining the coordinates of new sample.</p>
-<a class="reference internal image-reference" href="_images/SampleMethods_Simplex.png"><img alt="Randomly generated point inside a 2-D simplex" class="align-center" src="_images/SampleMethods_Simplex.png" style="width: 339.0px; height: 261.0px;" /></a>
-<div class="section" id="id12">
-<h3>Class Descriptions<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
-<dt id="UQpy.SampleMethods.Simplex">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">Simplex</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nsamples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Simplex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Simplex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate random samples inside a simplex using uniform probability distribution.</p>
-<p><strong>References:</strong></p>
-<ol class="arabic simple">
-<li><p>W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, “Simplex-stochastic collocation method with improved
-calability”,Journal of Computational Physics, 310:301–328 2016.</p></li>
-</ol>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>nodes</strong> (<cite>ndarray</cite> or <cite>list</cite>):</dt><dd><p>The vertices of the simplex.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>The number of samples to be generated inside the simplex.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>random_state</strong> (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Output:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p>New random samples distributed uniformly inside the simplex.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Method:</strong></p>
-<dl class="py method">
-<dt id="UQpy.SampleMethods.Simplex.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nsamples</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Simplex.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Simplex.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Execute the random sampling in the <code class="docutils literal notranslate"><span class="pre">Simplex</span></code> class.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is the function that performs random sampling in the <code class="docutils literal notranslate"><span class="pre">Simplex</span></code> class. If <cite>nsamples</cite> is
-provided, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically called when the <code class="docutils literal notranslate"><span class="pre">Simplex</span></code> object is defined. The user may also
-call the <code class="docutils literal notranslate"><span class="pre">run</span></code> method directly to generate samples. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">Simplex</span></code> class can be invoked
-many times and each time the generated samples are appended to the existing samples.</p>
-<p><strong>Input:</strong></p>
-<ul>
-<li><dl>
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be drawn from each distribution.</p>
-<p>If the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is invoked multiple times, the newly generated samples will be appended to the
-existing samples.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Output/Return:</strong></p>
-<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method has no returns, although it creates and/or appends the <cite>samples</cite> attribute of the <code class="docutils literal notranslate"><span class="pre">Simplex</span></code>
-class.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="akmcs">
-<h2>AKMCS<a class="headerlink" href="#akmcs" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class generates random samples from a specified probability distribution(s) using Adaptive Kriging-Monte Carlo Sampling(AKMCS).</p>
-<div class="section" id="adding-new-learning-function">
-<h3>Adding New Learning Function<a class="headerlink" href="#adding-new-learning-function" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class offers a variety of learning function to generate samples adaptively. These are specified by the <cite>learning_function</cite> parameter (i.e. ‘U-Function’, ‘Weighted-U Function’, ‘Expected Feasibility Function’, ‘Expected Improvement Function’ and ‘Expected Global Improvement Fit’). However, adding a new learning function is straightforward. This is done by creating a new method that contains the algorithm for selecting a new samples. This method takes as input the surrogate model and randomly generated monte carlo samples, and returns a set of samples that are selected according to the user’s desired learning function. The output of this function should be a numpy array of samples and a boolean indicating the class to continue or stop. The numpy array of samples should be a two-dimensional array with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined learning function is given below:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">u_function</span><span class="p">(</span><span class="n">surr</span><span class="p">,</span> <span class="n">pop</span><span class="p">):</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">g</span><span class="p">,</span> <span class="n">sig</span> <span class="o">=</span> <span class="n">surr</span><span class="p">(</span><span class="n">pop</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">pop</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">sig</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">pop</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">u</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">/</span> <span class="n">sig</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">rows</span> <span class="o">=</span> <span class="n">u</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[:</span><span class="mi">1</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">indicator</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="n">u</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
-<span class="gp">&gt;&gt;&gt; </span>        <span class="n">indicator</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">pop</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="p">:],</span> <span class="n">indicator</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="id13">
-<h3>Class Descriptions<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
-<dt id="UQpy.SampleMethods.AKMCS">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">AKMCS</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dist_object</span></em>, <em class="sig-param"><span class="n">runmodel_object</span></em>, <em class="sig-param"><span class="n">krig_object</span></em>, <em class="sig-param"><span class="n">samples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nsamples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nlearn</span><span class="o">=</span><span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">nstart</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">qoi_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">learning_function</span><span class="o">=</span><span class="default_value">'U'</span></em>, <em class="sig-param"><span class="n">n_add</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_pf</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate new samples using different active learning method and properties of kriging surrogate along with
-MCS, see (<a href="#id35"><span class="problematic" id="id14">[1]_</span></a>) for detailed explanation.</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id15"><span class="brackets">1</span></dt>
-<dd><p>B. Echard, N. Gayton and M. Lemaire, “AK-MCS: An active learning reliability method combining Kriging and
-Monte Carlo Simulation”, Structural Safety, Pages 145-154, 2011.</p>
-</dd>
-</dl>
-<p><strong>Inputs:</strong></p>
-<ul>
-<li><dl class="simple">
-<dt><strong>dist_object</strong> ((list of) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>List of <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> objects corresponding to each random variable.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>runmodel_object</strong> (<code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object):</dt><dd><p>A RunModel object, which is used to evaluate the function value.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the samples.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>krig_object</strong> (<cite>class</cite> object):</dt><dd><p>A surrogate model, this object must have fit and predict methods.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be drawn from each distribution.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nlearn</strong> (<cite>int</cite>):</dt><dd><p>Number of sample generated using LHS, which are used as learning set by AKMCS.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nstart</strong> (<cite>int</cite>):</dt><dd><p>Number of initial samples, randomly generated using LHS.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>qoi_name</strong> (<cite>dict</cite>):</dt><dd><p>If the quantity of interest is a dictionary, convert it to a list</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>learning_function</strong> (<cite>str</cite> or <cite>function</cite>):</dt><dd><dl>
-<dt>Learning function used as the selection criteria to identify new samples.</dt><dd><dl class="simple">
-<dt>Options:</dt><dd><ol class="arabic simple">
-<li><p>‘U’ - U-function</p></li>
-<li><p>‘EFF’ - Expected Feasibility Function</p></li>
-<li><p>‘Weighted-U’ - Weighted-U function</p></li>
-<li><p>‘EIF’ - Expected Improvement Function</p></li>
-<li><p>‘EGIF’ - Expected Global Improvement Fit</p></li>
-</ol>
-</dd>
-</dl>
-<p>Default: ‘U’.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>n_add</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be selected per iteration.</p>
-<p>Default: 1.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>save_pf</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator to estimate probability of failure after each iteration. Only required if user-defined learning
-function is used.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>random_state</strong> (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator.</p>
-<p>Default is None.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>verbose</strong> (<cite>Boolean</cite>):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
-<p>Default value: False.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Attributes:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the generated samples.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>pf</strong> (<cite>list</cite>):</dt><dd><p>Probability of failure after every iteration of AKMCS. Available as an output only for Reliability Analysis.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>cov_pf</strong> (<cite>list</cite>):</dt><dd><p>Covariance of probability of failure after every iteration of AKMCS. Available as an output only for
-Reliability Analysis.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Methods:</strong></p>
-<dl class="py method">
-<dt id="UQpy.SampleMethods.AKMCS.eff">
-<code class="sig-name descname">eff</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">surr</span></em>, <em class="sig-param"><span class="n">pop</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.eff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.eff" title="Permalink to this definition">¶</a></dt>
-<dd><p>Learns new samples based on Expected Feasibilty Function (EFF) as learning function, see (<a href="#id36"><span class="problematic" id="id16">[1]_</span></a>) for detailed
-explanation..</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id17"><span class="brackets">1</span></dt>
-<dd><p>B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, “Efficient Global Reliability Analysis
-for Nonlinear Implicit Performance Functions”, AIAA JOURNAL, Volume 46, 2008.</p>
-</dd>
-</dl>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>surr</strong> (<cite>class</cite> object):</dt><dd><p>A surrogate model, this object have predict method as defined in <cite>krig_object</cite> parameter.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>pop</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples in learning set.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Output/Returns:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>new_samples</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples selected by learning criteria.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>indicator</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
-
-<dl class="py method">
-<dt id="UQpy.SampleMethods.AKMCS.eif">
-<code class="sig-name descname">eif</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">surr</span></em>, <em class="sig-param"><span class="n">pop</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.eif"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.eif" title="Permalink to this definition">¶</a></dt>
-<dd><p>Learns new samples based on Expected Improvement Function (EIF) as learning function, see (<a href="#id37"><span class="problematic" id="id18">[1]_</span></a>) for detailed
-explanation..</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id19"><span class="brackets">1</span></dt>
-<dd><p>D.R. Jones, M. Schonlau, W.J. Welch, “Efficient Global Optimization of Expensive Black-Box Functions”,
-Journal of Global Optimization, Pages 455–492, 1998.</p>
-</dd>
-</dl>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>surr</strong> (<cite>class</cite> object):</dt><dd><p>A surrogate model, this object have predict method as defined in <cite>krig_object</cite> parameter.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>pop</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples in learning set.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Output/Returns:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>new_samples</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples selected by learning criteria.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>indicator</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
-
-<dl class="py method">
-<dt id="UQpy.SampleMethods.AKMCS.eigf">
-<code class="sig-name descname">eigf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">surr</span></em>, <em class="sig-param"><span class="n">pop</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.eigf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.eigf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Learns new samples based on Expected Improvement for Global Fit (EIGF) as learning function, see (<a href="#id38"><span class="problematic" id="id20">[1]_</span></a>) for
-detailed explanation.</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id21"><span class="brackets">1</span></dt>
-<dd><p>J.N Fuhg, “Adaptive surrogate models for parametric studies”, Master’s Thesis
-(Link: <a class="reference external" href="https://arxiv.org/pdf/1905.05345.pdf">https://arxiv.org/pdf/1905.05345.pdf</a>)</p>
-</dd>
-</dl>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>surr</strong> (<cite>class</cite> object):</dt><dd><p>A surrogate model, this object have predict method as defined in <cite>krig_object</cite> parameter.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>pop</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples in learning set.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Output/Returns:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>new_samples</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples selected by learning criteria.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>indicator</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
-
-<dl class="py method">
-<dt id="UQpy.SampleMethods.AKMCS.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nsamples</span></em>, <em class="sig-param"><span class="n">samples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">append_samples</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Execute the random sampling in the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is the function that performs random sampling in the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class. If <cite>nsamples</cite> is
-provided, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically called when the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> object is defined. The user may also
-call the <code class="docutils literal notranslate"><span class="pre">run</span></code> method directly to generate samples. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class can be invoked
-many times and each time the generated samples are appended to the existing samples.</p>
-<p><strong>Inputs:</strong></p>
-<ul>
-<li><dl>
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be drawn from each distribution.</p>
-<p>If the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is invoked multiple times, the newly generated samples will be appended to the
-existing samples.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the samples.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>append_samples</strong> (<cite>boolean</cite>)</dt><dd><p>Append over overwrite existing samples and model evaluations.</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">append_samples</span> <span class="pre">=</span> <span class="pre">False</span></code>, all previous samples and the corresponding quantities of interest from their
-model evaluations are deleted.</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">append_samples</span> <span class="pre">=</span> <span class="pre">True</span></code>, samples and their resulting quantities of interest are appended to the
-existing ones.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Output/Returns:</strong></p>
-<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method has no returns, although it creates and/or appends the <cite>samples</cite> attribute of the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code>
-class.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="UQpy.SampleMethods.AKMCS.u">
-<code class="sig-name descname">u</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">surr</span></em>, <em class="sig-param"><span class="n">pop</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.u"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.u" title="Permalink to this definition">¶</a></dt>
-<dd><p>Learns new samples based on U-function as learning function, see (<a href="#id39"><span class="problematic" id="id22">[1]_</span></a>) for detailed explanation.</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id23"><span class="brackets">1</span></dt>
-<dd><p>B. Echard, N. Gayton and M. Lemaire, “AK-MCS: An active learning reliability method combining Kriging and
-Monte Carlo Simulation”, Structural Safety, Pages 145-154, 2011.</p>
-</dd>
-</dl>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>surr</strong> (<cite>class</cite> object):</dt><dd><p>A surrogate model, this object have predict method as defined in <cite>krig_object</cite> parameter.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>pop</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples in learning set.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Output/Returns:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>new_samples</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples selected by learning criteria.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>indicator</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
-
-<dl class="py method">
-<dt id="UQpy.SampleMethods.AKMCS.weighted_u">
-<code class="sig-name descname">weighted_u</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">surr</span></em>, <em class="sig-param"><span class="n">pop</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.weighted_u"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.weighted_u" title="Permalink to this definition">¶</a></dt>
-<dd><p>Learns new samples based on Probability Weighted U-function as learning function, see (<a href="#id40"><span class="problematic" id="id24">[1]_</span></a>) for detailed
-explanation.</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id25"><span class="brackets">1</span></dt>
-<dd><p>V.S. Sundar and M.S. Shields, “RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH MULTIMODEL
-INFERENCE”.</p>
-</dd>
-</dl>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>surr</strong> (<cite>class</cite> object):</dt><dd><p>A surrogate model, this object have predict method as defined in <cite>krig_object</cite> parameter.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>pop</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples in learning set.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Output/Returns:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>new_samples</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples selected by learning criteria.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>indicator</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
 <div class="section" id="mcmc">
 <h2>MCMC<a class="headerlink" href="#mcmc" title="Permalink to this headline">¶</a></h2>
-<p>The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution <span class="math notranslate nohighlight">\(p(x)=\frac{\tilde{p}(x)}{Z}\)</span>, where <span class="math notranslate nohighlight">\(\tilde{p}(x)\)</span> is known but <span class="math notranslate nohighlight">\(Z\)</span> is hard to compute (this will often be the case when using Bayes’ theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method, see e.g. (<a href="#id41"><span class="problematic" id="id26">[1]_</span></a>, <a href="#id42"><span class="problematic" id="id27">[2]_</span></a>). More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution <span class="math notranslate nohighlight">\(p(x)\)</span>.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:</p>
+<p>The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution <span class="math notranslate nohighlight">\(p(x)=\frac{\tilde{p}(x)}{Z}\)</span>, where <span class="math notranslate nohighlight">\(\tilde{p}(x)\)</span> is known but <span class="math notranslate nohighlight">\(Z\)</span> is hard to compute (this will often be the case when using Bayes’ theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method, see e.g. (<a class="footnote-reference brackets" href="#id7" id="id3">1</a>, <a class="footnote-reference brackets" href="#id8" id="id4">2</a>). More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution <span class="math notranslate nohighlight">\(p(x)\)</span>.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:</p>
 <ul class="simple">
 <li><p>initialize with a seed sample <span class="math notranslate nohighlight">\(x_{0}\)</span></p></li>
 <li><dl class="simple">
@@ -1282,11 +439,11 @@ INFERENCE”.</p>
 <li><p>the <code class="docutils literal notranslate"><span class="pre">_check_methods_proposal</span></code> method checks whether a given proposal is adequate (i.e., has <code class="docutils literal notranslate"><span class="pre">rvs</span></code> and <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>/<code class="docutils literal notranslate"><span class="pre">pdf</span></code> methods).</p></li>
 </ul>
 </div>
-<div class="section" id="id28">
-<h3>Class Descriptions<a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<div class="section" id="id5">
+<h3>Class Descriptions<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
 <dt id="UQpy.SampleMethods.MCMC">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MCMC</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dimension</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pdf_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">log_pdf_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">args_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nburn</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">jump</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">nchains</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_log_pdf</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">concat_chains</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCMC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCMC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MCMC</code><span class="sig-paren">(</span><em class="sig-param">dimension=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">nchains=None</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCMC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCMC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.</p>
 <p>This is the parent class for all MCMC algorithms. This parent class only provides the framework for MCMC and cannot
 be used directly for sampling. Sampling is done by calling the child class for the specific MCMC algorithm.</p>
@@ -1410,9 +567,9 @@ niterations=nburn+jump*nsamples_per_chain.</p>
 </li>
 </ul>
 <p><strong>Methods:</strong></p>
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.MCMC.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nsamples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nsamples_per_chain</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCMC.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCMC.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCMC.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCMC.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the MCMC algorithm.</p>
 <p>This function samples from the MCMC chains and appends samples to existing ones (if any). This method leverages
 the <code class="docutils literal notranslate"><span class="pre">run_iterations</span></code> method that is specific to each algorithm.</p>
@@ -1433,9 +590,9 @@ the <code class="docutils literal notranslate"><span class="pre">run_iterations<
 of <cite>nchains</cite>, <cite>nsamples</cite> is set to the next largest integer that is a multiple of <cite>nchains</cite>.</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.MCMC.run_one_iteration">
-<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">current_state</span></em>, <em class="sig-param"><span class="n">current_log_pdf</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCMC.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCMC.run_one_iteration" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param">current_state</em>, <em class="sig-param">current_log_pdf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCMC.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCMC.run_one_iteration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run one iteration of the MCMC algorithm, starting at <cite>current_state</cite>.</p>
 <p>This method is over-written for each different MCMC algorithm. It must return the new state and associated
 log-pdf, which will be passed as inputs to the <code class="docutils literal notranslate"><span class="pre">run_one_iteration</span></code> method at the next iteration.</p>
@@ -1471,9 +628,9 @@ log-pdf, which will be passed as inputs to the <code class="docutils literal not
 
 <div class="section" id="mh">
 <h4>MH<a class="headerlink" href="#mh" title="Permalink to this headline">¶</a></h4>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.SampleMethods.MH">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MH</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pdf_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">log_pdf_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">args_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nburn</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">jump</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">dimension</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_log_pdf</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">concat_chains</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">nsamples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nsamples_per_chain</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nchains</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">proposal</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">proposal_is_symmetric</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MH" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MH</code><span class="sig-paren">(</span><em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">dimension=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">nchains=None</em>, <em class="sig-param">proposal=None</em>, <em class="sig-param">proposal_is_symmetric=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MH" title="Permalink to this definition">¶</a></dt>
 <dd><p>Metropolis-Hastings algorithm</p>
 <p><strong>References</strong></p>
 <ol class="arabic simple">
@@ -1495,9 +652,9 @@ Default: False, set to True if default proposal is used</p>
 </li>
 </ul>
 <p><strong>Methods:</strong></p>
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.MH.run_one_iteration">
-<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">current_state</span></em>, <em class="sig-param"><span class="n">current_log_pdf</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MH.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MH.run_one_iteration" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param">current_state</em>, <em class="sig-param">current_log_pdf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MH.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MH.run_one_iteration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run one iteration of the MCMC chain for MH algorithm, starting at current state - see <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> class.</p>
 </dd></dl>
 
@@ -1506,9 +663,9 @@ Default: False, set to True if default proposal is used</p>
 </div>
 <div class="section" id="mmh">
 <h4>MMH<a class="headerlink" href="#mmh" title="Permalink to this headline">¶</a></h4>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.SampleMethods.MMH">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MMH</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pdf_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">log_pdf_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">args_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nburn</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">jump</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">dimension</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_log_pdf</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">concat_chains</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">nsamples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nsamples_per_chain</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">proposal</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">proposal_is_symmetric</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nchains</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MMH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MMH" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MMH</code><span class="sig-paren">(</span><em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">dimension=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">proposal=None</em>, <em class="sig-param">proposal_is_symmetric=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">nchains=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MMH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MMH" title="Permalink to this definition">¶</a></dt>
 <dd><p>Component-wise Modified Metropolis-Hastings algorithm.</p>
 <p>In this algorithm, candidate samples are drawn separately in each dimension, thus the proposal consists of a list
 of 1d distributions. The target pdf can be given as a joint pdf or a list of marginal pdfs in all dimensions. This
@@ -1535,9 +692,9 @@ Default: False, set to True if default proposal is used</p>
 </li>
 </ul>
 <p><strong>Methods:</strong></p>
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.MMH.run_one_iteration">
-<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">current_state</span></em>, <em class="sig-param"><span class="n">current_log_pdf</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MMH.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MMH.run_one_iteration" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param">current_state</em>, <em class="sig-param">current_log_pdf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MMH.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MMH.run_one_iteration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run one iteration of the MCMC chain for MMH algorithm, starting at current state - see <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> class.</p>
 </dd></dl>
 
@@ -1546,9 +703,9 @@ Default: False, set to True if default proposal is used</p>
 </div>
 <div class="section" id="stretch">
 <h4>Stretch<a class="headerlink" href="#stretch" title="Permalink to this headline">¶</a></h4>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.SampleMethods.Stretch">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">Stretch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pdf_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">log_pdf_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">args_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nburn</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">jump</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">dimension</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_log_pdf</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">concat_chains</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">nsamples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nsamples_per_chain</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nchains</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Stretch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Stretch" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">Stretch</code><span class="sig-paren">(</span><em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">dimension=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">scale=2.0</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">nchains=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Stretch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Stretch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Affine-invariant sampler with Stretch moves, parallel implementation.</p>
 <p><strong>References:</strong></p>
 <ol class="arabic simple">
@@ -1566,9 +723,9 @@ Publications of the Astronomical Society of the Pacific, 125(925):306–312,2013
 </li>
 </ul>
 <p><strong>Methods:</strong></p>
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.Stretch.run_one_iteration">
-<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">current_state</span></em>, <em class="sig-param"><span class="n">current_log_pdf</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Stretch.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Stretch.run_one_iteration" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param">current_state</em>, <em class="sig-param">current_log_pdf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Stretch.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Stretch.run_one_iteration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run one iteration of the MCMC chain for Stretch algorithm, starting at current state - see <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> class.</p>
 </dd></dl>
 
@@ -1577,9 +734,9 @@ Publications of the Astronomical Society of the Pacific, 125(925):306–312,2013
 </div>
 <div class="section" id="dram">
 <h4>DRAM<a class="headerlink" href="#dram" title="Permalink to this headline">¶</a></h4>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.SampleMethods.DRAM">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">DRAM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pdf_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">log_pdf_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">args_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nburn</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">jump</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">dimension</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_log_pdf</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">concat_chains</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">nsamples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nsamples_per_chain</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">initial_covariance</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">k0</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">sp</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gamma_2</span><span class="o">=</span><span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">save_covariance</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nchains</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DRAM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DRAM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">DRAM</code><span class="sig-paren">(</span><em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">dimension=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">initial_covariance=None</em>, <em class="sig-param">k0=100</em>, <em class="sig-param">sp=None</em>, <em class="sig-param">gamma_2=0.2</em>, <em class="sig-param">save_covariance=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">nchains=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DRAM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DRAM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delayed Rejection Adaptive Metropolis algorithm</p>
 <p>In this algorithm, the proposal density is Gaussian and its covariance C is being updated from samples as
 C = sp * C_sample where C_sample is the sample covariance. Also, the delayed rejection scheme is applied, i.e,
@@ -1619,9 +776,9 @@ and Computing, 16(4):339–354, 2006</p></li>
 </li>
 </ul>
 <p><strong>Methods:</strong></p>
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.DRAM.run_one_iteration">
-<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">current_state</span></em>, <em class="sig-param"><span class="n">current_log_pdf</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DRAM.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DRAM.run_one_iteration" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param">current_state</em>, <em class="sig-param">current_log_pdf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DRAM.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DRAM.run_one_iteration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run one iteration of the MCMC chain for DRAM algorithm, starting at current state - see <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> class.</p>
 </dd></dl>
 
@@ -1630,9 +787,9 @@ and Computing, 16(4):339–354, 2006</p></li>
 </div>
 <div class="section" id="dream">
 <h4>DREAM<a class="headerlink" href="#dream" title="Permalink to this headline">¶</a></h4>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.SampleMethods.DREAM">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">DREAM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pdf_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">log_pdf_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">args_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nburn</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">jump</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">dimension</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_log_pdf</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">concat_chains</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">nsamples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nsamples_per_chain</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">delta</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">c</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">c_star</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">n_cr</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">p_g</span><span class="o">=</span><span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">adapt_cr</span><span class="o">=</span><span class="default_value">- 1, 1</span></em>, <em class="sig-param"><span class="n">check_chains</span><span class="o">=</span><span class="default_value">- 1, 1</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nchains</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DREAM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DREAM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">DREAM</code><span class="sig-paren">(</span><em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">dimension=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">delta=3</em>, <em class="sig-param">c=0.1</em>, <em class="sig-param">c_star=1e-06</em>, <em class="sig-param">n_cr=3</em>, <em class="sig-param">p_g=0.2</em>, <em class="sig-param">adapt_cr=(-1</em>, <em class="sig-param">1)</em>, <em class="sig-param">check_chains=(-1</em>, <em class="sig-param">1)</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">nchains=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DREAM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DREAM" title="Permalink to this definition">¶</a></dt>
 <dd><p>DiffeRential Evolution Adaptive Metropolis algorithm</p>
 <p><strong>References:</strong></p>
 <ol class="arabic simple">
@@ -1683,9 +840,9 @@ Default: (-1, 1), i.e., no check on outlier chains</p>
 </li>
 </ul>
 <p><strong>Methods:</strong></p>
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.DREAM.check_outlier_chains">
-<code class="sig-name descname">check_outlier_chains</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">replace_with_best</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DREAM.check_outlier_chains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DREAM.check_outlier_chains" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">check_outlier_chains</code><span class="sig-paren">(</span><em class="sig-param">replace_with_best=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DREAM.check_outlier_chains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DREAM.check_outlier_chains" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check outlier chains in DREAM algorithm.</p>
 <p>This function checks for outlier chains as part of the DREAM algorithm, potentially replacing outlier chains
 (i.e. the samples and log_pdf_values) with ‘good’ chains. The function does not have any returned output but it
@@ -1700,9 +857,9 @@ prints out the number of outlier chains.</p>
 </ul>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.DREAM.run_one_iteration">
-<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">current_state</span></em>, <em class="sig-param"><span class="n">current_log_pdf</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DREAM.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DREAM.run_one_iteration" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run_one_iteration</code><span class="sig-paren">(</span><em class="sig-param">current_state</em>, <em class="sig-param">current_log_pdf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DREAM.run_one_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DREAM.run_one_iteration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run one iteration of the MCMC chain for DREAM algorithm, starting at current state - see <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> class.</p>
 </dd></dl>
 
@@ -1718,11 +875,11 @@ prints out the number of outlier chains.</p>
 \[w(\textbf{x}) = \frac{p(\textbf{x})}{q(\textbf{x})}\]</div>
 <p>If <span class="math notranslate nohighlight">\(p\)</span> is only known up to a constant, i.e., one can only evaluate <span class="math notranslate nohighlight">\(\tilde{p}(\textbf{x})\)</span>, where <span class="math notranslate nohighlight">\(p(\textbf{x})=\frac{\tilde{p}(\textbf{x})}{Z}\)</span>, IS can be used by further normalizing the weights (self-normalized IS). The following figure shows the weighted samples obtained when using IS to estimate a 2d Gaussian target distribution <span class="math notranslate nohighlight">\(p\)</span>, sampling from a uniform proposal distribution <span class="math notranslate nohighlight">\(q\)</span>.</p>
 <a class="reference internal image-reference" href="_images/SampleMethods_IS_samples.png"><img alt="IS weighted samples" class="align-center" src="_images/SampleMethods_IS_samples.png" style="width: 220.8px; height: 226.4px;" /></a>
-<div class="section" id="id29">
-<h3>Class Descriptions<a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<div class="section" id="id6">
+<h3>Class Descriptions<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
 <dt id="UQpy.SampleMethods.IS">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">IS</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nsamples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pdf_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">log_pdf_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">args_target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">proposal</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">IS</code><span class="sig-paren">(</span><em class="sig-param">nsamples=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">proposal=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sample from a user-defined target density using importance sampling.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
@@ -1787,9 +944,9 @@ object itself can be passed directly.</p>
 </li>
 </ul>
 <p><strong>Methods:</strong></p>
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.IS.resample">
-<code class="sig-name descname">resample</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'multinomial'</span></em>, <em class="sig-param"><span class="n">nsamples</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS.resample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS.resample" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">resample</code><span class="sig-paren">(</span><em class="sig-param">method='multinomial'</em>, <em class="sig-param">nsamples=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS.resample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS.resample" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resample to get a set of un-weighted samples that represent the target pdf.</p>
 <p>Utility function that creates a set of un-weighted samples from a set of weighted samples. Can be useful for
 plotting for instance.</p>
@@ -1820,9 +977,9 @@ existing samples).</p>
 </ul>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.SampleMethods.IS.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nsamples</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate and weight samples.</p>
 <p>This function samples from the proposal and appends samples to existing ones (if any). It then weights the
 samples as log_w_unnormalized) = log(target)-log(proposal).</p>
@@ -1842,10 +999,10 @@ samples as log_w_unnormalized) = log(target)-log(proposal).</p>
 </dd></dl>
 
 <dl class="footnote brackets">
-<dt class="label" id="id30"><span class="brackets">1</span></dt>
+<dt class="label" id="id7"><span class="brackets"><a class="fn-backref" href="#id3">1</a></span></dt>
 <dd><p>Gelman et al., “Bayesian data analysis”, Chapman and Hall/CRC, 2013</p>
 </dd>
-<dt class="label" id="id31"><span class="brackets">2</span></dt>
+<dt class="label" id="id8"><span class="brackets"><a class="fn-backref" href="#id4">2</a></span></dt>
 <dd><p>R.C. Smith, “Uncertainty Quantification - Theory, Implementation and Applications”, CS&amp;E, 2014</p>
 </dd>
 </dl>
@@ -1893,11 +1050,6 @@ samples as log_w_unnormalized) = log(target)-log(proposal).</p>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">SampleMethods</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#mcs">MCS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#lhs">LHS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#sts">STS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#strata">Strata</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#rss">RSS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#simplex">Simplex</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#akmcs">AKMCS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#mcmc">MCMC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#is">IS</a></li>
 </ul>
@@ -1907,7 +1059,7 @@ samples as log_w_unnormalized) = log(target)-log(proposal).</p>
 <li class="toctree-l1"><a class="reference internal" href="surrogates.html">Surrogates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reliability.html">Reliability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">Dimension reduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">DimensionReduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="news.html">News</a></li>
 </ul>
@@ -1930,7 +1082,7 @@ samples as log_w_unnormalized) = log(target)-log(proposal).</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1939,7 +1091,7 @@ samples as log_w_unnormalized) = log(target)-log(proposal).</p>
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

@@ -1,19 +1,18 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UQpy.Inference &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -65,10 +64,10 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="kn">import</span> <span class="n">Distribution</span><span class="p">,</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">MVNormal</span>
-<span class="kn">from</span> <span class="nn">UQpy.RunModel</span> <span class="kn">import</span> <span class="n">RunModel</span>
-<span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="kn">import</span> <span class="n">MCMC</span><span class="p">,</span> <span class="n">IS</span>
-<span class="kn">from</span> <span class="nn">UQpy.Utilities</span> <span class="kn">import</span> <span class="n">check_input_dims</span>
+<span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Distribution</span><span class="p">,</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">MVNormal</span>
+<span class="kn">from</span> <span class="nn">UQpy.RunModel</span> <span class="k">import</span> <span class="n">RunModel</span>
+<span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">MCMC</span><span class="p">,</span> <span class="n">IS</span>
+<span class="kn">from</span> <span class="nn">UQpy.Utilities</span> <span class="k">import</span> <span class="n">check_input_dims</span>
 
 
 <span class="c1">########################################################################################################################</span>
@@ -123,7 +122,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Last Modified: 05/13/2020 by Audrey Olivier</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nparams</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_likelihood</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dist_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nparams</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_likelihood</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dist_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
                  <span class="n">error_covariance</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_likelihood</span>
                  <span class="p">):</span>
 
@@ -349,7 +348,7 @@
     <span class="c1"># Authors: Audrey Olivier, Dimitris Giovanis</span>
     <span class="c1"># Last Modified: 12/19 by Audrey Olivier</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inference_model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inference_model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs_optimizer</span><span class="p">):</span>
 
         <span class="c1"># Initialize variables</span>
@@ -365,7 +364,7 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
         <span class="k">if</span> <span class="n">optimizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
+            <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="k">import</span> <span class="n">minimize</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">minimize</span>
         <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">optimizer</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
@@ -433,7 +432,7 @@
             <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">nopt</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">nopt</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: nopt should be an integer &gt;= 1.&#39;</span><span class="p">)</span>
-                <span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="kn">import</span> <span class="n">Uniform</span>
+                <span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
                 <span class="n">x0</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">()</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
                     <span class="n">nsamples</span><span class="o">=</span><span class="n">nopt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">nparams</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
                     <span class="p">(</span><span class="n">nopt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">nparams</span><span class="p">))</span>
@@ -540,7 +539,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Authors: Audrey Olivier, Dimitris Giovanis</span>
     <span class="c1"># Last Modified: 12/19 by Audrey Olivier</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inference_model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sampling_class</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inference_model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sampling_class</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_sampler</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span> <span class="o">=</span> <span class="n">inference_model</span>
@@ -554,7 +553,7 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
 
-        <span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="kn">import</span> <span class="n">MCMC</span><span class="p">,</span> <span class="n">IS</span>
+        <span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">MCMC</span><span class="p">,</span> <span class="n">IS</span>
         <span class="c1"># MCMC algorithm</span>
         <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">sampling_class</span><span class="p">,</span> <span class="n">MCMC</span><span class="p">):</span>
             <span class="c1"># If the seed is not provided, sample one from the prior pdf of the parameters</span>
@@ -691,7 +690,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Authors: Audrey Olivier, Dimitris Giovanis</span>
     <span class="c1"># Last Modified: 12/19 by Audrey Olivier</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate_models</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;AIC&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate_models</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;AIC&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="c1"># Check inputs</span>
@@ -941,7 +940,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Authors: Audrey Olivier, Yuchen Zhou</span>
     <span class="c1"># Last modified: 01/24/2020 by Audrey Olivier</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate_models</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">prior_probabilities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method_evidence_computation</span><span class="o">=</span><span class="s1">&#39;harmonic_mean&#39;</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate_models</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">prior_probabilities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method_evidence_computation</span><span class="o">=</span><span class="s1">&#39;harmonic_mean&#39;</span><span class="p">,</span>
                  <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="c1"># Check inputs: candidate_models is a list of instances of Model, data must be provided, and input arguments</span>
@@ -1158,7 +1157,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../surrogates.html">Surrogates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reliability.html">Reliability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../dimension_reduction.html">Dimension reduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dimension_reduction.html">DimensionReduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
 </ul>
@@ -1181,7 +1180,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1190,7 +1189,7 @@
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

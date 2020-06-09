@@ -1,19 +1,18 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Distributions &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="SampleMethods" href="samplemethods.html" />
@@ -55,9 +54,9 @@ classes:</p>
 convenient for operating with the other <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> modules. All existing distributions and their methods in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> are restructured from the <code class="docutils literal notranslate"><span class="pre">scipy.stats</span></code> package.</p>
 <div class="section" id="parent-distribution-class">
 <h2>Parent Distribution Class<a class="headerlink" href="#parent-distribution-class" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Distribution">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Distribution</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">order_params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Distribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Distribution" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Distribution</code><span class="sig-paren">(</span><em class="sig-param">order_params=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Distribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Distribution" title="Permalink to this definition">¶</a></dt>
 <dd><p>A parent class to all <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> classes.</p>
 <p>All distributions possess a number of methods to perform basic probabilistic operations. For most of the predefined
 distributions in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> these methods are inherited from the <code class="docutils literal notranslate"><span class="pre">scipy.stats</span></code> package. These include standard
@@ -266,7 +265,7 @@ method of the scipy.stats package.</p>
 </ul>
 </dd>
 </dl>
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.Distributions.Distribution.get_params">
 <code class="sig-name descname">get_params</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Distribution.get_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Distribution.get_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the parameters of a <code class="docutils literal notranslate"><span class="pre">Distributions</span></code> object.</p>
@@ -283,9 +282,9 @@ marginal (e.g., location parameter of the 2nd marginal is identified as <cite>lo
 </ul>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.Distributions.Distribution.update_params">
-<code class="sig-name descname">update_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Distribution.update_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Distribution.update_params" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update_params</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Distribution.update_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Distribution.update_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the parameters of a <code class="docutils literal notranslate"><span class="pre">Distributions</span></code> object.</p>
 <p>To update the parameters of a <code class="docutils literal notranslate"><span class="pre">JointInd</span></code> or a <code class="docutils literal notranslate"><span class="pre">JointCopula</span></code> distribution, each parameter is assigned a
 unique string identifier as <cite>key_index</cite> - where <cite>key</cite> is the parameter name and <cite>index</cite> the index of the
@@ -306,18 +305,18 @@ marginal (e.g., location parameter of the 2nd marginal is identified as <cite>lo
 <div class="section" id="d-continuous-distributions">
 <h2>1D Continuous Distributions<a class="headerlink" href="#d-continuous-distributions" title="Permalink to this headline">¶</a></h2>
 <p>In <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>, univariate continuous distributions inherit from the <code class="docutils literal notranslate"><span class="pre">DistributionContinuous1D</span></code> class:</p>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.DistributionContinuous1D">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">DistributionContinuous1D</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#DistributionContinuous1D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.DistributionContinuous1D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">DistributionContinuous1D</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#DistributionContinuous1D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.DistributionContinuous1D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parent class for univariate continuous probability distributions.</p>
 </dd></dl>
 
 <div class="section" id="list-of-distributions">
 <h3>List of Distributions<a class="headerlink" href="#list-of-distributions" title="Permalink to this headline">¶</a></h3>
 <p>The following is a list of all 1D continuous distributions currently available in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Beta">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Beta</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a</span></em>, <em class="sig-param"><span class="n">b</span></em>, <em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Beta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Beta" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Beta</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Beta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Beta" title="Permalink to this definition">¶</a></dt>
 <dd><p>Beta distribution having probability density function</p>
 <div class="math notranslate nohighlight">
 \[f(x|a,b) = \dfrac{\Gamma(a+b)x^{a-1}(1-x)^{b-1}}{\Gamma(a)\Gamma(b)}\]</div>
@@ -354,9 +353,9 @@ marginal (e.g., location parameter of the 2nd marginal is identified as <cite>lo
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Cauchy">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Cauchy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Cauchy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Cauchy" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Cauchy</code><span class="sig-paren">(</span><em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Cauchy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Cauchy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Cauchy distribution having probability density function</p>
 <div class="math notranslate nohighlight">
 \[f(x) = \dfrac{1}{\pi(1+x^2)}\]</div>
@@ -381,9 +380,9 @@ this is equivalent to computing <span class="math notranslate nohighlight">\(f(y
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.ChiSquare">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">ChiSquare</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span></em>, <em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#ChiSquare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.ChiSquare" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">ChiSquare</code><span class="sig-paren">(</span><em class="sig-param">df</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#ChiSquare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.ChiSquare" title="Permalink to this definition">¶</a></dt>
 <dd><p>Chi-square distribution having probability density:</p>
 <div class="math notranslate nohighlight">
 \[f(x|k) = \dfrac{1}{2^{k/2}\Gamma(k/2)}x^{k/2-1}\exp{(-x/2)}\]</div>
@@ -414,9 +413,9 @@ this is equivalent to computing <span class="math notranslate nohighlight">\(f(y
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Exponential">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Exponential</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Exponential"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Exponential" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Exponential</code><span class="sig-paren">(</span><em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Exponential"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Exponential" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exponential distribution having probability density function:</p>
 <div class="math notranslate nohighlight">
 \[f(x) = \exp(-x)\]</div>
@@ -443,9 +442,9 @@ using <span class="math notranslate nohighlight">\(scale = 1 / \lambda\)</span>.
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Gamma">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Gamma</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a</span></em>, <em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Gamma"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Gamma" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Gamma</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Gamma"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Gamma" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gamma distribution having probability density function:</p>
 <div class="math notranslate nohighlight">
 \[f(x|a) = \dfrac{x^{a-1}\exp(-x)}{\Gamma(a)}\]</div>
@@ -476,9 +475,9 @@ this is equivalent to computing <span class="math notranslate nohighlight">\(f(y
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.GenExtreme">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">GenExtreme</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">c</span></em>, <em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#GenExtreme"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.GenExtreme" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">GenExtreme</code><span class="sig-paren">(</span><em class="sig-param">c</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#GenExtreme"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.GenExtreme" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generalized Extreme Value distribution having probability density function:</p>
 <div class="math notranslate nohighlight">
 \[`f(x|c) = \exp(-(1-cx)^{1/c})(1-cx)^{1/c-1}`\]</div>
@@ -512,9 +511,9 @@ this is equivalent to computing <span class="math notranslate nohighlight">\(f(y
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.InvGauss">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">InvGauss</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mu</span></em>, <em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#InvGauss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.InvGauss" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">InvGauss</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#InvGauss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.InvGauss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Inverse Gaussian distribution having probability density function</p>
 <div class="math notranslate nohighlight">
 \[f(x|\mu) = \dfrac{1}{2\pi x^3}\exp{(-\dfrac{(x\mu)^2}{2x\mu^2})}\]</div>
@@ -545,9 +544,9 @@ this is equivalent to computing <span class="math notranslate nohighlight">\(f(y
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Laplace">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Laplace</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Laplace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Laplace" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Laplace</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Laplace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Laplace" title="Permalink to this definition">¶</a></dt>
 <dd><p>Laplace distribution having probability density function</p>
 <div class="math notranslate nohighlight">
 \[f(x) = \dfrac{1}{2}\exp{-|x|}\]</div>
@@ -572,9 +571,9 @@ this is equivalent to computing <span class="math notranslate nohighlight">\(f(y
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Levy">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Levy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Levy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Levy" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Levy</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Levy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Levy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Levy distribution having probability density function</p>
 <div class="math notranslate nohighlight">
 \[f(x) = \dfrac{1}{\sqrt{2\pi x^3}}\exp(-\dfrac{1}{2x})\]</div>
@@ -600,9 +599,9 @@ this is equivalent to computing <span class="math notranslate nohighlight">\(f(y
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Logistic">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Logistic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Logistic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Logistic" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Logistic</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Logistic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Logistic" title="Permalink to this definition">¶</a></dt>
 <dd><p>Logistic distribution having probability density function</p>
 <div class="math notranslate nohighlight">
 \[f(x) = \dfrac{\exp(-x)}{(1+\exp(-x))^2}\]</div>
@@ -627,9 +626,9 @@ this is equivalent to computing <span class="math notranslate nohighlight">\(f(y
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Lognormal">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Lognormal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">s</span></em>, <em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Lognormal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Lognormal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Lognormal</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Lognormal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Lognormal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Lognormal distribution having probability density function</p>
 <div class="math notranslate nohighlight">
 \[f(x|s) = \dfrac{1}{sx\sqrt{2\pi}}\exp(-\dfrac{\log^2(x)}{2s^2})\]</div>
@@ -661,9 +660,9 @@ s = sigma and scale = exp(mu).</p>
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Maxwell">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Maxwell</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Maxwell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Maxwell" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Maxwell</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Maxwell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Maxwell" title="Permalink to this definition">¶</a></dt>
 <dd><p>Maxwell-Boltzmann distribution having probability density function</p>
 <div class="math notranslate nohighlight">
 \[f(x) = \sqrt{2/\pi}x^2\exp(-x^2/2)\]</div>
@@ -687,9 +686,9 @@ this is equivalent to computing <span class="math notranslate nohighlight">\(f(y
 * <code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">icdf</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>, <code class="docutils literal notranslate"><span class="pre">moments</span></code>, <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Normal">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Normal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Normal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Normal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Normal</code><span class="sig-paren">(</span><em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Normal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Normal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Normal distribution having probability density function</p>
 <div class="math notranslate nohighlight">
 \[f(x) = \dfrac{\exp(-x^2/2)}{\sqrt{2\pi}}\]</div>
@@ -714,9 +713,9 @@ this is equivalent to computing <span class="math notranslate nohighlight">\(f(y
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Pareto">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Pareto</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">b</span></em>, <em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Pareto"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Pareto" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Pareto</code><span class="sig-paren">(</span><em class="sig-param">b</em>, <em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Pareto"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Pareto" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pareto distribution having probability density function</p>
 <div class="math notranslate nohighlight">
 \[f(x|b) = \dfrac{b}{x^{b+1}}\]</div>
@@ -747,9 +746,9 @@ this is equivalent to computing <span class="math notranslate nohighlight">\(f(y
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Rayleigh">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Rayleigh</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Rayleigh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Rayleigh" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Rayleigh</code><span class="sig-paren">(</span><em class="sig-param">loc=0</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Rayleigh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Rayleigh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rayleigh distribution having probability density function</p>
 <div class="math notranslate nohighlight">
 \[f(x) = x\exp(-x^2/2)\]</div>
@@ -775,9 +774,9 @@ this is equivalent to computing <span class="math notranslate nohighlight">\(f(y
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.TruncNorm">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">TruncNorm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a</span></em>, <em class="sig-param"><span class="n">b</span></em>, <em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#TruncNorm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.TruncNorm" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">TruncNorm</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em>, <em class="sig-param">loc=0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#TruncNorm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.TruncNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Truncated normal distribution</p>
 <p>The standard form of this distribution (i.e, loc=0., scale=1) is a standard normal truncated to the range [a, b].
 Note that a and b are defined over the domain of the standard normal.</p>
@@ -810,9 +809,9 @@ Note that a and b are defined over the domain of the standard normal.</p>
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Uniform">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Uniform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Uniform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Uniform" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Uniform</code><span class="sig-paren">(</span><em class="sig-param">loc=0.0</em>, <em class="sig-param">scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Uniform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Uniform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Uniform distribution having probability density function</p>
 <div class="math notranslate nohighlight">
 \[f(x|a, b) = \dfrac{1}{b-a}\]</div>
@@ -841,18 +840,18 @@ Note that a and b are defined over the domain of the standard normal.</p>
 <div class="section" id="d-discrete-distributions">
 <h2>1D Discrete Distributions<a class="headerlink" href="#d-discrete-distributions" title="Permalink to this headline">¶</a></h2>
 <p>In <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>, univariate discrete distributions inherit from the <code class="docutils literal notranslate"><span class="pre">DistributionDiscrete1D</span></code> class:</p>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.DistributionDiscrete1D">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">DistributionDiscrete1D</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#DistributionDiscrete1D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.DistributionDiscrete1D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">DistributionDiscrete1D</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#DistributionDiscrete1D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.DistributionDiscrete1D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parent class for univariate discrete distributions.</p>
 </dd></dl>
 
 <div class="section" id="id3">
 <h3>List of Distributions<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <p>The following is a list of all 1D continuous distributions currently available in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Binomial">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Binomial</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">p</span></em>, <em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Binomial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Binomial" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Binomial</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">p</em>, <em class="sig-param">loc=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Binomial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Binomial" title="Permalink to this definition">¶</a></dt>
 <dd><p>Binomial distribution having probability mass function:</p>
 <div class="math notranslate nohighlight">
 \[f(x) = {n \choose x} p^x(1-p)^{n-x}\]</div>
@@ -883,9 +882,9 @@ Note that a and b are defined over the domain of the standard normal.</p>
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Poisson">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Poisson</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mu</span></em>, <em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Poisson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Poisson" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Poisson</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">loc=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Poisson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Poisson" title="Permalink to this definition">¶</a></dt>
 <dd><p>Poisson distribution having probability mass function:</p>
 <div class="math notranslate nohighlight">
 \[f(x) = \exp{(-\mu)}\dfrac{\mu^k}{k!}\]</div>
@@ -916,18 +915,18 @@ Note that a and b are defined over the domain of the standard normal.</p>
 <div class="section" id="multivariate-distributions">
 <h2>Multivariate Distributions<a class="headerlink" href="#multivariate-distributions" title="Permalink to this headline">¶</a></h2>
 <p>In <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>, multivariate distributions inherit from the <code class="docutils literal notranslate"><span class="pre">DistributionND</span></code> class:</p>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.DistributionND">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">DistributionND</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#DistributionND"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.DistributionND" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">DistributionND</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#DistributionND"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.DistributionND" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parent class for multivariate probability distributions.</p>
 </dd></dl>
 
 <p><code class="docutils literal notranslate"><span class="pre">UQpy</span></code> has some inbuilt multivariate distributions, which are directly child classes of <code class="docutils literal notranslate"><span class="pre">DistributionND</span></code>. Additionally, joint distributions can be built from their marginals through the use of the <code class="docutils literal notranslate"><span class="pre">JointInd</span></code> and <code class="docutils literal notranslate"><span class="pre">JointCopula</span></code> classes described below.</p>
 <div class="section" id="id4">
 <h3>List of Distributions<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Multinomial">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Multinomial</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">p</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Multinomial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Multinomial" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Multinomial</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">p</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Multinomial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Multinomial" title="Permalink to this definition">¶</a></dt>
 <dd><p>Multinomial distribution having probability mass function</p>
 <div class="math notranslate nohighlight">
 \[f(x) = \dfrac{n!}{x_1!\dots x_k!}p_1^{x_1}\dots p_k^{x_k}\]</div>
@@ -951,9 +950,9 @@ Note that a and b are defined over the domain of the standard normal.</p>
 </ul>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.MVNormal">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">MVNormal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mean</span></em>, <em class="sig-param"><span class="n">cov</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#MVNormal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.MVNormal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">MVNormal</code><span class="sig-paren">(</span><em class="sig-param">mean</em>, <em class="sig-param">cov=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#MVNormal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.MVNormal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Multivariate normal distribution having probability density function</p>
 <div class="math notranslate nohighlight">
 \[f(x) = \dfrac{1}{\sqrt{(2\pi)^k\det\Sigma}}\exp{-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)}\]</div>
@@ -981,9 +980,9 @@ Note that a and b are defined over the domain of the standard normal.</p>
 </div>
 <div class="section" id="joint-from-independent-marginals">
 <h3>Joint from independent marginals<a class="headerlink" href="#joint-from-independent-marginals" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.JointInd">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">JointInd</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">marginals</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#JointInd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.JointInd" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">JointInd</code><span class="sig-paren">(</span><em class="sig-param">marginals</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#JointInd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.JointInd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define a joint distribution from its independent marginals. <code class="docutils literal notranslate"><span class="pre">JointInd</span></code> is a child class of <code class="docutils literal notranslate"><span class="pre">DistributionND</span></code>.</p>
 <p><strong>Inputs:</strong></p>
 <ul class="simple">
@@ -1007,9 +1006,9 @@ the index of the marginal (e.g., location parameter of the 2nd marginal is ident
 </div>
 <div class="section" id="joint-from-marginals-and-copula">
 <h3>Joint from marginals and copula<a class="headerlink" href="#joint-from-marginals-and-copula" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.JointCopula">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">JointCopula</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">marginals</span></em>, <em class="sig-param"><span class="n">copula</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#JointCopula"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.JointCopula" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">JointCopula</code><span class="sig-paren">(</span><em class="sig-param">marginals</em>, <em class="sig-param">copula</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#JointCopula"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.JointCopula" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define a joint distribution from a list of marginals and a copula to introduce dependency. <code class="docutils literal notranslate"><span class="pre">JointCopula</span></code> is a
 child class of <code class="docutils literal notranslate"><span class="pre">DistributionND</span></code>.</p>
 <p><strong>Inputs:</strong></p>
@@ -1038,9 +1037,9 @@ parameters.</p>
 </div>
 <div class="section" id="copula">
 <h2>Copula<a class="headerlink" href="#copula" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Copula">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Copula</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">order_params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Copula"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Copula" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Copula</code><span class="sig-paren">(</span><em class="sig-param">order_params=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Copula"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Copula" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define a copula for a multivariate distribution whose dependence structure is defined with a copula.</p>
 <p>This class is used in support of the <code class="docutils literal notranslate"><span class="pre">JointCopula</span></code> distribution class.</p>
 <p><strong>Attributes:</strong></p>
@@ -1104,9 +1103,9 @@ method.</p>
 </ul>
 </dd>
 </dl>
-<dl class="py method">
+<dl class="method">
 <dt id="UQpy.Distributions.Copula.check_marginals">
-<code class="sig-name descname">check_marginals</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">marginals</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Copula.check_marginals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Copula.check_marginals" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">check_marginals</code><span class="sig-paren">(</span><em class="sig-param">marginals</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Copula.check_marginals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Copula.check_marginals" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform some checks on the marginals, raise errors if necessary.</p>
 <p>As an example, Archimedian copula are only defined for bi-variate continuous distributions, thus this method
 checks that marginals is of length 2 and continuous, and raise an error if that is not the case.</p>
@@ -1127,9 +1126,9 @@ checks that marginals is of length 2 and continuous, and raise an error if that 
 
 <div class="section" id="list-of-copulas">
 <h3>List of Copulas<a class="headerlink" href="#list-of-copulas" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Gumbel">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Gumbel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">theta</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Gumbel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Gumbel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Gumbel</code><span class="sig-paren">(</span><em class="sig-param">theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Gumbel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Gumbel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gumbel copula having cumulative distribution function</p>
 <div class="math notranslate nohighlight">
 \[F(u_1, u_2) = \exp(-(-\log(u_1))^{\Theta} + (-\log(u_2))^{\Theta})^{1/{\Theta}}\]</div>
@@ -1149,9 +1148,9 @@ checks that marginals is of length 2 and continuous, and raise an error if that 
 <p>(<code class="docutils literal notranslate"><span class="pre">check_copula</span></code> checks that <cite>marginals</cite> consist of solely 2 continuous univariate distributions).</p>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Clayton">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Clayton</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">theta</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Clayton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Clayton" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Clayton</code><span class="sig-paren">(</span><em class="sig-param">theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Clayton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Clayton" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clayton copula having cumulative distribution function</p>
 <div class="math notranslate nohighlight">
 \[F(u_1, u_2) = \max(u_1^{-\Theta} + u_2^{-\Theta} - 1, 0)^{-1/{\Theta}}\]</div>
@@ -1171,9 +1170,9 @@ checks that marginals is of length 2 and continuous, and raise an error if that 
 <p>(<code class="docutils literal notranslate"><span class="pre">check_copula</span></code> checks that <cite>marginals</cite> consist of solely 2 continuous univariate distributions).</p>
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="UQpy.Distributions.Frank">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Frank</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">theta</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Frank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Frank" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Frank</code><span class="sig-paren">(</span><em class="sig-param">theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Frank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Frank" title="Permalink to this definition">¶</a></dt>
 <dd><p>Frank copula having cumulative distribution function</p>
 <p><span class="math notranslate nohighlight">\(F(u_1, u_2) = -\dfrac{1}{\Theta} \log(1+\dfrac{(\exp(-\Theta u_1)-1)(\exp(-\Theta u_2)-1)}{\exp(-\Theta)-1})\)</span></p>
 <p>where <span class="math notranslate nohighlight">\(u_1 = F_1(x_1), u_2 = F_2(x_2)\)</span> are uniformly distributed on the interval <cite>[0, 1]</cite>.</p>
@@ -1257,7 +1256,7 @@ checks that marginals is of length 2 and continuous, and raise an error if that 
 <li class="toctree-l1"><a class="reference internal" href="surrogates.html">Surrogates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reliability.html">Reliability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">Dimension reduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">DimensionReduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="news.html">News</a></li>
 </ul>
@@ -1280,7 +1279,7 @@ checks that marginals is of length 2 and continuous, and raise an error if that 
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1289,7 +1288,7 @@ checks that marginals is of length 2 and continuous, and raise an error if that 
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

@@ -1,19 +1,18 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UQpy.StochasticProcess &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -35,10 +34,10 @@
   <h1>Source code for UQpy.StochasticProcess</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;This module contains functionality for all the stochastic process generation supported by UQpy.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">UQpy.Utilities</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">sqrtm</span>
-<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">norm</span>
+<span class="kn">from</span> <span class="nn">UQpy.Utilities</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">sqrtm</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">norm</span>
 <span class="kn">import</span> <span class="nn">itertools</span>
 
 
@@ -95,7 +94,7 @@
     <span class="c1"># Created by Lohit Vandanapu</span>
     <span class="c1"># Last Modified:04/08/2020 Lohit Vandanapu</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">dw</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">nw</span><span class="p">,</span> <span class="n">case</span><span class="o">=</span><span class="s1">&#39;uni&#39;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">dw</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">nw</span><span class="p">,</span> <span class="n">case</span><span class="o">=</span><span class="s1">&#39;uni&#39;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">S</span> <span class="o">=</span> <span class="n">S</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dw</span> <span class="o">=</span> <span class="n">dw</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nt</span> <span class="o">=</span> <span class="n">nt</span>
@@ -205,7 +204,7 @@
     <span class="c1"># Created by Lohit Vandanapu</span>
     <span class="c1"># Last Modified:04/08/2020 Lohit Vandanapu</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_sim</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">dw</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">nw</span><span class="p">,</span> <span class="n">case</span><span class="o">=</span><span class="s1">&#39;uni&#39;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_sim</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">dw</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">nw</span><span class="p">,</span> <span class="n">case</span><span class="o">=</span><span class="s1">&#39;uni&#39;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_sim</span> <span class="o">=</span> <span class="n">n_sim</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nw</span> <span class="o">=</span> <span class="n">nw</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nt</span> <span class="o">=</span> <span class="n">nt</span>
@@ -326,7 +325,7 @@
     <span class="c1"># Created by Lohit Vandanapu</span>
     <span class="c1"># Last Modified:04/08/2020 Lohit Vandanapu</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">R</span> <span class="o">=</span> <span class="n">R</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulate</span><span class="p">(</span><span class="n">nsamples</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">dt</span>
@@ -387,7 +386,7 @@
     <span class="c1"># Created by Lohit Vandanapu</span>
     <span class="c1"># Last Modified:04/08/2020 Lohit Vandanapu</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marginal</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">dw</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">nw</span><span class="p">,</span> <span class="n">S_g</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">R_g</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">samples_g</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marginal</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">dw</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">nw</span><span class="p">,</span> <span class="n">S_g</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">R_g</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">samples_g</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">R_g</span> <span class="ow">and</span> <span class="n">S_g</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Either the Power Spectrum or the Autocorrelation function should be specified&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">R_g</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -496,7 +495,7 @@
     <span class="c1"># Created by Lohit Vandanapu</span>
     <span class="c1"># Last Modified:04/08/2020 Lohit Vandanapu</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marginal</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">dw</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">nw</span><span class="p">,</span> <span class="n">R_ng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">S_ng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">samples_ng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marginal</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">dw</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">nw</span><span class="p">,</span> <span class="n">R_ng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">S_ng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">samples_ng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nw</span><span class="p">)</span> <span class="o">*</span> <span class="n">dw</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nt</span><span class="p">)</span> <span class="o">*</span> <span class="n">dt</span>
         <span class="k">if</span> <span class="n">R_ng</span> <span class="ow">and</span> <span class="n">S_ng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -634,7 +633,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../surrogates.html">Surrogates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reliability.html">Reliability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../dimension_reduction.html">Dimension reduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dimension_reduction.html">DimensionReduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
 </ul>
@@ -657,7 +656,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -666,7 +665,7 @@
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

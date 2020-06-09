@@ -635,7 +635,7 @@ class RunModel:
         else:
             # If the Python model is not vectorized and accepts only a single sample.
             for i in range(self.nexist, self.nexist + self.nsim):
-                sample_to_send = self.samples[i]
+                sample_to_send = np.atleast_2d(self.samples[i])
 
                 if len(self.python_kwargs) == 0:
                     self.model_output = model_object(sample_to_send)
