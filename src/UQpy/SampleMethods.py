@@ -749,7 +749,7 @@ class STS:
         elif self.stype == 'Voronoi' and nsamples is not None:
             self.run(nsamples=nsamples)
 
-    def run(self, nsamples=None, sts_design=None, input_file=None):
+    def run(self, nsamples=None, sts_design=None, input_file=None, random_state=None):
         """
         Execute the random sampling in the ``STS`` class.
 
@@ -775,6 +775,12 @@ class STS:
 
             Default: None.
 
+        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
+
+            If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+            object itself can be passed directly.
+
         **Output/Return:**
 
         The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``STS``
@@ -787,6 +793,12 @@ class STS:
 
         if self.verbose:
             print('UQpy: Running Stratified Sampling...')
+
+        if random_state is not None:
+            if isinstance(self.random_state, int):
+                self.random_state = np.random.RandomState(self.random_state)
+            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if self.stype == 'Rectangular':
             if self.sts_design is None:
