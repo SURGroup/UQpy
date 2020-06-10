@@ -746,11 +746,42 @@ class STS:
         elif self.stype == 'Voronoi' and nsamples is not None:
             self.run(nsamples=nsamples)
 
-    def run(self, nsamples=None, sts_design=None, input_file=None):
+    def run(self, nsamples=None, sts_design=None, input_file=None, random_state=None):
         """
-        Execute stratified sampling
-        This is an instance method that runs stratified sampling. It is automatically called when the STS class is
-        instantiated.
+        Execute the random sampling in the ``STS`` class.
+
+        The ``run`` method is the function that performs random sampling in the ``STS`` class. If `nsamples`,
+        `sts_design` or `input_file` is provided, the ``run`` method is automatically called when the ``STS`` object is
+        defined. The user may also call the ``run`` method directly to generate samples. The ``run`` method of the
+        ``STS`` class can be invoked many times and each time the generated samples are appended to the existing samples.
+
+        **Inputs:**
+
+        * **nsamples** (`int`):
+                Number of samples to be drawn from each distribution.
+                If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+                existing samples.
+
+        * **sts_design** (`list`):
+                List of integers specifiying the number of strata in each dimension. Required for rectangular
+                stratification.
+
+        * **input_file** (`str`):
+                File path to input file specifying stratum origins and stratum widths.
+
+                Default: None.
+
+        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+                Random seed used to initialize the pseudo-random number generator. If an integer is provided, this sets
+                the seed for an object of ``numpy.random.RandomState``. Otherwise, the object itself can be passed
+                directly.
+
+                Default is None.
+
+        **Output/Return:**
+
+        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``STS``
+        class.
         """
         self.nsamples = nsamples
         self.sts_design = sts_design
@@ -758,6 +789,13 @@ class STS:
 
         if self.verbose:
             print('UQpy: Running Stratified Sampling...')
+
+        if random_state is not None:
+            self.random_state = random_state
+            if isinstance(self.random_state, int):
+                self.random_state = np.random.RandomState(self.random_state)
+            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if self.stype == 'Rectangular':
             if self.sts_design is None:
