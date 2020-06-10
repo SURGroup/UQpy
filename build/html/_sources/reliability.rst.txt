@@ -50,7 +50,7 @@ where :math:`\textbf{Y}^\star` is the expansion point, :math:`G(\textbf{Y})` is 
 where :math:`\Phi(\cdot)` is the standard normal cumulative distribution function and :math:`\beta_{HL}=||\textbf{Y}^*||` is the norm of the design point known as the Hasofer-Lind reliability index calculated with the iterative Hasofer-Lind-Rackwitz-Fiessler (HLRF) algorithm.  The convergence criteria used for HLRF algorithm are: 
 
 
-.. math:: tol1: ||\textbf{Y}^{k} - \boldsymbol{\alpha}^\intercal\textbf{Y}^{k-1}\boldsymbol{\alpha}|| \leq 10^{-3}
+.. math:: tol1: ||\textbf{Y}^{k} - \textbf{Y}^{k-1}||_2 \leq 10^{-3}
 .. math:: tol2: G(\textbf{Y}^{k}) \leq 10^{-6}
 
 .. image:: _static/Reliability_FORM.png
