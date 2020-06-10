@@ -683,7 +683,7 @@ class Translation:
             self.samples_non_gaussian = self.translate_gaussian_samples()
         self.correlation_function_non_gaussian, self.scaled_correlation_function_non_gaussian = \
             self.autocorrelation_distortion()
-        self.S_ng = R_to_S(self.scaled_correlation_function_non_gaussian,
+        self.power_spectrum_non_gaussian = R_to_S(self.correlation_function_non_gaussian,
                            np.arange(0, number_frequency_intervals) * frequency_interval,
                            np.arange(0, number_time_intervals) * time_duration)
 
@@ -801,14 +801,14 @@ class InverseTranslation:
     def itam_power_spectrum(self):
         target_s = self.power_spectrum_non_gaussian
         i_converge = 0
-        max_iter = 10
+        max_iter = 100
         target_r = S_to_R(target_s, self.frequency, self.time)
         r_g_iterate = target_r
         s_g_iterate = target_s
         r_ng_iterate = np.zeros_like(target_r)
         s_ng_iterate = np.zeros_like(target_s)
 
-        for ii in range(max_iter):
+        for _ in range(max_iter):
             r_g_iterate = S_to_R(s_g_iterate, self.frequency, self.time)
             for i in range(len(target_r)):
                 r_ng_iterate[i] = solve_single_integral(dist_object=self.dist_object,
@@ -818,15 +818,16 @@ class InverseTranslation:
             err1 = np.sum((target_s - s_ng_iterate) ** 2)
             err2 = np.sum(target_s ** 2)
 
-            if ii == max_iter or 100 * np.sqrt(err1 / err2) < 0.0005:
+            if 100 * np.sqrt(err1 / err2) < 0.0005:
                 i_converge = 1
 
             s_g_next_iterate = (target_s / s_ng_iterate) * s_g_iterate
 
             # Eliminate Numerical error of Upgrading Scheme
             s_g_next_iterate[s_g_next_iterate < 0] = 0
+            s_g_iterate = s_g_next_iterate
 
-            if i_converge == 0 and ii != max_iter:
-                s_g_iterate = s_g_next_iterate
+            if i_converge:
+                break
 
         return s_g_iterate
