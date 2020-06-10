@@ -649,38 +649,55 @@ class STS:
     1. M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte
        Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
     **Input:**
+
     * **dist_object** ((list of) ``Distribution`` object(s)):
             List of ``Distribution`` objects corresponding to each random variable.
+
     * **nsamples** (`int`):
             Total number of samples. Required for voronoi stratification.
+
     * **sts_design** (`list`):
             List of integers specifiying the number of strata in each dimension. Required for rectangular
             stratification.
+
     * **sts_criterion** (`str`):
             Random or Centered samples inside a rectangular strata.
             Options:
                     1. 'random' - completely random. \n
                     2. 'centered' - points only at the centre. \n
+
             Default: 'random'
+
     * **stype** (`str`):
             Type of the strata (Rectangular or Voronoi).
+
     * **n_iters** (`int`):
             Default: 20
+
     * **input_file** (`str`):
             File path to input file specifying stratum origins and stratum widths.
+
             Default: None.
+
     * **random_state** (None or `int` or `np.random.RandomState` object):
             Random seed used to initialize the pseudo-random number generator. Default is None.
+
     * **verbose** (`Boolean`):
             A boolean declaring whether to write text to the terminal.
+
             Default value: False
+
     **Attributes:**
+
     * **samples** (`ndarray`):
             `ndarray` containing the generated samples.
+
     * **samplesU01** (`ndarray`):
             `ndarray` containing the generated samples on [0, 1]^dimension.
+
     * **strata** (`class` object):
             Instance of the class SampleMethods.Strata.
+
     **Methods:**
     """
     def __init__(self, dist_object, nsamples=None, sts_design=None, sts_criterion="random", stype='Rectangular',
@@ -729,11 +746,42 @@ class STS:
         elif self.stype == 'Voronoi' and nsamples is not None:
             self.run(nsamples=nsamples)
 
-    def run(self, nsamples=None, sts_design=None, input_file=None):
+    def run(self, nsamples=None, sts_design=None, input_file=None, random_state=None):
         """
-        Execute stratified sampling
-        This is an instance method that runs stratified sampling. It is automatically called when the STS class is
-        instantiated.
+        Execute the random sampling in the ``STS`` class.
+
+        The ``run`` method is the function that performs random sampling in the ``STS`` class. If `nsamples`,
+        `sts_design` or `input_file` is provided, the ``run`` method is automatically called when the ``STS`` object is
+        defined. The user may also call the ``run`` method directly to generate samples. The ``run`` method of the
+        ``STS`` class can be invoked many times and each time the generated samples are appended to the existing samples.
+
+        **Inputs:**
+
+        * **nsamples** (`int`):
+                Number of samples to be drawn from each distribution.
+                If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+                existing samples.
+
+        * **sts_design** (`list`):
+                List of integers specifiying the number of strata in each dimension. Required for rectangular
+                stratification.
+
+        * **input_file** (`str`):
+                File path to input file specifying stratum origins and stratum widths.
+
+                Default: None.
+
+        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+                Random seed used to initialize the pseudo-random number generator. If an integer is provided, this sets
+                the seed for an object of ``numpy.random.RandomState``. Otherwise, the object itself can be passed
+                directly.
+
+                Default is None.
+
+        **Output/Return:**
+
+        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``STS``
+        class.
         """
         self.nsamples = nsamples
         self.sts_design = sts_design
@@ -741,6 +789,12 @@ class STS:
 
         if self.verbose:
             print('UQpy: Running Stratified Sampling...')
+
+        if random_state is not None:
+            if isinstance(self.random_state, int):
+                self.random_state = np.random.RandomState(self.random_state)
+            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if self.stype == 'Rectangular':
             if self.sts_design is None:
@@ -812,6 +866,7 @@ class Strata:
     """
     Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^dimension with N strata.
     **Input:**
+
     * **n_strata** (`list` of `int`):
             A list of dimension n defining the number of strata in each of the n dimensions. Creates an equal
             stratification with strata widths equal to 1/n_strata. The total number of strata, N, is the product of the
@@ -821,8 +876,10 @@ class Strata:
                 2 strata in dimension 0 with stratum widths 1/2
                 3 strata in dimension 1 with stratum widths 1/3
                 2 strata in dimension 2 with stratum widths 1/2
+
     * **input_file** (`str`):
             File path to input file specifying stratum origins and stratum widths.
+
     * **origins** (`ndarray`):
             An array of dimension N x n specifying the origins of all strata. The origins of the strata are the
             coordinates of the stratum orthotope nearest the global origin.
@@ -832,6 +889,7 @@ class Strata:
                            [0, 0.5]
                            [0.5, 0]
                            [0.5, 0.5]]
+
     * **widths** (`ndarray`):
             An array of dimension N x n specifying the widths of all strata in each dimension
             Example: A 2D stratification with 2 strata in each dimension
@@ -839,10 +897,13 @@ class Strata:
                              [0.5, 0.5]
                              [0.5, 0.5]
                              [0.5, 0.5]]
+
     **Attributes:**
+
     * **weights** (`ndarray`):
             An array of dimension 1 x N containing sample weights. Sample weights are equal to the product of the
             strata widths (i.e. they are equal to the size of the strata in the [0, 1]^n space.
+
     """
     def __init__(self, n_strata=None, input_file=None, origins=None, widths=None):
 
@@ -896,10 +957,14 @@ class Strata:
         https://pypi.org/project/pyDOE/
         or
         https://github.com/tisimst/pyDOE/
+
         **Input:**
+
         * **levels** (`list`):
                 A list of integers that indicate the number of levels of each input design factor.
+
         **Output:**
+
         * **ff** (`ndarray`):
                 Full-factorial design matrix.
         """
@@ -933,32 +998,50 @@ class RSS:
     """
     Generate new samples using adaptive sampling methods, i.e. Refined Stratified Sampling and Gradient
     Enhanced Refined Stratified Sampling.
+
     **References:**
+
     1. Michael D. Shields, Kirubel Teferra, Adam Hapij and Raymond P. Daddazio, "Refined Stratified Sampling for
        efficient Monte Carlo based uncertainty quantification", Reliability Engineering & System Safety,
        ISSN: 0951-8320, Vol: 142, Page: 310-325, 2015.
+
     2. M. D. Shields, "Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems",
        Reliability Engineering & System Safety, ISSN: 0951-8320, Vol: 175, Page: 207-224, 2018.
+
     **Input:**
+
     * **runmodel_object** (``Uqpy.RunModel`` object):
             A RunModel object, which is used to evaluate the function value.
+
     * **sample_object** (``Uqpy.SampleMethodes.STS`` or ``UQpy.SampleMethods.RSS`` object):
             A SampleMethods class object, which contains information about existing samples.
+
     * **krig_object** (`class` object):
             A surrogate model, which should have fit and predict as methods.
+
     * **local** (`boolean`):
             Indicator to update surrogate locally.
+
     * **max_train_size** (`int`):
             Minimum size of training data around new sample used to update surrogate.
+
             Default: nsamples.
+
+    * **qoi_name** (`dict`):
+            If the quantity of interest is a dictionary, convert it to a list
+
     * **step_size** (`float`):
             Step size to calculate the gradient using central difference.
+
     * **n_add** (`int`):
             Number of samples generated in each iteration.
+
     * **random_state** (None or `int` or `np.random.RandomState` object):
             Random seed used to initialize the pseudo-random number generator. Default is None.
+
     * **verbose** (`Boolean`):
             A boolean declaring whether to write text to the terminal.
+
             Default value: False
     """
 
@@ -1571,13 +1654,18 @@ class RSS:
         """
         Estimating gradients with a metamodel (surrogate).
         **Inputs:**
+
         * **x** (`ndarray`):
                 Samples in the training data.
+
         * **y** (`ndarray`):
                 Function values evaluated at the samples in the training data.
+
         * **xt** (`ndarray`):
                 Samples where gradients need to be evaluated.
+
         **Outputs:**
+
         * **gr** (`ndarray`):
                 First-order gradient evaluated at the points 'xt' using central difference.
         """
@@ -1600,17 +1688,25 @@ class RSS:
 class Simplex:
     """
     Generate random samples inside a simplex using uniform probability distribution.
+
     **References:**
+
     1. W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, "Simplex-stochastic collocation method with improved
        calability",Journal of Computational Physics, 310:301–328 2016.
+
     **Input:**
+
     * **nodes** (`ndarray` or `list`):
              The vertices of the simplex.
+
     * **nsamples** (`int`):
              The number of samples to be generated inside the simplex.
+
     * **random_state** (None or `int` or `np.random.RandomState` object):
             Random seed used to initialize the pseudo-random number generator. Default is None.
+
     **Output:**
+
     * **samples** (`ndarray`):
              New random samples distributed uniformly inside the simplex.
     """
@@ -1673,28 +1769,39 @@ class Simplex:
 ########################################################################################################################
 class AKMCS:
     """
-    Generate new samples using different active learning method and properties of kriging surrogate along with
-    MCS.
+    Generate new samples using different active learning method and properties of kriging surrogate along with MCS.
+
     **References:**
+
     1. B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
         Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
+
     **Input:**
+
     * **dist_object** ((list of) ``Distribution`` object(s)):
             List of ``Distribution`` objects corresponding to each random variable.
+
     * **runmodel_object** (``RunModel`` object):
             A RunModel object, which is used to evaluate the function value.
+
     * **samples** (`ndarray`):
             `ndarray` containing the samples.
+
     * **krig_object** (`class` object):
             A surrogate model, this object must have fit and predict methods.
+
     * **nsamples** (`int`):
             Number of samples to be drawn from each distribution.
+
     * **nlearn** (`int`):
             Number of sample generated using LHS, which are used as learning set by AKMCS.
+
     * **nstart** (`int`):
             Number of initial samples, randomly generated using LHS.
+
     * **qoi_name** (`dict`):
             If the quantity of interest is a dictionary, convert it to a list
+
     * **learning_function** (`str` or `function`):
             Learning function used as the selection criteria to identify new samples.
                 Options:
@@ -1703,26 +1810,38 @@ class AKMCS:
                     3. 'Weighted-U' - Weighted-U function \n
                     4. 'EIF' - Expected Improvement Function \n
                     5. 'EGIF' - Expected Global Improvement Fit \n
+
                 Default: 'U'.
+
     * **n_add** (`int'):
             Number of samples to be selected per iteration.
+
             Default: 1.
+
     * **save_pf** (`boolean'):
             Indicator to estimate probability of failure after each iteration. Only required if user-defined learning
             function is used.
+
     * **random_state** (None or `int` or `np.random.RandomState` object):
             Random seed used to initialize the pseudo-random number generator. Default is None.
+
     * **verbose** (`Boolean`):
             A boolean declaring whether to write text to the terminal.
+
             Default value: False.
+
     **Attributes:**
+
     * **samples** (`ndarray`):
             `ndarray` containing the generated samples.
+
     * **pf** (`list`):
             Probability of failure after every iteration of AKMCS. Available as an output only for Reliability Analysis.
+
     * **cov_pf** (`list`):
             Covariance of probability of failure after every iteration of AKMCS. Available as an output only for
             Reliability Analysis.
+
     """
 
     def __init__(self, dist_object, runmodel_object, krig_object, samples=None, nsamples=None, nlearn=10000,
@@ -1834,6 +1953,7 @@ class AKMCS:
         The ``run`` method of the ``AKMCS`` class can be invoked many times and the generated samples are appended to
         the existing samples. Iterative procedure is applied to learn samples based on metamodel and learning function,
         and then metamodel is updated based on new samples.
+
         """
 
         self.nsamples = nsamples
@@ -1882,11 +2002,10 @@ class AKMCS:
 
             # Apply the learning function to identify the new point to run the model.
 
-            new_ind, ind = self.learning_function(self.krig_model, rest_pop)
-            new_point = np.atleast_2d(rest_pop[new_ind])
+            new_point, ind = self.learning_function(self.krig_model, rest_pop)
 
             # Add the new points to the training set and to the sample set.
-            self.samples = np.vstack([self.samples, new_point])
+            self.samples = np.vstack([self.samples, np.atleast_2d(new_point)])
 
             # Run the model at the new points
             self.runmodel_object.run(samples=new_point, append_samples=True)
@@ -1927,12 +2046,16 @@ class AKMCS:
     # ------------------
     def eigf(self, surr, pop):
         """
-        Learns new samples based on Expected Improvement for Global Fit (EIGF) as learning function
+        Learns new samples based on Expected Improvement for Global Fit (EIGF) as learning function.
+
         **References:**
+
         1. J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
            (Link: https://arxiv.org/pdf/1905.05345.pdf)
         """
         g, sig = surr(pop, True)
+
+        # Remove the inconsistency in the shape of 'g' and 'sig' array
         g = g.reshape([pop.shape[0], 1])
         sig = sig.reshape([pop.shape[0], 1])
 
@@ -1950,16 +2073,21 @@ class AKMCS:
         u = np.square(np.squeeze(g) - qoi_array) + np.square(np.squeeze(sig))
 
         rows = np.argmax(u)
-        return rows, False
+
+        return pop[rows, :], False
 
     def u(self, surr, pop):
         """
         Learns new samples based on U-function as learning function.
+
         **References:**
+
         1. B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
         Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
         """
         g, sig = surr(pop, True)
+
+        # Remove the inconsistency in the shape of 'g' and 'sig' array
         g = g.reshape([pop.shape[0], 1])
         sig = sig.reshape([pop.shape[0], 1])
 
@@ -1969,17 +2097,21 @@ class AKMCS:
         if min(u[:, 0]) >= 2:
             self.indicator = True
 
-        return rows, self.indicator
+        return pop[rows, :], self.indicator
 
     def weighted_u(self, surr, pop):
         """
         Learns new samples based on Probability Weighted U-function as learning function.
+
         **References:**
+
         1. V.S. Sundar and M.S. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH MULTIMODEL
            INFERENCE".
         """
         max_p = self.kwargs['max_p']
         g, sig = surr(pop, True)
+
+        # Remove the inconsistency in the shape of 'g' and 'sig' array
         g = g.reshape([pop.shape[0], 1])
         sig = sig.reshape([pop.shape[0], 1])
 
@@ -1995,16 +2127,20 @@ class AKMCS:
         if min(u[:, 0]) >= 2:
             self.indicator = True
 
-        return rows, self.indicator
+        return pop[rows, :], self.indicator
 
     def eff(self, surr, pop):
         """
         Learns new samples based on Expected Feasibilty Function (EFF) as learning function.
+
         **References:**
+
         1. B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, "Efficient Global Reliability Analysis
            for Nonlinear Implicit Performance Functions", AIAA JOURNAL, Volume 46, 2008.
         """
         g, sig = surr(pop, True)
+
+        # Remove the inconsistency in the shape of 'g' and 'sig' array
         g = g.reshape([pop.shape[0], 1])
         sig = sig.reshape([pop.shape[0], 1])
         # Reliability threshold: a_ = 0
@@ -2021,16 +2157,20 @@ class AKMCS:
         if max(eff[:, 0]) <= 0.001:
             self.indicator = True
 
-        return rows, self.indicator
+        return pop[rows, :], self.indicator
 
     def eif(self, surr, pop):
         """
         Learns new samples based on Expected Improvement Function (EIF) as learning function.
+
         **References:**
+
         1. D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box Functions",
            Journal of Global Optimization, Pages 455–492, 1998.
         """
         g, sig = surr(pop, True)
+
+        # Remove the inconsistency in the shape of 'g' and 'sig' array
         g = g.reshape([pop.shape[0], 1])
         sig = sig.reshape([pop.shape[0], 1])
 
@@ -2038,7 +2178,7 @@ class AKMCS:
         u = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf((fm - g) / sig)
         rows = u[:, 0].argsort()[(np.size(g) - self.n_add):]
 
-        return rows, False
+        return pop[rows, :], False
 
 ########################################################################################################################
 ########################################################################################################################
