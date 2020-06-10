@@ -7,12 +7,12 @@
     <title>UQpy.Transformations &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -158,7 +158,7 @@
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_x</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">samples_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_x_to_y</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">Jxy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Jxy</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">distortion_x_to_z</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">itam_error1</span><span class="p">,</span>
                                                  <span class="bp">self</span><span class="o">.</span><span class="n">itam_error2</span><span class="p">)</span>
@@ -362,11 +362,11 @@
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">corr_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">samples_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_y_to_x</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">Jyx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-
+            <span class="bp">self</span><span class="o">.</span><span class="n">Jyx</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">corr_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">distortion_z_to_x</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">samples_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_y_to_x</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span><span class="p">)</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">Jyx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jacobian_y_x</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples_x</span><span class="p">,</span> <span class="n">corr_z</span><span class="p">)</span>
 
 <div class="viewcode-block" id="InvNataf.distortion_z_to_x"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.InvNataf.distortion_z_to_x">[docs]</a>    <span class="nd">@staticmethod</span>
@@ -579,7 +579,7 @@
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -588,7 +588,7 @@
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
