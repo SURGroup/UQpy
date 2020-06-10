@@ -635,7 +635,11 @@ class TaylorSeries:
 
         array_of_samples = np.array(list_of_samples)
         array_of_samples = array_of_samples.reshape((len(array_of_samples), -1))
+
         runmodel_object.run(samples=array_of_samples, append_samples=False)
+        if verbose:
+            print('samples for gradient: {0}'.format(array_of_samples[1:]))
+            print('model evaluations for the gradient: {0}'.format(runmodel_object.qoi_list[1:]))
 
         if order.lower() == 'first':
             gradient = np.zeros(point_y.shape[0])
@@ -714,6 +718,10 @@ class TaylorSeries:
             array_of_mixed_points = np.array(list_of_mixed_points)
             array_of_mixed_points = array_of_mixed_points.reshape((len(array_of_mixed_points), -1))
             runmodel_object.run(samples=array_of_mixed_points, append_samples=False)
+
+            if verbose:
+                print('samples for gradient: {0}'.format(array_of_mixed_points[1:]))
+                print('model evaluations for the gradient: {0}'.format(runmodel_object.qoi_list[1:]))
 
             for j in range(count):
                 qoi_0 = runmodel_object.qoi_list[4 * j]
@@ -900,7 +908,6 @@ class FORM(TaylorSeries):
         g_record = list()
         dg_x_record = list()
         alpha_record = list()
-        dg_y_record = list()
 
         conv_flag = 0
         k = 0
@@ -925,30 +932,43 @@ class FORM(TaylorSeries):
             self.x = x
             y_record.append(y)
             x_record.append(x)
+            if self.verbose:
+                print('Design point Y: {0}'.format(y[k, :]))
+                print('Design point X: {0}'.format(self.x))
+
             # 2. evaluate Limit State Function and the gradient at point u_k and direction cosines
             dg_y, qoi = self.derivatives(point_y=y[k, :], point_x=self.x, runmodel_object=self.runmodel_object,
                                          dist_object=self.dist_object, order='first',
-                                         corr_z=self.corr_z)
+                                         corr_z=self.corr_z, verbose=self.verbose)
+
+            if self.verbose:
+                print('Gradient: {0}'.format(dg_y))
+
             g_record.append(qoi)
             dg_y_record[k + 1, :] = dg_y
             norm_grad = np.linalg.norm(dg_y)
             alpha = - dg_y / norm_grad
+            if self.verbose:
+                print('Directional cosines: {0}'.format(alpha))
+
             self.alpha = alpha.squeeze()
             alpha_record.append(self.alpha)
             beta[k + 1] = beta[k] + qoi / norm_grad
+            if self.verbose:
+                print('Beta: {0}'.format(beta[k]))
+                print('Pf: {0}'.format(stats.norm.cdf(-beta[k])))
+
             y[k + 1, :] = beta[k + 1] * self.alpha
 
             if k > 0:
                 if (self.tol1 is not None) and (self.tol2 is not None) and (self.tol3 is not None):
-                    if np.linalg.norm(y[k + 1, :] - y[k, :]) <= self.tol1 and np.linalg.norm(g_record[k + 1] -
-                                                                                             g_record[k]) \
+                    if np.linalg.norm(y[k + 1, :] - y[k, :]) <= self.tol1 and np.linalg.norm(beta[k + 1] - beta[k]) \
                             <= self.tol2 and np.linalg.norm(dg_y_record[k + 1, :] - dg_y_record[k, :]) < self.tol3:
                         conv_flag = 1
                     else:
                         k = k + 1
                 if (self.tol1 is None) and (self.tol2 is None) and (self.tol3 is None):
-                    if np.linalg.norm(y[k + 1, :] - y[k, :]) <= self.tol1 or np.linalg.norm(g_record[k + 1] -
-                                                                                            g_record[k]) \
+                    if np.linalg.norm(y[k + 1, :] - y[k, :]) <= self.tol1 or np.linalg.norm(beta[k + 1] - beta[k]) \
                             <= self.tol2 or np.linalg.norm(dg_y_record[k + 1, :] - dg_y_record[k, :]) < self.tol3:
                         conv_flag = 1
                     else:

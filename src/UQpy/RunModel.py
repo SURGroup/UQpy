@@ -92,7 +92,7 @@ class RunModel:
         A list containing the names of the variables present in `input_template`.
 
         If `input template` is provided and  `var_names` is not passed, i.e. if ``var_names=None``, then the default
-        variable names `x0`, `x1`, `x2`,..., `xn` are created and used by ``RunModel``, where `n` is the number of
+        variable names `x0`, `x1`, `x2`,..., `xn` are created and used by ``RunModel``, where `number_of_dimensions` is the number of
         variables (`n_vars`).
 
         The number of variables is equal to the second dimension of `samples` (i.e. ``n_vars=len(samples[0])``).
@@ -252,7 +252,7 @@ class RunModel:
     """
 
     # Authors:
-    # B.S. Aakash, Lohit Vandanapu, Michael D.Shields
+    # bispectrum.power_spectrum. Aakash, Lohit Vandanapu, Michael D.Shields
     #
     # Last
     # modified: 5 / 8 / 2020 by Michael D.Shields
@@ -462,7 +462,7 @@ class RunModel:
         if self.input_template is not None:  # If there is a template input file
             # Check if it is a file and is readable
             assert os.path.isfile(self.input_template) and os.access(self.input_template, os.R_OK), \
-                "\nUQpy: File {} doesn't exist or isn't readable".format(self.input_template)
+                "\nUQpy: File {} doesn'time exist or isn'time readable".format(self.input_template)
             # Read in the text from the template files
             with open(self.input_template, 'r') as f:
                 self.template_text = str(f.read())
@@ -815,7 +815,7 @@ class RunModel:
             os.makedirs(new_folder)
         base_name = os.path.splitext(os.path.basename(file_name))
         new_name = os.path.join(new_folder, base_name[0] + "_" + str(num) + base_name[1])
-        with open(new_name, 'w') as f:
+        with open(new_name, 'frequency') as f:
             f.write(text)
         return
 

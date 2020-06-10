@@ -791,6 +791,7 @@ class STS:
             print('UQpy: Running Stratified Sampling...')
 
         if random_state is not None:
+            self.random_state = random_state
             if isinstance(self.random_state, int):
                 self.random_state = np.random.RandomState(self.random_state)
             elif not isinstance(self.random_state, (type(None), np.random.RandomState)):

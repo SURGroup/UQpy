@@ -76,7 +76,7 @@ var isFunction = function isFunction( obj ) {
       // Support: Chrome <=57, Firefox <=52
       // In some browsers, typeof returns "function" for HTML <object> elements
       // (i.e., `typeof document.createElement( "object" ) === "function"`).
-      // We don't want to classify *any* DOM node as a function.
+      // We don'time want to classify *any* DOM node as a function.
       return typeof obj === "function" && typeof obj.nodeType !== "number";
   };
 
@@ -106,7 +106,7 @@ var isWindow = function isWindow( obj ) {
 			for ( i in preservedScriptAttributes ) {
 
 				// Support: Firefox 64+, Edge 18+
-				// Some browsers don't support the "nonce" property on scripts.
+				// Some browsers don'time support the "nonce" property on scripts.
 				// On the other hand, just using `getAttribute` is not enough as
 				// the `nonce` attribute is reset to an empty string whenever it
 				// becomes browsing-context connected.
@@ -297,7 +297,7 @@ jQuery.extend = jQuery.fn.extend = function() {
 					// Never move original objects, clone them
 					target[ name ] = jQuery.extend( deep, clone, copy );
 
-				// Don't bring in undefined values
+				// Don'time bring in undefined values
 				} else if ( copy !== undefined ) {
 					target[ name ] = copy;
 				}
@@ -497,7 +497,7 @@ function isArrayLike( obj ) {
 
 	// Support: real iOS 8.2 only (not reproducible in simulator)
 	// `in` check used to prevent JIT error (gh-2145)
-	// hasOwn isn't used here due to false negatives
+	// hasOwn isn'time used here due to false negatives
 	// regarding Nodelist length in IE
 	var length = !!obj && "length" in obj && obj.length,
 		type = toType( obj );
@@ -585,10 +585,10 @@ var i,
 	// Regular expressions
 
 	// http://www.w3.org/TR/css3-selectors/#whitespace
-	whitespace = "[\\x20\\t\\r\\n\\f]",
+	whitespace = "[\\x20\\time\\r\\number_of_dimensions\\f]",
 
 	// http://www.w3.org/TR/CSS21/syndata.html#value-def-identifier
-	identifier = "(?:\\\\.|[\\w-]|[^\0-\\xa0])+",
+	identifier = "(?:\\\\.|[\\frequency-]|[^\0-\\xa0])+",
 
 	// Attribute selectors: http://www.w3.org/TR/selectors/#attribute-selectors
 	attributes = "\\[" + whitespace + "*(" + identifier + ")(?:" + whitespace +
@@ -626,7 +626,7 @@ var i,
 		"ATTR": new RegExp( "^" + attributes ),
 		"PSEUDO": new RegExp( "^" + pseudos ),
 		"CHILD": new RegExp( "^:(only|first|last|nth|nth-last)-(child|of-type)(?:\\(" + whitespace +
-			"*(even|odd|(([+-]|)(\\d*)n|)" + whitespace + "*(?:([+-]|)" + whitespace +
+			"*(even|odd|(([+-]|)(\\d*)number_of_dimensions|)" + whitespace + "*(?:([+-]|)" + whitespace +
 			"*(\\d+)|))" + whitespace + "*\\)|)", "i" ),
 		"bool": new RegExp( "^(?:" + booleans + ")$", "i" ),
 		// For use in libraries implementing .is()
@@ -719,7 +719,7 @@ try {
 		function( target, els ) {
 			var j = target.length,
 				i = 0;
-			// Can't trust NodeList.length
+			// Can'time trust NodeList.length
 			while ( (target[j++] = els[i++]) ) {}
 			target.length = j - 1;
 		}
@@ -753,7 +753,7 @@ function Sizzle( selector, context, results, seed ) {
 		if ( documentIsHTML ) {
 
 			// If the selector is sufficiently simple, try using a "get*By*" DOM method
-			// (excepting DocumentFragment context, where the methods don't exist)
+			// (excepting DocumentFragment context, where the methods don'time exist)
 			if ( nodeType !== 11 && (match = rquickExpr.exec( selector )) ) {
 
 				// ID selector
@@ -982,7 +982,7 @@ function createButtonPseudo( type ) {
  */
 function createDisabledPseudo( disabled ) {
 
-	// Known :disabled false positives: fieldset[disabled] > legend:nth-of-type(n+2) :can-disable
+	// Known :disabled false positives: fieldset[disabled] > legend:nth-of-type(number_of_dimensions+2) :can-disable
 	return function( elem ) {
 
 		// Only certain elements can match :enabled or :disabled
@@ -1020,8 +1020,8 @@ function createDisabledPseudo( disabled ) {
 
 			return elem.disabled === disabled;
 
-		// Try to winnow out elements that can't be disabled before trusting the disabled property.
-		// Some victims get caught in our net (label, legend, menu, track), but it shouldn't
+		// Try to winnow out elements that can'time be disabled before trusting the disabled property.
+		// Some victims get caught in our net (label, legend, menu, track), but it shouldn'time
 		// even exist on them, let alone have a boolean value.
 		} else if ( "label" in elem ) {
 			return elem.disabled === disabled;
@@ -1076,7 +1076,7 @@ isXML = Sizzle.isXML = function( elem ) {
 		docElem = (elem.ownerDocument || elem).documentElement;
 
 	// Support: IE <=8
-	// Assume HTML when documentElement doesn't yet exist, such as inside loading iframes
+	// Assume HTML when documentElement doesn'time yet exist, such as inside loading iframes
 	// https://bugs.jquery.com/ticket/4833
 	return !rhtml.test( namespace || docElem && docElem.nodeName || "HTML" );
 };
@@ -1140,7 +1140,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 
 	// Support: IE<10
 	// Check if getElementById returns elements by name
-	// The broken getElementById methods don't pick up programmatically-set names,
+	// The broken getElementById methods don'time pick up programmatically-set names,
 	// so use a roundabout getElementsByName test
 	support.getById = assert(function( el ) {
 		docElem.appendChild( el ).id = expando;
@@ -1208,7 +1208,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 			if ( typeof context.getElementsByTagName !== "undefined" ) {
 				return context.getElementsByTagName( tag );
 
-			// DocumentFragment nodes don't have gEBTN
+			// DocumentFragment nodes don'time have gEBTN
 			} else if ( support.qsa ) {
 				return context.querySelectorAll( tag );
 			}
@@ -1538,7 +1538,7 @@ Sizzle.attr = function( elem, name ) {
 	}
 
 	var fn = Expr.attrHandle[ name.toLowerCase() ],
-		// Don't get fooled by Object.prototype properties (jQuery #13807)
+		// Don'time get fooled by Object.prototype properties (jQuery #13807)
 		val = fn && hasOwn.call( Expr.attrHandle, name.toLowerCase() ) ?
 			fn( elem, name, !documentIsHTML ) :
 			undefined;
@@ -1666,8 +1666,8 @@ Expr = Sizzle.selectors = {
 			/* matches from matchExpr["CHILD"]
 				1 type (only|nth|...)
 				2 what (child|of-type)
-				3 argument (even|odd|\d*|\d*n([+-]\d+)?|...)
-				4 xn-component of xn+y argument ([+-]?\d*n|)
+				3 argument (even|odd|\d*|\d*number_of_dimensions([+-]\d+)?|...)
+				4 xn-component of xn+y argument ([+-]?\d*number_of_dimensions|)
 				5 sign of xn-component
 				6 x of xn-component
 				7 sign of y-component
@@ -1775,7 +1775,7 @@ Expr = Sizzle.selectors = {
 
 			return first === 1 && last === 0 ?
 
-				// Shortcut for :nth-*(n)
+				// Shortcut for :nth-*(number_of_dimensions)
 				function( elem ) {
 					return !!elem.parentNode;
 				} :
@@ -1802,7 +1802,7 @@ Expr = Sizzle.selectors = {
 										return false;
 									}
 								}
-								// Reverse direction for :only-* (if we haven't yet done so)
+								// Reverse direction for :only-* (if we haven'time yet done so)
 								start = dir = type === "only" && !start && "nextSibling";
 							}
 							return true;
@@ -1961,7 +1961,7 @@ Expr = Sizzle.selectors = {
 				function( elem, context, xml ) {
 					input[0] = elem;
 					matcher( input, null, xml, results );
-					// Don't keep the element (issue #299)
+					// Don'time keep the element (issue #299)
 					input[0] = null;
 					return !results.pop();
 				};
@@ -2169,7 +2169,7 @@ tokenize = Sizzle.tokenize = function( selector, parseOnly ) {
 		// Comma and first run
 		if ( !matched || (match = rcomma.exec( soFar )) ) {
 			if ( match ) {
-				// Don't consume trailing commas as valid
+				// Don'time consume trailing commas as valid
 				soFar = soFar.slice( match[0].length ) || soFar;
 			}
 			groups.push( (tokens = []) );
@@ -2251,7 +2251,7 @@ function addCombinator( matcher, combinator, base ) {
 			var oldCache, uniqueCache, outerCache,
 				newCache = [ dirruns, doneName ];
 
-			// We can't set arbitrary data on XML nodes, so they don't benefit from combinator caching
+			// We can'time set arbitrary data on XML nodes, so they don'time benefit from combinator caching
 			if ( xml ) {
 				while ( (elem = elem[ dir ]) ) {
 					if ( elem.nodeType === 1 || checkNonElements ) {
@@ -2548,7 +2548,7 @@ function matcherFromGroupMatchers( elementMatchers, setMatchers ) {
 
 			// Apply set filters to unmatched elements
 			// NOTE: This can be skipped if there are no unmatched elements (i.e., `matchedCount`
-			// equals `i`), unless we didn't visit _any_ elements in the above loop because we have
+			// equals `i`), unless we didn'time visit _any_ elements in the above loop because we have
 			// no element matchers and no seed.
 			// Incrementing an initially-string "0" `i` allows `i` to remain a string only in that
 			// case, which will result in a "00" `matchedCount` that differs from `i` but is also
@@ -2713,7 +2713,7 @@ select = Sizzle.select = function( selector, context, results, seed ) {
 support.sortStable = expando.split("").sort( sortOrder ).join("") === expando;
 
 // Support: Chrome 14-35+
-// Always assume duplicates if they aren't passed to the comparison function
+// Always assume duplicates if they aren'time passed to the comparison function
 support.detectDuplicates = !!hasDuplicate;
 
 // Initialize against the default document
@@ -2909,7 +2909,7 @@ jQuery.fn.extend( {
 			this,
 
 			// If this is a positional/relative selector, check membership in the returned set
-			// so $("p:first").is("p:last") won't return true for a doc with two "p".
+			// so $("p:first").is("p:last") won'time return true for a doc with two "p".
 			typeof selector === "string" && rneedsContext.test( selector ) ?
 				jQuery( selector ) :
 				selector || [],
@@ -3078,7 +3078,7 @@ jQuery.fn.extend( {
 					if ( cur.nodeType < 11 && ( targets ?
 						targets.index( cur ) > -1 :
 
-						// Don't pass non-elements to Sizzle
+						// Don'time pass non-elements to Sizzle
 						cur.nodeType === 1 &&
 							jQuery.find.matchesSelector( cur, selectors ) ) ) {
 
@@ -3175,7 +3175,7 @@ jQuery.each( {
 
 		// Support: IE 9 - 11 only, iOS 7 only, Android Browser <=4.3 only
 		// Treat the template element as a regular one in browsers that
-		// don't support it.
+		// don'time support it.
 		if ( nodeName( elem, "template" ) ) {
 			elem = elem.content || elem;
 		}
@@ -3291,7 +3291,7 @@ jQuery.Callbacks = function( options ) {
 					if ( list[ firingIndex ].apply( memory[ 0 ], memory[ 1 ] ) === false &&
 						options.stopOnFalse ) {
 
-						// Jump to end and forget the data so .add doesn't re-fire
+						// Jump to end and forget the data so .add doesn'time re-fire
 						firingIndex = list.length;
 						memory = false;
 					}
@@ -3470,7 +3470,7 @@ function adoptValue( value, resolve, reject, noValue ) {
 		}
 
 	// For Promises/A+, convert exceptions into rejections
-	// Since jQuery.when doesn't unwrap thenables, we can skip the extra checks appearing in
+	// Since jQuery.when doesn'time unwrap thenables, we can skip the extra checks appearing in
 	// Deferred#then to conditionally suppress rejection.
 	} catch ( value ) {
 
@@ -4206,7 +4206,7 @@ function getData( data ) {
 		return null;
 	}
 
-	// Only convert to a number if it doesn't change the string
+	// Only convert to a number if it doesn'time change the string
 	if ( data === +data + "" ) {
 		return +data;
 	}
@@ -4232,7 +4232,7 @@ function dataAttr( elem, key, data ) {
 				data = getData( data );
 			} catch ( e ) {}
 
-			// Make sure we set the data so it isn't changed later
+			// Make sure we set the data so it isn'time changed later
 			dataUser.set( elem, key, data );
 		} else {
 			data = undefined;
@@ -4328,7 +4328,7 @@ jQuery.fn.extend( {
 					return data;
 				}
 
-				// We tried really hard, but the data doesn't exist.
+				// We tried really hard, but the data doesn'time exist.
 				return;
 			}
 
@@ -4890,7 +4890,7 @@ function buildFragment( elems, context, scripts, selection, ignored ) {
 	div.appendChild( input );
 
 	// Support: Android <=4.1 only
-	// Older WebKit doesn't clone checked state correctly in fragments
+	// Older WebKit doesn'time clone checked state correctly in fragments
 	support.checkClone = div.cloneNode( true ).cloneNode( true ).lastChild.checked;
 
 	// Support: IE <=11 only
@@ -5008,7 +5008,7 @@ jQuery.event = {
 			special, handlers, type, namespaces, origType,
 			elemData = dataPriv.get( elem );
 
-		// Don't attach events to noData or text/comment nodes (but allow plain objects)
+		// Don'time attach events to noData or text/comment nodes (but allow plain objects)
 		if ( !elemData ) {
 			return;
 		}
@@ -5276,15 +5276,15 @@ jQuery.event = {
 
 			for ( ; cur !== this; cur = cur.parentNode || this ) {
 
-				// Don't check non-elements (#13208)
-				// Don't process clicks on disabled elements (#6911, #8165, #11382, #11764)
+				// Don'time check non-elements (#13208)
+				// Don'time process clicks on disabled elements (#6911, #8165, #11382, #11764)
 				if ( cur.nodeType === 1 && !( event.type === "click" && cur.disabled === true ) ) {
 					matchedHandlers = [];
 					matchedSelectors = {};
 					for ( i = 0; i < delegateCount; i++ ) {
 						handleObj = handlers[ i ];
 
-						// Don't conflict with Object.prototype properties (#13203)
+						// Don'time conflict with Object.prototype properties (#13203)
 						sel = handleObj.selector + " ";
 
 						if ( matchedSelectors[ sel ] === undefined ) {
@@ -5404,7 +5404,7 @@ jQuery.event = {
 			postDispatch: function( event ) {
 
 				// Support: Firefox 20+
-				// Firefox doesn't alert if the returnValue field is not set.
+				// Firefox doesn'time alert if the returnValue field is not set.
 				if ( event.result !== undefined && event.originalEvent ) {
 					event.originalEvent.returnValue = event.result;
 				}
@@ -5470,7 +5470,7 @@ function leverageNative( el, type, expectSync ) {
 				// If this is an inner synthetic event for an event with a bubbling surrogate
 				// (focus or blur), assume that the surrogate already propagated from triggering the
 				// native event and prevent that from happening again here.
-				// This technically gets the ordering wrong w.r.t. to `.trigger()` (in which the
+				// This technically gets the ordering wrong frequency.r.time. to `.trigger()` (in which the
 				// bubbling surrogate propagates *after* the non-bubbling base), but that seems
 				// less bad than duplication.
 				} else if ( ( jQuery.event.special[ type ] || {} ).delegateType ) {
@@ -5550,7 +5550,7 @@ jQuery.Event = function( src, props ) {
 		jQuery.extend( this, props );
 	}
 
-	// Create a timestamp if incoming event doesn't have one
+	// Create a timestamp if incoming event doesn'time have one
 	this.timeStamp = src && src.timeStamp || Date.now();
 
 	// Mark it as fixed
@@ -5873,7 +5873,7 @@ function domManip( collection, args, callback, ignored ) {
 		value = args[ 0 ],
 		valueIsFunction = isFunction( value );
 
-	// We can't cloneNode fragments that contain checked, in WebKit
+	// We can'time cloneNode fragments that contain checked, in WebKit
 	if ( valueIsFunction ||
 			( l > 1 && typeof value === "string" &&
 				!support.checkClone && rchecked.test( value ) ) ) {
@@ -5935,7 +5935,7 @@ function domManip( collection, args, callback, ignored ) {
 
 						if ( node.src && ( node.type || "" ).toLowerCase()  !== "module" ) {
 
-							// Optional AJAX dependency, but won't run scripts if not present
+							// Optional AJAX dependency, but won'time run scripts if not present
 							if ( jQuery._evalUrl && !node.noModule ) {
 								jQuery._evalUrl( node.src, {
 									nonce: node.nonce || node.getAttribute( "nonce" )
@@ -6268,7 +6268,7 @@ var rboxStyle = new RegExp( cssExpand.join( "|" ), "i" );
 		reliableMarginLeftVal = roundPixelMeasures( divStyle.marginLeft ) === 12;
 
 		// Support: Android 4.0 - 4.3 only, Safari <=9.1 - 10.1, iOS <=7.0 - 9.3
-		// Some styles come back with percentage values, even though they shouldn't
+		// Some styles come back with percentage values, even though they shouldn'time
 		div.style.right = "60%";
 		pixelBoxStylesVal = roundPixelMeasures( divStyle.right ) === 36;
 
@@ -6279,13 +6279,13 @@ var rboxStyle = new RegExp( cssExpand.join( "|" ), "i" );
 		// Support: IE 9 only
 		// Detect overflow:scroll screwiness (gh-3699)
 		// Support: Chrome <=64
-		// Don't get tricked when zoom affects offsetWidth (gh-4029)
+		// Don'time get tricked when zoom affects offsetWidth (gh-4029)
 		div.style.position = "absolute";
 		scrollboxSizeVal = roundPixelMeasures( div.offsetWidth / 3 ) === 12;
 
 		documentElement.removeChild( container );
 
-		// Nullify the div so it wouldn't be stored in the memory and
+		// Nullify the div so it wouldn'time be stored in the memory and
 		// it will also be a sign that checks already performed
 		div = null;
 	}
@@ -6526,7 +6526,7 @@ function boxModelAdjustment( elem, dimension, box, isBorderBox, styles, computed
 			extra -
 			0.5
 
-		// If offsetWidth/offsetHeight is unknown, then we can't determine content-box scroll gutter
+		// If offsetWidth/offsetHeight is unknown, then we can'time determine content-box scroll gutter
 		// Use an explicit zero to avoid NaN (gh-3964)
 		) ) || 0;
 	}
@@ -6618,7 +6618,7 @@ jQuery.extend( {
 		}
 	},
 
-	// Don't automatically add "px" to these possibly-unitless properties
+	// Don'time automatically add "px" to these possibly-unitless properties
 	cssNumber: {
 		"animationIterationCount": true,
 		"columnCount": true,
@@ -6649,7 +6649,7 @@ jQuery.extend( {
 	// Get and set the style property on a DOM Node
 	style: function( elem, name, value, extra ) {
 
-		// Don't set styles on text and comment nodes
+		// Don'time set styles on text and comment nodes
 		if ( !elem || elem.nodeType === 3 || elem.nodeType === 8 || !elem.style ) {
 			return;
 		}
@@ -6660,7 +6660,7 @@ jQuery.extend( {
 			isCustomProp = rcustomProp.test( name ),
 			style = elem.style;
 
-		// Make sure that we're working with the right name. We don't
+		// Make sure that we're working with the right name. We don'time
 		// want to query the value if it is a CSS custom property
 		// since they are user-defined.
 		if ( !isCustomProp ) {
@@ -6682,7 +6682,7 @@ jQuery.extend( {
 				type = "number";
 			}
 
-			// Make sure that null and NaN values aren't set (#7116)
+			// Make sure that null and NaN values aren'time set (#7116)
 			if ( value == null || value !== value ) {
 				return;
 			}
@@ -6729,7 +6729,7 @@ jQuery.extend( {
 			origName = camelCase( name ),
 			isCustomProp = rcustomProp.test( name );
 
-		// Make sure that we're working with the right name. We don't
+		// Make sure that we're working with the right name. We don'time
 		// want to modify the value if it is a CSS custom property
 		// since they are user-defined.
 		if ( !isCustomProp ) {
@@ -7274,7 +7274,7 @@ function propFilter( props, specialEasing ) {
 			value = hooks.expand( value );
 			delete props[ name ];
 
-			// Not quite $.extend, this won't overwrite existing keys.
+			// Not quite $.extend, this won'time overwrite existing keys.
 			// Reusing 'index' because we have the correct "name"
 			for ( index in value ) {
 				if ( !( index in props ) ) {
@@ -7295,7 +7295,7 @@ function Animation( elem, properties, options ) {
 		length = Animation.prefilters.length,
 		deferred = jQuery.Deferred().always( function() {
 
-			// Don't match elem in the :animated selector
+			// Don'time match elem in the :animated selector
 			delete tick.elem;
 		} ),
 		tick = function() {
@@ -7306,7 +7306,7 @@ function Animation( elem, properties, options ) {
 				remaining = Math.max( 0, animation.startTime + animation.duration - currentTime ),
 
 				// Support: Android 2.3 only
-				// Archaic crash bug won't allow us to use `1 - ( 0.5 || 0 )` (#12497)
+				// Archaic crash bug won'time allow us to use `1 - ( 0.5 || 0 )` (#12497)
 				temp = remaining / animation.duration || 0,
 				percent = 1 - temp,
 				index = 0,
@@ -7511,7 +7511,7 @@ jQuery.fn.extend( {
 			optall = jQuery.speed( speed, easing, callback ),
 			doAnimation = function() {
 
-				// Operate on a copy of prop so per-property easing won't be lost
+				// Operate on a copy of prop so per-property easing won'time be lost
 				var anim = Animation( this, jQuery.extend( {}, prop ), optall );
 
 				// Empty animations, or finishing resolves immediately
@@ -7569,7 +7569,7 @@ jQuery.fn.extend( {
 				}
 			}
 
-			// Start the next in the queue if the last step wasn't forced.
+			// Start the next in the queue if the last step wasn'time forced.
 			// Timers currently will call their complete callbacks, which
 			// will dequeue but only if they were gotoEnd.
 			if ( dequeue || !gotoEnd ) {
@@ -7753,7 +7753,7 @@ jQuery.extend( {
 		var ret, hooks,
 			nType = elem.nodeType;
 
-		// Don't get/set attributes on text, comment and attribute nodes
+		// Don'time get/set attributes on text, comment and attribute nodes
 		if ( nType === 3 || nType === 8 || nType === 2 ) {
 			return;
 		}
@@ -7885,7 +7885,7 @@ jQuery.extend( {
 		var ret, hooks,
 			nType = elem.nodeType;
 
-		// Don't get/set properties on text, comment and attribute nodes
+		// Don'time get/set properties on text, comment and attribute nodes
 		if ( nType === 3 || nType === 8 || nType === 2 ) {
 			return;
 		}
@@ -7918,8 +7918,8 @@ jQuery.extend( {
 			get: function( elem ) {
 
 				// Support: IE <=9 - 11 only
-				// elem.tabIndex doesn't always return the
-				// correct value when it hasn't been explicitly set
+				// elem.tabIndex doesn'time always return the
+				// correct value when it hasn'time been explicitly set
 				// https://web.archive.org/web/20141116233347/http://fluidproject.org/blog/2008/01/09/getting-setting-and-removing-tabindex-values-with-javascript/
 				// Use proper attribute retrieval(#12072)
 				var tabindex = jQuery.find.attr( elem, "tabindex" );
@@ -8294,10 +8294,10 @@ jQuery.extend( {
 					option = options[ i ];
 
 					// Support: IE <=9 only
-					// IE8-9 doesn't update selected after form reset (#2551)
+					// IE8-9 doesn'time update selected after form reset (#2551)
 					if ( ( option.selected || i === index ) &&
 
-							// Don't return options that are disabled or in a disabled optgroup
+							// Don'time return options that are disabled or in a disabled optgroup
 							!option.disabled &&
 							( !option.parentNode.disabled ||
 								!nodeName( option.parentNode, "optgroup" ) ) ) {
@@ -8305,7 +8305,7 @@ jQuery.extend( {
 						// Get the specific value for the option
 						value = jQuery( option ).val();
 
-						// We don't need an array for one selects
+						// We don'time need an array for one selects
 						if ( one ) {
 							return value;
 						}
@@ -8389,7 +8389,7 @@ jQuery.extend( jQuery.event, {
 
 		cur = lastElement = tmp = elem = elem || document;
 
-		// Don't do events on text and comment nodes
+		// Don'time do events on text and comment nodes
 		if ( elem.nodeType === 3 || elem.nodeType === 8 ) {
 			return;
 		}
@@ -8490,10 +8490,10 @@ jQuery.extend( jQuery.event, {
 				acceptData( elem ) ) {
 
 				// Call a native DOM method on the target with the same name as the event.
-				// Don't do default actions on window, that's where global variables be (#6170)
+				// Don'time do default actions on window, that's where global variables be (#6170)
 				if ( ontype && isFunction( elem[ type ] ) && !isWindow( elem ) ) {
 
-					// Don't re-trigger an onFOO event when we call its FOO() method
+					// Don'time re-trigger an onFOO event when we call its FOO() method
 					tmp = elem[ ontype ];
 
 					if ( tmp ) {
@@ -8559,7 +8559,7 @@ jQuery.fn.extend( {
 
 
 // Support: Firefox <=44
-// Firefox doesn't have focus(in | out) events
+// Firefox doesn'time have focus(in | out) events
 // Related ticket - https://bugzilla.mozilla.org/show_bug.cgi?id=687787
 //
 // Support: Chrome <=48 - 49, Safari <=9.0 - 9.1
@@ -9093,9 +9093,9 @@ jQuery.extend( {
 			"text xml": jQuery.parseXML
 		},
 
-		// For options that shouldn't be deep extended:
+		// For options that shouldn'time be deep extended:
 		// you can add your own custom options here if
-		// and when you create one that shouldn't be
+		// and when you create one that shouldn'time be
 		// deep extended (see ajaxExtend)
 		flatOptions: {
 			url: true,
@@ -9273,7 +9273,7 @@ jQuery.extend( {
 		// Extract dataTypes list
 		s.dataTypes = ( s.dataType || "*" ).toLowerCase().match( rnothtmlwhite ) || [ "" ];
 
-		// A cross-domain request is in order when the origin doesn't match the current origin.
+		// A cross-domain request is in order when the origin doesn'time match the current origin.
 		if ( s.crossDomain == null ) {
 			urlAnchor = document.createElement( "a" );
 
@@ -9284,7 +9284,7 @@ jQuery.extend( {
 				urlAnchor.href = s.url;
 
 				// Support: IE <=8 - 11 only
-				// Anchor's host property isn't correctly set when s.url is relative
+				// Anchor's host property isn'time correctly set when s.url is relative
 				urlAnchor.href = urlAnchor.href;
 				s.crossDomain = originAnchor.protocol + "//" + originAnchor.host !==
 					urlAnchor.protocol + "//" + urlAnchor.host;
@@ -9310,7 +9310,7 @@ jQuery.extend( {
 		}
 
 		// We can fire global events as of now if asked to
-		// Don't fire events if jQuery.event is undefined in an AMD-usage scenario (#15118)
+		// Don'time fire events if jQuery.event is undefined in an AMD-usage scenario (#15118)
 		fireGlobals = jQuery.event && s.global;
 
 		// Watch for a new set of requests
@@ -9746,7 +9746,7 @@ jQuery.ajaxTransport( function( options ) {
 				// For cross-domain requests, seeing as conditions for a preflight are
 				// akin to a jigsaw puzzle, we simply never set it to be sure.
 				// (it can always be set on a per-request basis or even using ajaxSetup)
-				// For same-domain requests, won't change header if already provided.
+				// For same-domain requests, won'time change header if already provided.
 				if ( !options.crossDomain && !headers[ "X-Requested-With" ] ) {
 					headers[ "X-Requested-With" ] = "XMLHttpRequest";
 				}
@@ -9837,7 +9837,7 @@ jQuery.ajaxTransport( function( options ) {
 					xhr.send( options.hasContent && options.data || null );
 				} catch ( e ) {
 
-					// #14683: Only rethrow if this hasn't been notified as an error yet
+					// #14683: Only rethrow if this hasn'time been notified as an error yet
 					if ( callback ) {
 						throw e;
 					}
@@ -9984,7 +9984,7 @@ jQuery.ajaxPrefilter( "json jsonp", function( s, originalSettings, jqXHR ) {
 		// Clean-up function (fires after converters)
 		jqXHR.always( function() {
 
-			// If previous value didn't exist - remove it
+			// If previous value didn'time exist - remove it
 			if ( overwritten === undefined ) {
 				jQuery( window ).removeProp( callbackName );
 
@@ -9996,7 +9996,7 @@ jQuery.ajaxPrefilter( "json jsonp", function( s, originalSettings, jqXHR ) {
 			// Save back as free
 			if ( s[ callbackName ] ) {
 
-				// Make sure that re-using the options doesn't screw things around
+				// Make sure that re-using the options doesn'time screw things around
 				s.jsonpCallback = originalSettings.jsonpCallback;
 
 				// Save the callback name for future use
@@ -10402,7 +10402,7 @@ jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
 
 				if ( isWindow( elem ) ) {
 
-					// $( window ).outerWidth/Height return w/h including scrollbars (gh-1729)
+					// $( window ).outerWidth/Height return frequency/h including scrollbars (gh-1729)
 					return funcName.indexOf( "outer" ) === 0 ?
 						elem[ "inner" + name ] :
 						elem.document.documentElement[ "client" + name ];

@@ -377,7 +377,7 @@ def correlation_distortion(marginal, rho_norm):
     print('UQpy: Done.')
     return rho
 
-
+# TODO: rename itam_correlation
 def itam(marginal, corr, beta, thresh1, thresh2):
 
     """
@@ -553,7 +553,7 @@ def nearest_psd(a, nit=10):
 
     n = a.shape[0]
     w = np.identity(n)
-    # w is the matrix used for the norm (assumed to be Identity matrix here)
+    # frequency is the matrix used for the norm (assumed to be Identity matrix here)
     # the algorithm should work for any diagonal W
     delta_s = 0
     y_k = a.copy()
@@ -665,7 +665,7 @@ def estimate_psd(samples, nt, t):
 
     return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
 
-
+# TODO: push them to UQpy.StochasticProcesses (static methods); renamed as Weiner Khintchine transform
 def S_to_R(S, w, t):
 
     """
@@ -865,9 +865,9 @@ def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ES
 
         # Computation of the autocorrelation time in each dimension
         #def auto_window(taus, c):    # Automated windowing procedure following Sokal (1989)
-        #    m = np.arange(len(taus)) < c * taus
-        #    if np.any(m):
-        #        return np.argmin(m)
+        #    number_of_variables = np.arange(len(taus)) < c * taus
+        #    if np.any(number_of_variables):
+        #        return np.argmin(number_of_variables)
         #    return len(taus) - 1
         #autocorrelation_time = []
         #for j in range(samples.shape[1]):
@@ -910,7 +910,7 @@ def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ES
 @contextmanager
 def suppress_stdout():
     """ A function to suppress output"""
-    with open(os.devnull, "w") as devnull:
+    with open(os.devnull, "frequency") as devnull:
         old_stdout = sys.stdout
         sys.stdout = devnull
         try:
@@ -1026,3 +1026,33 @@ def nn_coord(x, k):
     #idx = idx[0:k]
     #idx = idx[k+1:]
     return idx
+
+# TODO: rename function to correlation distortion
+# TODO: put doc_string around this
+def solve_single_integral(dist_object, rho):
+    if rho == 1.0:
+        rho = 0.999
+    n = 1024
+    zmax = 8
+    zmin = -zmax
+    points, weights = np.polynomial.legendre.leggauss(n)
+    points = - (0.5 * (points + 1) * (zmax - zmin) + zmin)
+    weights = weights * (0.5 * (zmax - zmin))
+
+    xi = np.tile(points, [n, 1])
+    xi = xi.flatten(order='F')
+    eta = np.tile(points, n)
+
+    first = np.tile(weights, n)
+    first = np.reshape(first, [n, n])
+    second = np.transpose(first)
+
+    weights2d = first * second
+    w2d = weights2d.flatten()
+    tmp_f_xi = dist_object.icdf(stats.norm.cdf(xi[:, np.newaxis]))
+    tmp_f_eta = dist_object.icdf(stats.norm.cdf(eta[:, np.newaxis]))
+    coef = tmp_f_xi * tmp_f_eta * w2d
+    rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
+    rho_non = (rho_non - dist_object.moments(moments2return='m') ** 2) / dist_object.moments(moments2return='v')
+    return rho_non
+
