@@ -19,23 +19,37 @@
 from UQpy.Distributions import *
 
 
-class Nataf:
+class Isoprobabilistic:
     """
-    Transform random variables  using the `Nataf` transformation  and  calculate  the  correlation  distortion.
-    ([1]_, [2]_).
+    Transform random variables  using the isoprobabilistic transformations
 
-    This is the parent class to all Nataf algorithms.
+    This is the parent class to all isoprobabilistic transformation algorithms.
 
-    **References:**
+    **Inputs:**
 
-    .. [1] A. Nataf, “Determination des distributions dont les marges sont donnees”, C. correlation_function. Acad. Sci.
-       vol. 225, pp. 42-43, Paris, 1962.
-    .. [2] correlation_function. Lebrun and A. Dutfoy, “An innovating analysis of the Nataf transformation from the copula viewpoint”,
-       Prob. Eng. Mech.,  vol. 24, pp. 312-320, 2009.
+    * **samples_x** (`ndarray`):
+            Random vector of shape ``(nsamples, dimension)`` with prescribed probability distribution, with
+            ``(nsamples, dimension) = samples_x.shape``.
+
+    * **samples_y** (`ndarray`):
+            Uncorrelated standard random vector of shape ``(nsamples, dimension)``
+            ``(nsamples, dimension) = samples_x.shape``.
+
+    * **dist_object** ((list of ) ``Distribution`` object(s)):
+                    Probability distribution of each random variable. Must be an object of type
+                    ``DistributionContinuous1D`` or ``JointInd``.
+
+    * **corr_x** (`ndarray`):
+        The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
+
+    * **corr_z** (`ndarray`):
+        The correlation  matrix (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z** .
+
+        Default: The ``identity`` matrix.
 
     """
 
-    def __init__(self, dist_object):
+    def __init__(self, dist_object, samples_x, samples_y, corr_x, corr_z):
 
         if isinstance(dist_object, list):
             for i in range(len(dist_object)):
@@ -45,26 +59,22 @@ class Nataf:
             if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
                 raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
 
+        self.dist_object = dist_object
+        self.samples_x = samples_x
+        self.samples_y = samples_y
+        self.corr_x = corr_x
+        self.corr_z = corr_z
 
-class Forward(Nataf):
+
+class Nataf(Isoprobabilistic):
     """
-    A class perform the Nataf transformation, i.e. transform arbitrarily distributed random variables
-    to independent standard normal variables. This is a an child class of the ``Nataf`` class.
+    A class to perform the Nataf transformation.
+    This is a an child class of the ``Isoprobabilistic`` class.
 
     **Inputs:**
 
-    * **samples** (`ndarray`):
-            Random vector of shape ``(nsamples, dimension)`` with prescribed probability distribution, with
-            ``(nsamples, dimension) = samples.shape``.
-
-    * **dist_object** ((list of ) ``Distribution`` object(s)):
-                    Probability distribution of each random variable. Must be an object of type
-                    ``DistributionContinuous1D`` or ``JointInd``.
-
-    * **cov** (`ndarray`):
-        The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
-
-        Default: The ``identity`` matrix.
+    The ``Nataf`` class has the inputs: * **samples_x**, * **corr_x** and * **dist_object** as the ``Isoprob`` class
+    plus:
 
     * **itam_error1** (`float`):
         A threshold value the `ITAM` method (see ``Utilities`` module).
@@ -84,51 +94,45 @@ class Forward(Nataf):
 
     **Output/Returns:**
 
-    * **U** (`ndarray`):
+    * **Y** (`ndarray`):
         Independent standard normal vector of shape ``(nsamples, dimension)``.
 
-    * **Cz** (`ndarray`):
+    * **corr_z** (`ndarray`):
         Distorted correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal vector **Z**.
 
-    * **Jxu** (`ndarray`):
-        The jacobian of the transformation of shape ``(dimension, dimension)`` (if asked).
+    * **Jxy** (`ndarray`):
+        The jacobian of the transformation of shape ``(dimension, dimension)``.
 
     **Methods:**
     """
 
-    def __init__(self, dist_object, samples=None, cov=None, beta=1.0, itam_error1=0.001,
-                 itam_error2=0.01):
+    def __init__(self, samples_x, dist_object, corr_x=None, beta=1.0, itam_error1=0.001,
+                 itam_error2=0.01, corr_z=None, samples_y=None):
 
-        super().__init__(dist_object)
+        super().__init__(dist_object, samples_x, samples_y, corr_x, corr_z)
 
         self.beta = beta
         self.itam_error1 = itam_error1
         self.itam_error2 = itam_error2
+        self.corr_x = corr_x
+        self.dist_object = dist_object
+        self.samples_x = samples_x
 
-        if samples is None:
-            if cov is None:
-                raise Warning('UQpy: No action is performed.')
-            else:
-                self.Cz = self.distortion_x_to_z(dist_object, cov, beta, itam_error1, itam_error2)
+        if corr_x is None:
+            self.corr_x = np.eye(self.samples_x.shape[1])
 
+        if np.all(np.equal(self.corr_x, np.eye(self.samples_x.shape[1]))):
+            self.corr_z = self.corr_x
+            self.samples_y = self.transform_x_to_y(self.samples_x, self.dist_object, self.corr_z)
+            self.Jxy = [np.eye(self.samples_x.shape[1])]
         else:
-            if cov is None:
-                self.C_z = np.eye(samples.shape[1])
-                self.z = self.transform_x_to_z(samples, dist_object)
-                self.u = self.z
-
-                self.Jxu = np.eye(samples.shape[1])
-
-            else:
-                self.Cz = self.distortion_x_to_z(dist_object, cov, beta, itam_error1, itam_error2)
-                z = self.transform_x_to_z(samples, dist_object)
-                self.z = Correlate(z, self.Cz).z
-                self.u = Uncorrelate(self.z, self.Cz).u
-
-                self.Jxu = self.jacobian_x_u(dist_object, samples, self.u, self.Cz)
+            self.corr_z = self.distortion_x_to_z(self.dist_object, self.corr_x, self.beta, self.itam_error1,
+                                                 self.itam_error2)
+            self.samples_y = self.transform_x_to_y(self.samples_x, self.dist_object, self.corr_z)
+            self.Jxy = self.jacobian_x_y(self.dist_object, self.samples_x, self.samples_y, self.corr_z)
 
     @staticmethod
-    def distortion_x_to_z(dist_object, cov, beta=1.0, itam_error1=0.001, itam_error2=0.01):
+    def distortion_x_to_z(dist_object, corr_x,  beta=1.0, itam_error1=0.001, itam_error2=0.01):
         """
         This is a method to calculate the correlation matrix :math:`\mathbf{C_Z}` of the standard normal random vector
         :math:`\mathbf{z}`  given the correlation matrix :math:`\mathbf{C_x}` of the random vector :math:`\mathbf{x}`
@@ -140,7 +144,7 @@ class Forward(Nataf):
                 Probability distribution of each random variable. Must be an object of type
                 ``DistributionContinuous1D`` or ``JointInd``.
 
-        * **cov** (`ndarray`):
+        * **corr_x** (`ndarray`):
             The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
 
             Default: The ``identity`` matrix.
@@ -168,11 +172,11 @@ class Forward(Nataf):
 
         """
         from UQpy.Utilities import itam
-        cov_distorted = itam(dist_object, cov, beta, itam_error1, itam_error2)
+        cov_distorted = itam(dist_object, corr_x, beta, itam_error1, itam_error2)
         return cov_distorted
 
     @staticmethod
-    def transform_x_to_z(x, dist_object):
+    def transform_x_to_y(samples_x, dist_object, corr_z):
         """
         This is a method to transform a vector :math:`\mathbf{x}` of  samples with marginal distributions
         :math:`f_i(x_i)` and cumulative distributions :math:`F_i(x_i)` to a vector :math:`\mathbf{z}` of standard normal
@@ -183,7 +187,7 @@ class Forward(Nataf):
 
         **Inputs:**
 
-        * **x** (`ndarray`):
+        * **samples_x** (`ndarray`):
             Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.
 
         * **dist_object** ((list of) ``Distribution`` object(s)):
@@ -191,46 +195,48 @@ class Forward(Nataf):
                     ``DistributionContinuous1D`` or ``JointInd``.
         **Outputs:**
 
-        * **z** (`ndarray`):
+        * **samples_z** (`ndarray`):
             Standard normal random vector of shape ``(nsamples, dimension)``.
 
         """
-        z = np.zeros_like(x)
+        samples_z = np.zeros_like(samples_x)
 
         if isinstance(dist_object, JointInd):
             if all(hasattr(m, 'cdf') for m in dist_object.marginals):
                 for j in range(len(dist_object.marginals)):
-                    z[:, j] = stats.norm.ppf(dist_object.marginals[j].cdf(np.atleast_2d(x[:, j]).T))
+                    samples_z[:, j] = stats.norm.ppf(dist_object.marginals[j].cdf(np.atleast_2d(samples_x[:, j]).T))
         elif isinstance(dist_object, DistributionContinuous1D):
             f_i = dist_object.cdf
-            z = np.atleast_2d(stats.norm.ppf(f_i(x))).T
+            samples_z = np.atleast_2d(stats.norm.ppf(f_i(samples_x))).T
         else:
-            m, n = np.shape(x)
+            m, n = np.shape(samples_x)
             for j in range(n):
                 f_i = dist_object[j].cdf
-                z[:, j] = stats.norm.ppf(f_i(np.atleast_2d(x[:, j]).T))
-        return z
+                samples_z[:, j] = stats.norm.ppf(f_i(np.atleast_2d(samples_x[:, j]).T))
+        samples_y = Nataf.decorrelate(samples_z, corr_z)
+
+        return samples_y
 
     @staticmethod
-    def jacobian_x_u(dist_object, x, z, cov):
+    def jacobian_x_y(dist_object, samples_x, samples_y, corr_z):
         """
-        This is a method to calculate the jacobian of the transformation :math:`\mathbf{J}_{\mathbf{xu}}`.
+        This is a method to calculate the jacobian of the transformation :math:`\mathbf{J}_{\mathbf{xy}}`.
 
         This is a static method, part of the ``Nataf`` class.
 
         **Inputs:**
 
-        * **u** (`ndarray`):
+        * **samples_z** (`ndarray`):
             Standard normal vector of shape ``(nsamples, dimension)``.
 
-        * **x** (`ndarray`):
+        * **samples_x** (`ndarray`):
             Random vector of shape ``(nsamples, dimension)``.
 
         * **dist_object** ((list of) ``Distribution`` object(s)):
                     Probability distribution of each random variable. Must be an object of type
                     ``DistributionContinuous1D`` or ``JointInd``.
 
-        * **cov** (`ndarray`):
+        * **corr_z** (`ndarray`):
         The covariance  matrix of shape ``(dimension, dimension)``.
 
         **Outputs:**
@@ -239,88 +245,104 @@ class Forward(Nataf):
             Matrix of shape ``(dimension, dimension)``.
 
         """
+        samples_z = InvNataf.correlate(samples_y, corr_z)
         from scipy.linalg import cholesky
-        h = cholesky(cov, lower=True)
-        m, n = np.shape(z)
+        h = cholesky(corr_z, lower=True)
+        m, n = np.shape(samples_z)
         y = np.zeros(shape=(n, n))
-        jacobian_x_to_u = [None] * m
+        jacobian_x_to_y = [None] * m
         for i in range(m):
             for j in range(n):
-                xi = np.array([x[i, j]])
-                zi = np.array([z[i, j]])
+                xi = np.array([samples_x[i, j]])
+                zi = np.array([samples_z[i, j]])
                 y[j, j] = stats.norm.pdf(zi) / dist_object[j].pdf(xi)
-            jacobian_x_to_u[i] = np.linalg.solve(y, h)
+            jacobian_x_to_y[i] = np.linalg.solve(y, h)
 
-        return jacobian_x_to_u
+        return jacobian_x_to_y
+
+    @staticmethod
+    def decorrelate(samples_z, corr_z):
+
+        """
+        Remove correlation from standard normal random variables.
+
+        **Inputs:**
+
+        * **samples_z** (`ndarray`):
+            Correlated standard normal vector of shape ``(nsamples, dimension)``.
+
+        * **corr_z** (`ndarray`):
+            The correlation matrix. Must be an ``ndarray`` of shape ``(u.shape[1], u.shape[1])``.
+
+        **Outputs/Returns:**
+
+        * **samples_y** (`ndarray`):
+            Uncorrelated standard normal vector of shape ``(nsamples, dimension)``.
+
+        """
+
+        from scipy.linalg import cholesky
+        h = cholesky(corr_z, lower=True)
+        samples_y = np.linalg.solve(h, samples_z.T).T
+
+        return samples_y
 
 
-class Inverse(Nataf):
+class InvNataf(Isoprobabilistic):
     """
     A class perform the inverse Nataf transformation, i.e. transform independent standard normal variables to
-    arbitrarily distributed random variables. This is a an child class of the ``Nataf`` class.
+    arbitrarily distributed random variables.
+
+    This is a an child class of the ``Isoprobabilistic`` class.
 
     **Inputs:**
 
-    * **samples** (`ndarray``):
-        Uncorrelated standard normal vector of shape ``(nsamples, dimension)`` with
-        ``(nsamples, dimension) = samples.shape``.
+    The ``InvNataf`` class has the inputs: * **samples_y**, * **corr_z** and * **dist_object** as the ``Isoprob`` class.
 
-    * **dist_object** ((list of) ``Distribution`` object(s)):
-            Probability distribution of each random variable. Must be an object of type
-                    ``DistributionContinuous1D`` or ``JointInd``.
+    **Attributes:**
 
-    * **cov** (`ndarray`):
-        The covariance  matrix of shape ``(dimension, dimension)`` (Optional) .
-
-        Default: The ``identity`` matrix.
-
-    **Output/Returns:**
-
-    * **x** (`ndarray`):
+    * **samples_x** (`ndarray`):
         Independent standard normal vector of shape ``(nsamples, dimension)``.
 
-    * **Cx** (`ndarray`):
+    * **corr_x** (`ndarray`):
         Distorted correlation matrix of the random vector **X** of shape ``(dimension, dimension)``.
 
-    * **Jux** (`ndarray`):
+    * **Jyx** (`ndarray`):
         The jacobian of the transformation of shape ``(dimension, dimension)``.
 
     **Methods:**
 
     """
 
-    def __init__(self, dist_object, samples=None, cov=None):
+    def __init__(self, samples_y, dist_object, corr_z=None, corr_x=None, samples_x=None):
 
-        super().__init__(dist_object)
+        super().__init__(dist_object, samples_x, samples_y,  corr_x, corr_z)
 
-        if samples is None:
-            if cov is None:
-                raise Warning('UQpy: No action is performed.')
-            else:
-                self.Cx = self.distortion_z_to_x(dist_object, cov)
+        self.corr_z = corr_z
+        self.dist_object = dist_object
+        self.samples_y = samples_y
 
+        if corr_z is None:
+            self.corr_z = np.eye(self.samples_y.shape[1])
+
+        if np.all(np.equal(self.corr_z, np.eye(self.samples_y.shape[1]))):
+            self.corr_x = self.corr_z
+            self.samples_x = self.transform_y_to_x(self.samples_y, self.dist_object, self.corr_z)
+            self.Jyx = [np.eye(self.samples_y.shape[1])]
         else:
-            if cov is None:
-                self.Cx = np.eye(samples.shape[1])
-                self.z = samples
-                self.x = self.transform_z_to_x(self.z, dist_object)
+            self.corr_x = self.distortion_z_to_x(self.dist_object, self.corr_z)
+            self.samples_x = self.transform_y_to_x(self.samples_y, self.dist_object, self.corr_z)
 
-                self.Jux = np.eye(samples.shape[1])
-
-            else:
-                self.Cx = self.distortion_z_to_x(dist_object, cov)
-                self.z = Correlate(samples, cov).z
-                self.x = self.transform_z_to_x(samples, dist_object)
-
-                self.Jux = self.jacobian_u_x(dist_object, self.z, self.x, cov)
+            self.Jyx = self.jacobian_y_x(self.dist_object, self.samples_y, self.samples_x, corr_z)
 
     @staticmethod
-    def distortion_z_to_x(dist_object, cov):
+    def distortion_z_to_x(dist_object, corr_z):
         """
         This is a method to calculate the correlation matrix :math:`\mathbf{C_x}` of the random vector
         :math:`\mathbf{x}`  given the correlation matrix :math:`\mathbf{C_z}` of the standard normal random vector
-        :math:`\mathbf{z}` using the `correlation_distortion` method (see ``Utilities`` class). This is a static
-        method, part of the ``Inverse`` class.
+        :math:`\mathbf{z}` using the `correlation_distortion` method (see ``Utilities`` class).
+
+        This is a static method, part of the ``InvNataf`` class.
 
         **Inputs:**
 
@@ -328,8 +350,8 @@ class Inverse(Nataf):
                 Probability distribution of each random variable. Must be an object of type
                 ``DistributionContinuous1D`` or ``JointInd``.
 
-        * **cov** (`ndarray`):
-            The correlation  matrix (:math:`\mathbf{C_z}`) of the standard normal vector **z** .
+        * **corr_z** (`ndarray`):
+            The correlation  matrix (:math:`\mathbf{C_z}`) of the standard normal vector **Z** .
 
             Default: The ``identity`` matrix.
 
@@ -340,22 +362,22 @@ class Inverse(Nataf):
 
         """
         from UQpy.Utilities import correlation_distortion
-        cov_distorted = correlation_distortion(dist_object, cov)
+        cov_distorted = correlation_distortion(dist_object, corr_z)
         return cov_distorted
 
     @staticmethod
-    def transform_z_to_x(z, dist_object):
+    def transform_y_to_x(samples_y, dist_object, corr_z):
         """
-        This is a method to transform a vector :math:`\mathbf{z}` of  standard normal samples to a vector
+        This is a method to transform a vector :math:`\mathbf{y}` of  standard normal samples to a vector
         :math:`\mathbf{x}` of  samples with marginal distributions :math:`f_i(x_i)` and cumulative distributions
         :math:`F_i(x_i)` according to: :math:`Z_{i}=F_i^{-1}(\Phi(Z_{i}))`, where :math:`\Phi` is the cumulative
         distribution function of a standard  normal variable.
 
-        This is a static method, part of the ``Nataf`` class.
+        This is a static method, part of the ``InvNataf`` class.
 
         **Inputs:**
 
-        * **z** (`ndarray`):
+        * **samples_y** (`ndarray`):
             Standard normal vector of shape ``(nsamples, dimension)``.
 
         * **dist_object** ((list of) ``Distribution`` object(s)):
@@ -364,119 +386,97 @@ class Inverse(Nataf):
 
         **Outputs:**
 
-        * **x** (`ndarray`):
+        * **samples_x** (`ndarray`):
             Random vector of shape ``(nsamples, dimension)`` with prescribed probability distribution.
 
         """
-
-        x = np.zeros_like(z)
+        samples_z = InvNataf.correlate(samples_y, corr_z)
+        samples_x = np.zeros_like(samples_y)
 
         if isinstance(dist_object, JointInd):
             if all(hasattr(m, 'icdf') for m in dist_object.marginals):
                 for j in range(len(dist_object.marginals)):
                     f_i = dist_object.marginals[j].icdf
-                    x[:, j] = np.atleast_2d(f_i(stats.norm.cdf(z[:, j]).T))
+                    samples_x[:, j] = np.atleast_2d(f_i(stats.norm.cdf(samples_z[:, j]).T))
         elif isinstance(dist_object, DistributionContinuous1D):
             f_i = dist_object.icdf
-            x = np.atleast_2d(f_i(stats.norm.cdf(z))).T
+            samples_x = np.atleast_2d(f_i(stats.norm.cdf(samples_z))).T
         elif isinstance(dist_object, list):
-            _, n = np.shape(z)
-            for j in range(n):
+            for j in range(samples_y.shape[1]):
                 f_i = dist_object[j].icdf
-                x[:, j] = np.atleast_2d(f_i(stats.norm.cdf(z[:, j]).T))
-        return x
+                samples_x[:, j] = np.atleast_2d(f_i(stats.norm.cdf(samples_z[:, j]).T))
+        return samples_x
 
     @staticmethod
-    def jacobian_u_x(dist_object, z, x, cov):
+    def jacobian_y_x(dist_object, samples_y, samples_x, corr_z):
         """
-        This is a method to calculate the jacobian of the transformation :math:`\mathbf{J}_{\mathbf{ux}}`.
+        This is a method to calculate the jacobian of the transformation :math:`\mathbf{J}_{\mathbf{yx}}`.
 
-        This is a static method, part of the ``Nataf`` class.
+        This is a static method, part of the ``InvNataf`` class.
 
         **Inputs:**
 
-        * **u** (`ndarray`):
+        * **samples_z** (`ndarray`):
             Standard normal vector of shape ``(nsamples, dimension)``.
 
-        * **x** (`ndarray`):
+        * **samples_x** (`ndarray`):
             Random vector of shape ``(nsamples, dimension)``.
 
         * **dist_object** ((list of) ``Distribution`` object(s)):
                     Probability distribution of each random variable. Must be an object of type
                     ``DistributionContinuous1D`` or ``JointInd``.
 
-        * **cov** (`ndarray`):
+        * **corr_z** (`ndarray`):
         The covariance  matrix of shape ``(dimension, dimension)``.
 
         **Outputs:**
 
-        * **jacobian_u_to_x** (`ndarray`):
+        * **jacobian_y_to_x** (`ndarray`):
             Matrix of shape ``(dimension, dimension)``.
 
         """
+        samples_z = InvNataf.correlate(samples_y, corr_z)
         from scipy.linalg import cholesky
-        h = cholesky(cov, lower=True)
-        m, n = np.shape(z)
+        h = cholesky(corr_z, lower=True)
+        m, n = np.shape(samples_z)
         y = np.zeros(shape=(n, n))
-        jacobian_u_to_x = [None] * m
+        jacobian_y_to_x = [None] * m
         for i in range(m):
             for j in range(n):
-                xi = np.array([x[i, j]])
-                zi = np.array([z[i, j]])
+                xi = np.array([samples_x[i, j]])
+                zi = np.array([samples_z[i, j]])
                 y[j, j] = dist_object[j].pdf(xi) / stats.norm.pdf(zi)
-            jacobian_u_to_x[i] = np.linalg.solve(h, y)
+            jacobian_y_to_x[i] = np.linalg.solve(h, y)
 
-        return jacobian_u_to_x
+        return jacobian_y_to_x
 
+    @staticmethod
+    def correlate(samples_y, corr_z):
+        """
+        Induce correlation to uncorrelated standard normal random variables.
 
-class Uncorrelate:
-    """
-    Remove correlation from correlated standard normal random variables.
+        This is a static method, part of the ``InvNataf`` class.
 
-    **Inputs:**
+        **Inputs:**
 
-    * **samples** (`ndarray`):
-        Correlated standard normal vector of shape ``(nsamples, dimension)``.
+        * **samples_y** (`ndarray`):
+            Uncorrelated standard normal vector of shape ``(nsamples, dimension)``.
 
-    * **cov** (`ndarray`):
-        The correlation matrix. Must be an ``ndarray`` of shape ``(u.shape[1], u.shape[1])``.
+        * **corr_z** (`ndarray`):
+            The correlation matrix. Must be an ``ndarray`` of shape ``(u.shape[1], u.shape[1])``.
 
-    **Outputs:**
+        **Outputs/Returns:**
 
-    * **u** (`ndarray`):
-        Correlated standard normal vector of shape ``(nsamples, dimension)``.
+        * **samples_z** (`ndarray`):
+            Correlated standard normal vector of shape ``(nsamples, dimension)``.
 
-    """
+        """
 
-    def __init__(self, samples, corr):
-        self.z = samples
         from scipy.linalg import cholesky
-        h = cholesky(corr, lower=True)
-        self.u = np.dot(np.linalg.inv(h), self.z.T).T
+        h = cholesky(corr_z, lower=True)
+        samples_z = np.dot(h, samples_y.T).T
+
+        return samples_z
 
 
-class Correlate:
-    """
-    Induce correlation to uncorrelated standard normal random variables.
 
-    **Inputs:**
-
-    * **samples** (`ndarray`):
-        Uncorrelated standard normal vector of shape ``(nsamples, dimension)``.
-
-    * **cov** (`ndarray`):
-        The correlation matrix. Must be an ``ndarray`` of shape ``(u.shape[1], u.shape[1])``.
-
-    **Outputs:**
-
-    * **z** (`ndarray`):
-        Correlated standard normal vector of shape ``(nsamples, dimension)``.
-
-    """
-
-    def __init__(self, samples, cov):
-        self.u = samples
-        self.corr = cov
-        from scipy.linalg import cholesky
-        h = cholesky(cov, lower=True)
-        self.z = np.dot(h, self.u.T).T

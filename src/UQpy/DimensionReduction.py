@@ -16,24 +16,28 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 """
-This module contains the classes and methods to perform the point wise and multi point data-based dimensionality
-reduction via projection onto the Grassmann manifold and Diffusion Maps, respectively. Further, interpolation in the
-tangent space centered at a given point on the Grassmann manifold can be performed.
+``DimensionReduction`` is the module for ``UQpy`` to perform the dimensionality reduction of high-dimensional data.
 
-* Grassmann: This class contains methods to perform the projection of matrices onto the Grassmann manifold where their
-  dimensionality are reduced and where standard interpolation can be performed on a tangent space.
-* DiffusionMaps: In this class the diffusion maps create a connection between the spectral properties of the diffusion
-  process and the intrinsic geometry of the data resulting in a multiscale representation of the data.
+This module contains the classes and methods to perform pointwise and multi point data-based dimensionality reduction
+via projection onto Grassmann manifolds and Diffusion Maps, respectively. Further, interpolation in the tangent space
+centered at a given point on the Grassmann manifold can be performed, as well as the computation of kernels defined on
+the Grassmann manifold to be employed in techniques using subspaces.
+
+The module currently contains the following classes:
+
+* ``Grassmann``: Class for for analysis of samples on the Grassmann manifold.
+
+* ``DiffusionMaps``: Class for multi point data-based dimensionality reduction.
+
 """
 
-from UQpy.Surrogates import Krig
-from UQpy.Utilities import *
+from UQpy.Surrogates import Kriging  
+from UQpy.Utilities import * 
 import scipy as sp
 import numpy as np
 import itertools
 from scipy.interpolate import LinearNDInterpolator
-from os import path
-import math
+import copy
 
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsl
@@ -46,216 +50,474 @@ import scipy.spatial.distance as sd
 ########################################################################################################################
 ########################################################################################################################
 
-
 class Grassmann:
     """
-    Project matrices onto the Grassmann manifold and create a tangent space where standard interpolation is performed.
+    Mathematical analysis on the Grassmann manifold.
 
-    This class contains methods to perform the projection of matrices onto the Grassmann manifold via singular value
-    decomposition(SVD) where their dimensionality are reduced. Further, the mapping from the Grassmannian to a tangent
-    space centered at a given reference point (exponential mapping) as well as the mapping from the tangent space to the
-    manifold (logarithmic mapping). Moreover, a interpolation can be performed in the tangent space. Further, additional
-    quantities such as the Karcher mean, the distance on the manifold, and the kernel defined on the Grassmann manifold
-    can be obtained.
-
-    **References:**
-
-    1. Jiayao Zhang, Guangxu Zhu, Robert W. Heath Jr., and Kaibin Huang, "Grassmannian Learning: Embedding Geometry
-       Awareness in Shallow and Deep Learning", arXiv:1808.02229 [cs, eess, math, stat], Aug. 2018.
-
-    2. D.G. Giovanis, M.D. Shields, "Uncertainty quantification for complex systems with very high dimensional response
-       using Grassmann manifold variations", Journal of Computational Physics, Volume 364, Pages 393-415, 2018.
-
+    The ``Grassmann`` class contains methods of data analysis on the Grassmann manifold, which is a special case of flag
+    manifold. The projection of matrices onto the Grassmann manifold is performed via singular value decomposition(SVD),
+    where their dimensionality are reduced. Further, the mapping from the Grassmann manifold to a tangent space
+    constructed at a given reference point (logarithmic mapping), as well as the mapping from the tangent space to the
+    manifold (exponential mapping) are implemented as methods. Moreover, an interpolation can be performed on the
+    tangent space taking advantage of the implemented logarithmic and exponential maps. Additional quantities such
+    as the Karcher mean, distance, and kernel, all defined on the Grassmann manifold, can be obtained using
+    implemented methods. When the class ``Grassmann`` is instantiated some attributes are set using the method
+    ``manifold``, where the dimension of the manifold as well as the samples are input arguments.
+    
     **Input:**
 
-    :param distance_object: It specifies the name of a function or class implementing the distance on the manifold.
+    * **distance_method** (`callable`)
+        Defines the distance metric on the manifold. The user can pass a callable object defining the distance metric
+        using two different ways. First, the user can pass one of the methods implemented in the class ``Grassmann``, they are:
 
-                            Default: None
-    :type distance_object: str
+        - `grassmann_distance`;
+        - `chordal_distance`;
+        -`procrustes_distance`;
+        -`projections_distance`.
 
-    :param distance_script: The filename (with extension) of a Python script implementing dist_object
-                            (only for user defined metrics).
+        In this regard,
+        the class ``Grassmann`` is instantiated and the attributes are set using the method ``manifold``. Thus,
+        an object containing the attribute `distance_method` is passed as `Grassmann.distance_method`. Second, the user
+        can pass either a method of a class or a function. For example, if the user wish to
+        use `grassmann_distance` to compute the distance, one can use the following command:
 
-                            Default: None
-    :type distance_script: str
+        >>> Grassmann(distance_method=Grassmann.grassmann_distance)
 
-    :param kernel_object: It specifies the name of a function or class implementing the Grassmann kernel.
-                          Default: None
-    :type kernel_object: str
+         On the other hand, if the user implemented a function
+        (e.g., `user_distance`) to compute the distance, `distance_method` must assume the following value
+        `distance_method = user_distance`, which must be pre-loaded using import. In this regard, the
+        function input must contain the first (x0) and second (x1) matrices as arguments (e.g, user_distance(x0,x1))
 
-    :param kernel_script: The filename (with extension) of a Python script implementing kernel_object
-                          (only for user defined metrics).
+    * **kernel_method** (`callable`)
+        Object of the kernel function defined on the Grassmann manifold. The user can pass a object using two different
+        ways. First, the user can pass one of the methods implemented in the class ``Grassmann``, they are:
 
-                          Default: None
-    :type distance_script: str
+        - `projection_kernel`;
+        - `binet_cauchy_kernel`.
 
-    :param interp_object: It specifies the name of the function or class implementing the interpolator.
+        In this regard, the object is passed as `Grassmann.kernel_method`.
+        Second, the user can pass callable objects either as a method of a class or as a function. 
+        For example, if the user wish to use `projection_kernel` to estimate the kernel matrix, one can use the
+        following command:
 
-                          Default: None
-    :type interp_object: str
+        >>> Grassmann(kernel_method=Grassmann.projection_kernel)
 
-    :param interp_script: The filename (with extension) of the Python script implementing of interp_object
-                          (only for user defined interpolator).
+        On the other hand, if the user implemented
+        a function (e.g., `user_kernel`) to compute the kernel matrix, `kernel_method` must assume the following value
+        `kernel_object = user_kernel`, which must be pre-loaded using import. In this regard, the function
+        input must contain the first (x0) and second (x1) matrices as arguments (e.g, user_kernel(x0,x1))
+    
+    * **interp_object** (`object`)
+        Interpolator to be used in the Tangent space. The user can pass an object defining the interpolator
+        via four different ways.
 
-                          Default: None
-    :type interp_script: str
+        - Using the ``Grassmann`` method ``linear_interp`` as Grassmann(interp_object=Grassmann.linear_interp).
+        - Using an object of ``UQpy.Kriging`` as Grassmann(interp_object=Kriging_Object)
+        - Using an object of ``sklearn.gaussian_process`` as Grassmann(interp_object=Sklearn_Object)
+        - Using an user defined object (e.g., user_interp). In this case, the function must contain the following
+          arguments: `coordinates`, `samples`, and `point`.
+    
+    * **karcher_method** (`callable`)
+        Optimization method used in the estimation of the Karcher mean. The user can pass a callable object via
+        two different ways. First, the user can pass one of the methods implemented in the class ``Grassmann``,
+        they are:
 
-    **Authors:**
+        - ``gradient_descent``;
+        - ``stochastic_gradient_descent``.
 
-    Ketson correlation_function. M. dos Santos, Dimitris G. Giovanis
+        Second, the user can pass callable objects either as a method of a class or as a function. It is worth
+        mentioning that the method ``gradient_descent`` also allows the accelerated descent method due to Nesterov.
+    
+    **Attributes:**
 
-    Last modified: 03/26/20 by Ketson correlation_function. M. dos Santos
+    * **p** (`int` or `str`)
+        Dimension of the p-planes defining the Grassmann manifold G(n,p).
+        
+    * **ranks** (`list`)
+        Dimension of the embedding dimension for the manifolds G(n,p) of each sample.
+        
+    * **samples** (`list` of `list` or `ndarray`)
+        Input samples defined as a `list` of matrices.
+        
+    * **nargs** (`int`)
+        Number of matrices in `samples`.
+        
+    * **max_rank** (`int`)
+        Maximum value of `ranks`.
+        
+    * **psi** (`list`)
+        Left singular eigenvectors from the singular value decomposition of each sample in `samples`
+        representing a point on the Grassmann manifold.
+    
+    * **sigma** (`list`)
+        Singular values from the singular value decomposition of each sample in `samples`.
+    
+    * **phi** (`list`)
+        Right singular eigenvector from the singular value decomposition of each sample in `samples`
+        representing a point on the Grassmann manifold.
+
+    **Methods:**
     """
 
-    def __init__(self, distance_object=None, distance_script=None, kernel_object=None, kernel_script=None,
-                 interp_object=None,
-                 interp_script=None, karcher_object=None, karcher_script=None):
+    def __init__(self, distance_method=None, kernel_method=None, interp_object=None, karcher_method=None):
 
         # Distance.
-        self.distance_script = distance_script
-        self.distance_object = distance_object
-        if distance_script is not None:
-            self.user_distance_check = path.exists(distance_script)
-        else:
-            self.user_distance_check = False
-
-        if self.user_distance_check:
-            try:
-                self.module_dist = __import__(self.distance_script[:-3])
-            except ImportError:
-                raise ImportError('There is no module implementing a distance.')
+        if distance_method is not None:
+            if callable(distance_method):
+                self.distance_object = distance_method
+            else:
+                raise TypeError('UQpy: A callable distance object must be provided.')
 
         # Kernels.
-        self.kernel_script = kernel_script
-        self.kernel_object = kernel_object
-        if kernel_script is not None:
-            self.user_kernel_check = path.exists(kernel_script)
-        else:
-            self.user_kernel_check = False
-
-        if self.user_kernel_check:
-            try:
-                self.module_kernel = __import__(self.kernel_script[:-3])
-            except ImportError:
-                raise ImportError('There is no module implementing a Grassmann kernel.')
-
+        if kernel_method is not None:
+            if callable(kernel_method):
+                self.kernel_object = kernel_method
+            else:
+                raise TypeError('UQpy: A callable kernel object must be provided.')
+        
         # Interpolation.
-        self.interp_script = interp_script
-        self.interp_object = interp_object
-        if interp_script is not None:
-            self.user_interp_check = path.exists(interp_script)
-        else:
-            self.user_interp_check = False
-
-        if self.user_interp_check:
-            try:
-                self.module_interp = __import__(self.interp_script[:-3])
-            except ImportError:
-                raise ImportError('There is no module implementing the interpolation.')
+        skl_str = "<class 'sklearn.gaussian_process.gpr.GaussianProcessRegressor'>"
+        self.skl = str(type(interp_object))==skl_str
+        if interp_object is not None:
+            if callable(interp_object) or isinstance(interp_object, Kriging) or self.skl:
+                self.interp_object = interp_object
+            else:
+                raise TypeError('UQpy: A callable interpolation object must be provided.')
 
         # Karcher mean.
-        self.karcher_script = karcher_script
-        self.karcher_object = karcher_object
-        if karcher_script is not None:
-            self.user_karcher_check = path.exists(karcher_script)
+        if karcher_method is not None:
+            if distance_method is None:
+                raise ValueError('UQpy: A callable distance object must be provided too.')
+
+            if callable(karcher_method):
+                self.karcher_object = karcher_method
+            else:
+                raise TypeError('UQpy: A callable Karcher mean object must be provided.')
+
+        self.samples = []
+        self.psi = []
+        self.sigma = []
+        self.phi = []
+        self.n_psi = []
+        self.n_phi = []
+        self.p = None
+        self.ranks = []
+        self.nargs = 0
+        self.max_rank = None
+
+    def manifold(self, p=None, samples=None, append_samples=False):
+
+        """
+        Set the grassmann manifold and project the samples on it via singular value decomposition.
+
+        This method project samples onto the Grassmann manifold via singular value decomposition. The input arguments
+        are passed through the argument `samples` containing a list of lists or a list of ndarrays. Moreover, this
+        method serves to set the manifold and to verify the consistency of the input data. This method can be called
+        using the following command:
+
+        >>> Grassmann.manifold(p=p,samples=samples,append_samples=False)
+
+        In this case, append_samples is a boolean variable used to define if new sample will replace the previous ones
+        or will just get appended (`append_samples=True`).
+
+        **Input:**
+        
+        * **p** (`int` or `str` or `NoneType`)
+            Dimension of the p-planes defining the Grassmann manifold G(n,p). This parameter can assume an integer value 
+            larger than 0 or the strings `max`, when `p` assumes the maximum rank of the input matrices, or `min` when
+            it assumes the minimum one. If `p` is not provided `ranks` will store the ranks of each input
+            matrix and each sample will lie on a distinct manifold.
+            
+        * **samples** (`list`)
+            Input samples defined as a `list` of matrices. In this regard, `samples` is a 
+            collection of matrices stored as a `list`. Moreover, The shape of the input matrices stored 
+            in samples are verified and compared for consistency with `p`.
+            
+        * **append_samples** (`bool`)
+            The attributes are replaced when manifold is called if `append_samples` is False, otherwise the lists are 
+            appended.
+        """
+
+        # If manifold called for the first time 
+        # force append_samples to be False.
+        if not self.samples:
+            append_samples = False
+
+        # samples must be a list.
+        # Test samples for type consistency.
+        if not isinstance(samples, list) and not isinstance(samples, np.ndarray):
+            raise TypeError('UQpy: `samples` must be either a list or numpy.ndarray.')
+        elif isinstance(samples, np.ndarray):
+            samples = samples.tolist()
+
+        # If append_samples is true, store the new samples
+        # in a new list.
+        if append_samples:
+            samples_new = copy.copy(samples)
+            nargs_new = len(samples_new)
+
+            for i in range(nargs_new):
+                self.samples.append(samples_new[i])
+
+            samples = self.samples
+            if p is None:
+                p = self.p
+
+        # samples must be converted into a ndarray due to the necessary computation over slices.
+        # Check the number of matrices stored in samples.
+        nargs = len(samples)
+
+        # At least one argument must be provided, otherwise show an error message.
+        if nargs < 1:
+            raise ValueError('UQpy: At least one input matrix must be provided.')
+
+        n_left = []
+        n_right = []
+        for i in range(nargs):
+            n_left.append(max(np.shape(samples[i])))
+            n_right.append(min(np.shape(samples[i])))
+
+        bool_left = (n_left.count(n_left[0]) != len(n_left))
+        bool_right = (n_right.count(n_right[0]) != len(n_right))
+
+        if bool_left and bool_right:
+            raise TypeError('UQpy: The shape of the input matrices must be the same.')
         else:
-            self.user_karcher_check = False
+            n_psi = n_left[0]
+            n_phi = n_right[0]
 
-        if self.user_karcher_check:
-            try:
-                self.module_karcher = __import__(self.karcher_script[:-3])
-            except ImportError:
-                raise ImportError('There is no module implementing an optimizer to find the Karcher mean.')
+        if isinstance(p, str):
 
-    # Calculate the distance on the manifold
-    def distance(self, *argv, **kwargs):
+            # If append_sample just compute the rank of the new samples.
+            if append_samples:
+                ranks = self.ranks
+                ranks_new = []
+                for i in range(nargs_new):
+                    rnk = int(np.linalg.matrix_rank(samples_new[i]))
+                    ranks.append(rnk)
+                    ranks_new.append(rnk)
+            else:
+                ranks = []
+                for i in range(nargs):
+                    ranks.append(np.linalg.matrix_rank(samples[i]))
+
+            if p is "max":
+                # Get the maximum rank of the input matrices
+                p = int(max(ranks))
+            elif p is "min":
+                # Get the minimum rank of the input matrices
+                p = int(min(ranks))
+            else:
+                raise ValueError('UQpy: The only allowable input strings are `min` and `max`.')
+
+            ranks = np.ones(nargs) * [int(p)]
+            ranks = ranks.tolist()
+
+            if append_samples:
+                ranks_new = np.ones(nargs_new) * [int(p)]
+                ranks_new = ranks_new.tolist()
+        else:
+            if p is None:
+                if append_samples:
+                    ranks = self.ranks
+                    ranks_new = []
+                    for i in range(nargs_new):
+                        rnk = int(np.linalg.matrix_rank(samples_new[i]))
+                        ranks.append(rnk)
+                        ranks_new.append(rnk)
+                else:
+                    ranks = []
+                    for i in range(nargs):
+                        ranks.append(np.linalg.matrix_rank(samples[i]))
+            else:
+                if not isinstance(p, int):
+                    raise TypeError('UQpy: `p` must be integer.')
+
+                if p < 1:
+                    raise ValueError('UQpy: `p` must be an integer larger than or equal to one.')
+
+                for i in range(nargs):
+                    if min(np.shape(samples[i])) < p:
+                        raise ValueError('UQpy: The dimension of the input data is not consistent with `p` of G(n,p).')
+
+                ranks = np.ones(nargs) * [int(p)]
+                ranks = ranks.tolist()
+
+                if append_samples:
+                    ranks_new = np.ones(nargs_new) * [int(p)]
+                    ranks_new = ranks_new.tolist()
+
+        ranks = list(map(int, ranks))
+
+        # For each point perform svd.
+        if append_samples:
+            for i in range(nargs_new):
+                u, s, v = svd(samples_new[i], int(ranks_new[i]))
+                self.psi.append(u)
+                self.sigma.append(np.diag(s))
+                self.phi.append(v)
+        else:
+            psi = []  # initialize the left singular eigenvectors as a list.
+            sigma = []  # initialize the singular values as a list.
+            phi = []  # initialize the right singular eigenvectors as a list.
+            for i in range(nargs):
+                u, s, v = svd(samples[i], int(ranks[i]))
+                psi.append(u)
+                sigma.append(np.diag(s))
+                phi.append(v)
+
+            self.samples = samples
+            self.psi = psi
+            self.sigma = sigma
+            self.phi = phi
+
+        self.n_psi = n_psi
+        self.n_phi = n_phi
+        self.p = p
+        self.ranks = ranks
+        self.nargs = nargs
+        self.max_rank = int(np.max(ranks))
+
+    def distance(self, points_grassmann=None):
 
         """
         Estimate the distance between points on the Grassmann manifold.
 
         This method computes the pairwise distance of points projected on the Grassmann manifold. The input arguments
-        are passed through a list of arguments (argv) containing a list of lists or a list of numpy arrays. Further,
-        the user has the option either to pass the rank of each list or numpy array or to let the method compute them.
-        When the user call this method a list containing the pairwise distances is returned as an output argument where
-        the distances are stored as [{0,0},{0,1},{0,2},...,{1,0},{1,1},{1,2}], where {a,b} corresponds to the distance
-        between the points 'a' and 'b'. Further, users are asked to provide the distance definition when the class
-        Grassmann is instatiated. The current built-in options are the Grassmann, chordal, procrustes, and projection
-        distances, but the users have also the option to implement their own distance definition.
+        are passed through a `list` of `list` or a `list` of `ndarray`. When the user call this method a list containing
+        the pairwise distances is returned as an output argument where the distances are stored as 
+        [{0,1},{0,2},...,{1,0},{1,1},{1,2},...], where {a,b} corresponds to the distance between the points 'a' and 
+        'b'. Further, users are asked to provide the distance definition when the class `Grassmann` is instatiated. 
+        The current built-in options are the `grassmann_distance`, `chordal_distance`, `procrustes_distance`, and 
+        `projection_distance`, but the users have also the option to implement their own distance definition.
+        In this case, the user must be aware that the matrices in `points_grassmann` must represent points on the
+        Grassmann manifold. For example, given the points on the Grassmann manifold one can compute the pairwise
+        distances in the following way:
+
+        >>> Gr = Grassmann(distance_method=Grassmann.grassmann_distance)
+        >>> Gr.distance(points_grassmann=points_grassmann)
 
         **Input:**
 
-        :param argv: Matrices (at least 2) corresponding to the points on the Grassmann manifold.
-        :type  argv: list of arguments
-
-        :param kwargs: Contains the keyword for the user defined rank. If a list or numpy ndarray containing the rank of
-               each matrix is not provided, the code will compute them using numpy.linalg.matrix_rank.
-        :type kwargs: dictionary of arguments
+        * **points_grassmann** (`list` or `NoneType`) 
+            Matrices (at least 2) corresponding to the points on the Grassmann manifold. If `points_grassmann` is not
+            provided it means that the samples in `manifold` are employed, and the pairwise distances of the points on
+            the manifold defined by the left and right singular eigenvectors are computed.
 
         **Output/Returns:**
 
-        :param distance_list: Pairwise distance.
-        :type distance_list: list
+        * **points_distance** (`list`)
+            Pairwise distances if `points_grassmann` is provided.
+                
+        * **points_distance_psi** (`list`)
+            Pairwise distance of points on the manifold defined by the left singular eigenvectors if `points_grassmann` 
+            is not provided.
+            
+        * **points_distance_phi** (`list`)
+            Pairwise distance of points on the manifold defined by the right singular eigenvectors if `points_grassmann` 
+            is not provided.
         """
 
-        nargs = len(argv[0])
-        psi = argv[0]
-
-        if 'rank' in kwargs.keys():
-            ranks = kwargs['rank']
+        # Show an error message if no distance_object is identified.
+        if self.distance_object is None:
+            raise TypeError('UQpy: `distance_object` cannot be NoneType')
         else:
-            ranks = None
+            distance_fun = self.distance_object
 
-        # Initial tests
-        #-----------------------------------------------------------
-        if ranks is None:
-            ranks = []
-            for i in range(nargs):
-                ranks.append(np.linalg.matrix_rank(psi[i]))
-        elif type(ranks) != list and type(ranks) != np.ndarray:
-            raise TypeError('rank MUST be either a list or ndarray.')
-            
+        # If points_grassmann is not provided compute the distances on the manifold defined
+        # by the left (psi) and right (phi) singular eigenvectors. In this case, use the information
+        # set by the method manifold.
+        if points_grassmann is None:
+
+            # Compute the pairwise distances.
+            points_distance_psi = self.__estimate_distance(self.psi, self.ranks, distance_fun)
+            points_distance_phi = self.__estimate_distance(self.phi, self.ranks, distance_fun)
+
+            # Return the parwise distances for the left and right singular eigenvectors.
+            return points_distance_psi, points_distance_phi
+        else:
+            if isinstance(points_grassmann, np.ndarray):
+                points_grassmann = points_grassmann.tolist()
+
+            n_size = max(np.shape(points_grassmann[0]))
+            for i in range(len(points_grassmann)):
+                if n_size != max(np.shape(points_grassmann[i])):
+                    raise TypeError('UQpy: The shape of the input matrices must be the same.')
+
+            # if points_grasssmann is provided, use the shape of the input matrices to define 
+            # the dimension of the p-planes defining the manifold of each individual input matrix.
+            p_dim = []
+            for i in range(len(points_grassmann)):
+                p_dim.append(min(np.shape(np.array(points_grassmann[i]))))
+
+            # Compute the pairwise distances.
+            points_distance = self.__estimate_distance(points_grassmann, p_dim, distance_fun)
+
+            # Return the pairwise distances.
+            return points_distance
+
+    @staticmethod
+    def __estimate_distance(points, p_dim, distance_fun):
+
+        """
+        Private method: Estimate the distance between points on the Grassmann manifold.
+
+        This is an auxiliary method to compute the pairwise distance of points on the Grassmann manifold. 
+        The input arguments are passed through a list . Further, the user has the option to pass the dimension 
+        of the embedding space.
+
+        **Input:**
+
+        * **points** (`list` or `ndarray`)
+            Matrices (at least 2) corresponding to the points on the Grassmann manifold.
+        
+        * **p_dim** (`list`)
+            Embedding dimension.
+
+        **Output/Returns:**
+
+        * **distance_list** (`list`)
+            Pairwise distance.
+        """
+
+        # Check points for type and shape consistency.
+        # -----------------------------------------------------------
+        if not isinstance(points, list) and not isinstance(points, np.ndarray):
+            raise TypeError('UQpy: The input matrices must be either list or numpy.ndarray.')
+
+        nargs = len(points)
+
         if nargs < 2:
-            raise ValueError('Two matrices or more MUST be provided.')
-        elif len(ranks) != nargs:
-            raise ValueError('The number of elements in rank and in the input data MUST be the same.')
-        #------------------------------------------------------------
-            
+            raise ValueError('UQpy: At least two matrices must be provided.')
+
+        # ------------------------------------------------------------
+
         # Define the pairs of points to compute the Grassmann distance.
         indices = range(nargs)
         pairs = list(itertools.combinations(indices, 2))
 
-        if self.user_distance_check:
-            if self.distance_script is None:
-                raise TypeError('distance_script cannot be None')
-
-            exec('from ' + self.distance_script[:-3] + ' import ' + self.distance_object)
-            distance_fun = eval(self.distance_object)
-        else:
-            if self.distance_object is None:
-                raise TypeError('distance_object cannot be None')
-
-            distance_fun = eval("Grassmann." + self.distance_object)
-
+        # Compute the pairwise distances.
         distance_list = []
         for id_pair in range(np.shape(pairs)[0]):
             ii = pairs[id_pair][0]  # Point i
             jj = pairs[id_pair][1]  # Point j
 
-            rank0 = int(ranks[ii])
-            rank1 = int(ranks[jj])
+            p0 = int(p_dim[ii])
+            p1 = int(p_dim[jj])
 
-            x0 = np.asarray(psi[ii])[:, :rank0]
-            x1 = np.asarray(psi[jj])[:, :rank1]
+            x0 = np.asarray(points[ii])[:, :p0]
+            x1 = np.asarray(points[jj])[:, :p1]
 
-            dist = distance_fun(x0, x1)
+            # Call the functions where the distance metric is implemented.
+            distance_value = distance_fun(x0, x1)
 
-            distance_list.append(dist)
+            distance_list.append(distance_value)
 
         return distance_list
 
     # ==================================================================================================================
     # Built-in metrics are implemented in this section. Any new built-in metric must be implemented
-    # here with the decorator @staticmethod.
+    # here with the decorator @staticmethod.  
 
     @staticmethod
     def grassmann_distance(x0, x1):
@@ -263,23 +525,31 @@ class Grassmann:
         """
         Estimate the Grassmann distance.
 
-        One of the distances defined on a manifold is the Grassmann distance implemented herein. As the user gives the
-        distance definition when the class Grassmann is instantiated the method 'distance' uses this information to call
-        the respective distance definition.
+        One of the distances defined on the Grassmann manifold is the Grassmann distance.
 
         **Input:**
 
-        :param x0: Point on the Grassmann manifold.
-        :type  x0: list or numpy array
+        * **x0** (`list` or `ndarray`)
+            Point on the Grassmann manifold.
 
-        :param x1: Point on the Grassmann manifold.
-        :type  x1: list or numpy array
+        * **x1** (`list` or `ndarray`)
+            Point on the Grassmann manifold.
 
         **Output/Returns:**
 
-        :param distance: Grassmann distance between x0 and x1.
-        :type distance: float
+        * **distance** (`float`)
+            Grassmann distance between x0 and x1.
         """
+
+        if not isinstance(x0, list) and not isinstance(x0, np.ndarray):
+            raise TypeError('UQpy: x0 must be either list or numpy.ndarray.')
+        else:
+            x0 = np.array(x0)
+
+        if not isinstance(x1, list) and not isinstance(x1, np.ndarray):
+            raise TypeError('UQpy: x1 must be either list or numpy.ndarray.')
+        else:
+            x1 = np.array(x1)
 
         l = min(np.shape(x0))
         k = min(np.shape(x1))
@@ -300,23 +570,31 @@ class Grassmann:
         """
         Estimate the chordal distance.
 
-        One of the distances defined on a manifold is the chordal distance implemented herein. As the user gives the
-        distance definition when the class Grassmann is instantiated the method 'distance' uses this information to call
-        the respective distance definition.
+        One of the distances defined on the Grassmann manifold is the chordal distance.
 
         **Input:**
 
-        :param x0: Point on the Grassmann manifold.
-        :type  x0: list or numpy array
+        * **x0** (`list` or `ndarray`) 
+            Point on the Grassmann manifold.
 
-        :param x1: Point on the Grassmann manifold.
-        :type  x1: list or numpy array
+        * **x1** (`list` or `ndarray`)
+            Point on the Grassmann manifold.
 
         **Output/Returns:**
 
-        :param distance: Chordal distance between x0 and x1.
-        :type distance: float
+        * **distance** (`float`)
+            Chordal distance between x0 and x1.
         """
+
+        if not isinstance(x0, list) and not isinstance(x0, np.ndarray):
+            raise TypeError('UQpy: x0 must be either list or numpy.ndarray.')
+        else:
+            x0 = np.array(x0)
+
+        if not isinstance(x1, list) and not isinstance(x1, np.ndarray):
+            raise TypeError('UQpy: x1 must be either list or numpy.ndarray.')
+        else:
+            x1 = np.array(x1)
 
         l = min(np.shape(x0))
         k = min(np.shape(x1))
@@ -338,23 +616,31 @@ class Grassmann:
         """
         Estimate the Procrustes distance.
 
-        One of the distances defined on a manifold is the Procrustes distance implemented herein. As the user gives the
-        distance definition when the class Grassmann is instantiated the method 'distance' uses this information to call
-        the respective distance definition.
+        One of the distances defined on the Grassmann manifold is the Procrustes distance.
 
         **Input:**
 
-        :param x0: Point on the Grassmann manifold.
-        :type  x0: list or numpy array
+        * **x0** (`list` or `ndarray`)
+            Point on the Grassmann manifold.
 
-        :param x1: Point on the Grassmann manifold.
-        :type  x1: list or numpy array
+        * **x1** (`list` or `ndarray`)
+            Point on the Grassmann manifold.
 
         **Output/Returns:**
 
-        :param distance: Procrustes distance between x0 and x1.
-        :type distance: float
+        * **distance** (`float`)
+            Procrustes distance between x0 and x1.
         """
+
+        if not isinstance(x0, list) and not isinstance(x0, np.ndarray):
+            raise TypeError('UQpy: x0 must be either list or numpy.ndarray.')
+        else:
+            x0 = np.array(x0)
+
+        if not isinstance(x1, list) and not isinstance(x1, np.ndarray):
+            raise TypeError('UQpy: x1 must be either list or numpy.ndarray.')
+        else:
+            x1 = np.array(x1)
 
         l = min(np.shape(x0))
         k = min(np.shape(x1))
@@ -376,23 +662,31 @@ class Grassmann:
         """
         Estimate the projection distance.
 
-        One of the distances defined on a manifold is the projection distance implemented herein. As the user gives the
-        distance definition when the class Grassmann is instantiated the method 'distance' uses this information to call
-        the respective distance definition.
+        One of the distances defined on the Grassmann manifold is the projection distance.
 
         **Input:**
 
-        :param x0: Point on the Grassmann manifold.
-        :type  x0: list or numpy array
+        * **x0** (`list` or `ndarray`) 
+            Point on the Grassmann manifold.
 
-        :param x1: Point on the Grassmann manifold.
-        :type  x1: list or numpy array
+        * **x1** (`list` or `ndarray`)
+            Point on the Grassmann manifold.
 
         **Output/Returns:**
 
-        :param distance: Projection distance between x0 and x1.
-        :type distance: float
+        * **distance** (`float`)
+            Projection distance between x0 and x1.
         """
+
+        if not isinstance(x0, list) and not isinstance(x0, np.ndarray):
+            raise TypeError('UQpy: x0 must be either list or numpy.ndarray.')
+        else:
+            x0 = np.array(x0)
+
+        if not isinstance(x1, list) and not isinstance(x1, np.ndarray):
+            raise TypeError('UQpy: x1 must be either list or numpy.ndarray.')
+        else:
+            x1 = np.array(x1)
 
         # Check rank and swap.
         c = np.zeros([x0.shape[0], x0.shape[1]])
@@ -409,123 +703,188 @@ class Grassmann:
         return distance
 
     # ==================================================================================================================
-    def kernel(self, *argv, **kwargs):
+    def kernel(self, points_grassmann=None):
 
         """
         Compute a kernel matrix on the Grassmann manifold.
 
-        This method computes the kernel matrix of points projected on the Grassmann manifold. The input arguments
-        are passed through a list of arguments (argv) containing a list of lists or a list of numpy arrays. Further,
-        the user has the option either to pass the rank of each list or numpy array or to let the method compute them.
-        When the user call this method a Numpy array containing the kernel matrix is returned as an output argument.
-        Further, users are asked to provide the kernel definition when the class Grassmann is instatiated. The current
-        built-in options are the projection kernel and the Binet-Cauchy kernel, but the users have also the option to
-        implement their own kernel definition.
+        This method computes the kernel matrix of points on the Grassmann manifold. The input arguments are passed 
+        through a list. When the user call this method a ndarray containing the kernel matrix is returned as an
+        output argument. Further, users are asked to provide the kernel method when the class Grassmann is instatiated.
+        The current built-in options are the `projection_kernel` and the `binet_cauchy_kernel`, but the users have
+        the option to implement their own kernel definition. However, the user must be aware that the points used
+        to compute the kernel must be the points on the same manifold; therefore, it is important to ensure that the 
+        dimension of all the input matrices are the same. Therefore, the following commands can be used:
+
+        >>> Gr = Grassmann(kernel_method=Grassmann.projection_kernel)
+        >>> Gr.kernel(points_grassmann=points_grassmann)
 
         **Input:**
 
-        :param argv: Matrices (at least 2) corresponding to the points on the Grassmann manifold.
-        :type  argv: list of arguments
-
-        :param kwargs: Contains the keyword for the user defined rank. If a list or numpy ndarray containing the rank of
-               each matrix is not provided, the code will compute them using numpy.linalg.matrix_rank.
-        :type kwargs: dictionary of arguments
+        * **points_grassmann** (`list` or `NoneType`) 
+            Matrices (at least 2) corresponding to the points on the Grassmann manifold. If `points_grassmann` is not
+            provided it means that the samples set by `manifold` is employed and kernel matrices are computed for the 
+            points on the manifold defined by the left and right singular eigenvectors are computed.
 
         **Output/Returns:**
 
-        :param kernel_matrix: Kernel matrix.
-        :type kernel_matrix: Numpy array
+        * **kernel_matrix** (`list`)
+            Kernel matrix if `points_grassmann` is provided.
+                
+        * **kernel_matrix_psi** (`list`)
+            Kernel matrix on the manifold defined by the left singular eigenvectors if `points_grassmann` 
+            is not provided.
+            
+        * **kernel_matrix_phi** (`list`)
+            Kernel matrix on the manifold defined by the right singular eigenvectors if `points_grassmann` 
+            is not provided.
         """
 
-        nargs = len(argv[0])
-        psi = argv[0]
+        # If points_grassmann is None get the information set using the method manifold.
+        if points_grassmann is None:
+            ranks = self.ranks
 
-        if 'rank' in kwargs.keys():
-            ranks = kwargs['rank']
+            # Check if all the input points belong to the same manifold.
+            if ranks.count(ranks[0]) != len(ranks):
+                raise TypeError('UQpy: the input points do not belog to the same manifold.')
+            else:
+                p_dim = ranks[0]
+
+            # Compute the kernel matrix    
+            kernel_psi = self.__estimate_kernel(self.psi, p_dim=p_dim)
+            kernel_phi = self.__estimate_kernel(self.phi, p_dim=p_dim)
+
+            # Return both kernel matrices.
+            return kernel_psi, kernel_phi
         else:
-            ranks = None
+            if isinstance(points_grassmann, np.ndarray):
+                points_grassmann = points_grassmann.tolist()
 
-        # Initial tests
-        #-----------------------------------------------------------
-        if ranks is None:
-            ranks = []
-            for i in range(nargs):
-                ranks.append(np.linalg.matrix_rank(psi[i]))
-        elif type(ranks) != list and type(ranks) != np.ndarray:
-            raise TypeError('rank MUST be either a list or ndarray.')
-            
+            n_size = max(np.shape(points_grassmann[0]))
+            for i in range(len(points_grassmann)):
+                if n_size != max(np.shape(points_grassmann[i])):
+                    raise TypeError('UQpy: The shape of the input matrices must be the same.')
+
+            # Check the embedding dimension and its consistency.
+            p_dim = []
+            for i in range(len(points_grassmann)):
+                p_dim.append(min(np.shape(np.array(points_grassmann[i]))))
+
+            if p_dim.count(p_dim[0]) != len(p_dim):
+                raise TypeError('UQpy: The input points do not belog to the same manifold.')
+            else:
+                p0 = p_dim[0]
+                if p0 != self.p:
+                    raise ValueError('UQpy: The input points do not belog to the manifold G(n,p).')
+
+                    # Compute the kernel matrix.
+            kernel_matrix = self.__estimate_kernel(np.array(points_grassmann), p0)
+
+            # Return the kernel matrix.
+            return kernel_matrix
+
+    def __estimate_kernel(self, points, p_dim):
+
+        """
+        Private method: Compute a kernel matrix on the Grassmann manifold.
+
+        This an auxiliary and private method to compute the kernel matrix of points on the Grassmann manifold.
+        When using this method a ndarray containing the kernel matrix is returned as an output argument.
+
+        **Input:**
+
+        * **points** (`list` or `ndarray`)
+            Matrices (at least 2) corresponding to the points on the Grassmann manifold.
+        
+        * **p_dim** (`int`)
+            Embedding dimension.
+
+        **Output/Returns:**
+
+        * **kernel_matrix** (`list`)
+            Kernel matrix.
+        """
+
+        # Check points for type and shape consistency.
+        # -----------------------------------------------------------
+        if not isinstance(points, list) and not isinstance(points, np.ndarray):
+            raise TypeError('UQpy: `points` must be either list or numpy.ndarray.')
+
+        nargs = len(points)
+
         if nargs < 2:
-            raise ValueError('Two matrices or more MUST be provided.')
-        elif len(ranks) != nargs:
-            raise ValueError('The number of elements in rank and in the input data MUST be the same.')
-        #------------------------------------------------------------
+            raise ValueError('UQpy: At least two matrices must be provided.')
+        # ------------------------------------------------------------
 
-        # Define the pairs of points to compute the Grassmann distance.
+        # Define the pairs of points to compute the entries of the kernel matrix.
         indices = range(nargs)
         pairs = list(itertools.combinations(indices, 2))
 
-        if self.user_kernel_check:
-            exec('from ' + self.kernel_script[:-3] + ' import ' + self.kernel_object)
-            kernel_fun = eval(self.kernel_object)
+        # Show an error message if no kernel_object is found.    
+        if self.kernel_object is None:
+            raise TypeError('UQpy: `kernel_object` cannot be NoneType')
         else:
-            kernel_fun = eval("Grassmann." + self.kernel_object)
+            kernel_fun = self.kernel_object
 
+        # Estimate off-diagonal entries of the kernel matrix.
         kernel_list = []
         for id_pair in range(np.shape(pairs)[0]):
             ii = pairs[id_pair][0]  # Point i
             jj = pairs[id_pair][1]  # Point j
 
-            x0 = psi[ii]
-            x1 = psi[jj]
-
-            rank0 = ranks[ii]
-            rank1 = ranks[jj]
-            x0 = x0[:, :rank0]  # Truncating the matrices.
-            x1 = x1[:, :rank1]
+            x0 = np.asarray(points[ii])[:, :p_dim]
+            x1 = np.asarray(points[jj])[:, :p_dim]
 
             ker = kernel_fun(x0, x1)
             kernel_list.append(ker)
 
+        # Diagonal entries of the kernel matrix.
         kernel_diag = []
         for id_elem in range(nargs):
-            xd = psi[id_elem]
-            rankd = xd.shape[1]
-            xd = xd[:, :rankd]
+            xd = np.asarray(points[id_elem])
+            xd = xd[:, :p_dim]
 
             kerd = kernel_fun(xd, xd)
             kernel_diag.append(kerd)
 
-        kernel_matrix = sd.squareform(kernel_list) + np.diag(kernel_diag)
+        # Add the diagonals and off-diagonal entries of the Kernel matrix.
+        kernel_matrix = sd.squareform(np.array(kernel_list)) + np.diag(kernel_diag)
 
+        # Return the kernel matrix.
         return kernel_matrix
 
     # ==================================================================================================================
-    # Built-in kernels are implemented in this section. Any new built-in kernel must be implemented
-    # here with the decorator @staticmethod.
-
     @staticmethod
     def projection_kernel(x0, x1):
 
         """
         Estimate the value of the projection kernel between x0 and x1.
 
-        One of the kernels defined on a manifold is the projection kernel implemented herein. As the user gives the
-        kernel definition when the class Grassmann is instantiated the method 'kernel' uses this information to call
-        the respective kernel definition.
+        One of the kernels defined on a manifold is the projection kernel.
 
         **Input:**
 
-        :param x0: Point on the Grassmann manifold.
-        :type  x0: list or numpy array
+        * **x0** (`list` or `ndarray`)
+            Point on the Grassmann manifold.
 
-        :param x1: Point on the Grassmann manifold.
-        :type x1: list or numpy array
+        * **x1** (`list` or `ndarray`)
+            Point on the Grassmann manifold.
 
         **Output/Returns:**
 
-        :param ker: Kernel value for x0 and x1.
-        :type ker: float
+        * **distance** (`float`)
+            Kernel value for x0 and x1.
         """
+
+        if not isinstance(x0, list) and not isinstance(x0, np.ndarray):
+            raise TypeError('UQpy: x0 must be either list or numpy.ndarray.')
+        else:
+            x0 = np.array(x0)
+
+        if not isinstance(x1, list) and not isinstance(x1, np.ndarray):
+            raise TypeError('UQpy: x1 must be either list or numpy.ndarray.')
+        else:
+            x1 = np.array(x1)
 
         r = np.dot(x0.T, x1)
         n = np.linalg.norm(r, 'fro')
@@ -538,23 +897,31 @@ class Grassmann:
         """
         Estimate the value of the Binet-Cauchy kernel between x0 and x1.
 
-        One of the kernels defined on a manifold is the Binet-Cauchy kernel implemented herein. As the user gives the
-        kernel definition when the class Grassmann is instantiated the method 'kernel' uses this information to call
-        the respective kernel definition.
+        One of the kernels defined on a manifold is the Binet-Cauchy kernel.
 
         **Input:**
 
-        :param x0: Point on the Grassmann manifold.
-        :type  x0: list or numpy array
+        * **x0** (`list` or `ndarray`)
+            Point on the Grassmann manifold.
 
-        :param x1: Point on the Grassmann manifold.
-        :type x1: list or numpy array
+        * **x1** (`list` or `ndarray`)
+            Point on the Grassmann manifold.
 
         **Output/Returns:**
 
-        :param ker: Kernel value for x0 and x1.
-        :type ker: float
+        * **distance** (`float`)
+            Kernel value for x0 and x1.
         """
+
+        if not isinstance(x0, list) and not isinstance(x0, np.ndarray):
+            raise TypeError('UQpy: x0 must be either list or numpy.ndarray.')
+        else:
+            x0 = np.array(x0)
+
+        if not isinstance(x1, list) and not isinstance(x1, np.ndarray):
+            raise TypeError('UQpy: x1 must be either list or numpy.ndarray.')
+        else:
+            x1 = np.array(x1)
 
         r = np.dot(x0.T, x1)
         det = np.linalg.det(r)
@@ -563,195 +930,151 @@ class Grassmann:
 
     # ==================================================================================================================
     @staticmethod
-    def project_points(*argv, **kwargs):
+    def log_map(points_grassmann=None, ref=None):
 
         """
-        Project the input matrices onto the Grassmann manifold via singular value decomposition (SVD).
+        Mapping points from the Grassmann manifold on the tangent space.
 
-        This method project matrices onto the Grassmann manifold via singular value decomposition. The input arguments
-        are passed through a list of arguments (argv) containing a list of lists or a list of numpy arrays. Further,
-        the user has the option either to pass the rank of each list or numpy array or to let the method compute them.
-        When the user call this method the left and right -singular eigenvectors, as well as the singular values are
-        returned together with the individual ranks and the maximum rank. The size of the output matrices are given by
-        the maximum rank observed.
+        It maps the points on the Grassmann manifold, passed to the method using the input argument `points_grassmann`,
+        onto the tangent space constructed on ref (a reference point on the Grassmann manifold).
+        It is mandatory that the user pass a reference point to the method. Further, the reference point and the points
+        in `points_grassmann` must belong to the same manifold.
 
         **Input:**
 
-        :param argv: Matrices (at least 2) corresponding to the points on the Grassmann manifold.
-        :type  argv: list of arguments
+        * **points_grassmann** (`list`)
+            Matrices (at least 2) corresponding to the points on the Grassmann manifold.
 
-        :param kwargs: Contains the keyword for the user defined rank. If a list or numpy ndarray containing the rank of
-               each matrix is not provided, the code will compute them using numpy.linalg.matrix_rank.
-        :type kwargs: dictionary of arguments
+        * **ref** (`list` or `ndarray`)
+            A point on the Grassmann manifold used as reference to construct the tangent space.
 
         **Output/Returns:**
 
-        :param psi: Left-singular eigenvectors.
-        :type psi: list
-
-        :param sigma: Singular eigenvalues.
-        :type sigma: list
-
-        :param phi: Right-singular eigenvectors.
-        :type phi: list
-
-        :param max_rank: Maximum rank.
-        :type max_rank: float
-
-        :param ranks: Ranks of the input matrices.
-        :type ranks: list
+        * **points_tan**: (`list`)
+            Point on the tangent space.
         """
 
-        matrix, nargs = check_arguments(argv, min_num_matrix=1, ortho=False)
+        # Show an error message if points_grassmann is not provided.
+        if points_grassmann is None:
+            raise TypeError('UQpy: No input data is provided.')
 
-        if 'rank' in kwargs.keys():
-            ranks = kwargs['rank']
-        else:
-            ranks = None   
+        # Show an error message if ref is not provided.
+        if ref is None:
+            raise TypeError('UQpy: No reference point is provided.')
 
-        # Initial tests
-        #-----------------------------------------------------------
-        if ranks is None:
-            ranks = []
-            for i in range(nargs):
-                ranks.append(np.linalg.matrix_rank(matrix[i]))
-        elif type(ranks) != list and type(ranks) != np.ndarray:
-            raise TypeError('rank MUST be either a list or ndarray.')
-            
-        if len(ranks) != nargs:
-            raise ValueError('The number of elements in rank and in the input data MUST be the same.')
-        #------------------------------------------------------------
+        # Check points_grassmann for type consistency.
+        if not isinstance(points_grassmann, list) and not isinstance(points_grassmann, np.ndarray):
+            raise TypeError('UQpy: `points_grassmann` must be either a list or numpy.ndarray.')
 
-        max_rank = int(np.max(ranks))  # rank = max(r1, r2, ..., rn)
-        psi = []  # initialize the left singular vectors as a list.
-        sigma = []  # initialize the singular values as a list.
-        phi = []  # initialize the right singular vectors as a list.
+        # Get the number of matrices in the set.
+        nargs = len(points_grassmann)
 
-        # For each point perform svd with max_rank columns.
+        shape_0 = np.shape(points_grassmann[0])
+        shape_ref = np.shape(ref)
+        p_dim = []
         for i in range(nargs):
-            u, s, v = svd(matrix[i], max_rank)
-            psi.append(u)
-            sigma.append(np.diag(s))
-            phi.append(v.T)
-            
-        return psi, sigma, phi, max_rank, ranks
+            shape = np.shape(points_grassmann[i])
+            p_dim.append(min(np.shape(np.array(points_grassmann[i]))))
+            if shape != shape_0:
+                raise Exception('The input points are in different manifold.')
 
-    @staticmethod
-    def log_mapping(*argv, ref=None, rank_ref=None):
+            if shape != shape_ref:
+                raise Exception('The ref and points_grassmann are in different manifolds.')
 
-        """
-        Map points on the Grassmann manifold onto tangent space.
+        p0 = p_dim[0]
 
-        It maps the points on the Grassmann manifold, passed to the method using *argv, onto the tangent space
-        constructed on ref (a reference point on the Grassmann manifold). It is mandatory that the user pass a reference
-        point to the method. Moreover, the user is asked to to provide the dimension of the manifold where the tangent 
-        space is constructed, but if this value is not provided the method compute the rank of the reference point.
-
-        **Input:**
-
-        :param argv: Matrices (at least 2) corresponding to the points on the Grassmann manifold.
-        :type  argv: list of arguments
-
-        :param ref: A point on the Grassmann manifold used as reference to construct the tangent space.
-        :type ref: list or numpy array
-        
-        :param rank_ref: Rank of the reference point.
-        :type rank_ref: int
-
-        **Output/Returns:**
-
-        :param _gamma: Point on the tangent space.
-        :type _gamma: list
-        """
-        
-        u, nr = check_arguments(argv, min_num_matrix=1, ortho=False)
-
-        # Initial tests
-        #-----------------------------------------------------------
-        if rank_ref is None:
-            rank_ref = np.linalg.matrix_rank(ref)
-        elif type(rank_ref) != int:
-            raise TypeError('rank of reference MUST be integer.')   
-        #------------------------------------------------------------
-        
-        # Check the input arguments.
-        #u, nr = check_arguments(argv, min_num_matrix=1, ortho=False)
-
-        ref = ref[:,0:rank_ref]
-        if type(ref) != list:
+        # Check reference for type consistency.
+        ref = np.asarray(ref)
+        if not isinstance(ref, list):
             ref_list = ref.tolist()
         else:
             ref_list = ref
             ref = np.array(ref)
 
+        # Multiply ref by its transpose.
         refT = ref.T
         m0 = np.dot(ref, refT)
 
-        _gamma = []
-        for i in range(nr):
-            utrunc=u[i][:,0:rank_ref]
-            if utrunc.tolist() == ref_list:
-                _gamma.append(np.zeros(np.shape(ref)))
-            else:
+        # Loop over all the input matrices.
+        points_tan = []
+        for i in range(nargs):
+            utrunc = points_grassmann[i][:, 0:p0]
 
-                # M = ((I - psi0*psi0')*psi1)*inv(psi0'*psi1)
+            # If the reference point is one of the given points
+            # set the entries to zero.
+            if utrunc.tolist() == ref_list:
+                points_tan.append(np.zeros(np.shape(ref)))
+            else:
+                # compute: M = ((I - psi0*psi0')*psi1)*inv(psi0'*psi1)
                 minv = np.linalg.inv(np.dot(refT, utrunc))
                 m = np.dot(utrunc - np.dot(m0, utrunc), minv)
-                ui, si, vi = np.linalg.svd(m, full_matrices=False)  # svd(number_of_variables, max_rank)
-                _gamma.append(np.dot(np.dot(ui, np.diag(np.arctan(si))), vi))
+                ui, si, vi = np.linalg.svd(m, full_matrices=False)  # svd(m, max_rank)
+                points_tan.append(np.dot(np.dot(ui, np.diag(np.arctan(si))), vi))
 
-        return _gamma
+        # Return the points on the tangent space
+        return points_tan
 
     @staticmethod
-    def exp_mapping(*argv, ref=None, rank_ref=None):
+    def exp_map(points_tangent=None, ref=None):
 
         """
         Map points on the tangent space onto the Grassmann manifold.
 
-        It maps the points on the tangent space, passed to the method using *argv, onto the Grassmann manifold
-        constructed on ref (a reference point on the Grassmann manifold). It is mandatory that the user pass a reference
-        point to the method. Moreover, the user is asked to to provide the dimension of the manifold where the tangent 
-        space is constructed, but if this value is not provided the method compute the rank of the reference point.
+        It maps the points on the tangent space, passed to the method using points_tangent, onto the Grassmann manifold. 
+        It is mandatory that the user pass a reference point where the tangent space was created.
 
         **Input:**
 
-        :param argv: Matrices (at least 2) corresponding to the points on the Grassmann manifold.
-        :type  argv: list of arguments
+        * **points_tangent** (`list`)
+            Matrices (at least 2) corresponding to the points on the Grassmann manifold.
 
-        :param ref: A point on the Grassmann manifold used as reference to construct the tangent space.
-        :type ref: list or numpy array
-        
-        :param rank_ref: Rank of the reference point.
-        :type rank_ref: int
-
+        * **ref** (`list` or `ndarray`)
+            A point on the Grassmann manifold used as reference to construct the tangent space.
+       
         **Output/Returns:**
 
-        :param _gamma: Point on the tangent space.
-        :type _gamma: list
+        * **points_manifold**: (`list`)
+            Point on the tangent space.
         """
-        """
-        exp_mapping: perform the exponential mapping from the tangent space
-                     to the Grassmann manifold.
-        :param ref: list or ndarray containing the reference point on the Grassmann manifold
-                    where the tangent space is approximated.
 
-        """
-        # Check input arguments.
-        u, nr = check_arguments(argv, min_num_matrix=1, ortho=False)
+        # Show an error message if points_tangent is not provided.
+        if points_tangent is None:
+            raise TypeError('UQpy: No input data is provided.')
 
-        # Initial tests
-        #-----------------------------------------------------------
-        if rank_ref is None:
-            rank_ref = np.linalg.matrix_rank(ref)
-        elif type(rank_ref) != int:
-            raise TypeError('rank of reference MUST be integer.')    
-        #------------------------------------------------------------
+        # Show an error message if ref is not provided.
+        if ref is None:
+            raise TypeError('UQpy: No reference point is provided.')
 
-        ref = ref[:,0:rank_ref]
-        x = []
-        for i in range(nr):
-            
-            utrunc=u[i][:,0:rank_ref]
+        # Test points_tangent for type consistency.
+        if not isinstance(points_tangent, list) and not isinstance(points_tangent, np.ndarray):
+            raise TypeError('UQpy: `points_tangent` must be either list or numpy.ndarray.')
+
+        # Number of input matrices.
+        nargs = len(points_tangent)
+
+        shape_0 = np.shape(points_tangent[0])
+        shape_ref = np.shape(ref)
+        p_dim = []
+        for i in range(nargs):
+            shape = np.shape(points_tangent[i])
+            p_dim.append(min(np.shape(np.array(points_tangent[i]))))
+            if shape != shape_0:
+                raise Exception('The input points are in different manifold.')
+
+            if shape != shape_ref:
+                raise Exception('The ref and points_grassmann are in different manifolds.')
+
+        p0 = p_dim[0]
+
+        # -----------------------------------------------------------
+
+        ref = np.array(ref)
+        # ref = ref[:,:p0]
+
+        # Map the each point back to the manifold.
+        points_manifold = []
+        for i in range(nargs):
+            utrunc = points_tangent[i][:, :p0]
             ui, si, vi = np.linalg.svd(utrunc, full_matrices=False)
 
             # Exponential mapping.
@@ -763,100 +1086,153 @@ class Grassmann:
             if not np.allclose(xtest, np.identity(np.shape(xtest)[0])):
                 x0, unused = np.linalg.qr(x0)  # re-orthonormalizing.
 
-            x.append(x0)
+            points_manifold.append(x0)
 
-        return x
+        return points_manifold
 
-    def karcher_mean(self, *argv, **kwargs):
+    def karcher_mean(self, points_grassmann=None, **kwargs):
 
         """
         Compute the Karcher mean.
 
         This method computes the Karcher mean given a set of points on the Grassmann manifold. The Karcher mean is
-        estimated by the minimization of the Frechet variance, where the Frechet variance corresponds to the summation of the
-        square distances, defined on a manifold, to a given point.
-        
+        estimated by the minimization of the Frechet variance, where the Frechet variance corresponds to the sum of the
+        square distances, defined on the Grassmann manifold, to a given point. The command to compute the Karcher mean
+        given a seto of points on the Grassmann manifold is.
+
+        >>> Gr = Grassmann(karcher_method=Grassmann.gradient_descent)
+        >>> Gr.manifold(p=p,samples=samples,append_samples=False)
+        >>> karcher_left, karcher_right = Gr.karcher_mean()
+
+        In this case two values are returned corresponding to the ones related to the manifolds defined by the left and
+        right singular eigenvectors.
+
         **Input:**
 
-        :param argv: Matrices (at least 2) corresponding to the points on the Grassmann manifold.
-        :type  argv: list of arguments
+        * **points_grassmann** (`list` or `ndarray`)
+            Matrices (at least 2) corresponding to the points on the Grassmann manifold.
         
-        :param kwargs: Contains the keywords for the used in the optimizers to find the Karcher mean.
-        :type kwargs: dictionary of arguments
+        * **kwargs** (`dictionary`)
+            Contains the keywords for the used in the optimizers to find the Karcher mean. If ``gradient_descent`` is
+            employed the keywords are `acc`, a boolean variable for the accelerated method; `tol`, tolerance with
+            default value equal to 1e-3; and `maxiter`, maximum number of iterations with default value equal to 1000.
+            If `stochastic_gradient_descent` is employed instead, `acc` is not used.
 
         **Output/Returns:**
 
-        :param kr_mean: Karcher mean.
-        :type kr_mean: list
+        * **kr_mean** (`list`)
+            Karcher mean.
+            
+        * **kr_mean_psi** (`list`)
+            Karcher mean for left singular eigenvectors if `points_grassmann` is not provided.
+            
+        * **kr_mean_phi** (`list`)
+            Karcher mean for right singular eigenvectors if `points_grassmann` is not provided.
         """
 
-        matrix, nargs = check_arguments(argv, min_num_matrix=2, ortho=False)
-
-        if self.user_karcher_check:
-            exec('from ' + self.karcher_script[:-3] + ' import ' + self.karcher_object)
-            karcher_fun = eval(self.karcher_object)
+        # Show an error message if karcher_object is not provided.
+        if self.karcher_object is None:
+            raise TypeError('UQpy: `karcher_object` cannot be NoneType')
         else:
-            karcher_fun = eval("Grassmann." + self.karcher_object)
+            karcher_fun = self.karcher_object
 
-        shape_ref = np.shape(matrix[0])
-        for i in range(1, nargs):
-            if np.shape(matrix[i]) != shape_ref:
-                raise TypeError('Input matrices have different shape.')
+        if self.distance_object is None:
+            raise TypeError('UQpy: `distance_object` cannot be NoneType')
+        else:
+            distance_fun = self.distance_object
 
-        kr_mean = karcher_fun(self, matrix, kwargs)
+        # Compute the Karcher mean for psi and phi if points_grassmann is not provided.
+        if points_grassmann is None:
+            kr_mean_psi = karcher_fun(self.psi, distance_fun, kwargs)
+            kr_mean_phi = karcher_fun(self.phi, distance_fun, kwargs)
 
-        return kr_mean
+            # Return both mean values.  
+            return kr_mean_psi, kr_mean_phi
+        else:
 
-    def gradient_descent(self, data_points, kwargs):
+            # Test the input data for type consistency.
+            if not isinstance(points_grassmann, list) and not isinstance(points_grassmann, np.ndarray):
+                raise TypeError('UQpy: `points_grassmann` must be either list or numpy.ndarray.')
+
+            # Compute and test the number of input matrices necessary to compute the Karcher mean.
+            nargs = len(points_grassmann)
+            if nargs < 2:
+                raise ValueError('UQpy: At least two matrices must be provided.')
+
+            # Test the dimensionality of the input data.
+            p = []
+            for i in range(len(points_grassmann)):
+                p.append(min(np.shape(np.array(points_grassmann[i]))))
+
+            if p.count(p[0]) != len(p):
+                raise TypeError('UQpy: The input points do not belog to the same manifold.')
+            else:
+                p0 = p[0]
+                if p0 != self.p:
+                    raise ValueError('UQpy: The input points do not belog to the manifold G(n,p).')
+
+            kr_mean = karcher_fun(points_grassmann, distance_fun, kwargs)
+
+            return kr_mean
+
+    @staticmethod
+    def gradient_descent(data_points, distance_fun, kwargs):
 
         """
         Compute the Karcher mean using the gradient descent method.
 
         This method computes the Karcher mean given a set of points on the Grassmann manifold. In this regard, the
-        gradient descent method is implemented herein also considering the acceleration scheme due to Nesterov. Further,
-        this method is called by the method 'karcher_mean'.
+        ``gradient_descent`` method is implemented herein also considering the acceleration scheme due to Nesterov.
+        Further, this method is called by the method ``karcher_mean``.
 
         **Input:**
 
-        :param data_points: Points on the Grassmann manifold.
-        :type  data_points: list
+        * **data_points** (`list`)
+            Points on the Grassmann manifold.
+        
+        * **distance_fun** (`callable`)
+            Distance function.
 
-        :param kwargs: Contains the keywords for the used in the optimizers to find the Karcher mean.
-        :type kwargs: dictionary of arguments
+        * **kwargs** (`dictionary`)
+            Contains the keywords for the used in the optimizers to find the Karcher mean.
 
         **Output/Returns:**
 
-        :param mean_element: Karcher mean.
-        :type mean_element: list
+        * **mean_element** (`list`)
+            Karcher mean.
         """
 
+        # acc is a boolean varible to activate the Nesterov acceleration scheme.
         if 'acc' in kwargs.keys():
             acc = kwargs['acc']
         else:
             acc = False
 
+        # Error tolerance
         if 'tol' in kwargs.keys():
             tol = kwargs['tol']
         else:
             tol = 1e-3
 
+        # Maximum number of iterations.
         if 'maxiter' in kwargs.keys():
             maxiter = kwargs['maxiter']
         else:
             maxiter = 1000
 
+        # Number of points.
         n_mat = len(data_points)
 
-        alpha = 0.5  # todo: this can be adaptive (e.g., Armijo rule).
+        # =========================================
+        alpha = 0.5
         rnk = []
         for i in range(n_mat):
             rnk.append(min(np.shape(data_points[i])))
 
         max_rank = max(rnk)
-        
         fmean = []
         for i in range(n_mat):
-            fmean.append(self.frechet_variance(data_points[i], data_points))
+            fmean.append(Grassmann.frechet_variance(data_points[i], data_points, distance_fun))
 
         index_0 = fmean.index(min(fmean))
         mean_element = data_points[index_0].tolist()
@@ -869,7 +1245,8 @@ class Grassmann:
         avg = []
         _gamma = []
         if acc:
-            _gamma = Grassmann.log_mapping(data_points, ref=np.asarray(mean_element), rank_ref=max_rank)
+            _gamma = Grassmann.log_map(points_grassmann=data_points, ref=np.asarray(mean_element))
+
             avg_gamma.fill(0)
             for i in range(n_mat):
                 avg_gamma += _gamma[i] / n_mat
@@ -877,8 +1254,7 @@ class Grassmann:
 
         # Main loop
         while itera <= maxiter:
-
-            _gamma = Grassmann.log_mapping(data_points, ref=np.asarray(mean_element), rank_ref=max_rank)
+            _gamma = Grassmann.log_map(points_grassmann=data_points, ref=np.asarray(mean_element))
             avg_gamma.fill(0)
 
             for i in range(n_mat):
@@ -899,7 +1275,7 @@ class Grassmann:
             else:
                 step = alpha * avg_gamma
 
-            x = Grassmann.exp_mapping(step, ref=np.asarray(mean_element), rank_ref=max_rank)
+            x = Grassmann.exp_map(points_tangent=[step], ref=np.asarray(mean_element))
 
             test_1 = np.linalg.norm(x[0] - mean_element, 'fro')
 
@@ -911,29 +1287,34 @@ class Grassmann:
 
             itera += 1
 
+        # return the Karcher mean.
         return mean_element
 
-    def stochastic_gradient_descent(self, data_points, kwargs):
+    @staticmethod
+    def stochastic_gradient_descent(data_points, distance_fun, kwargs):
 
         """
         Compute the Karcher mean using the stochastic gradient descent method.
 
         This method computes the Karcher mean given a set of points on the Grassmann manifold. In this regard, the
-        stochastic gradient descent method is implemented herein. Further, this method is called by the method
-        'karcher_mean'.
+        ``stochastic_gradient_descent`` method is implemented herein. Further, this method is called by the method
+        ``karcher_mean``.
 
         **Input:**
 
-        :param data_points: Points on the Grassmann manifold.
-        :type  data_points: list
+        * **data_points** (`list`)
+            Points on the Grassmann manifold.
+            
+        * **distance_fun** (`callable`)
+            Distance function.
 
-        :param kwargs: Contains the keywords for the used in the optimizers to find the Karcher mean.
-        :type kwargs: dictionary of arguments
+        * **kwargs** (`dictionary`)
+            Contains the keywords for the used in the optimizers to find the Karcher mean.
 
         **Output/Returns:**
 
-        :param mean_element: Karcher mean.
-        :type mean_element: list
+        * **mean_element** (`list`)
+            Karcher mean.
         """
 
         if 'tol' in kwargs.keys():
@@ -951,12 +1332,12 @@ class Grassmann:
         rnk = []
         for i in range(n_mat):
             rnk.append(min(np.shape(data_points[i])))
-            
+
         max_rank = max(rnk)
-        
+
         fmean = []
         for i in range(n_mat):
-            fmean.append(self.frechet_variance(data_points[i], data_points), rank_ref=max_rank)
+            fmean.append(Grassmann.frechet_variance(data_points[i], data_points, distance_fun))
 
         index_0 = fmean.index(min(fmean))
 
@@ -973,11 +1354,11 @@ class Grassmann:
             for i in range(len(indices)):
                 alpha = 0.5 / k
                 idx = indices[i]
-                _gamma = Grassmann.log_mapping(data_points[idx], ref=np.asarray(mean_element), rank_ref=max_rank)
+                _gamma = Grassmann.log_map(points_grassmann=[data_points[idx]], ref=np.asarray(mean_element))
 
                 step = 2 * alpha * _gamma[0]
 
-                X = Grassmann.exp_mapping(step, ref=np.asarray(mean_element), rank_ref=max_rank)
+                X = Grassmann.exp_map(points_tangent=[step], ref=np.asarray(mean_element))
 
                 _gamma = []
                 mean_element = X[0]
@@ -992,90 +1373,220 @@ class Grassmann:
 
         return mean_element
 
-    def frechet_variance(self, point, *argv):
+    # Private method
+    @staticmethod
+    def frechet_variance(point_grassmann, points_grassmann, distance_fun):
 
         """
-        Compute Frechet variance.
+        Compute the Frechet variance.
 
-        The Frechet variance corresponds to the summation of the square distances, defined on a manifold, to a given
-        point also on the manifold. Thie method is employed in the minimization scheme used to find the Karcher mean.
+        The Frechet variance corresponds to the summation of the square distances, on the manifold, to a given
+        point also on the manifold. This method is employed in the minimization scheme used to find the Karcher mean.
 
         **Input:**
 
-        :param point: Point on the Grassmann manifold where the Frechet variance is computed.
-        :type  point: list or numpy array
-
-        :param argv: Matrices (at least 2) corresponding to the points on the Grassmann manifold.
-        :type  argv: list of arguments
+        * **point_grassmann** (`list` or `ndarray`)
+            Point on the Grassmann manifold where the Frechet variance is computed.
+            
+        * **points_grassmann** (`list` or `ndarray`)
+            Points on the Grassmann manifold.  
+            
+        * **distance_fun** (`callable`)
+            Distance function.      
 
         **Output/Returns:**
 
-        :param fmean: Frechet variance.
-        :type fmean: list
+        * **frechet_var** (`list`)
+            Frechet variance.
         """
+        p_dim = []
+        for i in range(len(points_grassmann)):
+            p_dim.append(min(np.shape(np.array(points_grassmann[i]))))
 
-        matrix, n_mat = check_arguments(argv, min_num_matrix=2, ortho=False)
+        nargs = len(points_grassmann)
+
+        if nargs < 2:
+            raise ValueError('UQpy: At least two input matrices must be provided.')
 
         accum = 0
-        for i in range(n_mat):
-            d = self.distance([point, matrix[i]])
-            accum += d[0] * d[0]
+        for i in range(nargs):
+            distances = Grassmann.__estimate_distance([point_grassmann, points_grassmann[i]], p_dim, distance_fun)
+            accum += distances[0] ** 2
 
-        frechet_var = accum / n_mat
+        frechet_var = accum / nargs
         return frechet_var
 
-    def interpolate_sample(self, *argv, coordinates=None, point=None, **kwargs):
+    def interpolate(self, coordinates, point, element_wise=True):
 
         """
-        Interpolate a point.
+        Interpolate a point on the Grassmann manifold given the samples in the ambient space (sample space).
+
+        Interpolate a `point` on the Grassmann manifold given the `coordinates`, support points, and the `samples`.
+        Further, the user must select the option `element_wise` to perform the interpolation in the entries of the input
+        matrices, if `point` and `samples` are matrices. The samples related to `coordinates` are set using
+        `manifold`. For example, the following command is used to perform the interpolation.
+
+        >>> from UQpy.Surrogates import Kriging
+        >>> Krig = Kriging(reg_model='Linear', corr_model='Exponential', n_opt=1, dimension=2)
+        >>> Gr = Grassmann(distance_object=Grassmann.grassmann_distance,
+        >>>                interp_object=Krig, karcher_method=Grassmann.gradient_descent)
+        >>> Gr.manifold(p=p,samples=samples)
+        >>> interpolated = Gr.interpolate(coordinates=coordinates, point=point, element_wise=True)
+
+        On the other hand, if a scikit learn gaussian_process object is provided, one can use the following commands:
+        
+        >>> from sklearn.gaussian_process import GaussianProcessRegressor
+        >>> gp = GaussianProcessRegressor()
+        >>> Gr = Grassmann(distance_method=Grassmann.grassmann_distance, 
+                           interp_object=gp,karcher_method=Grassmann.gradient_descent)
+        >>> Gr.manifold(p=p,samples=samples)
+        >>> interpolated = Gr.interpolate(coordinates=coordinates, point=[point], element_wise=True)
+
+        **Input:**
+
+        * **coordinates** (`list` or `ndarray`)
+            Coordinate of the support samples.
+            
+        * **point** (`list` or `ndarray`)
+            Point to be interpolated.      
+
+        * **element_wise** (`bool`)
+            Element wise interpolation. 
+            
+        **Output/Returns:**
+
+        * **interpolated** (`list`)
+            Interpolated point.
+        """
+
+        # Find the Karcher mean.
+        ref_psi, ref_phi = self.karcher_mean()
+
+        # Reshape the vector containing the singular values as a diagonal matrix.
+        sigma_m = []
+        for i in range(len(self.sigma)):
+            sigma_m.append(np.diag(self.sigma[i]))
+
+        # Project the points on the manifold to the tangent space created over the Karcher mean.
+        gamma_psi = self.log_map(points_grassmann=self.psi, ref=ref_psi)
+        gamma_phi = self.log_map(points_grassmann=self.phi, ref=ref_phi)
+
+        # Perform the interpolation in the tangent space.
+        interp_psi = self.interpolate_sample(coordinates=coordinates, samples=gamma_psi, point=point,
+                                             element_wise=element_wise)
+        interp_phi = self.interpolate_sample(coordinates=coordinates, samples=gamma_phi, point=point,
+                                             element_wise=element_wise)
+        interp_sigma = self.interpolate_sample(coordinates=coordinates, samples=sigma_m, point=point,
+                                               element_wise=element_wise)
+
+        # Map the interpolated point back to the manifold.
+        psi_tilde = self.exp_map(points_tangent=[interp_psi], ref=ref_psi)
+        phi_tilde = self.exp_map(points_tangent=[interp_phi], ref=ref_phi)
+
+        # Estimate the interpolated solution.
+        psi_tilde = np.array(psi_tilde[0])
+        phi_tilde = np.array(phi_tilde[0])
+        interpolated = np.dot(np.dot(psi_tilde, interp_sigma), phi_tilde.T)
+
+        return interpolated
+
+    def interpolate_sample(self, coordinates, samples, point, element_wise=True):
+
+        """
+        Interpolate a point on the tangent space.
 
         Once the points on the Grassmann manifold are projected onto the tangent space standard interpolation can be
         performed. In this regard, the user should provide the data points, the coordinates of each input data point,
         and the point to be interpolated. Furthermore, additional parameters, depending on the selected interpolation
-        method, can be provided via kwargs.
+        method, can be provided via kwargs. In comparison to ``interpolate``, here the samples prodived are points on
+        the TANGENT SPACE.
 
         **Input:**
 
-        :param coordinates: Coordinates of the input data points.
-        :type  coordinates: numpy array
+        * **coordinates** (`list` or `ndarray`)
+            Coordinates of the input data points.
 
-        :param data_points: Matrices corresponding to the points on the Grassmann manifold.
-        :type  data_points: numpy array
+        * **samples** (`list` or `ndarray`)
+            Matrices corresponding to the points on the tangent space.
 
-        :param point: Coordinates of the point to be interpolated.
-        :type  point: numpy array
+        * **point** (`list` or `ndarray`)
+            Coordinates of the point to be interpolated.
 
-        :param kwargs: Contains the keywords for the parameters used in different interpolation methods.
-        :type kwargs: dictionary of arguments
+        * **element_wise** (`bool`)
+            Boolean variable for the element wise intepolation of a matrix.
 
         **Output/Returns:**
 
-        :param interp_point: Interpolated point.
-        :type interp_point: numpy array
+        * **interp_point** (`ndarray`)
+            Interpolated point on the tangent space.
         """
 
-        data_points, nargs = check_arguments(argv, min_num_matrix=3, ortho=False)
-
-        if self.user_interp_check:
-            exec('from ' + self.interp_script[:-3] + ' import ' + self.interp_object)
-            interp_fun = eval(self.interp_object)
-        else:
-            interp_fun = eval("Grassmann." + self.interp_object)
-
-        shape_ref = np.shape(data_points[0])
-        for i in range(1, nargs):
-            if np.shape(data_points[i]) != shape_ref:
-                raise TypeError('Input matrices have different shape.')
+        if isinstance(samples, list):
+            samples = np.array(samples)
 
         # Test if the sample is stored as a list
-        if type(point) == list:
+        if isinstance(point, list):
             point = np.array(point)
 
         # Test if the nodes are stored as a list
-        if type(coordinates) == list:
+        if isinstance(coordinates, list):
             coordinates = np.array(coordinates)
 
-        interp_point = interp_fun(coordinates, data_points, point, kwargs)
+        nargs = len(samples)
+
+        if self.interp_object is None:
+            raise TypeError('UQpy: `interp_object` cannot be NoneType')
+        else:
+            if self.interp_object is Grassmann.linear_interp:
+                element_wise = False
+
+            if isinstance(self.interp_object, Kriging):
+                #K = self.interp_object
+                element_wise = True
+            else:
+                interp_fun = self.interp_object
+
+        shape_ref = np.shape(samples[0])
+        for i in range(1, nargs):
+            if np.shape(samples[i]) != shape_ref:
+                raise TypeError('UQpy: Input matrices have different shape.')
+
+        if element_wise:
+
+            shape_ref = np.shape(samples[0])
+            interp_point = np.zeros(shape_ref)
+            nrows = samples[0].shape[0]
+            ncols = samples[0].shape[1]
+
+            val_data = []
+            dim = np.shape(coordinates)[1]
+
+            for j in range(nrows):
+                for k in range(ncols):
+                    val_data = []
+                    for i in range(nargs):
+                        val_data.append([samples[i][j, k]])
+
+                    # if all the elements of val_data are the same.
+                    if val_data.count(val_data[0]) == len(val_data):
+                        val = np.array(val_data)
+                        y = val[0]
+                    else:
+                        val_data = np.array(val_data)
+                        self.skl_str = "<class 'sklearn.gaussian_process.gpr.GaussianProcessRegressor'>"
+                        if isinstance(self.interp_object, Kriging) or self.skl:
+                            self.interp_object.fit(coordinates, val_data)
+                            y = self.interp_object.predict(point, return_std=False)
+                        else:
+                            y = interp_fun(coordinates, samples, point)
+
+                    interp_point[j, k] = y
+
+        else:
+            if isinstance(self.interp_object, Kriging):
+                raise TypeError('UQpy: Kriging only can be used in the elementwise interpolation.')
+            else:
+                interp_point = interp_fun(coordinates, samples, point)
 
         return interp_point
 
@@ -1084,7 +1595,7 @@ class Grassmann:
     # implemented here with the decorator @staticmethod.
 
     @staticmethod
-    def linear_interp(coordinates, data_points, point, kwargs):
+    def linear_interp(coordinates, samples, point):
 
         """
         Interpolate a point using the linear interpolation.
@@ -1094,116 +1605,39 @@ class Grassmann:
 
         **Input:**
 
-        :param coordinates: Coordinates of the input data points.
-        :type  coordinates: numpy array
+        * **coordinates** (`ndarray`)
+            Coordinates of the input data points.
 
-        :param data_points: Matrices corresponding to the points on the Grassmann manifold.
-        :type  data_points: numpy array
+        * **samples** (`ndarray`)
+            Matrices corresponding to the points on the Grassmann manifold.
 
-        :param point: Coordinates of the point to be interpolated.
-        :type  point: numpy array
-
-        :param kwargs: Contains the keywords for the parameters used in different interpolation methods.
-        :type kwargs: dictionary of arguments
+        * **point** (`ndarray`)
+            Coordinates of the point to be interpolated.
 
         **Output/Returns:**
 
-        :param interp_point: Interpolated point.
-        :type interp_point: numpy array
+        * **interp_point** (`ndarray`)
+            Interpolated point.
         """
 
-        myInterpolator = LinearNDInterpolator(coordinates, data_points)
+        if not isinstance(coordinates, list) and not isinstance(coordinates, np.ndarray):
+            raise TypeError('UQpy: `coordinates` must be either list or ndarray.')
+        else:
+            coordinates = np.array(coordinates)
+
+        if not isinstance(samples, list) and not isinstance(samples, np.ndarray):
+            raise TypeError('UQpy: `samples` must be either list or ndarray.')
+        else:
+            samples = np.array(samples)
+
+        if not isinstance(point, list) and not isinstance(point, np.ndarray):
+            raise TypeError('UQpy: `point` must be either list or ndarray.')
+        else:
+            point = np.array(point)
+
+        myInterpolator = LinearNDInterpolator(coordinates, samples)
         interp_point = myInterpolator(point)
         interp_point = interp_point[0]
-
-        return interp_point
-
-    @staticmethod
-    def kriging_interp(coordinates, data_points, point, kwargs):
-
-        """
-        Interpolate a point using the Kriging interpolation.
-
-        For the Kriging interpolation the user are asked to provide the data points, the coordinates of the data points,
-        and the coordinate of the point to be interpolated. Further, the necessary parameters to perform the Kriging
-        interpolation are the regression model 'reg_model', the correlation model 'corr_model', and the number of times
-        optimization problem is to be solved with different starting point'n_opt'. In fact, additional parameters can be
-        considered by the user if necessary.
-
-        **Input:**
-
-        :param coordinates: Coordinates of the input data points.
-        :type  coordinates: numpy array
-
-        :param data_points: Matrices corresponding to the points on the Grassmann manifold.
-        :type  data_points: numpy array
-
-        :param point: Coordinates of the point to be interpolated.
-        :type  point: numpy array
-
-        :param kwargs: Contains the keywords for the parameters used in different interpolation methods.
-        :type kwargs: dictionary of arguments
-
-        **Output/Returns:**
-
-        :param interp_point: Interpolated point.
-        :type interp_point: numpy array
-        """
-
-        if 'reg_model' in kwargs.keys():
-            reg_model = kwargs['reg_model']
-        else:
-            reg_model = None
-
-        if 'corr_model' in kwargs.keys():
-            corr_model = kwargs['corr_model']
-        else:
-            corr_model = None
-
-        if 'n_opt' in kwargs.keys():
-            n_opt = kwargs['n_opt']
-        else:
-            n_opt = None
-
-        if reg_model is None:
-            raise ValueError('reg_model is missing.')
-
-        if corr_model is None:
-            raise ValueError('corr_model is missing.')
-
-        if n_opt is None:
-            raise ValueError('n_opt is missing.')
-
-        if not isinstance(n_opt, int):
-            raise ValueError('n_opt must be integer.')
-        else:
-            if n_opt < 1:
-                raise ValueError('n_opt must be larger than or equal to 1.')
-
-        shape_ref = np.shape(data_points[0])
-        interp_point = np.zeros(shape_ref)
-        nargs = len(data_points)
-        nrows = data_points[0].shape[0]
-        ncols = data_points[0].shape[1]
-
-        val_data = []
-
-        for j in range(nrows):
-            for k in range(ncols):
-                for i in range(nargs):
-                    val_data.append([data_points[i][j, k]])
-
-                if val_data.count(val_data[0]) == len(val_data):
-                    val = np.array(val_data)
-                    y = val[0]
-                else:
-                    val = np.array(val_data)
-                    K = Krig(samples=coordinates, values=val, reg_model=reg_model, corr_model=corr_model, n_opt=n_opt)
-                    y, mse = K.interpolate(point, dy=True)
-
-                val_data.clear()
-
-                interp_point[j, k] = y
 
         return interp_point
 
@@ -1216,215 +1650,257 @@ class Grassmann:
 
 class DiffusionMaps:
     """
-    Perform the diffusion maps on the input data to reveal the lower dimensional embedded data geometry.
+    Perform the diffusion maps on the input data to reveal its lower dimensional embedded geometry.
 
-    In this class the diffusion maps create a connection between the spectral properties of the diffusion process and
-    the intrinsic geometry of the data resulting in a multiscale representation of the data. In this regard an affinity
-    matrix containing the degree of similarity of the data points is either estimated based on the euclidean distance
-    using a Gaussian kernel, or the affinity matrix is computed using other Kernel definition and passed to the main
+    In this class, the diffusion maps create a connection between the spectral properties of the diffusion process and
+    the intrinsic geometry of the data resulting in a multiscale representation of it. In this regard, an affinity
+    matrix containing the degree of similarity of the data points is either estimated based on the euclidean distance,
+    using a Gaussian kernel, or it is computed using any other Kernel definition passed to the main
     method (e.g., defining a kernel on the Grassmann manifold).
-
-    **References:**
-
-    1. Ronald correlation_function. Coifman, Stéphane Lafon, "Diffusion maps", Applied and Computational Harmonic Analysis, Volume 21,
-       Issue 1, Pages 5-30, 2006.
-
-    2. Nadler, bispectrum., Lafon, power_spectrum., Coifman, correlation_function., and Kevrekidis, I., "Diffusion maps, spectral clustering and eigenfunctions
-       of Fokker-Planck operators", In Y. Weiss, bispectrum. Scholkopf, and J. Platt (Eds.), Advances in Neural Information
-       Processing Systems, 18, pages 955 – 962, 2006, Cambridge, MA: MIT Press.
 
     **Input:**
 
-    :param alpha: Assumes a value between 0 and 1 and corresponding to different diffusion operators.
+    * **alpha** (`float`)
+        Assumes a value between 0 and 1 and corresponding to different diffusion operators. In this regard, one can use
+        this parameter to take into consideration the distribution of the data points on the diffusion process.
+        It happens because the distribution of the data is not necessarily dependent on the geometry of the manifold.
+        Therefore, if alpha` is equal to 1, the Laplace-Beltrami operator is approximated and the geometry of the
+        manifold is recovered without taking the distribution of the points into consideration. On the other hand, when
+        `alpha` is equal to 0.5 the Fokker-Plank operator is approximated and the distribution of points is taken into
+        consideration. Further, when `alpha` is equal to zero the Laplace normalization is recovered.
 
-                  Default: 0.5
-    :type alpha: float
+    * **n_evecs** (`int`)
+        The number of eigenvectors and eigenvalues used in the representation of the diffusion coordinates.
 
-    :param n_evecs: the number of eigenvectors and eigenvalues used in the representation of the diffusion coordinates.
+    * **sparse** (`bool`)
+        Is a boolean variable to activate the `sparse` mode of the method.
 
-                    Default: 2
-    :type n_evecs: int
+    * **k_neighbors** (`int`)
+        Used when `sparse` is True to select the k samples close to a given sample in the construction
+        of an sparse graph defining the affinity of the input data. For instance, if `k_neighbors` is equal to 10, only
+        the closest ten points of a given point are connect to a given point in the graph. As a consequence, the
+        obtained affinity matrix is sparse which reduces the computational effort of the eigendecomposition of the
+        transition kernel of the Markov chain.
+        
+    * **kernel_object** (`function`)
+        An object of a callable object used to compute the kernel matrix. Three different options are provided:
 
-    :param sparse: Is a boolean variable defining the sparsity of the graph generated when data is provided to estimate
-                   the diffusion coordinates using the standard approach.
+        - Using the ``DiffusionMaps`` method ``gaussian_kernel`` as
+          DiffusionMaps(kernel_object=DiffusionMaps.gaussian_kernel);
+        - Using an user defined function as DiffusionMaps(kernel_object=user_kernel);
+        - Passing a ``Grassmann`` class object DiffusionMaps(kernel_object=Grassmann_Object). In this case, the user has
+         to select ``kernel_grassmann`` in order to define which kernel matrix will be used because when the the
+         ``Grassmann`` class is used in a dataset a kernel matrix can be constructed with both the left and right
+         singular eigenvectors.
 
-                   Default: False
-    :type sparse: bool
+    * **kernel_grassmann** (`str`)
+        It assumes the values 'left' and 'right' for the left and right singular eigenvectors used to compute the kernel
+        matrix, respectively. Moreover, if 'sum' is selected, it means that the kernel matrix is composed by the sum of
+        the kernel matrices estimated using the left and right singular eigenvectors. On the other hand, if 'prod' is used
+        instead, it means that the kernel matrix is composed by the product of the matrices estimated using the left and
+        right singular eigenvectors.
+    
+    **Attributes:** 
+    
+    * **kernel_matrix** (`ndarray`)
+        Kernel matrix.
+    
+    * **transition_matrix** (`ndarray`)
+        Transition kernel of a Markov chain on the data.
+        
+    * **dcoords** (`ndarray`)
+        Diffusion coordinates
+    
+    * **evecs** (`ndarray`)
+        Eigenvectors of the transition kernel of a Markov chanin on the data.
+    
+    * **evals** (`ndarray`)
+        Eigenvalues of the transition kernel of a Markov chanin on the data.
 
-    :param k_neighbors: Used when sparse is True to define the number of samples close to a given sample
-                        used in the construction of the affinity matrix.
-
-                        Default: 1
-    :type k_neighbors: int
-
-    **Authors:**
-
-    Ketson correlation_function. M. dos Santos, Dimitris G. Giovanis
-
-    Last modified: 03/26/20 by Ketson correlation_function. M. dos Santos
+    **Methods:**
     """
 
-    def __init__(self, alpha=0.5, n_evecs=2, sparse=False, k_neighbors=1):
+    def __init__(self, alpha=0.5, n_evecs=2, sparse=False, k_neighbors=1, kernel_object=None, kernel_grassmann=None):
+
         self.alpha = alpha
         self.n_evecs = n_evecs
         self.sparse = sparse
         self.k_neighbors = k_neighbors
+        self.kernel_object = kernel_object
+        self.kernel_grassmann = kernel_grassmann
+
+        # from UQpy.DimensionReduction import Grassmann
+        # from DimensionReduction import Grassmann
+
+        if kernel_object is not None:
+            if callable(kernel_object) or isinstance(kernel_object, Grassmann):
+                self.kernel_object = kernel_object
+            else:
+                raise TypeError('UQpy: Either a callable kernel or a Grassmann class object must be provided.')
 
         if alpha < 0 or alpha > 1:
-            raise ValueError('alpha should be a value between 0 and 1.')
+            raise ValueError('UQpy: `alpha` must be a value between 0 and 1.')
 
         if isinstance(n_evecs, int):
             if n_evecs < 1:
-                raise ValueError('n_evecs should be larger than or equal to one.')
+                raise ValueError('UQpy: `n_evecs` must be larger than or equal to one.')
         else:
-            raise TypeError('n_evecs should be integer.')
+            raise TypeError('UQpy: `n_evecs` must be integer.')
 
         if not isinstance(sparse, bool):
-            raise TypeError('sparse should be a boolean variable.')
+            raise TypeError('UQpy: `sparse` must be a boolean variable.')
         elif sparse is True:
             if isinstance(k_neighbors, int):
                 if k_neighbors < 1:
-                    raise ValueError('k_neighbors should be larger than or equal to one.')
+                    raise ValueError('UQpy: `k_neighbors` must be larger than or equal to one.')
             else:
-                raise TypeError('k_neighbors should be integer.')
+                raise TypeError('UQpy: `k_neighbors` must be integer.')
 
-    def mapping(self, **kwargs):
+    def mapping(self, data=None, epsilon=None):
 
         """
         Perform diffusion maps to reveal the embedded geometry of datasets.
 
-        In nonlinear dimensionality reduction Diffusion Maps corresponds to a technique used to reveal the intrinsic
-        structure of datasets based on diffusion processes. In particular, the eigenfunctions function of Markov
-        matrices defining a random walk on the data are used to obtain coordinate system, represented by the diffusion
-        coordinates, revealing the geometric description of the data. It is worth to mention that the diffusion
-        coordinates are defined on a Euclidean space where usual metrics define the distances between pairs of data
-        points. Moreover, the diffusion maps create a connection between the spectral properties of the diffusion
-        process and the intrinsic geometry of the data resulting in a multiscale representation of the data. In this
-        method, the users either provide the input data or they provide the affinity matrix. If the input data is
-        provided the standard diffusion maps is performed where the parameter 'epsilon' of the Gaussian kernel is either
-        provided by the user or estimated based on the median of the square of the euclidian distances between data
-        points. On the other hand, the user can compute the affinity matrix externally (e.g., using the Grassmann
-        kernel) in order to pass it to the method.
+        In this method, the users have the option to work with input data defined by subspaces obtained via projection
+        of input data points on the Grassmann manifold, or directly with the input data points. For example,
+        considering that a ``Grassmann`` object is provided using the following command:
+
+        >>> Gr = Grassmann(kernel_method=Grassmann.projection_kernel)
+        >>> Gr.manifold(p=p,samples=samples,append_samples=False)
+
+        one can instantiate the DiffusionMaps class and run the diffusion maps as follows:
+        >>> dfm = DiffusionMaps(alpha=0.5, n_evecs=10, kernel_object=Gr, kernel_grassmann = 'prod')
+        >>> diff_coords, evals, evecs = dfm.mapping()
+
+        On the other hand, if the user wish to pass a dataset (samples) to compute the diffusion coordinates using the Gaussian
+        kernel, one can use the following commands:
+
+        >>> dfm = DiffusionMaps(alpha=0.5, n_evecs=10, kernel_object=DiffusionMaps.gaussian_kernel)
+        >>> diff_coords, evals, evecs = dfm.mapping(samples=samples, epsilon=epsilon)
+
+        In the latest case, if `epsilon` is not provided it is estimated based on the median of the square of the
+        euclidian distances between data points.
 
         **Input:**
 
-        :param kwargs: Contains the following keywords: data (input data), epsilon (parameter of the Gaussian kernel),
-                       and kernel_matrix (when the kernel matrix is provided).
-        :type kwargs: dictionary of arguments
+        * **data** (`list`)
+            Data points in the ambient space.
+        
+        * **epsilon** (`floar`)
+            Parameter of the Gaussian kernel.
 
         **Output/Returns:**
 
-        :param dcoords: Diffusion coordinates.
-        :type dcoords: numpy array
+        * **dcoords** (`ndarray`)
+            Diffusion coordinates.
 
-        :param evals: eigenvalues.
-        :type evals: numpy array
+        * **evals** (`ndarray`)
+            eigenvalues.
 
-        :param evecs: eigenvectors.
-        :type evecs: numpy array
+        * **evecs** (`ndarray`)
+            eigenvectors.
         """
-
-        if 'data' in kwargs.keys():
-            data = kwargs['data']
-        else:
-            data = None
-
-        if 'epsilon' in kwargs.keys():
-            epsilon = kwargs['epsilon']
-        else:
-            epsilon = None
-
-        if 'kernel_mat' in kwargs.keys():
-            kernel_mat = kwargs['kernel_mat']
-        else:
-            kernel_mat = None
 
         alpha = self.alpha
         n_evecs = self.n_evecs
         sparse = self.sparse
         k_neighbors = self.k_neighbors
 
-        if data is None and kernel_mat is None:
-            raise ValueError('data and kernel_mat both are None.')
+        if data is None and not isinstance(self.kernel_object, Grassmann):
+            raise TypeError('UQpy: Data cannot be NoneType.')
 
-        if kernel_mat is not None:
-            if np.shape(kernel_mat)[0] != np.shape(kernel_mat)[1]:
-                raise ValueError('kernel_mat is not a square matrix.')
+        if isinstance(self.kernel_object, Grassmann):
+
+            if self.kernel_grassmann is None:
+                raise ValueError('UQpy: kernel_grassmann is not provided.')
+
+            if self.kernel_grassmann == 'left':
+                kernel_matrix = self.kernel_object.kernel(self.kernel_object.psi)
+            elif self.kernel_grassmann == 'right':
+                kernel_matrix = self.kernel_object.kernel(self.kernel_object.phi)
+            elif self.kernel_grassmann == 'sum':
+                kernel_psi, kernel_phi = self.kernel_object.kernel()
+                kernel_matrix = kernel_psi + kernel_phi
+            elif self.kernel_grassmann == 'prod':
+                kernel_psi, kernel_phi = self.kernel_object.kernel()
+                kernel_matrix = kernel_psi * kernel_phi
             else:
-                if n_evecs > max(np.shape(kernel_mat)):
-                    raise ValueError('n_evecs is larger than the size of kernel_mat.')
+                raise ValueError('UQpy: the provided kernel_grassmann is not valid.')
 
-        if data is None:
-            N = np.shape(kernel_mat)[0]
+        elif self.kernel_object == DiffusionMaps.gaussian_kernel:
+            kernel_matrix = self.kernel_object(self, data=data, epsilon=epsilon)
+        elif callable(self.kernel_object) and self.kernel_object != DiffusionMaps.gaussian_kernel:
+            kernel_matrix = self.kernel_object(data=data)
         else:
-            N = np.shape(data)[0]
+            raise TypeError('UQpy: Not valid type for kernel_object')
 
-        # Construct the Kernel matrix if no Kernel matrix is provided.
-        # k_matrix, epsilon = DiffusionMaps.create_kernel_matrix(self, data, epsilon, kernel_mat=kernel_mat)
-        if kernel_mat is None:
-            k_matrix = DiffusionMaps.create_kernel_matrix(self, data, epsilon)
-        else:
-            k_matrix = kernel_mat
+        n = np.shape(kernel_matrix)[0]
+        if sparse:
+            kernel_matrix = self.__sparse_kernel(kernel_matrix, k_neighbors)
 
         # Compute the diagonal matrix D(i,i) = sum(Kernel(i,j)^alpha,j) and its inverse.
-        D, D_inv = DiffusionMaps.D_matrix(k_matrix, alpha)
+        d, d_inv = self.__d_matrix(kernel_matrix, alpha)
 
         # Compute L^alpha = D^(-alpha)*L*D^(-alpha).
-        Lstar = DiffusionMaps.l_alpha_normalize(self, k_matrix, D_inv)
+        l_star = self.__l_alpha_normalize(kernel_matrix, d_inv)
 
-        Dstar, Dstar_inv = DiffusionMaps.D_matrix(Lstar, 1.0)
+        d_star, d_star_inv = self.__d_matrix(l_star, 1.0)
         if sparse:
-            Dstar_invd = sps.spdiags(Dstar_inv, 0, Dstar_inv.shape[0], Dstar_inv.shape[0])
+            d_star_invd = sps.spdiags(d_star_inv, 0, d_star_inv.shape[0], d_star_inv.shape[0])
         else:
-            Dstar_invd = np.diag(Dstar_inv)
+            d_star_invd = np.diag(d_star_inv)
 
-        Ps = Dstar_invd.dot(Lstar)
+        transition_matrix = d_star_invd.dot(l_star)
 
         # Find the eigenvalues and eigenvectors of Ps.
         if sparse:
-            evals, evecs = spsl.eigs(Ps, k=(n_evecs + 1), which='LR')
+            evals, evecs = spsl.eigs(transition_matrix, k=(n_evecs + 1), which='LR')
         else:
-            evals, evecs = np.linalg.eig(Ps)
+            evals, evecs = np.linalg.eig(transition_matrix)
 
         ix = np.argsort(np.abs(evals))
         ix = ix[::-1]
         s = np.real(evals[ix])
         u = np.real(evecs[:, ix])
 
+        # Truncated eigenvalues and eigenvectors
         evals = s[:n_evecs]
         evecs = u[:, :n_evecs]
 
-        dcoords = np.zeros([N, n_evecs])
+        # Compute the diffusion coordinates
+        dcoords = np.zeros([n, n_evecs])
         for i in range(n_evecs):
             dcoords[:, i] = evals[i] * evecs[:, i]
 
+        self.kernel_matrix = kernel_matrix
+        self.transition_matrix = transition_matrix
+        self.dcoords = dcoords
+        self.evecs = evecs
+        self.evals = evals
+
         return dcoords, evals, evecs
 
-    # @staticmethod
-    def create_kernel_matrix(self, data, epsilon=None):
+    def gaussian_kernel(self, data, epsilon=None):
 
         """
-        Compute the Kernel matrix for the standard diffusion maps technique.
+        Compute the Gaussian Kernel matrix.
 
-        If a dataset is provided and no kernel matrix is computed externally one can use this method to estimate the
-        affinity matrix using the Gaussian kernel. In this regard, if no 'epsilon' is provided the method estimates a
+        Estimate the affinity matrix using the Gaussian kernel. If no `epsilon` is provided the method estimates a
         suitable value taking the median of the square value of the pairwise euclidean distances of the points in the
         input dataset.
 
         **Input:**
 
-        :param data: Contains the input data.
-        :type data: list of numpy array
+        * **data** (`list`)
+            Input data.
 
-        :param epsilon: Parameter of the Gaussian kernel.
-
-                        Default: None
-        :type epsilon: float
+        * **epsilon** (`float`)
+            Parameter of the Gaussian kernel.
 
         **Output/Returns:**
 
-        :param kernel_mat: Kernel matrix.
-        :type kernel_mat: numpy array
+        * **Kernel matrix** (`ndarray`)
+            Kernel matrix.
         """
 
         sparse = self.sparse
@@ -1432,133 +1908,137 @@ class DiffusionMaps:
 
         # Compute the pairwise distances.
         if len(np.shape(data)) == 2:
-            dist_pairs = sd.pdist(data, 'euclidean')
+            # Set of 1-D arrays
+            distance_pairs = sd.pdist(data, 'euclidean')
         elif len(np.shape(data)) == 3:
-
+            # Set of 2-D arrays
             # Check arguments: verify the consistency of input arguments.
-            datam, nargs = check_arguments(data, min_num_matrix=2, ortho=False)
-
+            nargs = len(data)
             indices = range(nargs)
             pairs = list(itertools.combinations(indices, 2))
 
-            dist_pairs = []
+            distance_pairs = []
             for id_pair in range(np.shape(pairs)[0]):
                 ii = pairs[id_pair][0]  # Point i
                 jj = pairs[id_pair][1]  # Point j
 
-                x0 = datam[ii]
-                x1 = datam[jj]
+                x0 = data[ii]
+                x1 = data[jj]
 
-                dist = np.linalg.norm(x0 - x1, 'fro')
+                distance = np.linalg.norm(x0 - x1, 'fro')
 
-                dist_pairs.append(dist)
+                distance_pairs.append(distance)
         else:
-            raise TypeError('The size of the input data is not adequate.')
+            raise TypeError('UQpy: The size of the input data is not consistent with this method.')
 
-        # Find a suitable episilon if it is not provided by the user.
         if epsilon is None:
-            epsilon = DiffusionMaps.find_epsilon(dist_pairs)
+            # Compute a suitable episilon when it is not provided by the user.
+            # Compute epsilon as the median of the square of the euclidean distances
+            epsilon = np.median(np.array(distance_pairs) ** 2)
 
-        kernel_mat = np.exp(-sd.squareform(dist_pairs) ** 2 / (4 * epsilon))
+        kernel_matrix = np.exp(-sd.squareform(distance_pairs) ** 2 / (4 * epsilon))
 
-        # If the user prefer to use a sparse graph.
-        if sparse:
+        return kernel_matrix
 
-            nrows = np.shape(kernel_mat)[0]
-
-            for i in range(nrows):
-                vec = kernel_mat[i, :]
-                idx = nn_coord(vec, k_neighbors)
-                kernel_mat[i, idx] = 0
-
-            kernel_mat = sps.csc_matrix(kernel_mat)
-
-        return kernel_mat
-
+    # Private method
     @staticmethod
-    def find_epsilon(dist_pairs):
+    def __sparse_kernel(kernel_matrix, k_neighbors):
 
         """
-        Find epsilon based on the pairwise distances.
+        Private method: Construct a sparse kernel.
 
-        If the user does not provide the value of 'epsilon' use the pairwise distances to estimate it based on the
-        median of their values squared.
+        Given the number the k nearest neighbors and a kernel matrix, return a sparse kernel matrix.
 
         **Input:**
 
-        :param dist_pairs: Pairwise distance.
-        :type dist_pairs: list of numpy array
-
+        * **kernel_matrix** (`list` or `ndarray`)
+            Kernel matrix.
+            
+        * **alpha** (`float`)
+            Assumes a value between 0 and 1 and corresponding to different diffusion operators.
+            
         **Output/Returns:**
 
-        :param epsilon: Gaussian kernel parameter.
-        :type epsilon: float
+        * **D** (`list`)
+            Matrix D.
+
+        * **D_inv** (`list`)
+            Inverse of matrix D.
         """
 
-        dist_pairs_sq = np.array(dist_pairs) ** 2
-        epsilon = np.median(dist_pairs_sq)
+        nrows = np.shape(kernel_matrix)[0]
+        for i in range(nrows):
+            vec = kernel_matrix[i, :]
+            idx = nn_coord(vec, k_neighbors)
+            kernel_matrix[i, idx] = 0
+            if sum(kernel_matrix[i, :]) <= 0:
+                raise ValueError('UQpy: Consider increasing `k_neighbors` to have a connected graph.')
 
-        return epsilon
+        sparse_kernel_matrix = sps.csc_matrix(kernel_matrix)
 
+        return sparse_kernel_matrix
+
+    # Private method
     @staticmethod
-    def D_matrix(kernel_mat, alpha):
+    def __d_matrix(kernel_matrix, alpha):
 
         """
-        Compute the diagonal matrix D and its inverse.
+        Private method: Compute the diagonal matrix D and its inverse.
 
         In the normalization process we have to estimate matrix D(i,i) = sum(Kernel(i,j)^alpha,j) and its inverse.
 
         **Input:**
 
-        :param kernel_mat: Kernel matrix.
-        :type kernel_mat: list of numpy array
-
+        * **kernel_matrix** (`list` or `ndarray`)
+            Kernel matrix.
+            
+        * **alpha** (`float`)
+            Assumes a value between 0 and 1 and corresponding to different diffusion operators.
+            
         **Output/Returns:**
 
-        :param D: Matrix D.
-        :type D: list of numpy array
+        * **d** (`list`)
+            Matrix D.
 
-        :param D_inv: Inverse of matrix D.
-        :type D_inv: list of numpy array
+        * **d_inv** (`list`)
+            Inverse of matrix D.
         """
 
-        kmat = kernel_mat
-        D = np.array(kmat.sum(axis=1)).flatten()
+        d = np.array(kernel_matrix.sum(axis=1)).flatten()
+        d_inv = np.power(d, -alpha)
 
-        D_inv = np.power(D, -alpha)
-        return D, D_inv
+        return d, d_inv
 
-    # @staticmethod
-    def l_alpha_normalize(self, kernel_mat, D_inv):
+    # Private method
+    def __l_alpha_normalize(self, kernel_mat, d_inv):
 
         """
-        Compute and normalize the kernel matrix with the matrix D.
+        Private method: Compute and normalize the kernel matrix with the matrix D.
 
         In the normalization process we have to estimate matrix D(i,i) = sum(Kernel(i,j)^alpha,j) and its inverse.
         We now use this information to normalize the kernel matrix.
 
         **Input:**
 
-        :param kernel_mat: Kernel matrix.
-        :type kernel_mat: list of numpy array
+        * **kernel_mat** (`list` or `ndarray`)
+            Kernel matrix.
 
-        :param D_inv: Inverse of matrix D.
-        :type D_inv: list of numpy array
+        * **d_inv** (`list` or `ndarray`)
+            Inverse of matrix D.
 
         **Output/Returns:**
 
-        :param norm_ker: Normalized kernel.
-        :type norm_ker: list of numpy array
+        * **normalized_kernel** (`list` or `ndarray`)
+            Normalized kernel.
         """
 
         sparse = self.sparse
-        m = D_inv.shape[0]
-
+        m = d_inv.shape[0]
         if sparse:
-            Dalpha = sps.spdiags(D_inv, 0, m, m)
+            d_alpha = sps.spdiags(d_inv, 0, m, m)
         else:
-            Dalpha = np.diag(D_inv)
+            d_alpha = np.diag(d_inv)
 
-        norm_ker = Dalpha.dot(kernel_mat.dot(Dalpha))
+        normalized_kernel = d_alpha.dot(kernel_mat.dot(d_alpha))
 
-        return norm_ker
+        return normalized_kernel

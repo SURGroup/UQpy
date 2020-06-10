@@ -19,12 +19,13 @@
 import os
 import sys
 from contextlib import contextmanager
-
+from UQpy.RunModel import RunModel
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
 from scipy.special import gamma
 from scipy.stats import chi2, norm
+from UQpy.RunModel import RunModel
 
 
 def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
@@ -63,6 +64,140 @@ def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=Non
 #
 #     volume = np.sum(d_vol)
 #     return volume
+
+def gradient(runmodel_object=None, point=None, order='first', df_step=None):
+    """
+    A method to estimate the gradients (1st, 2nd, mixed) of a function using a finite difference scheme in the
+    standard normal space. First order gradients are calculated using central finite differences.
+
+    **Inputs:**
+
+    * **runmodel_object** (``RunModel`` object or a `callable` ):
+        The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.
+
+    * **point** (`ndarray`):
+        The point to evaluate the gradient with shape ``samples.shape=(1, dimension)
+
+    * **order** (`str`):
+        Order of the gradient. Available options: 'first', 'second', 'mixed'.
+
+        Default: 'First'.
+
+    * **df_step** (`float`):
+        Finite difference step.
+
+        Default: 0.001.
+
+    **Output/Returns:**
+
+    * **du_dj** (`ndarray`):
+        Vector of first-order gradients (if order = 'first').
+
+    * **d2u_dj** (`ndarray`):
+        Vector of second-order gradients (if order = 'second').
+
+    * **d2u_dij** (`ndarray`):
+        Vector of mixed gradients (if order = 'mixed').
+
+    """
+    point = np.atleast_2d(point)
+
+    dimension = point.shape[1]
+
+    if df_step is None:
+        df_step = [0.001] * dimension
+    elif isinstance(df_step, float):
+        df_step = [df_step] * dimension
+    elif isinstance(df_step, list):
+        if len(df_step) == 1:
+            df_step = [df_step[0]] * dimension
+
+    if not callable(runmodel_object) and not isinstance(runmodel_object, RunModel):
+        raise RuntimeError('A RunModel object or callable function must be provided as model.')
+
+    def func(m):
+        def func_eval(x):
+            if isinstance(m, RunModel):
+                m.run(samples=x, append_samples=False)
+                return np.array(m.qoi_list).flatten()
+            else:
+                return m(x).flatten()
+
+        return func_eval
+
+    f_eval = func(m=runmodel_object)
+
+    if order.lower() == 'first':
+        du_dj = np.zeros([point.shape[0], dimension])
+
+        for ii in range(dimension):
+            eps_i = df_step[ii]
+            u_i1_j = point.copy()
+            u_i1_j[:, ii] = u_i1_j[:, ii] + eps_i
+            u_1i_j = point.copy()
+            u_1i_j[:, ii] = u_1i_j[:, ii] - eps_i
+
+            qoi_plus = f_eval(u_i1_j)
+            qoi_minus = f_eval(u_1i_j)
+
+            du_dj[:, ii] = ((qoi_plus - qoi_minus) / (2 * eps_i))
+
+        return du_dj
+
+    elif order.lower() == 'second':
+        # print('Calculating second order derivatives..')
+        d2u_dj = np.zeros([point.shape[0], dimension])
+        for ii in range(dimension):
+            u_i1_j = point.copy()
+            u_i1_j[:, ii] = u_i1_j[:, ii] + df_step[ii]
+            u_1i_j = point.copy()
+            u_1i_j[:, ii] = u_1i_j[:, ii] - df_step[ii]
+
+            qoi_plus = f_eval(u_i1_j)
+            qoi = f_eval(point)
+            qoi_minus = f_eval(u_1i_j)
+
+            d2u_dj[:, ii] = ((qoi_plus - 2 * qoi + qoi_minus) / (df_step[ii] * df_step[ii]))
+
+        return d2u_dj
+
+    elif order.lower() == 'mixed':
+
+        import itertools
+        range_ = list(range(dimension))
+        d2u_dij = np.zeros([point.shape[0], int(dimension * (dimension - 1) / 2)])
+        count = 0
+        for i in itertools.combinations(range_, 2):
+            u_i1_j1 = point.copy()
+            u_i1_1j = point.copy()
+            u_1i_j1 = point.copy()
+            u_1i_1j = point.copy()
+
+            eps_i1_0 = df_step[i[0]]
+            eps_i1_1 = df_step[i[1]]
+
+            u_i1_j1[:, i[0]] += eps_i1_0
+            u_i1_j1[:, i[1]] += eps_i1_1
+
+            u_i1_1j[:, i[0]] += eps_i1_0
+            u_i1_1j[:, i[1]] -= eps_i1_1
+
+            u_1i_j1[:, i[0]] -= eps_i1_0
+            u_1i_j1[:, i[1]] += eps_i1_1
+
+            u_1i_1j[:, i[0]] -= eps_i1_0
+            u_1i_1j[:, i[1]] -= eps_i1_1
+
+            print('hi')
+            qoi_0 = f_eval(u_i1_j1)
+            qoi_1 = f_eval(u_i1_1j)
+            qoi_2 = f_eval(u_1i_j1)
+            qoi_3 = f_eval(u_1i_1j)
+
+            d2u_dij[:, count] = ((qoi_0 + qoi_3 - qoi_1 - qoi_2) / (4 * eps_i1_0 * eps_i1_1))
+
+            count += 1
+        return d2u_dij
 
 
 def voronoi_unit_hypercube(samples):
@@ -849,121 +984,6 @@ def svd(matrix, value):
         v = vi[:, :value]
 
     return u, s, v
-
-def check_arguments(argv, min_num_matrix, ortho):
-    
-    """
-    Check input arguments for consistency.
-
-    Check the input matrices for consistency given the minimum number of matrices (min_num_matrix) 
-    and the boolean varible (ortho) to test the orthogonality.
-
-    **Input:**
-
-    :param argv: Matrices to be tested.
-    :type  argv: list of arguments
-
-    :param min_num_matrix: Minimum number of matrices.
-    :type  min_num_matrix: int
-    
-    :param ortho: boolean varible to test the orthogonality.
-    :type  ortho: bool
-
-    **Output/Returns:**
-
-    :param inputs: Return the input matrices.
-    :type  inputs: numpy array
-
-    :param nargs: Number of matrices.
-    :type  nargs: numpy array
-    """
-        
-    # Check the minimum number of matrices involved in the operations
-    if type(min_num_matrix) != int:
-        raise ValueError('The minimum number of matrices MUST be an integer number!')
-    elif min_num_matrix < 1:
-        raise ValueError('Number of arguments MUST be larger than or equal to one!')
-
-    # Check if the variable controlling the orthogonalization is boolean
-    if type(ortho) != bool:
-        raise ValueError('The last argument MUST be a boolean!')
-
-    nargv = len(argv)
-
-    # If the number of provided inputs are zero exit the code
-    if nargv == 0:
-        raise ValueError('Missing input arguments!')
-
-    # Else if the number of arguments is equal to 1 
-    elif nargv == 1:
-
-        # Check if the number of expected matrices are higher than or equal to 2
-        args = argv[0]
-        nargs = len(args)
-      
-        if np.shape(args)[0] == 1 or len(np.shape(args)) == 2:
-            nargs = 1
-        # if it is lower than two exit the code, otherwise store them in a list
-        if nargs < min_num_matrix:
-            raise ValueError('The number of points must be higher than:', min_num_matrix)
-
-        else:
-            inputs = []
-            if nargs == 1:
-                inputs = [args]
-            else:
-
-                # Loop over all elements
-                for i in range(nargs):                  
-                    # Verify the type of the input variables and store in a list
-                    inputs.append(test_type(args[i], ortho))
-
-    else:
-
-        nargs = nargv
-        # Each argument MUST be a matrix
-        inputs = []
-        for i in range(nargv):
-            # Verify the type of the input variables and store in a list
-            inputs.append(test_type(argv[i], ortho))
-
-    return inputs, nargs
-
-
-def test_type(X, ortho):
-    
-    """
-    Test the datatype of X.
-
-    Check if the datatype of the matrix X is consistent.
-
-    **Input:**
-
-    :param X: Matrices to be tested.
-    :type  X: list or numpy array
-    
-    :param ortho: boolean varible to test the orthogonality.
-    :type  ortho: bool
-
-    **Output/Returns:**
-
-    :param Y: Tested and adjusted matrices.
-    :type  Y: numpy array
-    """
-        
-    if not isinstance(X, (list, np.ndarray)):
-        raise TypeError('Elements of input arguments should be provided either as list or array')
-    elif type(X) == list:
-        Y = np.array(X)
-    else:
-        Y = X
-
-    if ortho:
-        Ytest = np.dot(Y.T, Y)
-        if not np.array_equal(Ytest, np.identity(np.shape(Ytest)[0])):
-            Y, unused = np.linalg.qr(Y)
-
-    return Y
 
 def nn_coord(x, k):
     

@@ -7,12 +7,12 @@
     <title>UQpy.Distributions &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -1147,6 +1147,8 @@
         <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;moments&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">marginals</span><span class="p">):</span>
             <span class="k">def</span> <span class="nf">joint_moments</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">moments2return</span><span class="o">=</span><span class="s1">&#39;mvsk&#39;</span><span class="p">):</span>
                 <span class="c1"># Go through all marginals</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">moments2return</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">marg</span><span class="o">.</span><span class="n">moments</span><span class="p">(</span><span class="n">moments2return</span><span class="o">=</span><span class="n">moments2return</span><span class="p">)</span> <span class="k">for</span> <span class="n">marg</span> <span class="ow">in</span> <span class="n">dist</span><span class="o">.</span><span class="n">marginals</span><span class="p">])</span>
                 <span class="n">moments_</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">marginals</span><span class="p">),</span> <span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">moments2return</span><span class="p">))]</span>
                 <span class="k">for</span> <span class="n">ind_m</span><span class="p">,</span> <span class="n">marg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">marginals</span><span class="p">):</span>
                     <span class="n">moments_i</span> <span class="o">=</span> <span class="n">marg</span><span class="o">.</span><span class="n">moments</span><span class="p">(</span><span class="n">moments2return</span><span class="o">=</span><span class="n">moments2return</span><span class="p">)</span>
@@ -2626,7 +2628,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../surrogates.html">Surrogates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reliability.html">Reliability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../dimension_reduction.html">Dimension reduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dimension_reduction.html">DimensionReduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
 </ul>
@@ -2649,7 +2651,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -2658,7 +2660,7 @@
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
