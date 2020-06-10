@@ -123,11 +123,14 @@ class SubsetSimulation:
             raise AttributeError(
                 'UQpy: Subset simulation requires the user to pass a RunModel object')
 
-        self.random_state = self.mcmc_kwargs['random_state']
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        if 'random_state' in self.mcmc_kwargs:
+            self.random_state = self.mcmc_kwargs['random_state']
+            if isinstance(self.random_state, int):
+                self.random_state = np.random.RandomState(self.random_state)
+            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        else:
+            self.random_state = None
 
         # Perform initial error checks
         self._init_sus()
