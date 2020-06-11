@@ -25,7 +25,6 @@ import numpy as np
 import scipy.stats as stats
 from scipy.special import gamma
 from scipy.stats import chi2, norm
-from UQpy.RunModel import RunModel
 
 
 def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
@@ -379,7 +378,7 @@ def correlation_distortion(marginal, rho_norm):
     return rho
 
 
-def itam(marginal, corr, beta, thresh1, thresh2):
+def itam_correlation(marginal, corr, beta, thresh1, thresh2):
 
     """
         Description:
@@ -666,7 +665,7 @@ def estimate_psd(samples, nt, t):
 
     return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
 
-
+# TODO: push them to UQpy.StochasticProcesses (static methods); renamed as Weiner Khintchine transform
 def S_to_R(S, w, t):
 
     """
@@ -986,6 +985,121 @@ def svd(matrix, value):
 
     return u, s, v
 
+def check_arguments(argv, min_num_matrix, ortho):
+    
+    """
+    Check input arguments for consistency.
+
+    Check the input matrices for consistency given the minimum number of matrices (min_num_matrix) 
+    and the boolean varible (ortho) to test the orthogonality.
+
+    **Input:**
+
+    :param argv: Matrices to be tested.
+    :type  argv: list of arguments
+
+    :param min_num_matrix: Minimum number of matrices.
+    :type  min_num_matrix: int
+    
+    :param ortho: boolean varible to test the orthogonality.
+    :type  ortho: bool
+
+    **Output/Returns:**
+
+    :param inputs: Return the input matrices.
+    :type  inputs: numpy array
+
+    :param nargs: Number of matrices.
+    :type  nargs: numpy array
+    """
+        
+    # Check the minimum number of matrices involved in the operations
+    if type(min_num_matrix) != int:
+        raise ValueError('The minimum number of matrices MUST be an integer number!')
+    elif min_num_matrix < 1:
+        raise ValueError('Number of arguments MUST be larger than or equal to one!')
+
+    # Check if the variable controlling the orthogonalization is boolean
+    if type(ortho) != bool:
+        raise ValueError('The last argument MUST be a boolean!')
+
+    nargv = len(argv)
+
+    # If the number of provided inputs are zero exit the code
+    if nargv == 0:
+        raise ValueError('Missing input arguments!')
+
+    # Else if the number of arguments is equal to 1 
+    elif nargv == 1:
+
+        # Check if the number of expected matrices are higher than or equal to 2
+        args = argv[0]
+        nargs = len(args)
+      
+        if np.shape(args)[0] == 1 or len(np.shape(args)) == 2:
+            nargs = 1
+        # if it is lower than two exit the code, otherwise store them in a list
+        if nargs < min_num_matrix:
+            raise ValueError('The number of points must be higher than:', min_num_matrix)
+
+        else:
+            inputs = []
+            if nargs == 1:
+                inputs = [args]
+            else:
+
+                # Loop over all elements
+                for i in range(nargs):                  
+                    # Verify the type of the input variables and store in a list
+                    inputs.append(test_type(args[i], ortho))
+
+    else:
+
+        nargs = nargv
+        # Each argument MUST be a matrix
+        inputs = []
+        for i in range(nargv):
+            # Verify the type of the input variables and store in a list
+            inputs.append(test_type(argv[i], ortho))
+
+    return inputs, nargs
+
+
+def test_type(X, ortho):
+    
+    """
+    Test the datatype of X.
+
+    Check if the datatype of the matrix X is consistent.
+
+    **Input:**
+
+    :param X: Matrices to be tested.
+    :type  X: list or numpy array
+    
+    :param ortho: boolean varible to test the orthogonality.
+    :type  ortho: bool
+
+    **Output/Returns:**
+
+    :param Y: Tested and adjusted matrices.
+    :type  Y: numpy array
+    """
+        
+    if not isinstance(X, (list, np.ndarray)):
+        raise TypeError('Elements of input arguments should be provided either as list or array')
+    elif type(X) == list:
+        Y = np.array(X)
+    else:
+        Y = X
+
+    if ortho:
+        Ytest = np.dot(Y.T, Y)
+        if not np.array_equal(Ytest, np.identity(np.shape(Ytest)[0])):
+            Y, unused = np.linalg.qr(Y)
+
+    return Y
+
 def nn_coord(x, k):
     
     """
@@ -1027,3 +1141,33 @@ def nn_coord(x, k):
     #idx = idx[0:k]
     #idx = idx[k+1:]
     return idx
+
+# TODO: rename function to correlation distortion
+# TODO: put doc_string around this
+def solve_single_integral(dist_object, rho):
+    if rho == 1.0:
+        rho = 0.999
+    n = 1024
+    zmax = 8
+    zmin = -zmax
+    points, weights = np.polynomial.legendre.leggauss(n)
+    points = - (0.5 * (points + 1) * (zmax - zmin) + zmin)
+    weights = weights * (0.5 * (zmax - zmin))
+
+    xi = np.tile(points, [n, 1])
+    xi = xi.flatten(order='F')
+    eta = np.tile(points, n)
+
+    first = np.tile(weights, n)
+    first = np.reshape(first, [n, n])
+    second = np.transpose(first)
+
+    weights2d = first * second
+    w2d = weights2d.flatten()
+    tmp_f_xi = dist_object.icdf(stats.norm.cdf(xi[:, np.newaxis]))
+    tmp_f_eta = dist_object.icdf(stats.norm.cdf(eta[:, np.newaxis]))
+    coef = tmp_f_xi * tmp_f_eta * w2d
+    rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
+    rho_non = (rho_non - dist_object.moments(moments2return='m') ** 2) / dist_object.moments(moments2return='v')
+    return rho_non
+

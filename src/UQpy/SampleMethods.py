@@ -795,6 +795,7 @@ class STS:
             print('UQpy: Running Stratified Sampling...')
 
         if random_state is not None:
+            self.random_state = random_state
             if isinstance(self.random_state, int):
                 self.random_state = np.random.RandomState(self.random_state)
             elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
@@ -958,12 +959,12 @@ class Strata:
         or
         https://github.com/tisimst/pyDOE/
 
-        **Inputs:**
+        **Input:**
 
         * **levels** (`list`):
                 A list of integers that indicate the number of levels of each input design factor.
 
-        **Outputs:**
+        **Output:**
 
         * **ff** (`ndarray`):
                 Full-factorial design matrix.
@@ -2192,6 +2193,8 @@ class AKMCS:
 
         """
         g, sig = surr(pop, True)
+
+        # Remove the inconsistency in the shape of 'g' and 'sig' array
         g = g.reshape([pop.shape[0], 1])
         sig = sig.reshape([pop.shape[0], 1])
 

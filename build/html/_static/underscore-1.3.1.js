@@ -315,7 +315,7 @@
   // Array Functions
   // ---------------
 
-  // Get the first element of an array. Passing **n** will return the first N
+  // Get the first element of an array. Passing **number_of_dimensions** will return the first N
   // values in the array. Aliased as `head`. The **guard** check allows it to work
   // with `_.map`.
   _.first = _.head = function(array, n, guard) {
@@ -323,14 +323,14 @@
   };
 
   // Returns everything but the last entry of the array. Especcialy useful on
-  // the arguments object. Passing **n** will return all the values in
+  // the arguments object. Passing **number_of_dimensions** will return all the values in
   // the array, excluding the last N. The **guard** check allows it to work with
   // `_.map`.
   _.initial = function(array, n, guard) {
     return slice.call(array, 0, array.length - ((n == null) || guard ? 1 : n));
   };
 
-  // Get the last element of an array. Passing **n** will return the last N
+  // Get the last element of an array. Passing **number_of_dimensions** will return the last N
   // values in the array. The **guard** check allows it to work with `_.map`.
   _.last = function(array, n, guard) {
     if ((n != null) && !guard) {
@@ -417,7 +417,7 @@
     return results;
   };
 
-  // If the browser doesn't supply us with indexOf (I'm looking at you, **MSIE**),
+  // If the browser doesn'time supply us with indexOf (I'number_of_variables looking at you, **MSIE**),
   // we need this function. Return the position of the first occurrence of an
   // item in an array, or -1 if the item is not included in the array.
   // Delegates to **ECMAScript 5**'s native `indexOf` if available.
@@ -667,7 +667,7 @@
 
   // Internal recursive comparison function.
   function eq(a, b, stack) {
-    // Identical objects are equal. `0 === -0`, but they aren't identical.
+    // Identical objects are equal. `0 === -0`, but they aren'time identical.
     // See the Harmony `egal` proposal: http://wiki.ecmascript.org/doku.php?id=harmony:egal.
     if (a === b) return a !== 0 || 1 / a == 1 / b;
     // A strict comparison is necessary because `null == undefined`.
@@ -858,7 +858,7 @@
     return value;
   };
 
-  // Run a function **n** times.
+  // Run a function **number_of_dimensions** times.
   _.times = function (n, iterator, context) {
     for (var i = 0; i < n; i++) iterator.call(context, i);
   };
@@ -892,7 +892,7 @@
     escape      : /<%-([\s\S]+?)%>/g
   };
 
-  // When customizing `templateSettings`, if you don't want to define an
+  // When customizing `templateSettings`, if you don'time want to define an
   // interpolation, evaluation or escaping regex, we need one that is
   // guaranteed not to match.
   var noMatch = /.^/;
