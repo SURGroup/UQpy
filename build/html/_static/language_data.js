@@ -5,7 +5,7 @@
  * This script contains the language-specific data used by searchtools.js,
  * namely the list of stopwords, stemmer, scorer and splitter.
  *
- * :copyright: Copyright 2007-2019 by the Sphinx team, see AUTHORS.
+ * :copyright: Copyright 2007-2020 by the Sphinx team, see AUTHORS.
  * :license: BSD, see LICENSE for details.
  *
  */
@@ -58,9 +58,9 @@ var Stemmer = function() {
   var C = c + "[^aeiouy]*";    // consonant sequence
   var V = v + "[aeiou]*";      // vowel sequence
 
-  var mgr0 = "^(" + C + ")?" + V + C;                      // [C]VC... is number_of_variables>0
-  var meq1 = "^(" + C + ")?" + V + C + "(" + V + ")?$";    // [C]VC[V] is number_of_variables=1
-  var mgr1 = "^(" + C + ")?" + V + C + V + C;              // [C]VCVC... is number_of_variables>1
+  var mgr0 = "^(" + C + ")?" + V + C;                      // [C]VC... is m>0
+  var meq1 = "^(" + C + ")?" + V + C + "(" + V + ")?$";    // [C]VC[V] is m=1
+  var mgr1 = "^(" + C + ")?" + V + C + V + C;              // [C]VCVC... is m>1
   var s_v   = "^(" + C + ")?" + v;                         // vowel in stem
 
   this.stemWord = function (w) {

@@ -728,11 +728,7 @@ class STS:
 
         self.dist_object = dist_object
 
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        self.random_state = check_random_state(random_state)
 
         # Check sampling criterion
         if self.sts_criterion not in ['random', 'centered']:
@@ -791,11 +787,7 @@ class STS:
             print('UQpy: Running Stratified Sampling...')
 
         if random_state is not None:
-            self.random_state = random_state
-            if isinstance(self.random_state, int):
-                self.random_state = np.random.RandomState(self.random_state)
-            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            self.random_state = check_random_state(random_state)
 
         if self.stype == 'Rectangular':
             if self.sts_design is None:
@@ -905,6 +897,8 @@ class Strata:
             An array of dimension 1 x N containing sample weights. Sample weights are equal to the product of the
             strata widths (i.e. they are equal to the size of the strata in the [0, 1]^n space.
 
+    **Methods:**
+
     """
     def __init__(self, n_strata=None, input_file=None, origins=None, widths=None):
 
@@ -945,7 +939,8 @@ class Strata:
     def fullfact(levels):
 
         """
-        Create a full-factorial design
+        Create a full-factorial design.
+
         Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
         Copyright (C) 2012 - 2013 - Michael Baudin
         Copyright (C) 2012 - Maria Christopoulou
@@ -998,18 +993,18 @@ class Strata:
 class RSS:
     """
     Generate new samples using adaptive sampling methods, i.e. Refined Stratified Sampling and Gradient
-    Enhanced Refined Stratified Sampling.
+    Enhanced Refined Stratified Sampling ([1]_, [2]_).
 
     **References:**
 
-    1. Michael D. Shields, Kirubel Teferra, Adam Hapij and Raymond P. Daddazio, "Refined Stratified Sampling for
+    .. [1] Michael D. Shields, Kirubel Teferra, Adam Hapij and Raymond P. Daddazio, "Refined Stratified Sampling for
        efficient Monte Carlo based uncertainty quantification", Reliability Engineering & System Safety,
        ISSN: 0951-8320, Vol: 142, Page: 310-325, 2015.
 
-    2. M. D. Shields, "Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems",
+    .. [2] M. D. Shields, "Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems",
        Reliability Engineering & System Safety, ISSN: 0951-8320, Vol: 175, Page: 207-224, 2018.
 
-    **Input:**
+    **Inputs:**
 
     * **runmodel_object** (``Uqpy.RunModel`` object):
             A RunModel object, which is used to evaluate the function value.
@@ -1038,12 +1033,17 @@ class RSS:
             Number of samples generated in each iteration.
 
     * **random_state** (None or `int` or `np.random.RandomState` object):
-            Random seed used to initialize the pseudo-random number generator. Default is None.
+            Random seed used to initialize the pseudo-random number generator.
+
+            Default is None.
 
     * **verbose** (`Boolean`):
             A boolean declaring whether to write text to the terminal.
 
             Default value: False
+
+    **Methods:**
+
     """
 
     def __init__(self, sample_object=None, runmodel_object=None, krig_object=None, local=False, max_train_size=None,
@@ -1060,13 +1060,7 @@ class RSS:
         self.nexist = 0
         self.n_add = n_add
 
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif isinstance(self.random_state, type(None)):
-            self.random_state = np.random.RandomState()
-        elif not isinstance(self.random_state, np.random.RandomState):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        self.random_state = check_random_state(random_state)
 
         if self.cell == 'Voronoi':
             self.mesh = []
@@ -1108,12 +1102,25 @@ class RSS:
 
     def run(self, nsamples=0):
         """
-        Execute refined stratified sampling.
-        This is an instance method that runs refined stratified sampling. It is automatically called when the RSS class
-        is instantiated.
-        **Inputs:**
-        :param nsamples: Final size of the samples.
-        :type nsamples: int
+        Execute the random sampling in the ``RSS`` class.
+
+        The ``run`` method is the function that performs random sampling in the ``RSS`` class. If `nsamples` is
+        provided, the ``run`` method is automatically called when the ``RSS`` object is defined. The user may also call
+        the ``run`` method directly to generate samples. The ``run`` method of the ``RSS`` class can be invoked many
+        times and each time the generated samples are appended to the existing samples.
+
+        **Input:**
+
+        * **nsamples** (`int`):
+                Number of samples to be drawn from each distribution.
+
+                If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+                existing samples.
+
+        **Output/Return:**
+
+        The ``run`` method has no returns, although it creates and/or appends the `sample_object.samples` attribute of
+        the ``RSS`` class.
         """
         self.nsamples = nsamples
         self.nexist = self.sample_object.samples.shape[0]
@@ -1130,7 +1137,7 @@ class RSS:
     ###################################################
     def run_gerss(self):
         """
-        Samples are generated using Gradient Enhanced-Refined Stratified Sampling.
+        This method generates samples using Gradient Enhanced Refined Stratified Sampling.
         """
         # --------------------------
         # RECTANGULAR STRATIFICATION
@@ -1462,7 +1469,7 @@ class RSS:
     #################################
     def run_rss(self):
         """
-        Samples are generated using Refined Stratified Sampling.
+        This method generates samples using Refined Stratified Sampling.
         """
         # --------------------------
         # RECTANGULAR STRATIFICATION
@@ -1654,6 +1661,7 @@ class RSS:
     def estimate_gradient(self, x, y, xt):
         """
         Estimating gradients with a metamodel (surrogate).
+
         **Inputs:**
 
         * **x** (`ndarray`):
@@ -1692,10 +1700,10 @@ class Simplex:
 
     **References:**
 
-    1. W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, "Simplex-stochastic collocation method with improved
+    .. [1] W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, "Simplex-stochastic collocation method with improved
        calability",Journal of Computational Physics, 310:301–328 2016.
 
-    **Input:**
+    **Inputs:**
 
     * **nodes** (`ndarray` or `list`):
              The vertices of the simplex.
@@ -1704,16 +1712,15 @@ class Simplex:
              The number of samples to be generated inside the simplex.
 
     * **random_state** (None or `int` or `np.random.RandomState` object):
-            Random seed used to initialize the pseudo-random number generator. Default is None.
+            Random seed used to initialize the pseudo-random number generator.
+
+            Default is None.
 
     **Output:**
 
     * **samples** (`ndarray`):
              New random samples distributed uniformly inside the simplex.
     """
-
-    # Authors: Dimitris G.Giovanis
-    # Last modified: 11/28/2018 by Mohit S. Chauhan
 
     def __init__(self, nodes=None, nsamples=None, random_state=None):
         self.nodes = np.atleast_2d(nodes)
@@ -1722,11 +1729,7 @@ class Simplex:
         if self.nodes.shape[0] != self.nodes.shape[1] + 1:
             raise NotImplementedError("UQpy: Size of simplex (nodes) is not consistent.")
 
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        self.random_state = check_random_state(random_state)
 
         if nsamples is not None:
             if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
@@ -1736,9 +1739,24 @@ class Simplex:
 
     def run(self, nsamples):
         """
-        Generates uniformly distributed random samples inside the simplex.
-        This is an instance method that generates samples. It is automatically called when the Simplex class is
-        instantiated.
+        Execute the random sampling in the ``Simplex`` class.
+
+        The ``run`` method is the function that performs random sampling in the ``Simplex`` class. If `nsamples` is
+        provided, the ``run`` method is automatically called when the ``Simplex`` object is defined. The user may also
+        call the ``run`` method directly to generate samples. The ``run`` method of the ``Simplex`` class can be invoked
+        many times and each time the generated samples are appended to the existing samples.
+
+        **Input:**
+
+        * **nsamples** (`int`):
+            Number of samples to be drawn from each distribution.
+            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+            existing samples.
+
+        **Output/Return:**
+
+        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``Simplex``
+        class.
         """
         self.nsamples = nsamples
         dimension = self.nodes.shape[1]
@@ -1770,14 +1788,15 @@ class Simplex:
 ########################################################################################################################
 class AKMCS:
     """
-    Generate new samples using different active learning method and properties of kriging surrogate along with MCS.
+    Generate new samples using different active learning method and properties of kriging surrogate along with
+    MCS, see ([1]_) for detailed explanation.
 
     **References:**
 
-    1. B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
+    .. [1] B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
         Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
 
-    **Input:**
+    **Inputs:**
 
     * **dist_object** ((list of) ``Distribution`` object(s)):
             List of ``Distribution`` objects corresponding to each random variable.
@@ -1824,7 +1843,9 @@ class AKMCS:
             function is used.
 
     * **random_state** (None or `int` or `np.random.RandomState` object):
-            Random seed used to initialize the pseudo-random number generator. Default is None.
+            Random seed used to initialize the pseudo-random number generator.
+
+            Default is None.
 
     * **verbose** (`Boolean`):
             A boolean declaring whether to write text to the terminal.
@@ -1842,6 +1863,8 @@ class AKMCS:
     * **cov_pf** (`list`):
             Covariance of probability of failure after every iteration of AKMCS. Available as an output only for
             Reliability Analysis.
+
+    **Methods:**
 
     """
 
@@ -1915,11 +1938,7 @@ class AKMCS:
             if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
                 raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        self.random_state = check_random_state(random_state)
 
         if hasattr(krig_object, 'fit') and hasattr(krig_object, 'predict'):
             self.krig_object = krig_object
@@ -1951,9 +1970,36 @@ class AKMCS:
 
     def run(self, samples=None, append_samples=True, nsamples=0):
         """
-        The ``run`` method of the ``AKMCS`` class can be invoked many times and the generated samples are appended to
-        the existing samples. Iterative procedure is applied to learn samples based on metamodel and learning function,
-        and then metamodel is updated based on new samples.
+        Execute the random sampling in the ``AKMCS`` class.
+
+        The ``run`` method is the function that performs random sampling in the ``AKMCS`` class. If `nsamples` is
+        provided, the ``run`` method is automatically called when the ``AKMCS`` object is defined. The user may also
+        call the ``run`` method directly to generate samples. The ``run`` method of the ``AKMCS`` class can be invoked
+        many times and each time the generated samples are appended to the existing samples.
+
+        **Inputs:**
+
+        * **nsamples** (`int`):
+            Number of samples to be drawn from each distribution.
+            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+            existing samples.
+
+        * **samples** (`ndarray`):
+            `ndarray` containing the samples.
+
+        * **append_samples** (`boolean`)
+            Append over overwrite existing samples and model evaluations.
+
+            If ``append_samples = False``, all previous samples and the corresponding quantities of interest from their
+            model evaluations are deleted.
+
+            If ``append_samples = True``, samples and their resulting quantities of interest are appended to the
+            existing ones.
+
+        **Output/Returns:**
+
+        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``AKMCS``
+        class.
 
         """
 
@@ -2047,12 +2093,30 @@ class AKMCS:
     # ------------------
     def eigf(self, surr, pop):
         """
-        Learns new samples based on Expected Improvement for Global Fit (EIGF) as learning function.
+        Learns new samples based on Expected Improvement for Global Fit (EIGF) as learning function, see ([1]_) for
+        detailed explanation.
 
         **References:**
 
-        1. J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
+        .. [1] J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
            (Link: https://arxiv.org/pdf/1905.05345.pdf)
+
+        **Inputs:**
+
+        * **surr** (`class` object):
+            A surrogate model, this object have predict method as defined in `krig_object` parameter.
+
+        * **pop** (`numpy array`):
+            An array of samples in learning set.
+
+        **Output/Returns:**
+
+        * **new_samples** (`numpy array`):
+            An array of samples selected by learning criteria.
+
+        * **indicator** (`boolean`):
+            Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.
+
         """
         g, sig = surr(pop, True)
 
@@ -2079,12 +2143,29 @@ class AKMCS:
 
     def u(self, surr, pop):
         """
-        Learns new samples based on U-function as learning function.
+        Learns new samples based on U-function as learning function, see ([1]_) for detailed explanation.
 
         **References:**
 
-        1. B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
-        Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
+        .. [1] B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
+           Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
+
+        **Inputs:**
+
+        * **surr** (`class` object):
+            A surrogate model, this object have predict method as defined in `krig_object` parameter.
+
+        * **pop** (`numpy array`):
+            An array of samples in learning set.
+
+        **Output/Returns:**
+
+        * **new_samples** (`numpy array`):
+            An array of samples selected by learning criteria.
+
+        * **indicator** (`boolean`):
+            Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.
+
         """
         g, sig = surr(pop, True)
 
@@ -2102,12 +2183,30 @@ class AKMCS:
 
     def weighted_u(self, surr, pop):
         """
-        Learns new samples based on Probability Weighted U-function as learning function.
+        Learns new samples based on Probability Weighted U-function as learning function, see ([1]_) for detailed
+        explanation.
 
         **References:**
 
-        1. V.S. Sundar and M.S. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH MULTIMODEL
+        .. [1] V.S. Sundar and M.S. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH MULTIMODEL
            INFERENCE".
+
+        **Inputs:**
+
+        * **surr** (`class` object):
+            A surrogate model, this object have predict method as defined in `krig_object` parameter.
+
+        * **pop** (`numpy array`):
+            An array of samples in learning set.
+
+        **Output/Returns:**
+
+        * **new_samples** (`numpy array`):
+            An array of samples selected by learning criteria.
+
+        * **indicator** (`boolean`):
+            Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.
+
         """
         max_p = self.kwargs['max_p']
         g, sig = surr(pop, True)
@@ -2132,12 +2231,30 @@ class AKMCS:
 
     def eff(self, surr, pop):
         """
-        Learns new samples based on Expected Feasibilty Function (EFF) as learning function.
+        Learns new samples based on Expected Feasibilty Function (EFF) as learning function, see ([1]_) for detailed
+        explanation.
 
         **References:**
 
-        1. B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, "Efficient Global Reliability Analysis
+        .. [1] B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, "Efficient Global Reliability Analysis
            for Nonlinear Implicit Performance Functions", AIAA JOURNAL, Volume 46, 2008.
+
+        **Inputs:**
+
+        * **surr** (`class` object):
+            A surrogate model, this object have predict method as defined in `krig_object` parameter.
+
+        * **pop** (`numpy array`):
+            An array of samples in learning set.
+
+        **Output/Returns:**
+
+        * **new_samples** (`numpy array`):
+            An array of samples selected by learning criteria.
+
+        * **indicator** (`boolean`):
+            Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.
+
         """
         g, sig = surr(pop, True)
 
@@ -2162,12 +2279,30 @@ class AKMCS:
 
     def eif(self, surr, pop):
         """
-        Learns new samples based on Expected Improvement Function (EIF) as learning function.
+        Learns new samples based on Expected Improvement Function (EIF) as learning function, see ([1]_) for detailed
+        explanation.
 
         **References:**
 
-        1. D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box Functions",
+        .. [1] D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box Functions",
            Journal of Global Optimization, Pages 455–492, 1998.
+
+        **Inputs:**
+
+        * **surr** (`class` object):
+            A surrogate model, this object have predict method as defined in `krig_object` parameter.
+
+        * **pop** (`numpy array`):
+            An array of samples in learning set.
+
+        **Output/Returns:**
+
+        * **new_samples** (`numpy array`):
+            An array of samples selected by learning criteria.
+
+        * **indicator** (`boolean`):
+            Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.
+
         """
         g, sig = surr(pop, True)
 

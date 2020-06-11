@@ -1,18 +1,18 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>Surrogates &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Reliability" href="reliability.html" />
@@ -35,116 +35,85 @@
             
   <div class="section" id="surrogates">
 <span id="id1"></span><h1>Surrogates<a class="headerlink" href="#surrogates" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
-<dt id="UQpy.Surrogates.SROM">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Surrogates.</code><code class="sig-name descname">SROM</code><span class="sig-paren">(</span><em class="sig-param">samples=None</em>, <em class="sig-param">target_dist_object=None</em>, <em class="sig-param">moments=None</em>, <em class="sig-param">weights_errors=None</em>, <em class="sig-param">weights_distribution=None</em>, <em class="sig-param">weights_moments=None</em>, <em class="sig-param">weights_correlation=None</em>, <em class="sig-param">properties=None</em>, <em class="sig-param">correlation=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Surrogates.html#SROM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Surrogates.SROM" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random
-quantity.</p>
-<p>SROM generates a discrete approximation of continuous random variables. The probabilities/weights are
-considered to be the parameters for the SROM and they can be obtained by minimizing the error between the
-marginal distributions, first and second order moments about origin and correlation between random variables.</p>
-<p><strong>References:</strong></p>
-<ol class="arabic simple">
-<li><p>M. Grigoriu, “Reduced order models for random functions. Application to stochastic problems”,
-Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.</p></li>
+<div class="section" id="srom">
+<h2>SROM<a class="headerlink" href="#srom" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">SROM</span></code> takes a set of samples and attributes of a distribution and optimizes the sample probability weights according to the method of Stochastic Reduced Order Models as defined by <a class="footnote-reference brackets" href="#id4" id="id2">1</a>. SROM constructs a reduce order model for arbitrary random variables.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\tilde{X} =  \begin{cases} x_1 &amp; probability \text{  }p_1^{(opt)} \\ &amp; \vdots \\ x_m &amp; probability \text{  }p_m^{(opt)} \end{cases}\end{split}\]</div>
+<p>This class identify the probability/weights associated with sample, such that total error between distribution, moments and correlation of random variables is minimized. This optimization problem can be express as:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}&amp; \min_{\mathbf{p}}  \sum_{u=1}^3 \alpha_u e_u(\mathbf{p}) \\ &amp; \sum_{k=1}^m p_k =1 \quad and \quad p_k \geq 0, \quad k=1,2,\dots,m\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\alpha_1\)</span>, <span class="math notranslate nohighlight">\(\alpha_2\)</span>, <span class="math notranslate nohighlight">\(\alpha_3 \geq 0\)</span> are constants defining the relative important of distribution, moments and correlation error between the reduce order model and actual random variables in the objective function.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}&amp;  e_{1}(p)=\sum\limits_{i=1}^d \sum\limits_{k=1}^m w_{F}(x_{k,i};i)(\hat{F}_{i}(x_{k,i})-F_{i}(x_{k,i}))^2  \\ &amp; e_{2}(p)=\sum\limits_{i=1}^d \sum\limits_{r=1}^q w_{\mu}(r;i)(\hat{\mu}(r;i)-\mu(r;i))^2 \\ &amp; e_{3}(p)=\sum\limits_{i,j=1,...,d ; j&gt;i}  w_{r}(i,j)(\hat{r}(i,j)-r(i,j))^2\end{split}\]</div>
+<p>Here, <span class="math notranslate nohighlight">\(F\)</span> and <span class="math notranslate nohighlight">\(\hat{F}\)</span> denote the marginal distribution of <span class="math notranslate nohighlight">\(\mathbf{X}\)</span> and <span class="math notranslate nohighlight">\(\mathbf{\hat{X}}\)</span> (reduced order model). Similarly, <span class="math notranslate nohighlight">\(\mu\)</span> and <span class="math notranslate nohighlight">\(\hat{\mu}\)</span> are marginal moments and <span class="math notranslate nohighlight">\(r\)</span> and <span class="math notranslate nohighlight">\(\hat{r}\)</span> are correlation matrix of <span class="math notranslate nohighlight">\(\mathbf{X}\)</span> and <span class="math notranslate nohighlight">\(\mathbf{\hat{X}}\)</span>. This class only consider first and second order moment about origin, i.e. q=2. And, ‘m’ is number of samples and ‘d’ is number of random variables.</p>
+<div class="section" id="class-descriptions">
+<h3>Class Descriptions<a class="headerlink" href="#class-descriptions" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="kriging">
+<h2>Kriging<a class="headerlink" href="#kriging" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">Kriging</span></code> class defines an approximate surrogate model or response surface which can be used to predict function values at unknown location. Kriging gives the best unbiased linear predictor at the intermediate samples. This class generates a model <span class="math notranslate nohighlight">\(\hat{y}\)</span> that express the response surface as a realization of regression model and gaussian random process.</p>
+<div class="math notranslate nohighlight">
+\[\hat{y}(x) = \mathcal{F}(\beta, x) + z(x)\]</div>
+<p>Regression model (<span class="math notranslate nohighlight">\(\mathcal{F}\)</span>) is linear combination of ‘<span class="math notranslate nohighlight">\(p\)</span>’ chosen scalar basis function.</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{F}(\beta, x) = \beta_1 f_1(x) + \dots + \beta_p f_p(x) = f(x)^T \beta\]</div>
+<p>The random process <span class="math notranslate nohighlight">\(z(x)\)</span> have mean zero and covariance is defined through correlation matrix(<span class="math notranslate nohighlight">\(\mathcal{R}(\theta, s, x)\)</span>), which depends on hyperparameters(<span class="math notranslate nohighlight">\(\theta\)</span>) and samples(<span class="math notranslate nohighlight">\(s\)</span>).</p>
+<div class="math notranslate nohighlight">
+\[E\big[z(s)z(x)] = \sigma^2 \mathcal{R}(\theta, s, x)\]</div>
+<p>Hyperparameters are estimate by maximizing the log-likehood function.</p>
+<div class="math notranslate nohighlight">
+\[\text{log}(p(y|x, \theta)) = -\frac{1}{2}y^T \mathcal{R}^{-1} y - \frac{1}{2}\text{log}(|\mathcal{R}|) - \frac{n}{2}\text{log}(2\pi)\]</div>
+<p>Once hyperparameters are computed, correlation matrix(<span class="math notranslate nohighlight">\(\mathcal{R}\)</span>) and basis functions are evaluated at sample points(<span class="math notranslate nohighlight">\(F\)</span>). Then, correlation coefficient(<span class="math notranslate nohighlight">\(\beta\)</span>) and process variance(<span class="math notranslate nohighlight">\(\sigma^2\)</span>) can be computed using following equations.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}(F^T R^{-1} F)\beta^* &amp; = F^T R^{-1} Y \\ \sigma^2 &amp; = \frac{1}{m} (Y - F\beta^*)^T R{-1}(Y - F\beta^*)\end{split}\]</div>
+<p>The final predictor function can be defined as:</p>
+<div class="math notranslate nohighlight">
+\[\hat{y}(x) = f(x)^T \beta^* + r(x)^T R^{-1}(Y - F\beta^*)\]</div>
+<div class="section" id="adding-new-regression-model">
+<h3>Adding New Regression Model<a class="headerlink" href="#adding-new-regression-model" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">Kriging</span></code> class offers a variety of model for fitting approximate surrogate model. These are specified by the <cite>reg_model</cite> parameter (i.e. ‘constant’, ‘linear’ and ‘quadratic’). However, adding a new model is straightforward. This is done by creating a new method that computes basis function and it’s jacobian. This method takes as input the samples points and returns two array containing the value of value of basis function and it’s jacobian at sample points. The first output of this function should be a two dimensional numpy array with the first dimension being the number of samples and the second dimension being the number of basis functions. The second output (i.e. jacobian of basis function) is a three dimensional numpy array with the first dimension being the number of samples, the second dimension being the number of variables and the third dimension being the number of basis functions. An example user-defined model is given below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">constant</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">fx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">jf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">fx</span><span class="p">,</span> <span class="n">jf</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-new-correlation-model">
+<h3>Adding New Correlation Model<a class="headerlink" href="#adding-new-correlation-model" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">Kriging</span></code> class offers a variety of model to minimize the error in surrogate model. These are specified by the <cite>corr_model</cite> parameter (i.e. ‘exponential’, ‘gaussian’, ‘linear’, ‘spherical’, ‘cubic’ and ‘spline’). However, user can also add a new model. This is done by creating a new method that computes correlation matrix, it’s derivative w.r.t samples and it’s derivative w.r.t hyperparameters. This method takes as input the new points, training points, hyperparameters and two indicator for the computation of derivative of correlation matrix (i.e. <cite>dt</cite> and <cite>dx</cite>). If both indicators are false, then method should return correlation matrix, i.e. a 2-D array with first dimension being the number of points and second dimension being the number of training points. If <cite>dx</cite> parameter is True, then method should return correlation matrix and derivative of correlation matrix w.r.t variables, i.e. a 3-D array with first being the number of points, second dimension being the number of training points and third dimension being the number of variables. If <cite>dt</cite> is True, then method should return correlation matrix and it’s derivative w.r.t hyperparameters, i.e. a 3-D array with same shape as derivative of correlation matrix w.r.t. variables. An example user-defined model is given below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">Gaussian</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">x</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="c1"># Create stack matrix, where each block is x_i with all s</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">stack</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_3d</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">rx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="n">params</span> <span class="o">*</span> <span class="p">(</span><span class="n">stack</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="n">dt</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">drdt</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">stack</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">rx</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="n">rx</span><span class="p">,</span> <span class="n">drdt</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="n">dx</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">drdx</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">params</span> <span class="o">*</span> <span class="n">stack</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">rx</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="n">rx</span><span class="p">,</span> <span class="n">drdx</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">rx</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h3>Class Descriptions<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<dl class="footnote brackets">
+<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
+<dd><ol class="upperalpha simple" start="13">
+<li><p>Grigoriu, “Reduced order models for random functions. Application to stochastic problems”, Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.</p></li>
 </ol>
-<p><strong>Input:</strong></p>
-<ul>
-<li><dl class="simple">
-<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p>An array/list of samples corresponding to each random variables.</p>
+</dd>
+<dt class="label" id="id5"><span class="brackets">2</span></dt>
+<dd><p>S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, “DACE – A MATLAB Kriging Toolbox”, Informatics and Mathematical Modelling, Version 2.0, 2002.</p>
 </dd>
 </dl>
-</li>
-<li><dl class="simple">
-<dt><strong>target_dist_object</strong> ((list of) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>A list of distribution objects of random variables.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>moments</strong> (<cite>list</cite> of <cite>float</cite>):</dt><dd><p>A list containing first and second order moment about origin of all random variables.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>weights_errors</strong> (<cite>list</cite> of <cite>float</cite>):</dt><dd><p>Weights associated with error in distribution, moments and correlation.</p>
-<p>Default: weights_errors = [1, 0.2, 0]</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>properties</strong> (<cite>list</cite> of <cite>booleans</cite>):</dt><dd><p>A list of booleans representing properties, which are required to match in reduce order model. This class
-focus on reducing errors in distribution, first order moment about origin, second order moment about origin
-and correlation of samples.
-Example: properties = [True, True, False, False] will minimize errors in distribution and errors in first
-order moment about origin in reduce order model.</p>
-<p>Default: weights_errors = [1, 0.2, 0]</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>weights_distribution</strong> (<cite>ndarray</cite> or <cite>list</cite> of <cite>float</cite>):</dt><dd><p>An list or array containing weights associated with different samples.
-Options:</p>
-<blockquote>
-<div><p>If weights_distribution is None, then default value is assigned.
-If size of weights_distribution is 1xd, then it is assigned as dot product of weights_distribution and
-default value.
-Otherwise size of weights_distribution should be equal to Nxd.</p>
-</div></blockquote>
-<p>Default: weights_distribution = An array of shape Nxd with all elements equal to 1.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>weights_moments</strong> (<cite>ndarray</cite> or <cite>list</cite> of <cite>float</cite>):</dt><dd><p>An array of dimension 2xd, where ‘d’ is number of random variables. It contain weights associated with
-moments.
-Options:</p>
-<blockquote>
-<div><p>If weights_moments is None, then default value is assigned.
-If size of weights_moments is 1xd, then it is assigned as dot product of weights_moments and default
-value.
-Otherwise size of weights_distribution should be equal to 2xd.</p>
-</div></blockquote>
-<p>Default: weights_moments = Square of reciprocal of elements of moments.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>weights_correlation</strong> (<cite>ndarray</cite> or <cite>list</cite> of <cite>float</cite>):</dt><dd><p>An array of dimension dxd, where ‘d’ is number of random variables. It contain weights associated with
-correlation of random variables.</p>
-<p>Default: weights_correlation = dxd dimensional array with all elements equal to 1.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>correlation</strong> (<cite>ndarray</cite> or <cite>list of floats</cite>):</dt><dd><p>Correlation matrix between random variables.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Attributes:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>sample_weights</strong> (<cite>ndarray</cite>):</dt><dd><p>The probabilities/weights defining discrete approximation of continuous random variables.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<dl class="method">
-<dt id="UQpy.Surrogates.SROM.init_srom">
-<code class="sig-name descname">init_srom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Surrogates.html#SROM.init_srom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Surrogates.SROM.init_srom" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialization and preliminary error checks.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="UQpy.Surrogates.SROM.run_srom">
-<code class="sig-name descname">run_srom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Surrogates.html#SROM.run_srom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Surrogates.SROM.run_srom" title="Permalink to this definition">¶</a></dt>
-<dd><p>Runs stochastic reduced order model.
-This is an instance method that runs SROM. It is automatically called when the SROM class is instantiated.</p>
-</dd></dl>
-
-</dd></dl>
-
 <div class="toctree-wrapper compound">
+</div>
+</div>
 </div>
 </div>
 
@@ -186,7 +155,9 @@ This is an instance method that runs SROM. It is automatically called when the S
 <li class="toctree-l1"><a class="reference internal" href="samplemethods.html">SampleMethods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="transformations.html">Transformations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stochastic_process.html">StochasticProcess</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Surrogates</a><ul class="simple">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Surrogates</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#srom">SROM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kriging">Kriging</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="reliability.html">Reliability</a></li>
@@ -214,7 +185,7 @@ This is an instance method that runs SROM. It is automatically called when the S
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -223,7 +194,7 @@ This is an instance method that runs SROM. It is automatically called when the S
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
