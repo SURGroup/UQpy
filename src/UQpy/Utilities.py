@@ -25,7 +25,6 @@ import numpy as np
 import scipy.stats as stats
 from scipy.special import gamma
 from scipy.stats import chi2, norm
-from UQpy.RunModel import RunModel
 
 
 def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
@@ -377,8 +376,8 @@ def correlation_distortion(marginal, rho_norm):
     print('UQpy: Done.')
     return rho
 
-# TODO: rename itam_correlation
-def itam(marginal, corr, beta, thresh1, thresh2):
+
+def itam_correlation(marginal, corr, beta, thresh1, thresh2):
 
     """
         Description:
@@ -553,7 +552,7 @@ def nearest_psd(a, nit=10):
 
     n = a.shape[0]
     w = np.identity(n)
-    # frequency is the matrix used for the norm (assumed to be Identity matrix here)
+    # w is the matrix used for the norm (assumed to be Identity matrix here)
     # the algorithm should work for any diagonal W
     delta_s = 0
     y_k = a.copy()
@@ -865,9 +864,9 @@ def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ES
 
         # Computation of the autocorrelation time in each dimension
         #def auto_window(taus, c):    # Automated windowing procedure following Sokal (1989)
-        #    number_of_variables = np.arange(len(taus)) < c * taus
-        #    if np.any(number_of_variables):
-        #        return np.argmin(number_of_variables)
+        #    m = np.arange(len(taus)) < c * taus
+        #    if np.any(m):
+        #        return np.argmin(m)
         #    return len(taus) - 1
         #autocorrelation_time = []
         #for j in range(samples.shape[1]):
@@ -910,7 +909,7 @@ def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ES
 @contextmanager
 def suppress_stdout():
     """ A function to suppress output"""
-    with open(os.devnull, "frequency") as devnull:
+    with open(os.devnull, "w") as devnull:
         old_stdout = sys.stdout
         sys.stdout = devnull
         try:
@@ -985,6 +984,121 @@ def svd(matrix, value):
 
     return u, s, v
 
+def check_arguments(argv, min_num_matrix, ortho):
+    
+    """
+    Check input arguments for consistency.
+
+    Check the input matrices for consistency given the minimum number of matrices (min_num_matrix) 
+    and the boolean varible (ortho) to test the orthogonality.
+
+    **Input:**
+
+    :param argv: Matrices to be tested.
+    :type  argv: list of arguments
+
+    :param min_num_matrix: Minimum number of matrices.
+    :type  min_num_matrix: int
+    
+    :param ortho: boolean varible to test the orthogonality.
+    :type  ortho: bool
+
+    **Output/Returns:**
+
+    :param inputs: Return the input matrices.
+    :type  inputs: numpy array
+
+    :param nargs: Number of matrices.
+    :type  nargs: numpy array
+    """
+        
+    # Check the minimum number of matrices involved in the operations
+    if type(min_num_matrix) != int:
+        raise ValueError('The minimum number of matrices MUST be an integer number!')
+    elif min_num_matrix < 1:
+        raise ValueError('Number of arguments MUST be larger than or equal to one!')
+
+    # Check if the variable controlling the orthogonalization is boolean
+    if type(ortho) != bool:
+        raise ValueError('The last argument MUST be a boolean!')
+
+    nargv = len(argv)
+
+    # If the number of provided inputs are zero exit the code
+    if nargv == 0:
+        raise ValueError('Missing input arguments!')
+
+    # Else if the number of arguments is equal to 1 
+    elif nargv == 1:
+
+        # Check if the number of expected matrices are higher than or equal to 2
+        args = argv[0]
+        nargs = len(args)
+      
+        if np.shape(args)[0] == 1 or len(np.shape(args)) == 2:
+            nargs = 1
+        # if it is lower than two exit the code, otherwise store them in a list
+        if nargs < min_num_matrix:
+            raise ValueError('The number of points must be higher than:', min_num_matrix)
+
+        else:
+            inputs = []
+            if nargs == 1:
+                inputs = [args]
+            else:
+
+                # Loop over all elements
+                for i in range(nargs):                  
+                    # Verify the type of the input variables and store in a list
+                    inputs.append(test_type(args[i], ortho))
+
+    else:
+
+        nargs = nargv
+        # Each argument MUST be a matrix
+        inputs = []
+        for i in range(nargv):
+            # Verify the type of the input variables and store in a list
+            inputs.append(test_type(argv[i], ortho))
+
+    return inputs, nargs
+
+
+def test_type(X, ortho):
+    
+    """
+    Test the datatype of X.
+
+    Check if the datatype of the matrix X is consistent.
+
+    **Input:**
+
+    :param X: Matrices to be tested.
+    :type  X: list or numpy array
+    
+    :param ortho: boolean varible to test the orthogonality.
+    :type  ortho: bool
+
+    **Output/Returns:**
+
+    :param Y: Tested and adjusted matrices.
+    :type  Y: numpy array
+    """
+        
+    if not isinstance(X, (list, np.ndarray)):
+        raise TypeError('Elements of input arguments should be provided either as list or array')
+    elif type(X) == list:
+        Y = np.array(X)
+    else:
+        Y = X
+
+    if ortho:
+        Ytest = np.dot(Y.T, Y)
+        if not np.array_equal(Ytest, np.identity(np.shape(Ytest)[0])):
+            Y, unused = np.linalg.qr(Y)
+
+    return Y
+
 def nn_coord(x, k):
     
     """
@@ -1056,3 +1170,11 @@ def solve_single_integral(dist_object, rho):
     rho_non = (rho_non - dist_object.moments(moments2return='m') ** 2) / dist_object.moments(moments2return='v')
     return rho_non
 
+def check_random_state(random_state):
+    return_rs = random_state
+    if isinstance(random_state, int):
+        return_rs = np.random.RandomState(random_state)
+    elif not isinstance(random_state, (type(None), np.random.RandomState)):
+        raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
+    return return_rs
