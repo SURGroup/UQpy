@@ -15,11 +15,13 @@ The module currently contains the following classes:
 import itertools
 
 from scipy.linalg import sqrtm
-from scipy.stats import norm
 
 from UQpy.Distributions import *
 from UQpy.Utilities import *
 
+
+# TODO: Add static methods for W-K transform.
+# TODO: Modify function name in utilities.
 
 class SRM:
     """
@@ -501,7 +503,7 @@ class BSRM:
 
 class KLE:
     """
-    A class to simulate Stochastic Processes from a given auto-correlation function based on the Karhunen-Louve
+    A class to simulate stochastic processes from a given auto-correlation function based on the Karhunen-Loeve
     Expansion
 
     **Input:**
@@ -513,13 +515,13 @@ class KLE:
         ``KLE`` object is created but samples are not generated.
 
     * **correlation_function** (`list or numpy.ndarray`):
-        The correlation function of the stochastic process.
+        The correlation function of the stochastic process of size (`number_time_intervals`, `number_time_intervals`)
 
-    * **time_duration** (`float`):
+    * **time_interval** (`float`):
         The length of time discretization.
 
-    * **threashold** (`int`):
-        The threshold of number of eigen values to be used in the expansion.
+    * **threshold** (`int`):
+        The threshold number of eigenvalues to be used in the expansion.
 
     * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
         Random seed used to initialize the pseudo-random number generator. Default is None.
@@ -540,6 +542,8 @@ class KLE:
 
     **Methods**
     """
+
+    # TODO: Test this for non-stationary processes.
 
     def __init__(self, nsamples, correlation_function, time_duration, threshold=None, random_state=None, verbose=False):
         self.correlation_function = correlation_function
@@ -579,7 +583,7 @@ class KLE:
         Execute the random sampling in the ``KLE`` class.
 
         The ``run`` method is the function that performs random sampling in the ``KLE`` class. If `nsamples` is
-        provided, the ``run`` method is automatically called when the ``KLE`` object is defined. The user may also call
+        provided when the ``KLE`` object is defined, the ``run`` method is automatically called. The user may also call
         the ``run`` method directly to generate samples. The ``run`` method of the ``KLE`` class can be invoked many
         times and each time the generated samples are appended to the existing samples.
 
@@ -629,10 +633,10 @@ class Translation:
     **Input:**
 
     * **dist_object** (`list or numpy.ndarray`):
-        An instance of the UQpy Distributions class defining the marginal distribution to which the gaussian stochastic
-        process should be translated to.
+        An instance of the UQpy ``Distributions`` class defining the marginal distribution to which the Gaussian
+        stochastic process should be translated to.
 
-    * **time_duration** (`float`):
+    * **time_interval** (`float`):
         The value of time discretization.
 
     * **frequency_interval** (`float`):
@@ -647,32 +651,37 @@ class Translation:
     * **power_spectrum_gaussian** ('list or numpy.ndarray'):
         The power spectrum of the gaussian stochastic process to be translated.
 
+        `power_spectrum_gaussian` must be of size (`number_frequency_intervals`).
+
     * **correlation_function_gaussian** ('list or numpy.ndarray'):
-        The auto correlation function of the gaussian stochastic process to be translated.
+        The auto correlation function of the Gaussian stochastic process to be translated.
 
         Either the power spectrum or the auto correlation function of the gaussian stochastic process needs to be
         defined.
 
+        `correlation_function_gaussian` must be of size (`number_time_intervals`).
+
     * **samples_gaussian** (`list or numpy.ndarray`):
-        Samples of gaussian stochastic process to be translated.
+        Samples of Gaussian stochastic process to be translated.
+
+        `samples_gaussian` is optional. If no samples are passed, the ``Translation`` class will compute the correlation
+        distortion.
 
     **Attributes:**
 
     * **samples_non_gaussian** (`numpy.ndarray`):
-        Translated non-gaussian stochastic process from gaussian stochastic processes.
+        Translated non-Gaussian stochastic process from Gaussian samples.
 
     * **power_spectrum_non_gaussian** (`numpy.ndarray`):
-        The power spectrum of the translated non-gaussian stochastic processes.
+        The power spectrum of the translated non-Gaussian stochastic processes.
 
     * **correlation_function_non_gaussian** (`numpy.ndarray`):
-        The correlation function of the translated non-gaussian stochastic processes obtained by distorting the gaussian
+        The correlation function of the translated non-Gaussian stochastic processes obtained by distorting the Gaussian
         correlation function.
 
     * **scaled_correlation_function_non_gaussian** (`numpy.ndarray`):
-        This obtained by scaling the correlation function of the non-gaussian stochastic processes to make the
-        correlation at '0' distance to be 1
-
-    **Methods**
+        This obtained by scaling the correlation function of the non-Gaussian stochastic processes to make the
+        correlation at '0' lag to be 1
     """
 
     def __init__(self, dist_object, time_duration, frequency_interval, number_time_intervals,
@@ -703,6 +712,7 @@ class Translation:
                            np.arange(0, number_frequency_intervals) * frequency_interval,
                            np.arange(0, number_time_intervals) * time_duration)
 
+    # TODO: Make these private methods.
     def translate_gaussian_samples(self):
         standard_deviation = np.sqrt(self.correlation_function_gaussian[0])
         samples_cdf = norm.cdf(self.samples_gaussian, scale=standard_deviation)
@@ -736,10 +746,10 @@ class InverseTranslation:
     **Input:**
 
     * **dist_object** (`list or numpy.ndarray`):
-        An instance of the UQpy Distributions class defining the marginal distribution of the non-gaussian stochastic
-        processes.
+        An instance of the ``UQpy`` ``Distributions`` class defining the marginal distribution of the non-Gaussian
+        stochastic process.
 
-    * **time_duration** (`float`):
+    * **time_interval** (`float`):
         The value of time discretization.
 
     * **frequency_interval** (`float`):
@@ -752,33 +762,35 @@ class InverseTranslation:
         The number of frequency discretizations.
 
     * **power_spectrum_non_gaussian** ('list or numpy.ndarray'):
-        The power spectrum of the non-gaussian stochastic processes.
+        The power spectrum of the non-Gaussian stochastic processes.
 
     * **correlation_function_non_gaussian** ('list or numpy.ndarray'):
-        The auto correlation function of the non-gaussian stochastic processes.
+        The auto correlation function of the non-Gaussian stochastic processes.
 
-        Either the power spectrum or the auto correlation function of the gaussian stochastic process needs to be
+        Either the power spectrum or the auto correlation function of the Gaussian stochastic process needs to be
         defined.
 
     * **samples_non_gaussian** (`list or numpy.ndarray`):
-        Samples of non-gaussian stochastic processes.
+        Samples of non-Gaussian stochastic processes.
+
+        `samples_non_gaussian` is optional. If no samples are passed, the ``InverseTranslation`` class will compute the
+        underlying Gaussian correlation using the ITAM.
 
     **Attributes:**
 
     * **samples_gaussian** (`numpy.ndarray`):
-        The Inverse translated gaussian stochastic processes from the non-gaussian stochastic processes.
+        The inverse translated Gaussian samples from the non-Gaussian samples.
 
     * **power_spectrum_gaussian** (`numpy.ndarray`):
-        The power spectrum of the inverse translated gaussian stochastic processes.
+        The power spectrum of the inverse translated Gaussian stochastic processes.
 
     * **correlation_function_gaussian** (`numpy.ndarray`):
-        The correlation function of the inverse translated gaussian stochastic processes.
+        The correlation function of the inverse translated Gaussian stochastic processes.
 
     * **scaled_correlation_function_non_gaussian** (`numpy.ndarray`):
-        This obtained by scaling the correlation function of the gaussian stochastic processes to make the correlation
+        This obtained by scaling the correlation function of the Gaussian stochastic processes to make the correlation
         at '0' distance to be 1
 
-    **Methods**
     """
 
     def __init__(self, dist_object, time_duration, frequency_interval, number_time_intervals,
@@ -805,6 +817,7 @@ class InverseTranslation:
         self.correlation_function_gaussian = self.auto_correlation_function_gaussian / \
                                              self.auto_correlation_function_gaussian[0]
 
+    # TODO: Make private methods.
     def inverse_translate_non_gaussian_samples(self):
         if hasattr(self.dist_object, 'cdf'):
             non_gaussian_cdf = getattr(self.dist_object, 'cdf')
