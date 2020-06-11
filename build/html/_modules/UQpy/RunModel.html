@@ -126,7 +126,7 @@
 <span class="sd">        A list containing the names of the variables present in `input_template`.</span>
 
 <span class="sd">        If `input template` is provided and  `var_names` is not passed, i.e. if ``var_names=None``, then the default</span>
-<span class="sd">        variable names `x0`, `x1`, `x2`,..., `xn` are created and used by ``RunModel``, where `n` is the number of</span>
+<span class="sd">        variable names `x0`, `x1`, `x2`,..., `xn` are created and used by ``RunModel``, where `number_of_dimensions` is the number of</span>
 <span class="sd">        variables (`n_vars`).</span>
 
 <span class="sd">        The number of variables is equal to the second dimension of `samples` (i.e. ``n_vars=len(samples[0])``).</span>
@@ -286,7 +286,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Authors:</span>
-    <span class="c1"># B.S. Aakash, Lohit Vandanapu, Michael D.Shields</span>
+    <span class="c1"># bispectrum.power_spectrum. Aakash, Lohit Vandanapu, Michael D.Shields</span>
     <span class="c1">#</span>
     <span class="c1"># Last</span>
     <span class="c1"># modified: 5 / 8 / 2020 by Michael D.Shields</span>
@@ -496,7 +496,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_template</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># If there is a template input file</span>
             <span class="c1"># Check if it is a file and is readable</span>
             <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_template</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_template</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">R_OK</span><span class="p">),</span> \
-                <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">UQpy: File </span><span class="si">{}</span><span class="s2"> doesn&#39;t exist or isn&#39;t readable&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_template</span><span class="p">)</span>
+                <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">UQpy: File </span><span class="si">{}</span><span class="s2"> doesn&#39;time exist or isn&#39;time readable&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_template</span><span class="p">)</span>
             <span class="c1"># Read in the text from the template files</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_template</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">template_text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
@@ -849,7 +849,7 @@
             <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">new_folder</span><span class="p">)</span>
         <span class="n">base_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file_name</span><span class="p">))</span>
         <span class="n">new_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_folder</span><span class="p">,</span> <span class="n">base_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="o">+</span> <span class="n">base_name</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="s1">&#39;frequency&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
         <span class="k">return</span>
 

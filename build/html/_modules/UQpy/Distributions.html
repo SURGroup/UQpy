@@ -217,7 +217,7 @@
 <span class="sd">            Generated iid samples, `ndarray` of shape `(npoints, dimension)`.</span>
 
 <span class="sd">    **moments** *(moments2return=&#39;mvsk&#39;)*</span>
-<span class="sd">        Computes the mean &#39;m&#39;, variance/covariance (&#39;v&#39;), skewness (&#39;s&#39;) and/or kurtosis (&#39;k&#39;) of the distribution.</span>
+<span class="sd">        Computes the mean &#39;number_of_variables&#39;, variance/covariance (&#39;v&#39;), skewness (&#39;s&#39;) and/or kurtosis (&#39;k&#39;) of the distribution.</span>
 
 <span class="sd">        For a univariate distribution, mean, variance, skewness and kurtosis are returned. For a multivariate</span>
 <span class="sd">        distribution, the mean vector, covariance and vectors of marginal skewness and marginal kurtosis are returned.</span>
@@ -852,16 +852,16 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Binomial distribution having probability mass function:</span>
 
-<span class="sd">    .. math:: f(x) = {n \choose x} p^x(1-p)^{n-x}</span>
+<span class="sd">    .. math:: f(x) = {number_of_dimensions \choose x} p^x(1-p)^{number_of_dimensions-x}</span>
 
-<span class="sd">    for :math:`x\in\{0, 1, 2, ..., n\}`.</span>
+<span class="sd">    for :math:`x\inumber_of_dimensions\{0, 1, 2, ..., number_of_dimensions\}`.</span>
 
 <span class="sd">    In this standard form `(loc=0)`. Use `loc` to shift the distribution. Specifically, this is equivalent to computing</span>
 <span class="sd">    :math:`f(y)` where :math:`y=x-loc`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
-<span class="sd">    * **n** (`int`):</span>
+<span class="sd">    * **number_of_dimensions** (`int`):</span>
 <span class="sd">        number of trials, integer &gt;= 0</span>
 <span class="sd">    * **p** (`float`):</span>
 <span class="sd">        success probability for each trial, real number in [0, 1]</span>
@@ -873,7 +873,7 @@
 <span class="sd">    * ``cdf``, ``pmf``, ``log_pmf``, ``icdf``, ``rvs, moments``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">))</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">order_params</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;number_of_dimensions&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">binom</span><span class="p">)</span></div>
 
 
@@ -983,27 +983,27 @@
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;mean&#39;</span><span class="p">:</span> <span class="n">mle_mu</span><span class="p">,</span> <span class="s1">&#39;cov&#39;</span><span class="p">:</span> <span class="n">mle_cov</span><span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">moments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">moments2return</span><span class="o">=</span><span class="s1">&#39;mv&#39;</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">moments2return</span> <span class="o">==</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">moments2return</span> <span class="o">==</span> <span class="s1">&#39;number_of_variables&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;mean&#39;</span><span class="p">]</span>
         <span class="k">elif</span> <span class="n">moments2return</span> <span class="o">==</span> <span class="s1">&#39;v&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;cov&#39;</span><span class="p">]</span>
         <span class="k">elif</span> <span class="n">moments2return</span> <span class="o">==</span> <span class="s1">&#39;mv&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;mean&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;cov&#39;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: moments2return must be &quot;m&quot;, &quot;v&quot; or &quot;mv&quot;.&#39;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: moments2return must be &quot;number_of_variables&quot;, &quot;v&quot; or &quot;mv&quot;.&#39;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Multinomial"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Multinomial">[docs]</a><span class="k">class</span> <span class="nc">Multinomial</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Multinomial distribution having probability mass function</span>
 
-<span class="sd">    .. math:: f(x) = \dfrac{n!}{x_1!\dots x_k!}p_1^{x_1}\dots p_k^{x_k}</span>
+<span class="sd">    .. math:: f(x) = \dfrac{number_of_dimensions!}{x_1!\dots x_k!}p_1^{x_1}\dots p_k^{x_k}</span>
 
-<span class="sd">    for :math:`x=\{x_1,\dots,x_k\}` where each :math:`x_i` is a non-negative integer and :math:`\sum_i x_i = n`.</span>
+<span class="sd">    for :math:`x=\{x_1,\dots,x_k\}` where each :math:`x_i` is a non-negative integer and :math:`\sum_i x_i = number_of_dimensions`.</span>
 
 <span class="sd">    **Inputs:**</span>
 
-<span class="sd">    * **n** (`int`):</span>
+<span class="sd">    * **number_of_dimensions** (`int`):</span>
 <span class="sd">        number of trials</span>
 <span class="sd">    * **p** (`array_like`):</span>
 <span class="sd">        probability of a trial falling into each category; should sum to 1</span>
@@ -1030,24 +1030,24 @@
             <span class="n">size</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nsamples</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">moments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">moments2return</span><span class="o">=</span><span class="s1">&#39;mv&#39;</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">moments2return</span> <span class="o">==</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span>
-            <span class="n">mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;n&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;p&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">moments2return</span> <span class="o">==</span> <span class="s1">&#39;number_of_variables&#39;</span><span class="p">:</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;number_of_dimensions&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;p&#39;</span><span class="p">])</span>
             <span class="k">return</span> <span class="n">mean</span>
         <span class="k">elif</span> <span class="n">moments2return</span> <span class="o">==</span> <span class="s1">&#39;v&#39;</span><span class="p">:</span>
-            <span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;n&#39;</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;p&#39;</span><span class="p">])</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;number_of_dimensions&#39;</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;p&#39;</span><span class="p">])</span>
             <span class="n">d</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
             <span class="n">cov</span> <span class="o">=</span> <span class="o">-</span> <span class="n">n</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:],</span> <span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">p</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">d</span><span class="p">])</span>
             <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">cov</span><span class="p">,</span> <span class="n">n</span> <span class="o">*</span> <span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">p</span><span class="p">))</span>
             <span class="k">return</span> <span class="n">cov</span>
         <span class="k">elif</span> <span class="n">moments2return</span> <span class="o">==</span> <span class="s1">&#39;mv&#39;</span><span class="p">:</span>
-            <span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;n&#39;</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;p&#39;</span><span class="p">])</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;number_of_dimensions&#39;</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;p&#39;</span><span class="p">])</span>
             <span class="n">d</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
             <span class="n">cov</span> <span class="o">=</span> <span class="o">-</span> <span class="n">n</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:],</span> <span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">p</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">d</span><span class="p">])</span>
             <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">cov</span><span class="p">,</span> <span class="n">n</span> <span class="o">*</span> <span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">p</span><span class="p">))</span>
             <span class="n">mean</span> <span class="o">=</span> <span class="n">n</span> <span class="o">*</span> <span class="n">p</span>
             <span class="k">return</span> <span class="n">mean</span><span class="p">,</span> <span class="n">cov</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: moments2return must be &quot;m&quot;, &quot;v&quot; or &quot;mv&quot;.&#39;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: moments2return must be &quot;number_of_variables&quot;, &quot;v&quot; or &quot;mv&quot;.&#39;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="JointInd"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.JointInd">[docs]</a><span class="k">class</span> <span class="nc">JointInd</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
@@ -1551,7 +1551,7 @@
 <span class="sd">    **Input:**</span>
 
 <span class="sd">    * **theta** (`float`):</span>
-<span class="sd">        Parameter of the copula, real number in R\{0}.</span>
+<span class="sd">        Parameter of the copula, real number in correlation_function\{0}.</span>
 
 <span class="sd">    This copula possesses the following methods:</span>
 
@@ -1562,7 +1562,7 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
         <span class="c1"># Check the input copula_params</span>
         <span class="k">if</span> <span class="n">theta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">((</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)))</span> <span class="ow">or</span> <span class="p">(</span><span class="n">theta</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input theta should be a float in R\</span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input theta should be a float in correlation_function\</span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">theta</span><span class="o">=</span><span class="n">theta</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">evaluate_cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unif</span><span class="p">):</span>
@@ -2518,7 +2518,7 @@
 
     <span class="k">elif</span> <span class="n">dist_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;binomial&#39;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;n&#39;</span><span class="p">:</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;p&#39;</span><span class="p">:</span> <span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;number_of_dimensions&#39;</span><span class="p">:</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;p&#39;</span><span class="p">:</span> <span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span>
         <span class="k">return</span> <span class="n">stats</span><span class="o">.</span><span class="n">binom</span><span class="p">,</span> <span class="n">kwargs</span>
 
     <span class="k">elif</span> <span class="n">dist_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;beta&#39;</span><span class="p">:</span>
