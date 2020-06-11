@@ -35,7 +35,33 @@
             
   <div class="section" id="stochasticprocess">
 <span id="stochastic-process"></span><h1>StochasticProcess<a class="headerlink" href="#stochasticprocess" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
+<p>The StochasticProcess module consists of classes and functions to generate samples of Stochastic Processes from Power
+Spectrum, Bispectrums and Autocorrelation Functions. The generated Stochastic Processes can be transformed to other
+marginal distributions.</p>
+<div class="section" id="srm">
+<h2>SRM<a class="headerlink" href="#srm" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">SRM</span></code> is a class for generating Stochastic Processes by Spectral Representation2442Method from a prescribed Power
+Spectral Density Function.</p>
+</div>
+<div class="section" id="bsrm">
+<h2>BSRM<a class="headerlink" href="#bsrm" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">BSRM</span></code> is a class for generating Stochastic Processes by BiSpectral Representa-2492tion Method from a prescribed Power
+Spectral Density Function and a Bispectral Density Function.</p>
+</div>
+<div class="section" id="kle">
+<h2>KLE<a class="headerlink" href="#kle" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">KLE</span></code> is a class for generating Stochastic Processes by Karhunen Louve Expan-2541sion from a prescribed
+Autocorrelation Function.</p>
+</div>
+<div class="section" id="translation">
+<h2>Translation<a class="headerlink" href="#translation" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Translation</span></code> is a class for translating Gaussian Stochastic Processes to Non-Gaussian Stochastic Processes. This
+class returns the non-Gaussian samples along with the distorted Autocorrelated Function.</p>
+</div>
+<div class="section" id="inversetranslation">
+<h2>InverseTranslation<a class="headerlink" href="#inversetranslation" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">InverseTranslation</span></code> is a class for translating Non-Gaussian Stochastic Processes back to Standard Gaussian Stochastic
+Processes. This class returns the non-Gaussian samples along with the distorted Autocorrelated Function.</p>
 </div>
 </div>
 
@@ -76,7 +102,12 @@
 <li class="toctree-l1"><a class="reference internal" href="distributions.html">Distributions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="samplemethods.html">SampleMethods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="transformations.html">Transformations</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">StochasticProcess</a><ul class="simple">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">StochasticProcess</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#srm">SRM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bsrm">BSRM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kle">KLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#translation">Translation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inversetranslation">InverseTranslation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="surrogates.html">Surrogates</a></li>

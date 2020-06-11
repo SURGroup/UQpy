@@ -105,7 +105,7 @@ Class Descriptions
 AKMCS
 -----
 
-The ``AKMCS`` class generates random samples from a specified probability distribution(s) using Adaptive Kriging-Monte Carlo Sampling(AKMCS).
+The ``AKMCS`` class generates samples adaptively based on a learning function using Adaptive Kriging-Monte Carlo Sampling(AKMCS). This class creates a learning set using ``LHS`` class and predicts model evaluation using ``Kriging`` surrogate. To initialize this class, the user needs to provide an initial set of samples, distribution object to generate learning set of samples, the ``RunModel`` object for model execution, a ``Kriging`` object, and sets the relevant parameters.
 
 Adding New Learning Function
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

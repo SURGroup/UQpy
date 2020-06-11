@@ -731,11 +731,7 @@ class STS:
 
         self.dist_object = dist_object
 
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        self.random_state = check_random_state(random_state)
 
         # Check sampling criterion
         if self.sts_criterion not in ['random', 'centered']:
@@ -795,11 +791,7 @@ class STS:
             print('UQpy: Running Stratified Sampling...')
 
         if random_state is not None:
-            self.random_state = random_state
-            if isinstance(self.random_state, int):
-                self.random_state = np.random.RandomState(self.random_state)
-            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            self.random_state = check_random_state(random_state)
 
         if self.stype == 'Rectangular':
             if self.sts_design is None:
@@ -1064,13 +1056,7 @@ class RSS:
         self.nexist = 0
         self.n_add = n_add
 
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif isinstance(self.random_state, type(None)):
-            self.random_state = np.random.RandomState()
-        elif not isinstance(self.random_state, np.random.RandomState):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        self.random_state = check_random_state(random_state)
 
         if self.cell == 'Voronoi':
             self.mesh = []
@@ -1734,9 +1720,6 @@ class Simplex:
 
     """
 
-    # Authors: Dimitris G.Giovanis
-    # Last modified: 11/28/2018 by Mohit S. Chauhan
-
     def __init__(self, nodes=None, nsamples=None, random_state=None):
         self.nodes = np.atleast_2d(nodes)
         self.nsamples = nsamples
@@ -1744,11 +1727,7 @@ class Simplex:
         if self.nodes.shape[0] != self.nodes.shape[1] + 1:
             raise NotImplementedError("UQpy: Size of simplex (nodes) is not consistent.")
 
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        self.random_state = check_random_state(random_state)
 
         if nsamples is not None:
             if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
