@@ -1,18 +1,32 @@
-"""This module contains functionality for all the stochastic process generation supported by UQpy."""
+"""
+The module currently contains the following classes:
 
-from UQpy.Utilities import *
-from UQpy.Distributions import *
+* ``SRM``: Class for simulation of Gaussian stochastic processes and random fields using the Spectral Representation
+  Method.
+* ``BSRM``: Class for simulation of third-order non-Gaussian stochastic processes and random fields using the
+  Bispectral Representation Method.
+* ``KLE``: Class for simulation of stochastic processes using the Karhunen-Loeve Expansion.
+* ``Translation``: Class for transforming a Gaussian stochastic process to a non-Gaussian stochastic process with
+  prescribed marginal probability distribution.
+* ``InverseTranslation``: Call for identifying an underlying Gaussian stochastic process for a non-Gaussian process with
+  prescribed marginal probability distribution and autocorrelation function / power spectrum.
+"""
+
+import itertools
+
 from scipy.linalg import sqrtm
 from scipy.stats import norm
-import itertools
+
+from UQpy.Distributions import *
+from UQpy.Utilities import *
 
 
 class SRM:
     """
-    A class to simulate Stochastic Processes from a given power spectrum density based on the Spectral Representation
-    Method. This class can simulate both uni-variate and multi-variate multi-dimensional Stochastic Processes. Uses
-    Singular Value Decomposition as opposed to Cholesky Decomposition to be robust with near-Positive Definite
-    multi-dimensional Power Spectra.
+    A class to simulate stochastic processes from a given power spectrum density using the Spectral Representation
+    Method. This class can simulate uni-variate, multi-variate, and multi-dimensional stochastic processes. The class
+    uses Singular Value Decomposition, as opposed to Cholesky Decomposition, to ensure robust, near-positive definite
+    multi-dimensional power spectra.
 
     **Input:**
 
@@ -23,32 +37,32 @@ class SRM:
         ``SRM`` object is created but samples are not generated.
 
     * **power_spectrum** (`list or numpy.ndarray`):
-        The prescribed power spectrum.
+        The discretized power spectrum.
 
-    * **time_duration** (`list or numpy.ndarray`):
-        List of length of time discretizations across dimensions.
+        For uni-variate, one-dimensional processes `power_spectrum` will be `list` or `ndarray` of length
+        `number_frequency_intervals`.
 
-        The length of the list needs to be the same as the number of dimensions.
+        For multi-variate, one-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size
+        (`number_of_variables`, `number_of_variables`, `number_frequency_intervals`).
+
+        For uni-variate, multi-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size
+        (`number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`)
+
+        For multi-variate, multi-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size
+        (`number_of_variables`, `number_of_variables`, `number_frequency_intervals[0]`, ...
+        `number_frequency_intervals[number_of_dimensions-1]``).
+
+    * **time_interval** (`list or numpy.ndarray`):
+        Length of time discretizations (:math:`\Delta t`) for each dimension of size `number_of_dimensions`.
 
     * **frequency_interval** (`list or numpy.ndarray`):
-        List of length of frequency discretizations across dimensions.
-
-        The length of the list needs to be the same as the number of dimensions.
+        Length of frequency discretizations (:math:`\Delta \omega`) for each dimension of size `number_of_dimensions`.
 
     * **number_frequency_intervals** (`list or numpy.ndarray`):
-        List of number of frequency discretizations across dimensions.
-
-        The length of the list needs to be the same as the number of dimensions.
+        Number of frequency discretizations for each dimension of size `number_of_dimensions`.
 
     * **number_time_intervals** (`list or numpy.ndarray`):
-        List of number of time discretizations across dimensions.
-
-        The length of the list needs to be the same as the number of dimensions.
-
-    * **case** (`string`):
-        The type of simulation - 'uni' for uni-variate and 'multi' for multi-variate.
-
-        The default value of case variable if 'uni'.
+        Number of time discretizations for each dimensions of size `number_of_dimensions`.
 
     * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
         Random seed used to initialize the pseudo-random number generator. Default is None.
@@ -64,8 +78,8 @@ class SRM:
     * **samples** (`ndarray`):
         Generated samples.
 
-        The shape of the samples is determined by the number of dimensions and number of variables of the stochastic
-        process.
+        The shape of the samples is (`nsamples`, `number_of_variables`, `number_time_intervals[0]`, ...,
+        `number_time_intervals[number_of_dimensions-1]`)
 
     * **number_of_dimensions** (`int`):
         The dimensionality of the stochastic process.
@@ -76,8 +90,8 @@ class SRM:
     * **phi** (`ndarray`):
         The random phase angles used in the simulation of the stochastic process.
 
-        The shape of the phase angles is determined by the number of dimensions and number of variables of the
-        stochastic process.
+        The shape of the phase angles (`nsamples`, `number_of_variables`, `number_frequency_intervals[0]`, ...,
+        `number_frequency_intervals[number_of_dimensions-1]`)
 
     **Methods**
 
@@ -111,6 +125,8 @@ class SRM:
         self.number_of_dimensions = None
         self.phi = None
 
+        # TODO: Change time_duration to time_interval
+        # TODO: Remove case parameters
         if self.case == 'uni':
             self.number_of_dimensions = len(self.power_spectrum.shape)
         elif self.case == 'multi':
@@ -126,11 +142,11 @@ class SRM:
         Execute the random sampling in the ``SRM`` class.
 
         The ``run`` method is the function that performs random sampling in the ``SRM`` class. If `nsamples` is
-        provided, the ``run`` method is automatically called when the ``SRM`` object is defined. The user may also call
+        provided when the ``SRM`` object is defined, the ``run`` method is automatically called. The user may also call
         the ``run`` method directly to generate samples. The ``run`` method of the ``SRM`` class can be invoked many
         times and each time the generated samples are appended to the existing samples.
 
-        ** Input:**
+        **Input:**
 
         * **nsamples** (`int`):
             Number of samples of the stochastic process to be simulated.
@@ -209,10 +225,9 @@ class SRM:
 
 class BSRM:
     """
-    A class to simulate Stochastic Processes from a given power spectrum and bispectrum density based on the 3-rd order
-    Spectral Representation Method.This class can simulate both uni-variate and multi-variate multi-dimensional
-    Stochastic Processes. This class uses Singular Value Decomposition as opposed to Cholesky Decomposition to be robust
-    with near-Positive Definite multi-dimensional Power Spectra.
+    A class to simulate non-Gaussian stochastic processes from a given power spectrum and bispectrum based on the 3-rd
+    order Spectral Representation Method. This class can simulate uni-variate, one-dimensional and multi-dimensional
+    stochastic processes.
 
     **Input:**
 
@@ -223,35 +238,35 @@ class BSRM:
         ``BSRM`` object is created but samples are not generated.
 
     * **power_spectrum** (`list or numpy.ndarray`):
-        The prescribed power spectrum.
+        The discretized power spectrum.
+
+        For uni-variate, one-dimensional processes `power_spectrum` will be `list` or `ndarray` of length
+        `number_frequency_intervals`.
+
+        For uni-variate, multi-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size
+        (`number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`)
 
     * **bispectrum** (`list or numpy.ndarray`):
         The prescribed bispectrum.
 
-    * **time_duration** (`list or numpy.ndarray`):
-        List of length of time discretizations across dimensions.
+        For uni-variate, one-dimensional processes, `bispectrum` will be a `list` or `ndarray` of size
+        (`number_frequency_intervals`, `number_frequency_intervals`)
 
-        The length of the list needs to be the same as the number of dimensions.
+        For uni-variate, multi-dimensional processes, `bispectrum` will be a `list` or `ndarray` of size
+        (`number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`,
+        `number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`)
+
+    * **time_interval** (`list or numpy.ndarray`):
+        Length of time discretizations (:math:`\Delta t`) for each dimension of size `number_of_dimensions`.
 
     * **frequency_interval** (`list or numpy.ndarray`):
-        List of length of frequency discretizations across dimensions.
-
-        The length of the list needs to be the same as the number of dimensions.
+        Length of frequency discretizations (:math:`\Delta \omega`) for each dimension of size `number_of_dimensions`.
 
     * **number_frequency_intervals** (`list or numpy.ndarray`):
-        List of number of frequency discretizations across dimensions.
-
-        The length of the list needs to be the same as the number of dimensions.
+        Number of frequency discretizations for each dimension of size `number_of_dimensions`.
 
     * **number_time_intervals** (`list or numpy.ndarray`):
-        List of number of time discretizations across dimensions.
-
-        The length of the list needs to be the same as the number of dimensions.
-
-    * **case** (`string`):
-        The type of simulation - 'uni' for uni-variate and 'multi' for multi-variate.
-
-        The default value of case variable if 'uni'.
+        Number of time discretizations for each dimensions of size `number_of_dimensions`.
 
     * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
         Random seed used to initialize the pseudo-random number generator. Default is None.
@@ -267,8 +282,8 @@ class BSRM:
     * **samples** (`ndarray`):
         Generated samples.
 
-        The shape of the samples is determined by the number of dimensions and number of variables of the stochastic
-        process.
+        The shape of the samples is (`nsamples`, `number_of_variables`, `number_time_intervals[0]`, ...,
+        `number_time_intervals[number_of_dimensions-1]`)
 
     * **number_of_dimensions** (`int`):
         The dimensionality of the stochastic process.
@@ -279,21 +294,20 @@ class BSRM:
     * **phi** (`ndarray`):
         The random phase angles used in the simulation of the stochastic process.
 
-        The shape of the phase angles is determined by the number of dimensions and number of variables of the
-        stochastic process.
+        The shape of the phase angles (`nsamples`, `number_of_variables`, `number_frequency_intervals[0]`, ...,
+        `number_frequency_intervals[number_of_dimensions-1]`)
 
     * **b_ampl** (`ndarray`):
-        The amplitude of the Bispectral density.
+        The amplitude of the bispectrum.
 
     * **b_real** (`ndarray`):
-        The real part of the Bispectral density.
+        The real part of the bispectrum.
 
     * **b_imag** (`ndarray`):
-        The imaginary part of the Bispectral density.
+        The imaginary part of the bispectrum.
 
     * **biphase** (`ndarray`):
-        The biphase values of the Bispectral density. THe biphase if defines as the tan inverse of the imaginary part to
-        the real part of the bispectral density.
+        The biphase values of the bispectrum.
 
     * **pure_power_spectrum** (`ndarray`):
         The pure part of the power spectrum.
@@ -341,6 +355,8 @@ class BSRM:
         self.case = case
         self.verbose = verbose
 
+        # TODO: Remve case parameter
+        # TODO: Change time_duration parameter to time_interval
         if self.case == 'uni':
             self.number_of_dimensions = len(self.power_spectrum.shape)
             self._compute_bicoherence_uni()
