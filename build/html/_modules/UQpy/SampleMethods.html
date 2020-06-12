@@ -780,11 +780,42 @@
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">stype</span> <span class="o">==</span> <span class="s1">&#39;Voronoi&#39;</span> <span class="ow">and</span> <span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sts_design</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sts_design</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Execute stratified sampling</span>
-<span class="sd">        This is an instance method that runs stratified sampling. It is automatically called when the STS class is</span>
-<span class="sd">        instantiated.</span>
+<span class="sd">        Execute the random sampling in the ``STS`` class.</span>
+
+<span class="sd">        The ``run`` method is the function that performs random sampling in the ``STS`` class. If `nsamples`,</span>
+<span class="sd">        `sts_design` or `input_file` is provided, the ``run`` method is automatically called when the ``STS`` object is</span>
+<span class="sd">        defined. The user may also call the ``run`` method directly to generate samples. The ``run`` method of the</span>
+<span class="sd">        ``STS`` class can be invoked many times and each time the generated samples are appended to the existing samples.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **nsamples** (`int`):</span>
+<span class="sd">                Number of samples to be drawn from each distribution.</span>
+<span class="sd">                If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the</span>
+<span class="sd">                existing samples.</span>
+
+<span class="sd">        * **sts_design** (`list`):</span>
+<span class="sd">                List of integers specifiying the number of strata in each dimension. Required for rectangular</span>
+<span class="sd">                stratification.</span>
+
+<span class="sd">        * **input_file** (`str`):</span>
+<span class="sd">                File path to input file specifying stratum origins and stratum widths.</span>
+
+<span class="sd">                Default: None.</span>
+
+<span class="sd">        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):</span>
+<span class="sd">                Random seed used to initialize the pseudo-random number generator. If an integer is provided, this sets</span>
+<span class="sd">                the seed for an object of ``numpy.random.RandomState``. Otherwise, the object itself can be passed</span>
+<span class="sd">                directly.</span>
+
+<span class="sd">                Default is None.</span>
+
+<span class="sd">        **Output/Return:**</span>
+
+<span class="sd">        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``STS``</span>
+<span class="sd">        class.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sts_design</span> <span class="o">=</span> <span class="n">sts_design</span>
@@ -792,6 +823,13 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Running Stratified Sampling...&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">random_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stype</span> <span class="o">==</span> <span class="s1">&#39;Rectangular&#39;</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sts_design</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

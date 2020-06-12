@@ -669,7 +669,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># If the Python model is not vectorized and accepts only a single sample.</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nexist</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nexist</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsim</span><span class="p">):</span>
-                <span class="n">sample_to_send</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">sample_to_send</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">python_kwargs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">model_output</span> <span class="o">=</span> <span class="n">model_object</span><span class="p">(</span><span class="n">sample_to_send</span><span class="p">)</span>
