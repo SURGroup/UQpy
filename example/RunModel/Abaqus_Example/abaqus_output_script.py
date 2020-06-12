@@ -29,7 +29,7 @@ def ODBAnalysis():
     disps = xy1.data
 
     outfilename = 'time_temp_disp_data.csv'
-    outfile = open(outfilename, 'w')
+    outfile = open(outfilename, 'frequency')
     for i in range(len(disps)):
         outfile.write('%10.6f, %10.6f, %10.6f \n' % (disps[i][0] - 1, temps[i][1], disps[i][1] - disps[0][1]))
     outfile.close()

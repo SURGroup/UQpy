@@ -24,8 +24,8 @@ def extract_disp_temp_output(index):
                     os.remove(os.path.join(dir_name, item))
 
             # Compute the maximum allowable displacement
-            length_of_beam = 1  # in m
-            depth_of_beam = 0.035  # in m
+            length_of_beam = 1  # in number_of_variables
+            depth_of_beam = 0.035  # in number_of_variables
             max_allowable_disp = length_of_beam ** 2 / (400 * depth_of_beam)
 
             # Obtain the maximum midpoint displacement

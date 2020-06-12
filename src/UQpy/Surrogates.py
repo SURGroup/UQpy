@@ -15,12 +15,13 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""
-This module contains functionality for all the surrogate methods supported in UQpy.
+"""This module contains functionality for all the surrogate methods supported in UQpy.
 
-* SROM: Estimate a discrete approximation for a continuous random variable using Stochastic Reduced Order Model.
+The module currently contains the following classes:
 
-* Kriging: Generates an approximates surrogate model using Kriging.
+- ``SROM``: Class to estimate a discrete approximation for a continuous random variable using Stochastic Reduced Order
+            Model.
+- ``Kriging``: Class to generate an approximate surrogate model using Kriging.
 """
 
 from UQpy.Distributions import *
@@ -38,16 +39,7 @@ class SROM:
     Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random
     quantity.
 
-    SROM generates a discrete approximation of continuous random variables. The probabilities/weights are
-    considered to be the parameters for the SROM and they can be obtained by minimizing the error between the
-    marginal distributions, first and second order moments about origin and correlation between random variables.
-
-    **References:**
-
-    1. M. Grigoriu, "Reduced order models for random functions. Application to stochastic problems",
-       Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.
-
-    **Input:**
+    **Inputs:**
 
     * **samples** (`ndarray`):
             An array/list of samples corresponding to each random variables.
@@ -107,6 +99,8 @@ class SROM:
     * **sample_weights** (`ndarray`):
             The probabilities/weights defining discrete approximation of continuous random variables.
 
+    **Methods:**
+
     """
 
     def __init__(self, samples=None, target_dist_object=None, moments=None, weights_errors=None,
@@ -156,6 +150,7 @@ class SROM:
     def run_srom(self):
         """
         Runs stochastic reduced order model.
+
         This is an instance method that runs SROM. It is automatically called when the SROM class is instantiated.
         """
         from scipy import optimize
@@ -310,19 +305,10 @@ class SROM:
 
 class Kriging:
     """
-    Kriging generates an approximate surrogate model to predict the function value at unknown/new samples.
+    Kriging generates an approximate surrogate model to predict the function value at unknown/new samples, see ([2]_)
+    for detailed explanation.
 
-    A Surrogate is generated using training data and information about regression and correlation model. A Maximum
-    Likelihood Estimator (MLE) is computed for hyperparameter of correlation model. This class create a method,
-    i.e. Krig.interpolate. This functions estimates the approximate functional value and mean square error at
-    unknown/new samples.
-
-    **References:**
-
-    1. S.N. Lophaven , Hans Bruun Nielsen , J. Søndergaard, "DACE -- A MATLAB Kriging Toolbox", Informatics and
-       Mathematical Modelling, Version 2.0, 2002.
-
-    **Input:**
+    **Inputs:**
 
     * **reg_model** (`str` or `function`):
             Regression model contains the basis function, which defines the trend of the model.
@@ -379,13 +365,6 @@ class Kriging:
             Inverse of cholesky decomposition of the Correlation matrix
 
     **Methods:**
-
-    * **predict** (`function`):
-            This methods returns the model estimate and standard deviation (if return_std is 'True') of estimate at
-            a new samples point.
-
-    * **jacobian** (`function`):
-            This methods returns the gradient of model estimate at a new samples point.
 
     """
 
@@ -460,6 +439,26 @@ class Kriging:
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
     def fit(self, samples, values):
+        """
+        This method fit the surrogate model using the samples and values parameter.
+
+        User can run this method multiple time after initiating the ``Kriging`` class object. This method update the
+        samples and values parameter of ``Kriging`` object. This method changes `nopt` parameter to 1 after first run,
+        and then uses `corr_model_params` from previous run as the starting point for MLE problem.
+
+        **Inputs:**
+
+        * **samples** (`ndarray`):
+                `ndarray` containing the training points.
+
+        * **values** (`ndarray`):
+                `ndarray` containing the model evaluations at the training points.
+
+        **Output/Return:**
+
+        The ``fit`` method has no returns, although it creates the `beta`, `err_var` and `C_inv` attributes of the
+        ``Kriging`` class.
+        """
         from scipy.linalg import cholesky
 
         if self.verbose:
@@ -591,16 +590,27 @@ class Kriging:
 
     def predict(self, x, return_std=False):
         """
-        Predict the function value at new points
+        Predict the function value at new points.
 
         This method evaluates the regression and correlation model at new sample point. Then, it predicts the function
         value and mean square error using regression coefficients and training data.
-        **Input:**
-        :param x: nD-array (2 dimensional) corresponding to the new points.
-        :type  x: list or array
 
-        :param return_std: Indicator to estimate standard deviation.
-        :type return_std: boolean
+        **Inputs:**
+
+        * **x** (`list` or `numpy array`):
+                nD-array (2 dimensional) corresponding to the new points.
+
+        * **return_std** (`list` or `numpy array`):
+                Indicator to estimate standard deviation.
+
+        **Outputs:**
+
+        * **f_x** (`numpy array`):
+                A 1-D/2-D array of predicted value at the new points.
+
+        * **std_f_x (`numpy array`):
+                A 1-D/2-D array of standard deviation of predicted value at the new points.
+
         """
         x = np.atleast_2d(x)
         if self.normalize:
@@ -633,13 +643,21 @@ class Kriging:
 
     def jacobian(self, x):
         """
-        Predict the gradient of the function at new points
+        Predict the gradient of the function at new points.
 
         This method evaluates the regression and correlation model at new sample point. Then, it predicts the gradient
         using regression coefficients and training data.
+
         **Input:**
-        :param x: nD-array (2 dimensional) corresponding to the new points.
-        :type  x: list or array
+
+        * **x** (`list` or `numpy array`):
+                nD-array (2 dimensional) corresponding to the new points.
+
+        **Output:**
+
+        * **grad_x** (`list` or `numpy array`):
+                nD-array (1/2 dimensional) of gradient of surrogate model evaluated at the new points.
+
         """
         x = np.atleast_2d(x)
         if self.normalize:
@@ -662,14 +680,20 @@ class Kriging:
     @staticmethod
     def regress(model):
         """
-        Defines a function to evaluate basis functions
+        Defines a function to evaluate basis functions.
 
         This method defines a function based on the choice of regression model, which computes the basis functions
         for provided samples.
+
         **Input:**
 
-        :param model: Name of the regression model.
-        :type  model: str
+        * **model** (`str`):
+                Name of the correlation model.
+
+        **Output:**
+
+        * **c** (`function`):
+                Returns a callable function, which returns the correlation matrix.
 
         """
         def r(s):
@@ -712,17 +736,19 @@ class Kriging:
     @staticmethod
     def corr(model):
         """
-        Defines a function to compute correlation matrix
+        Defines a function to compute correlation matrix.
+
         This method defines a function based on the choice of correlation model, which computes the correlation matrix
         for provided samples.
+
         **Input:**
 
-        :param model: Name of the correlation model.
-        :type  model: str
+        * **model** (`str`):
+                Name of the correlation model.
 
-        ** Methods:**
+        **Output:**
 
-        * **c** (`callable`):
+        * **c** (`function`):
                 Returns a callable function, which returns the correlation matrix.
 
         """

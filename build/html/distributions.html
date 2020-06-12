@@ -7,12 +7,12 @@
     <title>Distributions &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="SampleMethods" href="samplemethods.html" />
@@ -224,7 +224,7 @@ object itself can be passed directly.</p>
 </li>
 </ul>
 </dd>
-<dt><strong>moments</strong> <em>(moments2return=’mvsk’)</em></dt><dd><p>Computes the mean ‘m’, variance/covariance (‘v’), skewness (‘s’) and/or kurtosis (‘k’) of the distribution.</p>
+<dt><strong>moments</strong> <em>(moments2return=’mvsk’)</em></dt><dd><p>Computes the mean ‘number_of_variables’, variance/covariance (‘v’), skewness (‘s’) and/or kurtosis (‘k’) of the distribution.</p>
 <p>For a univariate distribution, mean, variance, skewness and kurtosis are returned. For a multivariate
 distribution, the mean vector, covariance and vectors of marginal skewness and marginal kurtosis are returned.</p>
 <p><strong>Inputs:</strong></p>
@@ -854,14 +854,14 @@ Note that a and b are defined over the domain of the standard normal.</p>
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Binomial</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">p</em>, <em class="sig-param">loc=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Binomial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Binomial" title="Permalink to this definition">¶</a></dt>
 <dd><p>Binomial distribution having probability mass function:</p>
 <div class="math notranslate nohighlight">
-\[f(x) = {n \choose x} p^x(1-p)^{n-x}\]</div>
-<p>for <span class="math notranslate nohighlight">\(x\in\{0, 1, 2, ..., n\}\)</span>.</p>
+\[f(x) = {number_of_dimensions \choose x} p^x(1-p)^{number_of_dimensions-x}\]</div>
+<p>for <span class="math notranslate nohighlight">\(x\inumber_of_dimensions\{0, 1, 2, ..., number_of_dimensions\}\)</span>.</p>
 <p>In this standard form <cite>(loc=0)</cite>. Use <cite>loc</cite> to shift the distribution. Specifically, this is equivalent to computing
 <span class="math notranslate nohighlight">\(f(y)\)</span> where <span class="math notranslate nohighlight">\(y=x-loc\)</span>.</p>
 <p><strong>Inputs:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>n</strong> (<cite>int</cite>):</dt><dd><p>number of trials, integer &gt;= 0</p>
+<dt><strong>number_of_dimensions</strong> (<cite>int</cite>):</dt><dd><p>number of trials, integer &gt;= 0</p>
 </dd>
 </dl>
 </li>
@@ -929,12 +929,12 @@ Note that a and b are defined over the domain of the standard normal.</p>
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Distributions.</code><code class="sig-name descname">Multinomial</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">p</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Distributions.html#Multinomial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Distributions.Multinomial" title="Permalink to this definition">¶</a></dt>
 <dd><p>Multinomial distribution having probability mass function</p>
 <div class="math notranslate nohighlight">
-\[f(x) = \dfrac{n!}{x_1!\dots x_k!}p_1^{x_1}\dots p_k^{x_k}\]</div>
-<p>for <span class="math notranslate nohighlight">\(x=\{x_1,\dots,x_k\}\)</span> where each <span class="math notranslate nohighlight">\(x_i\)</span> is a non-negative integer and <span class="math notranslate nohighlight">\(\sum_i x_i = n\)</span>.</p>
+\[f(x) = \dfrac{number_of_dimensions!}{x_1!\dots x_k!}p_1^{x_1}\dots p_k^{x_k}\]</div>
+<p>for <span class="math notranslate nohighlight">\(x=\{x_1,\dots,x_k\}\)</span> where each <span class="math notranslate nohighlight">\(x_i\)</span> is a non-negative integer and <span class="math notranslate nohighlight">\(\sum_i x_i = number_of_dimensions\)</span>.</p>
 <p><strong>Inputs:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>n</strong> (<cite>int</cite>):</dt><dd><p>number of trials</p>
+<dt><strong>number_of_dimensions</strong> (<cite>int</cite>):</dt><dd><p>number of trials</p>
 </dd>
 </dl>
 </li>
@@ -1179,7 +1179,7 @@ checks that marginals is of length 2 and continuous, and raise an error if that 
 <p><strong>Input:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>theta</strong> (<cite>float</cite>):</dt><dd><p>Parameter of the copula, real number in R{0}.</p>
+<dt><strong>theta</strong> (<cite>float</cite>):</dt><dd><p>Parameter of the copula, real number in correlation_function{0}.</p>
 </dd>
 </dl>
 </li>
@@ -1279,7 +1279,7 @@ checks that marginals is of length 2 and continuous, and raise an error if that 
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1288,7 +1288,7 @@ checks that marginals is of length 2 and continuous, and raise an error if that 
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
