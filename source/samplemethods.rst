@@ -44,7 +44,93 @@ Class Descriptions
 .. autoclass:: UQpy.SampleMethods.LHS
 	:members:
 
-	
+
+STS
+----
+
+The ``STS`` class generates random samples from a specified probability distribution(s) using Stratified sampling. It is a variance reduction sampling technique. It aims to distribute random samples on the complete sample space. The sample space is divided into a set of space-filling and disjoint regions, called strata and samples are generated inside each strata.
+
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: UQpy.SampleMethods.STS
+	:members:
+
+
+Strata
+----
+
+The `Strata` class is a supporting class for stratified sampling and its variants. The class defines a rectilinear stratification of the unit hypercube. Strata are defined by specifying a stratum origin as the coordinates of the stratum corner nearest to the global origin and a stratum width for each dimension.
+
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: UQpy.SampleMethods.Strata
+	:members:
+
+
+RSS
+----
+
+The ``RSS`` class generated samples randomly or uses gradient-based adaptive approach to reduce the variance of output statistical estimates. The method used to generate samples is define by `runmodel_object` parameter. If, it is not defined then RSS class executes Refined Stratified sampling, otherwise Gradient Enhanced Refined Stratified sampling is executed. Refined Stratified sampling randomly selects the stratum to refine from the strata/cells with maximum weight. Whereas, Gradient Enhaced Refined Stratified sampling selects the strata/cells with maximum stratum variance. This class divides the sample domain using either rectangular stratification or voronoi cells, this is define by the `sample_object` parameter. In case of rectangular stratification, selected strata is divided along the maximum width to define new strata. In case of Voronoi cells, the new sample is drawn from a sub-simplex, which is used for refinement.
+
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: UQpy.SampleMethods.RSS
+	:members:
+
+
+Simplex
+-------
+
+The ``Simplex`` class generates uniformly distributed sample inside a simplex, whose coordinates are expressed by :math:`\zeta_k` and :math:`n_d` is the dimension. First, this class generates :math:`n_d` independent uniform random variables on [0, 1], i.e. :math:`r_q`, then compute samples inside simplex using following equation:
+
+.. math:: \mathbf{M_{n_d}} = \zeta_0 + \sum_{i=1}^{n_d} \Big{[}\prod_{j=1}^{i} r_{n_d-j+1}^{\frac{1}{n_d-j+1}}\Big{]}(\zeta_i - \zeta_{i-1})
+
+The :math:`M_{n_d}` is :math:`n_d` dimensional array defining the coordinates of new sample.
+
+.. image:: _static/SampleMethods_Simplex.png
+   :scale: 50 %
+   :alt: Randomly generated point inside a 2-D simplex
+   :align: center
+
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: UQpy.SampleMethods.Simplex
+	:members:
+
+
+AKMCS
+-----
+
+The ``AKMCS`` class generates samples adaptively based on a learning function using Adaptive Kriging-Monte Carlo Sampling(AKMCS). This class creates a learning set using ``LHS`` class and predicts model evaluation using ``Kriging`` surrogate. To initialize this class, the user needs to provide an initial set of samples, distribution object to generate learning set of samples, the ``RunModel`` object for model execution, a ``Kriging`` object, and sets the relevant parameters.
+
+Adding New Learning Function
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``AKMCS`` class offers a variety of learning function to generate samples adaptively. These are specified by the `learning_function` parameter (i.e. 'U-Function', 'Weighted-U Function', 'Expected Feasibility Function', 'Expected Improvement Function' and 'Expected Global Improvement Fit'). However, adding a new learning function is straightforward. This is done by creating a new method that contains the algorithm for selecting a new samples. This method takes as input the surrogate model and randomly generated monte carlo samples, and returns a set of samples that are selected according to the user's desired learning function. The output of this function should be a numpy array of samples and a boolean indicating the class to continue or stop. The numpy array of samples should be a two-dimensional array with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined learning function is given below:
+
+
+>>> def u_function(surr, pop):
+>>> 	g, sig = surr(pop, True)
+>>> 	g = g.reshape([pop.shape[0], 1])
+>>> 	sig = sig.reshape([pop.shape[0], 1])
+>>> 	u = abs(g) / sig
+>>>     rows = u[:, 0].argsort()[:1]
+>>>     indicator = False
+>>>     if min(u[:, 0]) >= 2:
+>>>         indicator = True
+>>> 	return pop[rows, :], indicator
+
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: UQpy.SampleMethods.AKMCS
+	:members:
+
+
 MCMC
 ----
 

@@ -19,7 +19,7 @@
 import os
 import sys
 from contextlib import contextmanager
-
+from UQpy.RunModel import RunModel
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
@@ -63,6 +63,140 @@ def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=Non
 #
 #     volume = np.sum(d_vol)
 #     return volume
+
+def gradient(runmodel_object=None, point=None, order='first', df_step=None):
+    """
+    A method to estimate the gradients (1st, 2nd, mixed) of a function using a finite difference scheme in the
+    standard normal space. First order gradients are calculated using central finite differences.
+
+    **Inputs:**
+
+    * **runmodel_object** (``RunModel`` object or a `callable` ):
+        The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.
+
+    * **point** (`ndarray`):
+        The point to evaluate the gradient with shape ``samples.shape=(1, dimension)
+
+    * **order** (`str`):
+        Order of the gradient. Available options: 'first', 'second', 'mixed'.
+
+        Default: 'First'.
+
+    * **df_step** (`float`):
+        Finite difference step.
+
+        Default: 0.001.
+
+    **Output/Returns:**
+
+    * **du_dj** (`ndarray`):
+        Vector of first-order gradients (if order = 'first').
+
+    * **d2u_dj** (`ndarray`):
+        Vector of second-order gradients (if order = 'second').
+
+    * **d2u_dij** (`ndarray`):
+        Vector of mixed gradients (if order = 'mixed').
+
+    """
+    point = np.atleast_2d(point)
+
+    dimension = point.shape[1]
+
+    if df_step is None:
+        df_step = [0.001] * dimension
+    elif isinstance(df_step, float):
+        df_step = [df_step] * dimension
+    elif isinstance(df_step, list):
+        if len(df_step) == 1:
+            df_step = [df_step[0]] * dimension
+
+    if not callable(runmodel_object) and not isinstance(runmodel_object, RunModel):
+        raise RuntimeError('A RunModel object or callable function must be provided as model.')
+
+    def func(m):
+        def func_eval(x):
+            if isinstance(m, RunModel):
+                m.run(samples=x, append_samples=False)
+                return np.array(m.qoi_list).flatten()
+            else:
+                return m(x).flatten()
+
+        return func_eval
+
+    f_eval = func(m=runmodel_object)
+
+    if order.lower() == 'first':
+        du_dj = np.zeros([point.shape[0], dimension])
+
+        for ii in range(dimension):
+            eps_i = df_step[ii]
+            u_i1_j = point.copy()
+            u_i1_j[:, ii] = u_i1_j[:, ii] + eps_i
+            u_1i_j = point.copy()
+            u_1i_j[:, ii] = u_1i_j[:, ii] - eps_i
+
+            qoi_plus = f_eval(u_i1_j)
+            qoi_minus = f_eval(u_1i_j)
+
+            du_dj[:, ii] = ((qoi_plus - qoi_minus) / (2 * eps_i))
+
+        return du_dj
+
+    elif order.lower() == 'second':
+        # print('Calculating second order derivatives..')
+        d2u_dj = np.zeros([point.shape[0], dimension])
+        for ii in range(dimension):
+            u_i1_j = point.copy()
+            u_i1_j[:, ii] = u_i1_j[:, ii] + df_step[ii]
+            u_1i_j = point.copy()
+            u_1i_j[:, ii] = u_1i_j[:, ii] - df_step[ii]
+
+            qoi_plus = f_eval(u_i1_j)
+            qoi = f_eval(point)
+            qoi_minus = f_eval(u_1i_j)
+
+            d2u_dj[:, ii] = ((qoi_plus - 2 * qoi + qoi_minus) / (df_step[ii] * df_step[ii]))
+
+        return d2u_dj
+
+    elif order.lower() == 'mixed':
+
+        import itertools
+        range_ = list(range(dimension))
+        d2u_dij = np.zeros([point.shape[0], int(dimension * (dimension - 1) / 2)])
+        count = 0
+        for i in itertools.combinations(range_, 2):
+            u_i1_j1 = point.copy()
+            u_i1_1j = point.copy()
+            u_1i_j1 = point.copy()
+            u_1i_1j = point.copy()
+
+            eps_i1_0 = df_step[i[0]]
+            eps_i1_1 = df_step[i[1]]
+
+            u_i1_j1[:, i[0]] += eps_i1_0
+            u_i1_j1[:, i[1]] += eps_i1_1
+
+            u_i1_1j[:, i[0]] += eps_i1_0
+            u_i1_1j[:, i[1]] -= eps_i1_1
+
+            u_1i_j1[:, i[0]] -= eps_i1_0
+            u_1i_j1[:, i[1]] += eps_i1_1
+
+            u_1i_1j[:, i[0]] -= eps_i1_0
+            u_1i_1j[:, i[1]] -= eps_i1_1
+
+            print('hi')
+            qoi_0 = f_eval(u_i1_j1)
+            qoi_1 = f_eval(u_i1_1j)
+            qoi_2 = f_eval(u_1i_j1)
+            qoi_3 = f_eval(u_1i_1j)
+
+            d2u_dij[:, count] = ((qoi_0 + qoi_3 - qoi_1 - qoi_2) / (4 * eps_i1_0 * eps_i1_1))
+
+            count += 1
+        return d2u_dij
 
 
 def voronoi_unit_hypercube(samples):
@@ -243,7 +377,7 @@ def correlation_distortion(marginal, rho_norm):
     return rho
 
 
-def itam(marginal, corr, beta, thresh1, thresh2):
+def itam_correlation(marginal, corr, beta, thresh1, thresh2):
 
     """
         Description:
@@ -530,7 +664,7 @@ def estimate_psd(samples, nt, t):
 
     return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
 
-
+# TODO: push them to UQpy.StochasticProcesses (static methods); renamed as Weiner Khintchine transform
 def S_to_R(S, w, t):
 
     """
@@ -1006,3 +1140,41 @@ def nn_coord(x, k):
     #idx = idx[0:k]
     #idx = idx[k+1:]
     return idx
+
+# TODO: rename function to correlation distortion
+# TODO: put doc_string around this
+def solve_single_integral(dist_object, rho):
+    if rho == 1.0:
+        rho = 0.999
+    n = 1024
+    zmax = 8
+    zmin = -zmax
+    points, weights = np.polynomial.legendre.leggauss(n)
+    points = - (0.5 * (points + 1) * (zmax - zmin) + zmin)
+    weights = weights * (0.5 * (zmax - zmin))
+
+    xi = np.tile(points, [n, 1])
+    xi = xi.flatten(order='F')
+    eta = np.tile(points, n)
+
+    first = np.tile(weights, n)
+    first = np.reshape(first, [n, n])
+    second = np.transpose(first)
+
+    weights2d = first * second
+    w2d = weights2d.flatten()
+    tmp_f_xi = dist_object.icdf(stats.norm.cdf(xi[:, np.newaxis]))
+    tmp_f_eta = dist_object.icdf(stats.norm.cdf(eta[:, np.newaxis]))
+    coef = tmp_f_xi * tmp_f_eta * w2d
+    rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
+    rho_non = (rho_non - dist_object.moments(moments2return='m') ** 2) / dist_object.moments(moments2return='v')
+    return rho_non
+
+def check_random_state(random_state):
+    return_rs = random_state
+    if isinstance(random_state, int):
+        return_rs = np.random.RandomState(random_state)
+    elif not isinstance(random_state, (type(None), np.random.RandomState)):
+        raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
+    return return_rs

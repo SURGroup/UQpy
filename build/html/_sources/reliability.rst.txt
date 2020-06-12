@@ -3,57 +3,80 @@
 Reliability
 ===========
 
-Reliability of a system refers to the assessment of its probability failure (i.e the structure no longer satisfies some performance measures), given the model uncertainty in the structural, environmental and load parameters. Given a vector of random variables :math:`\textbf{X}=\{X_1, X_2, \ldots, X_n\} \in \mathcal{D}_\textbf{X}\subset \mathbb{R}^n`, where :math:`\mathcal{D}` is the domain of interest and :math:`f_{\textbf{X}}(\textbf{x})` is its joint probability density function then, the probability that the system will fail is defined as
+Reliability of a system refers to the assessment of its probability of failure (i.e the system no longer satisfies some performance measures), given the model uncertainty in the structural, environmental and load parameters. Given a vector of random variables :math:`\textbf{X}=\{X_1, X_2, \ldots, X_n\} \in \mathcal{D}_\textbf{X}\subset \mathbb{R}^n`, where :math:`\mathcal{D}` is the domain of interest and :math:`f_{\textbf{X}}(\textbf{x})` is its joint probability density function then, the probability that the system will fail is defined as
 
 
 .. math:: P_f =\mathbb{P}(g(\textbf{X}) \leq 0) = \int_{D_f} f_{\textbf{X}}(\textbf{x})d\textbf{x} = \int_{\{\textbf{X}:g(\textbf{X})\leq 0 \}} f_{\textbf{X}}(\textbf{x})d\textbf{x}
 
 
-where :math:`g(\textbf{X})` is the so-called performance function. Formulation of reliability methods in ``UQpy`` is made on the standard normal space :math:`\textbf{U}\sim \mathcal{N}(\textbf{0}, \textbf{I}_n)` which means that a nonlinear isoprobabilistic  transformation from the generally non-normal parameter space :math:`\textbf{X}\sim f_{\textbf{X}}(\cdot)` is required (see module ``Tansformations``). The performance function in the standard normal space is denoted :math:`G(\textbf{U})`.
+where :math:`g(\textbf{X})` is the so-called performance function. The reliability problem is often formulated in the standard normal space :math:`\textbf{Y}\sim \mathcal{N}(\textbf{0}, \textbf{I}_n)`, which means that a nonlinear isoprobabilistic  transformation from the generally non-normal parameter space :math:`\textbf{X}\sim f_{\textbf{X}}(\cdot)` to the standard normal is required (see the ``Tansformations`` module). The performance function in the standard normal space is denoted :math:`G(\textbf{Y})`. ``UQpy`` does not require this transformation and can support reliability analysis for problems with arbitrarily distributed parameters.
 
-This module contains functionality for all the structural reliability methods supported in ``UQpy``. 
-The module currently contains the following classes:
+.. automodule:: UQpy.Reliability
 
-- ``TaylorSeries``: Class to perform reliability analysis using FORM/SORM.
-- ``SubsetSimulation``: Class to perform reliability analysis using subset simulation.
+
+Subset Simulation
+-------------------
+
+In the subset simulation method [3]_ the probability of failure :math:`P_f`  is approximated by a product of probabilities of more frequent events. That is, the failure event :math:`G = \{\textbf{x} \in \mathbb{R}^n:G(\textbf{x}) \leq 0\}`, is expressed as the of union of `M` nested intermediate events :math:`G_1,G_2,\cdots,G_M` such that :math:`G_1 \supset G_2 \supset \cdots \supset G_M`, and :math:`G = \cap_{i=1}^{M} G_i`. The intermediate failure events are defined as :math:`G_i=\{G(\textbf{x})\le b_i\}`, where :math:`b_1>b_2>\cdots>b_i=0` are positive thresholds selected such that each conditional probability :math:`P(G_i | G_{i-1}), ~i=2,3,\cdots,M-1` equals a target probability value :math:`p_0`. The probability of failure :math:`P_f` is estimated as: 
+
+.. math:: P_f = P\left(\cap_{i=1}^M G_i\right) = P(G_1)\prod_{i=2}^M P(G_i | G_{i-1})
+
+where the probability :math:`P(G_1)` is computed through Monte Carlo simulations. In order to estimate the conditional probabilities :math:`P(G_i|G_{i-1}),~j=2,3,\cdots,M` generation of Markov Chain Monte Carlo (MCMC) samples from the conditional pdf :math:`p_{\textbf{Y}}(\textbf{y}|G_{i-1})` is required. In the context of subset simulation, the Markov chains are constructed through a two-step acceptance/rejection criterion. Starting from a Markov chain state :math:`\textbf{x}` and a proposal distribution :math:`q(\cdot|\textbf{x})`, a candidate sample :math:`\textbf{w}` is generated. In the first stage, the sample :math:`\textbf{w}` is accepted/rejected with probability
+
+.. math:: \alpha=\min\bigg\{1, \frac{p(\textbf{w})q(\textbf{x}|\textbf{w})}{p(\textbf{x})q(\textbf{w}|\textbf{x})}\bigg\}
+
+and in the second stage is accepted/rejected based on whether the sample belongs to the failure region :math:`G_j`. ``SubSetSimulation`` can be used with any of the available (or custom) ``MCMC`` classes in the ``SampleMethods`` module.
+
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: UQpy.Reliability.SubsetSimulation
+    :members: 
 
 
 Taylor Series
 -------------
 
-``TaylorSeries`` is a class that calculates the reliability  of a model using the First Order Reliability Method (FORM) or the Second Order Reliability Method (SORM) based on the first-order and second-order Taylor series expansion approximation of the performance function, respectively.
+``TaylorSeries`` is a class that calculates the reliability  of a model using the First Order Reliability Method (FORM) or the Second Order Reliability Method (SORM) based on the first-order and second-order Taylor series expansion approximation of the performance function, respectively ([1]_, [2]_).
 
 In FORM, the performance function is linearized according to
 
-.. math:: G(\textbf{U})  \approx  G(\textbf{U}^\star) + \nabla G_{|_{\textbf{U}^\star}}(\textbf{U}-\textbf{U}^\star)^\intercal
+.. math:: G(\textbf{Y})  \approx  G(\textbf{Y}^\star) + \nabla G_{|_{\textbf{Y}^\star}}(\textbf{Y}-\textbf{Y}^\star)^\intercal
 
-where :math:`\textbf{U}^\star` is expansion point, :math:`G(\textbf{U})` is the performance function evaluated in the standard normal space and :math:`\nabla G_{|_{\textbf{U}^\star}}` is the gradient of :math:`G(\textbf{U})` evaluated at :math:`\textbf{U}^\star`. The probability failure can be calculated by 
+where :math:`\textbf{Y}^\star` is the expansion point, :math:`G(\textbf{Y})` is the performance function evaluated in the standard normal space and :math:`\nabla G_{|_{\textbf{Y}^\star}}` is the gradient of :math:`G(\textbf{Y})` evaluated at :math:`\textbf{Y}^\star`. The probability failure can be calculated by 
 
 .. math:: P_{f, \text{form}} = \Phi(-\beta_{HL})
 
-where :math:`\Phi(\cdot)` is the standard normal cumulative distribution function and :math:`\beta_{HL}=||\textbf{U}^*||` is the norm of the design point known as the Hasofer-Lind reliability index calculated with the Hasofer-Lind-Rackwitz-Fiessler (HLRF) algorithm. 
+where :math:`\Phi(\cdot)` is the standard normal cumulative distribution function and :math:`\beta_{HL}=||\textbf{Y}^*||` is the norm of the design point known as the Hasofer-Lind reliability index calculated with the iterative Hasofer-Lind-Rackwitz-Fiessler (HLRF) algorithm.  The convergence criteria used for HLRF algorithm are: 
+
+
+.. math:: tol1: ||\textbf{Y}^{k} - \textbf{Y}^{k-1}||_2 \leq 10^{-3}
+.. math:: tol2: G(\textbf{Y}^{k}) \leq 10^{-6}
 
 .. image:: _static/Reliability_FORM.png
-   :scale: 100 %
+   :scale: 40 %
    :alt:  Graphical representation of the FORM.
    :align: center
 
 In SORM the performance function is approximated by a second-order Taylor series around the design point according to 
 
 
-.. math:: G(\textbf{U}) = G(\textbf{U}^\star) + \nabla G_{|_{\textbf{U}^\star}}(\textbf{U}-\textbf{U}^\star)^\intercal + \frac{1}{2}(\textbf{U}-\textbf{U}^\star)\textbf{H}(\textbf{U}-\textbf{U}^\star)
+.. math:: G(\textbf{Y}) = G(\textbf{Y}^\star) + \nabla G_{|_{\textbf{Y}^\star}}(\textbf{Y}-\textbf{Y}^\star)^\intercal + \frac{1}{2}(\textbf{Y}-\textbf{Y}^\star)\textbf{H}(\textbf{Y}-\textbf{Y}^\star)
 
-where :math:`\textbf{H}` is the Hessian matrix of the second derivatives of :math:`G(\textbf{U})` evaluated at :math:`\textbf{U}^*`. After the design point :math:`\textbf{U}^*` is identified and the probability of failure :math:`P_{f, \text{form}}` is calculated with FORM a correction is made according to 
+where :math:`\textbf{H}` is the Hessian matrix of the second derivatives of :math:`G(\textbf{Y})` evaluated at :math:`\textbf{Y}^*`. After the design point :math:`\textbf{Y}^*` is identified and the probability of failure :math:`P_{f, \text{form}}` is calculated with FORM a correction is made according to 
 
 
 .. math:: P_{f, \text{sorm}} = \Phi(-\beta_{HL}) \prod_{i=1}^{n-1} (1+\beta_{HL}\kappa_i)^{-\frac{1}{2}}
 
 where :math:`\kappa_i` is the `i-th`  curvature. 
 
-The ``TayloreSeries`` class is the parent class of the ``FORM`` and ``SORM`` classes that perform the FORM and SORM, respectively. These classes can be imported in a python script using the following command:
+The ``TaylorSeries`` class is the parent class of the ``FORM`` and ``SORM`` classes that perform the FORM and SORM, respectively. These classes can be imported in a python script using the following command:
 
 >>> from UQpy.Reliability import FORM, SORM
 
+
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.Reliability.TaylorSeries
     :members: 
@@ -61,78 +84,26 @@ The ``TayloreSeries`` class is the parent class of the ``FORM`` and ``SORM`` cla
 FORM
 ~~~~~~~~~~
 
-The ``FORM`` class can be used to estimate the reliability of a system using the first order reliability method. For example, consider the simple structural reliability problem defined in a two-dimensional parameter space consisting of a resistance :math:`R` and a stress :math:`S`. The failure happens when the stress is higher than the resistance, leading to the following limit-state function:
-
-.. math:: \textbf{X}=\{R, S\}
-.. math:: g(\textbf{X}) = R - S
-
-The two random variables are independent  and  normally distributed according to :math:`R \sim N(200, 20)` and :math:`S \sim N(150, 50)`. The probability of failure in this case is estimated with MCS to be 0.0127.  In order to estimate the probability of failure using FORM we simply type in a python script:
-
->>> from UQpy.RunModel import RunModel
->>> from UQpy.Distributions import Normal
->>> from UQpy.Reliability import FORM
->>> dist1 = Normal(loc=200, scale=20)
->>> dist2 = Normal(loc=150, scale=10)
->>> RunModelObject = RunModel(model_script='pfn.py',model_object_name="model") #see RunModel section on how to define the model
->>> Q = FORM(dist_object=[dist1,dist2], model=RunModelObject)
-
-If we want to print the results:
-
->>> print('Design point in standard normal space: %s' % Q.DesignPoint_U)
-	Design point in standard normal space: [[-2.  1.]]
->>> print('Design point in parameter space: %s' % Q.DesignPoint_X)
-	Design point in parameter space: [[160. 160.]]
->>> print('Hasofer-Lind reliability index: %s' % Q.HL_beta)
-	Hasofer-Lind reliability index: [2.23606798]
->>> print('FORM probability of failure: %s' % Q.Prob_FORM)
-	FORM probability of failure: [0.01267366]
-	
-.. image:: _static/Reliability_example_form.png
-   :scale: 70 %
-   :alt:  Limit-state function in the parameter space.
-   :align: center
-
-.. autoclass:: UQpy.Reliability.Form
+.. autoclass:: UQpy.Reliability.FORM
     :members: 
 	
 SORM
 ~~~~~~~~~~
 
-The ``SORM`` class can be used to estimate the reliability of a system using the second order reliability method. For example, consider the problem where the limit state to be a nonlinear function of two (`d`) random variables
 
-.. math:: g(X_1, X_2) = X_1X_1 - 80
-
-where :math:`X_1` follows a normal distribution with mean :math:`\mu_{X_1}=20` and standard deviation :math:`\sigma_{X_1}=7` and :math:`X_2` follows a lognormal distribution with mean :math:`\mu_{X_2}=7` and standard deviation :math:`\sigma_{X_2}=1.4`. In order to estimate the probability of failure using the ``Sorm`` class we type in a python script:
-
->>> from UQpy.RunModel import RunModel
->>> from UQpy.Distributions import Normal, Lognormal
->>> from UQpy.Reliability import SORM
-
-First we need to gfind the parameters of the `Lognormal` distribution model (see ``scipy.stats``):
-
->>> mu = np.log(7.) - np.log(np.sqrt(1 + (1.4 / 7.) ** 2))
->>> scale = np.exp(mu)
->>> s = np.sqrt(np.log(1 + (1.4 /7.) ** 2))
-
-Then we define the ``Distribution`` objects and the ``RunModel`` object:
->>> dist1 = Normal(loc=20., scale=3.5)
->>> dist2 = Lognormal(s=s, loc=0.0, scale=scale)
-
->>> RunModelObject = RunModel(model_script='pfn.py',model_object_name="model") #see RunModel section on how to define the model
-
-Then we can run SORM
-
->>> F = SORM(dist_object=[dist1,dist2], model=RunModelObject)
-
-If we want to print the results:
-
->>> print('FORM probability of failure: %s' % F.Prob_FORM)
-	FORM probability of failure: [0.02784094]
->>> print('SORM probability of failure: %s' % F.Prob_SORM)
-	SORM probability of failure: [0.03007141]
-
-.. autoclass:: UQpy.Reliability.Sorm
+.. autoclass:: UQpy.Reliability.SORM
     :members: 
+	
+**References:**
+	
+.. [1] R. Rackwitz and R. Fiessler, “Structural reliability under combined random load sequences”, Structural Safety, Vol. 22, no. 1, pp: 27–60, 1978.
+.. [2] K. Breitung, “Asymptotic approximations for multinormal integrals”, J. Eng. Mech., ASCE, Vol. 110, no. 3, pp: 357–367, 1984.
+.. [3] S.K.  Au  and  J.L.  Beck. "Estimation  of  small  failure  probabilities  in  high  dimensions  by  subset  simulation", Probabilistic  Engineering Mechanics, 16(4):263–277, 2001.
+.. [4] Shields, M.D., Giovanis, D.G., and Sundar, V.S. "Subset simulation for problems with strongly non-Gaussian, highly anisotropics, and degenerate distributions," Computers & Structures (Accepted with Revisions)
 	
 .. toctree::
     :maxdepth: 2
+	
+
+	
+

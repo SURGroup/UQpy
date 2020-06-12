@@ -227,7 +227,7 @@ def FireProblem():
 
     # Create field output request
     mdb.models['FireBenchmark'].fieldOutputRequests['F-Output-1'].setValues(
-        variables=('S', 'PE', 'PEEQ', 'PEMAG', 'LE', 'U'))
+        variables=('power_spectrum', 'PE', 'PEEQ', 'PEMAG', 'LE', 'U'))
 
     # Create history output requests
     mdb.models['FireBenchmark'].historyOutputRequests['H-Output-1'].setValues(
