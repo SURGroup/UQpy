@@ -3026,7 +3026,7 @@ class Stretch(MCMC):
             set1 = (inds == split)
 
             # Get current and complementary sets
-            sets = [current_state[inds == j, :] for j in range(2)]
+            sets = [current_state[inds == j01, :] for j01 in range(2)]
             curr_set, comp_set = sets[split], sets[1 - split]  # current and complementary sets respectively
             ns, nc = len(curr_set), len(comp_set)
 
@@ -3051,6 +3051,23 @@ class Stretch(MCMC):
                     current_state[j] = candidate
                     current_log_pdf[j] = lpc
                     accept_vec[j] += 1.
+
+            # Sample new state for S1 based on S0 and vice versa
+            #zz = ((self.scale - 1.) * np.random.rand(ns, 1) + 1) ** 2. / self.scale  # sample Z
+            #factors = (self.dimension - 1.) * np.log(zz)  # compute log(Z ** (d - 1))
+            #rint = np.random.choice(nc, size=(ns,), replace=True)  # sample X_{j} from complementary set
+            #candidates = comp_set[rint, :] - (comp_set[rint, :] - curr_set) * np.tile(zz, [1, self.dimension])  # new candidates
+
+            # Compute new likelihood, can be done in parallel :)
+            #logp_candidates = self.evaluate_log_target(candidates)
+
+            # Compute acceptance rate
+            #for j, f, lpc, candidate in zip(all_inds[set1], factors, logp_candidates, candidates):
+            #    accept = np.log(np.random.rand()) < f + lpc - current_log_pdf[j]
+            #    if accept:
+            #        current_state[j] = candidate
+            #        current_log_pdf[j] = lpc
+            #        accept_vec[j] += 1.
 
         # Update the acceptance rate
         self._update_acceptance_rate(accept_vec)
