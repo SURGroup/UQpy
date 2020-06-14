@@ -935,7 +935,7 @@ class FORM(TaylorSeries):
             if self.verbose:
                 print('Beta: {0}'.format(beta[k]))
                 print('Pf: {0}'.format(stats.norm.cdf(-beta[k])))
-                print('Error:', error_record[-1])
+
 
             y[k + 1, :] = -beta[k + 1] * self.alpha
 
@@ -1009,6 +1009,9 @@ class FORM(TaylorSeries):
                     conv_flag = True
                 else:
                     k = k + 1
+
+            if self.verbose:
+                print('Error:', error_record[-1])
 
             if conv_flag is True:
                 break
