@@ -242,7 +242,7 @@ class Nataf:
 
     def transform_y2x(self, samples_y, jacobian=False):
         """
-        This is a method to transform an uncorrelated standard normal vector :math:`\mathbf{y}` to a vector
+        This is a method to transform a standard normal vector :math:`\mathbf{z}` to a vector
         :math:`\mathbf{x}` of samples with marginal distributions :math:`f_i(x_i)` and cumulative distributions
         :math:`F_i(x_i)` to samples  according to: :math:`Z_{i}=\Phi^{-1}(F_i(X_{i}))`, where :math:`\Phi` is the
         cumulative distribution function of a standard  normal variable.
@@ -251,8 +251,8 @@ class Nataf:
 
         **Inputs:**
 
-        * **samples_y** (`ndarray`):
-            Uncorrelated Standard normal random vector of shape ``(nsamples, dimension)``
+        * **samples_z** (`ndarray`):
+            Standard normal random vector of shape ``(nsamples, dimension)``
 
         * **jacobian** ('Boolean'):
             A boolean whether to return the jacobian of the transformation.
