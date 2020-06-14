@@ -917,16 +917,16 @@ class FORM(TaylorSeries):
             # 2. evaluate Limit State Function and the gradient at point u_k and direction cosines
             dg_y, qoi = self.derivatives(point_y=y[k, :], point_x=self.x, runmodel_object=self.runmodel_object,
                                          nataf_object=self.nataf_object, order='first', verbose=self.verbose)
-
             g_record.append(qoi)
 
-            dg_x = sp.linalg.solve(np.linalg.inv(self.jyx[0]), dg_y)
-            dg_y_record[k + 1, :] = sp.linalg.solve(self.jyx[0], dg_x)
-            norm_grad = np.linalg.norm(dg_y)
+            # dg_x = sp.linalg.solve(np.linalg.inv(self.jyx[0]), dg_y)
+            dg_y_record[k + 1, :] = dg_y
+            norm_grad = np.linalg.norm(dg_y_record[k + 1, :])
             alpha = dg_y / norm_grad
             if self.verbose:
                 print('Directional cosines (alpha): {0}'.format(alpha))
                 print('Gradient (dg_y): {0}'.format(dg_y_record[k + 1, :]))
+                print('norm dg_y:', norm_grad)
 
             self.alpha = alpha.squeeze()
             alpha_record.append(self.alpha)
@@ -935,7 +935,6 @@ class FORM(TaylorSeries):
             if self.verbose:
                 print('Beta: {0}'.format(beta[k]))
                 print('Pf: {0}'.format(stats.norm.cdf(-beta[k])))
-
 
             y[k + 1, :] = -beta[k + 1] * self.alpha
 
