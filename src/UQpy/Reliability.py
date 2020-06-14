@@ -843,8 +843,9 @@ class FORM(TaylorSeries):
             seed = np.zeros(self.dimension)
         elif seed_y is None and seed_x is not None:
             from UQpy.Transformations import Nataf
-            seed_y = self.nataf_object.transform_x2z(seed_x.reshape(1, -1), jacobian=False)
-            seed = np.squeeze(seed_y)
+            seed_z = self.nataf_object.transform_x2z(seed_x.reshape(1, -1), jacobian=False)
+            from UQpy.Transformations import Decorrelate
+            seed_y = Decorrelate(seed_z, self.nataf_object.corr_z)
         elif seed_y is not None and seed_x is None:
             seed = np.squeeze(seed_y)
         else:
@@ -890,7 +891,6 @@ class FORM(TaylorSeries):
                                          nataf_object=self.nataf_object, order='first', verbose=self.verbose)
             g_record.append(qoi)
 
-            # dg_x = sp.linalg.solve(np.linalg.inv(self.jyx[0]), dg_y)
             dg_y_record[k + 1, :] = dg_y
             norm_grad = np.linalg.norm(dg_y_record[k + 1, :])
             alpha = dg_y / norm_grad
@@ -1052,7 +1052,7 @@ class SORM(TaylorSeries):
     """
 
     def __init__(self, dist_object, runmodel_object, def_step=None, corr_x=None, corr_z=None, n_iter=100,
-                 tol1=1e-3, tol2=1e-3, tol3=1e-3, verbose=False):
+                 tol1=None, tol2=None, tol3=None, verbose=False):
 
         super().__init__(dist_object, runmodel_object, corr_x, corr_z, n_iter, tol1, tol2, tol3, def_step, verbose)
 
