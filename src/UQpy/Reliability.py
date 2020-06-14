@@ -805,38 +805,9 @@ class FORM(TaylorSeries):
         self.df_step = df_step
         self.error_record = None
 
-        if (tol1 is None) and (tol2 is None) and (tol3 is None):
-            self.tol1 = 1e-3
-            self.tol2 = 1e-3
-            self.tol3 = 1e-3
-        if (tol1 is not None) and (tol2 is not None) and (tol3 is not None):
-            self.tol1 = tol1
-            self.tol2 = tol2
-            self.tol3 = tol3
-        elif (tol1 is not None) and (tol2 is None) and (tol3 is None):
-            self.tol1 = tol1
-            self.tol2 = None
-            self.tol3 = None
-        elif (tol1 is None) and (tol2 is not None) and (tol3 is None):
-            self.tol1 = None
-            self.tol2 = tol2
-            self.tol3 = None
-        elif (tol1 is None) and (tol2 is None) and (tol3 is not None):
-            self.tol1 = None
-            self.tol2 = None
-            self.tol3 = tol3
-        elif (tol1 is not None) and (tol2 is not None) and (tol3 is None):
-            self.tol1 = tol1
-            self.tol2 = tol2
-            self.tol3 = None
-        elif (tol1 is not None) and (tol2 is None) and (tol3 is not None):
-            self.tol1 = tol1
-            self.tol2 = None
-            self.tol3 = tol3
-        elif (tol1 is None) and (tol2 is not None) and (tol3 is not None):
-            self.tol1 = None
-            self.tol2 = tol2
-            self.tol3 = tol3
+        self.tol1 = tol1
+        self.tol2 = tol2
+        self.tol3 = tol3
 
         self.y_record = None
         self.x_record = None
@@ -953,7 +924,7 @@ class FORM(TaylorSeries):
                 error2 = np.linalg.norm(beta[k + 1] - beta[k])
                 error3 = np.linalg.norm(dg_y_record[k + 1, :] - dg_y_record[k, :])
                 error_record.append([error1, error2, error3])
-                if error1 <= self.tol1 or error2 <= self.tol2 or error3 < self.tol3:
+                if error1 <= 1e-3 or error2 <= 1e-3 or error3 < 1e-3:
                     conv_flag = True
                 else:
                     k = k + 1
