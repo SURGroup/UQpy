@@ -41,17 +41,18 @@ Taylor Series
 
 In FORM, the performance function is linearized according to
 
-.. math:: G(\textbf{Y})  \approx  G(\textbf{Y}^\star) + \nabla G_{|_{\textbf{Y}^\star}}(\textbf{Y}-\textbf{Y}^\star)^\intercal
+.. math:: G(\textbf{Y})  \approx  G(\textbf{Y}^\star) + \nabla G(\textbf{Y}^\star)(\textbf{Y}-\textbf{Y}^\star)^\intercal
 
-where :math:`\textbf{Y}^\star` is the expansion point, :math:`G(\textbf{Y})` is the performance function evaluated in the standard normal space and :math:`\nabla G_{|_{\textbf{Y}^\star}}` is the gradient of :math:`G(\textbf{Y})` evaluated at :math:`\textbf{Y}^\star`. The probability failure can be calculated by 
+where :math:`\textbf{Y}^\star` is the expansion point, :math:`G(\textbf{Y})` is the performance function evaluated in the standard normal space and :math:`\nabla G(\textbf{Y}^\star)` is the gradient of :math:`G(\textbf{Y})` evaluated at :math:`\textbf{Y}^\star`. The probability failure can be calculated by 
 
 .. math:: P_{f, \text{form}} = \Phi(-\beta_{HL})
 
 where :math:`\Phi(\cdot)` is the standard normal cumulative distribution function and :math:`\beta_{HL}=||\textbf{Y}^*||` is the norm of the design point known as the Hasofer-Lind reliability index calculated with the iterative Hasofer-Lind-Rackwitz-Fiessler (HLRF) algorithm.  The convergence criteria used for HLRF algorithm are: 
 
 
-.. math:: tol1: ||\textbf{Y}^{k} - \textbf{Y}^{k-1}||_2 \leq 10^{-3}
-.. math:: tol2: G(\textbf{Y}^{k}) \leq 10^{-6}
+.. math:: e1: ||\textbf{Y}^{k} - \textbf{Y}^{k-1}||_2 \leq 10^{-3}
+.. math:: e2: ||\beta_{HL}^{k} - \beta_{HL}^{k-1}||_2 \leq 10^{-3}
+.. math:: e3: ||\nabla G(\textbf{Y}^{k})- \nabla G(\textbf{Y}^{k-1})||_2 \leq 10^{-3}
 
 .. image:: _static/Reliability_FORM.png
    :scale: 40 %
@@ -61,7 +62,7 @@ where :math:`\Phi(\cdot)` is the standard normal cumulative distribution functio
 In SORM the performance function is approximated by a second-order Taylor series around the design point according to 
 
 
-.. math:: G(\textbf{Y}) = G(\textbf{Y}^\star) + \nabla G_{|_{\textbf{Y}^\star}}(\textbf{Y}-\textbf{Y}^\star)^\intercal + \frac{1}{2}(\textbf{Y}-\textbf{Y}^\star)\textbf{H}(\textbf{Y}-\textbf{Y}^\star)
+.. math:: G(\textbf{Y}) = G(\textbf{Y}^\star) +  \nabla G(\textbf{Y}^\star)(\textbf{Y}-\textbf{Y}^\star)^\intercal + \frac{1}{2}(\textbf{Y}-\textbf{Y}^\star)\textbf{H}(\textbf{Y}-\textbf{Y}^\star)
 
 where :math:`\textbf{H}` is the Hessian matrix of the second derivatives of :math:`G(\textbf{Y})` evaluated at :math:`\textbf{Y}^*`. After the design point :math:`\textbf{Y}^*` is identified and the probability of failure :math:`P_{f, \text{form}}` is calculated with FORM a correction is made according to 
 

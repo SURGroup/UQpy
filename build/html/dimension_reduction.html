@@ -79,7 +79,7 @@ the Grassmann manifold to be employed in techniques using subspaces.</p>
 <div class="section" id="class-descriptions">
 <h3>Class Descriptions<a class="headerlink" href="#class-descriptions" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> class is imported using the following command:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">DimensionReduction</span> <span class="k">import</span> <span class="n">Grassmann</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">DimensionReduction</span> <span class="k">import</span> <span class="n">Grassmann</span>
 </pre></div>
 </div>
 <p>One can use the following command to instantiate the class <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code></p>
@@ -112,7 +112,7 @@ the class <code class="docutils literal notranslate"><span class="pre">Grassmann
 an object containing the attribute <cite>distance_method</cite> is passed as <cite>Grassmann.distance_method</cite>. Second, the user
 can pass either a method of a class or a function. For example, if the user wish to
 use <cite>grassmann_distance</cite> to compute the distance, one can use the following command:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Grassmann</span><span class="p">(</span><span class="n">distance_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">grassmann_distance</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Grassmann</span><span class="p">(</span><span class="n">distance_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">grassmann_distance</span><span class="p">)</span>
 </pre></div>
 </div>
 <blockquote>
@@ -135,7 +135,7 @@ ways. First, the user can pass one of the methods implemented in the class <code
 Second, the user can pass callable objects either as a method of a class or as a function.
 For example, if the user wish to use <cite>projection_kernel</cite> to estimate the kernel matrix, one can use the
 following command:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Grassmann</span><span class="p">(</span><span class="n">kernel_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">projection_kernel</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Grassmann</span><span class="p">(</span><span class="n">kernel_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">projection_kernel</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>On the other hand, if the user implemented
@@ -288,7 +288,7 @@ The current built-in options are the <cite>grassmann_distance</cite>, <cite>chor
 In this case, the user must be aware that the matrices in <cite>points_grassmann</cite> must represent points on the
 Grassmann manifold. For example, given the points on the Grassmann manifold one can compute the pairwise
 distances in the following way:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">distance_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">grassmann_distance</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">distance_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">grassmann_distance</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">points_grassmann</span><span class="o">=</span><span class="n">points_grassmann</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -458,7 +458,7 @@ Further, this method is called by the method <code class="docutils literal notra
 Further, the user must select the option <cite>element_wise</cite> to perform the interpolation in the entries of the input
 matrices, if <cite>point</cite> and <cite>samples</cite> are matrices. The samples related to <cite>coordinates</cite> are set using
 <cite>manifold</cite>. For example, the following command is used to perform the interpolation.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Surrogates</span> <span class="k">import</span> <span class="n">Kriging</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Surrogates</span> <span class="k">import</span> <span class="n">Kriging</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Krig</span> <span class="o">=</span> <span class="n">Kriging</span><span class="p">(</span><span class="n">reg_model</span><span class="o">=</span><span class="s1">&#39;Linear&#39;</span><span class="p">,</span> <span class="n">corr_model</span><span class="o">=</span><span class="s1">&#39;Exponential&#39;</span><span class="p">,</span> <span class="n">n_opt</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dimension</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">distance_object</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">grassmann_distance</span><span class="p">,</span>
 <span class="gp">&gt;&gt;&gt; </span>               <span class="n">interp_object</span><span class="o">=</span><span class="n">Krig</span><span class="p">,</span> <span class="n">karcher_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">gradient_descent</span><span class="p">)</span>
@@ -467,7 +467,7 @@ matrices, if <cite>point</cite> and <cite>samples</cite> are matrices. The sampl
 </pre></div>
 </div>
 <p>On the other hand, if a scikit learn gaussian_process object is provided, one can use the following commands:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.gaussian_process</span> <span class="k">import</span> <span class="n">GaussianProcessRegressor</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.gaussian_process</span> <span class="k">import</span> <span class="n">GaussianProcessRegressor</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gp</span> <span class="o">=</span> <span class="n">GaussianProcessRegressor</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">distance_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">grassmann_distance</span><span class="p">,</span>
 <span class="go">                   interp_object=gp,karcher_method=Grassmann.gradient_descent)</span>
@@ -553,7 +553,7 @@ the TANGENT SPACE.</p>
 estimated by the minimization of the Frechet variance, where the Frechet variance corresponds to the sum of the
 square distances, defined on the Grassmann manifold, to a given point. The command to compute the Karcher mean
 given a seto of points on the Grassmann manifold is.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">karcher_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">gradient_descent</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">karcher_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">gradient_descent</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span><span class="o">.</span><span class="n">manifold</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span><span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span><span class="n">append_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">karcher_left</span><span class="p">,</span> <span class="n">karcher_right</span> <span class="o">=</span> <span class="n">Gr</span><span class="o">.</span><span class="n">karcher_mean</span><span class="p">()</span>
 </pre></div>
@@ -607,7 +607,7 @@ The current built-in options are the <cite>projection_kernel</cite> and the <cit
 the option to implement their own kernel definition. However, the user must be aware that the points used
 to compute the kernel must be the points on the same manifold; therefore, it is important to ensure that the
 dimension of all the input matrices are the same. Therefore, the following commands can be used:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">kernel_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">projection_kernel</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">kernel_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">projection_kernel</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">points_grassmann</span><span class="o">=</span><span class="n">points_grassmann</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -716,7 +716,7 @@ in <cite>points_grassmann</cite> must belong to the same manifold.</p>
 are passed through the argument <cite>samples</cite> containing a list of lists or a list of ndarrays. Moreover, this
 method serves to set the manifold and to verify the consistency of the input data. This method can be called
 using the following command:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Grassmann</span><span class="o">.</span><span class="n">manifold</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span><span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span><span class="n">append_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Grassmann</span><span class="o">.</span><span class="n">manifold</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span><span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span><span class="n">append_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>In this case, append_samples is a boolean variable used to define if new sample will replace the previous ones
@@ -890,7 +890,7 @@ appended.</p>
 <div class="section" id="id9">
 <h3>Class Descriptions<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">DiffusionMaps</span></code> class is imported using the following command:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">DimensionReduction</span> <span class="k">import</span> <span class="n">DiffusionMaps</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">DimensionReduction</span> <span class="k">import</span> <span class="n">DiffusionMaps</span>
 </pre></div>
 </div>
 <p>One can use the following command to instantiate the class <code class="docutils literal notranslate"><span class="pre">DiffusionMaps</span></code></p>
@@ -1027,7 +1027,7 @@ input dataset.</p>
 <p>In this method, the users have the option to work with input data defined by subspaces obtained via projection
 of input data points on the Grassmann manifold, or directly with the input data points. For example,
 considering that a <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> object is provided using the following command:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">kernel_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">projection_kernel</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">kernel_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">projection_kernel</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span><span class="o">.</span><span class="n">manifold</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span><span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span><span class="n">append_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1036,7 +1036,7 @@ considering that a <code class="docutils literal notranslate"><span class="pre">
 &gt;&gt;&gt; diff_coords, evals, evecs = dfm.mapping()</p>
 <p>On the other hand, if the user wish to pass a dataset (samples) to compute the diffusion coordinates using the Gaussian
 kernel, one can use the following commands:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dfm</span> <span class="o">=</span> <span class="n">DiffusionMaps</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">n_evecs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">kernel_object</span><span class="o">=</span><span class="n">DiffusionMaps</span><span class="o">.</span><span class="n">gaussian_kernel</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dfm</span> <span class="o">=</span> <span class="n">DiffusionMaps</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">n_evecs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">kernel_object</span><span class="o">=</span><span class="n">DiffusionMaps</span><span class="o">.</span><span class="n">gaussian_kernel</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">diff_coords</span><span class="p">,</span> <span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">dfm</span><span class="o">.</span><span class="n">mapping</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="n">epsilon</span><span class="p">)</span>
 </pre></div>
 </div>
