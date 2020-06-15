@@ -148,8 +148,8 @@ class Nataf:
             Distorted correlation matrix (:math:`\mathbf{C_z}`) of the standard normal vector **Z**.
 
         """
-        from UQpy.Utilities import itam
-        cov_distorted = itam(dist_object, corr_x, beta, itam_error1, itam_error2)
+        from UQpy.Utilities import itam_correlation
+        cov_distorted = itam_correlation(dist_object, corr_x, beta, itam_error1, itam_error2)
         return cov_distorted
 
     @staticmethod
@@ -230,17 +230,17 @@ class Nataf:
             return samples_z
         else:
             jac = np.zeros(shape=(n, n))
-            jacobian_x2y = [None] * m
+            jacobian_x2z = [None] * m
             for i in range(m):
                 for j in range(n):
                     xi = np.array([samples_x[i, j]])
                     zi = np.array([samples_z[i, j]])
                     jac[j, j] = stats.norm.pdf(zi) / self.dist_object[j].pdf(xi)
-                jacobian_x2y[i] = np.linalg.solve(jac, self.H)
+                jacobian_x2z[i] = np.linalg.solve(jac, self.H)
 
-            return samples_z, jacobian_x2y
+            return samples_z, jacobian_x2z
 
-    def transform_y2x(self, samples_y, jacobian=False):
+    def transform_z2x(self, samples_z, jacobian=False):
         """
         This is a method to transform a standard normal vector :math:`\mathbf{z}` to a vector
         :math:`\mathbf{x}` of samples with marginal distributions :math:`f_i(x_i)` and cumulative distributions
@@ -269,10 +269,10 @@ class Nataf:
 
         """
 
-        m, n = np.shape(samples_y)
+        m, n = np.shape(samples_z)
         from scipy.linalg import cholesky
         h = cholesky(self.corr_z, lower=True)
-        samples_z = (h @ samples_y.T).T
+        #samples_z = (h @ samples_y.T).T
 
         samples_x = np.zeros_like(samples_z)
         if isinstance(self.dist_object, JointInd):

@@ -54,11 +54,12 @@ The module currently contains the following classes:</p>
 <p>where <span class="math notranslate nohighlight">\(X_i =F_i^{-1}(\Phi(Z_{i}))\)</span> and <span class="math notranslate nohighlight">\(\phi_2(\cdot)\)</span> is the bivariate standard normal probability density function. The integration is directly evaluated using a quadratic two-dimensional Gauss-Legendre integration.</p>
 <p>The Jacobian of the transformation can be also estimated with the <code class="docutils literal notranslate"><span class="pre">Nataf</span></code> class as:</p>
 <div class="math notranslate nohighlight">
-\[\mathbf{J_{xy}}=\dfrac{\partial\mathbf{x}}{\partial\mathbf{y}}= \dfrac{\partial\mathbf{x}}{\partial\mathbf{z}} =\left[\dfrac{\phi(Z_i)}{f_i(X_i)}\right]\mathbf{H}.\]</div>
-<p>The ‘Nataf’ class also allows for the inverse of the Nataf transformation, i.e. transforming a vector of uncorrelated standard normal vector <span class="math notranslate nohighlight">\(\textbf{y}=[Y_1,...,Y_n]\)</span> to random variables with prescribed marginal cumulative distributions and correlation matrix <span class="math notranslate nohighlight">\(\textbf{C}_z=[\rho_{ij}]\)</span> according to:</p>
+\[\mathbf{J_{xz}} = \dfrac{\partial\mathbf{x}}{\partial\mathbf{z}} =\left[\dfrac{\phi(Z_i)}{f_i(X_i)}\right]\mathbf{H}.\]</div>
+<p>where <span class="math notranslate nohighlight">\(\textbf{H}\)</span> is the lower diagonal matrix resulting from the Cholesky decomposition of the correlation  matrix
+(<span class="math notranslate nohighlight">\(\mathbf{C_Z}\)</span>). The ‘Nataf’ class also allows for the inverse of the Nataf transformation, i.e. transforming a vector of standard normal vector <span class="math notranslate nohighlight">\(\textbf{z}=[Z_1,...,Z_n]\)</span> to random variables with prescribed marginal cumulative distributions and correlation matrix <span class="math notranslate nohighlight">\(\textbf{C}_x=[\rho_{ij}]\)</span> according to:</p>
 <div class="math notranslate nohighlight">
 \[X_{i}=F_i^{-1}(\Phi(Z_{i}))\]</div>
-<p>where <span class="math notranslate nohighlight">\(\textbf{z}=[Z_1,...,Z_n]\)</span> is a correlated standard normal vector. The inverse Nataf is widely-used in reliabilityt analysis using FORM.</p>
+<p>The inverse Nataf is widely-used in reliabilityt analysis using FORM.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">Nataf</span></code>   class can be imported in a python script using the following command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="n">Nataf</span>
 </pre></div>
@@ -269,9 +270,9 @@ distribution function of a standard  normal variable.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="UQpy.Transformations.Nataf.transform_y2x">
-<code class="sig-name descname">transform_y2x</code><span class="sig-paren">(</span><em class="sig-param">samples_y</em>, <em class="sig-param">jacobian=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Nataf.transform_y2x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Nataf.transform_y2x" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is a method to transform an uncorrelated standard normal vector <span class="math notranslate nohighlight">\(\mathbf{y}\)</span> to a vector
+<dt id="UQpy.Transformations.Nataf.transform_z2x">
+<code class="sig-name descname">transform_z2x</code><span class="sig-paren">(</span><em class="sig-param">samples_z</em>, <em class="sig-param">jacobian=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Nataf.transform_z2x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Nataf.transform_z2x" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a method to transform a standard normal vector <span class="math notranslate nohighlight">\(\mathbf{z}\)</span> to a vector
 <span class="math notranslate nohighlight">\(\mathbf{x}\)</span> of samples with marginal distributions <span class="math notranslate nohighlight">\(f_i(x_i)\)</span> and cumulative distributions
 <span class="math notranslate nohighlight">\(F_i(x_i)\)</span> to samples  according to: <span class="math notranslate nohighlight">\(Z_{i}=\Phi^{-1}(F_i(X_{i}))\)</span>, where <span class="math notranslate nohighlight">\(\Phi\)</span> is the
 cumulative distribution function of a standard  normal variable.</p>
@@ -279,7 +280,7 @@ cumulative distribution function of a standard  normal variable.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
 <li><dl class="simple">
-<dt><strong>samples_y</strong> (<cite>ndarray</cite>):</dt><dd><p>Uncorrelated Standard normal random vector of shape <code class="docutils literal notranslate"><span class="pre">(nsamples,</span> <span class="pre">dimension)</span></code></p>
+<dt><strong>samples_z</strong> (<cite>ndarray</cite>):</dt><dd><p>Standard normal random vector of shape <code class="docutils literal notranslate"><span class="pre">(nsamples,</span> <span class="pre">dimension)</span></code></p>
 </dd>
 </dl>
 </li>

@@ -495,22 +495,22 @@ class TaylorSeries:
         If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
 
         If `corr_z` is provided, it is the correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal random
-        vector **U** .
+        vector **Z** .
 
          Default: `corr_z` is specified as the identity matrix.
 
     * **tol1** (`float`):
-         Convergence threshold for the `HLRF` algorithm.
+         Convergence threshold for criterion `e1` of the `HLRF` algorithm.
 
          Default: 1.0e-3
 
     * **tol2** (`float`):
-         Convergence threshold for the `HLRF` algorithm.
+         Convergence threshold for criterion `e2` of the `HLRF` algorithm.
 
          Default: 1.0e-3
 
     * **tol3** (`float`):
-         Convergence threshold for the `HLRF` algorithm.
+         Convergence threshold for criterion `e3` of the  `HLRF` algorithm.
 
          Default: 1.0e-3
 
@@ -518,6 +518,11 @@ class TaylorSeries:
          Maximum number of iterations for the `HLRF` algorithm.
 
          Default: 100
+
+    * **df_step** ('float'):
+         Finite difference step.
+
+         Default: 0.01 (see `derivatives` class)
 
     * **verbose** (Boolean):
         A boolean declaring whether to write text to the terminal.
@@ -578,7 +583,7 @@ class TaylorSeries:
         * **runmodel_object** (``RunModel`` object):
             The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
 
-        * **nataf_object** (``Nataf`` object(s)):
+        * **nataf_object** (``Nataf`` object):
             An object of the ``Nataf`` class (see ``Nataf`` class).
 
         * **order** (`str`):
@@ -618,13 +623,15 @@ class TaylorSeries:
             y_i1_j = point_y.tolist()
             y_i1_j[ii] = y_i1_j[ii] + df_step
 
-            temp_x_i1_j = nataf_object.transform_y2x(np.array(y_i1_j).reshape(1, -1), jacobian=False)
+            z_i1_j = Correlate(np.array(y_i1_j).reshape(1, -1), nataf_object.corr_z).samples_z
+            temp_x_i1_j = nataf_object.transform_z2x(z_i1_j.reshape(1, -1), jacobian=False)
             x_i1_j = temp_x_i1_j
             list_of_samples.append(x_i1_j)
 
             y_1i_j = point_y.tolist()
             y_1i_j[ii] = y_1i_j[ii] - df_step
-            temp_x_1i_j = nataf_object.transform_y2x(np.array(y_1i_j).reshape(1, -1), jacobian=False)
+            z_1i_j = Correlate(np.array(y_1i_j).reshape(1, -1), nataf_object.corr_z).samples_z
+            temp_x_1i_j = nataf_object.transform_z2x(z_1i_j.reshape(1, -1), jacobian=False)
             x_1i_j = temp_x_1i_j
             list_of_samples.append(x_1i_j)
 
@@ -662,7 +669,7 @@ class TaylorSeries:
                 qoi_plus = output_list[2 * jj + 1]
                 qoi_minus = output_list[2 * jj + 2]
 
-                d2y_dj[jj] = ((qoi_minus - 2 * qoi + qoi_plus) / (df_step ** 2))
+                d2y_dj[jj] = ((qoi_minus - 2 * qoi[0] + qoi_plus) / (df_step ** 2))
 
             list_of_mixed_points = list()
             import itertools
@@ -687,16 +694,20 @@ class TaylorSeries:
                 y_1i_1j[i[0]] -= df_step
                 y_1i_1j[i[1]] -= df_step
 
-                x_i1_j1 = nataf_object.transform_y2x(np.array(y_i1_j1).reshape(1, -1), jacobian=False)
+                z_i1_j1 = Correlate(np.array(y_i1_j1).reshape(1, -1), nataf_object.corr_z).samples_z
+                x_i1_j1 = nataf_object.transform_z2x(z_i1_j1.reshape(1, -1), jacobian=False)
                 list_of_mixed_points.append(x_i1_j1)
 
-                x_i1_1j = nataf_object.transform_y2x(np.array(y_i1_1j).reshape(1, -1), jacobian=False)
+                z_i1_1j = Correlate(np.array(y_i1_1j).reshape(1, -1), nataf_object.corr_z).samples_z
+                x_i1_1j = nataf_object.transform_z2x(z_i1_1j.reshape(1, -1), jacobian=False)
                 list_of_mixed_points.append(x_i1_1j)
 
-                x_1i_j1 = nataf_object.transform_y2x(np.array(y_1i_j1).reshape(1, -1), jacobian=False)
+                z_1i_j1 = Correlate(np.array(y_1i_j1).reshape(1, -1), nataf_object.corr_z).samples_z
+                x_1i_j1 = nataf_object.transform_z2x(np.array(z_1i_j1).reshape(1, -1), jacobian=False)
                 list_of_mixed_points.append(x_1i_j1)
 
-                x_1i_1j = nataf_object.transform_y2x(np.array(y_1i_1j).reshape(1, -1), jacobian=False)
+                z_1i_1j = Correlate(np.array(y_1i_1j).reshape(1, -1), nataf_object.corr_z).samples_z
+                x_1i_1j = nataf_object.transform_z2x(np.array(z_1i_1j).reshape(1, -1), jacobian=False)
                 list_of_mixed_points.append(x_1i_1j)
 
                 count = count + 1
@@ -731,7 +742,7 @@ class TaylorSeries:
 class FORM(TaylorSeries):
     """
     A class perform the First Order Reliability Method. The ``run`` method of the ``FORM`` class can be invoked many
-        times and each time the results are appended to the existing ones.
+    times and each time the results are appended to the existing ones.
 
     This is a child class of the ``TaylorSeries`` class.
 
@@ -776,6 +787,9 @@ class FORM(TaylorSeries):
 
     * **g_record** (`list`):
         Record of the performance function.
+
+    * **error_record** (`list`):
+        Record of the error defined by criteria `e1, e2, e3`.
 
     **Methods:**
 
@@ -845,7 +859,7 @@ class FORM(TaylorSeries):
             from UQpy.Transformations import Nataf
             seed_z = self.nataf_object.transform_x2z(seed_x.reshape(1, -1), jacobian=False)
             from UQpy.Transformations import Decorrelate
-            seed_y = Decorrelate(seed_z, self.nataf_object.corr_z)
+            seed = Decorrelate(seed_z, self.nataf_object.corr_z)
         elif seed_y is not None and seed_x is None:
             seed = np.squeeze(seed_y)
         else:
@@ -864,7 +878,7 @@ class FORM(TaylorSeries):
         y[0, :] = seed
         g_record.append(0.0)
         dg_y_record = np.zeros([self.n_iter, self.dimension])
-        import scipy as sp
+
         while not conv_flag:
             if self.verbose:
                 print('Number of iteration:', k)
@@ -873,10 +887,11 @@ class FORM(TaylorSeries):
                 if seed_x is not None:
                     x = seed_x
                 else:
-                    x, self.jyx = self.nataf_object.transform_y2x(seed.reshape(1, -1), jacobian=True)
+                    seed_z = Correlate(seed.reshape(1, -1), self.nataf_object.corr_z).samples_z        #(h @ samples_y.T).T
+                    x, self.jyx = self.nataf_object.transform_z2x(seed_z.reshape(1, -1), jacobian=True)
             else:
-
-                x, self.jyx = self.nataf_object.transform_y2x(y[k, :].reshape(1, -1), jacobian=True)
+                z = Correlate(y[k, :].reshape(1, -1), self.nataf_object.corr_z).samples_z
+                x, self.jyx = self.nataf_object.transform_z2x(z, jacobian=True)
 
             self.x = x
             y_record.append(y)
@@ -1072,7 +1087,7 @@ class SORM(TaylorSeries):
         self.alpha_record = None
         self.dg_y_record = None
         self.df_step = def_step
-        self.error_check = None
+        self.error_record = None
 
         self.Pf_sorm = None
         self.beta_sorm = None
@@ -1115,7 +1130,7 @@ class SORM(TaylorSeries):
         self.g_record = self.obj.g_record
         self.dg_y_record = self.obj.dg_y_record
         self.alpha_record = self.obj.alpha_record
-        self.error_check = self.obj.error_record
+        self.error_record = self.obj.error_record
 
         dimension = self.obj.dimension
         alpha = self.obj.alpha
@@ -1158,4 +1173,3 @@ class SORM(TaylorSeries):
             self.beta_sorm = self.beta_sorm + [-stats.norm.ppf(self.Pf_sorm)]
 
         self.call = True
-

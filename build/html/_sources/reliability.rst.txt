@@ -47,12 +47,12 @@ where :math:`\textbf{Y}^\star` is the expansion point, :math:`G(\textbf{Y})` is 
 
 .. math:: P_{f, \text{form}} = \Phi(-\beta_{HL})
 
-where :math:`\Phi(\cdot)` is the standard normal cumulative distribution function and :math:`\beta_{HL}=||\textbf{Y}^*||` is the norm of the design point known as the Hasofer-Lind reliability index calculated with the iterative Hasofer-Lind-Rackwitz-Fiessler (HLRF) algorithm.  The convergence criteria used for iterative HLRF algorithm are: 
+where :math:`\Phi(\cdot)` is the standard normal cumulative distribution function and :math:`\beta_{HL}=||\textbf{Y}^*||` is the norm of the design point known as the Hasofer-Lind reliability index calculated with the iterative Hasofer-Lind-Rackwitz-Fiessler (HLRF) algorithm.  The convergence criteria used for HLRF algorithm are: 
 
 
-.. math:: tol1: ||\textbf{Y}^{k} - \textbf{Y}^{k-1}||_2 \leq 10^{-3}
-.. math:: tol2: ||\beta_{HL}^{k} - \beta_{HL}^{k-1}||_2 \leq 10^{-3}
-.. math:: tol3: ||\nabla G(\textbf{Y}^{k})- \nabla G(\textbf{Y}^{k-1})||_2 \leq 10^{-3}
+.. math:: e1: ||\textbf{Y}^{k} - \textbf{Y}^{k-1}||_2 \leq 10^{-3}
+.. math:: e2: ||\beta_{HL}^{k} - \beta_{HL}^{k-1}||_2 \leq 10^{-3}
+.. math:: e3: ||\nabla G(\textbf{Y}^{k})- \nabla G(\textbf{Y}^{k-1})||_2 \leq 10^{-3}
 
 .. image:: _static/Reliability_FORM.png
    :scale: 40 %

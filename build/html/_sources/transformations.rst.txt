@@ -28,13 +28,14 @@ where :math:`X_i =F_i^{-1}(\Phi(Z_{i}))` and :math:`\phi_2(\cdot)` is the bivari
 
 The Jacobian of the transformation can be also estimated with the ``Nataf`` class as:
 
-.. math:: \mathbf{J_{xy}}=\dfrac{\partial\mathbf{x}}{\partial\mathbf{y}}= \dfrac{\partial\mathbf{x}}{\partial\mathbf{z}} =\left[\dfrac{\phi(Z_i)}{f_i(X_i)}\right]\mathbf{H}.
+.. math:: \mathbf{J_{xz}} = \dfrac{\partial\mathbf{x}}{\partial\mathbf{z}} =\left[\dfrac{\phi(Z_i)}{f_i(X_i)}\right]\mathbf{H}.
 
-The 'Nataf' class also allows for the inverse of the Nataf transformation, i.e. transforming a vector of uncorrelated standard normal vector :math:`\textbf{y}=[Y_1,...,Y_n]` to random variables with prescribed marginal cumulative distributions and correlation matrix :math:`\textbf{C}_z=[\rho_{ij}]` according to:
+where :math:`\textbf{H}` is the lower diagonal matrix resulting from the Cholesky decomposition of the correlation  matrix
+(:math:`\mathbf{C_Z}`). The 'Nataf' class also allows for the inverse of the Nataf transformation, i.e. transforming a vector of standard normal vector :math:`\textbf{z}=[Z_1,...,Z_n]` to random variables with prescribed marginal cumulative distributions and correlation matrix :math:`\textbf{C}_x=[\rho_{ij}]` according to:
 
 .. math:: X_{i}=F_i^{-1}(\Phi(Z_{i}))
 
-where :math:`\textbf{z}=[Z_1,...,Z_n]` is a correlated standard normal vector. The inverse Nataf is widely-used in reliabilityt analysis using FORM.
+The inverse Nataf is widely-used in reliabilityt analysis using FORM.
 
 The ``Nataf``   class can be imported in a python script using the following command:
 

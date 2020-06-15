@@ -38,7 +38,7 @@
 <p>Reliability of a system refers to the assessment of its probability of failure (i.e the system no longer satisfies some performance measures), given the model uncertainty in the structural, environmental and load parameters. Given a vector of random variables <span class="math notranslate nohighlight">\(\textbf{X}=\{X_1, X_2, \ldots, X_n\} \in \mathcal{D}_\textbf{X}\subset \mathbb{R}^n\)</span>, where <span class="math notranslate nohighlight">\(\mathcal{D}\)</span> is the domain of interest and <span class="math notranslate nohighlight">\(f_{\textbf{X}}(\textbf{x})\)</span> is its joint probability density function then, the probability that the system will fail is defined as</p>
 <div class="math notranslate nohighlight">
 \[P_f =\mathbb{P}(g(\textbf{X}) \leq 0) = \int_{D_f} f_{\textbf{X}}(\textbf{x})d\textbf{x} = \int_{\{\textbf{X}:g(\textbf{X})\leq 0 \}} f_{\textbf{X}}(\textbf{x})d\textbf{x}\]</div>
-<p>where <span class="math notranslate nohighlight">\(g(\textbf{X})\)</span> is the so-called performance function. The reliability problem is often formulated in the standard normal space <span class="math notranslate nohighlight">\(\textbf{Y}\sim \mathcal{N}(\textbf{0}, \textbf{I}_n)\)</span>, which means that a nonlinear isoprobabilistic  transformation from the generally non-normal parameter space <span class="math notranslate nohighlight">\(\textbf{X}\sim f_{\textbf{X}}(\cdot)\)</span> to the standard normal is required (see the <code class="docutils literal notranslate"><span class="pre">Tansformations</span></code> module). The performance function in the standard normal space is denoted <span class="math notranslate nohighlight">\(G(\textbf{Y})\)</span>.</p>
+<p>where <span class="math notranslate nohighlight">\(g(\textbf{X})\)</span> is the so-called performance function. The reliability problem is often formulated in the standard normal space <span class="math notranslate nohighlight">\(\textbf{Y}\sim \mathcal{N}(\textbf{0}, \textbf{I}_n)\)</span>, which means that a nonlinear isoprobabilistic  transformation from the generally non-normal parameter space <span class="math notranslate nohighlight">\(\textbf{X}\sim f_{\textbf{X}}(\cdot)\)</span> to the standard normal is required (see the <code class="docutils literal notranslate"><span class="pre">Tansformations</span></code> module). The performance function in the standard normal space is denoted <span class="math notranslate nohighlight">\(G(\textbf{Y})\)</span>. <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> does not require this transformation and can support reliability analysis for problems with arbitrarily distributed parameters.</p>
 <span class="target" id="module-UQpy.Reliability"></span><p>This module contains functionality for all reliability methods supported in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.
 The module currently contains the following classes:</p>
 <ul class="simple">
@@ -48,7 +48,7 @@ Reliability Method (SORM).</p></li>
 </ul>
 <div class="section" id="subset-simulation">
 <h2>Subset Simulation<a class="headerlink" href="#subset-simulation" title="Permalink to this headline">¶</a></h2>
-<p>In the subset simulation method <a class="footnote-reference brackets" href="#id10" id="id2">3</a> the probability of failure <span class="math notranslate nohighlight">\(P_f\)</span>  is approximated by a product of probabilities of more frequent events. That is, the failure event <span class="math notranslate nohighlight">\(G = \{\textbf{y} \in \mathbb{R}^n:G(\textbf{y}) \leq 0\}\)</span>, is expressed as the of union of <cite>M</cite> nested intermediate events <span class="math notranslate nohighlight">\(G_1,G_2,\cdots,G_M\)</span> such that <span class="math notranslate nohighlight">\(G_1 \supset G_2 \supset \cdots \supset G_M\)</span>, and <span class="math notranslate nohighlight">\(G = \cap_{i=1}^{M} G_i\)</span>. The intermediate failure events are defined as <span class="math notranslate nohighlight">\(G_i=\{G(\textbf{y})\le b_i\}\)</span>, where <span class="math notranslate nohighlight">\(b_1&gt;b_2&gt;\cdots&gt;b_i=0\)</span> are positive thresholds selected such that each conditional probability <span class="math notranslate nohighlight">\(P(G_i | G_{i-1}), ~i=2,3,\cdots,M-1\)</span> equals a target probability value <span class="math notranslate nohighlight">\(p_0\)</span>. The probability of failure <span class="math notranslate nohighlight">\(P_f\)</span> is estimated as:</p>
+<p>In the subset simulation method <a class="footnote-reference brackets" href="#id10" id="id2">3</a> the probability of failure <span class="math notranslate nohighlight">\(P_f\)</span>  is approximated by a product of probabilities of more frequent events. That is, the failure event <span class="math notranslate nohighlight">\(G = \{\textbf{x} \in \mathbb{R}^n:G(\textbf{x}) \leq 0\}\)</span>, is expressed as the of union of <cite>M</cite> nested intermediate events <span class="math notranslate nohighlight">\(G_1,G_2,\cdots,G_M\)</span> such that <span class="math notranslate nohighlight">\(G_1 \supset G_2 \supset \cdots \supset G_M\)</span>, and <span class="math notranslate nohighlight">\(G = \cap_{i=1}^{M} G_i\)</span>. The intermediate failure events are defined as <span class="math notranslate nohighlight">\(G_i=\{G(\textbf{x})\le b_i\}\)</span>, where <span class="math notranslate nohighlight">\(b_1&gt;b_2&gt;\cdots&gt;b_i=0\)</span> are positive thresholds selected such that each conditional probability <span class="math notranslate nohighlight">\(P(G_i | G_{i-1}), ~i=2,3,\cdots,M-1\)</span> equals a target probability value <span class="math notranslate nohighlight">\(p_0\)</span>. The probability of failure <span class="math notranslate nohighlight">\(P_f\)</span> is estimated as:</p>
 <div class="math notranslate nohighlight">
 \[P_f = P\left(\cap_{i=1}^M G_i\right) = P(G_1)\prod_{i=2}^M P(G_i | G_{i-1})\]</div>
 <p>where the probability <span class="math notranslate nohighlight">\(P(G_1)\)</span> is computed through Monte Carlo simulations. In order to estimate the conditional probabilities <span class="math notranslate nohighlight">\(P(G_i|G_{i-1}),~j=2,3,\cdots,M\)</span> generation of Markov Chain Monte Carlo (MCMC) samples from the conditional pdf <span class="math notranslate nohighlight">\(p_{\textbf{Y}}(\textbf{y}|G_{i-1})\)</span> is required. In the context of subset simulation, the Markov chains are constructed through a two-step acceptance/rejection criterion. Starting from a Markov chain state <span class="math notranslate nohighlight">\(\textbf{x}\)</span> and a proposal distribution <span class="math notranslate nohighlight">\(q(\cdot|\textbf{x})\)</span>, a candidate sample <span class="math notranslate nohighlight">\(\textbf{w}\)</span> is generated. In the first stage, the sample <span class="math notranslate nohighlight">\(\textbf{w}\)</span> is accepted/rejected with probability</p>
@@ -185,13 +185,13 @@ class is instantiated.</p>
 <p>where <span class="math notranslate nohighlight">\(\textbf{Y}^\star\)</span> is the expansion point, <span class="math notranslate nohighlight">\(G(\textbf{Y})\)</span> is the performance function evaluated in the standard normal space and <span class="math notranslate nohighlight">\(\nabla G(\textbf{Y}^\star)\)</span> is the gradient of <span class="math notranslate nohighlight">\(G(\textbf{Y})\)</span> evaluated at <span class="math notranslate nohighlight">\(\textbf{Y}^\star\)</span>. The probability failure can be calculated by</p>
 <div class="math notranslate nohighlight">
 \[P_{f, \text{form}} = \Phi(-\beta_{HL})\]</div>
-<p>where <span class="math notranslate nohighlight">\(\Phi(\cdot)\)</span> is the standard normal cumulative distribution function and <span class="math notranslate nohighlight">\(\beta_{HL}=||\textbf{Y}^*||\)</span> is the norm of the design point known as the Hasofer-Lind reliability index calculated with the iterative Hasofer-Lind-Rackwitz-Fiessler (HLRF) algorithm.  The convergence criteria used for iterative HLRF algorithm are:</p>
+<p>where <span class="math notranslate nohighlight">\(\Phi(\cdot)\)</span> is the standard normal cumulative distribution function and <span class="math notranslate nohighlight">\(\beta_{HL}=||\textbf{Y}^*||\)</span> is the norm of the design point known as the Hasofer-Lind reliability index calculated with the iterative Hasofer-Lind-Rackwitz-Fiessler (HLRF) algorithm.  The convergence criteria used for HLRF algorithm are:</p>
 <div class="math notranslate nohighlight">
-\[tol1: ||\textbf{Y}^{k} - \textbf{Y}^{k-1}||_2 \leq 10^{-3}\]</div>
+\[e1: ||\textbf{Y}^{k} - \textbf{Y}^{k-1}||_2 \leq 10^{-3}\]</div>
 <div class="math notranslate nohighlight">
-\[tol2: ||\beta_{HL}^{k} - \beta_{HL}^{k-1}||_2 \leq 10^{-3}\]</div>
+\[e2: ||\beta_{HL}^{k} - \beta_{HL}^{k-1}||_2 \leq 10^{-3}\]</div>
 <div class="math notranslate nohighlight">
-\[tol3: ||\nabla G(\textbf{Y}^{k})- \nabla G(\textbf{Y}^{k-1})||_2 \leq 10^{-3}\]</div>
+\[e3: ||\nabla G(\textbf{Y}^{k})- \nabla G(\textbf{Y}^{k-1})||_2 \leq 10^{-3}\]</div>
 <a class="reference internal image-reference" href="_images/Reliability_FORM.png"><img alt="Graphical representation of the FORM." class="align-center" src="_images/Reliability_FORM.png" style="width: 544.0px; height: 355.20000000000005px;" /></a>
 <p>In SORM the performance function is approximated by a second-order Taylor series around the design point according to</p>
 <div class="math notranslate nohighlight">
@@ -228,7 +228,7 @@ class is instantiated.</p>
 <dt><strong>corr_z</strong> or <strong>corr_x</strong> (<cite>ndarray</cite>):</dt><dd><p>Covariance matrix</p>
 <p>If <cite>corr_x</cite> is provided, it is the correlation matrix (<span class="math notranslate nohighlight">\(\mathbf{C_X}\)</span>) of the random vector <strong>X</strong> .</p>
 <p>If <cite>corr_z</cite> is provided, it is the correlation matrix (<span class="math notranslate nohighlight">\(\mathbf{C_Z}\)</span>) of the standard normal random
-vector <strong>U</strong> .</p>
+vector <strong>Z</strong> .</p>
 <blockquote>
 <div><p>Default: <cite>corr_z</cite> is specified as the identity matrix.</p>
 </div></blockquote>
@@ -236,19 +236,19 @@ vector <strong>U</strong> .</p>
 </dl>
 </li>
 <li><dl>
-<dt><strong>tol1</strong> (<cite>float</cite>):</dt><dd><p>Convergence threshold for the <cite>HLRF</cite> algorithm.</p>
+<dt><strong>tol1</strong> (<cite>float</cite>):</dt><dd><p>Convergence threshold for criterion <cite>e1</cite> of the <cite>HLRF</cite> algorithm.</p>
 <p>Default: 1.0e-3</p>
 </dd>
 </dl>
 </li>
 <li><dl>
-<dt><strong>tol2</strong> (<cite>float</cite>):</dt><dd><p>Convergence threshold for the <cite>HLRF</cite> algorithm.</p>
+<dt><strong>tol2</strong> (<cite>float</cite>):</dt><dd><p>Convergence threshold for criterion <cite>e2</cite> of the <cite>HLRF</cite> algorithm.</p>
 <p>Default: 1.0e-3</p>
 </dd>
 </dl>
 </li>
 <li><dl>
-<dt><strong>tol3</strong> (<cite>float</cite>):</dt><dd><p>Convergence threshold for the <cite>HLRF</cite> algorithm.</p>
+<dt><strong>tol3</strong> (<cite>float</cite>):</dt><dd><p>Convergence threshold for criterion <cite>e3</cite> of the  <cite>HLRF</cite> algorithm.</p>
 <p>Default: 1.0e-3</p>
 </dd>
 </dl>
@@ -256,6 +256,12 @@ vector <strong>U</strong> .</p>
 <li><dl>
 <dt><strong>n_iter</strong> (<cite>int</cite>):</dt><dd><p>Maximum number of iterations for the <cite>HLRF</cite> algorithm.</p>
 <p>Default: 100</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>df_step</strong> (‘float’):</dt><dd><p>Finite difference step.</p>
+<p>Default: 0.01 (see <cite>derivatives</cite> class)</p>
 </dd>
 </dl>
 </li>
@@ -292,7 +298,7 @@ scheme after transformation to the standard normal space.</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>nataf_object</strong> (<code class="docutils literal notranslate"><span class="pre">Nataf</span></code> object(s)):</dt><dd><p>An object of the <code class="docutils literal notranslate"><span class="pre">Nataf</span></code> class (see <code class="docutils literal notranslate"><span class="pre">Nataf</span></code> class).</p>
+<dt><strong>nataf_object</strong> (<code class="docutils literal notranslate"><span class="pre">Nataf</span></code> object):</dt><dd><p>An object of the <code class="docutils literal notranslate"><span class="pre">Nataf</span></code> class (see <code class="docutils literal notranslate"><span class="pre">Nataf</span></code> class).</p>
 </dd>
 </dl>
 </li>
@@ -346,10 +352,8 @@ scheme after transformation to the standard normal space.</p>
 <dl class="class">
 <dt id="UQpy.Reliability.FORM">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">FORM</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">runmodel_object</em>, <em class="sig-param">df_step=None</em>, <em class="sig-param">corr_x=None</em>, <em class="sig-param">corr_z=None</em>, <em class="sig-param">n_iter=100</em>, <em class="sig-param">tol1=None</em>, <em class="sig-param">tol2=None</em>, <em class="sig-param">tol3=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#FORM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.FORM" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>A class perform the First Order Reliability Method. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">FORM</span></code> class can be invoked many</dt><dd><p>times and each time the results are appended to the existing ones.</p>
-</dd>
-</dl>
+<dd><p>A class perform the First Order Reliability Method. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">FORM</span></code> class can be invoked many
+times and each time the results are appended to the existing ones.</p>
 <p>This is a child class of the <code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> class.</p>
 <p><strong>Input:</strong></p>
 <p>See <code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> class.</p>
@@ -415,6 +419,11 @@ scheme after transformation to the standard normal space.</p>
 </dd>
 </dl>
 </li>
+<li><dl class="simple">
+<dt><strong>error_record</strong> (<cite>list</cite>):</dt><dd><p>Record of the error defined by criteria <cite>e1, e2, e3</cite>.</p>
+</dd>
+</dl>
+</li>
 </ul>
 <p><strong>Methods:</strong></p>
 <dl class="method">
@@ -439,7 +448,7 @@ scheme after transformation to the standard normal space.</p>
 <h4>SORM<a class="headerlink" href="#sorm" title="Permalink to this headline">¶</a></h4>
 <dl class="class">
 <dt id="UQpy.Reliability.SORM">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">SORM</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">runmodel_object</em>, <em class="sig-param">def_step=None</em>, <em class="sig-param">corr_x=None</em>, <em class="sig-param">corr_z=None</em>, <em class="sig-param">n_iter=100</em>, <em class="sig-param">tol1=0.001</em>, <em class="sig-param">tol2=0.001</em>, <em class="sig-param">tol3=0.001</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#SORM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.SORM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">SORM</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">runmodel_object</em>, <em class="sig-param">def_step=None</em>, <em class="sig-param">corr_x=None</em>, <em class="sig-param">corr_z=None</em>, <em class="sig-param">n_iter=100</em>, <em class="sig-param">tol1=None</em>, <em class="sig-param">tol2=None</em>, <em class="sig-param">tol3=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#SORM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.SORM" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class to perform the Second Order Reliability Method. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">FORM</span></code> class can be invoked many
 times and each time the results are appended to the existing ones.</p>
 <p><code class="docutils literal notranslate"><span class="pre">SORM</span></code> class first performs FORM and then corrects the estimated FORM probability using second-order information.</p>
