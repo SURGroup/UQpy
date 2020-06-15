@@ -6,20 +6,13 @@ Transformations
 This module contains functionality for all the transformations methods supported in ``UQpy``. 
 The module currently contains the following classes:
 
-- ``Isoprob``: Class to perform isoprobabilistic transformations.
-
-
-Isoprobabilistic
------------------
-
-``Isoprob`` is   a   class   for   transforming  non-Gaussian depedent random  variables  to independent standard Gaussian. It is the parent class of the ``Nataf`` and ``InvNataf`` classes that perform the Nataf transformation and its inverse, respectively.
-
-.. autoclass:: UQpy.Transformations.Isoprob
-    :members: 
+- ``Nataf``: Class to perform the Nataf isoprobabilistic transformations.
+- ``Correlate``: Class to induce correlation to a standard normal vector.
+- ``Decorrelate``: Class to remove correlation from a standard normal vector.
 
 
 Nataf
-~~~~~~~
+-----------------
 
 ``Nataf`` is   a   class   for   transforming   random   variables   using   the   `Nataf` transformation  and  calculating  the  correlation  distortion.    According  to  the Nataf transformation theory ([1]_, [2]_), a `n`-dimensional dependent random vector :math:`\textbf{x}=[X_1,...,X_n]` for which the  marginal cumulative distributions :math:`F_i(x_i)`  and the correlattion matrix :math:`\textbf{C}_x=[\xi_{ij}]` are known, can be transformed (component-wise) to standard normal random vector :math:`\textbf{z}=[Z_1,...,Z_n]` with correlation matrix :math:`\textbf{C}_z=[\rho_{ij}]` through the transformation:
 
@@ -33,38 +26,48 @@ This transformation causes a `correlation distortion`; the correlation coefficie
 
 where :math:`X_i =F_i^{-1}(\Phi(Z_{i}))` and :math:`\phi_2(\cdot)` is the bivariate standard normal probability density function. The integration is directly evaluated using a quadratic two-dimensional Gauss-Legendre integration.
 
-After the correlation matrix :math:`\textbf{C}_z=[\rho_{ij}]` is determined, the mutually independent standard normal vector :math:`\textbf{Y}=[Y_1,...,Y_n]` can be calculated as: 
+The Jacobian of the transformation can be also estimated with the ``Nataf`` class as:
 
-.. math:: \textbf{y}^\intercal = \mathbf{H}^{-1} \mathbf{z}^\intercal
+.. math:: \mathbf{J_{xz}} = \dfrac{\partial\mathbf{x}}{\partial\mathbf{z}} =\left[\dfrac{\phi(Z_i)}{f_i(X_i)}\right]\mathbf{H}.
 
-where :math:`\mathbf{H}` is the lower triangular matrix resulting from the Cholesky decomposition of the correlation matrix, i.e. :math:`\mathbf{C_z}=\mathbf{H}\mathbf{H}^\intercal`. 
+where :math:`\textbf{H}` is the lower diagonal matrix resulting from the Cholesky decomposition of the correlation  matrix
+(:math:`\mathbf{C_Z}`). The 'Nataf' class also allows for the inverse of the Nataf transformation, i.e. transforming a vector of standard normal vector :math:`\textbf{z}=[Z_1,...,Z_n]` to random variables with prescribed marginal cumulative distributions and correlation matrix :math:`\textbf{C}_x=[\rho_{ij}]` according to:
 
-The Jacobian of the Nataf transformation can be also estimated with the ``Nataf`` class as:
+.. math:: X_{i}=F_i^{-1}(\Phi(Z_{i}))
 
-.. math:: \mathbf{J_{xy}}=\dfrac{\partial\mathbf{x}}{\partial\mathbf{y}}= \dfrac{\partial\mathbf{x}}{\partial\mathbf{z}} =\left[\dfrac{\phi(Z_i)}{f_i(X_i)}\right]\mathbf{H}.
+The inverse Nataf is widely-used in reliabilityt analysis using FORM.
+
+The ``Nataf``   class can be imported in a python script using the following command:
+
+>>> from UQpy.Transformations import Nataf
 
 .. autoclass:: UQpy.Transformations.Nataf
     :members: 
 
 
-InvNataf
-~~~~~~~~~~
+Correlate
+-----------------
 
-The ``InvNataf`` class performs the the inverse Nataf transformation. From a mutually independent standard normal vector :math:`\textbf{y}=[Y_1,...,Y_n]` obtain the correlated standard normal vector :math:`\textbf{z}=[Z_1,...,Z_n]`
+``Correlate`` is a class to induce correlation to an uncorrelated standard normal vector :math:`\textbf{y}=[Y_1,...,Y_n]`, given the correlation matrix :math:`\textbf{C}_z=[\rho_{ij}]`. The correlated standard normal vector :math:`\textbf{z}=[Z_1,...,Z_n]` can be calculated as: 
 
 .. math:: \mathbf{z}^\intercal = \mathbf{H}\mathbf{y}^\intercal
 
-where :math:`\mathbf{H}` is the lower triangular matrix resulting from the Cholesky decomposition of the correlation matrix, i.e. :math:`\mathbf{C_z}=\mathbf{H}\mathbf{H}^\intercal`. Then transform :math:`\textbf{z}' to 
+where :math:`\mathbf{H}` is the lower triangular matrix resulting from the Cholesky decomposition of the correlation matrix, i.e. :math:`\mathbf{C_z}=\mathbf{H}\mathbf{H}^\intercal`. 
 
-.. math:: X_{i}=F_i^{-1}(\Phi(Z_{i}))
-
-.. autoclass:: UQpy.Transformations.InvNataf
+.. autoclass:: UQpy.Transformations.Correlate
     :members:
+	
+Decorrelate
+-----------------
 
+``Decorrelate`` is a class to remove correlation from an correlated standard normal vector :math:`\textbf{z}=[Z_1,...,Z_n]` with correlation matrix :math:`\textbf{C}_z=[\rho_{ij}]`. The uncorrelated standard normal vector :math:`\textbf{y}=[Y_1,...,Y_n]` can be calculated as: 
 
-The ``Nataf`` and ``InvNataf``  classes can be imported in a python script using the following command:
+.. math:: \textbf{y}^\intercal = \mathbf{H}^{-1} \mathbf{z}^\intercal
 
->>> from UQpy.Transformations import Forward, Inverse
+The ``Decorrelate`` class can be imported in a python script using the following command:
+
+>>> from UQpy.Transformations import Decorrelate
+
 
 **References:**
 

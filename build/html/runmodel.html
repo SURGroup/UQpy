@@ -1,18 +1,18 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>RunModel &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Distributions" href="distributions.html" />
@@ -35,6 +35,14 @@
             
   <div class="section" id="runmodel">
 <span id="id1"></span><h1>RunModel<a class="headerlink" href="#runmodel" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-UQpy.RunModel"></span><p><code class="docutils literal notranslate"><span class="pre">RunModel</span></code> is the core module for <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> to execute computational models</p>
+<p><code class="docutils literal notranslate"><span class="pre">RunModel</span></code> contains a single class, also called <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> that is used to execute computational models at specified
+sample points. <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> may be used to execute Python models or third-party software models and is capable of
+running models serially or in parallel on both local machines or HPC clusters.</p>
+<p>The module currently contains the following classes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">RunModel</span></code>: Class for execution of a computational model</p></li>
+</ul>
 <div class="section" id="architecture-workflow">
 <h2>Architecture &amp; Workflow<a class="headerlink" href="#architecture-workflow" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> class has four basic workflows delineated in two levels. At the first level, <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> can be used for execution of either a Python computational model, in which case the model is imported and run directly, or for execution of a third-party software model. When running with a third-party software model, <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> interfaces with the model through text-based input files and serves as the “driver” to initiate the necessary calculations. At the second level, the jobs that are run by <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> can either be executed
@@ -149,7 +157,7 @@ the command line as</p>
                   <span class="s2">&quot;.m .&quot;</span>
    <span class="n">command2</span> <span class="o">=</span> <span class="s2">&quot;matlab -nosplash -nojvm -nodisplay -nodesktop -r</span>
                   <span class="s1">&#39;run matlab_model_&quot; + str(sample_index + 1) + &quot;.m;</span>
-                              <span class="n">exit</span><span class="s1">&#39;&quot;</span>
+                              <span class="nb">exit</span><span class="s1">&#39;&quot;</span>
    <span class="c1"># Rename the output file</span>
    <span class="n">command3</span> <span class="o">=</span> <span class="s2">&quot;mv y.txt y_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">sample_index</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.txt&quot;</span>
 
@@ -263,6 +271,256 @@ the command line as</p>
 </div>
 <div class="section" id="runmodel-class">
 <h2>RunModel Class<a class="headerlink" href="#runmodel-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="UQpy.RunModel.RunModel">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.RunModel.</code><code class="sig-name descname">RunModel</code><span class="sig-paren">(</span><em class="sig-param">samples=None</em>, <em class="sig-param">model_script=None</em>, <em class="sig-param">model_object_name=None</em>, <em class="sig-param">input_template=None</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">output_script=None</em>, <em class="sig-param">output_object_name=None</em>, <em class="sig-param">ntasks=1</em>, <em class="sig-param">cores_per_task=1</em>, <em class="sig-param">nodes=1</em>, <em class="sig-param">cluster=False</em>, <em class="sig-param">resume=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">model_dir='Model_Runs'</em>, <em class="sig-param">fmt=None</em>, <em class="sig-param">separator='</em>, <em class="sig-param">'</em>, <em class="sig-param">vec=True</em>, <em class="sig-param">delete_files=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/RunModel.html#RunModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.RunModel.RunModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a computational model at specified sample points.</p>
+<p>This class is the interface between <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> and computational models. The model is called in a Python script whose
+name must be passed as one the arguments to the <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> call. If the model is in Python, <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> import the
+model and executes it directly. If the model is not in Python, <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> must be provided the name of a template
+input file, the name of the Python script that runs the model, and an (optional) output Python script.</p>
+<p><strong>Input:</strong></p>
+<ul>
+<li><dl>
+<dt><strong>samples</strong> (<cite>ndarray</cite> or <cite>list</cite>)</dt><dd><p>Samples to be passed as inputs to the model.</p>
+<p>Regardless of data type, the first dimension of <code class="docutils literal notranslate"><span class="pre">samples</span></code> must be equal to the number of samples at which
+to execute the model. That is, <code class="docutils literal notranslate"><span class="pre">len(samples)</span> <span class="pre">=</span> <span class="pre">nsamples</span></code>.</p>
+<p>Regardless of data type, the second dimension of <code class="docutils literal notranslate"><span class="pre">samples</span></code> must be equal to the number of variables to
+to pass for each model evaluation. That is, <code class="docutils literal notranslate"><span class="pre">len(samples[0])</span> <span class="pre">=</span> <span class="pre">n_vars</span></code>. Each variable need not be a scalar.
+Variables may be scalar, vector, matrix, or tensor type (i.e. <cite>float</cite>, <cite>list</cite>, or <cite>ndarray</cite>).</p>
+<p>If <cite>samples</cite> are not passed, a <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object will be instantiated that can be used later, with the <code class="docutils literal notranslate"><span class="pre">run</span></code>
+method, to evaluate the model.</p>
+<p>Used in both python and third-party model execution.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>model_script</strong> (<cite>str</cite>)</dt><dd><p>The filename (with .py extension) of the Python script which contains commands to execute the model.</p>
+<p>The named file must be present in the current working directory from which <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> is called.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>model_object_name</strong> (‘str`)</dt><dd><p>In the Python workflow, <cite>model_object_name</cite> specifies the name of the function or class within <cite>model_script’
+that executes the model. If there is only one function or class in the `model_script</cite>, then it is not necessary
+to specify the model_object_name. If there are multiple objects within the <cite>model_script</cite>, then
+<cite>model_object_name</cite> must be specified.</p>
+<p><cite>model_object_name</cite> is not used in the third-party software model workflow.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>input_template</strong> (<cite>str</cite>)</dt><dd><p>The name of the template input file that will be used to generate input files for each run of the model. When
+operating <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> with a third-party software model, <code class="docutils literal notranslate"><span class="pre">input_template</span></code> must be specified.</p>
+<p>The named file must be present in the current working directory from which <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> is called.</p>
+<p><cite>input_template</cite> is not used in the Python model workflow.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>var_names</strong> (<cite>list</cite> of <cite>str</cite>)</dt><dd><p>A list containing the names of the variables present in <cite>input_template</cite>.</p>
+<p>If <cite>input template</cite> is provided and  <cite>var_names</cite> is not passed, i.e. if <code class="docutils literal notranslate"><span class="pre">var_names=None</span></code>, then the default
+variable names <cite>x0</cite>, <cite>x1</cite>, <cite>x2</cite>,…, <cite>xn</cite> are created and used by <code class="docutils literal notranslate"><span class="pre">RunModel</span></code>, where <cite>n</cite> is the number of
+variables (<cite>n_vars</cite>).</p>
+<p>The number of variables is equal to the second dimension of <cite>samples</cite> (i.e. <code class="docutils literal notranslate"><span class="pre">n_vars=len(samples[0])</span></code>).</p>
+<p><cite>var_names</cite> is not used in the Python model workflow.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>output_script</strong> (<cite>str</cite>)</dt><dd><p>The filename of the Python script that contains the commands to process the output from third-party software
+model evaluation. <cite>output_script</cite> is used to extract quantities of interest from model output files and return
+the quantities of interest to <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> for subsequent <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> processing (e.g. for adaptive methods that
+utilize the results of previous simulations to initialize new simulations).</p>
+<p>If, in the third-party software model workflow, <code class="docutils literal notranslate"><span class="pre">output_script</span> <span class="pre">=</span> <span class="pre">None</span></code> (the default), then the qoi_list
+attribute is empty and postprocessing must be handled outside of <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p>
+<p>If used, the named file must be present in the current working directory from which <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> is called.</p>
+<p><cite>output_script</cite> is not used in the Python model workflow. In the Python model workflow, all model postprocessing
+is handled directly within <cite>model_script</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>output_object_name</strong> (<cite>str</cite>)</dt><dd><p>The name of the function or class within <cite>output_script</cite> that is used to collect and process the output values
+from third-party software model output files. If the object is a class, the output must be saved as an attribute
+called <cite>qoi</cite>. If it is a function, it should return the output quantity of interest.</p>
+<p>If there is only one function or only one class in <cite>output_script</cite>, then it is not necessary to specify
+<cite>output_object_name</cite>. If there are multiple objects in <cite>output_script</cite>, then output_object_name must be
+specified.</p>
+<p><cite>output_object_name</cite> is not used in the Python model workflow.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>ntasks</strong> (<cite>int</cite>)</dt><dd><p>Number of tasks to be run in parallel. By default, <code class="docutils literal notranslate"><span class="pre">ntasks</span> <span class="pre">=</span> <span class="pre">1</span></code> and the models are executed serially.</p>
+<p>Setting ntasks equal to a positive integer greater than 1 will trigger the parallel workflow.</p>
+<p><cite>ntasks</cite> is used for both the Python and third-party model workflows. <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> uses <cite>GNU parallel</cite> to
+execute third-party models in parallel and the multiprocessing module to execute Python models in parallel.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>cores_per_task</strong> (<cite>int</cite>)</dt><dd><p>Number of cores to be used by each task. In cases where a third-party model runs across multiple CPUs, this
+optional attribute allocates the necessary resources to each model evaluation.</p>
+<p><cite>cores_per_task</cite> is not used in the Python model workflow.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>nodes</strong> (<cite>int</cite>)</dt><dd><p>Number of nodes across which to distribute individual tasks on an HPC cluster in the third-party model workflow.
+If more than one compute node is necessary to execute individual runs in parallel, <cite>nodes</cite> must be specified.</p>
+<p><cite>nodes</cite> is not used in the Python model workflow.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>cluster</strong> (<cite>boolean</cite>)</dt><dd><p>Set <code class="docutils literal notranslate"><span class="pre">cluster</span> <span class="pre">=</span> <span class="pre">True</span></code> to run on an HPC cluster.</p>
+<p><code class="docutils literal notranslate"><span class="pre">RunModel</span></code> currently supports computations on HPC clusters using the SLURM scheduler
+(<a class="reference external" href="https://slurm.schedmd.com">https://slurm.schedmd.com</a>). The set of model evaulations is submitted using the GNU <cite>parallel</cite> command with
+option <cite>-j ntasks</cite>. Individual model evaluations are submitted using the <cite>srun</cite> command with options <cite>-N nodes</cite>
+and <cite>-c cores_per_node</cite>.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">cluster</span> <span class="pre">=</span> <span class="pre">False</span></code>, the <cite>srun</cite> command is not used, but the <cite>parallel</cite> command still is.</p>
+<p><cite>cluster</cite> is not used for the Python model workflow.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>resume</strong> (<cite>boolean</cite>)</dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">resume</span> <span class="pre">=</span> <span class="pre">True</span></code>, <cite>GNU parallel</cite> enables <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> to resume execution of any model evaluations that failed
+to execute in the third-party software model workflow.</p>
+<p>To use this feature, execute the same call to <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> that failed to complete but with <code class="docutils literal notranslate"><span class="pre">resume</span> <span class="pre">=</span> <span class="pre">True</span></code>.
+The same set of samples must be passed to resume processing from the last successful execution of the model.</p>
+<p><cite>resume</cite> is not used in the Python model workflow.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>verbose</strong> (<cite>boolean</cite>)</dt><dd><p>Set <code class="docutils literal notranslate"><span class="pre">verbose</span> <span class="pre">=</span> <span class="pre">True</span></code> to print status messages to the terminal during execution.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>model_dir</strong> (<cite>str</cite>)</dt><dd><p>Specifies the name of the sub-directory from which the model will be executed and to which output files will be
+saved.  A new directory is created by <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> within the current directory whose name is <cite>model_dir</cite>
+appended with a timestamp.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>fmt</strong> (<cite>str</cite>)</dt><dd><p>If the <cite>template_input</cite> requires variables to be written in specific format, this format can be specified here.</p>
+<p>Format specification follows standard Python conventions for the str.format() command described at:
+<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str.format">https://docs.python.org/3/library/stdtypes.html#str.format</a>. For additional details, see the Format String Syntax
+description at: <a class="reference external" href="https://docs.python.org/3/library/string.html#formatstrings">https://docs.python.org/3/library/string.html#formatstrings</a>.</p>
+<p>For example, ls-dyna .k files require each card is to be exactly 10 characters. The following format string
+syntax can be used, “{:&gt;10.4f}”.</p>
+<p><cite>fmt</cite> is not used in the Python model workflow.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>separator</strong> (<cite>str</cite>)</dt><dd><p>A string used to delimit values when printing arrays to the <cite>template_input</cite>.</p>
+<p><cite>separator</cite> is not used in the Python model workflow.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>vec</strong> (<cite>boolean</cite>)</dt><dd><p>Specifies vectorized (<code class="docutils literal notranslate"><span class="pre">vec</span> <span class="pre">=</span> <span class="pre">True</span></code>) or looped (<code class="docutils literal notranslate"><span class="pre">vec</span> <span class="pre">=</span> <span class="pre">False</span></code>) model evaluation in the serial Python model
+workflow.</p>
+<p>In the Python model workflow, <cite>model_script</cite> may be written to accept a single sample or multiple samples at a
+time. If it is written to accept a single sample, set <code class="docutils literal notranslate"><span class="pre">vec</span> <span class="pre">=</span> <span class="pre">False</span></code> and <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> will run the model in a
+loop over the number of samples. If <cite>model_script</cite> is written to accept multiple samples, set <code class="docutils literal notranslate"><span class="pre">vec</span> <span class="pre">=</span> <span class="pre">True</span></code> and
+<code class="docutils literal notranslate"><span class="pre">RunModel</span></code> will pass all of the samples to the model for vectorized computation.</p>
+<p><cite>vec</cite> is not used in the third-party model workflow.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>delete_files</strong> (<cite>boolean</cite>)</dt><dd><p>Specifies whether or not to delete individual run output files after model execution and output processing.</p>
+<p>If <cite>delete_files = True</cite>, <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> will remove all <cite>run_i…</cite> directories in the <cite>model_dir</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>kwargs</strong> (<cite>dict</cite>)</dt><dd><p>Additional inputs to the Python object specified by <cite>model_object_name</cite> in the Python model workflow.</p>
+<p><cite>**kwargs</cite> is not used in the third-party model workflow.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Attributes</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>samples</strong> (<cite>ndarray</cite>)</dt><dd><p>Internally, <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> converts the input <cite>samples</cite> into a numpy <cite>ndarray</cite> with at least two dimension where
+the first dimension of the <cite>ndarray</cite> corresponds to a single sample to be executed by the model.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nsim</strong> (<cite>int</cite>)</dt><dd><p>Number of model evaluations to be performed, <code class="docutils literal notranslate"><span class="pre">nsim</span> <span class="pre">=</span> <span class="pre">len(samples)</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>nexist</strong> (<cite>int</cite>)</dt><dd><p>Number of pre-existing model evaluations, prior to a new <code class="docutils literal notranslate"><span class="pre">run</span></code> method call.</p>
+<p>If the <code class="docutils literal notranslate"><span class="pre">run</span></code> methods has previously been called and model evaluations performed, subsequent calls to the
+<code class="docutils literal notranslate"><span class="pre">run</span></code> method will be appended to the <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object. <cite>nexist</cite> stores the number of previously existing
+model evaluations.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>n_vars</strong> (<cite>int</cite>)</dt><dd><p>Number of variables to be passed for each model evaluation, <code class="docutils literal notranslate"><span class="pre">n_vars</span> <span class="pre">=</span> <span class="pre">len(samples[0])</span></code>.</p>
+<p>Note that variables do not need to be scalars. Variables can be scalars, vectors, matrices, or tensors. When
+writing vectors, matrices, and tensors to a <cite>input_template</cite> they are first flattened and written in delimited
+form.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>qoi_list</strong> (<cite>list</cite>)</dt><dd><p>A list containing the output quantities of interest</p>
+<p>In the third-party model workflow, these output quantities of interest are extracted from the model output files
+by <cite>output_script</cite>.</p>
+<p>In the Python model workflow, the returned quantity of interest from the model evaluations is stored as
+<cite>qoi_list</cite>.</p>
+<p>This attribute is commonly used for adaptive algorithms that employ learning functions based on previous model
+evaluations.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods</strong></p>
+<dl class="method">
+<dt id="UQpy.RunModel.RunModel.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">samples=None</em>, <em class="sig-param">append_samples=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/RunModel.html#RunModel.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.RunModel.RunModel.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute a computational model at given sample values.</p>
+<p>If <cite>samples</cite> are passed when defining the <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is called automatically.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method may also be called directly after defining the <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object.</p>
+<p><strong>Input:</strong></p>
+<ul>
+<li><dl>
+<dt><strong>samples</strong> (<cite>ndarray</cite> or <cite>list</cite>)</dt><dd><p>Samples to be passed as inputs to the model defined by the <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object.</p>
+<p>Regardless of data type, the first dimension of <code class="docutils literal notranslate"><span class="pre">samples</span></code> must be equal to the number of samples at which
+to execute the model. That is, <code class="docutils literal notranslate"><span class="pre">len(samples)</span> <span class="pre">=</span> <span class="pre">nsamples</span></code>.</p>
+<p>Regardless of data type, the second dimension of <code class="docutils literal notranslate"><span class="pre">samples</span></code> must be equal to the number of variables to
+to pass for each model evaluation. That is, <code class="docutils literal notranslate"><span class="pre">len(samples[0])</span> <span class="pre">=</span> <span class="pre">n_vars</span></code>. Each variable need not be a
+scalar. Variables may be scalar, vector, matrix, or tensor type (i.e. <cite>float</cite>, <cite>list</cite>, or <cite>ndarray</cite>).</p>
+<p>Used in both python and third-party model execution.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>append_samples</strong> (<cite>boolean</cite>)</dt><dd><p>Append over overwrite existing samples and model evaluations.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">append_samples</span> <span class="pre">=</span> <span class="pre">False</span></code>, all previous samples and the corresponding quantities of interest from their
+model evaluations are deleted.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">append_samples</span> <span class="pre">=</span> <span class="pre">True</span></code>, samples and their resulting quantities of interest are appended to the
+existing ones.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="footnote brackets">
 <dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
 <dd><p>Tange, Ole. (2018). GNU Parallel 2018, <a class="reference external" href="https://doi.org/10.5281/zenodo.1146014">https://doi.org/10.5281/zenodo.1146014</a></p>
@@ -343,7 +601,7 @@ the command line as</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -352,7 +610,7 @@ the command line as</p>
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
