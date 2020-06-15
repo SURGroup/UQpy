@@ -28,7 +28,9 @@ def det_rvs(samples=None):
     return x
 
 def det_rvs_par(samples=None):
-
+    print(samples[0])
+    print(samples[1])
+    print(type(samples))
     x = samples[0] * np.linalg.det(samples[1])
     return x
 
