@@ -7,6 +7,7 @@ from scipy.stats import norm
 import itertools
 
 
+# TODO: add non-stationary-methods for all the classes
 class SRM:
     """
     A class to simulate Stochastic Processes from a given power spectrum density based on the Spectral Representation
@@ -102,7 +103,7 @@ class SRM:
 
         self.random_state = random_state
         if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
+            np.random.seed(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
@@ -841,7 +842,6 @@ class InverseTranslation:
         return s_g_iterate
 
 
-@staticmethod
 def Wiener_Khinchin_transform(power_spectrum, frequency, time):
     """
         Description:
@@ -869,7 +869,6 @@ def Wiener_Khinchin_transform(power_spectrum, frequency, time):
     return correlation_function
 
 
-@staticmethod
 def Inverse_Wiener_Khinchin_transform(correlation_function, frequency, time):
     """
         Description: A function to transform the autocorrelation function to a power spectrum
@@ -897,7 +896,6 @@ def Inverse_Wiener_Khinchin_transform(correlation_function, frequency, time):
     return power_spectrum
 
 
-@staticmethod
 def scaling_correlation_function(correlation_function):
     """
         Description: A function to scale down the autocorrelation function to a correlation function
