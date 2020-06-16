@@ -282,7 +282,8 @@ def compute_Delaunay_centroid_volume(vertices):
     return centroid, volume
 
 
-def correlation_distortion(marginal, rho_norm):
+# TODO: name change
+def correlation_distortion_change(marginal, rho_norm):
 
     """
         Description:
@@ -1068,9 +1069,8 @@ def nn_coord(x, k):
     #idx = idx[k+1:]
     return idx
 
-# TODO: rename function to correlation distortion
 # TODO: put doc_string around this
-def solve_single_integral(dist_object, rho):
+def correlation_distortion(dist_object, rho):
     if rho == 1.0:
         rho = 0.999
     n = 1024
