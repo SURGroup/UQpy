@@ -27,18 +27,16 @@ def det_rvs(samples=None):
     x = samples[:][0] * np.linalg.det(samples[:][1])
     return x
 
+
 def det_rvs_par(samples=None):
-    print(samples[0])
-    print(samples[1])
-    print(type(samples))
-    x = samples[0] * np.linalg.det(samples[1])
+    x = samples[0][0] * np.linalg.det(samples[0][1])
     return x
 
 
 class DetRVs:
     def __init__(self, samples=None):
 
-        self.qoi = samples[:][0] * np.linalg.det(samples[:][1])
+        self.qoi = samples[0][0] * np.linalg.det(samples[0][1])
 
 
 def det_rvs_fixed(samples=None, coeff=None):
