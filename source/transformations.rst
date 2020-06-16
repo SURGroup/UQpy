@@ -48,9 +48,9 @@ The ``Nataf``   class can be imported in a python script using the following com
 Correlate
 -----------------
 
-``Correlate`` is a class to induce correlation to an uncorrelated standard normal vector :math:`\textbf{y}=[Y_1,...,Y_n]`, given the correlation matrix :math:`\textbf{C}_z=[\rho_{ij}]`. The correlated standard normal vector :math:`\textbf{z}=[Z_1,...,Z_n]` can be calculated as: 
+``Correlate`` is a class to induce correlation to an uncorrelated standard normal vector :math:`\textbf{u}=[U_1,...,U_n]`, given the correlation matrix :math:`\textbf{C}_z=[\rho_{ij}]`. The correlated standard normal vector :math:`\textbf{z}=[Z_1,...,Z_n]` can be calculated as: 
 
-.. math:: \mathbf{z}^\intercal = \mathbf{H}\mathbf{y}^\intercal
+.. math:: \mathbf{z}^\intercal = \mathbf{H}\mathbf{u}^\intercal
 
 where :math:`\mathbf{H}` is the lower triangular matrix resulting from the Cholesky decomposition of the correlation matrix, i.e. :math:`\mathbf{C_z}=\mathbf{H}\mathbf{H}^\intercal`. 
 
@@ -60,9 +60,9 @@ where :math:`\mathbf{H}` is the lower triangular matrix resulting from the Chole
 Decorrelate
 -----------------
 
-``Decorrelate`` is a class to remove correlation from an correlated standard normal vector :math:`\textbf{z}=[Z_1,...,Z_n]` with correlation matrix :math:`\textbf{C}_z=[\rho_{ij}]`. The uncorrelated standard normal vector :math:`\textbf{y}=[Y_1,...,Y_n]` can be calculated as: 
+``Decorrelate`` is a class to remove correlation from an correlated standard normal vector :math:`\textbf{z}=[Z_1,...,Z_n]` with correlation matrix :math:`\textbf{C}_z=[\rho_{ij}]`. The uncorrelated standard normal vector :math:`\textbf{u}=[U_1,...,U_n]` can be calculated as: 
 
-.. math:: \textbf{y}^\intercal = \mathbf{H}^{-1} \mathbf{z}^\intercal
+.. math:: \textbf{u}^\intercal = \mathbf{H}^{-1} \mathbf{z}^\intercal
 
 The ``Decorrelate`` class can be imported in a python script using the following command:
 

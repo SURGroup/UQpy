@@ -20,10 +20,9 @@ from UQpy.Distributions import *
 from UQpy.Utilities import *
 
 
-# TODO: Add static methods for W-K transform.
-# TODO: Modify function name in utilities.
-
 # TODO: add non-stationary-methods for all the classes
+
+
 class SRM:
     """
     A class to simulate stochastic processes from a given power spectrum density using the Spectral Representation
@@ -100,21 +99,26 @@ class SRM:
 
     """
 
-    def __init__(self, nsamples, power_spectrum, time_duration, frequency_length, number_time_intervals,
-                 number_frequency_intervals, case='uni', random_state=None, verbose=False):
+    def __init__(self, nsamples, power_spectrum, time_interval, frequency_interval, number_time_intervals,
+                 number_frequency_intervals, random_state=None, verbose=False):
         self.power_spectrum = power_spectrum
-        self.time_duration = np.array(time_duration)
-        self.frequency_length = np.array(frequency_length)
+        if isinstance(time_interval, float) and isinstance(frequency_interval, float) and \
+                isinstance(number_time_intervals, int) and isinstance(number_frequency_intervals, int):
+            time_interval = [time_interval]
+            frequency_interval = [frequency_interval]
+            number_time_intervals = [number_time_intervals]
+            number_frequency_intervals = [number_frequency_intervals]
+        self.time_interval = np.array(time_interval)
+        self.frequency_interval = np.array(frequency_interval)
         self.number_time_intervals = np.array(number_time_intervals)
         self.number_frequency_intervals = np.array(number_frequency_intervals)
         self.nsamples = nsamples
 
         # Error checks
-        t_u = 2 * np.pi / (2 * self.number_frequency_intervals * self.frequency_length)
-        if (self.time_duration > t_u).any():
+        t_u = 2 * np.pi / (2 * self.number_frequency_intervals * self.frequency_interval)
+        if (self.time_interval > t_u).any():
             raise RuntimeError('UQpy: Aliasing might occur during execution')
 
-        self.case = case
         self.verbose = verbose
 
         self.random_state = random_state
@@ -125,16 +129,14 @@ class SRM:
 
         self.samples = None
         self.number_of_variables = None
-        self.number_of_dimensions = None
+        self.number_of_dimensions = len(self.number_frequency_intervals)
         self.phi = None
 
-        # TODO: Change time_duration to time_interval
-        # TODO: Remove case parameters
-        if self.case == 'uni':
-            self.number_of_dimensions = len(self.power_spectrum.shape)
-        elif self.case == 'multi':
+        if self.number_of_dimensions == len(self.power_spectrum.shape):
+            self.case = 'uni'
+        else:
             self.number_of_variables = self.power_spectrum.shape[0]
-            self.number_of_dimensions = len(self.power_spectrum.shape[2:])
+            self.case = 'multi'
 
         # Run Spectral Representation Method
         if self.nsamples is not None:
@@ -206,7 +208,7 @@ class SRM:
 
     def _simulate_uni(self, phi):
         fourier_coefficient = np.exp(phi * 1.0j) * np.sqrt(
-            2 ** (self.number_of_dimensions + 1) * self.power_spectrum * np.prod(self.frequency_length))
+            2 ** (self.number_of_dimensions + 1) * self.power_spectrum * np.prod(self.frequency_interval))
         samples = np.fft.fftn(fourier_coefficient, self.number_time_intervals)
         samples = np.real(samples)
         samples = samples[:, np.newaxis]
@@ -214,7 +216,7 @@ class SRM:
 
     def _simulate_multi(self, phi):
         power_spectrum = np.einsum('ij...->...ij', self.power_spectrum)
-        coefficient = np.sqrt(2 ** (self.number_of_dimensions + 1)) * np.sqrt(np.prod(self.frequency_length))
+        coefficient = np.sqrt(2 ** (self.number_of_dimensions + 1)) * np.sqrt(np.prod(self.frequency_interval))
         u, s, v = np.linalg.svd(power_spectrum)
         power_spectrum_decomposed = np.einsum('...ij,...j->...ij', u, np.sqrt(s))
         fourier_coefficient = coefficient * np.einsum('...ij,n...j -> n...i',
@@ -324,25 +326,25 @@ class BSRM:
     **Methods**
     """
 
-    def __init__(self, nsamples, power_spectrum, bispectrum, time_duration, frequency_length, number_time_intervals,
+    def __init__(self, nsamples, power_spectrum, bispectrum, time_interval, frequency_interval, number_time_intervals,
                  number_frequency_intervals, case='uni', random_state=None, verbose=False):
         self.nsamples = nsamples
         self.number_frequency_intervals = np.array(number_frequency_intervals)
         self.number_time_intervals = np.array(number_time_intervals)
-        self.frequency_length = np.array(frequency_length)
-        self.time_duration = np.array(time_duration)
+        self.frequency_interval = np.array(frequency_interval)
+        self.time_interval = np.array(time_interval)
         self.number_of_dimensions = len(power_spectrum.shape)
         self.power_spectrum = power_spectrum
         self.bispectrum = bispectrum
 
         # Error checks
-        t_u = 2 * np.pi / (2 * self.number_frequency_intervals * self.frequency_length)
-        if (self.time_duration > t_u).any():
+        t_u = 2 * np.pi / (2 * self.number_frequency_intervals * self.frequency_interval)
+        if (self.time_interval > t_u).any():
             raise RuntimeError('UQpy: Aliasing might occur during execution')
 
         self.random_state = random_state
         if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
+            np.random.seed(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
@@ -358,14 +360,11 @@ class BSRM:
         self.case = case
         self.verbose = verbose
 
-        # TODO: Remve case parameter
-        # TODO: Change time_duration parameter to time_interval
-        if self.case == 'uni':
-            self.number_of_dimensions = len(self.power_spectrum.shape)
-            self._compute_bicoherence_uni()
-        elif self.case == 'multi':
+        if self.number_of_dimensions == len(self.power_spectrum.shape):
+            self.case = 'uni'
+        else:
             self.number_of_variables = self.power_spectrum.shape[0]
-            self.number_of_dimensions = len(self.power_spectrum.shape[2:])
+            self.case = 'multi'
 
         if self.nsamples is not None:
             self.run(nsamples=self.nsamples)
@@ -406,7 +405,7 @@ class BSRM:
                         self.pure_power_sepctrum[(*wj, *[])] != 0:
                     self.bc2[(*wi, *wj)] = self.b_ampl[(*wi, *wj)] ** 2 / (
                             self.pure_power_sepctrum[(*wi, *[])] * self.pure_power_sepctrum[(*wj, *[])] *
-                            self.power_spectrum[(*wk, *[])]) * self.frequency_length ** self.number_of_dimensions
+                            self.power_spectrum[(*wk, *[])]) * self.frequency_interval ** self.number_of_dimensions
                     self.sum_bc2[(*wk, *[])] = self.sum_bc2[(*wk, *[])] + self.bc2[(*wi, *wj)]
                 else:
                     self.bc2[(*wi, *wj)] = 0
@@ -423,7 +422,7 @@ class BSRM:
     def _simulate_bsrm_uni(self, phi):
         coeff = np.sqrt((2 ** (
                 self.number_of_dimensions + 1)) * self.power_spectrum *
-                        self.frequency_length ** self.number_of_dimensions)
+                        self.frequency_interval ** self.number_of_dimensions)
         phi_e = np.exp(phi * 1.0j)
         biphase_e = np.exp(self.biphase * 1.0j)
         b = np.sqrt(1 - self.sum_bc2) * phi_e
@@ -546,9 +545,9 @@ class KLE:
 
     # TODO: Test this for non-stationary processes.
 
-    def __init__(self, nsamples, correlation_function, time_duration, threshold=None, random_state=None, verbose=False):
+    def __init__(self, nsamples, correlation_function, time_interval, threshold=None, random_state=None, verbose=False):
         self.correlation_function = correlation_function
-        self.time_duration = time_duration
+        self.time_interval = time_interval
         if threshold:
             self.number_eigen_values = threshold
         else:
@@ -556,7 +555,7 @@ class KLE:
 
         self.random_state = random_state
         if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
+            np.random.seed(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
@@ -685,41 +684,47 @@ class Translation:
         correlation at '0' lag to be 1
     """
 
-    def __init__(self, dist_object, time_duration, frequency_interval, number_time_intervals,
+    def __init__(self, dist_object, time_interval, frequency_interval, number_time_intervals,
                  number_frequency_intervals, power_spectrum_gaussian=None, correlation_function_gaussian=None,
                  samples_gaussian=None):
         self.dist_object = dist_object
+        self.time_interval = time_interval
+        self.frequency_interval = frequency_interval
+        self.number_time_intervals = number_time_intervals
+        self.number_frequency_intervals = number_frequency_intervals
         if correlation_function_gaussian is None and power_spectrum_gaussian is None:
             print('Either the Power Spectrum or the Autocorrelation function should be specified')
         if correlation_function_gaussian is None:
             self.power_spectrum_gaussian = power_spectrum_gaussian
-            self.correlation_function_gaussian = Wiener_Khinchin_transform(power_spectrum_gaussian,
-                                                                           np.arange(0, number_frequency_intervals) *
-                                                                           frequency_interval,
-                                                                           np.arange(0,
-                                                                                     number_time_intervals) * time_duration)
+            self.correlation_function_gaussian = wiener_khinchin_transform(power_spectrum_gaussian, np.arange(0,
+                                                                           self.number_frequency_intervals) *
+                                                                           self.frequency_interval,
+                                                                           np.arange(0, self.number_time_intervals) *
+                                                                           self.time_interval)
         elif power_spectrum_gaussian is None:
             self.correlation_function_gaussian = correlation_function_gaussian
-            self.power_spectrum_gaussian = Inverse_Wiener_Khinchin_transform(correlation_function_gaussian,
-                                                                             np.arange(0,
-                                                                                       number_frequency_intervals) * frequency_interval,
-                                                                             np.arange(0,
-                                                                                       number_time_intervals) * time_duration)
+            self.power_spectrum_gaussian = inverse_wiener_khinchin_transform(correlation_function_gaussian, np.arange(0,
+                                                                             self.number_frequency_intervals) *
+                                                                             self.frequency_interval,
+                                                                             np.arange(0, self.number_time_intervals) *
+                                                                             self.time_interval)
         self.shape = self.correlation_function_gaussian.shape
         self.dim = len(self.correlation_function_gaussian.shape)
         if samples_gaussian is not None:
-            self.samples_gaussian = samples_gaussian
-            self.samples_non_gaussian = self.translate_gaussian_samples()
+            self.samples_shape = samples_gaussian.shape
+            self.samples_gaussian = samples_gaussian.flatten()[:, np.newaxis]
+            self.samples_non_gaussian = self._translate_gaussian_samples().reshape(self.samples_shape)
         self.correlation_function_non_gaussian, self.scaled_correlation_function_non_gaussian = \
-            self.autocorrelation_distortion()
-        self.power_spectrum_non_gaussian = Inverse_Wiener_Khinchin_transform(self.correlation_function_non_gaussian,
+            self._autocorrelation_distortion()
+        self.power_spectrum_non_gaussian = inverse_wiener_khinchin_transform(self.correlation_function_non_gaussian,
                                                                              np.arange(0,
-                                                                                       number_frequency_intervals) * frequency_interval,
+                                                                                       self.number_frequency_intervals)
+                                                                             * self.frequency_interval,
                                                                              np.arange(0,
-                                                                                       number_time_intervals) * time_duration)
+                                                                                       self.number_time_intervals)
+                                                                             * self.time_interval)
 
-    # TODO: Make these private methods.
-    def translate_gaussian_samples(self):
+    def _translate_gaussian_samples(self):
         standard_deviation = np.sqrt(self.correlation_function_gaussian[0])
         samples_cdf = norm.cdf(self.samples_gaussian, scale=standard_deviation)
         if hasattr(self.dist_object, 'icdf'):
@@ -729,13 +734,13 @@ class Translation:
             raise AttributeError('UQpy: The marginal dist_object needs to have an inverse cdf defined.')
         return samples_non_gaussian
 
-    def autocorrelation_distortion(self):
+    def _autocorrelation_distortion(self):
         correlation_function_gaussian = scaling_correlation_function(self.correlation_function_gaussian)
         correlation_function_gaussian = np.clip(correlation_function_gaussian, -0.999, 0.999)
         correlation_function_non_gaussian = np.zeros_like(correlation_function_gaussian)
         for i in itertools.product(*[range(s) for s in self.shape]):
-            correlation_function_non_gaussian[i] = solve_single_integral(self.dist_object,
-                                                                         correlation_function_gaussian[i])
+            correlation_function_non_gaussian[i] = correlation_distortion(self.dist_object,
+                                                                          correlation_function_gaussian[i])
         if hasattr(self.dist_object, 'moments'):
             non_gaussian_moments = getattr(self.dist_object, 'moments')()
         else:
@@ -799,35 +804,35 @@ class InverseTranslation:
 
     """
 
-    def __init__(self, dist_object, time_duration, frequency_interval, number_time_intervals,
+    def __init__(self, dist_object, time_interval, frequency_interval, number_time_intervals,
                  number_frequency_intervals, correlation_function_non_gaussian=None,
                  power_spectrum_non_gaussian=None, samples_non_gaussian=None):
         self.dist_object = dist_object
         self.frequency = np.arange(0, number_frequency_intervals) * frequency_interval
-        self.time = np.arange(0, number_time_intervals) * time_duration
+        self.time = np.arange(0, number_time_intervals) * time_interval
         if correlation_function_non_gaussian is None and power_spectrum_non_gaussian is None:
             print('Either the Power Spectrum or the Autocorrelation function should be specified')
         if correlation_function_non_gaussian is None:
             self.power_spectrum_non_gaussian = power_spectrum_non_gaussian
-            self.correlation_function_non_gaussian = Wiener_Khinchin_transform(power_spectrum_non_gaussian,
+            self.correlation_function_non_gaussian = wiener_khinchin_transform(power_spectrum_non_gaussian,
                                                                                self.frequency, self.time)
         elif power_spectrum_non_gaussian is None:
             self.correlation_function_non_gaussian = correlation_function_non_gaussian
-            self.power_spectrum_non_gaussian = Inverse_Wiener_Khinchin_transform(correlation_function_non_gaussian,
+            self.power_spectrum_non_gaussian = inverse_wiener_khinchin_transform(correlation_function_non_gaussian,
                                                                                  self.frequency, self.time)
         self.num = self.correlation_function_non_gaussian.shape[0]
         self.dim = len(self.correlation_function_non_gaussian.shape)
         if samples_non_gaussian is not None:
-            self.samples_non_gaussian = samples_non_gaussian
-            self.samples_gaussian = self.inverse_translate_non_gaussian_samples()
-        self.power_spectrum_gaussian = self.itam_power_spectrum()
-        self.auto_correlation_function_gaussian = Wiener_Khinchin_transform(self.power_spectrum_gaussian,
+            self.samples_shape = samples_non_gaussian.shape
+            self.samples_non_gaussian = samples_non_gaussian.flatten()[:, np.newaxis]
+            self.samples_gaussian = self._inverse_translate_non_gaussian_samples().reshape(self.samples_shape)
+        self.power_spectrum_gaussian = self._itam_power_spectrum()
+        self.auto_correlation_function_gaussian = wiener_khinchin_transform(self.power_spectrum_gaussian,
                                                                             self.frequency, self.time)
         self.correlation_function_gaussian = self.auto_correlation_function_gaussian / \
                                              self.auto_correlation_function_gaussian[0]
 
-    # TODO: Make private methods.
-    def inverse_translate_non_gaussian_samples(self):
+    def _inverse_translate_non_gaussian_samples(self):
         if hasattr(self.dist_object, 'cdf'):
             non_gaussian_cdf = getattr(self.dist_object, 'cdf')
             samples_cdf = non_gaussian_cdf(self.samples_non_gaussian)
@@ -836,22 +841,22 @@ class InverseTranslation:
         samples_g = Normal(loc=0.0, scale=1.0).icdf(samples_cdf)
         return samples_g
 
-    def itam_power_spectrum(self):
+    def _itam_power_spectrum(self):
         target_s = self.power_spectrum_non_gaussian
         i_converge = 0
         max_iter = 100
-        target_r = Wiener_Khinchin_transform(target_s, self.frequency, self.time)
+        target_r = wiener_khinchin_transform(target_s, self.frequency, self.time)
         r_g_iterate = target_r
         s_g_iterate = target_s
         r_ng_iterate = np.zeros_like(target_r)
         s_ng_iterate = np.zeros_like(target_s)
 
         for _ in range(max_iter):
-            r_g_iterate = Wiener_Khinchin_transform(s_g_iterate, self.frequency, self.time)
+            r_g_iterate = wiener_khinchin_transform(s_g_iterate, self.frequency, self.time)
             for i in range(len(target_r)):
-                r_ng_iterate[i] = solve_single_integral(dist_object=self.dist_object,
-                                                        rho=r_g_iterate[i] / r_g_iterate[0])
-            s_ng_iterate = Inverse_Wiener_Khinchin_transform(r_ng_iterate, self.frequency, self.time)
+                r_ng_iterate[i] = correlation_distortion(dist_object=self.dist_object,
+                                                         rho=r_g_iterate[i] / r_g_iterate[0])
+            s_ng_iterate = inverse_wiener_khinchin_transform(r_ng_iterate, self.frequency, self.time)
 
             err1 = np.sum((target_s - s_ng_iterate) ** 2)
             err2 = np.sum(target_s ** 2)
@@ -871,22 +876,31 @@ class InverseTranslation:
         return s_g_iterate
 
 
-def Wiener_Khinchin_transform(power_spectrum, frequency, time):
+def wiener_khinchin_transform(power_spectrum, frequency, time):
     """
-        Description:
+    A function to transform the power spectrum to a correlation function by the Wiener Khinchin transformation
 
-            A function to transform the power spectrum to an autocorrelation function
+    ** Input:**
 
-        Input:
-            :param power_spectrum: Power Spectrum of the signal
-            :param frequency: Array of frequency discretisations
-            :param time: Array of time discretisations
+    * **power_spectrum** (`list or numpy.array`):
 
-        Output:
-            :return correlation_function: Autocorrelation function
-            :rtype: ndarray
+        The power spectrum of the signal.
+
+    * **frequency** (`list or numpy.array`):
+
+        The frequency discretizations of the power spectrum.
+
+    * **time** (`list or numpy.array`):
+
+        The time discretizations of the signal.
+
+    **Output/Returns:**
+
+    * **correlation_function** (`list or numpy.array`):
+
+        The correlation function of the signal.
+
     """
-
     frequency_interval = frequency[1] - frequency[0]
     fac = np.ones(len(frequency))
     fac[1: len(frequency) - 1: 2] = 4
@@ -898,20 +912,30 @@ def Wiener_Khinchin_transform(power_spectrum, frequency, time):
     return correlation_function
 
 
-def Inverse_Wiener_Khinchin_transform(correlation_function, frequency, time):
+def inverse_wiener_khinchin_transform(correlation_function, frequency, time):
     """
-        Description: A function to transform the autocorrelation function to a power spectrum
+    A function to transform the autocorrelation function to a power spectrum by the Inverse Wiener Khinchin
+    transformation.
 
+    ** Input:**
 
-        Input:
-            :param correlation_function: Autocorrelation function of the signal
-            :param frequency: Array of frequency discretizations
-            :param time: Array of time discretizations
+    * **correlation_function** (`list or numpy.array`):
 
-        Output:
-            :return power_spectrum: Power Spectrum
-            :rtype: ndarray
+        The correlation function of the signal.
 
+    * **frequency** (`list or numpy.array`):
+
+        The frequency discretizations of the power spectrum.
+
+    * **time** (`list or numpy.array`):
+
+        The time discretizations of the signal.
+
+    **Output/Returns:**
+
+    * **power_spectrum** (`list or numpy.array`):
+
+        The power spectrum of the signal.
     """
     time_length = time[1] - time[0]
     fac = np.ones(len(time))
@@ -927,15 +951,19 @@ def Inverse_Wiener_Khinchin_transform(correlation_function, frequency, time):
 
 def scaling_correlation_function(correlation_function):
     """
-        Description: A function to scale down the autocorrelation function to a correlation function
+    A function to scale a correlation function such that correlation at 0 lag is equal to 1
 
+    ** Input:**
 
-        Input:
-            :param correlation_function: Autocorrelation function of the signal
-        Output:
-            :return scaled_correlation_function: correlation function of the signal
-            :rtype: ndarray
+    * **correlation_function** (`list or numpy.array`):
 
+        The correlation function of the signal.
+
+    **Output/Returns:**
+
+    * **scaled_correlation_function** (`list or numpy.array`):
+
+        The scaled correlation functions of the signal.
     """
     scaled_correlation_function = correlation_function / np.max(correlation_function)
     return scaled_correlation_function
