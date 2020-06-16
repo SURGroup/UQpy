@@ -335,8 +335,8 @@ class Correlate:
 
     **Inputs:**
 
-    * **samples_y** (`ndarray`):
-            Uncorrelated  standard normal vector of shape ``(nsamples, dimension)``.
+    * **samples_u** (`ndarray`):
+        Uncorrelated  standard normal vector of shape ``(nsamples, dimension)``.
 
     * **corr_z** (`ndarray`):
         The correlation  matrix (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z** .
@@ -352,13 +352,13 @@ class Correlate:
 
     """
 
-    def __init__(self, samples_y, corr_z):
+    def __init__(self, samples_u, corr_z):
 
-        self.samples_y = samples_y
+        self.samples_y = samples_u
         self.corr_z = corr_z
         from scipy.linalg import cholesky
         self.H = cholesky(self.corr_z, lower=True)
-        self.samples_z = (self.H @ samples_y.T).T
+        self.samples_z = (self.H @ samples_u.T).T
 
 
 class Decorrelate:
@@ -376,7 +376,7 @@ class Decorrelate:
 
     **Attributes:**
 
-    * **samples_y** (`ndarray`):
+    * **samples_u** (`ndarray`):
         Uncorrelated standard normal vector of shape ``(nsamples, dimension)``.
 
     * **H** (`ndarray`):
@@ -390,7 +390,7 @@ class Decorrelate:
         self.corr_z = corr_z
         from scipy.linalg import cholesky
         self.H = cholesky(self.corr_z, lower=True)
-        self.samples_y = np.linalg.solve(self.H, samples_z.T.squeeze()).T
+        self.samples_u = np.linalg.solve(self.H, samples_z.T.squeeze()).T
 
 
 
