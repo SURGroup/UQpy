@@ -369,8 +369,8 @@
 
 <span class="sd">    **Inputs:**</span>
 
-<span class="sd">    * **samples_y** (`ndarray`):</span>
-<span class="sd">            Uncorrelated  standard normal vector of shape ``(nsamples, dimension)``.</span>
+<span class="sd">    * **samples_u** (`ndarray`):</span>
+<span class="sd">        Uncorrelated  standard normal vector of shape ``(nsamples, dimension)``.</span>
 
 <span class="sd">    * **corr_z** (`ndarray`):</span>
 <span class="sd">        The correlation  matrix (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z** .</span>
@@ -386,13 +386,13 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples_y</span><span class="p">,</span> <span class="n">corr_z</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples_u</span><span class="p">,</span> <span class="n">corr_z</span><span class="p">):</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">samples_y</span> <span class="o">=</span> <span class="n">samples_y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples_y</span> <span class="o">=</span> <span class="n">samples_u</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span> <span class="o">=</span> <span class="n">corr_z</span>
         <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">cholesky</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">=</span> <span class="n">cholesky</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">samples_z</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">samples_y</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples_z</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">samples_u</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
 
 
 <span class="k">class</span> <span class="nc">Decorrelate</span><span class="p">:</span>
@@ -410,7 +410,7 @@
 
 <span class="sd">    **Attributes:**</span>
 
-<span class="sd">    * **samples_y** (`ndarray`):</span>
+<span class="sd">    * **samples_u** (`ndarray`):</span>
 <span class="sd">        Uncorrelated standard normal vector of shape ``(nsamples, dimension)``.</span>
 
 <span class="sd">    * **H** (`ndarray`):</span>
@@ -424,7 +424,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span> <span class="o">=</span> <span class="n">corr_z</span>
         <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">cholesky</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">=</span> <span class="n">cholesky</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">samples_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="p">,</span> <span class="n">samples_z</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples_u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="p">,</span> <span class="n">samples_z</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span><span class="o">.</span><span class="n">T</span>
 
 
 

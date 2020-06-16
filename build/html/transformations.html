@@ -311,18 +311,18 @@ cumulative distribution function of a standard  normal variable.</p>
 </div>
 <div class="section" id="correlate">
 <h2>Correlate<a class="headerlink" href="#correlate" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Correlate</span></code> is a class to induce correlation to an uncorrelated standard normal vector <span class="math notranslate nohighlight">\(\textbf{y}=[Y_1,...,Y_n]\)</span>, given the correlation matrix <span class="math notranslate nohighlight">\(\textbf{C}_z=[\rho_{ij}]\)</span>. The correlated standard normal vector <span class="math notranslate nohighlight">\(\textbf{z}=[Z_1,...,Z_n]\)</span> can be calculated as:</p>
+<p><code class="docutils literal notranslate"><span class="pre">Correlate</span></code> is a class to induce correlation to an uncorrelated standard normal vector <span class="math notranslate nohighlight">\(\textbf{u}=[U_1,...,U_n]\)</span>, given the correlation matrix <span class="math notranslate nohighlight">\(\textbf{C}_z=[\rho_{ij}]\)</span>. The correlated standard normal vector <span class="math notranslate nohighlight">\(\textbf{z}=[Z_1,...,Z_n]\)</span> can be calculated as:</p>
 <div class="math notranslate nohighlight">
-\[\mathbf{z}^\intercal = \mathbf{H}\mathbf{y}^\intercal\]</div>
+\[\mathbf{z}^\intercal = \mathbf{H}\mathbf{u}^\intercal\]</div>
 <p>where <span class="math notranslate nohighlight">\(\mathbf{H}\)</span> is the lower triangular matrix resulting from the Cholesky decomposition of the correlation matrix, i.e. <span class="math notranslate nohighlight">\(\mathbf{C_z}=\mathbf{H}\mathbf{H}^\intercal\)</span>.</p>
 <dl class="class">
 <dt id="UQpy.Transformations.Correlate">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Transformations.</code><code class="sig-name descname">Correlate</code><span class="sig-paren">(</span><em class="sig-param">samples_y</em>, <em class="sig-param">corr_z</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Correlate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Correlate" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Transformations.</code><code class="sig-name descname">Correlate</code><span class="sig-paren">(</span><em class="sig-param">samples_u</em>, <em class="sig-param">corr_z</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Correlate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Correlate" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class to induce correlation to standard normal random variables.</p>
 <p><strong>Inputs:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>samples_y</strong> (<cite>ndarray</cite>):</dt><dd><p>Uncorrelated  standard normal vector of shape <code class="docutils literal notranslate"><span class="pre">(nsamples,</span> <span class="pre">dimension)</span></code>.</p>
+<dt><strong>samples_u</strong> (<cite>ndarray</cite>):</dt><dd><p>Uncorrelated  standard normal vector of shape <code class="docutils literal notranslate"><span class="pre">(nsamples,</span> <span class="pre">dimension)</span></code>.</p>
 </dd>
 </dl>
 </li>
@@ -351,9 +351,9 @@ cumulative distribution function of a standard  normal variable.</p>
 </div>
 <div class="section" id="decorrelate">
 <h2>Decorrelate<a class="headerlink" href="#decorrelate" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Decorrelate</span></code> is a class to remove correlation from an correlated standard normal vector <span class="math notranslate nohighlight">\(\textbf{z}=[Z_1,...,Z_n]\)</span> with correlation matrix <span class="math notranslate nohighlight">\(\textbf{C}_z=[\rho_{ij}]\)</span>. The uncorrelated standard normal vector <span class="math notranslate nohighlight">\(\textbf{y}=[Y_1,...,Y_n]\)</span> can be calculated as:</p>
+<p><code class="docutils literal notranslate"><span class="pre">Decorrelate</span></code> is a class to remove correlation from an correlated standard normal vector <span class="math notranslate nohighlight">\(\textbf{z}=[Z_1,...,Z_n]\)</span> with correlation matrix <span class="math notranslate nohighlight">\(\textbf{C}_z=[\rho_{ij}]\)</span>. The uncorrelated standard normal vector <span class="math notranslate nohighlight">\(\textbf{u}=[U_1,...,U_n]\)</span> can be calculated as:</p>
 <div class="math notranslate nohighlight">
-\[\textbf{y}^\intercal = \mathbf{H}^{-1} \mathbf{z}^\intercal\]</div>
+\[\textbf{u}^\intercal = \mathbf{H}^{-1} \mathbf{z}^\intercal\]</div>
 <p>The <code class="docutils literal notranslate"><span class="pre">Decorrelate</span></code> class can be imported in a python script using the following command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Transformations</span> <span class="k">import</span> <span class="n">Decorrelate</span>
 </pre></div>
