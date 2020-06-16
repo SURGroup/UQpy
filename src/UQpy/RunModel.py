@@ -637,7 +637,6 @@ class RunModel:
             for i in range(self.nexist, self.nexist + self.nsim):
                 sample_to_send = np.atleast_2d(self.samples[i])
 
-
                 if len(self.python_kwargs) == 0:
                     self.model_output = model_object(sample_to_send)
                 else:
