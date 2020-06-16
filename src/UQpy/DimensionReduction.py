@@ -559,7 +559,7 @@ class Grassmann:
         (ui, si, vi) = svd(r, rank)
         index = np.where(si > 1)
         si[index] = 1.0
-        theta = np.arccos(si)
+        theta = np.arccos(np.diag(si))
         distance = np.sqrt(abs(k - l) * np.pi ** 2 / 4 + np.sum(theta ** 2))
 
         return distance
@@ -604,7 +604,7 @@ class Grassmann:
         (ui, si, vi) = svd(r_star, rank)
         index = np.where(si > 1)
         si[index] = 1.0
-        theta = np.arccos(si)
+        theta = np.arccos(np.diag(si))
         theta = (np.sin(theta)) ** 2
         distance = np.sqrt(abs(k - l) + np.sum(theta))
 
@@ -650,7 +650,7 @@ class Grassmann:
         (ui, si, vi) = svd(r, rank)
         index = np.where(si > 1)
         si[index] = 1.0
-        theta = np.arccos(si)
+        theta = np.arccos(np.diag(si))
         theta = np.sin(theta / 2) ** 2
         distance = np.sqrt(abs(k - l) + 2 * np.sum(theta))
 
