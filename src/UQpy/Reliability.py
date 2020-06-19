@@ -487,7 +487,7 @@ class TaylorSeries:
         ``DistributionContinuous1D`` or ``JointInd``.
 
     * **runmodel_object** (``RunModel`` object):
-        The computational model. It should be of type `RunModel` (see ``RunModel`` class).
+        The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
 
     * **corr_z** or **corr_x** (`ndarray`):
         Covariance matrix
@@ -520,7 +520,7 @@ class TaylorSeries:
          Default: 100
 
     * **df_step** ('float'):
-         Finite difference step.
+         Finite difference step in standard normal space.
 
          Default: 0.01 (see `derivatives` class)
 
@@ -576,9 +576,15 @@ class TaylorSeries:
             Point in the uncorrelated standard normal space at which to evaluate the gradient with shape
             `samples.shape=(1, dimension)`.
 
+            Either `point_u` or `point_x` must be specified. If `point_u` is specified, the derivatives are computed
+            directly.
+
         * **point_x** (`ndarray`):
             Point in the parameter space at which to evaluate the model with shape
             `samples.shape=(1, dimension)`.
+
+            Either `point_u` or `point_x` must be specified. If `point_x` is specified, the variable is transformed to
+            standard normal using the ``Nataf`` transformation and derivatives are computed.
 
         * **runmodel_object** (``RunModel`` object):
             The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
@@ -592,10 +598,10 @@ class TaylorSeries:
             Default: 'first'.
 
         * **point_qoi** (`float`):
-            Value of the model evaluated at point_y. Used only for second derivatives.
+            Value of the model evaluated at ``point_u``. Used only for second derivatives.
 
         * **df_step** (`float`):
-            Finite difference step.
+            Finite difference step in standard normal space.
 
             Default: 0.01
 
@@ -759,7 +765,7 @@ class FORM(TaylorSeries):
         Hasofer-Lind reliability index.
 
     * **DesignPoint_U** (`ndarray`):
-        Design point in the uncorrelated standard normal space **Y**.
+        Design point in the uncorrelated standard normal space **U**.
 
     * **DesignPoint_X** (`ndarray`):
         Design point in the parameter space **X**.
@@ -771,7 +777,7 @@ class FORM(TaylorSeries):
         Number of model evaluations.
 
     * **u_record** (`list`):
-        Record of all iteration points in the standard normal space **Y**.
+        Record of all iteration points in the standard normal space **U**.
 
     * **x_record** (`list`):
         Record of all iteration points in the parameter space **X**.
@@ -842,13 +848,15 @@ class FORM(TaylorSeries):
         **Input:**
 
         * **seed_y** or **seed_x** (`ndarray`):
-        The initial starting point for the `Hasofer-Lind` algorithm.
+            The initial starting point for the `Hasofer-Lind` algorithm.
 
-        If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
+            Either `seed_u` or `seed_x` must be provided.
 
-        If `seed_x` is provided, it should be a point in the parameter space of **X**.
+            If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
 
-        Default: `seed_u = (0, 0, ..., 0)`
+            If `seed_x` is provided, it should be a point in the parameter space of **X**.
+
+            Default: `seed_u = (0, 0, ..., 0)`
 
         """
         if self.verbose:
@@ -1103,13 +1111,15 @@ class SORM(TaylorSeries):
         **Input:**
 
         * **seed_u** or **seed_x** (`ndarray`):
-        The initial starting point for the `Hasofer-Lind` algorithm.
+            The initial starting point for the `Hasofer-Lind` algorithm.
 
-        If `seed_u` is provided, it should be a point in the standard normal space of **U**.
+            Either `seed_u` or `seed_x` must be provided.
 
-        If `seed_x` is provided, it should be a point in the parameter space of **X**.
+            If `seed_u` is provided, it should be a point in the standard normal space of **U**.
 
-        Default: `seed_u = (0, 0, ..., 0)`
+            If `seed_x` is provided, it should be a point in the parameter space of **X**.
+
+            Default: `seed_u = (0, 0, ..., 0)`
 
         """
 

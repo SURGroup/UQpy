@@ -521,7 +521,7 @@
 <span class="sd">        ``DistributionContinuous1D`` or ``JointInd``.</span>
 
 <span class="sd">    * **runmodel_object** (``RunModel`` object):</span>
-<span class="sd">        The computational model. It should be of type `RunModel` (see ``RunModel`` class).</span>
+<span class="sd">        The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).</span>
 
 <span class="sd">    * **corr_z** or **corr_x** (`ndarray`):</span>
 <span class="sd">        Covariance matrix</span>
@@ -554,7 +554,7 @@
 <span class="sd">         Default: 100</span>
 
 <span class="sd">    * **df_step** (&#39;float&#39;):</span>
-<span class="sd">         Finite difference step.</span>
+<span class="sd">         Finite difference step in standard normal space.</span>
 
 <span class="sd">         Default: 0.01 (see `derivatives` class)</span>
 
@@ -610,9 +610,15 @@
 <span class="sd">            Point in the uncorrelated standard normal space at which to evaluate the gradient with shape</span>
 <span class="sd">            `samples.shape=(1, dimension)`.</span>
 
+<span class="sd">            Either `point_u` or `point_x` must be specified. If `point_u` is specified, the derivatives are computed</span>
+<span class="sd">            directly.</span>
+
 <span class="sd">        * **point_x** (`ndarray`):</span>
 <span class="sd">            Point in the parameter space at which to evaluate the model with shape</span>
 <span class="sd">            `samples.shape=(1, dimension)`.</span>
+
+<span class="sd">            Either `point_u` or `point_x` must be specified. If `point_x` is specified, the variable is transformed to</span>
+<span class="sd">            standard normal using the ``Nataf`` transformation and derivatives are computed.</span>
 
 <span class="sd">        * **runmodel_object** (``RunModel`` object):</span>
 <span class="sd">            The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).</span>
@@ -626,10 +632,10 @@
 <span class="sd">            Default: &#39;first&#39;.</span>
 
 <span class="sd">        * **point_qoi** (`float`):</span>
-<span class="sd">            Value of the model evaluated at point_y. Used only for second derivatives.</span>
+<span class="sd">            Value of the model evaluated at ``point_u``. Used only for second derivatives.</span>
 
 <span class="sd">        * **df_step** (`float`):</span>
-<span class="sd">            Finite difference step.</span>
+<span class="sd">            Finite difference step in standard normal space.</span>
 
 <span class="sd">            Default: 0.01</span>
 
@@ -793,7 +799,7 @@
 <span class="sd">        Hasofer-Lind reliability index.</span>
 
 <span class="sd">    * **DesignPoint_U** (`ndarray`):</span>
-<span class="sd">        Design point in the uncorrelated standard normal space **Y**.</span>
+<span class="sd">        Design point in the uncorrelated standard normal space **U**.</span>
 
 <span class="sd">    * **DesignPoint_X** (`ndarray`):</span>
 <span class="sd">        Design point in the parameter space **X**.</span>
@@ -805,7 +811,7 @@
 <span class="sd">        Number of model evaluations.</span>
 
 <span class="sd">    * **u_record** (`list`):</span>
-<span class="sd">        Record of all iteration points in the standard normal space **Y**.</span>
+<span class="sd">        Record of all iteration points in the standard normal space **U**.</span>
 
 <span class="sd">    * **x_record** (`list`):</span>
 <span class="sd">        Record of all iteration points in the parameter space **X**.</span>
@@ -876,13 +882,15 @@
 <span class="sd">        **Input:**</span>
 
 <span class="sd">        * **seed_y** or **seed_x** (`ndarray`):</span>
-<span class="sd">        The initial starting point for the `Hasofer-Lind` algorithm.</span>
+<span class="sd">            The initial starting point for the `Hasofer-Lind` algorithm.</span>
 
-<span class="sd">        If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.</span>
+<span class="sd">            Either `seed_u` or `seed_x` must be provided.</span>
 
-<span class="sd">        If `seed_x` is provided, it should be a point in the parameter space of **X**.</span>
+<span class="sd">            If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.</span>
 
-<span class="sd">        Default: `seed_u = (0, 0, ..., 0)`</span>
+<span class="sd">            If `seed_x` is provided, it should be a point in the parameter space of **X**.</span>
+
+<span class="sd">            Default: `seed_u = (0, 0, ..., 0)`</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
@@ -1136,14 +1144,16 @@
 
 <span class="sd">        **Input:**</span>
 
-<span class="sd">        * **seed_y** or **seed_x** (`ndarray`):</span>
-<span class="sd">        The initial starting point for the `Hasofer-Lind` algorithm.</span>
+<span class="sd">        * **seed_u** or **seed_x** (`ndarray`):</span>
+<span class="sd">            The initial starting point for the `Hasofer-Lind` algorithm.</span>
 
-<span class="sd">        If `seed_u` is provided, it should be a point in the standard normal space of **Y**.</span>
+<span class="sd">            Either `seed_u` or `seed_x` must be provided.</span>
 
-<span class="sd">        If `seed_x` is provided, it should be a point in the parameter space of **X**.</span>
+<span class="sd">            If `seed_u` is provided, it should be a point in the standard normal space of **U**.</span>
 
-<span class="sd">        Default: `seed_u = (0, 0, ..., 0)`</span>
+<span class="sd">            If `seed_x` is provided, it should be a point in the parameter space of **X**.</span>
+
+<span class="sd">            Default: `seed_u = (0, 0, ..., 0)`</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 

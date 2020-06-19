@@ -220,7 +220,7 @@ class is instantiated.</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>runmodel_object</strong> (<code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object):</dt><dd><p>The computational model. It should be of type <cite>RunModel</cite> (see <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> class).</p>
+<dt><strong>runmodel_object</strong> (<code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object):</dt><dd><p>The computational model. It should be of type <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> (see <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> class).</p>
 </dd>
 </dl>
 </li>
@@ -260,7 +260,7 @@ vector <strong>Z</strong> .</p>
 </dl>
 </li>
 <li><dl>
-<dt><strong>df_step</strong> (‘float’):</dt><dd><p>Finite difference step.</p>
+<dt><strong>df_step</strong> (‘float’):</dt><dd><p>Finite difference step in standard normal space.</p>
 <p>Default: 0.01 (see <cite>derivatives</cite> class)</p>
 </dd>
 </dl>
@@ -280,15 +280,19 @@ scheme after transformation to the standard normal space.</p>
 <p>This is a static method of the <code class="docutils literal notranslate"><span class="pre">FORM</span></code> class.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
-<li><dl class="simple">
+<li><dl>
 <dt><strong>point_u</strong> (<cite>ndarray</cite>):</dt><dd><p>Point in the uncorrelated standard normal space at which to evaluate the gradient with shape
 <cite>samples.shape=(1, dimension)</cite>.</p>
+<p>Either <cite>point_u</cite> or <cite>point_x</cite> must be specified. If <cite>point_u</cite> is specified, the derivatives are computed
+directly.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
+<li><dl>
 <dt><strong>point_x</strong> (<cite>ndarray</cite>):</dt><dd><p>Point in the parameter space at which to evaluate the model with shape
 <cite>samples.shape=(1, dimension)</cite>.</p>
+<p>Either <cite>point_u</cite> or <cite>point_x</cite> must be specified. If <cite>point_x</cite> is specified, the variable is transformed to
+standard normal using the <code class="docutils literal notranslate"><span class="pre">Nataf</span></code> transformation and derivatives are computed.</p>
 </dd>
 </dl>
 </li>
@@ -309,12 +313,12 @@ scheme after transformation to the standard normal space.</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>point_qoi</strong> (<cite>float</cite>):</dt><dd><p>Value of the model evaluated at point_y. Used only for second derivatives.</p>
+<dt><strong>point_qoi</strong> (<cite>float</cite>):</dt><dd><p>Value of the model evaluated at <code class="docutils literal notranslate"><span class="pre">point_u</span></code>. Used only for second derivatives.</p>
 </dd>
 </dl>
 </li>
 <li><dl>
-<dt><strong>df_step</strong> (<cite>float</cite>):</dt><dd><p>Finite difference step.</p>
+<dt><strong>df_step</strong> (<cite>float</cite>):</dt><dd><p>Finite difference step in standard normal space.</p>
 <p>Default: 0.01</p>
 </dd>
 </dl>
@@ -370,7 +374,7 @@ times and each time the results are appended to the existing ones.</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>DesignPoint_U</strong> (<cite>ndarray</cite>):</dt><dd><p>Design point in the uncorrelated standard normal space <strong>Y</strong>.</p>
+<dt><strong>DesignPoint_U</strong> (<cite>ndarray</cite>):</dt><dd><p>Design point in the uncorrelated standard normal space <strong>U</strong>.</p>
 </dd>
 </dl>
 </li>
@@ -390,7 +394,7 @@ times and each time the results are appended to the existing ones.</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>u_record</strong> (<cite>list</cite>):</dt><dd><p>Record of all iteration points in the standard normal space <strong>Y</strong>.</p>
+<dt><strong>u_record</strong> (<cite>list</cite>):</dt><dd><p>Record of all iteration points in the standard normal space <strong>U</strong>.</p>
 </dd>
 </dl>
 </li>
@@ -432,13 +436,17 @@ times and each time the results are appended to the existing ones.</p>
 <dd><p>Run FORM</p>
 <p>This is an instance method that runs FORM.</p>
 <p><strong>Input:</strong></p>
-<ul class="simple">
-<li><p><strong>seed_y</strong> or <strong>seed_x</strong> (<cite>ndarray</cite>):</p></li>
-</ul>
-<p>The initial starting point for the <cite>Hasofer-Lind</cite> algorithm.</p>
+<ul>
+<li><dl>
+<dt><strong>seed_y</strong> or <strong>seed_x</strong> (<cite>ndarray</cite>):</dt><dd><p>The initial starting point for the <cite>Hasofer-Lind</cite> algorithm.</p>
+<p>Either <cite>seed_u</cite> or <cite>seed_x</cite> must be provided.</p>
 <p>If <cite>seed_u</cite> is provided, it should be a point in the uncorrelated standard normal space of <strong>U</strong>.</p>
 <p>If <cite>seed_x</cite> is provided, it should be a point in the parameter space of <strong>X</strong>.</p>
 <p>Default: <cite>seed_u = (0, 0, …, 0)</cite></p>
+</dd>
+</dl>
+</li>
+</ul>
 </dd></dl>
 
 </dd></dl>
@@ -476,13 +484,17 @@ times and each time the results are appended to the existing ones.</p>
 <dd><p>Run SORM</p>
 <p>This is an instance method that runs SORM.</p>
 <p><strong>Input:</strong></p>
-<ul class="simple">
-<li><p><strong>seed_y</strong> or <strong>seed_x</strong> (<cite>ndarray</cite>):</p></li>
-</ul>
-<p>The initial starting point for the <cite>Hasofer-Lind</cite> algorithm.</p>
-<p>If <cite>seed_u</cite> is provided, it should be a point in the standard normal space of <strong>Y</strong>.</p>
+<ul>
+<li><dl>
+<dt><strong>seed_u</strong> or <strong>seed_x</strong> (<cite>ndarray</cite>):</dt><dd><p>The initial starting point for the <cite>Hasofer-Lind</cite> algorithm.</p>
+<p>Either <cite>seed_u</cite> or <cite>seed_x</cite> must be provided.</p>
+<p>If <cite>seed_u</cite> is provided, it should be a point in the standard normal space of <strong>U</strong>.</p>
 <p>If <cite>seed_x</cite> is provided, it should be a point in the parameter space of <strong>X</strong>.</p>
 <p>Default: <cite>seed_u = (0, 0, …, 0)</cite></p>
+</dd>
+</dl>
+</li>
+</ul>
 </dd></dl>
 
 </dd></dl>
