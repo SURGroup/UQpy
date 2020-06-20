@@ -7,12 +7,12 @@
     <title>Reliability &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Inference" href="inference.html" />
@@ -201,14 +201,14 @@ class is instantiated.</p>
 \[P_{f, \text{sorm}} = \Phi(-\beta_{HL}) \prod_{i=1}^{n-1} (1+\beta_{HL}\kappa_i)^{-\frac{1}{2}}\]</div>
 <p>where <span class="math notranslate nohighlight">\(\kappa_i\)</span> is the <cite>i-th</cite>  curvature.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> class is the parent class of the <code class="docutils literal notranslate"><span class="pre">FORM</span></code> and <code class="docutils literal notranslate"><span class="pre">SORM</span></code> classes that perform the FORM and SORM, respectively. These classes can be imported in a python script using the following command:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Reliability</span> <span class="k">import</span> <span class="n">FORM</span><span class="p">,</span> <span class="n">SORM</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Reliability</span> <span class="k">import</span> <span class="n">FORM</span><span class="p">,</span> <span class="n">SORM</span>
 </pre></div>
 </div>
 <div class="section" id="id7">
 <h3>Class Descriptions<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.Reliability.TaylorSeries">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">TaylorSeries</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">runmodel_object</em>, <em class="sig-param">corr_x</em>, <em class="sig-param">corr_z</em>, <em class="sig-param">n_iter</em>, <em class="sig-param">tol1</em>, <em class="sig-param">tol2</em>, <em class="sig-param">tol3</em>, <em class="sig-param">df_step</em>, <em class="sig-param">verbose</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#TaylorSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.TaylorSeries" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">TaylorSeries</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">runmodel_object</em>, <em class="sig-param">form_object</em>, <em class="sig-param">corr_x</em>, <em class="sig-param">corr_z</em>, <em class="sig-param">seed_x</em>, <em class="sig-param">seed_u</em>, <em class="sig-param">n_iter</em>, <em class="sig-param">tol1</em>, <em class="sig-param">tol2</em>, <em class="sig-param">tol3</em>, <em class="sig-param">df_step</em>, <em class="sig-param">verbose</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#TaylorSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.TaylorSeries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform First and Second Order Reliability (FORM/SORM) methods.</p>
 <p>This is the parent class to all Taylor series expansion algorithms.</p>
 <p><strong>Input:</strong></p>
@@ -224,6 +224,11 @@ class is instantiated.</p>
 </dd>
 </dl>
 </li>
+<li><dl class="simple">
+<dt><strong>form_object</strong> (<code class="docutils literal notranslate"><span class="pre">FORM</span></code> object):</dt><dd><p>It should be of type <code class="docutils literal notranslate"><span class="pre">FORM</span></code> (see <code class="docutils literal notranslate"><span class="pre">FORM</span></code> class). Used to calculate SORM correction.</p>
+</dd>
+</dl>
+</li>
 <li><dl>
 <dt><strong>corr_z</strong> or <strong>corr_x</strong> (<cite>ndarray</cite>):</dt><dd><p>Covariance matrix</p>
 <p>If <cite>corr_x</cite> is provided, it is the correlation matrix (<span class="math notranslate nohighlight">\(\mathbf{C_X}\)</span>) of the random vector <strong>X</strong> .</p>
@@ -232,6 +237,15 @@ vector <strong>Z</strong> .</p>
 <blockquote>
 <div><p>Default: <cite>corr_z</cite> is specified as the identity matrix.</p>
 </div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>seed_u</strong> or <strong>seed_x</strong> (<cite>ndarray</cite>):</dt><dd><p>The initial starting point for the <cite>Hasofer-Lind</cite> algorithm.</p>
+<p>Either <cite>seed_u</cite> or <cite>seed_x</cite> must be provided.</p>
+<p>If <cite>seed_u</cite> is provided, it should be a point in the uncorrelated standard normal space of <strong>U</strong>.</p>
+<p>If <cite>seed_x</cite> is provided, it should be a point in the parameter space of <strong>X</strong>.</p>
+<p>Default: <cite>seed_u = (0, 0, …, 0)</cite></p>
 </dd>
 </dl>
 </li>
@@ -355,7 +369,7 @@ standard normal using the <code class="docutils literal notranslate"><span class
 <h4>FORM<a class="headerlink" href="#form" title="Permalink to this headline">¶</a></h4>
 <dl class="class">
 <dt id="UQpy.Reliability.FORM">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">FORM</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">runmodel_object</em>, <em class="sig-param">df_step=None</em>, <em class="sig-param">corr_x=None</em>, <em class="sig-param">corr_z=None</em>, <em class="sig-param">n_iter=100</em>, <em class="sig-param">tol1=None</em>, <em class="sig-param">tol2=None</em>, <em class="sig-param">tol3=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#FORM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.FORM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">FORM</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">runmodel_object</em>, <em class="sig-param">form_object=None</em>, <em class="sig-param">seed_x=None</em>, <em class="sig-param">seed_u=None</em>, <em class="sig-param">df_step=None</em>, <em class="sig-param">corr_x=None</em>, <em class="sig-param">corr_z=None</em>, <em class="sig-param">n_iter=100</em>, <em class="sig-param">tol1=None</em>, <em class="sig-param">tol2=None</em>, <em class="sig-param">tol3=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#FORM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.FORM" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class perform the First Order Reliability Method. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">FORM</span></code> class can be invoked many
 times and each time the results are appended to the existing ones.</p>
 <p>This is a child class of the <code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> class.</p>
@@ -436,13 +450,9 @@ times and each time the results are appended to the existing ones.</p>
 <dd><p>Run FORM</p>
 <p>This is an instance method that runs FORM.</p>
 <p><strong>Input:</strong></p>
-<ul>
-<li><dl>
-<dt><strong>seed_y</strong> or <strong>seed_x</strong> (<cite>ndarray</cite>):</dt><dd><p>The initial starting point for the <cite>Hasofer-Lind</cite> algorithm.</p>
-<p>Either <cite>seed_u</cite> or <cite>seed_x</cite> must be provided.</p>
-<p>If <cite>seed_u</cite> is provided, it should be a point in the uncorrelated standard normal space of <strong>U</strong>.</p>
-<p>If <cite>seed_x</cite> is provided, it should be a point in the parameter space of <strong>X</strong>.</p>
-<p>Default: <cite>seed_u = (0, 0, …, 0)</cite></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>seed_u</strong> or <strong>seed_x</strong> (<cite>ndarray</cite>):</dt><dd><p>See <code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> parent class.</p>
 </dd>
 </dl>
 </li>
@@ -456,13 +466,12 @@ times and each time the results are appended to the existing ones.</p>
 <h4>SORM<a class="headerlink" href="#sorm" title="Permalink to this headline">¶</a></h4>
 <dl class="class">
 <dt id="UQpy.Reliability.SORM">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">SORM</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">runmodel_object</em>, <em class="sig-param">def_step=None</em>, <em class="sig-param">corr_x=None</em>, <em class="sig-param">corr_z=None</em>, <em class="sig-param">n_iter=100</em>, <em class="sig-param">tol1=None</em>, <em class="sig-param">tol2=None</em>, <em class="sig-param">tol3=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#SORM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.SORM" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class to perform the Second Order Reliability Method. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">FORM</span></code> class can be invoked many
-times and each time the results are appended to the existing ones.</p>
-<p><code class="docutils literal notranslate"><span class="pre">SORM</span></code> class first performs FORM and then corrects the estimated FORM probability using second-order information.</p>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">SORM</code><span class="sig-paren">(</span><em class="sig-param">form_object</em>, <em class="sig-param">dist_object=None</em>, <em class="sig-param">seed_u=None</em>, <em class="sig-param">seed_x=None</em>, <em class="sig-param">runmodel_object=None</em>, <em class="sig-param">def_step=None</em>, <em class="sig-param">corr_x=None</em>, <em class="sig-param">corr_z=None</em>, <em class="sig-param">n_iter=None</em>, <em class="sig-param">tol1=None</em>, <em class="sig-param">tol2=None</em>, <em class="sig-param">tol3=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#SORM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.SORM" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to perform the Second Order Reliability Method.
+<code class="docutils literal notranslate"><span class="pre">SORM</span></code> class first performs FORM and then corrects the estimated FORM probability using second-order information.</p>
 <p><code class="docutils literal notranslate"><span class="pre">SORM</span></code> is a child class of the <code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> class.</p>
 <p><strong>Input:</strong></p>
-<p>The <code class="docutils literal notranslate"><span class="pre">SORM</span></code> class has the same inputs as the <code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> class.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">SORM</span></code> class requires anb object of type <code class="docutils literal notranslate"><span class="pre">FORM</span></code> as input.</p>
 <p><strong>Output/Returns:</strong></p>
 <p>The <code class="docutils literal notranslate"><span class="pre">SORM</span></code> class has the same outputs as the <code class="docutils literal notranslate"><span class="pre">FORM</span></code> class plus</p>
 <ul class="simple">
@@ -478,25 +487,6 @@ times and each time the results are appended to the existing ones.</p>
 </li>
 </ul>
 <p><strong>Methods:</strong></p>
-<dl class="method">
-<dt id="UQpy.Reliability.SORM.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">seed_x=None</em>, <em class="sig-param">seed_u=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#SORM.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.SORM.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run SORM</p>
-<p>This is an instance method that runs SORM.</p>
-<p><strong>Input:</strong></p>
-<ul>
-<li><dl>
-<dt><strong>seed_u</strong> or <strong>seed_x</strong> (<cite>ndarray</cite>):</dt><dd><p>The initial starting point for the <cite>Hasofer-Lind</cite> algorithm.</p>
-<p>Either <cite>seed_u</cite> or <cite>seed_x</cite> must be provided.</p>
-<p>If <cite>seed_u</cite> is provided, it should be a point in the standard normal space of <strong>U</strong>.</p>
-<p>If <cite>seed_x</cite> is provided, it should be a point in the parameter space of <strong>X</strong>.</p>
-<p>Default: <cite>seed_u = (0, 0, …, 0)</cite></p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
-
 </dd></dl>
 
 <p><strong>References:</strong></p>
@@ -593,7 +583,7 @@ times and each time the results are appended to the existing ones.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -602,7 +592,7 @@ times and each time the results are appended to the existing ones.</p>
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

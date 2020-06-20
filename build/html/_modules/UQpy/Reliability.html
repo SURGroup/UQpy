@@ -7,12 +7,12 @@
     <title>UQpy.Reliability &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -523,6 +523,9 @@
 <span class="sd">    * **runmodel_object** (``RunModel`` object):</span>
 <span class="sd">        The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).</span>
 
+<span class="sd">    * **form_object** (``FORM`` object):</span>
+<span class="sd">        It should be of type ``FORM`` (see ``FORM`` class). Used to calculate SORM correction.</span>
+
 <span class="sd">    * **corr_z** or **corr_x** (`ndarray`):</span>
 <span class="sd">        Covariance matrix</span>
 
@@ -532,6 +535,17 @@
 <span class="sd">        vector **Z** .</span>
 
 <span class="sd">         Default: `corr_z` is specified as the identity matrix.</span>
+
+<span class="sd">    * **seed_u** or **seed_x** (`ndarray`):</span>
+<span class="sd">        The initial starting point for the `Hasofer-Lind` algorithm.</span>
+
+<span class="sd">        Either `seed_u` or `seed_x` must be provided.</span>
+
+<span class="sd">        If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.</span>
+
+<span class="sd">        If `seed_x` is provided, it should be a point in the parameter space of **X**.</span>
+
+<span class="sd">        Default: `seed_u = (0, 0, ..., 0)`</span>
 
 <span class="sd">    * **tol1** (`float`):</span>
 <span class="sd">         Convergence threshold for criterion `e1` of the `HLRF` algorithm.</span>
@@ -565,25 +579,32 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">corr_x</span><span class="p">,</span> <span class="n">corr_z</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">,</span> <span class="n">tol1</span><span class="p">,</span> <span class="n">tol2</span><span class="p">,</span> <span class="n">tol3</span><span class="p">,</span> <span class="n">df_step</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">form_object</span><span class="p">,</span> <span class="n">corr_x</span><span class="p">,</span> <span class="n">corr_z</span><span class="p">,</span> <span class="n">seed_x</span><span class="p">,</span> <span class="n">seed_u</span><span class="p">,</span>  <span class="n">n_iter</span><span class="p">,</span> <span class="n">tol1</span><span class="p">,</span> <span class="n">tol2</span><span class="p">,</span>
+                 <span class="n">tol3</span><span class="p">,</span> <span class="n">df_step</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)):</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">,</span> <span class="n">JointInd</span><span class="p">)):</span>
-                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be provided.&#39;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">DistributionContinuous1D</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="mi">1</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">JointInd</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="o">.</span><span class="n">marginals</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form_object</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">,</span> <span class="n">JointInd</span><span class="p">)):</span>
+                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be &#39;</span>
+                                        <span class="s1">&#39;provided.&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">DistributionContinuous1D</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">JointInd</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist_object</span><span class="o">.</span><span class="n">marginals</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.&#39;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runmodel_object</span><span class="p">,</span> <span class="n">RunModel</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: A RunModel object is required for the model.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runmodel_object</span><span class="p">,</span> <span class="n">RunModel</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: A RunModel object is required for the model.&#39;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">nataf_object</span> <span class="o">=</span> <span class="n">Nataf</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">corr_z</span><span class="o">=</span><span class="n">corr_z</span><span class="p">,</span> <span class="n">corr_x</span><span class="o">=</span><span class="n">corr_x</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nataf_object</span> <span class="o">=</span> <span class="n">Nataf</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">corr_z</span><span class="o">=</span><span class="n">corr_z</span><span class="p">,</span> <span class="n">corr_x</span><span class="o">=</span><span class="n">corr_x</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">corr_x</span> <span class="o">=</span> <span class="n">corr_x</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span> <span class="o">=</span> <span class="n">corr_z</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="o">=</span> <span class="n">dist_object</span>
@@ -592,6 +613,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">tol1</span> <span class="o">=</span> <span class="n">tol1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tol2</span> <span class="o">=</span> <span class="n">tol2</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tol3</span> <span class="o">=</span> <span class="n">tol3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed_u</span> <span class="o">=</span> <span class="n">seed_u</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed_x</span> <span class="o">=</span> <span class="n">seed_x</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">df_step</span> <span class="o">=</span> <span class="n">df_step</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
 
@@ -835,10 +858,11 @@
 
 <span class="sd">     &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">df_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">corr_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">corr_z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-                 <span class="n">tol1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tol2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tol3</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">form_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed_u</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">df_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">corr_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">corr_z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tol2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tol3</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">corr_x</span><span class="p">,</span> <span class="n">corr_z</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">,</span> <span class="n">tol1</span><span class="p">,</span> <span class="n">tol2</span><span class="p">,</span> <span class="n">tol3</span><span class="p">,</span> <span class="n">df_step</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">form_object</span><span class="p">,</span> <span class="n">corr_x</span><span class="p">,</span> <span class="n">corr_z</span><span class="p">,</span> <span class="n">seed_x</span><span class="p">,</span> <span class="n">seed_u</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">,</span> <span class="n">tol1</span><span class="p">,</span> <span class="n">tol2</span><span class="p">,</span>
+                         <span class="n">tol3</span><span class="p">,</span> <span class="n">df_step</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
 
@@ -873,6 +897,13 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">call</span> <span class="o">=</span> <span class="kc">None</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed_u</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">seed_u</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed_u</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed_x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">seed_x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed_x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
 <div class="viewcode-block" id="FORM.run"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.FORM.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed_u</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run FORM</span>
@@ -881,17 +912,8 @@
 
 <span class="sd">        **Input:**</span>
 
-<span class="sd">        * **seed_y** or **seed_x** (`ndarray`):</span>
-<span class="sd">            The initial starting point for the `Hasofer-Lind` algorithm.</span>
-
-<span class="sd">            Either `seed_u` or `seed_x` must be provided.</span>
-
-<span class="sd">            If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.</span>
-
-<span class="sd">            If `seed_x` is provided, it should be a point in the parameter space of **X**.</span>
-
-<span class="sd">            Default: `seed_u = (0, 0, ..., 0)`</span>
-
+<span class="sd">        * **seed_u** or **seed_x** (`ndarray`):</span>
+<span class="sd">            See ``TaylorSeries`` parent class.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Running FORM...&#39;</span><span class="p">)</span>
@@ -1071,7 +1093,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">error_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_record</span> <span class="o">+</span> <span class="n">error_record</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">DesignPoint_U</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DesignPoint_U</span> <span class="o">+</span> <span class="p">[</span><span class="n">u</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="p">:]]</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">DesignPoint_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DesignPoint_X</span> <span class="o">+</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)]</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">Pf_form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Pf_form</span> <span class="o">+</span> <span class="p">[</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">beta_form</span><span class="p">[</span><span class="n">k</span><span class="p">])]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Pf_form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Pf_form</span> <span class="o">+</span> <span class="p">[</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="o">-</span><span class="n">beta</span><span class="p">[</span><span class="n">k</span><span class="p">])]</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">form_iterations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_iterations</span> <span class="o">+</span> <span class="p">[</span><span class="n">k</span><span class="p">]</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">u_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">u_record</span> <span class="o">+</span> <span class="p">[</span><span class="n">u_record</span><span class="p">[:</span><span class="n">k</span><span class="p">]]</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">x_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_record</span> <span class="o">+</span> <span class="p">[</span><span class="n">x_record</span><span class="p">[:</span><span class="n">k</span><span class="p">]]</span>
@@ -1083,16 +1105,14 @@
 
 <div class="viewcode-block" id="SORM"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.SORM">[docs]</a><span class="k">class</span> <span class="nc">SORM</span><span class="p">(</span><span class="n">TaylorSeries</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A class to perform the Second Order Reliability Method. The ``run`` method of the ``FORM`` class can be invoked many</span>
-<span class="sd">    times and each time the results are appended to the existing ones.</span>
-
+<span class="sd">    A class to perform the Second Order Reliability Method. </span>
 <span class="sd">    ``SORM`` class first performs FORM and then corrects the estimated FORM probability using second-order information.</span>
 
 <span class="sd">    ``SORM`` is a child class of the ``TaylorSeries`` class.</span>
 
 <span class="sd">    **Input:**</span>
 
-<span class="sd">    The ``SORM`` class has the same inputs as the ``TaylorSeries`` class.</span>
+<span class="sd">    The ``SORM`` class requires anb object of type ``FORM`` as input.</span>
 
 <span class="sd">    **Output/Returns:**</span>
 
@@ -1108,13 +1128,11 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">def_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">corr_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">corr_z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-                 <span class="n">tol1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tol2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tol3</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">form_object</span><span class="p">,</span> <span class="n">dist_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed_u</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">def_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">corr_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">corr_z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tol1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tol2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tol3</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">corr_x</span><span class="p">,</span> <span class="n">corr_z</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">,</span> <span class="n">tol1</span><span class="p">,</span> <span class="n">tol2</span><span class="p">,</span> <span class="n">tol3</span><span class="p">,</span> <span class="n">def_step</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">obj</span> <span class="o">=</span> <span class="n">FORM</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="o">=</span><span class="n">runmodel_object</span><span class="p">,</span> <span class="n">df_step</span><span class="o">=</span><span class="n">def_step</span><span class="p">,</span>
-                        <span class="n">corr_x</span><span class="o">=</span><span class="n">corr_x</span><span class="p">,</span>  <span class="n">corr_z</span><span class="o">=</span><span class="n">corr_z</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="n">n_iter</span><span class="p">,</span> <span class="n">tol1</span><span class="o">=</span><span class="n">tol1</span><span class="p">,</span> <span class="n">tol2</span><span class="o">=</span><span class="n">tol2</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">form_object</span><span class="p">,</span> <span class="n">corr_x</span><span class="p">,</span> <span class="n">corr_z</span><span class="p">,</span> <span class="n">seed_x</span><span class="p">,</span> <span class="n">seed_u</span><span class="p">,</span>  <span class="n">n_iter</span><span class="p">,</span> <span class="n">tol1</span><span class="p">,</span> <span class="n">tol2</span><span class="p">,</span>
+                         <span class="n">tol3</span><span class="p">,</span> <span class="n">def_step</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">beta_form</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">DesignPoint_U</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1134,54 +1152,44 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">Pf_sorm</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">beta_sorm</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">call</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">form_object</span><span class="p">,</span> <span class="n">FORM</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span> <span class="o">=</span> <span class="n">form_object</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: An object of type ``FORM`` is required to run SORM&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SORM.run"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.SORM.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed_u</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run SORM</span>
 
 <span class="sd">        This is an instance method that runs SORM.</span>
 
-<span class="sd">        **Input:**</span>
-
-<span class="sd">        * **seed_u** or **seed_x** (`ndarray`):</span>
-<span class="sd">            The initial starting point for the `Hasofer-Lind` algorithm.</span>
-
-<span class="sd">            Either `seed_u` or `seed_x` must be provided.</span>
-
-<span class="sd">            If `seed_u` is provided, it should be a point in the standard normal space of **U**.</span>
-
-<span class="sd">            If `seed_x` is provided, it should be a point in the parameter space of **X**.</span>
-
-<span class="sd">            Default: `seed_u = (0, 0, ..., 0)`</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Running SORM...&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Calculating SORM correction...&#39;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">seed_x</span><span class="o">=</span><span class="n">seed_x</span><span class="p">,</span> <span class="n">seed_u</span><span class="o">=</span><span class="n">seed_u</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta_form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">beta_form</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nataf_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">nataf_object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DesignPoint_U</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">DesignPoint_U</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DesignPoint_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">DesignPoint_X</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Pf_form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">Pf_form</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_iterations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">form_iterations</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">u_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">u_record</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">x_record</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">beta_record</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">g_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">g_record</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dg_u_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">dg_u_record</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">alpha_record</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">error_record</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">beta_form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">beta_form</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nataf_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">nataf_object</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">DesignPoint_U</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">DesignPoint_U</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">DesignPoint_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">DesignPoint_X</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Pf_form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">Pf_form</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">form_iterations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">form_iterations</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">u_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">u_record</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">x_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">x_record</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">beta_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">beta_record</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">g_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">g_record</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dg_u_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">dg_u_record</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">alpha_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">alpha_record</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">error_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">error_record</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">dimension</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">alpha</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">runmodel_object</span>
+        <span class="n">dg_u_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_object</span><span class="o">.</span><span class="n">dg_u_record</span>
 
-        <span class="n">dimension</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">dimension</span>
-        <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">alpha</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">runmodel_object</span>
-        <span class="n">dg_u_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">dg_u_record</span>
-
-        <span class="n">matrix_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fliplr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dimension</span><span class="p">))</span>
+        <span class="n">matrix_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fliplr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">))</span>
         <span class="n">matrix_a</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">alpha</span>
 
         <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
@@ -1207,7 +1215,7 @@
                                      <span class="n">order</span><span class="o">=</span><span class="s1">&#39;second&#39;</span><span class="p">,</span> <span class="n">point_qoi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">g_record</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
         <span class="n">matrix_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span> <span class="n">hessian_g</span><span class="p">),</span> <span class="n">r1</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">dg_u_record</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-        <span class="n">kappa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">matrix_b</span><span class="p">[:</span><span class="n">dimension</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="n">dimension</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">kappa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">matrix_b</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">Pf_sorm</span> <span class="o">=</span> <span class="p">[</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">beta_form</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta_form</span> <span class="o">*</span> <span class="n">kappa</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">beta_sorm</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Pf_sorm</span><span class="p">)]</span>
@@ -1216,7 +1224,7 @@
                                                                                           <span class="n">kappa</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">beta_sorm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta_sorm</span> <span class="o">+</span> <span class="p">[</span><span class="o">-</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Pf_sorm</span><span class="p">)]</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">call</span> <span class="o">=</span> <span class="kc">True</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call</span> <span class="o">=</span> <span class="kc">True</span></div>
 </pre></div>
 
           </div>
@@ -1282,7 +1290,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1291,7 +1299,7 @@
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
