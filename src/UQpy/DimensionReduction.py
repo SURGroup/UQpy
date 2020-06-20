@@ -389,11 +389,11 @@ class Grassmann:
         the pairwise distances is returned as an output argument where the distances are stored as 
         [{0,1},{0,2},...,{1,0},{1,1},{1,2},...], where {a,b} corresponds to the distance between the points 'a' and 
         'b'. Further, users are asked to provide the distance definition when the class `Grassmann` is instatiated. 
-        The current built-in options are the `grassmann_distance`, `chordal_distance`, `procrustes_distance`, and 
-        `projection_distance`, but the users have also the option to implement their own distance definition.
-        In this case, the user must be aware that the matrices in `points_grassmann` must represent points on the
-        Grassmann manifold. For example, given the points on the Grassmann manifold one can compute the pairwise
-        distances in the following way:
+        The current built-in options are the `grassmann_distance`, `chordal_distance`, `procrustes_distance`, 
+        `projection_distance`, and `binet_cauchy_distance`, but the users have also the option to implement their own 
+        distance definition. In this case, the user must be aware that the matrices in `points_grassmann` must represent 
+        points on the Grassmann manifold. For example, given the points on the Grassmann manifold one can compute the 
+        pairwise distances in the following way:
 
         >>> Gr = Grassmann(distance_method=Grassmann.grassmann_distance)
         >>> Gr.distance(points_grassmann=points_grassmann)
