@@ -72,8 +72,9 @@ class Grassmann:
 
         - `grassmann_distance`;
         - `chordal_distance`;
-        -`procrustes_distance`;
-        -`projections_distance`.
+        - `procrustes_distance`;
+        - `projection_distance`
+        - `binet_cauchy_distance`.
 
         In this regard,
         the class ``Grassmann`` is instantiated and the attributes are set using the method ``manifold``. Thus,
@@ -388,11 +389,11 @@ class Grassmann:
         the pairwise distances is returned as an output argument where the distances are stored as 
         [{0,1},{0,2},...,{1,0},{1,1},{1,2},...], where {a,b} corresponds to the distance between the points 'a' and 
         'b'. Further, users are asked to provide the distance definition when the class `Grassmann` is instatiated. 
-        The current built-in options are the `grassmann_distance`, `chordal_distance`, `procrustes_distance`, and 
-        `projection_distance`, but the users have also the option to implement their own distance definition.
-        In this case, the user must be aware that the matrices in `points_grassmann` must represent points on the
-        Grassmann manifold. For example, given the points on the Grassmann manifold one can compute the pairwise
-        distances in the following way:
+        The current built-in options are the `grassmann_distance`, `chordal_distance`, `procrustes_distance`, 
+        `projection_distance`, and `binet_cauchy_distance`, but the users have also the option to implement their own 
+        distance definition. In this case, the user must be aware that the matrices in `points_grassmann` must represent 
+        points on the Grassmann manifold. For example, given the points on the Grassmann manifold one can compute the 
+        pairwise distances in the following way:
 
         >>> Gr = Grassmann(distance_method=Grassmann.grassmann_distance)
         >>> Gr.distance(points_grassmann=points_grassmann)
@@ -557,9 +558,10 @@ class Grassmann:
 
         r = np.dot(x0.T, x1)
         (ui, si, vi) = svd(r, rank)
+
         index = np.where(si > 1)
         si[index] = 1.0
-        theta = np.arccos(si)
+        theta = np.arccos(np.diag(si))
         distance = np.sqrt(abs(k - l) * np.pi ** 2 / 4 + np.sum(theta ** 2))
 
         return distance
@@ -604,9 +606,9 @@ class Grassmann:
         (ui, si, vi) = svd(r_star, rank)
         index = np.where(si > 1)
         si[index] = 1.0
-        theta = np.arccos(si)
-        theta = (np.sin(theta)) ** 2
-        distance = np.sqrt(abs(k - l) + np.sum(theta))
+        theta = np.arccos(np.diag(si))
+        sin_sq = (np.sin(theta/2)) ** 2
+        distance = 2*np.sqrt(0.5*abs(k - l) + np.sum(sin_sq))
 
         return distance
 
@@ -650,9 +652,9 @@ class Grassmann:
         (ui, si, vi) = svd(r, rank)
         index = np.where(si > 1)
         si[index] = 1.0
-        theta = np.arccos(si)
-        theta = np.sin(theta / 2) ** 2
-        distance = np.sqrt(abs(k - l) + 2 * np.sum(theta))
+        theta = np.arccos(np.diag(si))
+        sin_t = np.sin(theta/2)
+        distance = 2*np.sqrt(abs(k - l)*np.sqrt(2)/2 + np.sum(sin_t))
 
         return distance
 
@@ -688,17 +690,63 @@ class Grassmann:
         else:
             x1 = np.array(x1)
 
-        # Check rank and swap.
-        c = np.zeros([x0.shape[0], x0.shape[1]])
-        if x0.shape[1] < x1.shape[1]:
-            x0 = x1
-            x1 = c
+        l = min(np.shape(x0))
+        k = min(np.shape(x1))
+        rank = min(l, k)
 
-        # Compute the projection.
         r = np.dot(x0.T, x1)
-        x1 = x1 - np.dot(x0, r)
+        (ui, si, vi) = svd(r, rank)
+        index = np.where(si > 1)
+        si[index] = 1.0
+        theta = np.arccos(np.diag(si))
+        sin_t = np.sin(theta) ** 2
+        distance = np.sqrt(abs(k - l) + np.sum(sin_t))
 
-        distance = np.arcsin(min(1, sp.linalg.norm(x1)))
+        return distance
+    
+    @staticmethod
+    def binet_cauchy_distance(x0, x1):
+
+        """
+        Estimate the Binet-Cauchy distance.
+
+        One of the distances defined on the Grassmann manifold is the projection distance.
+
+        **Input:**
+
+        * **x0** (`list` or `ndarray`) 
+            Point on the Grassmann manifold.
+
+        * **x1** (`list` or `ndarray`)
+            Point on the Grassmann manifold.
+
+        **Output/Returns:**
+
+        * **distance** (`float`)
+            Projection distance between x0 and x1.
+        """
+
+        if not isinstance(x0, list) and not isinstance(x0, np.ndarray):
+            raise TypeError('UQpy: x0 must be either list or numpy.ndarray.')
+        else:
+            x0 = np.array(x0)
+
+        if not isinstance(x1, list) and not isinstance(x1, np.ndarray):
+            raise TypeError('UQpy: x1 must be either list or numpy.ndarray.')
+        else:
+            x1 = np.array(x1)
+
+        l = min(np.shape(x0))
+        k = min(np.shape(x1))
+        rank = min(l, k)
+
+        r = np.dot(x0.T, x1)
+        (ui, si, vi) = svd(r, rank)
+        index = np.where(si > 1)
+        si[index] = 1.0
+        theta = np.arccos(np.diag(si))
+        sin_t = np.cos(theta) ** 2
+        distance = np.sqrt(1 - np.prod(sin_t))
 
         return distance
 

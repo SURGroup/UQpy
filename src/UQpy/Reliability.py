@@ -487,7 +487,10 @@ class TaylorSeries:
         ``DistributionContinuous1D`` or ``JointInd``.
 
     * **runmodel_object** (``RunModel`` object):
-        The computational model. It should be of type `RunModel` (see ``RunModel`` class).
+        The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
+
+    * **form_object** (``FORM`` object):
+        It should be of type ``FORM`` (see ``FORM`` class). Used to calculate SORM correction.
 
     * **corr_z** or **corr_x** (`ndarray`):
         Covariance matrix
@@ -498,6 +501,17 @@ class TaylorSeries:
         vector **Z** .
 
          Default: `corr_z` is specified as the identity matrix.
+
+    * **seed_u** or **seed_x** (`ndarray`):
+        The initial starting point for the `Hasofer-Lind` algorithm.
+
+        Either `seed_u` or `seed_x` must be provided.
+
+        If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
+
+        If `seed_x` is provided, it should be a point in the parameter space of **X**.
+
+        Default: `seed_u = (0, 0, ..., 0)`
 
     * **tol1** (`float`):
          Convergence threshold for criterion `e1` of the `HLRF` algorithm.
@@ -520,7 +534,7 @@ class TaylorSeries:
          Default: 100
 
     * **df_step** ('float'):
-         Finite difference step.
+         Finite difference step in standard normal space.
 
          Default: 0.01 (see `derivatives` class)
 
@@ -531,25 +545,32 @@ class TaylorSeries:
 
     """
 
-    def __init__(self, dist_object, runmodel_object, corr_x, corr_z, n_iter, tol1, tol2, tol3, df_step, verbose):
+    def __init__(self, dist_object, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u,  n_iter, tol1, tol2,
+                 tol3, df_step, verbose):
 
-        if isinstance(dist_object, list):
-            self.dimension = len(dist_object)
-            for i in range(len(dist_object)):
-                if not isinstance(dist_object[i], (DistributionContinuous1D, JointInd)):
-                    raise TypeError('UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be provided.')
-        else:
-            if isinstance(dist_object, DistributionContinuous1D):
-                self.dimension = 1
-            elif isinstance(dist_object, JointInd):
-                self.dimension = len(dist_object.marginals)
+        if form_object is None:
+            if isinstance(dist_object, list):
+                self.dimension = len(dist_object)
+                for i in range(len(dist_object)):
+                    if not isinstance(dist_object[i], (DistributionContinuous1D, JointInd)):
+                        raise TypeError('UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be '
+                                        'provided.')
             else:
-                raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
+                if isinstance(dist_object, DistributionContinuous1D):
+                    self.dimension = 1
+                elif isinstance(dist_object, JointInd):
+                    self.dimension = len(dist_object.marginals)
+                else:
+                    raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
 
-        if not isinstance(runmodel_object, RunModel):
-            raise ValueError('UQpy: A RunModel object is required for the model.')
+            if not isinstance(runmodel_object, RunModel):
+                raise ValueError('UQpy: A RunModel object is required for the model.')
 
-        self.nataf_object = Nataf(dist_object=dist_object, corr_z=corr_z, corr_x=corr_x)
+            self.nataf_object = Nataf(dist_object=dist_object, corr_z=corr_z, corr_x=corr_x)
+
+        else:
+            pass
+
         self.corr_x = corr_x
         self.corr_z = corr_z
         self.dist_object = dist_object
@@ -558,6 +579,8 @@ class TaylorSeries:
         self.tol1 = tol1
         self.tol2 = tol2
         self.tol3 = tol3
+        self.seed_u = seed_u
+        self.seed_x = seed_x
         self.df_step = df_step
         self.verbose = verbose
 
@@ -576,9 +599,15 @@ class TaylorSeries:
             Point in the uncorrelated standard normal space at which to evaluate the gradient with shape
             `samples.shape=(1, dimension)`.
 
+            Either `point_u` or `point_x` must be specified. If `point_u` is specified, the derivatives are computed
+            directly.
+
         * **point_x** (`ndarray`):
             Point in the parameter space at which to evaluate the model with shape
             `samples.shape=(1, dimension)`.
+
+            Either `point_u` or `point_x` must be specified. If `point_x` is specified, the variable is transformed to
+            standard normal using the ``Nataf`` transformation and derivatives are computed.
 
         * **runmodel_object** (``RunModel`` object):
             The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
@@ -592,10 +621,10 @@ class TaylorSeries:
             Default: 'first'.
 
         * **point_qoi** (`float`):
-            Value of the model evaluated at point_y. Used only for second derivatives.
+            Value of the model evaluated at ``point_u``. Used only for second derivatives.
 
         * **df_step** (`float`):
-            Finite difference step.
+            Finite difference step in standard normal space.
 
             Default: 0.01
 
@@ -759,7 +788,7 @@ class FORM(TaylorSeries):
         Hasofer-Lind reliability index.
 
     * **DesignPoint_U** (`ndarray`):
-        Design point in the uncorrelated standard normal space **Y**.
+        Design point in the uncorrelated standard normal space **U**.
 
     * **DesignPoint_X** (`ndarray`):
         Design point in the parameter space **X**.
@@ -771,7 +800,7 @@ class FORM(TaylorSeries):
         Number of model evaluations.
 
     * **u_record** (`list`):
-        Record of all iteration points in the standard normal space **Y**.
+        Record of all iteration points in the standard normal space **U**.
 
     * **x_record** (`list`):
         Record of all iteration points in the parameter space **X**.
@@ -795,10 +824,11 @@ class FORM(TaylorSeries):
 
      """
 
-    def __init__(self, dist_object, runmodel_object, df_step=None, corr_x=None, corr_z=None, n_iter=100,
-                 tol1=None, tol2=None, tol3=None, verbose=False):
+    def __init__(self, dist_object, runmodel_object, form_object=None, seed_x=None, seed_u=None, df_step=None,
+                 corr_x=None, corr_z=None, n_iter=100, tol1=None, tol2=None, tol3=None, verbose=False):
 
-        super().__init__(dist_object, runmodel_object, corr_x, corr_z, n_iter, tol1, tol2, tol3, df_step, verbose)
+        super().__init__(dist_object, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, n_iter, tol1, tol2,
+                         tol3, df_step, verbose)
 
         self.verbose = verbose
 
@@ -833,6 +863,13 @@ class FORM(TaylorSeries):
 
         self.call = None
 
+        if self.seed_u is not None:
+            self.run(seed_u=self.seed_u)
+        elif self.seed_x is not None:
+            self.run(seed_x=self.seed_x)
+        else:
+            pass
+
     def run(self, seed_x=None, seed_u=None):
         """
         Run FORM
@@ -841,15 +878,8 @@ class FORM(TaylorSeries):
 
         **Input:**
 
-        * **seed_y** or **seed_x** (`ndarray`):
-        The initial starting point for the `Hasofer-Lind` algorithm.
-
-        If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
-
-        If `seed_x` is provided, it should be a point in the parameter space of **X**.
-
-        Default: `seed_u = (0, 0, ..., 0)`
-
+        * **seed_u** or **seed_x** (`ndarray`):
+            See ``TaylorSeries`` parent class.
         """
         if self.verbose:
             print('UQpy: Running FORM...')
@@ -1029,7 +1059,7 @@ class FORM(TaylorSeries):
                 self.error_record = self.error_record + error_record
                 self.DesignPoint_U = self.DesignPoint_U + [u[k, :]]
                 self.DesignPoint_X = self.DesignPoint_X + [np.squeeze(self.x)]
-                self.Pf_form = self.Pf_form + [stats.norm.cdf(-self.beta_form[k])]
+                self.Pf_form = self.Pf_form + [stats.norm.cdf(-beta[k])]
                 self.form_iterations = self.form_iterations + [k]
                 self.u_record = self.u_record + [u_record[:k]]
                 self.x_record = self.x_record + [x_record[:k]]
@@ -1041,16 +1071,14 @@ class FORM(TaylorSeries):
 
 class SORM(TaylorSeries):
     """
-    A class to perform the Second Order Reliability Method. The ``run`` method of the ``FORM`` class can be invoked many
-    times and each time the results are appended to the existing ones.
-
-    ``SORM`` class first performs FORM and then corrects the estimated FORM probability using second-order information.
+    A class to perform the Second Order Reliability Method. This class is used to correct the estimated FORM probability
+     using second-order information.
 
     ``SORM`` is a child class of the ``TaylorSeries`` class.
 
     **Input:**
 
-    The ``SORM`` class has the same inputs as the ``TaylorSeries`` class.
+    The ``SORM`` class requires an object of type ``FORM`` as input.
 
     **Output/Returns:**
 
@@ -1066,13 +1094,11 @@ class SORM(TaylorSeries):
 
     """
 
-    def __init__(self, dist_object, runmodel_object, def_step=None, corr_x=None, corr_z=None, n_iter=100,
-                 tol1=None, tol2=None, tol3=None, verbose=False):
+    def __init__(self, form_object, dist_object=None, seed_u=None, seed_x=None, runmodel_object=None, def_step=None,
+                 corr_x=None, corr_z=None, n_iter=None, tol1=None, tol2=None, tol3=None, verbose=False):
 
-        super().__init__(dist_object, runmodel_object, corr_x, corr_z, n_iter, tol1, tol2, tol3, def_step, verbose)
-
-        self.obj = FORM(dist_object=dist_object, runmodel_object=runmodel_object, df_step=def_step,
-                        corr_x=corr_x,  corr_z=corr_z, n_iter=n_iter, tol1=tol1, tol2=tol2, verbose=verbose)
+        super().__init__(dist_object, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u,  n_iter, tol1, tol2,
+                         tol3, def_step, verbose)
 
         self.beta_form = None
         self.DesignPoint_U = None
@@ -1092,52 +1118,44 @@ class SORM(TaylorSeries):
         self.Pf_sorm = None
         self.beta_sorm = None
         self.call = None
+        if isinstance(form_object, FORM):
+            self.form_object = form_object
+            self._run()
+        else:
+            raise TypeError('UQpy: An object of type ``FORM`` is required to run SORM')
 
-    def run(self, seed_x=None, seed_u=None):
+    def _run(self):
 
         """
         Run SORM
 
         This is an instance method that runs SORM.
 
-        **Input:**
-
-        * **seed_u** or **seed_x** (`ndarray`):
-        The initial starting point for the `Hasofer-Lind` algorithm.
-
-        If `seed_u` is provided, it should be a point in the standard normal space of **U**.
-
-        If `seed_x` is provided, it should be a point in the parameter space of **X**.
-
-        Default: `seed_u = (0, 0, ..., 0)`
-
         """
 
         if self.verbose:
-            print('UQpy: Running SORM...')
+            print('UQpy: Calculating SORM correction...')
 
-        self.obj.run(seed_x=seed_x, seed_u=seed_u)
+        self.beta_form = self.form_object.beta_form[-1]
+        self.nataf_object = self.form_object.nataf_object
+        self.DesignPoint_U = self.form_object.DesignPoint_U[-1]
+        self.DesignPoint_X = self.form_object.DesignPoint_X[-1]
+        self.Pf_form = self.form_object.Pf_form
+        self.form_iterations = self.form_object.form_iterations[-1]
+        self.u_record = self.form_object.u_record
+        self.x_record = self.form_object.x_record
+        self.beta_record = self.form_object.beta_record
+        self.g_record = self.form_object.g_record
+        self.dg_u_record = self.form_object.dg_u_record
+        self.alpha_record = self.form_object.alpha_record
+        self.error_record = self.form_object.error_record
 
-        self.beta_form = self.obj.beta_form[-1]
-        self.nataf_object = self.obj.nataf_object
-        self.DesignPoint_U = self.obj.DesignPoint_U[-1]
-        self.DesignPoint_X = self.obj.DesignPoint_X[-1]
-        self.Pf_form = self.obj.Pf_form
-        self.form_iterations = self.obj.form_iterations[-1]
-        self.u_record = self.obj.u_record
-        self.x_record = self.obj.x_record
-        self.beta_record = self.obj.beta_record
-        self.g_record = self.obj.g_record
-        self.dg_u_record = self.obj.dg_u_record
-        self.alpha_record = self.obj.alpha_record
-        self.error_record = self.obj.error_record
+        self.dimension = self.form_object.dimension
+        alpha = self.form_object.alpha
+        model = self.form_object.runmodel_object
+        dg_u_record = self.form_object.dg_u_record
 
-        dimension = self.obj.dimension
-        alpha = self.obj.alpha
-        model = self.obj.runmodel_object
-        dg_u_record = self.obj.dg_u_record
-
-        matrix_a = np.fliplr(np.eye(dimension))
+        matrix_a = np.fliplr(np.eye(self.dimension))
         matrix_a[:, 0] = alpha
 
         def normalize(v):
@@ -1163,7 +1181,7 @@ class SORM(TaylorSeries):
                                      order='second', point_qoi=self.g_record[-1][-1])
 
         matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(dg_u_record[-1])
-        kappa = np.linalg.eig(matrix_b[:dimension-1, :dimension-1])
+        kappa = np.linalg.eig(matrix_b[:self.dimension-1, :self.dimension-1])
         if self.call is None:
             self.Pf_sorm = [stats.norm.cdf(-self.beta_form) * np.prod(1 / (1 + self.beta_form * kappa[0]) ** 0.5)]
             self.beta_sorm = [-stats.norm.ppf(self.Pf_sorm)]

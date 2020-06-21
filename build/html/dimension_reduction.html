@@ -104,9 +104,10 @@ using two different ways. First, the user can pass one of the methods implemente
 <ul class="simple">
 <li><p><cite>grassmann_distance</cite>;</p></li>
 <li><p><cite>chordal_distance</cite>;</p></li>
+<li><p><cite>procrustes_distance</cite>;</p></li>
+<li><p><cite>projection_distance</cite></p></li>
+<li><p><cite>binet_cauchy_distance</cite>.</p></li>
 </ul>
-<p>-<cite>procrustes_distance</cite>;
--<cite>projections_distance</cite>.</p>
 <p>In this regard,
 the class <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> is instantiated and the attributes are set using the method <code class="docutils literal notranslate"><span class="pre">manifold</span></code>. Thus,
 an object containing the attribute <cite>distance_method</cite> is passed as <cite>Grassmann.distance_method</cite>. Second, the user
@@ -219,6 +220,34 @@ representing a point on the Grassmann manifold.</p>
 </ul>
 <p><strong>Methods:</strong></p>
 <dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.binet_cauchy_distance">
+<em class="property">static </em><code class="sig-name descname">binet_cauchy_distance</code><span class="sig-paren">(</span><em class="sig-param">x0</em>, <em class="sig-param">x1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.binet_cauchy_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.binet_cauchy_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the Binet-Cauchy distance.</p>
+<p>One of the distances defined on the Grassmann manifold is the projection distance.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>x0</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>x1</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>distance</strong> (<cite>float</cite>)</dt><dd><p>Projection distance between x0 and x1.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
 <dt id="UQpy.DimensionReduction.Grassmann.binet_cauchy_kernel">
 <em class="property">static </em><code class="sig-name descname">binet_cauchy_kernel</code><span class="sig-paren">(</span><em class="sig-param">x0</em>, <em class="sig-param">x1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.binet_cauchy_kernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.binet_cauchy_kernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimate the value of the Binet-Cauchy kernel between x0 and x1.</p>
@@ -283,11 +312,11 @@ are passed through a <cite>list</cite> of <cite>list</cite> or a <cite>list</cit
 the pairwise distances is returned as an output argument where the distances are stored as
 [{0,1},{0,2},…,{1,0},{1,1},{1,2},…], where {a,b} corresponds to the distance between the points ‘a’ and
 ‘b’. Further, users are asked to provide the distance definition when the class <cite>Grassmann</cite> is instatiated.
-The current built-in options are the <cite>grassmann_distance</cite>, <cite>chordal_distance</cite>, <cite>procrustes_distance</cite>, and
-<cite>projection_distance</cite>, but the users have also the option to implement their own distance definition.
-In this case, the user must be aware that the matrices in <cite>points_grassmann</cite> must represent points on the
-Grassmann manifold. For example, given the points on the Grassmann manifold one can compute the pairwise
-distances in the following way:</p>
+The current built-in options are the <cite>grassmann_distance</cite>, <cite>chordal_distance</cite>, <cite>procrustes_distance</cite>,
+<cite>projection_distance</cite>, and <cite>binet_cauchy_distance</cite>, but the users have also the option to implement their own
+distance definition. In this case, the user must be aware that the matrices in <cite>points_grassmann</cite> must represent
+points on the Grassmann manifold. For example, given the points on the Grassmann manifold one can compute the
+pairwise distances in the following way:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">distance_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">grassmann_distance</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">points_grassmann</span><span class="o">=</span><span class="n">points_grassmann</span><span class="p">)</span>
 </pre></div>
