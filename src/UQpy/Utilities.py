@@ -23,8 +23,6 @@ from UQpy.RunModel import RunModel
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
-from scipy.special import gamma
-from scipy.stats import chi2, norm
 
 
 def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
@@ -666,204 +664,34 @@ def estimate_psd(samples, nt, t):
     return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
 
 
-def IS_diagnostics(sampling_outputs=None, weights=None, graphics=False, figsize=(8, 3), ):
-    """
-    Diagnostics for IS.
+# Audrey added this a while back, looks like it's not being used anymore
+# @contextmanager
+# def suppress_stdout():
+#     """ A function to suppress output"""
+#     with open(os.devnull, "w") as devnull:
+#         old_stdout = sys.stdout
+#         sys.stdout = devnull
+#         try:
+#             yield
+#         finally:
+#             sys.stdout = old_stdout
 
-    These diagnostics are qualitative, they can help the user in understanding how the IS algorithm is performing.
-    This function returns printouts and plots.
-
-    **Inputs:**
-
-    :param sampling_outputs: output object of a sampling method
-    :type sampling_outputs: object of class MCMC
-
-    :param weights: output weights (alternative to giving sampling_outputs)
-    :type weights: ndarray
-
-    :param graphics: indicates whether or not to do a plot
-
-                     Default: False
-    :type graphics: boolean
-
-    :param figsize: size of the figure for output plots
-    :type figsize: tuple (width, height)
-
-    """
-
-    if (sampling_outputs is None) and (weights is None):
-        raise ValueError('UQpy error: sampling_outputs or weights should be provided')
-    if sampling_outputs is not None:
-        weights = sampling_outputs.weights
-    print('Diagnostics for Importance Sampling \n')
-    effective_sample_size = 1/np.sum(weights**2, axis=0)
-    print('Effective sample size is ne={}, out of a total number of samples={} \n'.
-          format(effective_sample_size,np.size(weights)))
-    print('max_weight = {}, min_weight = {} \n'.format(max(weights), min(weights)))
-
-    # Output plots
-    if graphics:
-        fig, ax = plt.subplots(figsize=figsize)
-        ax.scatter(weights, np.zeros((np.size(weights), )), s=weights * 300, marker='o')
-        ax.set_xlabel('weights')
-        ax.set_title('Normalized weights out of importance sampling')
-        plt.show(fig)
-
-
-def MCMC_diagnostics(samples=None, sampling_outputs=None, eps_ESS=0.05, alpha_ESS=0.05,
-                     graphics=False, figsize=None):
-    """
-    Diagnostics for MCMC.
-
-    These diagnostics are qualitative, they can help the user in understanding how the MCMC algorithm is performing.
-    These diagnostics are not intended to give a quantitative assessment of MCMC algorithms. This function returns
-    printouts and plots.
-
-    **Inputs:**
-
-    :param sampling_outputs: output object of a sampling method
-    :type sampling_outputs: object of class MCMC
-
-    :param samples: output samples of a sampling method, alternative to giving sampling_outputs
-    :type samples: ndarray
-
-    :param eps_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
-    :type eps_ESS: float in [0,1]
-
-    :param alpha_ESS: small number required to compute ESS when sampling_method='MCMC', see documentation
-    :type alpha_ESS: float in [0,1]
-
-    :param graphics: indicates whether or not to do a plot
-
-                     Default: False
-    :type graphics: boolean
-
-    :param figsize: size of the figure for output plots
-    :type figsize: tuple (width, height)
-
-    """
-
-    if (eps_ESS < 0) or (eps_ESS > 1):
-        raise ValueError('eps_ESS should be a float between 0 and 1.')
-    if (alpha_ESS < 0) or (alpha_ESS > 1):
-        raise ValueError('alpha_ESS should be a float between 0 and 1.')
-
-    if (sampling_outputs is None) and (samples is None):
-        raise ValueError('sampling_outputs or samples should be provided')
-    if samples is None and sampling_outputs is not None:
-        samples = sampling_outputs.samples
-
-    if len(samples.shape) == 2:
-        print('Diagnostics for a single chain of MCMC \n')
-        print('!!! Warning !!! These diagnostics are purely qualitative and should be used with caution \n')
-        nsamples, dim = samples.shape
-
-        # Acceptance rate
-        if sampling_outputs is not None:
-            print('Acceptance ratio of the chain(s) = {}. \n'.format(sampling_outputs.acceptance_rate[0]))
-
-        # Computation of ESS and min ESS
-        bn = np.ceil(nsamples**(1/2))    # nb of samples per bin
-        an = int(np.ceil(nsamples/bn))    # nb of bins
-        idx = np.array_split(np.arange(nsamples), an)
-
-        means_subdivisions = np.empty((an, samples.shape[1]))
-        for i, idx_i in enumerate(idx):
-            x_sub = samples[idx_i, :]
-            means_subdivisions[i, :] = np.mean(x_sub, axis=0)
-        Omega = np.cov(samples.T)
-        Sigma = np.cov(means_subdivisions.T)
-        joint_ESS = nsamples*np.linalg.det(Omega)**(1/dim)/np.linalg.det(Sigma)**(1/dim)
-        chi2_value = chi2.ppf(1 - alpha_ESS, df=dim)
-        min_joint_ESS = 2 ** (2 / dim) * np.pi / (dim * gamma(dim / 2)) ** (
-                    2 / dim) * chi2_value / eps_ESS ** 2
-        marginal_ESS = np.empty((dim, ))
-        min_marginal_ESS = np.empty((dim,))
-        for j in range(dim):
-            marginal_ESS[j] = nsamples * Omega[j,j] / Sigma[j,j]
-            min_marginal_ESS[j] = 4 * norm.ppf(alpha_ESS/2)**2 / eps_ESS**2
-
-        print('Univariate Effective Sample Size in each dimension:')
-        for j in range(dim):
-            print('Dimension {}: ESS = {}, minimum ESS recommended = {}'.
-                  format(j+1, marginal_ESS[j], min_marginal_ESS[j]))
-        #print('\nMultivariate Effective Sample Size:')
-        #print('Multivariate ESS = {}, minimum ESS recommended = {}'.format(joint_ESS, min_joint_ESS))
-
-        # Computation of the autocorrelation time in each dimension
-        #def auto_window(taus, c):    # Automated windowing procedure following Sokal (1989)
-        #    m = np.arange(len(taus)) < c * taus
-        #    if np.any(m):
-        #        return np.argmin(m)
-        #    return len(taus) - 1
-        #autocorrelation_time = []
-        #for j in range(samples.shape[1]):
-        #    x = samples[:, j] - np.mean(samples[:, j])
-        #    f = np.correlate(x, x, mode="full") / np.dot(x, x)
-        #    maxlags = len(x) - 1
-        #    taus = np.arange(-maxlags, maxlags + 1)
-        #    f = f[len(x) - 1 - maxlags:len(x) + maxlags]
-        #    window = auto_window(taus, c=5.)
-        #    autocorrelation_time.append(taus[window])
-        #print('Autocorrelation time in each dimension (for nsamples = ):')
-        #for j in range(dim):
-        #    print('Dimension {}: autocorrelation time = {}'.format(j+1, autocorrelation_time[j]))
-
-        # Output plots
-        if graphics:
-            if dim >= 5:
-                print('No graphics when dim >= 5')
-            else:
-                if figsize is None:
-                    figsize = (20, 4 * dim)
-                fig, ax = plt.subplots(nrows=dim, ncols=3, figsize=figsize)
-                for j in range(samples.shape[1]):
-                    ax[j, 0].plot(np.arange(nsamples), samples[:, j])
-                    ax[j, 0].set_title('chain - parameter # {}'.format(j+1))
-                    ax[j, 1].plot(np.arange(nsamples), np.cumsum(samples[:, j])/np.arange(nsamples))
-                    ax[j, 1].set_title('parameter convergence')
-                    ax[j, 2].acorr(samples[:, j] - np.mean(samples[:, j]), maxlags=40, normed=True)
-                    ax[j, 2].set_title('correlation between samples')
-                plt.show(fig)
-
-    elif len(samples.chain) == 3:
-        print('No diagnostics for various chains of MCMC are currently supported. \n')
-
-    else:
-        return ValueError('Wrong dimensions in samples.')
-
-
-
-@contextmanager
-def suppress_stdout():
-    """ A function to suppress output"""
-    with open(os.devnull, "w") as devnull:
-        old_stdout = sys.stdout
-        sys.stdout = devnull
-        try:
-            yield
-        finally:
-            sys.stdout = old_stdout
-
-
-def check_input_dims(x):
-    """
-    Check that x is a 2D ndarray.
-
-    **Inputs:**
-
-    :param x: Existing samples
-    :type x: ndarray (nsamples, dim)
-
-    """
-    if not isinstance(x, np.ndarray):
-        try:
-            x = np.array(x)
-        except:
-            raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
-    if len(x.shape) != 2:
-        raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
-    return x
+# Audrey added this a while back, looks like it's not being used anymore
+#def check_input_dims(x):
+#    """
+#    Check that x is a 2D ndarray.
+#    **Inputs:**
+#    :param x: Existing samples
+#    :type x: ndarray (nsamples, dim)
+#    """
+#    if not isinstance(x, np.ndarray):
+#        try:
+#            x = np.array(x)
+#        except:
+#            raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
+#    if len(x.shape) != 2:
+#        raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
+#    return x
 
 
 # Grassmann: svd
@@ -1097,7 +925,11 @@ def correlation_distortion(dist_object, rho):
     rho_non = (rho_non - dist_object.moments(moments2return='m') ** 2) / dist_object.moments(moments2return='v')
     return rho_non
 
+
 def check_random_state(random_state):
+    """
+    Utility function: check that input random_state is either None, an integer or a np.randomRandomState object
+    """
     return_rs = random_state
     if isinstance(random_state, int):
         return_rs = np.random.RandomState(random_state)
