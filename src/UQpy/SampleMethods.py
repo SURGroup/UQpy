@@ -3567,6 +3567,9 @@ class IS:
     * **weights** (`ndarray`):
         Importance weights, weighted so that they sum up to 1, `ndarray` of shape (nsamples, )
 
+    * **unweighted_samples** (`ndarray`):
+        Set of un-weighted samples (useful for instance for plotting), computed by calling the `resample` method
+
     **Methods:**
     """
     # Last Modified: 10/05/2020 by Audrey Olivier
@@ -3645,6 +3648,12 @@ class IS:
         if self.verbose:
             print('UQpy: Importance Sampling performed successfully')
 
+        # If a set of unweighted samples exist, delete them as they are not representative of the distribution anymore
+        if self.unweighted_samples is not None:
+            if self.verbose:
+                print('UQpy: unweighted samples are being deleted, call the resample method to regenerate them')
+            self.unweighted_samples = None
+
     # def resample(self, method='multinomial', nsamples=None):
     #     """
     #     Resample to get a set of un-weighted samples that represent the target pdf.
@@ -3685,11 +3694,11 @@ class IS:
             Resampling method, as of V3 only multinomial resampling is supported. Default: 'multinomial'.
         * **nsamples** (`int`)
             Number of un-weighted samples to generate. Default: None (sets `nsamples` equal to the number of
-            existing samples).
+            existing weighted samples).
 
         **Output/Returns:**
 
-        The method has no returns, but it creates the attribute following attribute of the ``IS`` object.
+        The method has no returns, but it computes the following attribute of the ``IS`` object.
 
         * **unweighted_samples** (`ndarray`)
             Un-weighted samples that represent the target pdf, `ndarray` of shape (nsamples, dimension)
