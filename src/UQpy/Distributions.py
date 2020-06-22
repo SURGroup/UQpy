@@ -42,8 +42,6 @@ from types import MethodType
 import numpy as np
 import scipy.stats as stats
 
-from .Utilities import check_input_dims
-
 
 ########################################################################################################################
 #        Define the probability distribution of the random parameters
