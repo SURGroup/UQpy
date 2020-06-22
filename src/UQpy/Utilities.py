@@ -19,6 +19,7 @@
 import os
 import sys
 from contextlib import contextmanager
+from UQpy.RunModel import RunModel
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -1171,7 +1172,7 @@ def solve_single_integral(dist_object, rho):
     rho_non = (rho_non - dist_object.moments(moments2return='m') ** 2) / dist_object.moments(moments2return='v')
     return rho_non
 
-def check_random_state(random_state):
+def _check_random_state(random_state):
     return_rs = random_state
     if isinstance(random_state, int):
         return_rs = np.random.RandomState(random_state)
