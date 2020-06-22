@@ -3698,7 +3698,7 @@ class IS:
 
         **Output/Returns:**
 
-        The method has no returns, but it creates the attribute following attribute of the ``IS`` object.
+        The method has no returns, but it computes the following attribute of the ``IS`` object.
 
         * **unweighted_samples** (`ndarray`)
             Un-weighted samples that represent the target pdf, `ndarray` of shape (nsamples, dimension)
