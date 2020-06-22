@@ -641,6 +641,7 @@ class LHS:
 ########################################################################################################################
 #                                         Stratified Sampling  (STS)
 ########################################################################################################################
+
 class STS:
     """
     Generate samples from an assigned probability density function using Stratified Sampling ([1]_).
@@ -701,7 +702,6 @@ class STS:
             Instance of the class SampleMethods.Strata.
 
     **Methods:**
-
     """
     def __init__(self, dist_object, nsamples=None, sts_design=None, sts_criterion="random", stype='Rectangular',
                  input_file=None, n_iters=20, random_state=None, verbose=False):
@@ -757,31 +757,30 @@ class STS:
         **Inputs:**
 
         * **nsamples** (`int`):
-            Number of samples to be drawn from each distribution.
-
-            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
-            existing samples.
+                Number of samples to be drawn from each distribution.
+                If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+                existing samples.
 
         * **sts_design** (`list`):
-            List of integers specifiying the number of strata in each dimension. Required for rectangular
-            stratification.
+                List of integers specifiying the number of strata in each dimension. Required for rectangular
+                stratification.
 
         * **input_file** (`str`):
-            File path to input file specifying stratum origins and stratum widths.
+                File path to input file specifying stratum origins and stratum widths.
 
-            Default: None.
+                Default: None.
 
         * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-            Random seed used to initialize the pseudo-random number generator. Default is None.
+                Random seed used to initialize the pseudo-random number generator. If an integer is provided, this sets
+                the seed for an object of ``numpy.random.RandomState``. Otherwise, the object itself can be passed
+                directly.
 
-            If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-            object itself can be passed directly.
+                Default is None.
 
         **Output/Return:**
 
         The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``STS``
         class.
-
         """
         self.nsamples = nsamples
         self.sts_design = sts_design
@@ -997,6 +996,7 @@ class RSS:
     .. [1] Michael D. Shields, Kirubel Teferra, Adam Hapij and Raymond P. Daddazio, "Refined Stratified Sampling for
        efficient Monte Carlo based uncertainty quantification", Reliability Engineering & System Safety,
        ISSN: 0951-8320, Vol: 142, Page: 310-325, 2015.
+
     .. [2] M. D. Shields, "Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems",
        Reliability Engineering & System Safety, ISSN: 0951-8320, Vol: 175, Page: 207-224, 2018.
 
@@ -1096,7 +1096,7 @@ class RSS:
             else:
                 raise NotImplementedError("UQpy Error: nsamples should be a positive integer.")
 
-    def run(self, nsamples):
+    def run(self, nsamples=0):
         """
         Execute the random sampling in the ``RSS`` class.
 
@@ -1108,16 +1108,15 @@ class RSS:
         **Input:**
 
         * **nsamples** (`int`):
-            Number of samples to be drawn from each distribution.
+                Number of samples to be drawn from each distribution.
 
-            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
-            existing samples.
+                If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+                existing samples.
 
         **Output/Return:**
 
         The ``run`` method has no returns, although it creates and/or appends the `sample_object.samples` attribute of
         the ``RSS`` class.
-
         """
         self.nsamples = nsamples
         self.nexist = self.sample_object.samples.shape[0]
@@ -1698,7 +1697,7 @@ class Simplex:
 
     **References:**
 
-    1. W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, "Simplex-stochastic collocation method with improved
+    .. [1] W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, "Simplex-stochastic collocation method with improved
        calability",Journal of Computational Physics, 310:301–328 2016.
 
     **Inputs:**
@@ -1710,7 +1709,9 @@ class Simplex:
              The number of samples to be generated inside the simplex.
 
     * **random_state** (None or `int` or `np.random.RandomState` object):
-            Random seed used to initialize the pseudo-random number generator. Default is None.
+            Random seed used to initialize the pseudo-random number generator.
+
+            Default is None.
 
     **Output:**
 
@@ -1939,11 +1940,7 @@ class AKMCS:
             if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
                 raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        self.random_state = check_random_state(random_state)
 
         if hasattr(krig_object, 'fit') and hasattr(krig_object, 'predict'):
             self.krig_object = krig_object
@@ -3087,7 +3084,7 @@ class Stretch(MCMC):
             set1 = (inds == split)
 
             # Get current and complementary sets
-            sets = [current_state[inds == j, :] for j in range(2)]
+            sets = [current_state[inds == j01, :] for j01 in range(2)]
             curr_set, comp_set = sets[split], sets[1 - split]  # current and complementary sets respectively
             ns, nc = len(curr_set), len(comp_set)
 
@@ -3112,6 +3109,23 @@ class Stretch(MCMC):
                     current_state[j] = candidate
                     current_log_pdf[j] = lpc
                     accept_vec[j] += 1.
+
+            # Sample new state for S1 based on S0 and vice versa
+            #zz = ((self.scale - 1.) * np.random.rand(ns, 1) + 1) ** 2. / self.scale  # sample Z
+            #factors = (self.dimension - 1.) * np.log(zz)  # compute log(Z ** (d - 1))
+            #rint = np.random.choice(nc, size=(ns,), replace=True)  # sample X_{j} from complementary set
+            #candidates = comp_set[rint, :] - (comp_set[rint, :] - curr_set) * np.tile(zz, [1, self.dimension])  # new candidates
+
+            # Compute new likelihood, can be done in parallel :)
+            #logp_candidates = self.evaluate_log_target(candidates)
+
+            # Compute acceptance rate
+            #for j, f, lpc, candidate in zip(all_inds[set1], factors, logp_candidates, candidates):
+            #    accept = np.log(np.random.rand()) < f + lpc - current_log_pdf[j]
+            #    if accept:
+            #        current_state[j] = candidate
+            #        current_log_pdf[j] = lpc
+            #        accept_vec[j] += 1.
 
         # Update the acceptance rate
         self._update_acceptance_rate(accept_vec)
@@ -3555,6 +3569,9 @@ class IS:
     * **weights** (`ndarray`):
         Importance weights, weighted so that they sum up to 1, `ndarray` of shape (nsamples, )
 
+    * **unweighted_samples** (`ndarray`):
+        Set of un-weighted samples (useful for instance for plotting), computed by calling the `resample` method
+
     **Methods:**
     """
     # Last Modified: 10/05/2020 by Audrey Olivier
@@ -3633,6 +3650,12 @@ class IS:
         if self.verbose:
             print('UQpy: Importance Sampling performed successfully')
 
+        # If a set of unweighted samples exist, delete them as they are not representative of the distribution anymore
+        if self.unweighted_samples is not None:
+            if self.verbose:
+                print('UQpy: unweighted samples are being deleted, call the resample method to regenerate them')
+            self.unweighted_samples = None
+
     # def resample(self, method='multinomial', nsamples=None):
     #     """
     #     Resample to get a set of un-weighted samples that represent the target pdf.
@@ -3673,11 +3696,11 @@ class IS:
             Resampling method, as of V3 only multinomial resampling is supported. Default: 'multinomial'.
         * **nsamples** (`int`)
             Number of un-weighted samples to generate. Default: None (sets `nsamples` equal to the number of
-            existing samples).
+            existing weighted samples).
 
         **Output/Returns:**
 
-        The method has no returns, but it creates the attribute following attribute of the ``IS`` object.
+        The method has no returns, but it computes the following attribute of the ``IS`` object.
 
         * **unweighted_samples** (`ndarray`)
             Un-weighted samples that represent the target pdf, `ndarray` of shape (nsamples, dimension)

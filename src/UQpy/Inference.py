@@ -33,7 +33,6 @@ import numpy as np
 from UQpy.Distributions import Distribution, Normal, MVNormal
 from UQpy.RunModel import RunModel
 from UQpy.SampleMethods import MCMC, IS
-from UQpy.Utilities import check_input_dims
 
 
 ########################################################################################################################
@@ -166,9 +165,13 @@ class InferenceModel:
 
         """
 
-        params = check_input_dims(params)
+        # Check params
+        if not isinstance(params, np.ndarray):
+            params = np.array(params)
+        if len(params.shape) != 2:
+            raise TypeError('UQpy: input params should be a nested list or 2d ndarray of shape (nsamples, dimension).')
         if params.shape[1] != self.nparams:
-            raise ValueError('Wrong dimensions in params.')
+            raise ValueError('UQpy: Wrong dimensions in params.')
 
         # Case 1 - Forward model is given by RunModel
         if self.runmodel_object is not None:
