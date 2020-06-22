@@ -280,6 +280,12 @@ class SROM:
         """
         Initialization and preliminary error checks.
         """
+        if isinstance(self.moments, list):
+            self.moments = np.array(self.moments)
+
+        if isinstance(self.correlation, list):
+            self.correlation = np.array(self.correlation)
+
         # Check moments and correlation
         if self.properties[1] is True or self.properties[2] is True or self.properties[3] is True:
             if self.moments is None:
