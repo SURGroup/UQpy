@@ -76,7 +76,7 @@ Class Descriptions
    vol. 225, pp. 42-43, Paris, 1962.
 .. [2] R. Lebrun and A. Dutfoy, An innovating analysis of the Nataf transformation from the copula viewpoint,
    Prob. Eng. Mech.,  vol. 24, pp. 312-320, 2009.
-.. [3] Shields, M.D. and Kim, H. (2017). "Simulation of higher-order stochastic processes by spectral representation," Probabilistic Engineering Mechanics. 47: 1-15.
+.. [3] Kim, H. and Shields, M.D. (2015). "Modeling strongly non-Gaussian non-stationary stochastic processes using the Iterative Translation Approximation Method and Karhunen-Loeve Expansion," Computers and Structures. 161: 31-42.
 
 
 

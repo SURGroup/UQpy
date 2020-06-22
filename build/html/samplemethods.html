@@ -7,12 +7,12 @@
     <title>SampleMethods &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Transformations" href="transformations.html" />
@@ -155,7 +155,7 @@ the <code class="docutils literal notranslate"><span class="pre">MCS</span></cod
 <div class="section" id="adding-new-latin-hypercube-design-criteria">
 <h3>Adding New Latin Hypercube Design Criteria<a class="headerlink" href="#adding-new-latin-hypercube-design-criteria" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">LHS</span></code> class offers a variety of methods for pairing the samples in a Latin hypercube design. These are specified by the <cite>criterion</cite> parameter (i.e. ‘random’, ‘centered’, ‘minmax’, ‘correlate’). However, adding a new method is straightforward. This is done by creating a new method that contains the algorithm for pairing the samples. This method takes as input the randomly generated samples in equal probability bins in each dimension and returns a set of samples that is paired according to the user’s desired criterion. The user may also pass criterion-specific parameters into the custom method. These parameters are input to the <code class="docutils literal notranslate"><span class="pre">LHS</span></code> class through the <cite>**kwargs</cite>. The output of this function should be a numpy array of at least two-dimensions with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined criterion is given below:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">criterion</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">criterion</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">lhs_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
 <span class="gp">&gt;&gt;&gt; </span>            <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -884,7 +884,7 @@ class.</p>
 <div class="section" id="adding-new-learning-function">
 <h3>Adding New Learning Function<a class="headerlink" href="#adding-new-learning-function" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class offers a variety of learning function to generate samples adaptively. These are specified by the <cite>learning_function</cite> parameter (i.e. ‘U-Function’, ‘Weighted-U Function’, ‘Expected Feasibility Function’, ‘Expected Improvement Function’ and ‘Expected Global Improvement Fit’). However, adding a new learning function is straightforward. This is done by creating a new method that contains the algorithm for selecting a new samples. This method takes as input the surrogate model and randomly generated monte carlo samples, and returns a set of samples that are selected according to the user’s desired learning function. The output of this function should be a numpy array of samples and a boolean indicating the class to continue or stop. The numpy array of samples should be a two-dimensional array with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined learning function is given below:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">u_function</span><span class="p">(</span><span class="n">surr</span><span class="p">,</span> <span class="n">pop</span><span class="p">):</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">u_function</span><span class="p">(</span><span class="n">surr</span><span class="p">,</span> <span class="n">pop</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">g</span><span class="p">,</span> <span class="n">sig</span> <span class="o">=</span> <span class="n">surr</span><span class="p">(</span><span class="n">pop</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">pop</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">sig</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">pop</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
@@ -1792,6 +1792,11 @@ object itself can be passed directly.</p>
 </dd>
 </dl>
 </li>
+<li><dl class="simple">
+<dt><strong>unweighted_samples</strong> (<cite>ndarray</cite>):</dt><dd><p>Set of un-weighted samples (useful for instance for plotting), computed by calling the <cite>resample</cite> method</p>
+</dd>
+</dl>
+</li>
 </ul>
 <p><strong>Methods:</strong></p>
 <dl class="method">
@@ -1811,13 +1816,13 @@ plotting for instance.</p>
 </li>
 <li><dl class="simple">
 <dt><strong>nsamples</strong> (<cite>int</cite>)</dt><dd><p>Number of un-weighted samples to generate. Default: None (sets <cite>nsamples</cite> equal to the number of
-existing samples).</p>
+existing weighted samples).</p>
 </dd>
 </dl>
 </li>
 </ul>
 <p><strong>Output/Returns:</strong></p>
-<p>The method has no returns, but it creates the attribute following attribute of the <code class="docutils literal notranslate"><span class="pre">IS</span></code> object.</p>
+<p>The method has no returns, but it computes the following attribute of the <code class="docutils literal notranslate"><span class="pre">IS</span></code> object.</p>
 <ul class="simple">
 <li><dl class="simple">
 <dt><strong>unweighted_samples</strong> (<cite>ndarray</cite>)</dt><dd><p>Un-weighted samples that represent the target pdf, <cite>ndarray</cite> of shape (nsamples, dimension)</p>
@@ -1937,7 +1942,7 @@ samples as log_w_unnormalized) = log(target)-log(proposal).</p>
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1946,7 +1951,7 @@ samples as log_w_unnormalized) = log(target)-log(proposal).</p>
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

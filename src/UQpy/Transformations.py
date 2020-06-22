@@ -125,10 +125,10 @@ class Nataf:
     * **samples_z** (`ndarray`):
         Standard normal random vector of shape ``(nsamples, dimension)``
 
-    * **jacobian_x2z** (`ndarray`):
+    * **Jxz** (`ndarray`):
         The Jacobian of the transformation of shape ``(dimension, dimension)``.
 
-    * **jacobian_z2x** (`ndarray`):
+    * **Jzx** (`ndarray`):
         The Jacobian of the transformation of shape ``(dimension, dimension)``.
 
 
@@ -232,7 +232,7 @@ class Nataf:
         """
         Calculate the correlation matrix :math:`\mathbf{C_Z}` of the standard normal random vector
         :math:`\mathbf{Z}` given the correlation matrix :math:`\mathbf{C_X}` of the random vector :math:`\mathbf{X}`
-        using the `ITAM` method (see ``Utilities`` class).
+        using the `ITAM` method [3]_.
 
         **Inputs:**
 

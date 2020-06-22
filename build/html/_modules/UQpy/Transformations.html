@@ -7,12 +7,12 @@
     <title>UQpy.Transformations &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -50,13 +50,21 @@
 <span class="c1"># OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</span>
 
 
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains functionality for isoprobabilistic transformations in ``UQpy``.</span>
+<span class="sd">The module currently contains the following classes:</span>
+
+<span class="sd">- ``Nataf``: Class to perform the Nataf isoprobabilistic transformations.</span>
+<span class="sd">- ``Correlate``: Class to induce correlation to a standard normal vector.</span>
+<span class="sd">- ``Decorrelate``: Class to remove correlation from a standard normal vector.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
 <span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="o">*</span>
 
 
 <div class="viewcode-block" id="Nataf"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf">[docs]</a><span class="k">class</span> <span class="nc">Nataf</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-
-<span class="sd">    Transform random variables  using the Nataf iso-probabilistic transformation.</span>
+<span class="sd">    Transform random variables using the Nataf or Inverse Nataf transformation</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -64,29 +72,36 @@
 <span class="sd">        Probability distribution of each random variable. Must be an object of type</span>
 <span class="sd">        ``DistributionContinuous1D`` or ``JointInd``.</span>
 
-<span class="sd">    * **corr_x** or **corr_z** (`ndarray`):</span>
-<span class="sd">        The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** or the correlation correlation matrix</span>
-<span class="sd">        (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z**.</span>
+<span class="sd">    * **corr_x** (`ndarray`):</span>
+<span class="sd">        The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .</span>
 
-<span class="sd">        Default: The ``identity`` matrix.</span>
+<span class="sd">        Default: The identity matrix.</span>
 
-<span class="sd">    * **samples_x** or **samples_z** (`ndarray`):</span>
-<span class="sd">         Random vector **X**  with prescribed probability distributions or standard normal  random vector **Z** of</span>
-<span class="sd">         shape``(nsamples, dimension)``.</span>
+<span class="sd">        If ``corr_x`` is specified, the ``Nataf`` class invokes the ITAM to compute ``corr_z``.</span>
 
-<span class="sd">    * **jacobian** (`Boolean`):</span>
-<span class="sd">        The jacobian of the transformation of shape ``(dimension, dimension)``.</span>
+<span class="sd">    * **corr_z** (`ndarray`):</span>
+<span class="sd">        The correlation  matrix (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z** .</span>
 
-<span class="sd">        Default: ``False``</span>
+<span class="sd">        Default: The identity matrix.</span>
+
+<span class="sd">        If ``corr_z`` is specified, the ``Nataf`` class computes the correlation distortion integral above to solve for</span>
+<span class="sd">        ``corr_x``.</span>
 
 <span class="sd">    * **itam_threshold1** (`float`):</span>
-<span class="sd">        A threshold value for the relative difference between the non-Gaussian correlation function and the</span>
-<span class="sd">        underlying Gaussian.</span>
+<span class="sd">        If ``corr_x`` is specified, this specifies the threshold value for the error in the `ITAM` method (see</span>
+<span class="sd">        ``Utilities`` module) given by:</span>
 
-<span class="sd">        Default: 0.0001</span>
+<span class="sd">        .. math:: \epsilon_1 = ||\mathbf{C_X}^{target} - \mathbf{C_X}^{computed}||</span>
+
+<span class="sd">        Default: 0.001</span>
 
 <span class="sd">    * **itam_threshold2** (`float`):</span>
-<span class="sd">        A threshold value the `ITAM` method.</span>
+<span class="sd">        If ``corr_x`` is specified, this specifies the threshold value for the error difference between iterations in</span>
+<span class="sd">        the `ITAM` method (see ``Utilities`` module) given by:</span>
+
+<span class="sd">        .. math:: \epsilon_1^{i} - \epsilon_1^{i-1}</span>
+
+<span class="sd">        for iteration :math:`i`.</span>
 
 <span class="sd">        Default: 0.01</span>
 
@@ -94,6 +109,21 @@
 <span class="sd">        A parameter selected to optimize convergence speed and desired accuracy of the ITAM method.</span>
 
 <span class="sd">        Default: 1.0</span>
+
+<span class="sd">    * **samples_x** (`ndarray`):</span>
+<span class="sd">            Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.</span>
+
+<span class="sd">            If `samples_x` is provided, the ``Nataf`` class transforms them to `samples_z`.</span>
+
+<span class="sd">    * **samples_z** (`ndarray`):</span>
+<span class="sd">            Standard normal random vector of shape ``(nsamples, dimension)``</span>
+
+<span class="sd">            If `samples_z` is provided, the ``Nataf`` class transforms them to `samples_x`.</span>
+
+<span class="sd">    * **jacobian** (&#39;Boolean&#39;):</span>
+<span class="sd">            A boolean whether to return the jacobian of the transformation.</span>
+
+<span class="sd">            Default: False</span>
 
 <span class="sd">    * **itam_max_iter** (`int`):</span>
 <span class="sd">        Maximum number of iterations for the ITAM method.</span>
@@ -107,18 +137,34 @@
 
 <span class="sd">    **Attributes:**</span>
 
-<span class="sd">    * **corr_z** or **corr_x** (`ndarray`):</span>
-<span class="sd">        The distorted correlation matrix.</span>
+<span class="sd">    * **corr_z** (`ndarray`):</span>
+<span class="sd">        Distorted correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal vector **Z**.</span>
 
-<span class="sd">    * **samples_z** or **samples_x** (`ndarray`):</span>
-<span class="sd">        The transformed vector of shape ``(nsamples, dimension)``.</span>
-
-<span class="sd">    * **Jxz** or **Jzx** (`ndarray`):</span>
-<span class="sd">        The jacobian of the transformation of shape ``(dimension, dimension)``.</span>
+<span class="sd">    * **corr_x** (`ndarray`):</span>
+<span class="sd">        Distorted correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X**.</span>
 
 <span class="sd">    * **H** (`ndarray`):</span>
 <span class="sd">        The lower triangular matrix resulting from the Cholesky decomposition of the correlation matrix</span>
 <span class="sd">        :math:`\mathbf{C_Z}`.</span>
+
+<span class="sd">    * **itam_error1** (`list`)</span>
+<span class="sd">        List of ITAM errors for each iteration</span>
+
+<span class="sd">    * **itam_error2** (`list`)</span>
+<span class="sd">        List of ITAM difference errors for each iteration</span>
+
+<span class="sd">    * **samples_x** (`ndarray`):</span>
+<span class="sd">        Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.</span>
+
+<span class="sd">    * **samples_z** (`ndarray`):</span>
+<span class="sd">        Standard normal random vector of shape ``(nsamples, dimension)``</span>
+
+<span class="sd">    * **Jxz** (`ndarray`):</span>
+<span class="sd">        The Jacobian of the transformation of shape ``(dimension, dimension)``.</span>
+
+<span class="sd">    * **Jzx** (`ndarray`):</span>
+<span class="sd">        The Jacobian of the transformation of shape ``(dimension, dimension)``.</span>
+
 
 <span class="sd">    **Methods:**</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -218,33 +264,28 @@
     <span class="k">def</span> <span class="nf">itam</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">corr_x</span><span class="p">,</span>  <span class="n">itam_max_iter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">itam_threshold1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">itam_threshold2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
              <span class="n">verbose</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-
-<span class="sd">        This is a method to calculate the correlation matrix :math:`\mathbf{C_Z}` of the standard normal random vector</span>
-<span class="sd">        :math:`\mathbf{z}` given the correlation matrix :math:`\mathbf{C_x}` of the random vector :math:`\mathbf{x}`</span>
-<span class="sd">        using the ITAM method [1]_.</span>
-
-<span class="sd">        The `itam` method uses the ``nearest_psd`` method from ``Utilities`` module.</span>
-
-<span class="sd">        **References**</span>
-
-<span class="sd">        .. [1] Hwanpyo Kim, Michael D. Shields, Modeling strongly non-Gaussian non-stationary stochastic processes</span>
-<span class="sd">            using the Iterative Translation Approximation Method and Karhunen–Loève expansion, Computers and Structures,</span>
-<span class="sd">            161, (2015), 31–42.</span>
-
-<span class="sd">        .. [2] Shields M, Deodatis G. Estimation of evolutionary spectra for simulation of non-stationary and</span>
-<span class="sd">            non-Gaussian stochastic processes. Computers and Structures,  126, (2013), 149–63.</span>
+<span class="sd">        Calculate the correlation matrix :math:`\mathbf{C_Z}` of the standard normal random vector</span>
+<span class="sd">        :math:`\mathbf{Z}` given the correlation matrix :math:`\mathbf{C_X}` of the random vector :math:`\mathbf{X}`</span>
+<span class="sd">        using the `ITAM` method [3]_.</span>
 
 <span class="sd">        **Inputs:**</span>
 
 <span class="sd">        * **dist_object** ((list of ) ``Distribution`` object(s)):</span>
-<span class="sd">            Probability distribution of each random variable. Must be an object of type ``DistributionContinuous1D``</span>
-<span class="sd">            or ``JointInd``.</span>
+<span class="sd">            Probability distribution of each random variable. Must be an object of type</span>
+<span class="sd">            ``DistributionContinuous1D`` or ``JointInd``.</span>
+
+<span class="sd">            `dist_object` must have a ``cdf`` method.</span>
 
 <span class="sd">        * **corr_x** (`ndarray`):</span>
-<span class="sd">            The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X**.</span>
+<span class="sd">            The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .</span>
 
 <span class="sd">            Default: The ``identity`` matrix.</span>
 
+<span class="sd">        * **itam_threshold1** (`float`):</span>
+<span class="sd">            If ``corr_x`` is specified, this specifies the threshold value for the error in the `ITAM` method (see</span>
+<span class="sd">            ``Utilities`` module) given by:</span>
+
+<span class="sd">            .. math:: \epsilon_1 = ||\mathbf{C_X}^{target} - \mathbf{C_X}^{computed}||</span>
 <span class="sd">        * **itam_max_iter** (`int`):</span>
 <span class="sd">            Maximum number of iterations for the ITAM method.</span>
 
@@ -257,7 +298,12 @@
 <span class="sd">            Default: 0.001</span>
 
 <span class="sd">        * **itam_threshold2** (`float`):</span>
-<span class="sd">            A threshold value the `ITAM` method.</span>
+<span class="sd">            If ``corr_x`` is specified, this specifies the threshold value for the error difference between iterations</span>
+<span class="sd">            in the `ITAM` method (see ``Utilities`` module) given by:</span>
+
+<span class="sd">            .. math:: \epsilon_1^{i} - \epsilon_1^{i-1}</span>
+
+<span class="sd">            for iteration :math:`i`.</span>
 
 <span class="sd">            Default: 0.01</span>
 
@@ -274,7 +320,13 @@
 <span class="sd">        **Output/Returns:**</span>
 
 <span class="sd">        * **corr_z** (`ndarray`):</span>
-<span class="sd">            Distorted correlation matrix (:math:`\mathbf{C_z}`) of the standard normal vector **Z**.</span>
+<span class="sd">            Distorted correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal vector **Z**.</span>
+
+<span class="sd">        * **itam_error1** (`list`)</span>
+<span class="sd">            List of ITAM errors for each iteration</span>
+
+<span class="sd">        * **itam_error2** (`list`)</span>
+<span class="sd">            List of ITAM difference errors for each iteration</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -336,7 +388,6 @@
 <div class="viewcode-block" id="Nataf.distortion_z2x"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf.distortion_z2x">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">distortion_z2x</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">corr_z</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-
 <span class="sd">        This is a method to calculate the correlation matrix :math:`\mathbf{C_x}` of the random vector</span>
 <span class="sd">        :math:`\mathbf{x}`  given the correlation matrix :math:`\mathbf{C_z}` of the standard normal random vector</span>
 <span class="sd">        :math:`\mathbf{z}`.</span>
@@ -348,6 +399,8 @@
 <span class="sd">        * **dist_object** ((list of ) ``Distribution`` object(s)):</span>
 <span class="sd">                Probability distribution of each random variable. Must be an object of type</span>
 <span class="sd">                ``DistributionContinuous1D`` or ``JointInd``.</span>
+
+<span class="sd">                **dist_object** must have an ``icdf`` method.</span>
 
 <span class="sd">        * **corr_z** (`ndarray`):</span>
 <span class="sd">            The correlation  matrix (:math:`\mathbf{C_z}`) of the standard normal vector **Z** .</span>
@@ -362,7 +415,7 @@
 <span class="sd">        **Output/Returns:**</span>
 
 <span class="sd">        * **corr_x** (`ndarray`):</span>
-<span class="sd">            Distorted correlation matrix (:math:`\mathbf{C_x}`) of the random vector **x**.</span>
+<span class="sd">            Distorted correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X**.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -448,7 +501,6 @@
 
     <span class="k">def</span> <span class="nf">_transform_x2z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples_x</span><span class="p">,</span> <span class="n">jacobian</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-
 <span class="sd">        This is a method to transform a vector :math:`\mathbf{x}` of  samples with marginal distributions</span>
 <span class="sd">        :math:`f_i(x_i)` and cumulative distributions :math:`F_i(x_i)` to a vector :math:`\mathbf{z}` of standard normal</span>
 <span class="sd">        samples  according to: :math:`Z_{i}=\Phi^{-1}(F_i(X_{i}))`, where :math:`\Phi` is the cumulative</span>
@@ -507,7 +559,6 @@
 
     <span class="k">def</span> <span class="nf">_transform_z2x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples_z</span><span class="p">,</span> <span class="n">jacobian</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-
 <span class="sd">        This is a method to transform a standard normal vector :math:`\mathbf{z}` to a vector</span>
 <span class="sd">        :math:`\mathbf{x}` of samples with marginal distributions :math:`f_i(x_i)` and cumulative distributions</span>
 <span class="sd">        :math:`F_i(x_i)` to samples  according to: :math:`Z_{i}=\Phi^{-1}(F_i(X_{i}))`, where :math:`\Phi` is the</span>
@@ -568,10 +619,7 @@
 
 <div class="viewcode-block" id="Nataf.rvs"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf.rvs">[docs]</a>    <span class="k">def</span> <span class="nf">rvs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-
-<span class="sd">        This is a method to generate realizations from the joint pdf of the random vector **X**.</span>
-
-<span class="sd">        This method is part of the ``Nataf`` class.</span>
+<span class="sd">        Generate realizations from the joint pdf of the random vector **X**.</span>
 
 <span class="sd">        **Inputs:**</span>
 
@@ -598,7 +646,6 @@
 
 <div class="viewcode-block" id="Correlate"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Correlate">[docs]</a><span class="k">class</span> <span class="nc">Correlate</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-
 <span class="sd">    A class to induce correlation to standard normal random variables.</span>
 
 <span class="sd">    **Inputs:**</span>
@@ -629,9 +676,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">samples_z</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">samples_u</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
 
 
-<span class="k">class</span> <span class="nc">Decorrelate</span><span class="p">:</span>
+<div class="viewcode-block" id="Decorrelate"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Decorrelate">[docs]</a><span class="k">class</span> <span class="nc">Decorrelate</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-
 <span class="sd">    A class to remove correlation from correlated standard normal random variables.</span>
 
 
@@ -659,7 +705,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span> <span class="o">=</span> <span class="n">corr_z</span>
         <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">cholesky</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">=</span> <span class="n">cholesky</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">samples_u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="p">,</span> <span class="n">samples_z</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples_u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="p">,</span> <span class="n">samples_z</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span><span class="o">.</span><span class="n">T</span></div>
 
 
 
@@ -731,7 +777,7 @@
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -740,7 +786,7 @@
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
