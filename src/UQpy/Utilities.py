@@ -457,7 +457,7 @@ def test_type(X, ortho):
 
 
 # TODO: Check if still in use - Add Documentation (if public)
-def nn_coord(x, k):
+def _nn_coord(x, k):
     
     """
     Select k elements close to x.
