@@ -538,7 +538,7 @@ class TaylorSeries:
 
          Default: 0.01 (see `derivatives` class)
 
-    * **verbose** (Boolean):
+    * **verbose** (`Boolean`):
         A boolean declaring whether to write text to the terminal.
 
     **Methods:**
@@ -653,14 +653,16 @@ class TaylorSeries:
             y_i1_j[ii] = y_i1_j[ii] + df_step
 
             z_i1_j = Correlate(np.array(y_i1_j).reshape(1, -1), nataf_object.corr_z).samples_z
-            temp_x_i1_j = nataf_object.transform_z2x(z_i1_j.reshape(1, -1), jacobian=False)
+            nataf_object.run(samples_z=z_i1_j.reshape(1, -1), jacobian=False)
+            temp_x_i1_j = nataf_object.samples_x
             x_i1_j = temp_x_i1_j
             list_of_samples.append(x_i1_j)
 
             y_1i_j = point_u.tolist()
             y_1i_j[ii] = y_1i_j[ii] - df_step
             z_1i_j = Correlate(np.array(y_1i_j).reshape(1, -1), nataf_object.corr_z).samples_z
-            temp_x_1i_j = nataf_object.transform_z2x(z_1i_j.reshape(1, -1), jacobian=False)
+            nataf_object.run(samples_z=z_1i_j.reshape(1, -1), jacobian=False)
+            temp_x_1i_j = nataf_object.samples_x
             x_1i_j = temp_x_1i_j
             list_of_samples.append(x_1i_j)
 
@@ -724,19 +726,23 @@ class TaylorSeries:
                 y_1i_1j[i[1]] -= df_step
 
                 z_i1_j1 = Correlate(np.array(y_i1_j1).reshape(1, -1), nataf_object.corr_z).samples_z
-                x_i1_j1 = nataf_object.transform_z2x(z_i1_j1.reshape(1, -1), jacobian=False)
+                nataf_object.run(samples_z=z_i1_j1.reshape(1, -1), jacobian=False)
+                x_i1_j1 = nataf_object.samples_x
                 list_of_mixed_points.append(x_i1_j1)
 
                 z_i1_1j = Correlate(np.array(y_i1_1j).reshape(1, -1), nataf_object.corr_z).samples_z
-                x_i1_1j = nataf_object.transform_z2x(z_i1_1j.reshape(1, -1), jacobian=False)
+                nataf_object.run(samples_z=z_i1_1j.reshape(1, -1), jacobian=False)
+                x_i1_1j = nataf_object.samples_x
                 list_of_mixed_points.append(x_i1_1j)
 
                 z_1i_j1 = Correlate(np.array(y_1i_j1).reshape(1, -1), nataf_object.corr_z).samples_z
-                x_1i_j1 = nataf_object.transform_z2x(np.array(z_1i_j1).reshape(1, -1), jacobian=False)
+                nataf_object.run(samples_z=z_1i_j1.reshape(1, -1), jacobian=False)
+                x_1i_j1 = nataf_object.samples_x
                 list_of_mixed_points.append(x_1i_j1)
 
                 z_1i_1j = Correlate(np.array(y_1i_1j).reshape(1, -1), nataf_object.corr_z).samples_z
-                x_1i_1j = nataf_object.transform_z2x(np.array(z_1i_1j).reshape(1, -1), jacobian=False)
+                nataf_object.run(samples_z=z_1i_1j.reshape(1, -1), jacobian=False)
+                x_1i_1j = nataf_object.samples_x
                 list_of_mixed_points.append(x_1i_1j)
 
                 count = count + 1
@@ -887,7 +893,8 @@ class FORM(TaylorSeries):
             seed = np.zeros(self.dimension)
         elif seed_u is None and seed_x is not None:
             from UQpy.Transformations import Nataf
-            seed_z = self.nataf_object.transform_x2z(seed_x.reshape(1, -1), jacobian=False)
+            self.nataf_object.run(samples_x=seed_x.reshape(1, -1), jacobian=False)
+            seed_z = self.nataf_object.samples_z
             from UQpy.Transformations import Decorrelate
             seed = Decorrelate(seed_z, self.nataf_object.corr_z)
         elif seed_u is not None and seed_x is None:
@@ -918,10 +925,14 @@ class FORM(TaylorSeries):
                     x = seed_x
                 else:
                     seed_z = Correlate(seed.reshape(1, -1), self.nataf_object.corr_z).samples_z
-                    x, self.jzx = self.nataf_object.transform_z2x(seed_z.reshape(1, -1), jacobian=True)
+                    self.nataf_object.run(samples_z=seed_z.reshape(1, -1), jacobian=True)
+                    x = self.nataf_object.samples_x
+                    self.jzx = self.nataf_object.Jxz
             else:
                 z = Correlate(u[k, :].reshape(1, -1), self.nataf_object.corr_z).samples_z
-                x, self.jzx = self.nataf_object.transform_z2x(z, jacobian=True)
+                self.nataf_object.run(samples_z=z, jacobian=True)
+                x = self.nataf_object.samples_x
+                self.jzx = self.nataf_object.Jxz
 
             self.x = x
             u_record.append(u)

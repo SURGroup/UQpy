@@ -15,14 +15,170 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+"""
+
+List of methods (ready to use)
+--------------------------------
+
+:meth:`nearest_psd` : Find the nearest positive semi-definite matrix of a given matrix.
+
+:meth:`nearest_pd` : Find the nearest positive-definite matrix of a given matrix.
+
+:meth:`is_pd` : Check if a matrix is positive-definite.
+
+List of methods (needs revision)
+----------------------------------
+
+:meth:`run_parallel_python`:
+
+:meth:`voronoi_unit_hypercube`:
+
+:meth:`compute_Voronoi_centroid_volume`:
+
+:meth:`compute_Delaunay_centroid_volume`:
+
+:meth:`_get_a_plus`:
+
+:meth:`_get_ps`:
+
+:meth:`_get_pu`:
+
+:meth:`estimate_psd`:
+
+:meth:`suppress_stdout`:
+
+:meth:`check_input_dims`:
+
+:meth:`svd`:
+
+:meth:`check_arguments`:
+
+:meth:`test_type`:
+
+:meth:`nn_coord`:
+
+:meth:`correlation_distortion`:
+
+:meth:`check_random_state`:
+
+
+"""
 
 import os
 import sys
 from contextlib import contextmanager
-from UQpy.RunModel import RunModel
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
+
+
+def nearest_psd(input_matrix, iterations=10):
+    """
+    A function to compute the nearest positive semi-definite matrix of a given matrix [1]_.
+
+    **References**
+
+    .. [1] Houduo Qi, Defeng Sun, A Quadratically Convergent Newton Method for Computing the Nearest Correlation
+        Matrix, SIAM Journal on Matrix Analysis and Applications 28(2):360-385, 2006.
+
+    **Inputs:**
+
+    * **input_matrix** (`ndarray`):
+        Matrix to find the nearest PD.
+
+    * **iterations** (`int`):
+        Number of iterations to perform.
+
+        Default: 10
+
+    **Output/Returns:**
+
+    * **psd_matrix** (`ndarray`):
+        Nearest PSD matrix to input_matrix.
+
+    """
+
+    n = input_matrix.shape[0]
+    w = np.identity(n)
+    # w is the matrix used for the norm (assumed to be Identity matrix here)
+    # the algorithm should work for any diagonal W
+    delta_s = 0
+    psd_matrix = input_matrix.copy()
+    for k in range(iterations):
+
+        r_k = psd_matrix - delta_s
+        x_k = _get_ps(r_k, w=w)
+        delta_s = x_k - r_k
+        psd_matrix = _get_pu(x_k, w=w)
+
+    return psd_matrix
+
+
+def nearest_pd(input_matrix):
+    """
+    This is a method to find the nearest positive-definite matrix to input [1]_. Based on John D'Errico's
+    `nearestSPD` MATLAB code [2]_.
+
+    **References**
+
+    .. [1] N.J. Higham, "Computing a nearest symmetric positive semidefinite matrix" (1988):
+        https://doi.org/10.1016/0024-3795(88)90223-6.
+    .. [2] https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd
+
+    **Inputs:**
+
+    * **input_matrix** (`ndarray`):
+        Matrix to find the nearest PD.
+
+    **Output/Returns:**
+
+    * **pd_matrix** (`ndarray`):
+        Nearest PD matrix to input_matrix.
+
+    """
+
+    b = (input_matrix + input_matrix.T) / 2
+    _, s, v = np.linalg.svd(b)
+
+    h = np.dot(v.T, np.dot(np.diag(s), v))
+
+    a2 = (b + h) / 2
+
+    pd_matrix = (a2 + a2.T) / 2
+
+    if is_pd(pd_matrix):
+        return pd_matrix
+
+    spacing = np.spacing(np.linalg.norm(pd_matrix))
+    k = 1
+    while not is_pd(pd_matrix):
+        min_eig = np.min(np.real(np.linalg.eigvals(pd_matrix)))
+        pd_matrix += np.eye(input_matrix.shape[0]) * (-min_eig * k**2 + spacing)
+        k += 1
+
+    return pd_matrix
+
+
+def is_pd(input_matrix):
+    """
+    This is a method to return True when input is positive-definite, via Cholesky decomposition.
+
+    **Inputs:**
+
+    * **input_matrix** (`ndarray`):
+        Matrix to check if it is positive-definite.
+
+    **Output/Returns:**
+
+    * **True** or **False (`Boolean`):
+       Returns True if the input matrix is positive-definite.
+
+    """
+    try:
+        _ = np.linalg.cholesky(input_matrix)
+        return True
+    except np.linalg.LinAlgError:
+        return False
+
 
 
 def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
@@ -61,140 +217,6 @@ def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=Non
 #
 #     volume = np.sum(d_vol)
 #     return volume
-
-def gradient(runmodel_object=None, point=None, order='first', df_step=None):
-    """
-    A method to estimate the gradients (1st, 2nd, mixed) of a function using a finite difference scheme in the
-    standard normal space. First order gradients are calculated using central finite differences.
-
-    **Inputs:**
-
-    * **runmodel_object** (``RunModel`` object or a `callable` ):
-        The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.
-
-    * **point** (`ndarray`):
-        The point to evaluate the gradient with shape ``samples.shape=(1, dimension)
-
-    * **order** (`str`):
-        Order of the gradient. Available options: 'first', 'second', 'mixed'.
-
-        Default: 'First'.
-
-    * **df_step** (`float`):
-        Finite difference step.
-
-        Default: 0.001.
-
-    **Output/Returns:**
-
-    * **du_dj** (`ndarray`):
-        Vector of first-order gradients (if order = 'first').
-
-    * **d2u_dj** (`ndarray`):
-        Vector of second-order gradients (if order = 'second').
-
-    * **d2u_dij** (`ndarray`):
-        Vector of mixed gradients (if order = 'mixed').
-
-    """
-    point = np.atleast_2d(point)
-
-    dimension = point.shape[1]
-
-    if df_step is None:
-        df_step = [0.001] * dimension
-    elif isinstance(df_step, float):
-        df_step = [df_step] * dimension
-    elif isinstance(df_step, list):
-        if len(df_step) == 1:
-            df_step = [df_step[0]] * dimension
-
-    if not callable(runmodel_object) and not isinstance(runmodel_object, RunModel):
-        raise RuntimeError('A RunModel object or callable function must be provided as model.')
-
-    def func(m):
-        def func_eval(x):
-            if isinstance(m, RunModel):
-                m.run(samples=x, append_samples=False)
-                return np.array(m.qoi_list).flatten()
-            else:
-                return m(x).flatten()
-
-        return func_eval
-
-    f_eval = func(m=runmodel_object)
-
-    if order.lower() == 'first':
-        du_dj = np.zeros([point.shape[0], dimension])
-
-        for ii in range(dimension):
-            eps_i = df_step[ii]
-            u_i1_j = point.copy()
-            u_i1_j[:, ii] = u_i1_j[:, ii] + eps_i
-            u_1i_j = point.copy()
-            u_1i_j[:, ii] = u_1i_j[:, ii] - eps_i
-
-            qoi_plus = f_eval(u_i1_j)
-            qoi_minus = f_eval(u_1i_j)
-
-            du_dj[:, ii] = ((qoi_plus - qoi_minus) / (2 * eps_i))
-
-        return du_dj
-
-    elif order.lower() == 'second':
-        # print('Calculating second order derivatives..')
-        d2u_dj = np.zeros([point.shape[0], dimension])
-        for ii in range(dimension):
-            u_i1_j = point.copy()
-            u_i1_j[:, ii] = u_i1_j[:, ii] + df_step[ii]
-            u_1i_j = point.copy()
-            u_1i_j[:, ii] = u_1i_j[:, ii] - df_step[ii]
-
-            qoi_plus = f_eval(u_i1_j)
-            qoi = f_eval(point)
-            qoi_minus = f_eval(u_1i_j)
-
-            d2u_dj[:, ii] = ((qoi_plus - 2 * qoi + qoi_minus) / (df_step[ii] * df_step[ii]))
-
-        return d2u_dj
-
-    elif order.lower() == 'mixed':
-
-        import itertools
-        range_ = list(range(dimension))
-        d2u_dij = np.zeros([point.shape[0], int(dimension * (dimension - 1) / 2)])
-        count = 0
-        for i in itertools.combinations(range_, 2):
-            u_i1_j1 = point.copy()
-            u_i1_1j = point.copy()
-            u_1i_j1 = point.copy()
-            u_1i_1j = point.copy()
-
-            eps_i1_0 = df_step[i[0]]
-            eps_i1_1 = df_step[i[1]]
-
-            u_i1_j1[:, i[0]] += eps_i1_0
-            u_i1_j1[:, i[1]] += eps_i1_1
-
-            u_i1_1j[:, i[0]] += eps_i1_0
-            u_i1_1j[:, i[1]] -= eps_i1_1
-
-            u_1i_j1[:, i[0]] -= eps_i1_0
-            u_1i_j1[:, i[1]] += eps_i1_1
-
-            u_1i_1j[:, i[0]] -= eps_i1_0
-            u_1i_1j[:, i[1]] -= eps_i1_1
-
-            print('hi')
-            qoi_0 = f_eval(u_i1_j1)
-            qoi_1 = f_eval(u_i1_1j)
-            qoi_2 = f_eval(u_1i_j1)
-            qoi_3 = f_eval(u_1i_1j)
-
-            d2u_dij[:, count] = ((qoi_0 + qoi_3 - qoi_1 - qoi_2) / (4 * eps_i1_0 * eps_i1_1))
-
-            count += 1
-        return d2u_dij
 
 
 def voronoi_unit_hypercube(samples):
@@ -280,206 +302,30 @@ def compute_Delaunay_centroid_volume(vertices):
     return centroid, volume
 
 
-# TODO: name change
-def correlation_distortion_change(marginal, rho_norm):
+#def bi_variate_normal_pdf(x1, x2, rho):
 
-    """
-        Description:
+#    """
 
-            A function to solve the double integral equation in order to evaluate the modified correlation
-            matrix in the standard normal space given the correlation matrix in the original space. This is achieved
-            by a quadratic two-dimensional Gauss-Legendre integration.
-            This function is a part of the ERADIST code that can be found in:
-            https://www.era.bgu.tum.de/en/software/
+#        Description:
 
-        Input:
-            :param marginal: marginal distributions
-            :type marginal: list
+#            A function which evaluates the values of the bi-variate normal probability distribution function.
 
-            :param params: marginal distribution parameters.
-            :type params: list
+#        Input:
+#            :param x1: value 1
+#            :type x1: ndarray
 
-            :param rho_norm: Correlation at standard normal space.
-            :type rho_norm: ndarray
+#            :param x2: value 2
+#            :type x2: ndarray
 
-        Output:
-            :return rho: Distorted correlation
-            :rtype rho: ndarray
+#            :param rho: correlation between x1, x2
+#            :type rho: float
 
-    """
+#        Output:
 
-    n = 1024
-    z_max = 8
-    z_min = -z_max
-    points, weights = np.polynomial.legendre.leggauss(n)
-    points = - (0.5 * (points + 1) * (z_max - z_min) + z_min)
-    weights = weights * (0.5 * (z_max - z_min))
-
-    xi = np.tile(points, [n, 1])
-    xi = xi.flatten(order='F')
-    eta = np.tile(points, n)
-
-    first = np.tile(weights, n)
-    first = np.reshape(first, [n, n])
-    second = np.transpose(first)
-
-    weights2d = first * second
-    w2d = weights2d.flatten()
-    rho = np.ones_like(rho_norm)
-
-    print('UQpy: Computing Nataf correlation distortion...')
-    from UQpy.Distributions import JointInd
-    if isinstance(marginal, JointInd):
-        if all(hasattr(m, 'moments') for m in marginal.marginals) and \
-                all(hasattr(m, 'icdf') for m in marginal.marginals):
-            for i in range(len(marginal.marginals)):
-                i_cdf_i = marginal.marginals[i].icdf
-                mi = marginal.marginals[i].moments()
-                if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
-                    raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
-                for j in range(i + 1, len(marginal.marginals)):
-                    i_cdf_j = marginal.marginals[j].icdf
-                    mj = marginal.marginals[j].moments()
-                    if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
-                        raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
-
-                    tmp_f_xi = ((i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T) - mj[0]) / np.sqrt(mj[1]))
-                    tmp_f_eta = ((i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T) - mi[0]) / np.sqrt(mi[1]))
-                    coef = tmp_f_xi * tmp_f_eta * w2d
-
-                    rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
-                    rho[j, i] = rho[i, j]
-
-    elif isinstance(marginal, list):
-        if all(hasattr(m, 'moments') for m in marginal) and \
-                all(hasattr(m, 'icdf') for m in marginal):
-            for i in range(len(marginal)):
-                i_cdf_i = marginal[i].icdf
-                mi = marginal[i].moments()
-                if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
-                    raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
-
-                for j in range(i + 1, len(marginal)):
-                    i_cdf_j = marginal[j].icdf
-                    mj = marginal[j].moments()
-                    if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
-                        raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
-
-                    tmp_f_xi = ((i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T) - mj[0]) / np.sqrt(mj[1]))
-                    tmp_f_eta = ((i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T) - mi[0]) / np.sqrt(mi[1]))
-                    coef = tmp_f_xi * tmp_f_eta * w2d
-
-                    rho[i, j] = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho_norm[i, j]))
-                    rho[j, i] = rho[i, j]
-
-    print('UQpy: Done.')
-    return rho
-
-
-def itam_correlation(marginal, corr, beta, thresh1, thresh2):
-
-    """
-        Description:
-
-            A function to perform the  Iterative Translation Approximation Method;  an iterative scheme for
-            upgrading the Gaussian power spectral density function.
-            [1] Shields M, Deodatis G, Bocchini P. A simple and efficient methodology to approximate a general
-            non-Gaussian  stochastic process by a translation process. Probab Eng Mech 2011;26:511–9.
-
-
-        Input:
-            :param marginal: marginal distributions
-            :type marginal: list
-
-            :param params: marginal distribution parameters.
-            :type params: list
-
-            :param corr: Non-Gaussian Correlation matrix.
-            :type corr: ndarray
-
-            :param beta:  A variable selected to optimize convergence speed and desired accuracy.
-            :type beta: float
-
-            :param thresh1: Threshold
-            :type thresh1: float
-
-            :param thresh2: Threshold
-            :type thresh2: float
-
-        Output:
-            :return corr_norm: Gaussian correlation matrix
-            :rtype corr_norm: ndarray
-
-    """
-
-    if beta is None:
-        beta = 1.0
-    if thresh1 is None:
-        thresh1 = 0.0001
-    if thresh2 is None:
-        thresh2 = 0.01
-
-    # Initial Guess
-    corr_norm0 = corr
-    corr_norm = np.zeros_like(corr_norm0)
-    # Iteration Condition
-    error0 = 0.1
-    error1 = 100.
-    max_iter = 50
-    iter_ = 0
-
-    print("UQpy: Initializing Iterative Translation Approximation Method (ITAM)")
-    while iter_ < max_iter and error1 > thresh1 and abs(error1-error0)/error0 > thresh2:
-        error0 = error1
-        corr0 = correlation_distortion(marginal, corr_norm0)
-        error1 = np.linalg.norm(corr - corr0)
-
-        max_ratio = np.amax(np.ones((len(corr), len(corr))) / abs(corr_norm0))
-
-        corr_norm = np.nan_to_num((corr / corr0)**beta * corr_norm0)
-
-        # Do not allow off-diagonal correlations to equal or exceed one
-        corr_norm[corr_norm < -1.0] = (max_ratio + 1) / 2 * corr_norm0[corr_norm < -1.0]
-        corr_norm[corr_norm > 1.0] = (max_ratio + 1) / 2 * corr_norm0[corr_norm > 1.0]
-
-        # Iteratively finding the nearest PSD(Qi & Sun, 2006)
-        corr_norm = np.array(nearest_psd(corr_norm))
-
-        corr_norm0 = corr_norm.copy()
-
-        iter_ = iter_ + 1
-
-        print(["UQpy: ITAM iteration number ", iter_])
-        print(["UQpy: Current error, ", error1])
-
-    print("UQpy: ITAM Done.")
-    return corr_norm
-
-
-def bi_variate_normal_pdf(x1, x2, rho):
-
-    """
-
-        Description:
-
-            A function which evaluates the values of the bi-variate normal probability distribution function.
-
-        Input:
-            :param x1: value 1
-            :type x1: ndarray
-
-            :param x2: value 2
-            :type x2: ndarray
-
-            :param rho: correlation between x1, x2
-            :type rho: float
-
-        Output:
-
-    """
-    return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
-            np.exp(-1/(2*(1-rho**2)) *
-                   (x1**2 - 2 * rho * x1 * x2 + x2**2)))
+#   """
+#    return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
+#            np.exp(-1/(2*(1-rho**2)) *
+#                   (x1**2 - 2 * rho * x1 * x2 + x2**2)))
 
 
 def _get_a_plus(a):
@@ -532,111 +378,6 @@ def _get_pu(a, w=None):
     return np.matrix(a_ret)
 
 
-def nearest_psd(a, nit=10):
-
-    """
-        Description:
-            A function to compute the nearest positive semi definite matrix of a given matrix
-
-         Input:
-            :param a: Input matrix
-            :type a: ndarray
-
-            :param nit: Number of iterations to perform (Default=10)
-            :type nit: int
-
-        Output:
-            :return:
-    """
-
-    n = a.shape[0]
-    w = np.identity(n)
-    # w is the matrix used for the norm (assumed to be Identity matrix here)
-    # the algorithm should work for any diagonal W
-    delta_s = 0
-    y_k = a.copy()
-    for k in range(nit):
-
-        r_k = y_k - delta_s
-        x_k = _get_ps(r_k, w=w)
-        delta_s = x_k - r_k
-        y_k = _get_pu(x_k, w=w)
-
-    return y_k
-
-
-def nearest_pd(a):
-
-    """
-        Description:
-
-            Find the nearest positive-definite matrix to input
-            A Python/Numpy port of John D'Errico's `nearestSPD` MATLAB code [1], which
-            credits [2].
-            [1] https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd
-            [2] N.J. Higham, "Computing a nearest symmetric positive semidefinite
-            matrix" (1988): https://doi.org/10.1016/0024-3795(88)90223-6
-
-        Input:
-            :param a: Input matrix
-            :type a:
-
-
-        Output:
-
-    """
-
-    b = (a + a.T) / 2
-    _, s, v = np.linalg.svd(b)
-
-    h = np.dot(v.T, np.dot(np.diag(s), v))
-
-    a2 = (b + h) / 2
-
-    a3 = (a2 + a2.T) / 2
-
-    if is_pd(a3):
-        return a3
-
-    spacing = np.spacing(np.linalg.norm(a))
-    # The above is different from [1]. It appears that MATLAB's `chol` Cholesky
-    # decomposition will accept matrices with exactly 0-eigenvalue, whereas
-    # Numpy's will not. So where [1] uses `eps(mineig)` (where `eps` is Matlab
-    # for `np.spacing`), we use the above definition. CAVEAT: our `spacing`
-    # will be much larger than [1]'s `eps(mineig)`, since `mineig` is usually on
-    # the order of 1e-16, and `eps(1e-16)` is on the order of 1e-34, whereas
-    # `spacing` will, for Gaussian random matrices of small dimension, be on
-    # other order of 1e-16. In practice, both ways converge, as the unit test
-    # below suggests.
-    k = 1
-    while not is_pd(a3):
-        min_eig = np.min(np.real(np.linalg.eigvals(a3)))
-        a3 += np.eye(a.shape[0]) * (-min_eig * k**2 + spacing)
-        k += 1
-
-    return a3
-
-
-def is_pd(b):
-
-    """
-        Description:
-
-            Returns true when input is positive-definite, via Cholesky decomposition.
-
-        Input:
-            :param b: A general matrix
-
-        Output:
-
-    """
-    try:
-        _ = np.linalg.cholesky(b)
-        return True
-    except np.linalg.LinAlgError:
-        return False
-
-
 def estimate_psd(samples, nt, t):
 
     """
@@ -663,35 +404,36 @@ def estimate_psd(samples, nt, t):
 
     return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
 
+@contextmanager
+def suppress_stdout():
+    """ A function to suppress output"""
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:
+            yield
+        finally:
+            sys.stdout = old_stdout
 
-# Audrey added this a while back, looks like it's not being used anymore
-# @contextmanager
-# def suppress_stdout():
-#     """ A function to suppress output"""
-#     with open(os.devnull, "w") as devnull:
-#         old_stdout = sys.stdout
-#         sys.stdout = devnull
-#         try:
-#             yield
-#         finally:
-#             sys.stdout = old_stdout
 
-# Audrey added this a while back, looks like it's not being used anymore
-#def check_input_dims(x):
-#    """
-#    Check that x is a 2D ndarray.
-#    **Inputs:**
-#    :param x: Existing samples
-#    :type x: ndarray (nsamples, dim)
-#    """
-#    if not isinstance(x, np.ndarray):
-#        try:
-#            x = np.array(x)
-#        except:
-#            raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
-#    if len(x.shape) != 2:
-#        raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
-#    return x
+def check_input_dims(x):
+    """
+    Check that x is a 2D ndarray.
+
+    **Inputs:**
+
+    :param x: Existing samples
+    :type x: ndarray (nsamples, dim)
+
+    """
+    if not isinstance(x, np.ndarray):
+        try:
+            x = np.array(x)
+        except:
+            raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
+    if len(x.shape) != 2:
+        raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
+    return x
 
 
 # Grassmann: svd
@@ -921,15 +663,14 @@ def correlation_distortion(dist_object, rho):
     tmp_f_xi = dist_object.icdf(stats.norm.cdf(xi[:, np.newaxis]))
     tmp_f_eta = dist_object.icdf(stats.norm.cdf(eta[:, np.newaxis]))
     coef = tmp_f_xi * tmp_f_eta * w2d
-    rho_non = np.sum(coef * bi_variate_normal_pdf(xi, eta, rho))
+    phi2 = (1 / (2 * np.pi * np.sqrt(1 - rho ** 2)) *
+            np.exp(-1 / (2 * (1 - rho ** 2)) *
+                   (xi ** 2 - 2 * rho * xi * eta + eta ** 2)))
+    rho_non = np.sum(coef * phi2)
     rho_non = (rho_non - dist_object.moments(moments2return='m') ** 2) / dist_object.moments(moments2return='v')
     return rho_non
 
-
 def check_random_state(random_state):
-    """
-    Utility function: check that input random_state is either None, an integer or a np.randomRandomState object
-    """
     return_rs = random_state
     if isinstance(random_state, int):
         return_rs = np.random.RandomState(random_state)
