@@ -1677,6 +1677,7 @@ class RSS:
         """
         if self.krig_object is not None:
             self.krig_object.fit(x, y)
+            self.krig_object.nopt = 1
             tck = self.krig_object.predict
         else:
             from scipy.interpolate import LinearNDInterpolator
@@ -2071,7 +2072,7 @@ class AKMCS:
                 self.qoi = self.runmodel_object.qoi_list
 
             # Retrain the surrogate model
-            self.krig_object.fit(self.samples, self.qoi)
+            self.krig_object.fit(self.samples, self.qoi, nopt=1)
             self.krig_model = self.krig_object.predict
 
             if self.save_pf:
