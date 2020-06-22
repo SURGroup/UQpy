@@ -196,7 +196,7 @@ class is instantiated.</p>
 <p>In SORM the performance function is approximated by a second-order Taylor series around the design point according to</p>
 <div class="math notranslate nohighlight">
 \[G(\textbf{U}) = G(\textbf{U}^\star) +  \nabla G(\textbf{U}^\star)(\textbf{U}-\textbf{U}^\star)^\intercal + \frac{1}{2}(\textbf{U}-\textbf{U}^\star)\textbf{H}(\textbf{U}-\textbf{U}^\star)\]</div>
-<p>where <span class="math notranslate nohighlight">\(\textbf{H}\)</span> is the Hessian matrix of the second derivatives of <span class="math notranslate nohighlight">\(G(\textbf{U})\)</span> evaluated at <span class="math notranslate nohighlight">\(\textbf{U}^*\)</span>. After the design point <span class="math notranslate nohighlight">\(\textbf{Y}^*\)</span> is identified and the probability of failure <span class="math notranslate nohighlight">\(P_{f, \text{form}}\)</span> is calculated with FORM a correction is made according to</p>
+<p>where <span class="math notranslate nohighlight">\(\textbf{H}\)</span> is the Hessian matrix of the second derivatives of <span class="math notranslate nohighlight">\(G(\textbf{U})\)</span> evaluated at <span class="math notranslate nohighlight">\(\textbf{U}^*\)</span>. After the design point <span class="math notranslate nohighlight">\(\textbf{U}^*\)</span> is identified and the probability of failure <span class="math notranslate nohighlight">\(P_{f, \text{form}}\)</span> is calculated with FORM a correction is made according to</p>
 <div class="math notranslate nohighlight">
 \[P_{f, \text{sorm}} = \Phi(-\beta_{HL}) \prod_{i=1}^{n-1} (1+\beta_{HL}\kappa_i)^{-\frac{1}{2}}\]</div>
 <p>where <span class="math notranslate nohighlight">\(\kappa_i\)</span> is the <cite>i-th</cite>  curvature.</p>

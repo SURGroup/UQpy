@@ -16,12 +16,21 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
+"""
+This module contains functionality for isoprobabilistic transformations in ``UQpy``.
+The module currently contains the following classes:
+
+- ``Nataf``: Class to perform the Nataf isoprobabilistic transformations.
+- ``Correlate``: Class to induce correlation to a standard normal vector.
+- ``Decorrelate``: Class to remove correlation from a standard normal vector.
+"""
+
 from UQpy.Distributions import *
 
 
 class Nataf:
     """
-    Transform random variables  using the isoprobabilistic transformations
+    Transform random variables using the Nataf or Inverse Nataf transformation
 
     **Inputs:**
 
@@ -32,18 +41,33 @@ class Nataf:
     * **corr_x** (`ndarray`):
         The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
 
+        Default: The identity matrix.
+
+        If ``corr_x`` is specified, the ``Nataf`` class invokes the ITAM to compute ``corr_z``.
+
     * **corr_z** (`ndarray`):
         The correlation  matrix (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z** .
 
-        Default: The ``identity`` matrix.
+        Default: The identity matrix.
 
-    * **itam_error1** (`float`):
-        A threshold value the `ITAM` method (see ``Utilities`` module).
+        If ``corr_z`` is specified, the ``Nataf`` class computes the correlation distortion integral above to solve for
+        ``corr_x``.
+
+    * **itam_threshold1** (`float`):
+        If ``corr_x`` is specified, this specifies the threshold value for the error in the `ITAM` method (see
+        ``Utilities`` module) given by:
+
+        .. math:: \epsilon_1 = ||\mathbf{C_X}^{target} - \mathbf{C_X}^{computed}||
 
         Default: 0.001
 
-    * **itam_error2** (`float`):
-        A threshold value the `ITAM` method (see ``Utilities`` module).
+    * **itam_threshold2** (`float`):
+        If ``corr_x`` is specified, this specifies the threshold value for the error difference between iterations in
+        the `ITAM` method (see ``Utilities`` module) given by:
+
+        .. math:: \epsilon_1^{i} - \epsilon_1^{i-1}
+
+        for iteration :math:`i`.
 
         Default: 0.01
 
@@ -52,6 +76,21 @@ class Nataf:
         ``Utilities`` module).
 
         Default: 1.0
+
+    * **samples_x** (`ndarray`):
+            Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.
+
+            If `samples_x` is provided, the ``Nataf`` class transforms them to `samples_z`.
+
+    * **samples_z** (`ndarray`):
+            Standard normal random vector of shape ``(nsamples, dimension)``
+
+            If `samples_z` is provided, the ``Nataf`` class transforms them to `samples_x`.
+
+    * **jacobian** ('Boolean'):
+            A boolean whether to return the jacobian of the transformation.
+
+            Default: False
 
     **Attributes:**
 
@@ -64,6 +103,25 @@ class Nataf:
     * **H** (`ndarray`):
         The lower triangular matrix resulting from the Cholesky decomposition of the correlation matrix
         :math:`\mathbf{C_Z}`.
+
+    * **itam_error1** (`list`)
+        List of ITAM errors for each iteration
+
+    * **itam_error2** (`list`)
+        List of ITAM difference errors for each iteration
+
+    * **samples_x** (`ndarray`):
+        Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.
+
+    * **samples_z** (`ndarray`):
+        Standard normal random vector of shape ``(nsamples, dimension)``
+
+    * **jacobian_x2z** (`ndarray`):
+        The Jacobian of the transformation of shape ``(dimension, dimension)``.
+
+    * **jacobian_z2x** (`ndarray`):
+        The Jacobian of the transformation of shape ``(dimension, dimension)``.
+
 
     **Methods:**
     """
@@ -111,28 +169,38 @@ class Nataf:
     @staticmethod
     def distortion_x2z(dist_object, corr_x,  beta=1.0, itam_error1=0.001, itam_error2=0.01):
         """
-        This is a method to calculate the correlation matrix :math:`\mathbf{C_Z}` of the standard normal random vector
-        :math:`\mathbf{z}` given the correlation matrix :math:`\mathbf{C_x}` of the random vector :math:`\mathbf{x}`
+        Calculate the correlation matrix :math:`\mathbf{C_Z}` of the standard normal random vector
+        :math:`\mathbf{Z}` given the correlation matrix :math:`\mathbf{C_X}` of the random vector :math:`\mathbf{X}`
         using the `ITAM` method (see ``Utilities`` class).
 
         **Inputs:**
 
         * **dist_object** ((list of ) ``Distribution`` object(s)):
-                Probability distribution of each random variable. Must be an object of type
-                ``DistributionContinuous1D`` or ``JointInd``.
+            Probability distribution of each random variable. Must be an object of type
+            ``DistributionContinuous1D`` or ``JointInd``.
+
+            `dist_object` must have a ``cdf`` method.
 
         * **corr_x** (`ndarray`):
             The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
 
             Default: The ``identity`` matrix.
 
-        * **itam_error1** (`float`):
-            A threshold value the `ITAM` method (see ``Utilities`` module).
+        * **itam_threshold1** (`float`):
+            If ``corr_x`` is specified, this specifies the threshold value for the error in the `ITAM` method (see
+            ``Utilities`` module) given by:
+
+            .. math:: \epsilon_1 = ||\mathbf{C_X}^{target} - \mathbf{C_X}^{computed}||
 
             Default: 0.001
 
-        * **itam_error2** (`float`):
-            A threshold value the `ITAM` method (see ``Utilities`` module).
+        * **itam_threshold2** (`float`):
+            If ``corr_x`` is specified, this specifies the threshold value for the error difference between iterations
+            in the `ITAM` method (see ``Utilities`` module) given by:
+
+            .. math:: \epsilon_1^{i} - \epsilon_1^{i-1}
+
+            for iteration :math:`i`.
 
             Default: 0.01
 
@@ -144,8 +212,14 @@ class Nataf:
 
         **Output/Returns:**
 
-        * **cov_distorted** (`ndarray`):
-            Distorted correlation matrix (:math:`\mathbf{C_z}`) of the standard normal vector **Z**.
+        * **corr_z** (`ndarray`):
+            Distorted correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal vector **Z**.
+
+        * **itam_error1** (`list`)
+            List of ITAM errors for each iteration
+
+        * **itam_error2** (`list`)
+            List of ITAM difference errors for each iteration
 
         """
         from UQpy.Utilities import itam_correlation
@@ -159,13 +233,13 @@ class Nataf:
         :math:`\mathbf{x}`  given the correlation matrix :math:`\mathbf{C_z}` of the standard normal random vector
         :math:`\mathbf{z}` using the `correlation_distortion` method (see ``Utilities`` class).
 
-        This method is part of the ``Nataf`` class.
-
         **Inputs:**
 
         * **dist_object** ((list of ) ``Distribution`` object(s)):
                 Probability distribution of each random variable. Must be an object of type
                 ``DistributionContinuous1D`` or ``JointInd``.
+
+                **dist_object** must have an ``icdf`` method.
 
         * **corr_z** (`ndarray`):
             The correlation  matrix (:math:`\mathbf{C_z}`) of the standard normal vector **Z** .
@@ -174,24 +248,29 @@ class Nataf:
 
         **Output/Returns:**
 
-        * **cov_distorted** (`ndarray`):
-            Distorted correlation matrix (:math:`\mathbf{C_x}`) of the random vector **x**.
+        * **corr_x** (`ndarray`):
+            Distorted correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X**.
 
         """
         from UQpy.Utilities import correlation_distortion
         cov_distorted = correlation_distortion(dist_object, corr_z)
         return cov_distorted
 
-    def transform_x2z(self, samples_x, jacobian=False):
+    @staticmethod
+    def transform_x2z(dist_object, samples_x, jacobian=False):
         """
         This is a method to transform a vector :math:`\mathbf{x}` of  samples with marginal distributions
         :math:`f_i(x_i)` and cumulative distributions :math:`F_i(x_i)` to a vector :math:`\mathbf{z}` of standard normal
         samples  according to: :math:`Z_{i}=\Phi^{-1}(F_i(X_{i}))`, where :math:`\Phi` is the cumulative
         distribution function of a standard  normal variable.
 
-        This method is part of the ``Nataf`` class.
-
         **Inputs:**
+
+        * **dist_object** ((list of ) ``Distribution`` object(s)):
+                Probability distribution of each random variable. Must be an object of type
+                ``DistributionContinuous1D`` or ``JointInd``.
+
+                **dist_object** must have a ``cdf`` method.
 
         * **samples_x** (`ndarray`):
             Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.
@@ -240,7 +319,8 @@ class Nataf:
 
             return samples_z, jacobian_x2z
 
-    def transform_z2x(self, samples_z, jacobian=False):
+    @staticmethod
+    def transform_z2x(dist_object, samples_z, jacobian=False):
         """
         This is a method to transform a standard normal vector :math:`\mathbf{z}` to a vector
         :math:`\mathbf{x}` of samples with marginal distributions :math:`f_i(x_i)` and cumulative distributions
@@ -250,6 +330,12 @@ class Nataf:
         This method is part of the ``Nataf`` class.
 
         **Inputs:**
+
+        * **dist_object** ((list of ) ``Distribution`` object(s)):
+                Probability distribution of each random variable. Must be an object of type
+                ``DistributionContinuous1D`` or ``JointInd``.
+
+                **dist_object** must have an ``icdf`` method.
 
         * **samples_z** (`ndarray`):
             Standard normal random vector of shape ``(nsamples, dimension)``
@@ -302,9 +388,7 @@ class Nataf:
 
     def rvs(self, nsamples):
         """
-        This is a method to generate realizations from the joint pdf of the random vector **X**.
-
-        This method is part of the ''Nataf'' class.
+        Generate realizations from the joint pdf of the random vector **X**.
 
         **Inputs:**
 

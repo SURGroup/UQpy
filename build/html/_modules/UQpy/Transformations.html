@@ -50,12 +50,21 @@
 <span class="c1"># OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</span>
 
 
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains functionality for isoprobabilistic transformations in ``UQpy``.</span>
+<span class="sd">The module currently contains the following classes:</span>
+
+<span class="sd">- ``Nataf``: Class to perform the Nataf isoprobabilistic transformations.</span>
+<span class="sd">- ``Correlate``: Class to induce correlation to a standard normal vector.</span>
+<span class="sd">- ``Decorrelate``: Class to remove correlation from a standard normal vector.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
 <span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="o">*</span>
 
 
 <div class="viewcode-block" id="Nataf"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf">[docs]</a><span class="k">class</span> <span class="nc">Nataf</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Transform random variables  using the isoprobabilistic transformations</span>
+<span class="sd">    Transform random variables using the Nataf or Inverse Nataf transformation</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -66,18 +75,33 @@
 <span class="sd">    * **corr_x** (`ndarray`):</span>
 <span class="sd">        The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .</span>
 
+<span class="sd">        Default: The identity matrix.</span>
+
+<span class="sd">        If ``corr_x`` is specified, the ``Nataf`` class invokes the ITAM to compute ``corr_z``.</span>
+
 <span class="sd">    * **corr_z** (`ndarray`):</span>
 <span class="sd">        The correlation  matrix (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z** .</span>
 
-<span class="sd">        Default: The ``identity`` matrix.</span>
+<span class="sd">        Default: The identity matrix.</span>
 
-<span class="sd">    * **itam_error1** (`float`):</span>
-<span class="sd">        A threshold value the `ITAM` method (see ``Utilities`` module).</span>
+<span class="sd">        If ``corr_z`` is specified, the ``Nataf`` class computes the correlation distortion integral above to solve for</span>
+<span class="sd">        ``corr_x``.</span>
+
+<span class="sd">    * **itam_threshold1** (`float`):</span>
+<span class="sd">        If ``corr_x`` is specified, this specifies the threshold value for the error in the `ITAM` method (see</span>
+<span class="sd">        ``Utilities`` module) given by:</span>
+
+<span class="sd">        .. math:: \epsilon_1 = ||\mathbf{C_X}^{target} - \mathbf{C_X}^{computed}||</span>
 
 <span class="sd">        Default: 0.001</span>
 
-<span class="sd">    * **itam_error2** (`float`):</span>
-<span class="sd">        A threshold value the `ITAM` method (see ``Utilities`` module).</span>
+<span class="sd">    * **itam_threshold2** (`float`):</span>
+<span class="sd">        If ``corr_x`` is specified, this specifies the threshold value for the error difference between iterations in</span>
+<span class="sd">        the `ITAM` method (see ``Utilities`` module) given by:</span>
+
+<span class="sd">        .. math:: \epsilon_1^{i} - \epsilon_1^{i-1}</span>
+
+<span class="sd">        for iteration :math:`i`.</span>
 
 <span class="sd">        Default: 0.01</span>
 
@@ -86,6 +110,21 @@
 <span class="sd">        ``Utilities`` module).</span>
 
 <span class="sd">        Default: 1.0</span>
+
+<span class="sd">    * **samples_x** (`ndarray`):</span>
+<span class="sd">            Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.</span>
+
+<span class="sd">            If `samples_x` is provided, the ``Nataf`` class transforms them to `samples_z`.</span>
+
+<span class="sd">    * **samples_z** (`ndarray`):</span>
+<span class="sd">            Standard normal random vector of shape ``(nsamples, dimension)``</span>
+
+<span class="sd">            If `samples_z` is provided, the ``Nataf`` class transforms them to `samples_x`.</span>
+
+<span class="sd">    * **jacobian** (&#39;Boolean&#39;):</span>
+<span class="sd">            A boolean whether to return the jacobian of the transformation.</span>
+
+<span class="sd">            Default: False</span>
 
 <span class="sd">    **Attributes:**</span>
 
@@ -98,6 +137,25 @@
 <span class="sd">    * **H** (`ndarray`):</span>
 <span class="sd">        The lower triangular matrix resulting from the Cholesky decomposition of the correlation matrix</span>
 <span class="sd">        :math:`\mathbf{C_Z}`.</span>
+
+<span class="sd">    * **itam_error1** (`list`)</span>
+<span class="sd">        List of ITAM errors for each iteration</span>
+
+<span class="sd">    * **itam_error2** (`list`)</span>
+<span class="sd">        List of ITAM difference errors for each iteration</span>
+
+<span class="sd">    * **samples_x** (`ndarray`):</span>
+<span class="sd">        Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.</span>
+
+<span class="sd">    * **samples_z** (`ndarray`):</span>
+<span class="sd">        Standard normal random vector of shape ``(nsamples, dimension)``</span>
+
+<span class="sd">    * **jacobian_x2z** (`ndarray`):</span>
+<span class="sd">        The Jacobian of the transformation of shape ``(dimension, dimension)``.</span>
+
+<span class="sd">    * **jacobian_z2x** (`ndarray`):</span>
+<span class="sd">        The Jacobian of the transformation of shape ``(dimension, dimension)``.</span>
+
 
 <span class="sd">    **Methods:**</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -145,28 +203,38 @@
 <div class="viewcode-block" id="Nataf.distortion_x2z"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf.distortion_x2z">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">distortion_x2z</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">corr_x</span><span class="p">,</span>  <span class="n">beta</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">itam_error1</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">itam_error2</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        This is a method to calculate the correlation matrix :math:`\mathbf{C_Z}` of the standard normal random vector</span>
-<span class="sd">        :math:`\mathbf{z}` given the correlation matrix :math:`\mathbf{C_x}` of the random vector :math:`\mathbf{x}`</span>
+<span class="sd">        Calculate the correlation matrix :math:`\mathbf{C_Z}` of the standard normal random vector</span>
+<span class="sd">        :math:`\mathbf{Z}` given the correlation matrix :math:`\mathbf{C_X}` of the random vector :math:`\mathbf{X}`</span>
 <span class="sd">        using the `ITAM` method (see ``Utilities`` class).</span>
 
 <span class="sd">        **Inputs:**</span>
 
 <span class="sd">        * **dist_object** ((list of ) ``Distribution`` object(s)):</span>
-<span class="sd">                Probability distribution of each random variable. Must be an object of type</span>
-<span class="sd">                ``DistributionContinuous1D`` or ``JointInd``.</span>
+<span class="sd">            Probability distribution of each random variable. Must be an object of type</span>
+<span class="sd">            ``DistributionContinuous1D`` or ``JointInd``.</span>
+
+<span class="sd">            `dist_object` must have a ``cdf`` method.</span>
 
 <span class="sd">        * **corr_x** (`ndarray`):</span>
 <span class="sd">            The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .</span>
 
 <span class="sd">            Default: The ``identity`` matrix.</span>
 
-<span class="sd">        * **itam_error1** (`float`):</span>
-<span class="sd">            A threshold value the `ITAM` method (see ``Utilities`` module).</span>
+<span class="sd">        * **itam_threshold1** (`float`):</span>
+<span class="sd">            If ``corr_x`` is specified, this specifies the threshold value for the error in the `ITAM` method (see</span>
+<span class="sd">            ``Utilities`` module) given by:</span>
+
+<span class="sd">            .. math:: \epsilon_1 = ||\mathbf{C_X}^{target} - \mathbf{C_X}^{computed}||</span>
 
 <span class="sd">            Default: 0.001</span>
 
-<span class="sd">        * **itam_error2** (`float`):</span>
-<span class="sd">            A threshold value the `ITAM` method (see ``Utilities`` module).</span>
+<span class="sd">        * **itam_threshold2** (`float`):</span>
+<span class="sd">            If ``corr_x`` is specified, this specifies the threshold value for the error difference between iterations</span>
+<span class="sd">            in the `ITAM` method (see ``Utilities`` module) given by:</span>
+
+<span class="sd">            .. math:: \epsilon_1^{i} - \epsilon_1^{i-1}</span>
+
+<span class="sd">            for iteration :math:`i`.</span>
 
 <span class="sd">            Default: 0.01</span>
 
@@ -178,8 +246,14 @@
 
 <span class="sd">        **Output/Returns:**</span>
 
-<span class="sd">        * **cov_distorted** (`ndarray`):</span>
-<span class="sd">            Distorted correlation matrix (:math:`\mathbf{C_z}`) of the standard normal vector **Z**.</span>
+<span class="sd">        * **corr_z** (`ndarray`):</span>
+<span class="sd">            Distorted correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal vector **Z**.</span>
+
+<span class="sd">        * **itam_error1** (`list`)</span>
+<span class="sd">            List of ITAM errors for each iteration</span>
+
+<span class="sd">        * **itam_error2** (`list`)</span>
+<span class="sd">            List of ITAM difference errors for each iteration</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">UQpy.Utilities</span> <span class="k">import</span> <span class="n">itam_correlation</span>
@@ -193,13 +267,13 @@
 <span class="sd">        :math:`\mathbf{x}`  given the correlation matrix :math:`\mathbf{C_z}` of the standard normal random vector</span>
 <span class="sd">        :math:`\mathbf{z}` using the `correlation_distortion` method (see ``Utilities`` class).</span>
 
-<span class="sd">        This method is part of the ``Nataf`` class.</span>
-
 <span class="sd">        **Inputs:**</span>
 
 <span class="sd">        * **dist_object** ((list of ) ``Distribution`` object(s)):</span>
 <span class="sd">                Probability distribution of each random variable. Must be an object of type</span>
 <span class="sd">                ``DistributionContinuous1D`` or ``JointInd``.</span>
+
+<span class="sd">                **dist_object** must have an ``icdf`` method.</span>
 
 <span class="sd">        * **corr_z** (`ndarray`):</span>
 <span class="sd">            The correlation  matrix (:math:`\mathbf{C_z}`) of the standard normal vector **Z** .</span>
@@ -208,24 +282,29 @@
 
 <span class="sd">        **Output/Returns:**</span>
 
-<span class="sd">        * **cov_distorted** (`ndarray`):</span>
-<span class="sd">            Distorted correlation matrix (:math:`\mathbf{C_x}`) of the random vector **x**.</span>
+<span class="sd">        * **corr_x** (`ndarray`):</span>
+<span class="sd">            Distorted correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X**.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">UQpy.Utilities</span> <span class="k">import</span> <span class="n">correlation_distortion</span>
         <span class="n">cov_distorted</span> <span class="o">=</span> <span class="n">correlation_distortion</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">corr_z</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cov_distorted</span></div>
 
-<div class="viewcode-block" id="Nataf.transform_x2z"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf.transform_x2z">[docs]</a>    <span class="k">def</span> <span class="nf">transform_x2z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples_x</span><span class="p">,</span> <span class="n">jacobian</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Nataf.transform_x2z"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf.transform_x2z">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">transform_x2z</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples_x</span><span class="p">,</span> <span class="n">jacobian</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This is a method to transform a vector :math:`\mathbf{x}` of  samples with marginal distributions</span>
 <span class="sd">        :math:`f_i(x_i)` and cumulative distributions :math:`F_i(x_i)` to a vector :math:`\mathbf{z}` of standard normal</span>
 <span class="sd">        samples  according to: :math:`Z_{i}=\Phi^{-1}(F_i(X_{i}))`, where :math:`\Phi` is the cumulative</span>
 <span class="sd">        distribution function of a standard  normal variable.</span>
 
-<span class="sd">        This method is part of the ``Nataf`` class.</span>
-
 <span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **dist_object** ((list of ) ``Distribution`` object(s)):</span>
+<span class="sd">                Probability distribution of each random variable. Must be an object of type</span>
+<span class="sd">                ``DistributionContinuous1D`` or ``JointInd``.</span>
+
+<span class="sd">                **dist_object** must have a ``cdf`` method.</span>
 
 <span class="sd">        * **samples_x** (`ndarray`):</span>
 <span class="sd">            Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.</span>
@@ -274,7 +353,8 @@
 
             <span class="k">return</span> <span class="n">samples_z</span><span class="p">,</span> <span class="n">jacobian_x2z</span></div>
 
-<div class="viewcode-block" id="Nataf.transform_z2x"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf.transform_z2x">[docs]</a>    <span class="k">def</span> <span class="nf">transform_z2x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples_z</span><span class="p">,</span> <span class="n">jacobian</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Nataf.transform_z2x"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf.transform_z2x">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">transform_z2x</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">samples_z</span><span class="p">,</span> <span class="n">jacobian</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This is a method to transform a standard normal vector :math:`\mathbf{z}` to a vector</span>
 <span class="sd">        :math:`\mathbf{x}` of samples with marginal distributions :math:`f_i(x_i)` and cumulative distributions</span>
@@ -284,6 +364,12 @@
 <span class="sd">        This method is part of the ``Nataf`` class.</span>
 
 <span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **dist_object** ((list of ) ``Distribution`` object(s)):</span>
+<span class="sd">                Probability distribution of each random variable. Must be an object of type</span>
+<span class="sd">                ``DistributionContinuous1D`` or ``JointInd``.</span>
+
+<span class="sd">                **dist_object** must have an ``icdf`` method.</span>
 
 <span class="sd">        * **samples_z** (`ndarray`):</span>
 <span class="sd">            Standard normal random vector of shape ``(nsamples, dimension)``</span>
@@ -336,9 +422,7 @@
 
 <div class="viewcode-block" id="Nataf.rvs"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf.rvs">[docs]</a>    <span class="k">def</span> <span class="nf">rvs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        This is a method to generate realizations from the joint pdf of the random vector **X**.</span>
-
-<span class="sd">        This method is part of the &#39;&#39;Nataf&#39;&#39; class.</span>
+<span class="sd">        Generate realizations from the joint pdf of the random vector **X**.</span>
 
 <span class="sd">        **Inputs:**</span>
 
@@ -395,7 +479,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">samples_z</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">samples_u</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
 
 
-<span class="k">class</span> <span class="nc">Decorrelate</span><span class="p">:</span>
+<div class="viewcode-block" id="Decorrelate"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Decorrelate">[docs]</a><span class="k">class</span> <span class="nc">Decorrelate</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class to remove correlation from correlated standard normal random variables.</span>
 
@@ -424,7 +508,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span> <span class="o">=</span> <span class="n">corr_z</span>
         <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">cholesky</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">=</span> <span class="n">cholesky</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_z</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">samples_u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="p">,</span> <span class="n">samples_z</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples_u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="p">,</span> <span class="n">samples_z</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span><span class="o">.</span><span class="n">T</span></div>
 
 
 

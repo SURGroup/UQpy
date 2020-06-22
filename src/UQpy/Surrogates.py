@@ -42,54 +42,62 @@ class SROM:
     **Inputs:**
 
     * **samples** (`ndarray`):
-            An array/list of samples corresponding to each random variables.
+            An array/list of samples corresponding to the points at which the SROM is defined.
 
     * **target_dist_object** ((list of) ``Distribution`` object(s)):
-            A list of distribution objects of random variables.
+            A list of distribution object for each random variable.
 
     * **moments** (`list` of `float`):
-            A list containing first and second order moment about origin of all random variables.
+            A list containing first and second order moments about the origin for each random variable.
 
     * **weights_errors** (`list` of `float`):
-            Weights associated with error in distribution, moments and correlation.
+            A list of weights associated with the error in distribution, moments and correlation.
+
+            This corresponds to a list of the values :math:`a_{u}` in the objective function above.
 
             Default: weights_errors = [1, 0.2, 0]
 
     * **properties** (`list` of `booleans`):
-            A list of booleans representing properties, which are required to match in reduce order model. This class
-            focus on reducing errors in distribution, first order moment about origin, second order moment about origin
-            and correlation of samples.
-            Example: properties = [True, True, False, False] will minimize errors in distribution and errors in first
-            order moment about origin in reduce order model.
+            A list of booleans declaring the properties to be matched in the reduced order model.
 
-            Default: weights_errors = [1, 0.2, 0]
+            `properties[0] = True` matches the marginal distributions
+
+            `properties[1] = True` matches the mean values
+
+            `properties[2] = True` matches the mean square
+
+            `properties[3] = True` matches the correlation
 
     * **weights_distribution** (`ndarray` or `list` of `float`):
-            An list or array containing weights associated with different samples.
-            Options:
-                If weights_distribution is None, then default value is assigned.
-                If size of weights_distribution is 1xd, then it is assigned as dot product of weights_distribution and
-                default value.
-                Otherwise size of weights_distribution should be equal to Nxd.
+            An list or array containing weights associated with matching the distribution at each sample value.
 
-            Default: weights_distribution = An array of shape Nxd with all elements equal to 1.
+            `weights_distribution` is an array or list of shape `(m, d)` where each weight corresponds to the weight
+            :math:`w_F(x_{k,i}; i)` assigned for matching the distribution of component `i` at sample point
+            :math:`x_{k,i}`.
+
+            If `weights_distribution` is `(1, d)`, it is assumed that each sample sample is equally weighted according
+            to the corresponding weight for its distribution.
+
+            Default: `weights_distribution` = An array of shape `(m, d)` with all elements equal to 1.
 
     * **weights_moments** (`ndarray` or `list` of `float`):
-            An array of dimension 2xd, where 'd' is number of random variables. It contain weights associated with
-            moments.
-            Options:
-                If weights_moments is None, then default value is assigned.
-                If size of weights_moments is 1xd, then it is assigned as dot product of weights_moments and default
-                value.
-                Otherwise size of weights_distribution should be equal to 2xd.
+            An list or array containing weights associated with matching the moments about the origin for each
+            component.
+
+            `weights_moments` in list or array of shape `(2, d), where each weight corresponds to the weight
+            :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
+
+            If `weights_moments` is `(1, d)`, it is assumed that moments of all order are equally weighted.
 
             Default: weights_moments = Square of reciprocal of elements of moments.
 
     * **weights_correlation** (`ndarray` or `list` of `float`):
-            An array of dimension dxd, where 'd' is number of random variables. It contain weights associated with
-            correlation of random variables.
+            A list or array containing weights associated with matching the correlation of the random variables.
 
-            Default: weights_correlation = dxd dimensional array with all elements equal to 1.
+            `weights_correlation` is a list or array of shape `(d, d)` where each weight corresponds to the weight
+            :math:`w_R(i, j)` assigned for matching the correlation between component `i` and component `j`
+
+            Default: weights_correlation = `(d, d)` array with all elements equal to 1.
 
     * **correlation** (`ndarray` or `list of floats`):
             Correlation matrix between random variables.
@@ -97,7 +105,7 @@ class SROM:
     **Attributes:**
 
     * **sample_weights** (`ndarray`):
-            The probabilities/weights defining discrete approximation of continuous random variables.
+            The probability weights defining discrete approximation of continuous random variables.
 
     **Methods:**
 
