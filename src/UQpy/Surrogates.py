@@ -84,12 +84,12 @@ class SROM:
             An list or array containing weights associated with matching the moments about the origin for each
             component.
 
-            `weights_moments` in list or array of shape `(2, d), where each weight corresponds to the weight
+            `weights_moments` is a list or array of shape `(2, d), where each weight corresponds to the weight
             :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
 
             If `weights_moments` is `(1, d)`, it is assumed that moments of all order are equally weighted.
 
-            Default: weights_moments = Square of reciprocal of elements of moments.
+            Default: `weights_moments` = [[1/(moment[0][i]^2)], [1/(moment[1][i]^2)]] for i = 1, 2, ..., d.
 
     * **weights_correlation** (`ndarray` or `list` of `float`):
             A list or array containing weights associated with matching the correlation of the random variables.
@@ -313,46 +313,43 @@ class SROM:
 
 class Kriging:
     """
-    Kriging generates an approximate surrogate model to predict the function value at unknown/new samples, see ([2]_)
-    for detailed explanation.
+    Kriging generates an Gaussian process regression-based surrogate model to predict the model output at new sample
+    points.
 
     **Inputs:**
 
     * **reg_model** (`str` or `function`):
-            Regression model contains the basis function, which defines the trend of the model.
-            Options:
-                    1. Constant \n
-                    2. Linear \n
-                    3. Quadratic \n
+        `reg_model` specifies and evaluates the basis functions and their coefficients, which defines the trend of
+        the model.
+
+        Built-in options (string input): 'Constant', 'Linear', 'Quadratic'
+
+        The user may also pass a callable function as defined in `User-Defined Regression Model` above.
 
     * **corr_model** (`str` or `function`):
-            Correlation model contains the correlation function, which uses sample distance to define similarity between
-            samples.
-            Options:
-                    1. Exponential \n
-                    2. Gaussian \n
-                    3. Linear \n
-                    4. Spherical \n
-                    5. Cubic \n
-                    6. Spline \n
+        `corr_model` specifies and evaluates the correlation function.
+
+        Built-in options (string input): 'Exponential', 'Gaussian', 'Linear', 'Spherical', 'Cubic', 'Spline'
+
+        The user may also pass a callable function as defined in `User-Defined Correlation` above.
 
     * **corr_model_params** (`ndarray` or `list of floats`):
-            List of array of initial value of hyperparameters/scale parameters.
+            List or array of initial values for the correlation model hyperparameters/scale parameters.
 
     * **bounds** (`list` of `float`):
-            Bounds for hyperparameters used to solve optimization problem to estimate maximum likelihood estimator.
+            Bounds on the hyperparameters used to solve optimization problem to estimate maximum likelihood estimator.
             This should be a closed bound.
 
             Default: [0.001, 10**7] for each hyperparamter.
 
     * **op** (`boolean`):
             Indicator to solve MLE problem or not. If 'True' corr_model_params will be used as initial solution for
-            optimization problem. Otherwise, corr_model_params will be directly use as hyperparamter.
+            optimization problem. Otherwise, corr_model_params will be directly use as the hyperparamters.
 
             Default: True.
 
     * **nopt** (`int`):
-            Number of times optimization problem is to be solved with a random starting point.
+            Number of times MLE optimization problem is to be solved with a random starting point.
 
             Default: 1.
 
@@ -367,10 +364,10 @@ class Kriging:
             Regression coefficients
 
     * **err_var** (`ndarray`):
-            Variance in the error (assumed to be gaussian process)
+            Variance of the Gaussian random process
 
     * **C_inv** (`ndarray`):
-            Inverse of cholesky decomposition of the Correlation matrix
+            Inverse Cholesky decomposition of the correlation matrix
 
     **Methods:**
 
@@ -448,19 +445,21 @@ class Kriging:
 
     def fit(self, samples, values):
         """
-        This method fit the surrogate model using the samples and values parameter.
+        Fit the surrogate model using the training samples and the corresponding model values.
 
-        User can run this method multiple time after initiating the ``Kriging`` class object. This method update the
-        samples and values parameter of ``Kriging`` object. This method changes `nopt` parameter to 1 after first run,
+        The user can run this method multiple time after initiating the ``Kriging`` class object.
+
+        This method updates
+        the samples and parameters of the ``Kriging`` object. This method changes `nopt` parameter to 1 after first run,
         and then uses `corr_model_params` from previous run as the starting point for MLE problem.
 
         **Inputs:**
 
         * **samples** (`ndarray`):
-                `ndarray` containing the training points.
+            `ndarray` containing the training points.
 
         * **values** (`ndarray`):
-                `ndarray` containing the model evaluations at the training points.
+            `ndarray` containing the model evaluations at the training points.
 
         **Output/Return:**
 
@@ -598,26 +597,26 @@ class Kriging:
 
     def predict(self, x, return_std=False):
         """
-        Predict the function value at new points.
+        Predict the model response at new points.
 
-        This method evaluates the regression and correlation model at new sample point. Then, it predicts the function
-        value and mean square error using regression coefficients and training data.
+        This method evaluates the regression and correlation model at new sample points. Then, it predicts the function
+        value and standard deviation.
 
         **Inputs:**
 
         * **x** (`list` or `numpy array`):
-                nD-array (2 dimensional) corresponding to the new points.
+                Points at which to predict the model response.
 
-        * **return_std** (`list` or `numpy array`):
+        * **return_std** (`Boolean`):
                 Indicator to estimate standard deviation.
 
         **Outputs:**
 
         * **f_x** (`numpy array`):
-                A 1-D/2-D array of predicted value at the new points.
+                Predicted values at the new points.
 
-        * **std_f_x (`numpy array`):
-                A 1-D/2-D array of standard deviation of predicted value at the new points.
+        * **std_f_x** (`numpy array`):
+                Standard deviation of predicted values at the new points.
 
         """
         x = np.atleast_2d(x)
@@ -651,20 +650,20 @@ class Kriging:
 
     def jacobian(self, x):
         """
-        Predict the gradient of the function at new points.
+        Predict the gradient of the model at new points.
 
         This method evaluates the regression and correlation model at new sample point. Then, it predicts the gradient
-        using regression coefficients and training data.
+        using the regression coefficients and the training data.
 
         **Input:**
 
         * **x** (`list` or `numpy array`):
-                nD-array (2 dimensional) corresponding to the new points.
+                Points at which to evaluate the gradient.
 
         **Output:**
 
         * **grad_x** (`list` or `numpy array`):
-                nD-array (1/2 dimensional) of gradient of surrogate model evaluated at the new points.
+                Gradient of the surrogate model evaluated at the new points.
 
         """
         x = np.atleast_2d(x)
