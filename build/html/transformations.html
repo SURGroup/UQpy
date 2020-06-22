@@ -269,14 +269,18 @@ underlying Gaussian.</p>
 <dt id="UQpy.Transformations.Nataf.run">
 <code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">samples_x=None</em>, <em class="sig-param">samples_z=None</em>, <em class="sig-param">jacobian=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Nataf.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Nataf.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Execute the Nataf transformation or its inverse.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is the function that performs the Nataf transformation. If <cite>samples_x</cite> is
-provided, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method performs the Nataf transformation. If <cite>samples_z</cite> is provided, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method
-performs the inverse Nataf transformation.</p>
+<p>If <cite>samples_x</cite> is provided, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method performs the Nataf transformation. If <cite>samples_z</cite> is provided,         the <code class="docutils literal notranslate"><span class="pre">run</span></code> method performs the inverse Nataf transformation.</p>
 <p>** Input:**</p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
 <dt><strong>samples_x</strong> or <strong>samples_z</strong> (<cite>ndarray</cite>):</dt><dd><p>Random vector <strong>X</strong>  with prescribed probability distributions or standard normal random vector <strong>Z</strong> of
 shape``(nsamples, dimension)``.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>jacobian</strong> (<cite>Boolean</cite>):</dt><dd><p>The jacobian of the transformation of shape <code class="docutils literal notranslate"><span class="pre">(dimension,</span> <span class="pre">dimension)</span></code>.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </li>

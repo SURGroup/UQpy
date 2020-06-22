@@ -15,60 +15,59 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""
-
-List of methods (ready to use)
---------------------------------
-
-:meth:`nearest_psd` : Find the nearest positive semi-definite matrix of a given matrix.
-
-:meth:`nearest_pd` : Find the nearest positive-definite matrix of a given matrix.
-
-:meth:`is_pd` : Check if a matrix is positive-definite.
-
-List of methods (needs revision)
-----------------------------------
-
-:meth:`run_parallel_python`:
-
-:meth:`voronoi_unit_hypercube`:
-
-:meth:`compute_Voronoi_centroid_volume`:
-
-:meth:`compute_Delaunay_centroid_volume`:
-
-:meth:`_get_a_plus`:
-
-:meth:`_get_ps`:
-
-:meth:`_get_pu`:
-
-:meth:`estimate_psd`:
-
-:meth:`suppress_stdout`:
-
-:meth:`check_input_dims`:
-
-:meth:`svd`:
-
-:meth:`check_arguments`:
-
-:meth:`test_type`:
-
-:meth:`nn_coord`:
-
-:meth:`correlation_distortion`:
-
-:meth:`check_random_state`:
-
-
-"""
-
-import os
 import sys
-from contextlib import contextmanager
 import numpy as np
 import scipy.stats as stats
+
+
+def svd(matrix, rank=None, tol=None):
+    """
+    Compute the singular value decomposition (SVD) of a matrix.
+
+    **Inputs:**
+
+    * **matrix** (`ndarray`):
+        Matrix of ``shape=(m, n)`` to perform the factorization using thin SVD
+
+    * **tol** (`float`):
+        Tolerance to estimate the rank of the matrix.
+
+        Default: Machine precision
+
+    * **iterations** (`rank`):
+        Number of eigenvalues to keep.
+
+        Default: None
+
+    **Output/Returns:**
+
+    * **u** (`ndarray`):
+        Matrix of left eigenvectors of ``shape=(m, rank)``.
+
+    * **v** (`ndarray`):
+        Matrix of right eigenvectors of ``shape=(rank, n)``.
+
+    * **s** (`ndarray`):
+        Matrix of eigenvalues ``shape=(rank, rank)``.
+
+    """
+    ui, si, vi = np.linalg.svd(matrix, full_matrices=True, hermitian=False)
+    si = np.diag(si)
+    vi = vi.T
+    if rank is None:
+        if tol is not None:
+            rank = np.linalg.matrix_rank(si, tol=tol)
+        else:
+            rank = np.linalg.matrix_rank(si)
+        u = ui[:, :rank]
+        s = si[:rank, :rank]
+        v = vi[:, :rank]
+    else:
+        u = ui[:, :rank]
+        s = si[:rank, :rank]
+        v = vi[:, :rank]
+
+    return u, s, v
 
 
 def nearest_psd(input_matrix, iterations=10):
@@ -115,13 +114,13 @@ def nearest_psd(input_matrix, iterations=10):
 
 def nearest_pd(input_matrix):
     """
-    This is a method to find the nearest positive-definite matrix to input [1]_. Based on John D'Errico's
-    `nearestSPD` MATLAB code [2]_.
+    This is a method to find the nearest positive-definite matrix to input ([1]_, [2]_).
 
     **References**
 
-    .. [1] N.J. Higham, "Computing a nearest symmetric positive semidefinite matrix" (1988):
+    .. [1] N.J. Higham, "Computing a nearest symmetric positive semidefinite matrix" (1988),
         https://doi.org/10.1016/0024-3795(88)90223-6.
+
     .. [2] https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd
 
     **Inputs:**
@@ -145,12 +144,12 @@ def nearest_pd(input_matrix):
 
     pd_matrix = (a2 + a2.T) / 2
 
-    if is_pd(pd_matrix):
+    if _is_pd(pd_matrix):
         return pd_matrix
 
     spacing = np.spacing(np.linalg.norm(pd_matrix))
     k = 1
-    while not is_pd(pd_matrix):
+    while not _is_pd(pd_matrix):
         min_eig = np.min(np.real(np.linalg.eigvals(pd_matrix)))
         pd_matrix += np.eye(input_matrix.shape[0]) * (-min_eig * k**2 + spacing)
         k += 1
@@ -158,29 +157,14 @@ def nearest_pd(input_matrix):
     return pd_matrix
 
 
-def is_pd(input_matrix):
-    """
-    This is a method to return True when input is positive-definite, via Cholesky decomposition.
-
-    **Inputs:**
-
-    * **input_matrix** (`ndarray`):
-        Matrix to check if it is positive-definite.
-
-    **Output/Returns:**
-
-    * **True** or **False (`Boolean`):
-       Returns True if the input matrix is positive-definite.
-
-    """
+def _is_pd(input_matrix):
     try:
         _ = np.linalg.cholesky(input_matrix)
         return True
     except np.linalg.LinAlgError:
         return False
 
-
-
+# TODO: Add Documentation (if public)
 def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
     """
     Execute the python model in parallel
@@ -204,7 +188,7 @@ def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=Non
 
     return par_res
 
-
+# TODO: Check if still in use - Add Documentation (if public)
 # def compute_Voronoi_volume(vertices):
 #
 #     from scipy.spatial import Delaunay
@@ -218,7 +202,7 @@ def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=Non
 #     volume = np.sum(d_vol)
 #     return volume
 
-
+# TODO: Check if still in use - Add Documentation (if public)
 def voronoi_unit_hypercube(samples):
 
     from scipy.spatial import Voronoi
@@ -268,7 +252,7 @@ def voronoi_unit_hypercube(samples):
 
     return vor
 
-
+# TODO: Check if still in use - Add Documentation (if public)
 def compute_Voronoi_centroid_volume(vertices):
 
     from scipy.spatial import Delaunay, ConvexHull
@@ -287,7 +271,7 @@ def compute_Voronoi_centroid_volume(vertices):
 
     return C, V
 
-
+# TODO: Check if still in use - Add Documentation (if public)
 def compute_Delaunay_centroid_volume(vertices):
 
     from scipy.spatial import ConvexHull
@@ -302,82 +286,13 @@ def compute_Delaunay_centroid_volume(vertices):
     return centroid, volume
 
 
-#def bi_variate_normal_pdf(x1, x2, rho):
-
-#    """
-
-#        Description:
-
-#            A function which evaluates the values of the bi-variate normal probability distribution function.
-
-#        Input:
-#            :param x1: value 1
-#            :type x1: ndarray
-
-#            :param x2: value 2
-#            :type x2: ndarray
-
-#            :param rho: correlation between x1, x2
-#            :type rho: float
-
-#        Output:
-
-#   """
-#    return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
-#            np.exp(-1/(2*(1-rho**2)) *
-#                   (x1**2 - 2 * rho * x1 * x2 + x2**2)))
+def _bi_variate_normal_pdf(x1, x2, rho):
+   return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
+           np.exp(-1/(2*(1-rho**2)) *
+                  (x1**2 - 2 * rho * x1 * x2 + x2**2)))
 
 
-def _get_a_plus(a):
-
-    """
-        Description:
-
-            A supporting function for the nearest_pd function
-
-        Input:
-            :param a:A general nd array
-
-        Output:
-            :return a_plus: A modified nd array
-            :rtype:np.ndarray
-    """
-
-    eig_val, eig_vec = np.linalg.eig(a)
-    q = np.matrix(eig_vec)
-    x_diagonal = np.matrix(np.diag(np.maximum(eig_val, 0)))
-
-    return q * x_diagonal * q.T
-
-
-def _get_ps(a, w=None):
-
-    """
-        Description:
-
-            A supporting function for the nearest_pd function
-
-    """
-
-    w05 = np.matrix(w ** .5)
-
-    return w05.I * _get_a_plus(w05 * a * w05) * w05.I
-
-
-def _get_pu(a, w=None):
-
-    """
-        Description:
-
-            A supporting function for the nearest_pd function
-
-    """
-
-    a_ret = np.array(a.copy())
-    a_ret[w > 0] = np.array(w)[w > 0]
-    return np.matrix(a_ret)
-
-
+# TODO: Add Documentation (if public)
 def estimate_psd(samples, nt, t):
 
     """
@@ -404,84 +319,27 @@ def estimate_psd(samples, nt, t):
 
     return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
 
-@contextmanager
-def suppress_stdout():
-    """ A function to suppress output"""
-    with open(os.devnull, "w") as devnull:
-        old_stdout = sys.stdout
-        sys.stdout = devnull
-        try:
-            yield
-        finally:
-            sys.stdout = old_stdout
+def _get_a_plus(a):
+    eig_val, eig_vec = np.linalg.eig(a)
+    q = np.array(eig_vec)
+    x_diagonal = np.array(np.diag(np.maximum(eig_val, 0)))
+
+    return q * x_diagonal * q.T
 
 
-def check_input_dims(x):
-    """
-    Check that x is a 2D ndarray.
+def _get_ps(a, w=None):
+    w05 = np.array(w ** .5)
 
-    **Inputs:**
-
-    :param x: Existing samples
-    :type x: ndarray (nsamples, dim)
-
-    """
-    if not isinstance(x, np.ndarray):
-        try:
-            x = np.array(x)
-        except:
-            raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
-    if len(x.shape) != 2:
-        raise TypeError('Input should be provided as a nested list of 2d ndarray of shape (nsamples, dimension).')
-    return x
+    return w05.I * _get_a_plus(w05 * a * w05) * w05.I
 
 
-# Grassmann: svd
-def svd(matrix, value):
-    """
-    Compute the singular value decomposition of a matrix and truncate it.
+def _get_pu(a, w=None):
+    a_ret = np.array(a.copy())
+    a_ret[w > 0] = np.array(w)[w > 0]
+    return np.array(a_ret)
 
-    Given a matrix compute its singular value decomposition (SVD) and given a desired rank you
-    can truncate the matrix containing the eigenvectors.
 
-    **Input:**
-
-    :param matrix: Input matrix.
-    :type  matrix: list or numpy array
-
-    :param value: Rank.
-    :type  value: int
-
-    **Output/Returns:**
-
-    :param u: left-singular eigenvectors.
-    :type  u: numpy array
-
-    :param u: eigenvalues.
-    :type  u: numpy array
-
-    :param v: right-singular eigenvectors.
-    :type  v: numpy array
-    """
-    ui, si, vi = np.linalg.svd(matrix, full_matrices=True,hermitian=False)  # Compute the SVD of matrix
-    si = np.diag(si)  # Transform the array si into a diagonal matrix containing the singular values
-    vi = vi.T  # Transpose of vi
-
-    # Select the size of the matrices u, s, and v
-    # either based on the rank of (si) or on a user defined value
-    if value == 0:
-        rank = np.linalg.matrix_rank(si)  # increase the number of basis up to rank
-        u = ui[:, :rank]
-        s = si[:rank, :rank]
-        v = vi[:, :rank]
-
-    else:
-        u = ui[:, :value]
-        s = si[:value, :value]
-        v = vi[:, :value]
-
-    return u, s, v
-
+# TODO: Check if still in use - Add Documentation (if public)
 def check_arguments(argv, min_num_matrix, ortho):
     
     """
@@ -561,7 +419,7 @@ def check_arguments(argv, min_num_matrix, ortho):
 
     return inputs, nargs
 
-
+# TODO: Check if still in use - Add Documentation (if public)
 def test_type(X, ortho):
     
     """
@@ -597,6 +455,8 @@ def test_type(X, ortho):
 
     return Y
 
+
+# TODO: Check if still in use - Add Documentation (if public)
 def nn_coord(x, k):
     
     """
@@ -639,7 +499,7 @@ def nn_coord(x, k):
     #idx = idx[k+1:]
     return idx
 
-# TODO: put doc_string around this
+# TODO: Add Documentation (if public)
 def correlation_distortion(dist_object, rho):
     if rho == 1.0:
         rho = 0.999
@@ -663,13 +523,12 @@ def correlation_distortion(dist_object, rho):
     tmp_f_xi = dist_object.icdf(stats.norm.cdf(xi[:, np.newaxis]))
     tmp_f_eta = dist_object.icdf(stats.norm.cdf(eta[:, np.newaxis]))
     coef = tmp_f_xi * tmp_f_eta * w2d
-    phi2 = (1 / (2 * np.pi * np.sqrt(1 - rho ** 2)) *
-            np.exp(-1 / (2 * (1 - rho ** 2)) *
-                   (xi ** 2 - 2 * rho * xi * eta + eta ** 2)))
+    phi2 = _bi_variate_normal_pdf(xi, eta, rho)
     rho_non = np.sum(coef * phi2)
     rho_non = (rho_non - dist_object.moments(moments2return='m') ** 2) / dist_object.moments(moments2return='v')
     return rho_non
 
+# TODO: Check if still in use - Add Documentation (if public)
 def check_random_state(random_state):
     return_rs = random_state
     if isinstance(random_state, int):

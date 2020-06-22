@@ -183,15 +183,19 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Execute the Nataf transformation or its inverse.</span>
 
-<span class="sd">        The ``run`` method is the function that performs the Nataf transformation. If `samples_x` is</span>
-<span class="sd">        provided, the ``run`` method performs the Nataf transformation. If `samples_z` is provided, the ``run`` method</span>
-<span class="sd">        performs the inverse Nataf transformation.</span>
+<span class="sd">        If `samples_x` is provided, the ``run`` method performs the Nataf transformation. If `samples_z` is provided, \</span>
+<span class="sd">        the ``run`` method performs the inverse Nataf transformation.</span>
 
 <span class="sd">        ** Input:**</span>
 
 <span class="sd">        * **samples_x** or **samples_z** (`ndarray`):</span>
 <span class="sd">            Random vector **X**  with prescribed probability distributions or standard normal random vector **Z** of</span>
 <span class="sd">            shape``(nsamples, dimension)``.</span>
+
+<span class="sd">        * **jacobian** (`Boolean`):</span>
+<span class="sd">            The jacobian of the transformation of shape ``(dimension, dimension)``.</span>
+
+<span class="sd">            Default: ``False``</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">jacobian</span> <span class="o">=</span> <span class="n">jacobian</span>
