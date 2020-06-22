@@ -731,7 +731,11 @@ class STS:
 
         self.dist_object = dist_object
 
-        self.random_state = check_random_state(random_state)
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         # Check sampling criterion
         if self.sts_criterion not in ['random', 'centered']:
@@ -790,7 +794,11 @@ class STS:
             print('UQpy: Running Stratified Sampling...')
 
         if random_state is not None:
-            self.random_state = check_random_state(random_state)
+            self.random_state = random_state
+            if isinstance(self.random_state, int):
+                self.random_state = np.random.RandomState(self.random_state)
+            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if self.stype == 'Rectangular':
             if self.sts_design is None:
@@ -818,7 +826,7 @@ class STS:
             self.samples, self.samplesU01 = samples_u_to_x, samples
 
         elif self.stype == 'Voronoi':
-            from UQpy.Utilities import compute_Voronoi_centroid_volume, voronoi_unit_hypercube
+            from UQpy.Utilities import compute_voronoi_centroid_volume, voronoi_unit_hypercube
 
             samples_init = stats.uniform.rvs(size=[self.nsamples, self.dimension], random_state=self.random_state)
 
@@ -829,7 +837,7 @@ class STS:
                 self.strata.weights = []
                 for region in self.strata.bounded_regions:
                     vertices = self.strata.vertices[region + [region[0]], :]
-                    centroid, volume = compute_Voronoi_centroid_volume(vertices)
+                    centroid, volume = compute_voronoi_centroid_volume(vertices)
                     self.strata.centroids.append(centroid[0, :])
                     self.strata.weights.append(volume)
 
@@ -1056,7 +1064,11 @@ class RSS:
         self.nexist = 0
         self.n_add = n_add
 
-        self.random_state = check_random_state(random_state)
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if self.cell == 'Voronoi':
             self.mesh = []
@@ -1266,7 +1278,6 @@ class RSS:
         # ----------------------
         elif self.cell == 'Voronoi':
 
-            from UQpy.Utilities import compute_Delaunay_centroid_volume, voronoi_unit_hypercube
             from scipy.spatial.qhull import Delaunay
             import math
             import itertools
@@ -1304,7 +1315,7 @@ class RSS:
                 self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
                 for j in range(self.mesh.nsimplex):
                     self.mesh.centroids[j, :], self.mesh.volumes[j] = \
-                        compute_Delaunay_centroid_volume(points[self.mesh.vertices[j]])
+                        compute_delaunay_centroid_volume(points[self.mesh.vertices[j]])
 
                 # If the quantity of interest is a dictionary, convert it to a list
                 qoi = [None] * len(self.runmodel_object.qoi_list)
@@ -1453,7 +1464,7 @@ class RSS:
                 self.sample_object.strata.weights = []
                 for region in self.sample_object.strata.bounded_regions:
                     vertices = self.sample_object.strata.vertices[region + [region[0]], :]
-                    centroid, volume = compute_Voronoi_centroid_volume(vertices)
+                    centroid, volume = compute_voronoi_centroid_volume(vertices)
                     self.sample_object.strata.centroids.append(centroid[0, :])
                     self.sample_object.strata.weights.append(volume)
 
@@ -1549,7 +1560,6 @@ class RSS:
         # ----------------------
         elif self.cell == 'Voronoi':
 
-            from UQpy.Utilities import compute_Delaunay_centroid_volume, voronoi_unit_hypercube
             from scipy.spatial.qhull import Delaunay
             import math
             import itertools
@@ -1587,7 +1597,7 @@ class RSS:
                 self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
                 for j in range(self.mesh.nsimplex):
                     self.mesh.centroids[j, :], self.mesh.volumes[j] = \
-                        compute_Delaunay_centroid_volume(points[self.mesh.vertices[j]])
+                        compute_delaunay_centroid_volume(points[self.mesh.vertices[j]])
 
                 # ----------------------------------------------------
                 # Determine the simplex to break and draw a new sample
@@ -1645,7 +1655,7 @@ class RSS:
                 self.sample_object.strata.weights = []
                 for region in self.sample_object.strata.bounded_regions:
                     vertices = self.sample_object.strata.vertices[region + [region[0]], :]
-                    centroid, volume = compute_Voronoi_centroid_volume(vertices)
+                    centroid, volume = compute_voronoi_centroid_volume(vertices)
                     self.sample_object.strata.centroids.append(centroid[0, :])
                     self.sample_object.strata.weights.append(volume)
 
@@ -1729,7 +1739,11 @@ class Simplex:
         if self.nodes.shape[0] != self.nodes.shape[1] + 1:
             raise NotImplementedError("UQpy: Size of simplex (nodes) is not consistent.")
 
-        self.random_state = check_random_state(random_state)
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if nsamples is not None:
             if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
@@ -1940,7 +1954,11 @@ class AKMCS:
             if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
                 raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
-        self.random_state = check_random_state(random_state)
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if hasattr(krig_object, 'fit') and hasattr(krig_object, 'predict'):
             self.krig_object = krig_object
