@@ -44,7 +44,7 @@ The module currently contains the following classes:</p>
 </ul>
 <div class="section" id="nataf">
 <h2>Nataf<a class="headerlink" href="#nataf" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Nataf</span></code> is   a   class   for   transforming   random   variables   using   the   <cite>Nataf</cite> transformation  and  calculating  the  correlation  distortion.    According  to  the Nataf transformation theory (<a class="footnote-reference brackets" href="#id4" id="id2">1</a>, <a class="footnote-reference brackets" href="#id5" id="id3">2</a>), a <cite>n</cite>-dimensional dependent random vector <span class="math notranslate nohighlight">\(\textbf{x}=[X_1,...,X_n]\)</span> for which the  marginal cumulative distributions <span class="math notranslate nohighlight">\(F_i(x_i)\)</span>  and the correlattion matrix <span class="math notranslate nohighlight">\(\textbf{C}_x=[\xi_{ij}]\)</span> are known, can be transformed (component-wise) to standard normal random vector <span class="math notranslate nohighlight">\(\textbf{z}=[Z_1,...,Z_n]\)</span> with correlation matrix <span class="math notranslate nohighlight">\(\textbf{C}_z=[\rho_{ij}]\)</span> through the transformation:</p>
+<p><code class="docutils literal notranslate"><span class="pre">Nataf</span></code> is   a   class   for   transforming   random   variables   using   the   <cite>Nataf</cite> transformation  and  calculating  the  correlation  distortion.    According  to  the Nataf transformation theory (<a href="#id10"><span class="problematic" id="id2">[1]_</span></a>, <a href="#id11"><span class="problematic" id="id3">[2]_</span></a>), a <cite>n</cite>-dimensional dependent random vector <span class="math notranslate nohighlight">\(\textbf{x}=[X_1,...,X_n]\)</span> for which the  marginal cumulative distributions <span class="math notranslate nohighlight">\(F_i(x_i)\)</span>  and the correlattion matrix <span class="math notranslate nohighlight">\(\textbf{C}_x=[\xi_{ij}]\)</span> are known, can be transformed (component-wise) to standard normal random vector <span class="math notranslate nohighlight">\(\textbf{z}=[Z_1,...,Z_n]\)</span> with correlation matrix <span class="math notranslate nohighlight">\(\textbf{C}_z=[\rho_{ij}]\)</span> through the transformation:</p>
 <div class="math notranslate nohighlight">
 \[Z_{i}=\Phi^{-1}(F_i(X_{i}))\]</div>
 <p>where <span class="math notranslate nohighlight">\(\Phi(\cdot)\)</span> is the standard normal cumulative distribution function.</p>
@@ -66,8 +66,8 @@ The module currently contains the following classes:</p>
 </div>
 <dl class="class">
 <dt id="UQpy.Transformations.Nataf">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Transformations.</code><code class="sig-name descname">Nataf</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">beta=1.0</em>, <em class="sig-param">itam_error1=0.001</em>, <em class="sig-param">itam_error2=0.01</em>, <em class="sig-param">corr_z=None</em>, <em class="sig-param">corr_x=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Nataf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Nataf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Transform random variables  using the isoprobabilistic transformations</p>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Transformations.</code><code class="sig-name descname">Nataf</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">samples_x=None</em>, <em class="sig-param">samples_z=None</em>, <em class="sig-param">jacobian=False</em>, <em class="sig-param">corr_z=None</em>, <em class="sig-param">corr_x=None</em>, <em class="sig-param">beta=None</em>, <em class="sig-param">itam_threshold1=None</em>, <em class="sig-param">itam_threshold2=None</em>, <em class="sig-param">itam_max_iter=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Nataf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Nataf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform random variables  using the Nataf iso-probabilistic transformation.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
 <li><dl class="simple">
@@ -76,33 +76,53 @@ The module currently contains the following classes:</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt><strong>corr_x</strong> (<cite>ndarray</cite>):</dt><dd><p>The correlation  matrix (<span class="math notranslate nohighlight">\(\mathbf{C_X}\)</span>) of the random vector <strong>X</strong> .</p>
-</dd>
-</dl>
-</li>
 <li><dl>
-<dt><strong>corr_z</strong> (<cite>ndarray</cite>):</dt><dd><p>The correlation  matrix (<span class="math notranslate nohighlight">\(\mathbf{C_Z}\)</span>) of the standard normal random vector <strong>Z</strong> .</p>
+<dt><strong>corr_x</strong> or <strong>corr_z</strong> (<cite>ndarray</cite>):</dt><dd><p>The correlation  matrix (<span class="math notranslate nohighlight">\(\mathbf{C_X}\)</span>) of the random vector <strong>X</strong> or the correlation correlation matrix
+(<span class="math notranslate nohighlight">\(\mathbf{C_Z}\)</span>) of the standard normal random vector <strong>Z</strong>.</p>
 <p>Default: The <code class="docutils literal notranslate"><span class="pre">identity</span></code> matrix.</p>
 </dd>
 </dl>
 </li>
-<li><dl>
-<dt><strong>itam_error1</strong> (<cite>float</cite>):</dt><dd><p>A threshold value the <cite>ITAM</cite> method (see <code class="docutils literal notranslate"><span class="pre">Utilities</span></code> module).</p>
-<p>Default: 0.001</p>
+<li><dl class="simple">
+<dt><strong>samples_x</strong> or <strong>samples_z</strong> (<cite>ndarray</cite>):</dt><dd><p>Random vector <strong>X</strong>  with prescribed probability distributions or standard normal  random vector <strong>Z</strong> of
+shape``(nsamples, dimension)``.</p>
 </dd>
 </dl>
 </li>
 <li><dl>
-<dt><strong>itam_error2</strong> (<cite>float</cite>):</dt><dd><p>A threshold value the <cite>ITAM</cite> method (see <code class="docutils literal notranslate"><span class="pre">Utilities</span></code> module).</p>
+<dt><strong>jacobian</strong> (<cite>Boolean</cite>):</dt><dd><p>The jacobian of the transformation of shape <code class="docutils literal notranslate"><span class="pre">(dimension,</span> <span class="pre">dimension)</span></code>.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>itam_threshold1</strong> (<cite>float</cite>):</dt><dd><p>A threshold value for the relative difference between the non-Gaussian correlation function and the
+underlying Gaussian.</p>
+<p>Default: 0.0001</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>itam_threshold2</strong> (<cite>float</cite>):</dt><dd><p>A threshold value the <cite>ITAM</cite> method.</p>
 <p>Default: 0.01</p>
 </dd>
 </dl>
 </li>
 <li><dl>
-<dt><strong>beta</strong> (<cite>float</cite>):</dt><dd><p>A variable selected to optimize convergence speed and desired accuracy of the ITAM method (see
-<code class="docutils literal notranslate"><span class="pre">Utilities</span></code> module).</p>
+<dt><strong>beta</strong> (<cite>float</cite>):</dt><dd><p>A parameter selected to optimize convergence speed and desired accuracy of the ITAM method.</p>
 <p>Default: 1.0</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>itam_max_iter</strong> (<cite>int</cite>):</dt><dd><p>Maximum number of iterations for the ITAM method.</p>
+<p>Default: 100</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>verbose</strong> (<cite>Boolean</cite>):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </li>
@@ -110,12 +130,17 @@ The module currently contains the following classes:</p>
 <p><strong>Attributes:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>corr_z</strong> (<cite>ndarray</cite>):</dt><dd><p>Distorted correlation matrix (<span class="math notranslate nohighlight">\(\mathbf{C_Z}\)</span>) of the standard normal vector <strong>Z</strong>.</p>
+<dt><strong>corr_z</strong> or <strong>corr_x</strong> (<cite>ndarray</cite>):</dt><dd><p>The distorted correlation matrix.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>corr_x</strong> (<cite>ndarray</cite>):</dt><dd><p>Distorted correlation matrix (<span class="math notranslate nohighlight">\(\mathbf{C_X}\)</span>) of the random vector <strong>X</strong>.</p>
+<dt><strong>samples_z</strong> or <strong>samples_x</strong> (<cite>ndarray</cite>):</dt><dd><p>The transformed vector of shape <code class="docutils literal notranslate"><span class="pre">(nsamples,</span> <span class="pre">dimension)</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>Jxz</strong> or <strong>Jzx</strong> (<cite>ndarray</cite>):</dt><dd><p>The jacobian of the transformation of shape <code class="docutils literal notranslate"><span class="pre">(dimension,</span> <span class="pre">dimension)</span></code>.</p>
 </dd>
 </dl>
 </li>
@@ -128,61 +153,11 @@ The module currently contains the following classes:</p>
 </ul>
 <p><strong>Methods:</strong></p>
 <dl class="method">
-<dt id="UQpy.Transformations.Nataf.distortion_x2z">
-<em class="property">static </em><code class="sig-name descname">distortion_x2z</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">corr_x</em>, <em class="sig-param">beta=1.0</em>, <em class="sig-param">itam_error1=0.001</em>, <em class="sig-param">itam_error2=0.01</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Nataf.distortion_x2z"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Nataf.distortion_x2z" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is a method to calculate the correlation matrix <span class="math notranslate nohighlight">\(\mathbf{C_Z}\)</span> of the standard normal random vector
-<span class="math notranslate nohighlight">\(\mathbf{z}\)</span> given the correlation matrix <span class="math notranslate nohighlight">\(\mathbf{C_x}\)</span> of the random vector <span class="math notranslate nohighlight">\(\mathbf{x}\)</span>
-using the <cite>ITAM</cite> method (see <code class="docutils literal notranslate"><span class="pre">Utilities</span></code> class).</p>
-<p><strong>Inputs:</strong></p>
-<ul>
-<li><dl class="simple">
-<dt><strong>dist_object</strong> ((list of ) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>Probability distribution of each random variable. Must be an object of type
-<code class="docutils literal notranslate"><span class="pre">DistributionContinuous1D</span></code> or <code class="docutils literal notranslate"><span class="pre">JointInd</span></code>.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>corr_x</strong> (<cite>ndarray</cite>):</dt><dd><p>The correlation  matrix (<span class="math notranslate nohighlight">\(\mathbf{C_X}\)</span>) of the random vector <strong>X</strong> .</p>
-<p>Default: The <code class="docutils literal notranslate"><span class="pre">identity</span></code> matrix.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>itam_error1</strong> (<cite>float</cite>):</dt><dd><p>A threshold value the <cite>ITAM</cite> method (see <code class="docutils literal notranslate"><span class="pre">Utilities</span></code> module).</p>
-<p>Default: 0.001</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>itam_error2</strong> (<cite>float</cite>):</dt><dd><p>A threshold value the <cite>ITAM</cite> method (see <code class="docutils literal notranslate"><span class="pre">Utilities</span></code> module).</p>
-<p>Default: 0.01</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>beta</strong> (<cite>float</cite>):</dt><dd><p>A variable selected to optimize convergence speed and desired accuracy of the ITAM method (see
-<code class="docutils literal notranslate"><span class="pre">Utilities</span></code> module).</p>
-<p>Default: 1.0</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Output/Returns:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>cov_distorted</strong> (<cite>ndarray</cite>):</dt><dd><p>Distorted correlation matrix (<span class="math notranslate nohighlight">\(\mathbf{C_z}\)</span>) of the standard normal vector <strong>Z</strong>.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
-
-<dl class="method">
 <dt id="UQpy.Transformations.Nataf.distortion_z2x">
-<em class="property">static </em><code class="sig-name descname">distortion_z2x</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">corr_z</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Nataf.distortion_z2x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Nataf.distortion_z2x" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">distortion_z2x</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">corr_z</em>, <em class="sig-param">verbose=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Nataf.distortion_z2x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Nataf.distortion_z2x" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a method to calculate the correlation matrix <span class="math notranslate nohighlight">\(\mathbf{C_x}\)</span> of the random vector
 <span class="math notranslate nohighlight">\(\mathbf{x}\)</span>  given the correlation matrix <span class="math notranslate nohighlight">\(\mathbf{C_z}\)</span> of the standard normal random vector
-<span class="math notranslate nohighlight">\(\mathbf{z}\)</span> using the <cite>correlation_distortion</cite> method (see <code class="docutils literal notranslate"><span class="pre">Utilities</span></code> class).</p>
+<span class="math notranslate nohighlight">\(\mathbf{z}\)</span>.</p>
 <p>This method is part of the <code class="docutils literal notranslate"><span class="pre">Nataf</span></code> class.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
@@ -198,11 +173,110 @@ using the <cite>ITAM</cite> method (see <code class="docutils literal notranslat
 </dd>
 </dl>
 </li>
+<li><dl>
+<dt><strong>verbose</strong> (<cite>Boolean</cite>):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+</dl>
+</li>
 </ul>
 <p><strong>Output/Returns:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>cov_distorted</strong> (<cite>ndarray</cite>):</dt><dd><p>Distorted correlation matrix (<span class="math notranslate nohighlight">\(\mathbf{C_x}\)</span>) of the random vector <strong>x</strong>.</p>
+<dt><strong>corr_x</strong> (<cite>ndarray</cite>):</dt><dd><p>Distorted correlation matrix (<span class="math notranslate nohighlight">\(\mathbf{C_x}\)</span>) of the random vector <strong>x</strong>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Transformations.Nataf.itam">
+<em class="property">static </em><code class="sig-name descname">itam</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">corr_x</em>, <em class="sig-param">itam_max_iter=None</em>, <em class="sig-param">beta=None</em>, <em class="sig-param">itam_threshold1=None</em>, <em class="sig-param">itam_threshold2=None</em>, <em class="sig-param">verbose=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Nataf.itam"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Nataf.itam" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a method to calculate the correlation matrix <span class="math notranslate nohighlight">\(\mathbf{C_Z}\)</span> of the standard normal random vector
+<span class="math notranslate nohighlight">\(\mathbf{z}\)</span> given the correlation matrix <span class="math notranslate nohighlight">\(\mathbf{C_x}\)</span> of the random vector <span class="math notranslate nohighlight">\(\mathbf{x}\)</span>
+using the ITAM method <a href="#id12"><span class="problematic" id="id4">[1]_</span></a>.</p>
+<p>The <cite>itam</cite> method uses the <code class="docutils literal notranslate"><span class="pre">nearest_psd</span></code> method from <code class="docutils literal notranslate"><span class="pre">Utilities</span></code> module.</p>
+<p><strong>References</strong></p>
+<dl class="footnote brackets">
+<dt class="label" id="id5"><span class="brackets">1</span></dt>
+<dd><p>Hwanpyo Kim, Michael D. Shields, Modeling strongly non-Gaussian non-stationary stochastic processes
+using the Iterative Translation Approximation Method and Karhunen–Loève expansion, Computers and Structures,
+161, (2015), 31–42.</p>
+</dd>
+<dt class="label" id="id6"><span class="brackets">2</span></dt>
+<dd><p>Shields M, Deodatis G. Estimation of evolutionary spectra for simulation of non-stationary and
+non-Gaussian stochastic processes. Computers and Structures,  126, (2013), 149–63.</p>
+</dd>
+</dl>
+<p><strong>Inputs:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>dist_object</strong> ((list of ) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>Probability distribution of each random variable. Must be an object of type <code class="docutils literal notranslate"><span class="pre">DistributionContinuous1D</span></code>
+or <code class="docutils literal notranslate"><span class="pre">JointInd</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>corr_x</strong> (<cite>ndarray</cite>):</dt><dd><p>The correlation  matrix (<span class="math notranslate nohighlight">\(\mathbf{C_X}\)</span>) of the random vector <strong>X</strong>.</p>
+<p>Default: The <code class="docutils literal notranslate"><span class="pre">identity</span></code> matrix.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>itam_max_iter</strong> (<cite>int</cite>):</dt><dd><p>Maximum number of iterations for the ITAM method.</p>
+<p>Default: 100</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>itam_threshold1</strong> (<cite>float</cite>):</dt><dd><p>A threshold value for the relative difference between the non-Gaussian correlation function and the
+underlying Gaussian.</p>
+<p>Default: 0.001</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>itam_threshold2</strong> (<cite>float</cite>):</dt><dd><p>A threshold value the <cite>ITAM</cite> method.</p>
+<p>Default: 0.01</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>beta</strong> (<cite>float</cite>):</dt><dd><p>A parameters selected to optimize convergence speed and desired accuracy of the ITAM method (see <a href="#id13"><span class="problematic" id="id7">[2]_</span></a>).</p>
+<p>Default: 1.0</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>verbose</strong> (<cite>Boolean</cite>):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
+<p>Default: False</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>corr_z</strong> (<cite>ndarray</cite>):</dt><dd><p>Distorted correlation matrix (<span class="math notranslate nohighlight">\(\mathbf{C_z}\)</span>) of the standard normal vector <strong>Z</strong>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Transformations.Nataf.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">samples_x=None</em>, <em class="sig-param">samples_z=None</em>, <em class="sig-param">jacobian=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Nataf.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Nataf.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the Nataf transformation or its inverse.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is the function that performs the Nataf transformation. If <cite>samples_x</cite> is
+provided, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method performs the Nataf transformation. If <cite>samples_z</cite> is provided, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method
+performs the inverse Nataf transformation.</p>
+<p>** Input:**</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>samples_x</strong> or <strong>samples_z</strong> (<cite>ndarray</cite>):</dt><dd><p>Random vector <strong>X</strong>  with prescribed probability distributions or standard normal random vector <strong>Z</strong> of
+shape``(nsamples, dimension)``.</p>
 </dd>
 </dl>
 </li>
@@ -213,7 +287,7 @@ using the <cite>ITAM</cite> method (see <code class="docutils literal notranslat
 <dt id="UQpy.Transformations.Nataf.rvs">
 <code class="sig-name descname">rvs</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Nataf.rvs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Nataf.rvs" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a method to generate realizations from the joint pdf of the random vector <strong>X</strong>.</p>
-<p>This method is part of the ‘’Nataf’’ class.</p>
+<p>This method is part of the <code class="docutils literal notranslate"><span class="pre">Nataf</span></code> class.</p>
 <p><strong>Inputs:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
@@ -226,80 +300,6 @@ using the <cite>ITAM</cite> method (see <code class="docutils literal notranslat
 <ul class="simple">
 <li><dl class="simple">
 <dt><strong>samples_x</strong> (<cite>ndarray</cite>):</dt><dd><p>Random vector in the parameter space of shape <code class="docutils literal notranslate"><span class="pre">(nsamples,</span> <span class="pre">dimension)</span></code>.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
-
-<dl class="method">
-<dt id="UQpy.Transformations.Nataf.transform_x2z">
-<code class="sig-name descname">transform_x2z</code><span class="sig-paren">(</span><em class="sig-param">samples_x</em>, <em class="sig-param">jacobian=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Nataf.transform_x2z"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Nataf.transform_x2z" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is a method to transform a vector <span class="math notranslate nohighlight">\(\mathbf{x}\)</span> of  samples with marginal distributions
-<span class="math notranslate nohighlight">\(f_i(x_i)\)</span> and cumulative distributions <span class="math notranslate nohighlight">\(F_i(x_i)\)</span> to a vector <span class="math notranslate nohighlight">\(\mathbf{z}\)</span> of standard normal
-samples  according to: <span class="math notranslate nohighlight">\(Z_{i}=\Phi^{-1}(F_i(X_{i}))\)</span>, where <span class="math notranslate nohighlight">\(\Phi\)</span> is the cumulative
-distribution function of a standard  normal variable.</p>
-<p>This method is part of the <code class="docutils literal notranslate"><span class="pre">Nataf</span></code> class.</p>
-<p><strong>Inputs:</strong></p>
-<ul>
-<li><dl class="simple">
-<dt><strong>samples_x</strong> (<cite>ndarray</cite>):</dt><dd><p>Random vector of shape <code class="docutils literal notranslate"><span class="pre">(nsamples,</span> <span class="pre">dimension)</span></code> with prescribed probability distributions.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>jacobian</strong> (‘Boolean’):</dt><dd><p>A boolean whether to return the jacobian of the transformation.</p>
-<p>Default: False</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Outputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>samples_z</strong> (<cite>ndarray</cite>):</dt><dd><p>Standard normal random vector of shape <code class="docutils literal notranslate"><span class="pre">(nsamples,</span> <span class="pre">dimension)</span></code>.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>jacobian_x2z</strong> (<cite>ndarray</cite>):</dt><dd><p>The jacobian of the transformation of shape <code class="docutils literal notranslate"><span class="pre">(dimension,</span> <span class="pre">dimension)</span></code>.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
-
-<dl class="method">
-<dt id="UQpy.Transformations.Nataf.transform_z2x">
-<code class="sig-name descname">transform_z2x</code><span class="sig-paren">(</span><em class="sig-param">samples_z</em>, <em class="sig-param">jacobian=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Transformations.html#Nataf.transform_z2x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Transformations.Nataf.transform_z2x" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is a method to transform a standard normal vector <span class="math notranslate nohighlight">\(\mathbf{z}\)</span> to a vector
-<span class="math notranslate nohighlight">\(\mathbf{x}\)</span> of samples with marginal distributions <span class="math notranslate nohighlight">\(f_i(x_i)\)</span> and cumulative distributions
-<span class="math notranslate nohighlight">\(F_i(x_i)\)</span> to samples  according to: <span class="math notranslate nohighlight">\(Z_{i}=\Phi^{-1}(F_i(X_{i}))\)</span>, where <span class="math notranslate nohighlight">\(\Phi\)</span> is the
-cumulative distribution function of a standard  normal variable.</p>
-<p>This method is part of the <code class="docutils literal notranslate"><span class="pre">Nataf</span></code> class.</p>
-<p><strong>Inputs:</strong></p>
-<ul>
-<li><dl class="simple">
-<dt><strong>samples_z</strong> (<cite>ndarray</cite>):</dt><dd><p>Standard normal random vector of shape <code class="docutils literal notranslate"><span class="pre">(nsamples,</span> <span class="pre">dimension)</span></code></p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>jacobian</strong> (‘Boolean’):</dt><dd><p>A boolean whether to return the jacobian of the transformation.</p>
-<p>Default: False</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Outputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>samples_x</strong> (<cite>ndarray</cite>):</dt><dd><p>Random vector of shape <code class="docutils literal notranslate"><span class="pre">(nsamples,</span> <span class="pre">dimension)</span></code> with prescribed probability distributions.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>jacobian_z2x</strong> (<cite>ndarray</cite>):</dt><dd><p>The jacobian of the transformation of shape <code class="docutils literal notranslate"><span class="pre">(dimension,</span> <span class="pre">dimension)</span></code>.</p>
 </dd>
 </dl>
 </li>
@@ -360,12 +360,12 @@ cumulative distribution function of a standard  normal variable.</p>
 </div>
 <p><strong>References:</strong></p>
 <dl class="footnote brackets">
-<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
-<dd><p>A. Nataf, “Determination des distributions dont les marges sont donnees”, C. R. Acad. Sci.
+<dt class="label" id="id8"><span class="brackets">1</span></dt>
+<dd><p>A. Nataf, Determination des distributions dont les marges sont donnees, C. R. Acad. Sci.
 vol. 225, pp. 42-43, Paris, 1962.</p>
 </dd>
-<dt class="label" id="id5"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
-<dd><p>R. Lebrun and A. Dutfoy, “An innovating analysis of the Nataf transformation from the copula viewpoint”,
+<dt class="label" id="id9"><span class="brackets">2</span></dt>
+<dd><p>R. Lebrun and A. Dutfoy, An innovating analysis of the Nataf transformation from the copula viewpoint,
 Prob. Eng. Mech.,  vol. 24, pp. 312-320, 2009.</p>
 </dd>
 </dl>

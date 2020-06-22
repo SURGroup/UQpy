@@ -572,7 +572,7 @@
 
 <span class="sd">         Default: 0.01 (see `derivatives` class)</span>
 
-<span class="sd">    * **verbose** (Boolean):</span>
+<span class="sd">    * **verbose** (`Boolean`):</span>
 <span class="sd">        A boolean declaring whether to write text to the terminal.</span>
 
 <span class="sd">    **Methods:**</span>
@@ -1105,14 +1105,14 @@
 
 <div class="viewcode-block" id="SORM"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.SORM">[docs]</a><span class="k">class</span> <span class="nc">SORM</span><span class="p">(</span><span class="n">TaylorSeries</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A class to perform the Second Order Reliability Method. </span>
-<span class="sd">    ``SORM`` class first performs FORM and then corrects the estimated FORM probability using second-order information.</span>
+<span class="sd">    A class to perform the Second Order Reliability Method. This class is used to correct the estimated FORM probability</span>
+<span class="sd">     using second-order information.</span>
 
 <span class="sd">    ``SORM`` is a child class of the ``TaylorSeries`` class.</span>
 
 <span class="sd">    **Input:**</span>
 
-<span class="sd">    The ``SORM`` class requires anb object of type ``FORM`` as input.</span>
+<span class="sd">    The ``SORM`` class requires an object of type ``FORM`` as input.</span>
 
 <span class="sd">    **Output/Returns:**</span>
 

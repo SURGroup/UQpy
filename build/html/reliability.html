@@ -280,7 +280,7 @@ vector <strong>Z</strong> .</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>verbose</strong> (Boolean):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
+<dt><strong>verbose</strong> (<cite>Boolean</cite>):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
 </dd>
 </dl>
 </li>
@@ -467,11 +467,13 @@ times and each time the results are appended to the existing ones.</p>
 <dl class="class">
 <dt id="UQpy.Reliability.SORM">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">SORM</code><span class="sig-paren">(</span><em class="sig-param">form_object</em>, <em class="sig-param">dist_object=None</em>, <em class="sig-param">seed_u=None</em>, <em class="sig-param">seed_x=None</em>, <em class="sig-param">runmodel_object=None</em>, <em class="sig-param">def_step=None</em>, <em class="sig-param">corr_x=None</em>, <em class="sig-param">corr_z=None</em>, <em class="sig-param">n_iter=None</em>, <em class="sig-param">tol1=None</em>, <em class="sig-param">tol2=None</em>, <em class="sig-param">tol3=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#SORM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.SORM" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class to perform the Second Order Reliability Method.
-<code class="docutils literal notranslate"><span class="pre">SORM</span></code> class first performs FORM and then corrects the estimated FORM probability using second-order information.</p>
+<dd><dl class="simple">
+<dt>A class to perform the Second Order Reliability Method. This class is used to correct the estimated FORM probability</dt><dd><p>using second-order information.</p>
+</dd>
+</dl>
 <p><code class="docutils literal notranslate"><span class="pre">SORM</span></code> is a child class of the <code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> class.</p>
 <p><strong>Input:</strong></p>
-<p>The <code class="docutils literal notranslate"><span class="pre">SORM</span></code> class requires anb object of type <code class="docutils literal notranslate"><span class="pre">FORM</span></code> as input.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">SORM</span></code> class requires an object of type <code class="docutils literal notranslate"><span class="pre">FORM</span></code> as input.</p>
 <p><strong>Output/Returns:</strong></p>
 <p>The <code class="docutils literal notranslate"><span class="pre">SORM</span></code> class has the same outputs as the <code class="docutils literal notranslate"><span class="pre">FORM</span></code> class plus</p>
 <ul class="simple">
