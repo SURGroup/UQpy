@@ -33,6 +33,7 @@ The module currently contains the following classes:
 
 from UQpy.Surrogates import Kriging  
 from UQpy.Utilities import * 
+from UQpy.Utilities import _nn_coord
 import scipy as sp
 import numpy as np
 import itertools
@@ -2017,7 +2018,7 @@ class DiffusionMaps:
         nrows = np.shape(kernel_matrix)[0]
         for i in range(nrows):
             vec = kernel_matrix[i, :]
-            idx = nn_coord(vec, k_neighbors)
+            idx = _nn_coord(vec, k_neighbors)
             kernel_matrix[i, idx] = 0
             if sum(kernel_matrix[i, :]) <= 0:
                 raise ValueError('UQpy: Consider increasing `k_neighbors` to have a connected graph.')
