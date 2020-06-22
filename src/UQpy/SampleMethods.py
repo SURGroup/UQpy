@@ -1791,10 +1791,6 @@ class AKMCS:
     Generate new samples using different active learning method and properties of kriging surrogate along with
     MCS, see ([1]_) for detailed explanation.
 
-    **References:**
-
-    .. [1] B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
-        Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
 
     **Inputs:**
 

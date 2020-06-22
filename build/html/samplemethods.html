@@ -663,7 +663,7 @@ or
 <dt id="UQpy.SampleMethods.RSS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">RSS</code><span class="sig-paren">(</span><em class="sig-param">sample_object=None</em>, <em class="sig-param">runmodel_object=None</em>, <em class="sig-param">krig_object=None</em>, <em class="sig-param">local=False</em>, <em class="sig-param">max_train_size=None</em>, <em class="sig-param">step_size=0.005</em>, <em class="sig-param">qoi_name=None</em>, <em class="sig-param">n_add=1</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#RSS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.RSS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate new samples using adaptive sampling methods, i.e. Refined Stratified Sampling and Gradient
-Enhanced Refined Stratified Sampling (<a href="#id35"><span class="problematic" id="id6">[1]_</span></a>, <a href="#id36"><span class="problematic" id="id7">[2]_</span></a>).</p>
+Enhanced Refined Stratified Sampling (<a href="#id34"><span class="problematic" id="id6">[1]_</span></a>, <a href="#id35"><span class="problematic" id="id7">[2]_</span></a>).</p>
 <p><strong>References:</strong></p>
 <dl class="footnote brackets">
 <dt class="label" id="id8"><span class="brackets">1</span></dt>
@@ -903,14 +903,7 @@ class.</p>
 <dt id="UQpy.SampleMethods.AKMCS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">AKMCS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">runmodel_object</em>, <em class="sig-param">krig_object</em>, <em class="sig-param">samples=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nlearn=10000</em>, <em class="sig-param">nstart=None</em>, <em class="sig-param">qoi_name=None</em>, <em class="sig-param">learning_function='U'</em>, <em class="sig-param">n_add=1</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">save_pf=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate new samples using different active learning method and properties of kriging surrogate along with
-MCS, see (<a href="#id37"><span class="problematic" id="id13">[1]_</span></a>) for detailed explanation.</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id14"><span class="brackets">1</span></dt>
-<dd><p>B. Echard, N. Gayton and M. Lemaire, “AK-MCS: An active learning reliability method combining Kriging and
-Monte Carlo Simulation”, Structural Safety, Pages 145-154, 2011.</p>
-</dd>
-</dl>
+MCS, see (<a href="#id36"><span class="problematic" id="id13">[1]_</span></a>) for detailed explanation.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
 <li><dl class="simple">
@@ -972,13 +965,13 @@ Monte Carlo Simulation”, Structural Safety, Pages 145-154, 2011.</p>
 </dl>
 </li>
 <li><dl>
-<dt><strong>n_add</strong> (<a href="#id15"><span class="problematic" id="id16">`</span></a>int’):</dt><dd><p>Number of samples to be selected per iteration.</p>
+<dt><strong>n_add</strong> (<a href="#id14"><span class="problematic" id="id15">`</span></a>int’):</dt><dd><p>Number of samples to be selected per iteration.</p>
 <p>Default: 1.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>save_pf</strong> (<a href="#id17"><span class="problematic" id="id18">`</span></a>boolean’):</dt><dd><p>Indicator to estimate probability of failure after each iteration. Only required if user-defined learning
+<dt><strong>save_pf</strong> (<a href="#id16"><span class="problematic" id="id17">`</span></a>boolean’):</dt><dd><p>Indicator to estimate probability of failure after each iteration. Only required if user-defined learning
 function is used.</p>
 </dd>
 </dl>
@@ -1019,11 +1012,11 @@ Reliability Analysis.</p>
 <dl class="method">
 <dt id="UQpy.SampleMethods.AKMCS.eff">
 <code class="sig-name descname">eff</code><span class="sig-paren">(</span><em class="sig-param">surr</em>, <em class="sig-param">pop</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.eff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.eff" title="Permalink to this definition">¶</a></dt>
-<dd><p>Learns new samples based on Expected Feasibilty Function (EFF) as learning function, see (<a href="#id38"><span class="problematic" id="id19">[1]_</span></a>) for detailed
+<dd><p>Learns new samples based on Expected Feasibilty Function (EFF) as learning function, see (<a href="#id37"><span class="problematic" id="id18">[1]_</span></a>) for detailed
 explanation.</p>
 <p><strong>References:</strong></p>
 <dl class="footnote brackets">
-<dt class="label" id="id20"><span class="brackets">1</span></dt>
+<dt class="label" id="id19"><span class="brackets">1</span></dt>
 <dd><p>B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, “Efficient Global Reliability Analysis
 for Nonlinear Implicit Performance Functions”, AIAA JOURNAL, Volume 46, 2008.</p>
 </dd>
@@ -1059,11 +1052,11 @@ for Nonlinear Implicit Performance Functions”, AIAA JOURNAL, Volume 46, 2008.<
 <dl class="method">
 <dt id="UQpy.SampleMethods.AKMCS.eif">
 <code class="sig-name descname">eif</code><span class="sig-paren">(</span><em class="sig-param">surr</em>, <em class="sig-param">pop</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.eif"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.eif" title="Permalink to this definition">¶</a></dt>
-<dd><p>Learns new samples based on Expected Improvement Function (EIF) as learning function, see (<a href="#id39"><span class="problematic" id="id21">[1]_</span></a>) for detailed
+<dd><p>Learns new samples based on Expected Improvement Function (EIF) as learning function, see (<a href="#id38"><span class="problematic" id="id20">[1]_</span></a>) for detailed
 explanation.</p>
 <p><strong>References:</strong></p>
 <dl class="footnote brackets">
-<dt class="label" id="id22"><span class="brackets">1</span></dt>
+<dt class="label" id="id21"><span class="brackets">1</span></dt>
 <dd><p>D.R. Jones, M. Schonlau, W.J. Welch, “Efficient Global Optimization of Expensive Black-Box Functions”,
 Journal of Global Optimization, Pages 455–492, 1998.</p>
 </dd>
@@ -1099,11 +1092,11 @@ Journal of Global Optimization, Pages 455–492, 1998.</p>
 <dl class="method">
 <dt id="UQpy.SampleMethods.AKMCS.eigf">
 <code class="sig-name descname">eigf</code><span class="sig-paren">(</span><em class="sig-param">surr</em>, <em class="sig-param">pop</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.eigf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.eigf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Learns new samples based on Expected Improvement for Global Fit (EIGF) as learning function, see (<a href="#id40"><span class="problematic" id="id23">[1]_</span></a>) for
+<dd><p>Learns new samples based on Expected Improvement for Global Fit (EIGF) as learning function, see (<a href="#id39"><span class="problematic" id="id22">[1]_</span></a>) for
 detailed explanation.</p>
 <p><strong>References:</strong></p>
 <dl class="footnote brackets">
-<dt class="label" id="id24"><span class="brackets">1</span></dt>
+<dt class="label" id="id23"><span class="brackets">1</span></dt>
 <dd><p>J.N Fuhg, “Adaptive surrogate models for parametric studies”, Master’s Thesis
 (Link: <a class="reference external" href="https://arxiv.org/pdf/1905.05345.pdf">https://arxiv.org/pdf/1905.05345.pdf</a>)</p>
 </dd>
@@ -1176,10 +1169,10 @@ class.</p>
 <dl class="method">
 <dt id="UQpy.SampleMethods.AKMCS.u">
 <code class="sig-name descname">u</code><span class="sig-paren">(</span><em class="sig-param">surr</em>, <em class="sig-param">pop</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.u"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.u" title="Permalink to this definition">¶</a></dt>
-<dd><p>Learns new samples based on U-function as learning function, see (<a href="#id41"><span class="problematic" id="id25">[1]_</span></a>) for detailed explanation.</p>
+<dd><p>Learns new samples based on U-function as learning function, see (<a href="#id40"><span class="problematic" id="id24">[1]_</span></a>) for detailed explanation.</p>
 <p><strong>References:</strong></p>
 <dl class="footnote brackets">
-<dt class="label" id="id26"><span class="brackets">1</span></dt>
+<dt class="label" id="id25"><span class="brackets">1</span></dt>
 <dd><p>B. Echard, N. Gayton and M. Lemaire, “AK-MCS: An active learning reliability method combining Kriging and
 Monte Carlo Simulation”, Structural Safety, Pages 145-154, 2011.</p>
 </dd>
@@ -1215,11 +1208,11 @@ Monte Carlo Simulation”, Structural Safety, Pages 145-154, 2011.</p>
 <dl class="method">
 <dt id="UQpy.SampleMethods.AKMCS.weighted_u">
 <code class="sig-name descname">weighted_u</code><span class="sig-paren">(</span><em class="sig-param">surr</em>, <em class="sig-param">pop</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.weighted_u"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.weighted_u" title="Permalink to this definition">¶</a></dt>
-<dd><p>Learns new samples based on Probability Weighted U-function as learning function, see (<a href="#id42"><span class="problematic" id="id27">[1]_</span></a>) for detailed
+<dd><p>Learns new samples based on Probability Weighted U-function as learning function, see (<a href="#id41"><span class="problematic" id="id26">[1]_</span></a>) for detailed
 explanation.</p>
 <p><strong>References:</strong></p>
 <dl class="footnote brackets">
-<dt class="label" id="id28"><span class="brackets">1</span></dt>
+<dt class="label" id="id27"><span class="brackets">1</span></dt>
 <dd><p>V.S. Sundar and M.S. Shields, “RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH MULTIMODEL
 INFERENCE”.</p>
 </dd>
@@ -1258,7 +1251,7 @@ INFERENCE”.</p>
 </div>
 <div class="section" id="mcmc">
 <h2>MCMC<a class="headerlink" href="#mcmc" title="Permalink to this headline">¶</a></h2>
-<p>The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution <span class="math notranslate nohighlight">\(p(x)=\frac{\tilde{p}(x)}{Z}\)</span>, where <span class="math notranslate nohighlight">\(\tilde{p}(x)\)</span> is known but <span class="math notranslate nohighlight">\(Z\)</span> is hard to compute (this will often be the case when using Bayes’ theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method, see e.g. (<a href="#id43"><span class="problematic" id="id29">[1]_</span></a>, <a href="#id44"><span class="problematic" id="id30">[2]_</span></a>). More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution <span class="math notranslate nohighlight">\(p(x)\)</span>.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:</p>
+<p>The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution <span class="math notranslate nohighlight">\(p(x)=\frac{\tilde{p}(x)}{Z}\)</span>, where <span class="math notranslate nohighlight">\(\tilde{p}(x)\)</span> is known but <span class="math notranslate nohighlight">\(Z\)</span> is hard to compute (this will often be the case when using Bayes’ theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method, see e.g. (<a href="#id42"><span class="problematic" id="id28">[1]_</span></a>, <a href="#id43"><span class="problematic" id="id29">[2]_</span></a>). More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution <span class="math notranslate nohighlight">\(p(x)\)</span>.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:</p>
 <ul class="simple">
 <li><p>initialize with a seed sample <span class="math notranslate nohighlight">\(x_{0}\)</span></p></li>
 <li><dl class="simple">
@@ -1289,8 +1282,8 @@ INFERENCE”.</p>
 <li><p>the <code class="docutils literal notranslate"><span class="pre">_check_methods_proposal</span></code> method checks whether a given proposal is adequate (i.e., has <code class="docutils literal notranslate"><span class="pre">rvs</span></code> and <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>/<code class="docutils literal notranslate"><span class="pre">pdf</span></code> methods).</p></li>
 </ul>
 </div>
-<div class="section" id="id31">
-<h3>Class Descriptions<a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id30">
+<h3>Class Descriptions<a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.MCMC">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MCMC</code><span class="sig-paren">(</span><em class="sig-param">dimension=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">nchains=None</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCMC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCMC" title="Permalink to this definition">¶</a></dt>
@@ -1725,8 +1718,8 @@ prints out the number of outlier chains.</p>
 \[w(\textbf{x}) = \frac{p(\textbf{x})}{q(\textbf{x})}\]</div>
 <p>If <span class="math notranslate nohighlight">\(p\)</span> is only known up to a constant, i.e., one can only evaluate <span class="math notranslate nohighlight">\(\tilde{p}(\textbf{x})\)</span>, where <span class="math notranslate nohighlight">\(p(\textbf{x})=\frac{\tilde{p}(\textbf{x})}{Z}\)</span>, IS can be used by further normalizing the weights (self-normalized IS). The following figure shows the weighted samples obtained when using IS to estimate a 2d Gaussian target distribution <span class="math notranslate nohighlight">\(p\)</span>, sampling from a uniform proposal distribution <span class="math notranslate nohighlight">\(q\)</span>.</p>
 <a class="reference internal image-reference" href="_images/SampleMethods_IS_samples.png"><img alt="IS weighted samples" class="align-center" src="_images/SampleMethods_IS_samples.png" style="width: 220.8px; height: 226.4px;" /></a>
-<div class="section" id="id32">
-<h3>Class Descriptions<a class="headerlink" href="#id32" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id31">
+<h3>Class Descriptions<a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.IS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">IS</code><span class="sig-paren">(</span><em class="sig-param">nsamples=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">proposal=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS" title="Permalink to this definition">¶</a></dt>
@@ -1854,10 +1847,10 @@ samples as log_w_unnormalized) = log(target)-log(proposal).</p>
 </dd></dl>
 
 <dl class="footnote brackets">
-<dt class="label" id="id33"><span class="brackets">1</span></dt>
+<dt class="label" id="id32"><span class="brackets">1</span></dt>
 <dd><p>Gelman et al., “Bayesian data analysis”, Chapman and Hall/CRC, 2013</p>
 </dd>
-<dt class="label" id="id34"><span class="brackets">2</span></dt>
+<dt class="label" id="id33"><span class="brackets">2</span></dt>
 <dd><p>R.C. Smith, “Uncertainty Quantification - Theory, Implementation and Applications”, CS&amp;E, 2014</p>
 </dd>
 </dl>
