@@ -3,9 +3,8 @@
 Utilities
 ===========
 
-.. autoclass:: UQpy.Utilities
-    :members: 
+A module that contains miscalleneous methods used in various modules of ``UQpy``.  
+
+.. automodule:: UQpy.Utilities
+	:members: 
 	
-	
-.. toctree::
-    :maxdepth: 2

@@ -72,9 +72,9 @@ Class Descriptions
 
 **References:**
 
-.. [1] A. Nataf, “Determination des distributions dont les marges sont donnees”, C. R. Acad. Sci.
+.. [1] A. Nataf, Determination des distributions dont les marges sont donnees, C. R. Acad. Sci.
    vol. 225, pp. 42-43, Paris, 1962.
-.. [2] R. Lebrun and A. Dutfoy, “An innovating analysis of the Nataf transformation from the copula viewpoint”,
+.. [2] R. Lebrun and A. Dutfoy, An innovating analysis of the Nataf transformation from the copula viewpoint,
    Prob. Eng. Mech.,  vol. 24, pp. 312-320, 2009.
 .. [3] Shields, M.D. and Kim, H. (2017). "Simulation of higher-order stochastic processes by spectral representation," Probabilistic Engineering Mechanics. 47: 1-15.
 
