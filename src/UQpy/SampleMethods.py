@@ -644,11 +644,14 @@ class LHS:
 
 class STS:
     """
-    Generate samples from an assigned probability density function using Stratified Sampling.
+    Generate samples from an assigned probability density function using Stratified Sampling ([1]_).
+
     **References:**
-    1. M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte
+
+    .. [1] M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte
        Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
-    **Input:**
+
+    **Inputs:**
 
     * **dist_object** ((list of) ``Distribution`` object(s)):
             List of ``Distribution`` objects corresponding to each random variable.
@@ -728,7 +731,11 @@ class STS:
 
         self.dist_object = dist_object
 
-        self.random_state = check_random_state(random_state)
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         # Check sampling criterion
         if self.sts_criterion not in ['random', 'centered']:
@@ -787,7 +794,11 @@ class STS:
             print('UQpy: Running Stratified Sampling...')
 
         if random_state is not None:
-            self.random_state = check_random_state(random_state)
+            self.random_state = random_state
+            if isinstance(self.random_state, int):
+                self.random_state = np.random.RandomState(self.random_state)
+            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if self.stype == 'Rectangular':
             if self.sts_design is None:
@@ -815,7 +826,7 @@ class STS:
             self.samples, self.samplesU01 = samples_u_to_x, samples
 
         elif self.stype == 'Voronoi':
-            from UQpy.Utilities import compute_Voronoi_centroid_volume, voronoi_unit_hypercube
+            from UQpy.Utilities import compute_voronoi_centroid_volume, voronoi_unit_hypercube
 
             samples_init = stats.uniform.rvs(size=[self.nsamples, self.dimension], random_state=self.random_state)
 
@@ -826,7 +837,7 @@ class STS:
                 self.strata.weights = []
                 for region in self.strata.bounded_regions:
                     vertices = self.strata.vertices[region + [region[0]], :]
-                    centroid, volume = compute_Voronoi_centroid_volume(vertices)
+                    centroid, volume = compute_voronoi_centroid_volume(vertices)
                     self.strata.centroids.append(centroid[0, :])
                     self.strata.weights.append(volume)
 
@@ -841,14 +852,6 @@ class STS:
         if self.verbose:
             print('Successful execution of STS design.')
 
-    def in_hypercube(self, samples):
-
-        in_cube = True * self.nsamples
-        for i in range(self.dimension):
-            in_cube = np.logical_and(in_cube, np.logical_and(0 <= samples[:, i], samples[:, i] <= 1))
-
-        return in_cube
-
 ########################################################################################################################
 ########################################################################################################################
 #                                         Class Strata
@@ -858,7 +861,8 @@ class STS:
 class Strata:
     """
     Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^dimension with N strata.
-    **Input:**
+
+    **Inputs:**
 
     * **n_strata** (`list` of `int`):
             A list of dimension n defining the number of strata in each of the n dimensions. Creates an equal
@@ -939,7 +943,7 @@ class Strata:
     def fullfact(levels):
 
         """
-        Create a full-factorial design.
+        Create a full-factorial design
 
         Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
         Copyright (C) 2012 - 2013 - Michael Baudin
@@ -1060,7 +1064,11 @@ class RSS:
         self.nexist = 0
         self.n_add = n_add
 
-        self.random_state = check_random_state(random_state)
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if self.cell == 'Voronoi':
             self.mesh = []
@@ -1270,7 +1278,6 @@ class RSS:
         # ----------------------
         elif self.cell == 'Voronoi':
 
-            from UQpy.Utilities import compute_Delaunay_centroid_volume, voronoi_unit_hypercube
             from scipy.spatial.qhull import Delaunay
             import math
             import itertools
@@ -1308,7 +1315,7 @@ class RSS:
                 self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
                 for j in range(self.mesh.nsimplex):
                     self.mesh.centroids[j, :], self.mesh.volumes[j] = \
-                        compute_Delaunay_centroid_volume(points[self.mesh.vertices[j]])
+                        compute_delaunay_centroid_volume(points[self.mesh.vertices[j]])
 
                 # If the quantity of interest is a dictionary, convert it to a list
                 qoi = [None] * len(self.runmodel_object.qoi_list)
@@ -1457,7 +1464,7 @@ class RSS:
                 self.sample_object.strata.weights = []
                 for region in self.sample_object.strata.bounded_regions:
                     vertices = self.sample_object.strata.vertices[region + [region[0]], :]
-                    centroid, volume = compute_Voronoi_centroid_volume(vertices)
+                    centroid, volume = compute_voronoi_centroid_volume(vertices)
                     self.sample_object.strata.centroids.append(centroid[0, :])
                     self.sample_object.strata.weights.append(volume)
 
@@ -1553,7 +1560,6 @@ class RSS:
         # ----------------------
         elif self.cell == 'Voronoi':
 
-            from UQpy.Utilities import compute_Delaunay_centroid_volume, voronoi_unit_hypercube
             from scipy.spatial.qhull import Delaunay
             import math
             import itertools
@@ -1591,7 +1597,7 @@ class RSS:
                 self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
                 for j in range(self.mesh.nsimplex):
                     self.mesh.centroids[j, :], self.mesh.volumes[j] = \
-                        compute_Delaunay_centroid_volume(points[self.mesh.vertices[j]])
+                        compute_delaunay_centroid_volume(points[self.mesh.vertices[j]])
 
                 # ----------------------------------------------------
                 # Determine the simplex to break and draw a new sample
@@ -1649,7 +1655,7 @@ class RSS:
                 self.sample_object.strata.weights = []
                 for region in self.sample_object.strata.bounded_regions:
                     vertices = self.sample_object.strata.vertices[region + [region[0]], :]
-                    centroid, volume = compute_Voronoi_centroid_volume(vertices)
+                    centroid, volume = compute_voronoi_centroid_volume(vertices)
                     self.sample_object.strata.centroids.append(centroid[0, :])
                     self.sample_object.strata.weights.append(volume)
 
@@ -1680,6 +1686,7 @@ class RSS:
         """
         if self.krig_object is not None:
             self.krig_object.fit(x, y)
+            self.krig_object.nopt = 1
             tck = self.krig_object.predict
         else:
             from scipy.interpolate import LinearNDInterpolator
@@ -1720,6 +1727,9 @@ class Simplex:
 
     * **samples** (`ndarray`):
              New random samples distributed uniformly inside the simplex.
+
+    **Method:**
+
     """
 
     def __init__(self, nodes=None, nsamples=None, random_state=None):
@@ -1729,7 +1739,11 @@ class Simplex:
         if self.nodes.shape[0] != self.nodes.shape[1] + 1:
             raise NotImplementedError("UQpy: Size of simplex (nodes) is not consistent.")
 
-        self.random_state = check_random_state(random_state)
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if nsamples is not None:
             if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
@@ -1750,6 +1764,7 @@ class Simplex:
 
         * **nsamples** (`int`):
             Number of samples to be drawn from each distribution.
+
             If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
             existing samples.
 
@@ -1757,6 +1772,7 @@ class Simplex:
 
         The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``Simplex``
         class.
+
         """
         self.nsamples = nsamples
         dimension = self.nodes.shape[1]
@@ -1829,12 +1845,12 @@ class AKMCS:
 
                 Default: 'U'.
 
-    * **n_add** (`int'):
+    * **n_add** (`int`):
             Number of samples to be selected per iteration.
 
             Default: 1.
 
-    * **save_pf** (`boolean'):
+    * **save_pf** (`boolean`):
             Indicator to estimate probability of failure after each iteration. Only required if user-defined learning
             function is used.
 
@@ -1934,7 +1950,11 @@ class AKMCS:
             if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
                 raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
-        self.random_state = check_random_state(random_state)
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if hasattr(krig_object, 'fit') and hasattr(krig_object, 'predict'):
             self.krig_object = krig_object
@@ -1964,7 +1984,7 @@ class AKMCS:
                                           "integer.")
             self.run(nsamples=self.nsamples)
 
-    def run(self, samples=None, append_samples=True, nsamples=0):
+    def run(self, nsamples, samples=None, append_samples=True):
         """
         Execute the random sampling in the ``AKMCS`` class.
 
@@ -1977,6 +1997,7 @@ class AKMCS:
 
         * **nsamples** (`int`):
             Number of samples to be drawn from each distribution.
+
             If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
             existing samples.
 
@@ -2062,7 +2083,7 @@ class AKMCS:
                 self.qoi = self.runmodel_object.qoi_list
 
             # Retrain the surrogate model
-            self.krig_object.fit(self.samples, self.qoi)
+            self.krig_object.fit(self.samples, self.qoi, nopt=1)
             self.krig_model = self.krig_object.predict
 
             if self.save_pf:
@@ -2134,7 +2155,6 @@ class AKMCS:
         u = np.square(np.squeeze(g) - qoi_array) + np.square(np.squeeze(sig))
 
         rows = np.argmax(u)
-
         return pop[rows, :], False
 
     def u(self, surr, pop):
@@ -2228,7 +2248,7 @@ class AKMCS:
     def eff(self, surr, pop):
         """
         Learns new samples based on Expected Feasibilty Function (EFF) as learning function, see ([1]_) for detailed
-        explanation.
+        explanation..
 
         **References:**
 
@@ -2276,7 +2296,7 @@ class AKMCS:
     def eif(self, surr, pop):
         """
         Learns new samples based on Expected Improvement Function (EIF) as learning function, see ([1]_) for detailed
-        explanation.
+        explanation..
 
         **References:**
 

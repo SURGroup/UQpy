@@ -18,6 +18,7 @@
 import sys
 import numpy as np
 import scipy.stats as stats
+from UQpy.RunModel import RunModel
 
 
 def svd(matrix, rank=None, tol=None):
@@ -188,22 +189,157 @@ def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=Non
 
     return par_res
 
-# TODO: Check if still in use - Add Documentation (if public)
-# def compute_Voronoi_volume(vertices):
-#
-#     from scipy.spatial import Delaunay
-#
-#     d = Delaunay(vertices)
-#     d_vol = np.zeros(np.size(vertices, 0))
-#     for i in range(d.nsimplex):
-#         d_verts = vertices[d.simplices[i]]
-#         d_vol[i] = compute_Delaunay_volume(d_verts)
-#
-#     volume = np.sum(d_vol)
-#     return volume
 
-# TODO: Check if still in use - Add Documentation (if public)
+def gradient(runmodel_object=None, point=None, order='first', df_step=None):
+    """
+    This method estimates the gradients (1st, 2nd, mixed) of a function using a finite difference scheme in the
+    standard normal space. First order gradients are calculated using central finite differences.
+
+    **Inputs:**
+
+    * **runmodel_object** (``RunModel`` object or a `callable` ):
+        The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.
+
+    * **point** (`ndarray`):
+        The point to evaluate the gradient with shape ``point``.shape=(1, dimension)
+
+    * **order** (`str`):
+        Order of the gradient. Available options: 'first', 'second', 'mixed'.
+
+        Default: 'First'.
+
+    * **df_step** (`float`):
+        Finite difference step.
+
+        Default: 0.001.
+
+    **Output/Returns:**
+
+    * **du_dj** (`ndarray`):
+        Vector of first-order gradients (if order = 'first').
+
+    * **d2u_dj** (`ndarray`):
+        Vector of second-order gradients (if order = 'second').
+
+    * **d2u_dij** (`ndarray`):
+        Vector of mixed gradients (if order = 'mixed').
+
+    """
+    point = np.atleast_2d(point)
+
+    dimension = point.shape[1]
+
+    if df_step is None:
+        df_step = [0.001] * dimension
+    elif isinstance(df_step, float):
+        df_step = [df_step] * dimension
+    elif isinstance(df_step, list):
+        if len(df_step) == 1:
+            df_step = [df_step[0]] * dimension
+
+    if not callable(runmodel_object) and not isinstance(runmodel_object, RunModel):
+        raise RuntimeError('A RunModel object or callable function must be provided as model.')
+
+    def func(m):
+        def func_eval(x):
+            if isinstance(m, RunModel):
+                m.run(samples=x, append_samples=False)
+                return np.array(m.qoi_list).flatten()
+            else:
+                return m(x).flatten()
+
+        return func_eval
+
+    f_eval = func(m=runmodel_object)
+
+    if order.lower() == 'first':
+        du_dj = np.zeros([point.shape[0], dimension])
+
+        for ii in range(dimension):
+            eps_i = df_step[ii]
+            u_i1_j = point.copy()
+            u_i1_j[:, ii] = u_i1_j[:, ii] + eps_i
+            u_1i_j = point.copy()
+            u_1i_j[:, ii] = u_1i_j[:, ii] - eps_i
+
+            qoi_plus = f_eval(u_i1_j)
+            qoi_minus = f_eval(u_1i_j)
+
+            du_dj[:, ii] = ((qoi_plus - qoi_minus) / (2 * eps_i))
+
+        return du_dj
+
+    elif order.lower() == 'second':
+        # print('Calculating second order derivatives..')
+        d2u_dj = np.zeros([point.shape[0], dimension])
+        for ii in range(dimension):
+            u_i1_j = point.copy()
+            u_i1_j[:, ii] = u_i1_j[:, ii] + df_step[ii]
+            u_1i_j = point.copy()
+            u_1i_j[:, ii] = u_1i_j[:, ii] - df_step[ii]
+
+            qoi_plus = f_eval(u_i1_j)
+            qoi = f_eval(point)
+            qoi_minus = f_eval(u_1i_j)
+
+            d2u_dj[:, ii] = ((qoi_plus - 2 * qoi + qoi_minus) / (df_step[ii] * df_step[ii]))
+
+        return d2u_dj
+
+    elif order.lower() == 'mixed':
+
+        import itertools
+        range_ = list(range(dimension))
+        d2u_dij = np.zeros([point.shape[0], int(dimension * (dimension - 1) / 2)])
+        count = 0
+        for i in itertools.combinations(range_, 2):
+            u_i1_j1 = point.copy()
+            u_i1_1j = point.copy()
+            u_1i_j1 = point.copy()
+            u_1i_1j = point.copy()
+
+            eps_i1_0 = df_step[i[0]]
+            eps_i1_1 = df_step[i[1]]
+
+            u_i1_j1[:, i[0]] += eps_i1_0
+            u_i1_j1[:, i[1]] += eps_i1_1
+
+            u_i1_1j[:, i[0]] += eps_i1_0
+            u_i1_1j[:, i[1]] -= eps_i1_1
+
+            u_1i_j1[:, i[0]] -= eps_i1_0
+            u_1i_j1[:, i[1]] += eps_i1_1
+
+            u_1i_1j[:, i[0]] -= eps_i1_0
+            u_1i_1j[:, i[1]] -= eps_i1_1
+
+            print('hi')
+            qoi_0 = f_eval(u_i1_j1)
+            qoi_1 = f_eval(u_i1_1j)
+            qoi_2 = f_eval(u_1i_j1)
+            qoi_3 = f_eval(u_1i_1j)
+
+            d2u_dij[:, count] = ((qoi_0 + qoi_3 - qoi_1 - qoi_2) / (4 * eps_i1_0 * eps_i1_1))
+
+            count += 1
+        return d2u_dij
+
+
 def voronoi_unit_hypercube(samples):
+    """
+    This function mirror the samples in both low and high directions for each dimension and estimate the voronoi
+    regions for each sample.
+
+    **Inputs:**
+
+    * **samples** (`ndarray`):
+        Coordinates of points to construct a convex hull from ``samples.shape=(1, dimension)
+
+    **Output/Returns:**
+
+    * **vor** (`scipy.spatial.Voronoi` object):
+        Voronoi diagram in N dimension.
+    """
 
     from scipy.spatial import Voronoi
 
@@ -225,63 +361,83 @@ def voronoi_unit_hypercube(samples):
         samples = np.append(samples, points_temp2, axis=0)
 
     vor = Voronoi(samples, incremental=True)
+    vor.regions: list = vor.regions
+    vor.point_region: list = vor.point_region
 
-    eps = sys.float_info.epsilon
     regions = [None]*samples_center.shape[0]
 
     for i in range(samples_center.shape[0]):
         regions[i] = vor.regions[vor.point_region[i]]
-
-    # for region in vor.regions:
-    #     flag = True
-    #     for index in region:
-    #         if index == -1:
-    #             flag = False
-    #             break
-    #         else:
-    #             for i in range(dimension):
-    #                 x = vor.vertices[index, i]
-    #                 if not (-eps <= x and x <= 1 + eps):
-    #                     flag = False
-    #                     break
-    #     if region != [] and flag:
-    #         regions.append(region)
 
     vor.bounded_points = samples_center
     vor.bounded_regions = regions
 
     return vor
 
-# TODO: Check if still in use - Add Documentation (if public)
-def compute_Voronoi_centroid_volume(vertices):
+
+def compute_voronoi_centroid_volume(vertices):
+    """
+    This function computes the centroid and volume of voronoi cells created using vertices.
+
+    **Inputs:**
+
+    * **vertices** (`ndarray`):
+        Coordinates of points to construct a voronoi diagram.
+
+    **Output/Returns:**
+
+    * **centroid** (`numpy.ndarray`):
+        Centroid of Voronoi cells.
+
+    * **volume** (`numpy.ndarray`):
+        Volume of Voronoi cells.
+    """
 
     from scipy.spatial import Delaunay, ConvexHull
 
-    T = Delaunay(vertices)
+    tess = Delaunay(vertices)
+    tess.nsimplex: int = tess.nsimplex
+    tess.simplices: np.ndarray = tess.simplices
     dimension = np.shape(vertices)[1]
 
-    w = np.zeros((T.nsimplex, 1))
-    cent = np.zeros((T.nsimplex, dimension))
-    for i in range(T.nsimplex):
-        ch = ConvexHull(T.points[T.simplices[i]])
+    w = np.zeros((tess.nsimplex, 1))
+    cent = np.zeros((tess.nsimplex, dimension))
+    for i in range(tess.nsimplex):
+        ch = ConvexHull(tess.points[tess.simplices[i]])
+        ch.volume: float = ch.volume
         w[i] = ch.volume
-        cent[i, :] = np.mean(T.points[T.simplices[i]], axis=0)
-    V = np.sum(w)
-    C = np.matmul(np.divide(w, V).T, cent)
+        cent[i, :] = np.mean(tess.points[tess.simplices[i]], axis=0)
 
-    return C, V
+    volume = np.sum(w)
+    centroid = np.matmul(np.divide(w, volume).T, cent)
 
-# TODO: Check if still in use - Add Documentation (if public)
-def compute_Delaunay_centroid_volume(vertices):
+    return centroid, volume
+
+
+def compute_delaunay_centroid_volume(vertices):
+    """
+    This function computes the centroid and volume of Delaunay triangulation created using vertices.
+
+    **Inputs:**
+
+    * **vertices** (`ndarray`):
+        Coordinates of points to construct a Convex Hull.
+
+    **Output/Returns:**
+
+    * **centroid** (`numpy.ndarray`):
+        Centroid of Voronoi cells.
+
+    * **volume** (`numpy.ndarray`):
+        Volume of Voronoi cells.
+    """
 
     from scipy.spatial import ConvexHull
 
     ch = ConvexHull(vertices)
     volume = ch.volume
+    ch.volume: float = ch.volume
     centroid = np.mean(vertices, axis=0)
-
-    # v1 = np.concatenate((np.ones([np.size(vertices, 0), 1]), vertices), 1)
-    # volume = (1 / math.factorial(np.size(vertices, 0) - 1)) * np.linalg.det(v1.T)
 
     return centroid, volume
 
@@ -457,7 +613,7 @@ def test_type(X, ortho):
 
 
 # TODO: Check if still in use - Add Documentation (if public)
-def nn_coord(x, k):
+def _nn_coord(x, k):
     
     """
     Select k elements close to x.
@@ -527,13 +683,3 @@ def correlation_distortion(dist_object, rho):
     rho_non = np.sum(coef * phi2)
     rho_non = (rho_non - dist_object.moments(moments2return='m') ** 2) / dist_object.moments(moments2return='v')
     return rho_non
-
-# TODO: Check if still in use - Add Documentation (if public)
-def check_random_state(random_state):
-    return_rs = random_state
-    if isinstance(random_state, int):
-        return_rs = np.random.RandomState(random_state)
-    elif not isinstance(random_state, (type(None), np.random.RandomState)):
-        raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
-
-    return return_rs
