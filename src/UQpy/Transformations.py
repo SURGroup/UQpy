@@ -125,10 +125,10 @@ class Nataf:
     * **samples_z** (`ndarray`):
         Standard normal random vector of shape ``(nsamples, dimension)``
 
-    * **Jxz** (`ndarray`):
+    * **jxz** (`ndarray`):
         The Jacobian of the transformation of shape ``(dimension, dimension)``.
 
-    * **Jzx** (`ndarray`):
+    * **jzx** (`ndarray`):
         The Jacobian of the transformation of shape ``(dimension, dimension)``.
 
 
@@ -156,8 +156,8 @@ class Nataf:
         self.jacobian = jacobian
         self.verbose = verbose
         self.itam_max_iter = itam_max_iter
-        self.Jzx = None
-        self.Jxz = None
+        self.jzx = None
+        self.jxz = None
 
         self.beta = beta
         self.itam_threshold1 = itam_threshold1
@@ -217,14 +217,14 @@ class Nataf:
             if jacobian is False:
                 self.samples_z = self._transform_x2z(self.samples_x)
             elif jacobian is True:
-                self.samples_z, self.Jxz = self._transform_x2z(self.samples_x, jacobian=self.jacobian)
+                self.samples_z, self.jxz = self._transform_x2z(self.samples_x, jacobian=self.jacobian)
 
         if samples_z is not None:
             self.samples_z = samples_z
             if self.jacobian is False:
                 self.samples_x = self._transform_z2x(self.samples_z)
             elif self.jacobian is True:
-                self.samples_x, self.Jzx = self._transform_z2x(self.samples_z, jacobian=self.jacobian)
+                self.samples_x, self.jzx = self._transform_z2x(self.samples_z, jacobian=self.jacobian)
 
     @staticmethod
     def itam(dist_object, corr_x,  itam_max_iter=None, beta=None, itam_threshold1=None, itam_threshold2=None,
@@ -388,19 +388,18 @@ class Nataf:
         if verbose is None:
             verbose = False
 
-        n = 1024
         z_max = 8
         z_min = -z_max
-        points, weights = np.polynomial.legendre.leggauss(n)
+        points, weights = np.polynomial.legendre.leggauss(1024)
         points = - (0.5 * (points + 1) * (z_max - z_min) + z_min)
         weights = weights * (0.5 * (z_max - z_min))
 
-        xi = np.tile(points, [n, 1])
+        xi = np.tile(points, [1024, 1])
         xi = xi.flatten(order='F')
-        eta = np.tile(points, n)
+        eta = np.tile(points, 1024)
 
-        first = np.tile(weights, n)
-        first = np.reshape(first, [n, n])
+        first = np.tile(weights, 1024)
+        first = np.reshape(first, [1024, 1024])
         second = np.transpose(first)
 
         weights2d = first * second
@@ -489,7 +488,7 @@ class Nataf:
         * **samples_z** (`ndarray`):
             Standard normal random vector of shape ``(nsamples, dimension)``.
 
-        * **Jxz** (`ndarray`):
+        * **jxz** (`ndarray`):
             The jacobian of the transformation of shape ``(dimension, dimension)``.
 
         """
@@ -513,15 +512,15 @@ class Nataf:
             return samples_z
         else:
             jac = np.zeros(shape=(n, n))
-            Jxz = [None] * m
+            jxz = [None] * m
             for i in range(m):
                 for j in range(n):
                     xi = np.array([samples_x[i, j]])
                     zi = np.array([samples_z[i, j]])
                     jac[j, j] = stats.norm.pdf(zi) / self.dist_object[j].pdf(xi)
-                Jxz[i] = np.linalg.solve(jac, self.H)
+                jxz[i] = np.linalg.solve(jac, self.H)
 
-            return samples_z, Jxz
+            return samples_z, jxz
 
     def _transform_z2x(self, samples_z, jacobian=False):
         """
@@ -547,7 +546,7 @@ class Nataf:
         * **samples_x** (`ndarray`):
             Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.
 
-        * **Jzx** (`ndarray`):
+        * **jzx** (`ndarray`):
             The jacobian of the transformation of shape ``(dimension, dimension)``.
 
         """
@@ -573,15 +572,15 @@ class Nataf:
             return samples_x
         else:
             jac = np.zeros(shape=(n, n))
-            Jzx = [None] * m
+            jzx = [None] * m
             for i in range(m):
                 for j in range(n):
                     xi = np.array([samples_x[i, j]])
                     zi = np.array([samples_z[i, j]])
                     jac[j, j] = self.dist_object[j].pdf(xi) / stats.norm.pdf(zi)
-                Jzx[i] = np.linalg.solve(h, jac)
+                jzx[i] = np.linalg.solve(h, jac)
 
-            return samples_x, Jzx
+            return samples_x, jzx
 
     def rvs(self, nsamples):
         """
