@@ -414,13 +414,15 @@ of the <code class="docutils literal notranslate"><span class="pre">LHS</span></
 <dl class="class">
 <dt id="UQpy.SampleMethods.STS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">STS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">sts_design=None</em>, <em class="sig-param">sts_criterion='random'</em>, <em class="sig-param">stype='Rectangular'</em>, <em class="sig-param">input_file=None</em>, <em class="sig-param">n_iters=20</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#STS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.STS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate samples from an assigned probability density function using Stratified Sampling.
-<strong>References:</strong>
-1. M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, “Refined Stratified Sampling for efficient Monte</p>
-<blockquote>
-<div><p>Carlo based uncertainty quantification,” Reliability Engineering and System Safety,vol.142, pp.310-325,2015.</p>
-</div></blockquote>
-<p><strong>Input:</strong></p>
+<dd><p>Generate samples from an assigned probability density function using Stratified Sampling (<a href="#id38"><span class="problematic" id="id4">[1]_</span></a>).</p>
+<p><strong>References:</strong></p>
+<dl class="footnote brackets">
+<dt class="label" id="id5"><span class="brackets">1</span></dt>
+<dd><p>M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, “Refined Stratified Sampling for efficient Monte
+Carlo based uncertainty quantification,” Reliability Engineering and System Safety,vol.142, pp.310-325,2015.</p>
+</dd>
+</dl>
+<p><strong>Inputs:</strong></p>
 <ul>
 <li><dl class="simple">
 <dt><strong>dist_object</strong> ((list of) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>List of <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> objects corresponding to each random variable.</p>
@@ -548,13 +550,13 @@ class.</p>
 <div class="section" id="strata">
 <h2>Strata<a class="headerlink" href="#strata" title="Permalink to this headline">¶</a></h2>
 <p>The <cite>Strata</cite> class is a supporting class for stratified sampling and its variants. The class defines a rectilinear stratification of the unit hypercube. Strata are defined by specifying a stratum origin as the coordinates of the stratum corner nearest to the global origin and a stratum width for each dimension.</p>
-<div class="section" id="id4">
-<h3>Class Descriptions<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id6">
+<h3>Class Descriptions<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.Strata">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">Strata</code><span class="sig-paren">(</span><em class="sig-param">n_strata=None</em>, <em class="sig-param">input_file=None</em>, <em class="sig-param">origins=None</em>, <em class="sig-param">widths=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Strata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Strata" title="Permalink to this definition">¶</a></dt>
-<dd><p>Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^dimension with N strata.
-<strong>Input:</strong></p>
+<dd><p>Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^dimension with N strata.</p>
+<p><strong>Inputs:</strong></p>
 <ul>
 <li><dl>
 <dt><strong>n_strata</strong> (<cite>list</cite> of <cite>int</cite>):</dt><dd><p>A list of dimension n defining the number of strata in each of the n dimensions. Creates an equal
@@ -619,7 +621,7 @@ strata widths (i.e. they are equal to the size of the strata in the [0, 1]^n spa
 <dl class="method">
 <dt id="UQpy.SampleMethods.Strata.fullfact">
 <em class="property">static </em><code class="sig-name descname">fullfact</code><span class="sig-paren">(</span><em class="sig-param">levels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Strata.fullfact"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Strata.fullfact" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a full-factorial design.</p>
+<dd><p>Create a full-factorial design</p>
 <p>Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
 Copyright (C) 2012 - 2013 - Michael Baudin
 Copyright (C) 2012 - Maria Christopoulou
@@ -657,21 +659,21 @@ or
 <div class="section" id="rss">
 <h2>RSS<a class="headerlink" href="#rss" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">RSS</span></code> class generated samples randomly or uses gradient-based adaptive approach to reduce the variance of output statistical estimates. The method used to generate samples is define by <cite>runmodel_object</cite> parameter. If, it is not defined then RSS class executes Refined Stratified sampling, otherwise Gradient Enhanced Refined Stratified sampling is executed. Refined Stratified sampling randomly selects the stratum to refine from the strata/cells with maximum weight. Whereas, Gradient Enhaced Refined Stratified sampling selects the strata/cells with maximum stratum variance. This class divides the sample domain using either rectangular stratification or voronoi cells, this is define by the <cite>sample_object</cite> parameter. In case of rectangular stratification, selected strata is divided along the maximum width to define new strata. In case of Voronoi cells, the new sample is drawn from a sub-simplex, which is used for refinement.</p>
-<div class="section" id="id5">
-<h3>Class Descriptions<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id7">
+<h3>Class Descriptions<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.RSS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">RSS</code><span class="sig-paren">(</span><em class="sig-param">sample_object=None</em>, <em class="sig-param">runmodel_object=None</em>, <em class="sig-param">krig_object=None</em>, <em class="sig-param">local=False</em>, <em class="sig-param">max_train_size=None</em>, <em class="sig-param">step_size=0.005</em>, <em class="sig-param">qoi_name=None</em>, <em class="sig-param">n_add=1</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#RSS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.RSS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate new samples using adaptive sampling methods, i.e. Refined Stratified Sampling and Gradient
-Enhanced Refined Stratified Sampling (<a href="#id34"><span class="problematic" id="id6">[1]_</span></a>, <a href="#id35"><span class="problematic" id="id7">[2]_</span></a>).</p>
+Enhanced Refined Stratified Sampling (<a href="#id39"><span class="problematic" id="id8">[1]_</span></a>, <a href="#id40"><span class="problematic" id="id9">[2]_</span></a>).</p>
 <p><strong>References:</strong></p>
 <dl class="footnote brackets">
-<dt class="label" id="id8"><span class="brackets">1</span></dt>
+<dt class="label" id="id10"><span class="brackets">1</span></dt>
 <dd><p>Michael D. Shields, Kirubel Teferra, Adam Hapij and Raymond P. Daddazio, “Refined Stratified Sampling for
 efficient Monte Carlo based uncertainty quantification”, Reliability Engineering &amp; System Safety,
 ISSN: 0951-8320, Vol: 142, Page: 310-325, 2015.</p>
 </dd>
-<dt class="label" id="id9"><span class="brackets">2</span></dt>
+<dt class="label" id="id11"><span class="brackets">2</span></dt>
 <dd><p>M. D. Shields, “Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems”,
 Reliability Engineering &amp; System Safety, ISSN: 0951-8320, Vol: 175, Page: 207-224, 2018.</p>
 </dd>
@@ -810,16 +812,16 @@ the <code class="docutils literal notranslate"><span class="pre">RSS</span></cod
 <div class="math notranslate nohighlight">
 \[\mathbf{M_{n_d}} = \zeta_0 + \sum_{i=1}^{n_d} \Big{[}\prod_{j=1}^{i} r_{n_d-j+1}^{\frac{1}{n_d-j+1}}\Big{]}(\zeta_i - \zeta_{i-1})\]</div>
 <p>The <span class="math notranslate nohighlight">\(M_{n_d}\)</span> is <span class="math notranslate nohighlight">\(n_d\)</span> dimensional array defining the coordinates of new sample.</p>
-<a class="reference internal image-reference" href="_static/SampleMethods_Simplex.png"><img alt="Randomly generated point inside a 2-D simplex" class="align-center" src="_static/SampleMethods_Simplex.png" /></a>
-<div class="section" id="id10">
-<h3>Class Descriptions<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<a class="reference internal image-reference" href="_images/SampleMethods_Simplex.png"><img alt="Randomly generated point inside a 2-D simplex" class="align-center" src="_images/SampleMethods_Simplex.png" style="width: 339.0px; height: 261.0px;" /></a>
+<div class="section" id="id12">
+<h3>Class Descriptions<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.Simplex">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">Simplex</code><span class="sig-paren">(</span><em class="sig-param">nodes=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Simplex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Simplex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate random samples inside a simplex using uniform probability distribution.</p>
 <p><strong>References:</strong></p>
 <dl class="footnote brackets">
-<dt class="label" id="id11"><span class="brackets">1</span></dt>
+<dt class="label" id="id13"><span class="brackets">1</span></dt>
 <dd><p>W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, “Simplex-stochastic collocation method with improved
 calability”,Journal of Computational Physics, 310:301–328 2016.</p>
 </dd>
@@ -851,6 +853,7 @@ calability”,Journal of Computational Physics, 310:301–328 2016.</p>
 </dl>
 </li>
 </ul>
+<p><strong>Method:</strong></p>
 <dl class="method">
 <dt id="UQpy.SampleMethods.Simplex.run">
 <code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Simplex.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Simplex.run" title="Permalink to this definition">¶</a></dt>
@@ -860,10 +863,10 @@ provided, the <code class="docutils literal notranslate"><span class="pre">run</
 call the <code class="docutils literal notranslate"><span class="pre">run</span></code> method directly to generate samples. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">Simplex</span></code> class can be invoked
 many times and each time the generated samples are appended to the existing samples.</p>
 <p><strong>Input:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be drawn from each distribution.
-If the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is invoked multiple times, the newly generated samples will be appended to the
+<ul>
+<li><dl>
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be drawn from each distribution.</p>
+<p>If the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is invoked multiple times, the newly generated samples will be appended to the
 existing samples.</p>
 </dd>
 </dl>
@@ -880,30 +883,84 @@ class.</p>
 </div>
 <div class="section" id="akmcs">
 <h2>AKMCS<a class="headerlink" href="#akmcs" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class generates samples adaptively based on a learning function using Adaptive Kriging-Monte Carlo Sampling(AKMCS). This class creates a learning set using <code class="docutils literal notranslate"><span class="pre">LHS</span></code> class and predicts model evaluation using <code class="docutils literal notranslate"><span class="pre">Kriging</span></code> surrogate. To initialize this class, the user needs to provide an initial set of samples, distribution object to generate learning set of samples, the <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object for model execution, a <code class="docutils literal notranslate"><span class="pre">Kriging</span></code> object, and sets the relevant parameters.</p>
-<div class="section" id="adding-new-learning-function">
-<h3>Adding New Learning Function<a class="headerlink" href="#adding-new-learning-function" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class offers a variety of learning function to generate samples adaptively. These are specified by the <cite>learning_function</cite> parameter (i.e. ‘U-Function’, ‘Weighted-U Function’, ‘Expected Feasibility Function’, ‘Expected Improvement Function’ and ‘Expected Global Improvement Fit’). However, adding a new learning function is straightforward. This is done by creating a new method that contains the algorithm for selecting a new samples. This method takes as input the surrogate model and randomly generated monte carlo samples, and returns a set of samples that are selected according to the user’s desired learning function. The output of this function should be a numpy array of samples and a boolean indicating the class to continue or stop. The numpy array of samples should be a two-dimensional array with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined learning function is given below:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">u_function</span><span class="p">(</span><span class="n">surr</span><span class="p">,</span> <span class="n">pop</span><span class="p">):</span>
+<p>The <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class generates samples adaptively using a specified Kriging-based learning function in a general Adaptive Kriging-Monte Carlo Sampling (AKMCS) framework. Based on the specified learning function, different objectives can be achieved. In particular, the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class has learning functions for reliabliity analysis (probability of failure estimation), global optimization, best global fit surrogate models, and can also accept user-defined learning functions for these and other objectives.  Note that the term AKMCS is adopted from <a class="footnote-reference brackets" href="#id33" id="id14">3</a> although the procedure is referred to by different names depending on the specific learning function employed. For example, when applied for optimization the algorithm leverages the expected improvement function and is known under the name Efficient Global Optimization (EGO) <a class="footnote-reference brackets" href="#id34" id="id15">4</a>.</p>
+<div class="section" id="learning-functions">
+<h3>Learning Functions<a class="headerlink" href="#learning-functions" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> provides a number of built-in learning functions as well as allowing the user to proviee a custom learning function. These learning functions are described below.</p>
+<div class="section" id="u-function">
+<h4>U-Function<a class="headerlink" href="#u-function" title="Permalink to this headline">¶</a></h4>
+<p>The U-function is a learning function adopted for Kriging-based reliability analysis adopted from <a class="footnote-reference brackets" href="#id33" id="id16">3</a>. Given a Kriging model <span class="math notranslate nohighlight">\(\hat{y}(\mathbf{x})\)</span>, point estimator of its standard devaition <span class="math notranslate nohighlight">\(\sigma_{\hat{y}}(\mathbf{x})\)</span>, and a set of learning points <span class="math notranslate nohighlight">\(S\)</span>, the U-function seeks out the point <span class="math notranslate nohighlight">\(\mathbf{x}\in S\)</span> that minimizes the function:</p>
+<div class="math notranslate nohighlight">
+\[U(\mathbf{x}) = \dfrac{|\hat{y}(\mathbf{x})|}{\sigma_{\hat{y}}(\mathbf{x})}\]</div>
+<p>This point can be interpreted as the point in <span class="math notranslate nohighlight">\(S\)</span> where the Kriging model has the highest probabability of incorrectly identifying the sign of the performance function (i.e. incorrectly predicting the safe/fail state of the system).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> then adds the corresponding point to the training set, re-fits the Kriging model and repeats the procedure until the following stopping criterion in met:</p>
+<div class="math notranslate nohighlight">
+\[\min(U(\mathbf{x})) &gt; \epsilon_u\]</div>
+<p>where <span class="math notranslate nohighlight">\(\epsilon_u\)</span> is a user-defined error threshold (typically set to 2).</p>
+</div>
+<div class="section" id="weighted-u-function">
+<h4>Weighted U-Function<a class="headerlink" href="#weighted-u-function" title="Permalink to this headline">¶</a></h4>
+<p>The probability weighted U-function is a learning function for reliability analysis adapted from the U-function in <a class="footnote-reference brackets" href="#id35" id="id17">5</a>. It modifies the U-function as follows:</p>
+<div class="math notranslate nohighlight">
+\[W(\mathbf{x}) = \dfrac{\max_x[p(\mathbf{x})] - p(\mathbf{x})}{\max_x[p(\mathbf{x})]} U(\mathbf{x})\]</div>
+<p>where <span class="math notranslate nohighlight">\(p(\mathbf{x})\)</span> is the probability density function of <span class="math notranslate nohighlight">\(\mathbf{x}\)</span>. This has the effect of decreasing the learning function for points that have higher probability of occurrence. Thus, given two points with identical values of <span class="math notranslate nohighlight">\(U(x)\)</span>, the weighted learning function will select the point with higher probability of occurrence.</p>
+<p>As with the standard U-function, <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> with the weighted U-function iterates until <span class="math notranslate nohighlight">\(\min(U(\mathbf{x})) &gt; \epsilon_u\)</span> (the same stopping criterion as the U-function).</p>
+</div>
+<div class="section" id="expected-feasibility-function">
+<h4>Expected Feasibility Function<a class="headerlink" href="#expected-feasibility-function" title="Permalink to this headline">¶</a></h4>
+<p>The Expected Feasibility Function (EFF) is a learning function for reliability analysis introduced as part of the Efficient Global Reliability Analysis (EGRA) method <a class="footnote-reference brackets" href="#id36" id="id18">6</a>. The EFF provides assesses how well the true value of the peformance function, <span class="math notranslate nohighlight">\(y(\mathbf{x})\)</span>, is expected to satisfy the constraint <span class="math notranslate nohighlight">\(y(\mathbf{x}) = a\)</span> over a region <span class="math notranslate nohighlight">\(a-\epsilon \le y(\mathbf{x}) \le a+\epsilon\)</span>. It is given by:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align} EFF(\mathbf{x}) &amp;= (\hat{y}(\mathbf{x})-a)\bigg[2\Phi\bigg(\dfrac{a-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) - \Phi\bigg(\dfrac{(a-\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) - \Phi\bigg(\dfrac{(a+\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) \bigg] \\ &amp;-\sigma_{\hat{y}}(\mathbf{x})\bigg[2\phi\bigg(\dfrac{a-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) - \phi\bigg(\dfrac{(a-\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) - \phi\bigg(\dfrac{(a+\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) \bigg] \\ &amp;+ \bigg[ \Phi\bigg(\dfrac{(a+\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) - \Phi\bigg(\dfrac{(a-\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) \bigg] \end{align}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\Phi(\cdot)\)</span> and <span class="math notranslate nohighlight">\(\phi(\cdot)\)</span> are the standard normal cdf and pdf, respectively. For reliabilty, <span class="math notranslate nohighlight">\(a=0\)</span>, and it is suggest to use <span class="math notranslate nohighlight">\(\epsilon=2\sigma_{\hat{y}}^2\)</span>.</p>
+<p>At each iteration, the new point that is selected is the point that maximizes the EFF and iterations continue until</p>
+<div class="math notranslate nohighlight">
+\[\max_x(EFF(\mathbf{x})) &lt; \epsilon_{eff}\]</div>
+</div>
+<div class="section" id="expected-improvement-function">
+<h4>Expected Improvement Function<a class="headerlink" href="#expected-improvement-function" title="Permalink to this headline">¶</a></h4>
+<p>The Expected Improvement Function (EIF) is a Kriging-based learning function for global optimization introduced as part of the Efficient Global Optimization (EGO) method in <a class="footnote-reference brackets" href="#id34" id="id19">4</a>. The EIF seeks to find the global minimum of a function. It searches the space by placing samples at locations that maximize the expected improvement, where the improvement is defined as <span class="math notranslate nohighlight">\(I(\mathbf{x})=\max(y_{min}-y(\mathbf{x}), 0)\)</span>, where the model response <span class="math notranslate nohighlight">\(y(\mathbf{x})\)</span> is assumed to be a Gaussian random variable and <span class="math notranslate nohighlight">\(y_{min}\)</span> is the current minimum model response. The EIF is then expressed as:</p>
+<div class="math notranslate nohighlight">
+\[EIF(\mathbf{x}) = E[I(\mathbf{x})] = (y_{min}-\hat{y}(\mathbf{x})) \Phi \bigg(\dfrac{y_{min}-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) + \sigma_{\hat{y}}(\mathbf{x})\phi \bigg(\dfrac{y_{min}-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg)\]</div>
+<p>where <span class="math notranslate nohighlight">\(\Phi(\cdot)\)</span> and <span class="math notranslate nohighlight">\(\phi(\cdot)\)</span> are the standard normal cdf and pdf, respectively.</p>
+<p>At each iteration, the EGO algorithm selects the point in the learning set that maximizes the EIF. The algorithm continues until the maximum number of iterations or until:</p>
+<div class="math notranslate nohighlight">
+\[\dfrac{EIF(\mathbf{x})}{|y_{min}|} &lt; \epsilon_{eif}.\]</div>
+<p>Typically a value of 0.01 is used for <span class="math notranslate nohighlight">\(\epsilon_{eif}\)</span>.</p>
+</div>
+<div class="section" id="expected-improvement-for-global-fit">
+<h4>Expected Improvement for Global Fit<a class="headerlink" href="#expected-improvement-for-global-fit" title="Permalink to this headline">¶</a></h4>
+<p>The Expected Improvement for Global Fit (EIGF) learning function aims to build the surrogate model that is the best global representation of model. It was introduced in <a class="footnote-reference brackets" href="#id37" id="id20">7</a>. It aims to balance between even space-filling design and sampling in regions of high variation and is given by:</p>
+<div class="math notranslate nohighlight">
+\[EIGF(\mathbf{x}) = (\hat{y}(\mathbf{x}) - y(\mathbf{x}_*))^2 + \sigma_{\hat{y}}(\mathbf{x})^2\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathbf{x}_*\)</span> is the point in the training set closest in distance to the point <span class="math notranslate nohighlight">\(\mathbf{x}\)</span> and <span class="math notranslate nohighlight">\(y(\mathbf{x}_*)\)</span> is the model response at that point.</p>
+<p>No stopping criterion is suggested by the authors of <a class="footnote-reference brackets" href="#id37" id="id21">7</a>, thus its implementation in <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> uses a fixed number of iterations.</p>
+</div>
+<div class="section" id="user-defined-learning-functions">
+<h4>User-Defined Learning Functions<a class="headerlink" href="#user-defined-learning-functions" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class also allows new, user-defined learning functions to be specified in a straightforward way. This is done by creating a new method that contains the algorithm for selecting a new samples. This method takes as input the surrogate model, the randomly generated learning points, the number of points to be added in each iteration, and any requisite parameters including a stopping criterion. It returns a set of samples that are selected according to the user’s desired learning function and the corresponding learning function values. The outputs of this function should be (1) a numpy array of samples to be added; (2) a boolean stopping criterion indicating whether the iterations should continue (<cite>False</cite>) or stop (<cite>True</cite>), and (3) The learning function values at the new sample points. The numpy array of samples should be a two-dimensional array with the first dimension being the number of samples and the second dimension being the number of variables. An example user-defined learning function is given below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">u_function</span><span class="p">(</span><span class="n">surr</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">n_add</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">g</span><span class="p">,</span> <span class="n">sig</span> <span class="o">=</span> <span class="n">surr</span><span class="p">(</span><span class="n">pop</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">pop</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">sig</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">pop</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">u</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">/</span> <span class="n">sig</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">rows</span> <span class="o">=</span> <span class="n">u</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[:</span><span class="mi">1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">rows</span> <span class="o">=</span> <span class="n">u</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[:</span><span class="n">n_add</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">u_lf</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">indicator</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="n">u</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">u_stop</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;u_stop&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="n">u</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="n">u_stop</span><span class="p">:</span>
 <span class="gp">&gt;&gt;&gt; </span>        <span class="n">indicator</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">pop</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="p">:],</span> <span class="n">indicator</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">pop</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="p">:],</span> <span class="n">u_lf</span><span class="p">,</span> <span class="n">indicator</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="id12">
-<h3>Class Descriptions<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="id22">
+<h3>Class Descriptions<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.AKMCS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">AKMCS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">runmodel_object</em>, <em class="sig-param">krig_object</em>, <em class="sig-param">samples=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nlearn=10000</em>, <em class="sig-param">nstart=None</em>, <em class="sig-param">qoi_name=None</em>, <em class="sig-param">learning_function='U'</em>, <em class="sig-param">n_add=1</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">save_pf=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate new samples using different active learning method and properties of kriging surrogate along with
-MCS, see (<a href="#id36"><span class="problematic" id="id13">[1]_</span></a>) for detailed explanation.</p>
+<dd><p>Adaptively sample for construction of a Kriging surrogate for different objectives including reliability,
+optimization, and global fit.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
 <li><dl class="simple">
@@ -912,44 +969,52 @@ MCS, see (<a href="#id36"><span class="problematic" id="id13">[1]_</span></a>) f
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>runmodel_object</strong> (<code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object):</dt><dd><p>A RunModel object, which is used to evaluate the function value.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the samples.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>krig_object</strong> (<cite>class</cite> object):</dt><dd><p>A surrogate model, this object must have fit and predict methods.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be drawn from each distribution.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nlearn</strong> (<cite>int</cite>):</dt><dd><p>Number of sample generated using LHS, which are used as learning set by AKMCS.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nstart</strong> (<cite>int</cite>):</dt><dd><p>Number of initial samples, randomly generated using LHS.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>qoi_name</strong> (<cite>dict</cite>):</dt><dd><p>If the quantity of interest is a dictionary, convert it to a list</p>
+<dt><strong>runmodel_object</strong> (<code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object):</dt><dd><p>A <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object, which is used to evaluate the model.</p>
 </dd>
 </dl>
 </li>
 <li><dl>
-<dt><strong>learning_function</strong> (<cite>str</cite> or <cite>function</cite>):</dt><dd><dl>
-<dt>Learning function used as the selection criteria to identify new samples.</dt><dd><dl class="simple">
-<dt>Options:</dt><dd><ol class="arabic simple">
+<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p>The initial samples at which to evaluate the model.</p>
+<p>Either <cite>samples</cite> or <cite>nstart</cite> must be provided.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>krig_object</strong> (<cite>class</cite> object):</dt><dd><p>A Kriging surrogate model, this object must have <code class="docutils literal notranslate"><span class="pre">fit</span></code> and <code class="docutils literal notranslate"><span class="pre">predict</span></code> methods.</p>
+<p>May be an object of the <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> <code class="docutils literal notranslate"><span class="pre">Kriging</span></code> class or an object of the <code class="docutils literal notranslate"><span class="pre">scikit-learn</span></code>
+<code class="docutils literal notranslate"><span class="pre">GaussianProcessRegressor</span></code></p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Total number of samples to be drawn (including the initial samples).</p>
+<p>If <cite>nsamples</cite> is provided when instantiating the class, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method will automatically be called. If
+<cite>nsamples</cite> is not provided, <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> can be executed by invoking the <code class="docutils literal notranslate"><span class="pre">run</span></code> method and passing <cite>nsamples</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nlearn</strong> (<cite>int</cite>):</dt><dd><p>Number of samples generated for evaluation of the learning function. Samples for the learning set are drawn
+using <code class="docutils literal notranslate"><span class="pre">LHS</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>nstart</strong> (<cite>int</cite>):</dt><dd><p>Number of initial samples, randomly generated using <code class="docutils literal notranslate"><span class="pre">LHS</span></code>.</p>
+<p>Either <cite>samples</cite> or <cite>nstart</cite> must be provided.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>qoi_name</strong> (<cite>dict</cite>):</dt><dd><p>Name of the quantity of interest. If the quantity of interest is a dictionary, this is used to convert it to
+a list</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>learning_function</strong> (<cite>str</cite> or <cite>function</cite>):</dt><dd><p>Learning function used as the selection criteria to identify new samples.</p>
+<dl class="simple">
+<dt>Built-in options:</dt><dd><ol class="arabic simple">
 <li><p>‘U’ - U-function</p></li>
 <li><p>‘EFF’ - Expected Feasibility Function</p></li>
 <li><p>‘Weighted-U’ - Weighted-U function</p></li>
@@ -958,27 +1023,23 @@ MCS, see (<a href="#id36"><span class="problematic" id="id13">[1]_</span></a>) f
 </ol>
 </dd>
 </dl>
-<p>Default: ‘U’.</p>
-</dd>
-</dl>
+<p><cite>learning_function</cite> may also be passed as a user-defined callable function. This function must accept a Kriging
+surrogate model object with <code class="docutils literal notranslate"><span class="pre">fit</span></code> and <code class="docutils literal notranslate"><span class="pre">predict</span></code> methods, the set of learning points at which to evaluate the
+learning function, and it may also take an arbitrary number of additional parameters that are passed to
+<code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> as <cite>**kwargs</cite>.</p>
 </dd>
 </dl>
 </li>
 <li><dl>
-<dt><strong>n_add</strong> (<a href="#id14"><span class="problematic" id="id15">`</span></a>int’):</dt><dd><p>Number of samples to be selected per iteration.</p>
+<dt><strong>n_add</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be added per iteration.</p>
 <p>Default: 1.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt><strong>save_pf</strong> (<a href="#id16"><span class="problematic" id="id17">`</span></a>boolean’):</dt><dd><p>Indicator to estimate probability of failure after each iteration. Only required if user-defined learning
-function is used.</p>
-</dd>
-</dl>
-</li>
 <li><dl>
-<dt><strong>random_state</strong> (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator.</p>
-<p>Default is None.</p>
+<dt><strong>random_state</strong> (None or <cite>int</cite> or <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+<p>If an integer is provided, this sets the seed for an object of <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code>. Otherwise, the
+object itself can be passed directly.</p>
 </dd>
 </dl>
 </li>
@@ -988,22 +1049,23 @@ function is used.</p>
 </dd>
 </dl>
 </li>
+<li><dl>
+<dt><strong>kwargs</strong></dt><dd><p>Used to pass parameters to <cite>learning_function</cite>.</p>
+<p>For built-in <cite>learning_functions</cite>, see the requisite inputs in the method list below.</p>
+<p>For user-defined <cite>learning_functions</cite>, these will be defined by the requisite inputs to the user-defined method.</p>
+</dd>
+</dl>
+</li>
 </ul>
 <p><strong>Attributes:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the generated samples.</p>
+<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the samples at which the model is evaluated.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>pf</strong> (<cite>list</cite>):</dt><dd><p>Probability of failure after every iteration of AKMCS. Available as an output only for Reliability Analysis.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>cov_pf</strong> (<cite>list</cite>):</dt><dd><p>Covariance of probability of failure after every iteration of AKMCS. Available as an output only for
-Reliability Analysis.</p>
+<dt><strong>error_metric</strong> (<cite>list</cite>)</dt><dd><p>The learning function error metric at each iteration.</p>
 </dd>
 </dl>
 </li>
@@ -1012,37 +1074,47 @@ Reliability Analysis.</p>
 <dl class="method">
 <dt id="UQpy.SampleMethods.AKMCS.eff">
 <code class="sig-name descname">eff</code><span class="sig-paren">(</span><em class="sig-param">surr</em>, <em class="sig-param">pop</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.eff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.eff" title="Permalink to this definition">¶</a></dt>
-<dd><p>Learns new samples based on Expected Feasibilty Function (EFF) as learning function, see (<a href="#id37"><span class="problematic" id="id18">[1]_</span></a>) for detailed
-explanation.</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id19"><span class="brackets">1</span></dt>
-<dd><p>B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, “Efficient Global Reliability Analysis
-for Nonlinear Implicit Performance Functions”, AIAA JOURNAL, Volume 46, 2008.</p>
-</dd>
-</dl>
+<dd><p>Expected Feasibility Function (EFF) for reliability analysis, see <a class="footnote-reference brackets" href="#id36" id="id23">6</a> for a detailed explanation.</p>
 <p><strong>Inputs:</strong></p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
-<dt><strong>surr</strong> (<cite>class</cite> object):</dt><dd><p>A surrogate model, this object have predict method as defined in <cite>krig_object</cite> parameter.</p>
+<dt><strong>surr</strong> (<cite>class</cite> object):</dt><dd><p>A Kriging surrogate model, this object must have a <code class="docutils literal notranslate"><span class="pre">predict</span></code> method as defined in <cite>krig_object</cite> parameter.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>pop</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples in learning set.</p>
+<dt><strong>pop</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of samples defining the learning set at which points the EFF is evaluated</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>n_add</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be added per iteration.</p>
+<p>Default: 1.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>parameters</strong> (<cite>dictionary</cite>)</dt><dd><p>Dictionary containing all necessary parameters and the stopping criterion for the learning function. Here
+these include <cite>a</cite>, <cite>epsilon</cite>, and <cite>eff_stop</cite>.</p>
 </dd>
 </dl>
 </li>
 </ul>
 <p><strong>Output/Returns:</strong></p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
-<dt><strong>new_samples</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples selected by learning criteria.</p>
+<dt><strong>new_samples</strong> (<cite>ndarray</cite>):</dt><dd><p>Samples selected for model evaluation.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>indicator</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator for stopping criteria.</p>
+<p><cite>indicator = True</cite> specifies that the stopping criterion has been met and the AKMCS.run method stops.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>indicator</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.</p>
+<dt><strong>eff_lf</strong> (<cite>ndarray</cite>)</dt><dd><p>EFF learning function evaluated at the new sample points.</p>
 </dd>
 </dl>
 </li>
@@ -1052,37 +1124,48 @@ for Nonlinear Implicit Performance Functions”, AIAA JOURNAL, Volume 46, 2008.<
 <dl class="method">
 <dt id="UQpy.SampleMethods.AKMCS.eif">
 <code class="sig-name descname">eif</code><span class="sig-paren">(</span><em class="sig-param">surr</em>, <em class="sig-param">pop</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.eif"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.eif" title="Permalink to this definition">¶</a></dt>
-<dd><p>Learns new samples based on Expected Improvement Function (EIF) as learning function, see (<a href="#id38"><span class="problematic" id="id20">[1]_</span></a>) for detailed
+<dd><p>Expected Improvement Function (EIF) for Efficient Global Optimization (EFO). See <a class="footnote-reference brackets" href="#id34" id="id24">4</a> for a detailed
 explanation.</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id21"><span class="brackets">1</span></dt>
-<dd><p>D.R. Jones, M. Schonlau, W.J. Welch, “Efficient Global Optimization of Expensive Black-Box Functions”,
-Journal of Global Optimization, Pages 455–492, 1998.</p>
-</dd>
-</dl>
 <p><strong>Inputs:</strong></p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
-<dt><strong>surr</strong> (<cite>class</cite> object):</dt><dd><p>A surrogate model, this object have predict method as defined in <cite>krig_object</cite> parameter.</p>
+<dt><strong>surr</strong> (<cite>class</cite> object):</dt><dd><p>A Kriging surrogate model, this object must have a <code class="docutils literal notranslate"><span class="pre">predict</span></code> method as defined in <cite>krig_object</cite> parameter.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>pop</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples in learning set.</p>
+<dt><strong>pop</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of samples defining the learning set at which points the EIF is evaluated</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>n_add</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be added per iteration.</p>
+<p>Default: 1.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>parameters</strong> (<cite>dictionary</cite>)</dt><dd><p>Dictionary containing all necessary parameters and the stopping criterion for the learning function. Here
+this includes the parameter <cite>eif_stop</cite>.</p>
 </dd>
 </dl>
 </li>
 </ul>
 <p><strong>Output/Returns:</strong></p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
-<dt><strong>new_samples</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples selected by learning criteria.</p>
+<dt><strong>new_samples</strong> (<cite>ndarray</cite>):</dt><dd><p>Samples selected for model evaluation.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>indicator</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator for stopping criteria.</p>
+<p><cite>indicator = True</cite> specifies that the stopping criterion has been met and the AKMCS.run method stops.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>indicator</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.</p>
+<dt><strong>eif_lf</strong> (<cite>ndarray</cite>)</dt><dd><p>EIF learning function evaluated at the new sample points.</p>
 </dd>
 </dl>
 </li>
@@ -1092,37 +1175,47 @@ Journal of Global Optimization, Pages 455–492, 1998.</p>
 <dl class="method">
 <dt id="UQpy.SampleMethods.AKMCS.eigf">
 <code class="sig-name descname">eigf</code><span class="sig-paren">(</span><em class="sig-param">surr</em>, <em class="sig-param">pop</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.eigf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.eigf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Learns new samples based on Expected Improvement for Global Fit (EIGF) as learning function, see (<a href="#id39"><span class="problematic" id="id22">[1]_</span></a>) for
-detailed explanation.</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id23"><span class="brackets">1</span></dt>
-<dd><p>J.N Fuhg, “Adaptive surrogate models for parametric studies”, Master’s Thesis
-(Link: <a class="reference external" href="https://arxiv.org/pdf/1905.05345.pdf">https://arxiv.org/pdf/1905.05345.pdf</a>)</p>
-</dd>
-</dl>
+<dd><p>Expected Improvement for Global Fit (EIGF) learning function. See <a class="footnote-reference brackets" href="#id37" id="id25">7</a> for a detailed explanation.</p>
 <p><strong>Inputs:</strong></p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
-<dt><strong>surr</strong> (<cite>class</cite> object):</dt><dd><p>A surrogate model, this object have predict method as defined in <cite>krig_object</cite> parameter.</p>
+<dt><strong>surr</strong> (<cite>class</cite> object):</dt><dd><p>A Kriging surrogate model, this object must have a <code class="docutils literal notranslate"><span class="pre">predict</span></code> method as defined in <cite>krig_object</cite> parameter.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>pop</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples in learning set.</p>
+<dt><strong>pop</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of samples defining the learning set at which points the EIGF is evaluated</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>n_add</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be added per iteration.</p>
+<p>Default: 1.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>parameters</strong> (<cite>dictionary</cite>)</dt><dd><p>Dictionary containing all necessary parameters and the stopping criterion for the learning function. For
+<code class="docutils literal notranslate"><span class="pre">EIGF</span></code>, this dictionary is empty as no stopping criterion is specified.</p>
 </dd>
 </dl>
 </li>
 </ul>
 <p><strong>Output/Returns:</strong></p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
-<dt><strong>new_samples</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples selected by learning criteria.</p>
+<dt><strong>new_samples</strong> (<cite>ndarray</cite>):</dt><dd><p>Samples selected for model evaluation.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>indicator</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator for stopping criteria.</p>
+<p><cite>indicator = True</cite> specifies that the stopping criterion has been met and the AKMCS.run method stops.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>indicator</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.</p>
+<dt><strong>eigf_lf</strong> (<cite>ndarray</cite>)</dt><dd><p>EIGF learning function evaluated at the new sample points.</p>
 </dd>
 </dl>
 </li>
@@ -1131,28 +1224,26 @@ detailed explanation.</p>
 
 <dl class="method">
 <dt id="UQpy.SampleMethods.AKMCS.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">samples=None</em>, <em class="sig-param">append_samples=True</em>, <em class="sig-param">nsamples=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Execute the random sampling in the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is the function that performs random sampling in the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class. If <cite>nsamples</cite> is
-provided, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically called when the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> object is defined. The user may also
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em>, <em class="sig-param">samples=None</em>, <em class="sig-param">append_samples=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> learning iterations.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is the function that performs iterations in the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class. If <cite>nsamples</cite> is
+provided when defining the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> object, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically called. The user may also
 call the <code class="docutils literal notranslate"><span class="pre">run</span></code> method directly to generate samples. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class can be invoked
-many times and each time the generated samples are appended to the existing samples.</p>
+many times.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
 <li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be drawn from each distribution.
-If the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is invoked multiple times, the newly generated samples will be appended to the
-existing samples.</p>
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Total number of samples to be drawn (including the initial samples).</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the samples.</p>
+<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p>Samples at which to evaluate the model.</p>
 </dd>
 </dl>
 </li>
 <li><dl>
-<dt><strong>append_samples</strong> (<cite>boolean</cite>)</dt><dd><p>Append over overwrite existing samples and model evaluations.</p>
+<dt><strong>append_samples</strong> (<cite>boolean</cite>)</dt><dd><p>Append new samples and model evaluations to the existing samples and model evaluations.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">append_samples</span> <span class="pre">=</span> <span class="pre">False</span></code>, all previous samples and the corresponding quantities of interest from their
 model evaluations are deleted.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">append_samples</span> <span class="pre">=</span> <span class="pre">True</span></code>, samples and their resulting quantities of interest are appended to the
@@ -1162,43 +1253,54 @@ existing ones.</p>
 </li>
 </ul>
 <p><strong>Output/Returns:</strong></p>
-<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method has no returns, although it creates and/or appends the <cite>samples</cite> attribute of the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code>
-class.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method has no returns, although it creates and/or appends the <cite>samples</cite> attribute of the
+<code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="UQpy.SampleMethods.AKMCS.u">
 <code class="sig-name descname">u</code><span class="sig-paren">(</span><em class="sig-param">surr</em>, <em class="sig-param">pop</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.u"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.u" title="Permalink to this definition">¶</a></dt>
-<dd><p>Learns new samples based on U-function as learning function, see (<a href="#id40"><span class="problematic" id="id24">[1]_</span></a>) for detailed explanation.</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id25"><span class="brackets">1</span></dt>
-<dd><p>B. Echard, N. Gayton and M. Lemaire, “AK-MCS: An active learning reliability method combining Kriging and
-Monte Carlo Simulation”, Structural Safety, Pages 145-154, 2011.</p>
-</dd>
-</dl>
+<dd><p>U-function for reliability analysis. See [3] for a detailed explanation.</p>
 <p><strong>Inputs:</strong></p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
-<dt><strong>surr</strong> (<cite>class</cite> object):</dt><dd><p>A surrogate model, this object have predict method as defined in <cite>krig_object</cite> parameter.</p>
+<dt><strong>surr</strong> (<cite>class</cite> object):</dt><dd><p>A Kriging surrogate model, this object must have a <code class="docutils literal notranslate"><span class="pre">predict</span></code> method as defined in <cite>krig_object</cite> parameter.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>pop</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples in learning set.</p>
+<dt><strong>pop</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of samples defining the learning set at which points the U-function is evaluated</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>n_add</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be added per iteration.</p>
+<p>Default: 1.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>parameters</strong> (<cite>dictionary</cite>)</dt><dd><p>Dictionary containing all necessary parameters and the stopping criterion for the learning function. Here
+this includes the parameter <cite>u_stop</cite>.</p>
 </dd>
 </dl>
 </li>
 </ul>
 <p><strong>Output/Returns:</strong></p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
-<dt><strong>new_samples</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples selected by learning criteria.</p>
+<dt><strong>new_samples</strong> (<cite>ndarray</cite>):</dt><dd><p>Samples selected for model evaluation.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>indicator</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator for stopping criteria.</p>
+<p><cite>indicator = True</cite> specifies that the stopping criterion has been met and the AKMCS.run method stops.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>indicator</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.</p>
+<dt><strong>u_lf</strong> (<cite>ndarray</cite>)</dt><dd><p>U learning function evaluated at the new sample points.</p>
 </dd>
 </dl>
 </li>
@@ -1208,37 +1310,47 @@ Monte Carlo Simulation”, Structural Safety, Pages 145-154, 2011.</p>
 <dl class="method">
 <dt id="UQpy.SampleMethods.AKMCS.weighted_u">
 <code class="sig-name descname">weighted_u</code><span class="sig-paren">(</span><em class="sig-param">surr</em>, <em class="sig-param">pop</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.weighted_u"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.weighted_u" title="Permalink to this definition">¶</a></dt>
-<dd><p>Learns new samples based on Probability Weighted U-function as learning function, see (<a href="#id41"><span class="problematic" id="id26">[1]_</span></a>) for detailed
-explanation.</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id27"><span class="brackets">1</span></dt>
-<dd><p>V.S. Sundar and M.S. Shields, “RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH MULTIMODEL
-INFERENCE”.</p>
-</dd>
-</dl>
+<dd><p>Probability Weighted U-function for reliability analysis. See <a class="footnote-reference brackets" href="#id35" id="id26">5</a> for a detailed explanation.</p>
 <p><strong>Inputs:</strong></p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
-<dt><strong>surr</strong> (<cite>class</cite> object):</dt><dd><p>A surrogate model, this object have predict method as defined in <cite>krig_object</cite> parameter.</p>
+<dt><strong>surr</strong> (<cite>class</cite> object):</dt><dd><p>A Kriging surrogate model, this object must have a <code class="docutils literal notranslate"><span class="pre">predict</span></code> method as defined in <cite>krig_object</cite> parameter.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>pop</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples in learning set.</p>
+<dt><strong>pop</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of samples defining the learning set at which points the weighted U-function is evaluated</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>n_add</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be added per iteration.</p>
+<p>Default: 1.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>parameters</strong> (<cite>dictionary</cite>)</dt><dd><p>Dictionary containing all necessary parameters and the stopping criterion for the learning function. Here
+this includes the parameter <cite>u_stop</cite>.</p>
 </dd>
 </dl>
 </li>
 </ul>
 <p><strong>Output/Returns:</strong></p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
-<dt><strong>new_samples</strong> (<cite>numpy array</cite>):</dt><dd><p>An array of samples selected by learning criteria.</p>
+<dt><strong>new_samples</strong> (<cite>ndarray</cite>):</dt><dd><p>Samples selected for model evaluation.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>indicator</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator for stopping criteria.</p>
+<p><cite>indicator = True</cite> specifies that the stopping criterion has been met and the AKMCS.run method stops.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>indicator</strong> (<cite>boolean</cite>):</dt><dd><p>Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.</p>
+<dt><strong>w_lf</strong> (<cite>ndarray</cite>)</dt><dd><p>Weighted U learning function evaluated at the new sample points.</p>
 </dd>
 </dl>
 </li>
@@ -1251,7 +1363,7 @@ INFERENCE”.</p>
 </div>
 <div class="section" id="mcmc">
 <h2>MCMC<a class="headerlink" href="#mcmc" title="Permalink to this headline">¶</a></h2>
-<p>The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution <span class="math notranslate nohighlight">\(p(x)=\frac{\tilde{p}(x)}{Z}\)</span>, where <span class="math notranslate nohighlight">\(\tilde{p}(x)\)</span> is known but <span class="math notranslate nohighlight">\(Z\)</span> is hard to compute (this will often be the case when using Bayes’ theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method, see e.g. (<a href="#id42"><span class="problematic" id="id28">[1]_</span></a>, <a href="#id43"><span class="problematic" id="id29">[2]_</span></a>). More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution <span class="math notranslate nohighlight">\(p(x)\)</span>.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:</p>
+<p>The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution <span class="math notranslate nohighlight">\(p(x)=\frac{\tilde{p}(x)}{Z}\)</span>, where <span class="math notranslate nohighlight">\(\tilde{p}(x)\)</span> is known but <span class="math notranslate nohighlight">\(Z\)</span> is hard to compute (this will often be the case when using Bayes’ theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method, see e.g. (<a href="#id41"><span class="problematic" id="id27">[1]_</span></a>, <a href="#id42"><span class="problematic" id="id28">[2]_</span></a>). More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution <span class="math notranslate nohighlight">\(p(x)\)</span>.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:</p>
 <ul class="simple">
 <li><p>initialize with a seed sample <span class="math notranslate nohighlight">\(x_{0}\)</span></p></li>
 <li><dl class="simple">
@@ -1282,8 +1394,8 @@ INFERENCE”.</p>
 <li><p>the <code class="docutils literal notranslate"><span class="pre">_check_methods_proposal</span></code> method checks whether a given proposal is adequate (i.e., has <code class="docutils literal notranslate"><span class="pre">rvs</span></code> and <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>/<code class="docutils literal notranslate"><span class="pre">pdf</span></code> methods).</p></li>
 </ul>
 </div>
-<div class="section" id="id30">
-<h3>Class Descriptions<a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id29">
+<h3>Class Descriptions<a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.MCMC">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MCMC</code><span class="sig-paren">(</span><em class="sig-param">dimension=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">nchains=None</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCMC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCMC" title="Permalink to this definition">¶</a></dt>
@@ -1718,8 +1830,8 @@ prints out the number of outlier chains.</p>
 \[w(\textbf{x}) = \frac{p(\textbf{x})}{q(\textbf{x})}\]</div>
 <p>If <span class="math notranslate nohighlight">\(p\)</span> is only known up to a constant, i.e., one can only evaluate <span class="math notranslate nohighlight">\(\tilde{p}(\textbf{x})\)</span>, where <span class="math notranslate nohighlight">\(p(\textbf{x})=\frac{\tilde{p}(\textbf{x})}{Z}\)</span>, IS can be used by further normalizing the weights (self-normalized IS). The following figure shows the weighted samples obtained when using IS to estimate a 2d Gaussian target distribution <span class="math notranslate nohighlight">\(p\)</span>, sampling from a uniform proposal distribution <span class="math notranslate nohighlight">\(q\)</span>.</p>
 <a class="reference internal image-reference" href="_images/SampleMethods_IS_samples.png"><img alt="IS weighted samples" class="align-center" src="_images/SampleMethods_IS_samples.png" style="width: 220.8px; height: 226.4px;" /></a>
-<div class="section" id="id31">
-<h3>Class Descriptions<a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id30">
+<h3>Class Descriptions<a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.IS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">IS</code><span class="sig-paren">(</span><em class="sig-param">nsamples=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">proposal=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS" title="Permalink to this definition">¶</a></dt>
@@ -1847,11 +1959,28 @@ samples as log_w_unnormalized) = log(target)-log(proposal).</p>
 </dd></dl>
 
 <dl class="footnote brackets">
-<dt class="label" id="id32"><span class="brackets">1</span></dt>
+<dt class="label" id="id31"><span class="brackets">1</span></dt>
 <dd><p>Gelman et al., “Bayesian data analysis”, Chapman and Hall/CRC, 2013</p>
 </dd>
-<dt class="label" id="id33"><span class="brackets">2</span></dt>
+<dt class="label" id="id32"><span class="brackets">2</span></dt>
 <dd><p>R.C. Smith, “Uncertainty Quantification - Theory, Implementation and Applications”, CS&amp;E, 2014</p>
+</dd>
+<dt class="label" id="id33"><span class="brackets">3</span><span class="fn-backref">(<a href="#id14">1</a>,<a href="#id16">2</a>)</span></dt>
+<dd><ol class="upperalpha simple" start="2">
+<li><p>Echard, N. Gayton and M. Lemaire, “AK-MCS: An active learning reliability method combining Kriging and Monte Carlo Simulation”, Structural Safety, Pages 145-154, 2011.</p></li>
+</ol>
+</dd>
+<dt class="label" id="id34"><span class="brackets">4</span><span class="fn-backref">(<a href="#id15">1</a>,<a href="#id19">2</a>,<a href="#id24">3</a>)</span></dt>
+<dd><p>Jones, D. R., Schonlau, M., &amp; Welch, W. J. “Efficient global optimization of expensive black-box functions.” Journal of Global optimization, 13(4), 455-492, 1998.</p>
+</dd>
+<dt class="label" id="id35"><span class="brackets">5</span><span class="fn-backref">(<a href="#id17">1</a>,<a href="#id26">2</a>)</span></dt>
+<dd><p>V.S. Sundar and Shields, M.D. “Reliablity analysis using adaptive Kriging surrogates and multimodel inference.” ASCE-ASME Journal of Risk and Uncertainty in Engineering Systems. Part A: Civil Engineering. 5(2): 04019004, 2019.</p>
+</dd>
+<dt class="label" id="id36"><span class="brackets">6</span><span class="fn-backref">(<a href="#id18">1</a>,<a href="#id23">2</a>)</span></dt>
+<dd><p>B.J. Bichon, M.S. Eldred, L.P. Swiler, S. Mahadevan, and J.M. McFarland. “Efficient global reliablity analysis for nonlinear implicit performance functions.” AIAA Journal. 46(10) 2459-2468, (2008).</p>
+</dd>
+<dt class="label" id="id37"><span class="brackets">7</span><span class="fn-backref">(<a href="#id20">1</a>,<a href="#id21">2</a>,<a href="#id25">3</a>)</span></dt>
+<dd><p>C.Q. Lam. “Sequential adaptive designs in computer experiments for response surface model fit.” PhD diss., The Ohio State University, 2008.</p>
 </dd>
 </dl>
 <div class="toctree-wrapper compound">
