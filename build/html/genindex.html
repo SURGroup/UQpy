@@ -54,6 +54,7 @@
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  
 </div>
@@ -108,9 +109,11 @@
 </li>
       <li><a href="distributions.html#UQpy.Distributions.Clayton">Clayton (class in UQpy.Distributions)</a>
 </li>
-      <li><a href="distributions.html#UQpy.Distributions.Copula">Copula (class in UQpy.Distributions)</a>
+      <li><a href="utilities.html#UQpy.Utilities.compute_delaunay_centroid_volume">compute_delaunay_centroid_volume() (in module UQpy.Utilities)</a>
 </li>
-      <li><a href="surrogates.html#UQpy.Surrogates.Kriging.corr">corr() (UQpy.Surrogates.Kriging static method)</a>
+      <li><a href="utilities.html#UQpy.Utilities.compute_voronoi_centroid_volume">compute_voronoi_centroid_volume() (in module UQpy.Utilities)</a>
+</li>
+      <li><a href="distributions.html#UQpy.Distributions.Copula">Copula (class in UQpy.Distributions)</a>
 </li>
       <li><a href="transformations.html#UQpy.Transformations.Correlate">Correlate (class in UQpy.Transformations)</a>
 </li>
@@ -206,6 +209,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="utilities.html#UQpy.Utilities.gradient">gradient() (in module UQpy.Utilities)</a>
+</li>
       <li><a href="dimension_reduction.html#UQpy.DimensionReduction.Grassmann.gradient_descent">gradient_descent() (UQpy.DimensionReduction.Grassmann static method)</a>
 </li>
       <li><a href="dimension_reduction.html#UQpy.DimensionReduction.Grassmann">Grassmann (class in UQpy.DimensionReduction)</a>
@@ -224,14 +229,12 @@
 </li>
       <li><a href="inference.html#UQpy.Inference.InfoModelSelection">InfoModelSelection (class in UQpy.Inference)</a>
 </li>
-      <li><a href="surrogates.html#UQpy.Surrogates.SROM.init_srom">init_srom() (UQpy.Surrogates.SROM method)</a>
-</li>
       <li><a href="dimension_reduction.html#UQpy.DimensionReduction.Grassmann.interpolate">interpolate() (UQpy.DimensionReduction.Grassmann method)</a>
+</li>
+      <li><a href="dimension_reduction.html#UQpy.DimensionReduction.Grassmann.interpolate_sample">interpolate_sample() (UQpy.DimensionReduction.Grassmann method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="dimension_reduction.html#UQpy.DimensionReduction.Grassmann.interpolate_sample">interpolate_sample() (UQpy.DimensionReduction.Grassmann method)</a>
-</li>
       <li><a href="stochastic_process.html#UQpy.StochasticProcess.InverseTranslation">InverseTranslation (class in UQpy.StochasticProcess)</a>
 </li>
       <li><a href="distributions.html#UQpy.Distributions.InvGauss">InvGauss (class in UQpy.Distributions)</a>
@@ -336,8 +339,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="utilities.html#UQpy.Utilities.nearest_psd">nearest_psd() (in module UQpy.Utilities)</a>
 </li>
-      <li><a href="utilities.html#UQpy.Utilities.nn_coord">nn_coord() (in module UQpy.Utilities)</a>
-</li>
       <li><a href="distributions.html#UQpy.Distributions.Normal">Normal (class in UQpy.Distributions)</a>
 </li>
   </ul></td>
@@ -369,8 +370,6 @@
       <li><a href="samplemethods.html#UQpy.SampleMethods.LHS.random">random() (UQpy.SampleMethods.LHS static method)</a>
 </li>
       <li><a href="distributions.html#UQpy.Distributions.Rayleigh">Rayleigh (class in UQpy.Distributions)</a>
-</li>
-      <li><a href="surrogates.html#UQpy.Surrogates.Kriging.regress">regress() (UQpy.Surrogates.Kriging static method)</a>
 </li>
       <li><a href="samplemethods.html#UQpy.SampleMethods.IS.resample">resample() (UQpy.SampleMethods.IS method)</a>
 </li>
@@ -413,6 +412,8 @@
 </li>
         <li><a href="stochastic_process.html#UQpy.StochasticProcess.SRM.run">(UQpy.StochasticProcess.SRM method)</a>
 </li>
+        <li><a href="surrogates.html#UQpy.Surrogates.SROM.run">(UQpy.Surrogates.SROM method)</a>
+</li>
         <li><a href="transformations.html#UQpy.Transformations.Nataf.run">(UQpy.Transformations.Nataf method)</a>
 </li>
       </ul></li>
@@ -437,8 +438,6 @@
       <li><a href="utilities.html#UQpy.Utilities.run_parallel_python">run_parallel_python() (in module UQpy.Utilities)</a>
 </li>
       <li><a href="samplemethods.html#UQpy.SampleMethods.RSS.run_rss">run_rss() (UQpy.SampleMethods.RSS method)</a>
-</li>
-      <li><a href="surrogates.html#UQpy.Surrogates.SROM.run_srom">run_srom() (UQpy.Surrogates.SROM method)</a>
 </li>
       <li><a href="runmodel.html#UQpy.RunModel.RunModel">RunModel (class in UQpy.RunModel)</a>
 </li>
@@ -527,6 +526,14 @@
       <li><a href="surrogates.html#module-UQpy.Surrogates">UQpy.Surrogates (module)</a>
 </li>
       <li><a href="utilities.html#module-UQpy.Utilities">UQpy.Utilities (module)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="utilities.html#UQpy.Utilities.voronoi_unit_hypercube">voronoi_unit_hypercube() (in module UQpy.Utilities)</a>
 </li>
   </ul></td>
 </tr></table>
