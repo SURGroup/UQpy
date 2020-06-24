@@ -189,19 +189,6 @@ def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=Non
 
     return par_res
 
-# TODO: Check if still in use - Add Documentation (if public)
-# def compute_Voronoi_volume(vertices):
-#
-#     from scipy.spatial import Delaunay
-#
-#     d = Delaunay(vertices)
-#     d_vol = np.zeros(np.size(vertices, 0))
-#     for i in range(d.nsimplex):
-#         d_verts = vertices[d.simplices[i]]
-#         d_vol[i] = compute_Delaunay_volume(d_verts)
-#
-#     volume = np.sum(d_vol)
-#     return volume
 
 def gradient(runmodel_object=None, point=None, order='first', df_step=None):
     """
@@ -387,7 +374,7 @@ def voronoi_unit_hypercube(samples):
 
     return vor
 
-# TODO: Check if still in use - Add Documentation (if public)
+
 def compute_voronoi_centroid_volume(vertices):
     """
     This function computes the centroid and volume of voronoi cells created using vertices.
@@ -426,7 +413,7 @@ def compute_voronoi_centroid_volume(vertices):
 
     return centroid, volume
 
-# TODO: Check if still in use - Add Documentation (if public)
+
 def compute_delaunay_centroid_volume(vertices):
     """
     This function computes the centroid and volume of Delaunay triangulation created using vertices.

@@ -64,6 +64,60 @@ and the boolean varible (ortho) to test the orthogonality.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="UQpy.Utilities.compute_delaunay_centroid_volume">
+<code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">compute_delaunay_centroid_volume</code><span class="sig-paren">(</span><em class="sig-param">vertices</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#compute_delaunay_centroid_volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.compute_delaunay_centroid_volume" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes the centroid and volume of Delaunay triangulation created using vertices.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>vertices</strong> (<cite>ndarray</cite>):</dt><dd><p>Coordinates of points to construct a Convex Hull.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>centroid</strong> (<cite>numpy.ndarray</cite>):</dt><dd><p>Centroid of Voronoi cells.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>volume</strong> (<cite>numpy.ndarray</cite>):</dt><dd><p>Volume of Voronoi cells.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="UQpy.Utilities.compute_voronoi_centroid_volume">
+<code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">compute_voronoi_centroid_volume</code><span class="sig-paren">(</span><em class="sig-param">vertices</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#compute_voronoi_centroid_volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.compute_voronoi_centroid_volume" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes the centroid and volume of voronoi cells created using vertices.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>vertices</strong> (<cite>ndarray</cite>):</dt><dd><p>Coordinates of points to construct a voronoi diagram.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>centroid</strong> (<cite>numpy.ndarray</cite>):</dt><dd><p>Centroid of Voronoi cells.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>volume</strong> (<cite>numpy.ndarray</cite>):</dt><dd><p>Volume of Voronoi cells.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
 <dt id="UQpy.Utilities.estimate_psd">
 <code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">estimate_psd</code><span class="sig-paren">(</span><em class="sig-param">samples</em>, <em class="sig-param">nt</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#estimate_psd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.estimate_psd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Description: A function to estimate the Power Spectrum of a stochastic process given an ensemble of samples</p>
@@ -93,9 +147,59 @@ and the boolean varible (ortho) to test the orthogonality.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="UQpy.Utilities.gradient">
+<code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">gradient</code><span class="sig-paren">(</span><em class="sig-param">runmodel_object=None</em>, <em class="sig-param">point=None</em>, <em class="sig-param">order='first'</em>, <em class="sig-param">df_step=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method estimates the gradients (1st, 2nd, mixed) of a function using a finite difference scheme in the
+standard normal space. First order gradients are calculated using central finite differences.</p>
+<p><strong>Inputs:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>runmodel_object</strong> (<code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object or a <cite>callable</cite> ):</dt><dd><p>The numerical model. It should be of type <cite>RunModel</cite> (see <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> class) or a <cite>callable</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>point</strong> (<cite>ndarray</cite>):</dt><dd><p>The point to evaluate the gradient with shape <code class="docutils literal notranslate"><span class="pre">point</span></code>.shape=(1, dimension)</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>order</strong> (<cite>str</cite>):</dt><dd><p>Order of the gradient. Available options: ‘first’, ‘second’, ‘mixed’.</p>
+<p>Default: ‘First’.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>df_step</strong> (<cite>float</cite>):</dt><dd><p>Finite difference step.</p>
+<p>Default: 0.001.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>du_dj</strong> (<cite>ndarray</cite>):</dt><dd><p>Vector of first-order gradients (if order = ‘first’).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>d2u_dj</strong> (<cite>ndarray</cite>):</dt><dd><p>Vector of second-order gradients (if order = ‘second’).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>d2u_dij</strong> (<cite>ndarray</cite>):</dt><dd><p>Vector of mixed gradients (if order = ‘mixed’).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
 <dt id="UQpy.Utilities.nearest_pd">
 <code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">nearest_pd</code><span class="sig-paren">(</span><em class="sig-param">input_matrix</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#nearest_pd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.nearest_pd" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is a method to find the nearest positive-definite matrix to input (<a href="#id8"><span class="problematic" id="id2">[1]_</span></a>, <a class="footnote-reference brackets" href="#id5" id="id3">2</a>).</p>
+<dd><p>This is a method to find the nearest positive-definite matrix to input (<a href="#id10"><span class="problematic" id="id2">[1]_</span></a>, <a class="footnote-reference brackets" href="#id5" id="id3">2</a>).</p>
 <p><strong>References</strong></p>
 <dl class="footnote brackets">
 <dt class="label" id="id4"><span class="brackets">1</span></dt>
@@ -127,7 +231,7 @@ and the boolean varible (ortho) to test the orthogonality.</p>
 <dl class="function">
 <dt id="UQpy.Utilities.nearest_psd">
 <code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">nearest_psd</code><span class="sig-paren">(</span><em class="sig-param">input_matrix</em>, <em class="sig-param">iterations=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#nearest_psd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.nearest_psd" title="Permalink to this definition">¶</a></dt>
-<dd><p>A function to compute the nearest positive semi-definite matrix of a given matrix <a href="#id9"><span class="problematic" id="id6">[1]_</span></a>.</p>
+<dd><p>A function to compute the nearest positive semi-definite matrix of a given matrix <a href="#id11"><span class="problematic" id="id6">[1]_</span></a>.</p>
 <p><strong>References</strong></p>
 <dl class="footnote brackets">
 <dt class="label" id="id7"><span class="brackets">1</span></dt>
@@ -157,29 +261,6 @@ Matrix, SIAM Journal on Matrix Analysis and Applications 28(2):360-385, 2006.</p
 </dl>
 </li>
 </ul>
-</dd></dl>
-
-<dl class="function">
-<dt id="UQpy.Utilities.nn_coord">
-<code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">nn_coord</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">k</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#nn_coord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.nn_coord" title="Permalink to this definition">¶</a></dt>
-<dd><p>Select k elements close to x.</p>
-<p>Select k elements close to x to be used to construct a sparse kernel
-matrix to be used in the diffusion maps.</p>
-<p><strong>Input:</strong></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em> or </em><em>numpy array</em>) – Matrices to be tested.</p></li>
-<li><p><strong>k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Number of points close to x.</p></li>
-</ul>
-</dd>
-</dl>
-<p><strong>Output/Returns:</strong></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>idx</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Indices of the closer points.</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="function">
@@ -254,6 +335,29 @@ matrix to be used in the diffusion maps.</p>
 <dd class="field-odd"><p><strong>Y</strong> (<em>numpy array</em>) – Tested and adjusted matrices.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="UQpy.Utilities.voronoi_unit_hypercube">
+<code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">voronoi_unit_hypercube</code><span class="sig-paren">(</span><em class="sig-param">samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#voronoi_unit_hypercube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.voronoi_unit_hypercube" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function mirror the samples in both low and high directions for each dimension and estimate the voronoi
+regions for each sample.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p>Coordinates of points to construct a convex hull from <a href="#id8"><span class="problematic" id="id9">``</span></a>samples.shape=(1, dimension)</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>vor</strong> (<cite>scipy.spatial.Voronoi</cite> object):</dt><dd><p>Voronoi diagram in N dimension.</p>
+</dd>
+</dl>
+</li>
+</ul>
 </dd></dl>
 
 </div>

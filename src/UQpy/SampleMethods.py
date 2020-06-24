@@ -1804,13 +1804,9 @@ class Simplex:
 ########################################################################################################################
 class AKMCS:
     """
-    Generate new samples using different active learning method and properties of kriging surrogate along with
-    MCS, see ([1]_) for detailed explanation.
+    Adaptively sample for construction of a Kriging surrogate for different objectives including reliability,
+    optimization, and global fit.
 
-    **References:**
-
-    .. [1] B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
-        Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
 
     **Inputs:**
 
@@ -1818,85 +1814,92 @@ class AKMCS:
         List of ``Distribution`` objects corresponding to each random variable.
 
     * **runmodel_object** (``RunModel`` object):
-        A RunModel object, which is used to evaluate the function value.
+        A ``RunModel`` object, which is used to evaluate the model.
 
     * **samples** (`ndarray`):
-        `ndarray` containing the samples.
+        The initial samples at which to evaluate the model.
+
+        Either `samples` or `nstart` must be provided.
 
     * **krig_object** (`class` object):
-        A surrogate model, this object must have fit and predict methods.
+        A Kriging surrogate model, this object must have ``fit`` and ``predict`` methods.
+
+        May be an object of the ``UQpy`` ``Kriging`` class or an object of the ``scikit-learn``
+        ``GaussianProcessRegressor``
 
     * **nsamples** (`int`):
-        Number of samples to be drawn from each distribution.
+        Total number of samples to be drawn (including the initial samples).
+
+        If `nsamples` is provided when instantiating the class, the ``run`` method will automatically be called. If
+        `nsamples` is not provided, ``AKMCS`` can be executed by invoking the ``run`` method and passing `nsamples`.
 
     * **nlearn** (`int`):
-        Number of sample generated using LHS, which are used as learning set by AKMCS.
+        Number of samples generated for evaluation of the learning function. Samples for the learning set are drawn
+        using ``LHS``.
 
     * **nstart** (`int`):
-        Number of initial samples, randomly generated using LHS.
+        Number of initial samples, randomly generated using ``LHS``.
+
+        Either `samples` or `nstart` must be provided.
 
     * **qoi_name** (`dict`):
-        If the quantity of interest is a dictionary, convert it to a list
+        Name of the quantity of interest. If the quantity of interest is a dictionary, this is used to convert it to
+        a list
 
     * **learning_function** (`str` or `function`):
         Learning function used as the selection criteria to identify new samples.
-            Options:
-                1. 'U' - U-function \n
-                2. 'EFF' - Expected Feasibility Function \n
-                3. 'Weighted-U' - Weighted-U function \n
-                4. 'EIF' - Expected Improvement Function \n
-                5. 'EGIF' - Expected Global Improvement Fit \n
 
-            Default: 'U'.
+        Built-in options:
+                    1. 'U' - U-function \n
+                    2. 'EFF' - Expected Feasibility Function \n
+                    3. 'Weighted-U' - Weighted-U function \n
+                    4. 'EIF' - Expected Improvement Function \n
+                    5. 'EGIF' - Expected Global Improvement Fit \n
+
+        `learning_function` may also be passed as a user-defined callable function. This function must accept a Kriging
+        surrogate model object with ``fit`` and ``predict`` methods, the set of learning points at which to evaluate the
+        learning function, and it may also take an arbitrary number of additional parameters that are passed to
+        ``AKMCS`` as `**kwargs`.
 
     * **n_add** (`int`):
-        Number of samples to be selected per iteration.
+            Number of samples to be added per iteration.
 
-        Default: 1.
+            Default: 1.
 
-    * **save_pf** (`boolean`):
-        Indicator to estimate probability of failure after each iteration. Only required if user-defined learning
-        function is used.
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
 
-    * **random_state** (None or `int` or `np.random.RandomState` object):
-        Random seed used to initialize the pseudo-random number generator.
-
-        Default is None.
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
 
     * **verbose** (`Boolean`):
         A boolean declaring whether to write text to the terminal.
 
         Default value: False.
 
-    * ****kwargs** (`dictionary`):
-        Additional arguments to be passed to the method specified by `learning_function`.
+    * **kwargs**
+        Used to pass parameters to `learning_function`.
 
-        Keyword 'u_stop' in the dictionary defines stopping threshold for 'U' and 'Weighted-U' learning function. Keyword
-        'eff_a' (reliability threshold), 'eff_epsilon' and 'eff_stop'(stopping threshold) are additional parameters
-        required by 'EFF' learning function. Keyword eif_stop' defines stopping threshold for 'EIF' learning function.
+        For built-in `learning_functions`, see the requisite inputs in the method list below.
 
-        Default value: {"eif_stop":0.01, "u_stop":2, "eff_a": 0, "eff_epsilon": 2, "eff_stop": 0.001}
+        For user-defined `learning_functions`, these will be defined by the requisite inputs to the user-defined method.
 
 
     **Attributes:**
 
-    * **samples** (`numpy.ndarray`):
-        `ndarray` containing the generated samples.
+    * **samples** (`ndarray`):
+        `ndarray` containing the samples at which the model is evaluated.
 
-    * **values** (`numpy.ndarray`):
-        The model evaluated at samples.
+    * **error_metric** (`list`)
+        The learning function error metric at each iteration.
 
-    * **qoi** (`list`):
-        List containing quantity if interest and error metric after each iteration. This is probability of failure and
-        error in stopping criteria for 'Reliability' problem, minimum model evaluation and error in stopping criteria
-        for 'Optimization' problem, list containing None for 'GlobalFit' problem.
 
     **Methods:**
 
     """
 
     def __init__(self, dist_object, runmodel_object, krig_object, samples=None, nsamples=None, nlearn=10000,
-                 nstart=None, qoi_name=None, learning_function='U', n_add=1, random_state=None, problem=None,
+                 nstart=None, qoi_name=None, learning_function='U', n_add=1, random_state=None, save_pf=None,
                  verbose=False, **kwargs):
 
         # Initialize the internal variables of the class.
@@ -1914,10 +1917,11 @@ class AKMCS:
         self.moments = None
         self.n_add = n_add
         self.indicator = False
-        self.qoi = []
-        self.problem = problem
+        self.pf = []
+        self.cov_pf = []
+        self.save_pf = save_pf
         self.dimension = 0
-        self.values = None
+        self.qoi = None
         self.krig_model = None
         self.kwargs = kwargs
 
@@ -1927,36 +1931,31 @@ class AKMCS:
         else:
             self.dimension = len(self.dist_object)
 
+        if self.save_pf is None:
+            if self.learning_function not in ['EFF', 'U', 'Weighted-U']:
+                self.save_pf = False
+            else:
+                self.save_pf = True
+
         if type(self.learning_function).__name__ == 'function':
             self.learning_function = self.learning_function
         elif self.learning_function not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
             raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
         elif self.learning_function == 'EIGF':
-            self.problem = 'GlobalFit'
             self.learning_function = self.eigf
         elif self.learning_function == 'EIF':
-            self.problem = 'Optimization'
-            if 'eif_stop' not in self.kwargs:
-                self.kwargs['eif_stop'] = 0.01
             self.learning_function = self.eif
         elif self.learning_function == 'U':
-            self.problem = 'Reliability'
-            if 'u_stop' not in self.kwargs:
-                self.kwargs['u_stop'] = 2
             self.learning_function = self.u
         elif self.learning_function == 'Weighted-U':
-            self.problem = 'Reliability'
-            if 'u_stop' not in self.kwargs:
-                self.kwargs['u_stop'] = 2
+            if 'max_p' not in self.kwargs:
+                raise NotImplementedError("UQpy Error: Weighted-U learning function requires the parameter 'max_p'.")
             self.learning_function = self.weighted_u
         else:
-            self.problem = 'Reliability'
             if 'a' not in self.kwargs:
                 self.kwargs['a'] = 0
             if 'epsilon' not in self.kwargs:
                 self.kwargs['epsilon'] = 2
-            if 'eff_stop' not in self.kwargs:
-                self.kwargs['u_stop'] = 0.001
             self.learning_function = self.eff
 
         from UQpy.Distributions import DistributionContinuous1D, JointInd
@@ -1982,8 +1981,6 @@ class AKMCS:
 
         # If the initial sample design does not exists, run the initial calculations.
         if self.samples is None:
-            if self.nstart is None:
-                NotImplementedError("UQpy: User should provide either 'samples' or 'nstart' value.")
             if self.verbose:
                 print('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
             self.samples = LHS(dist_object=self.dist_object, nsamples=self.nstart, random_state=random_state).samples
@@ -2007,26 +2004,23 @@ class AKMCS:
 
     def run(self, nsamples, samples=None, append_samples=True):
         """
-        Execute the random sampling in the ``AKMCS`` class.
+        Execute the ``AKMCS`` learning iterations.
 
-        The ``run`` method is the function that performs random sampling in the ``AKMCS`` class. If `nsamples` is
-        provided, the ``run`` method is automatically called when the ``AKMCS`` object is defined. The user may also
+        The ``run`` method is the function that performs iterations in the ``AKMCS`` class. If `nsamples` is
+        provided when defining the ``AKMCS`` object, the ``run`` method is automatically called. The user may also
         call the ``run`` method directly to generate samples. The ``run`` method of the ``AKMCS`` class can be invoked
-        many times and each time the generated samples are appended to the existing samples.
+        many times.
 
         **Inputs:**
 
         * **nsamples** (`int`):
-            Number of samples to be drawn from each distribution.
-
-            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
-            existing samples.
+            Total number of samples to be drawn (including the initial samples).
 
         * **samples** (`ndarray`):
-            `ndarray` containing the samples.
+            Samples at which to evaluate the model.
 
         * **append_samples** (`boolean`)
-            Append over overwrite existing samples and model evaluations.
+            Append new samples and model evaluations to the existing samples and model evaluations.
 
             If ``append_samples = False``, all previous samples and the corresponding quantities of interest from their
             model evaluations are deleted.
@@ -2036,8 +2030,8 @@ class AKMCS:
 
         **Output/Returns:**
 
-        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``AKMCS``
-        class.
+        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the
+        ``AKMCS`` class.
 
         """
 
@@ -2060,15 +2054,15 @@ class AKMCS:
             print('UQpy: Performing AK-MCS design...')
 
         # If the quantity of interest is a dictionary, convert it to a list
-        self.values = [None] * len(self.runmodel_object.qoi_list)
+        self.qoi = [None] * len(self.runmodel_object.qoi_list)
         if type(self.runmodel_object.qoi_list[0]) is dict:
             for j in range(len(self.runmodel_object.qoi_list)):
-                self.values[j] = self.runmodel_object.qoi_list[j][self.qoi_name]
+                self.qoi[j] = self.runmodel_object.qoi_list[j][self.qoi_name]
         else:
-            self.values = self.runmodel_object.qoi_list
+            self.qoi = self.runmodel_object.qoi_list
 
         # Train the initial Kriging model.
-        self.krig_object.fit(self.samples, self.values)
+        self.krig_object.fit(self.samples, self.qoi)
         self.krig_model = self.krig_object.predict
 
         # ---------------------------------------------
@@ -2087,7 +2081,7 @@ class AKMCS:
 
             # Apply the learning function to identify the new point to run the model.
 
-            new_point, err, ind = self.learning_function(self.krig_model, rest_pop, self.kwargs)
+            new_point, ind = self.learning_function(self.krig_model, rest_pop)
 
             # Add the new points to the training set and to the sample set.
             self.samples = np.vstack([self.samples, np.atleast_2d(new_point)])
@@ -2096,68 +2090,73 @@ class AKMCS:
             self.runmodel_object.run(samples=new_point, append_samples=True)
 
             # If the quantity of interest is a dictionary, convert it to a list
-            self.values = [None] * len(self.runmodel_object.qoi_list)
+            self.qoi = [None] * len(self.runmodel_object.qoi_list)
             if type(self.runmodel_object.qoi_list[0]) is dict:
                 for j in range(len(self.runmodel_object.qoi_list)):
-                    self.values[j] = self.runmodel_object.qoi_list[j][self.qoi_name]
+                    self.qoi[j] = self.runmodel_object.qoi_list[j][self.qoi_name]
             else:
-                self.values = self.runmodel_object.qoi_list
+                self.qoi = self.runmodel_object.qoi_list
 
             # Retrain the surrogate model
-            self.krig_object.fit(self.samples, self.values, nopt=1)
+            self.krig_object.fit(self.samples, self.qoi, nopt=1)
             self.krig_model = self.krig_object.predict
 
-            if self.problem == 'Reliability':
+            if self.save_pf:
                 g = self.krig_model(learning_set, False)
-                n_ = g.shape[0] + len(self.values)
-                pf = (sum(g < 0) + sum(np.array(self.values) < 0)) / n_
-                self.qoi.append([pf[0], err])
+                n_ = g.shape[0] + len(self.qoi)
+                pf = (sum(g < 0) + sum(np.array(self.qoi) < 0)) / n_
+                self.pf.append(pf)
+                self.cov_pf.append(np.sqrt((1 - pf) / (pf * n_)))
 
-            if self.problem == 'Optimization':
-                self.qoi.append([min(self.values), err])
-
-            if self.problem == 'GlobalFit':
-                self.qoi.append([None, err])
-
-            # Exit the loop, if stopping criteria is satisfied
+            # Exit the loop, if error criteria is satisfied
             if ind:
-                print("UQpy: Learning stops at iteration: ", i)
+                if self.verbose:
+                    print("UQpy: Learning stops at iteration: ", i)
                 break
-
-            if self.verbose:
-                print("Iteration:", i)
+            else:
+                if self.verbose:
+                    print("Iteration:", i)
 
         if self.verbose:
-            print('UQpy: AKMCS complete.')
+            print('UQpy: AKMCS complete')
 
     # ------------------
     # LEARNING FUNCTIONS
     # ------------------
-    def eigf(self, surr, pop, parameters):
+    def eigf(self, surr, pop):
         """
-        Learns new samples based on Expected Improvement for Global Fit (EIGF) as learning function, see ([1]_) for
-        detailed explanation.
+        Expected Improvement for Global Fit (EIGF) learning function. See [7]_ for a detailed explanation.
 
-        **References:**
-
-        .. [1] J.N Fuhg, "Adaptive surrogate models for parametric studies", Master's Thesis
-           (Link: https://arxiv.org/pdf/1905.05345.pdf)
 
         **Inputs:**
 
         * **surr** (`class` object):
-            A surrogate model, this object have predict method as defined in `krig_object` parameter.
+            A Kriging surrogate model, this object must have a ``predict`` method as defined in `krig_object` parameter.
 
-        * **pop** (`numpy array`):
-            An array of samples in learning set.
+        * **pop** (`ndarray`):
+            An array of samples defining the learning set at which points the EIGF is evaluated
+
+        * **n_add** (`int`):
+            Number of samples to be added per iteration.
+
+            Default: 1.
+
+        * **parameters** (`dictionary`)
+            Dictionary containing all necessary parameters and the stopping criterion for the learning function. For
+            ``EIGF``, this dictionary is empty as no stopping criterion is specified.
 
         **Output/Returns:**
 
-        * **new_samples** (`numpy array`):
-            An array of samples selected by learning criteria.
+        * **new_samples** (`ndarray`):
+            Samples selected for model evaluation.
 
         * **indicator** (`boolean`):
-            Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.
+            Indicator for stopping criteria.
+
+            `indicator = True` specifies that the stopping criterion has been met and the AKMCS.run method stops.
+
+        * **eigf_lf** (`ndarray`)
+            EIGF learning function evaluated at the new sample points.
 
         """
         g, sig = surr(pop, True)
@@ -2174,38 +2173,49 @@ class AKMCS:
         neighbors = knn.kneighbors(np.atleast_2d(pop), return_distance=False)
 
         # noinspection PyTypeChecker
-        qoi_array = np.array([self.values[x] for x in np.squeeze(neighbors)])
+        qoi_array = np.array([self.qoi[x] for x in np.squeeze(neighbors)])
 
         # Compute the learning function at every point in the population.
         u = np.square(np.squeeze(g) - qoi_array) + np.square(np.squeeze(sig))
 
         rows = np.argmax(u)
-        return pop[rows, :], None, False
+        return pop[rows, :], False
 
-    def u(self, surr, pop, parameters):
+    def u(self, surr, pop):
         """
-        Learns new samples based on U-function as learning function, see ([1]_) for detailed explanation.
+        U-function for reliability analysis. See [3] for a detailed explanation.
 
-        **References:**
-
-        .. [1] B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and
-           Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
 
         **Inputs:**
 
         * **surr** (`class` object):
-            A surrogate model, this object have predict method as defined in `krig_object` parameter.
+            A Kriging surrogate model, this object must have a ``predict`` method as defined in `krig_object` parameter.
 
-        * **pop** (`numpy array`):
-            An array of samples in learning set.
+        * **pop** (`ndarray`):
+            An array of samples defining the learning set at which points the U-function is evaluated
+
+        * **n_add** (`int`):
+            Number of samples to be added per iteration.
+
+            Default: 1.
+
+        * **parameters** (`dictionary`)
+            Dictionary containing all necessary parameters and the stopping criterion for the learning function. Here
+            this includes the parameter `u_stop`.
+
 
         **Output/Returns:**
 
-        * **new_samples** (`numpy array`):
-            An array of samples selected by learning criteria.
+        * **new_samples** (`ndarray`):
+            Samples selected for model evaluation.
 
         * **indicator** (`boolean`):
-            Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.
+            Indicator for stopping criteria.
+
+            `indicator = True` specifies that the stopping criterion has been met and the AKMCS.run method stops.
+
+        * **u_lf** (`ndarray`)
+            U learning function evaluated at the new sample points.
 
         """
         g, sig = surr(pop, True)
@@ -2217,38 +2227,48 @@ class AKMCS:
         u = abs(g) / sig
         rows = u[:, 0].argsort()[:self.n_add]
 
-        if min(u[:, 0]) >= parameters['u_stop']:
+        if min(u[:, 0]) >= 2:
             self.indicator = True
 
-        return pop[rows, :], min(u[:, 0]), self.indicator
+        return pop[rows, :], self.indicator
 
-    def weighted_u(self, surr, pop, parameters):
+    def weighted_u(self, surr, pop):
         """
-        Learns new samples based on Probability Weighted U-function as learning function, see ([1]_) for detailed
-        explanation.
+        Probability Weighted U-function for reliability analysis. See [5]_ for a detailed explanation.
 
-        **References:**
-
-        .. [1] V.S. Sundar and M.S. Shields, "RELIABILITY ANALYSIS USING ADAPTIVE KRIGING SURROGATES WITH MULTIMODEL
-           INFERENCE".
 
         **Inputs:**
 
         * **surr** (`class` object):
-            A surrogate model, this object have predict method as defined in `krig_object` parameter.
+            A Kriging surrogate model, this object must have a ``predict`` method as defined in `krig_object` parameter.
 
-        * **pop** (`numpy array`):
-            An array of samples in learning set.
+        * **pop** (`ndarray`):
+            An array of samples defining the learning set at which points the weighted U-function is evaluated
+
+        * **n_add** (`int`):
+            Number of samples to be added per iteration.
+
+            Default: 1.
+
+        * **parameters** (`dictionary`)
+            Dictionary containing all necessary parameters and the stopping criterion for the learning function. Here
+            this includes the parameter `u_stop`.
 
         **Output/Returns:**
 
-        * **new_samples** (`numpy array`):
-            An array of samples selected by learning criteria.
+        * **new_samples** (`ndarray`):
+            Samples selected for model evaluation.
 
         * **indicator** (`boolean`):
-            Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.
+            Indicator for stopping criteria.
+
+            `indicator = True` specifies that the stopping criterion has been met and the AKMCS.run method stops.
+
+        * **w_lf** (`ndarray`)
+            Weighted U learning function evaluated at the new sample points.
 
         """
+        max_p = self.kwargs['max_p']
         g, sig = surr(pop, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
@@ -2256,46 +2276,53 @@ class AKMCS:
         sig = sig.reshape([pop.shape[0], 1])
 
         u = abs(g) / sig
-        p1, p2 = np.ones([pop.shape[0], pop.shape[1]]), np.ones([self.samples.shape[0], self.dimension])
+        p1, p2 = np.ones([pop.shape[0], pop.shape[1]]), np.ones([pop.shape[0], pop.shape[1]])
         for j in range(self.dimension):
             p1[:, j] = self.dist_object[j].pdf(np.atleast_2d(pop[:, j]).T)
-            p2[:, j] = self.dist_object[j].pdf(np.atleast_2d(self.samples[:, j]).T)
 
         p1 = p1.prod(1).reshape(u.size, 1)
-        max_p = max(p2.prod(1))
         u_ = u * ((max_p - p1) / max_p)
         rows = u_[:, 0].argsort()[:self.n_add]
 
-        if min(u[:, 0]) >= parameters['u_stop']:
+        if min(u[:, 0]) >= 2:
             self.indicator = True
 
-        return pop[rows, :], min(u[:, 0]), self.indicator
+        return pop[rows, :], self.indicator
 
-    def eff(self, surr, pop, parameters):
+    def eff(self, surr, pop):
         """
-        Learns new samples based on Expected Feasibilty Function (EFF) as learning function, see ([1]_) for detailed
-        explanation..
+        Expected Feasibility Function (EFF) for reliability analysis, see [6]_ for a detailed explanation.
 
-        **References:**
-
-        .. [1] B.J. Bichon, M.S. Eldred, L.P.Swiler, S. Mahadevan, J.M. McFarland, "Efficient Global Reliability Analysis
-           for Nonlinear Implicit Performance Functions", AIAA JOURNAL, Volume 46, 2008.
 
         **Inputs:**
 
         * **surr** (`class` object):
-            A surrogate model, this object have predict method as defined in `krig_object` parameter.
+            A Kriging surrogate model, this object must have a ``predict`` method as defined in `krig_object` parameter.
 
-        * **pop** (`numpy array`):
-            An array of samples in learning set.
+        * **pop** (`ndarray`):
+            An array of samples defining the learning set at which points the EFF is evaluated
+
+        * **n_add** (`int`):
+            Number of samples to be added per iteration.
+
+            Default: 1.
+
+        * **parameters** (`dictionary`)
+            Dictionary containing all necessary parameters and the stopping criterion for the learning function. Here
+            these include `a`, `epsilon`, and `eff_stop`.
 
         **Output/Returns:**
 
-        * **new_samples** (`numpy array`):
-            An array of samples selected by learning criteria.
+        * **new_samples** (`ndarray`):
+            Samples selected for model evaluation.
 
         * **indicator** (`boolean`):
-            Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.
+            Indicator for stopping criteria.
+
+            `indicator = True` specifies that the stopping criterion has been met and the AKMCS.run method stops.
+
+        * **eff_lf** (`ndarray`)
+            EFF learning function evaluated at the new sample points.
 
         """
         g, sig = surr(pop, True)
@@ -2304,8 +2331,8 @@ class AKMCS:
         g = g.reshape([pop.shape[0], 1])
         sig = sig.reshape([pop.shape[0], 1])
         # Reliability threshold: a_ = 0
-        # EGRA method: epshilon = 2*sigma(x)
-        a_, ep = parameters['eff_a'], parameters['eff_epsilon']*sig
+        # EGRA method: epsilon = 2*sigma(x)
+        a_, ep = self.kwargs['a'], self.kwargs['epsilon']*sig
         t1 = (a_ - g) / sig
         t2 = (a_ - ep - g) / sig
         t3 = (a_ + ep - g) / sig
@@ -2314,37 +2341,47 @@ class AKMCS:
         eff += ep * (stats.norm.cdf(t3) - stats.norm.cdf(t2))
         rows = eff[:, 0].argsort()[-self.n_add:]
 
-        if max(eff[:, 0]) <= parameters['eff_stop']:
+        if max(eff[:, 0]) <= 0.001:
             self.indicator = True
 
-        return pop[rows, :], max(eff[:, 0]), self.indicator
+        return pop[rows, :], self.indicator
 
-    def eif(self, surr, pop, parameters):
+    def eif(self, surr, pop):
         """
-        Learns new samples based on Expected Improvement Function (EIF) as learning function, see ([1]_) for detailed
-        explanation..
+        Expected Improvement Function (EIF) for Efficient Global Optimization (EFO). See [4]_ for a detailed
+        explanation.
 
-        **References:**
-
-        .. [1] D.R. Jones, M. Schonlau, W.J. Welch, "Efficient Global Optimization of Expensive Black-Box Functions",
-           Journal of Global Optimization, Pages 455–492, 1998.
 
         **Inputs:**
 
         * **surr** (`class` object):
-            A surrogate model, this object have predict method as defined in `krig_object` parameter.
+            A Kriging surrogate model, this object must have a ``predict`` method as defined in `krig_object` parameter.
 
-        * **pop** (`numpy array`):
-            An array of samples in learning set.
+        * **pop** (`ndarray`):
+            An array of samples defining the learning set at which points the EIF is evaluated
+
+        * **n_add** (`int`):
+            Number of samples to be added per iteration.
+
+            Default: 1.
+
+        * **parameters** (`dictionary`)
+            Dictionary containing all necessary parameters and the stopping criterion for the learning function. Here
+            this includes the parameter `eif_stop`.
+
 
         **Output/Returns:**
 
-        * **new_samples** (`numpy array`):
-            An array of samples selected by learning criteria.
+        * **new_samples** (`ndarray`):
+            Samples selected for model evaluation.
 
         * **indicator** (`boolean`):
-            Indicator for stopping criteria. If it is true, AKMCS.run method stops generating new samples.
+            Indicator for stopping criteria.
 
+            `indicator = True` specifies that the stopping criterion has been met and the AKMCS.run method stops.
+
+        * **eif_lf** (`ndarray`)
+            EIF learning function evaluated at the new sample points.
         """
         g, sig = surr(pop, True)
 
@@ -2352,15 +2389,11 @@ class AKMCS:
         g = g.reshape([pop.shape[0], 1])
         sig = sig.reshape([pop.shape[0], 1])
 
-        fm = min(self.values)
+        fm = min(self.qoi)
         u = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf((fm - g) / sig)
         rows = u[:, 0].argsort()[(np.size(g) - self.n_add):]
 
-        error = max(u[:, 0])/abs(fm)
-        if error <= parameters['eif_stop']:
-            self.indicator = True
-
-        return pop[rows, :], error, self.indicator
+        return pop[rows, :], False
 
 ########################################################################################################################
 ########################################################################################################################

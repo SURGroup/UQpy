@@ -365,43 +365,40 @@ class SROM:
 
 class Kriging:
     """
-    Kriging generates an approximate surrogate model to predict the function value at unknown/new samples, see ([2]_)
-    for detailed explanation.
+    Kriging generates an Gaussian process regression-based surrogate model to predict the model output at new sample
+    points.
 
     **Inputs:**
 
     * **reg_model** (`str` or `function`):
-            Regression model contains the basis function, which defines the trend of the model.
-            Options:
-                    1. Constant \n
-                    2. Linear \n
-                    3. Quadratic \n
+        `reg_model` specifies and evaluates the basis functions and their coefficients, which defines the trend of
+        the model.
+
+        Built-in options (string input): 'Constant', 'Linear', 'Quadratic'
+
+        The user may also pass a callable function as defined in `User-Defined Regression Model` above.
 
     * **corr_model** (`str` or `function`):
-            Correlation model contains the correlation function, which uses sample distance to define similarity between
-            samples.
-            Options:
-                    1. Exponential \n
-                    2. Gaussian \n
-                    3. Linear \n
-                    4. Spherical \n
-                    5. Cubic \n
-                    6. Spline \n
+        `corr_model` specifies and evaluates the correlation function.
+
+        Built-in options (string input): 'Exponential', 'Gaussian', 'Linear', 'Spherical', 'Cubic', 'Spline'
+
+        The user may also pass a callable function as defined in `User-Defined Correlation` above.
 
     * **corr_model_params** (`ndarray` or `list of floats`):
-            List of array of initial value of hyperparameters/scale parameters.
+        List or array of initial values for the correlation model hyperparameters/scale parameters.
 
     * **bounds** (`list` of `float`):
-            Bounds for hyperparameters used to solve optimization problem to estimate maximum likelihood estimator.
-            This should be a closed bound.
+        Bounds on the hyperparameters used to solve optimization problem to estimate maximum likelihood estimator.
+        This should be a closed bound.
 
-            Default: [0.001, 10**7] for each hyperparamter.
+        Default: [0.001, 10**7] for each hyperparamter.
 
     * **op** (`boolean`):
-            Indicator to solve MLE problem or not. If 'True' corr_model_params will be used as initial solution for
-            optimization problem. Otherwise, corr_model_params will be directly use as hyperparamter.
+        Indicator to solve MLE problem or not. If 'True' corr_model_params will be used as initial solution for
+        optimization problem. Otherwise, corr_model_params will be directly use as the hyperparamters.
 
-            Default: True.
+        Default: True.
 
     * **nopt** (`int`):
             Number of times optimization problem is to be solved with a random starting point.
@@ -500,11 +497,12 @@ class Kriging:
 
     def fit(self, samples, values, nopt=None, corr_model_params=None):
         """
-        This method fit the surrogate model using the samples and values parameter.
+        Fit the surrogate model using the training samples and the corresponding model values.
 
-        User can run this method multiple time after initiating the ``Kriging`` class object. This method update the
-        samples and values parameter of ``Kriging`` object. This method uses `corr_model_params` from previous run as
-        the starting point for MLE problem unless user provides a new starting point.
+        The user can run this method multiple time after initiating the ``Kriging`` class object.
+
+        This method updates the samples and parameters of the ``Kriging`` object. This method uses `corr_model_params`
+        from previous run as the starting point for MLE problem unless user provides a new starting point.
 
         **Inputs:**
 
@@ -654,15 +652,15 @@ class Kriging:
 
     def predict(self, x, return_std=False):
         """
-        Predict the function value at new points
+        Predict the model response at new points.
 
-        This method evaluates the regression and correlation model at new sample point. Then, it predicts the function
-        value and mean square error using regression coefficients and training data.
+        This method evaluates the regression and correlation model at new sample points. Then, it predicts the function
+        value and standard deviation.
 
         **Inputs:**
 
         * **x** (`list` or `numpy array`):
-                nD-array (2 dimensional) corresponding to the new points.
+                Points at which to predict the model response.
 
         * **return_std** (`list` or `numpy array`):
                 Indicator to estimate standard deviation.
@@ -670,10 +668,10 @@ class Kriging:
         **Outputs:**
 
         * **f_x** (`numpy array`):
-                A 1-D/2-D array of predicted value at the new points.
+                Predicted values at the new points.
 
         * **std_f_x (`numpy array`):
-                A 1-D/2-D array of standard deviation of predicted value at the new points.
+                Standard deviation of predicted values at the new points.
 
         """
         x = np.atleast_2d(x)
@@ -706,20 +704,20 @@ class Kriging:
 
     def jacobian(self, x):
         """
-        Predict the gradient of the function at new points
+        Predict the gradient of the model at new points.
 
         This method evaluates the regression and correlation model at new sample point. Then, it predicts the gradient
-        using regression coefficients and training data.
+        using the regression coefficients and the training data.
 
         **Input:**
 
         * **x** (`list` or `numpy array`):
-                nD-array (2 dimensional) corresponding to the new points.
+                Points at which to evaluate the gradient.
 
         **Output:**
 
         * **grad_x** (`list` or `numpy array`):
-                nD-array (1/2 dimensional) of gradient of surrogate model evaluated at the new points.
+                Gradient of the surrogate model evaluated at the new points.
 
         """
         x = np.atleast_2d(x)
@@ -988,155 +986,3 @@ class Kriging:
                     return rx, drdx
                 return rx
         return c
-
-        # def c(x, s, params, dt=False, dx=False):
-        #     rx, drdt, drdx = [0.], [0.], [0.]
-        #     x, s = np.atleast_2d(x), np.atleast_2d(s)
-        #     # Create stack matrix, where each block is x_i with all s
-        #     stack = np.tile(np.swapaxes(np.atleast_3d(x), 1, 2), (1, np.size(s, 0), 1)) - np.tile(s, (
-        #         np.size(x, 0),
-        #         1, 1))
-        #     if model == 'Gaussian':
-        #         rx = np.exp(np.sum(-params * abs(stack), axis=2))
-        #         if dt:
-        #             drdt = - abs(stack) * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
-        #         if dx:
-        #             drdx = - params * np.sign(stack) * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
-        #
-        #     elif model == 'Gaussian':
-        #         rx = np.exp(np.sum(-params * (stack ** 2), axis=2))
-        #         if dt:
-        #             drdt = -(stack ** 2) * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
-        #         if dx:
-        #             drdx = - 2 * params * stack * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
-        #     elif model == 'Linear':
-        #         # Taking stack and turning each d value into 1-theta*dij
-        #         after_parameters = 1 - params * abs(stack)
-        #         # Define matrix of zeros to compare against (not necessary to be defined separately,
-        #         # but the line is bulky if this isn't defined first, and it is used more than once)
-        #         comp_zero = np.zeros((np.size(x, 0), np.size(s, 0), np.size(s, 1)))
-        #         # Compute matrix of max{0,1-theta*d}
-        #         max_matrix = np.maximum(after_parameters, comp_zero)
-        #         rx = np.prod(max_matrix, 2)
-        #         # Create matrix that has 1s where max_matrix is nonzero
-        #         # -Essentially, this acts as a way to store the indices of where the values are nonzero
-        #         ones_and_zeros = max_matrix.astype(bool).astype(int)
-        #         # Set initial derivatives as if all were positive
-        #         first_dtheta = -abs(stack)
-        #         first_dx = np.negative(params) * np.sign(stack)
-        #         # Multiply derivs by ones_and_zeros...this will set the values where the
-        #         # derivative should be zero to zero, and keep all other values the same
-        #         drdt = np.multiply(first_dtheta, ones_and_zeros)
-        #         drdx = np.multiply(first_dx, ones_and_zeros)
-        #         # Loop over parameters, shifting max_matrix and multiplying over derivative
-        #         # matrix with each iteration
-        #         for i in range(len(params) - 1):
-        #             drdt = drdt * np.roll(max_matrix, i + 1, axis=2)
-        #             drdx = drdx * np.roll(max_matrix, i + 1, axis=2)
-        #     elif model == 'Spherical':
-        #         # Taking stack and creating array of all thetaj*dij
-        #         after_parameters = params * abs(stack)
-        #         # Create matrix of all ones to compare
-        #         comp_ones = np.ones((np.size(x, 0), np.size(s, 0), np.size(s, 1)))
-        #         # zeta_matrix has all values min{1,theta*dij}
-        #         zeta_matrix = np.minimum(after_parameters, comp_ones)
-        #         # Copy zeta_matrix to another matrix that will used to find where derivative should be zero
-        #         indices = zeta_matrix.copy()
-        #         # If value of min{1,theta*dij} is 1, the derivative should be 0.
-        #         # So, replace all values of 1 with 0, then perform the .astype(bool).astype(int)
-        #         # operation like in the linear example, so you end up with an array of 1's where
-        #         # the derivative should be caluclated and 0 where it should be zero
-        #         indices[indices == 1] = 0
-        #         # Create matrix of all |dij| (where non zero) to be used in calculation of dR/dtheta
-        #         dtheta_derivs = indices.astype(bool).astype(int) * abs(stack)
-        #         # Same as above, but for matrix of all thetaj where non-zero
-        #         dx_derivs = indices.astype(bool).astype(int) * params * np.sign(stack)
-        #         # Initial matrices containing derivates for all values in array. Note since
-        #         # dtheta_s and dx_s already accounted for where derivative should be zero, all
-        #         # that must be done is multiplying the |dij| or thetaj matrix on top of a
-        #         # matrix of derivates w.r.t zeta (in this case, dzeta = -1.5+1.5zeta**2)
-        #         drdt = (-1.5 + 1.5 * zeta_matrix ** 2) * dtheta_derivs
-        #         drdx = (-1.5 + 1.5 * zeta_matrix ** 2) * dx_derivs
-        #         # Also, create matrix for values of equation, 1 - 1.5zeta + 0.5zeta**3, for loop
-        #         zeta_function = 1 - 1.5 * zeta_matrix + 0.5 * zeta_matrix ** 3
-        #         rx = np.prod(zeta_function, 2)
-        #         # Same as previous example, loop over zeta matrix by shifting index
-        #         for i in range(len(params) - 1):
-        #             drdt = drdt * np.roll(zeta_function, i + 1, axis=2)
-        #             drdx = drdx * np.roll(zeta_function, i + 1, axis=2)
-        #     elif model == 'Cubic':
-        #         # Taking stack and creating array of all thetaj*dij
-        #         after_parameters = params * abs(stack)
-        #         # Create matrix of all ones to compare
-        #         comp_ones = np.ones((np.size(x, 0), np.size(s, 0), np.size(s, 1)))
-        #         # zeta_matrix has all values min{1,theta*dij}
-        #         zeta_matrix = np.minimum(after_parameters, comp_ones)
-        #         # Copy zeta_matrix to another matrix that will used to find where derivative should be zero
-        #         indices = zeta_matrix.copy()
-        #         # If value of min{1,theta*dij} is 1, the derivative should be 0.
-        #         # So, replace all values of 1 with 0, then perform the .astype(bool).astype(int)
-        #         # operation like in the linear example, so you end up with an array of 1's where
-        #         # the derivative should be caluclated and 0 where it should be zero
-        #         indices[indices == 1] = 0
-        #         # Create matrix of all |dij| (where non zero) to be used in calculation of dR/dtheta
-        #         dtheta_derivs = indices.astype(bool).astype(int) * abs(stack)
-        #         # Same as above, but for matrix of all thetaj where non-zero
-        #         dx_derivs = indices.astype(bool).astype(int) * params * np.sign(stack)
-        #         # Initial matrices containing derivates for all values in array. Note since
-        #         # dtheta_s and dx_s already accounted for where derivative should be zero, all
-        #         # that must be done is multiplying the |dij| or thetaj matrix on top of a
-        #         # matrix of derivates w.r.t zeta (in this case, dzeta = -6zeta+6zeta**2)
-        #         drdt = (-6 * zeta_matrix + 6 * zeta_matrix ** 2) * dtheta_derivs
-        #         drdx = (-6 * zeta_matrix + 6 * zeta_matrix ** 2) * dx_derivs
-        #         # Also, create matrix for values of equation, 1 - 3zeta**2 + 2zeta**3, for loop
-        #         zeta_function = 1 - 3 * zeta_matrix ** 2 + 2 * zeta_matrix ** 3
-        #         rx = np.prod(zeta_function, 2)
-        #         # Same as previous example, loop over zeta matrix by shifting index
-        #         for i in range(len(params) - 1):
-        #             drdt = drdt * np.roll(zeta_function, i + 1, axis=2)
-        #             drdx = drdx * np.roll(zeta_function, i + 1, axis=2)
-        #     elif model == 'Spline':
-        #         # In this case, the zeta value is just abs(stack)*parameters, no comparison
-        #         zeta_matrix = abs(stack) * params
-        #         # So, dtheta and dx are just |dj| and theta*sgn(dj), respectively
-        #         dtheta_derivs = abs(stack)
-        #         # dx_derivs = np.ones((np.size(x,0),np.size(s,0),np.size(s,1)))*parameters
-        #         dx_derivs = np.sign(stack) * params
-        #
-        #         # Initialize empty sigma and dsigma matrices
-        #         sigma = np.ones((zeta_matrix.shape[0], zeta_matrix.shape[1], zeta_matrix.shape[2]))
-        #         dsigma = np.ones((zeta_matrix.shape[0], zeta_matrix.shape[1], zeta_matrix.shape[2]))
-        #
-        #         # Loop over cases to create zeta_matrix and subsequent dR matrices
-        #         for i in range(zeta_matrix.shape[0]):
-        #             for j in range(zeta_matrix.shape[1]):
-        #                 for k in range(zeta_matrix.shape[2]):
-        #                     y = zeta_matrix[i, j, k]
-        #                     if 0 <= y <= 0.2:
-        #                         sigma[i, j, k] = 1 - 15 * y ** 2 + 30 * y ** 3
-        #                         dsigma[i, j, k] = -30 * y + 90 * y ** 2
-        #                     elif 0.2 < y < 1.0:
-        #                         sigma[i, j, k] = 1.25 * (1 - y) ** 3
-        #                         dsigma[i, j, k] = 3.75 * (1 - y) ** 2 * -1
-        #                     elif y >= 1:
-        #                         sigma[i, j, k] = 0
-        #                         dsigma[i, j, k] = 0
-        #
-        #         rx = np.prod(sigma, 2)
-        #
-        #         # Initialize derivative matrices incorporating chain rule
-        #         drdt = dsigma * dtheta_derivs
-        #         drdx = dsigma * dx_derivs
-        #
-        #         # Loop over to create proper matrices
-        #         for i in range(len(params) - 1):
-        #             drdt = drdt * np.roll(sigma, i + 1, axis=2)
-        #             drdx = drdx * np.roll(sigma, i + 1, axis=2)
-        #
-        #     if dt:
-        #         return rx, drdt
-        #     if dx:
-        #         return rx, drdx
-        #     return rx
-        #
-        # return c
