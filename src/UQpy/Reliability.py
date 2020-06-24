@@ -927,12 +927,12 @@ class FORM(TaylorSeries):
                     seed_z = Correlate(seed.reshape(1, -1), self.nataf_object.corr_z).samples_z
                     self.nataf_object.run(samples_z=seed_z.reshape(1, -1), jacobian=True)
                     x = self.nataf_object.samples_x
-                    self.jzx = self.nataf_object.Jxz
+                    self.jzx = self.nataf_object.jxz
             else:
                 z = Correlate(u[k, :].reshape(1, -1), self.nataf_object.corr_z).samples_z
                 self.nataf_object.run(samples_z=z, jacobian=True)
                 x = self.nataf_object.samples_x
-                self.jzx = self.nataf_object.Jxz
+                self.jzx = self.nataf_object.jxz
 
             self.x = x
             u_record.append(u)
