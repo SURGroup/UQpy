@@ -189,18 +189,18 @@ User-Defined Learning Functions
 The ``AKMCS`` class also allows new, user-defined learning functions to be specified in a straightforward way. This is done by creating a new method that contains the algorithm for selecting a new samples. This method takes as input the surrogate model, the randomly generated learning points, the number of points to be added in each iteration, any requisite parameters including a stopping criterion, existing samples, model evaluate at samples and distribution object. It returns a set of samples that are selected according to the user's desired learning function and the corresponding learning function values. The outputs of this function should be (1) a numpy array of samples to be added; (2) the learning function values at the new sample points, and (3) a boolean stopping criterion indicating whether the iterations should continue (`False`) or stop (`True`). The numpy array of samples should be a two-dimensional array with the first dimension being the number of samples and the second dimension being the number of variables. An example user-defined learning function is given below:
 
 
->>> def u_function(surr, pop, n_add, parameters):
+>>> def u_function(surr, pop, n_add, parameters, samples, qoi, dist_object):
 >>> 	g, sig = surr(pop, True)
 >>> 	g = g.reshape([pop.shape[0], 1])
 >>> 	sig = sig.reshape([pop.shape[0], 1])
 >>> 	u = abs(g) / sig
 >>>     rows = u[:, 0].argsort()[:n_add]
+>>> 	new_samples = pop[rows, :]
 >>>     u_lf = u[rows, 0]
 >>>     indicator = False
->>> 	u_stop = parameters['u_stop']
->>>     if min(u[:, 0]) >= u_stop:
+>>>     if min(u[:, 0]) >= parameters['u_stop']:
 >>>         indicator = True
->>> 	return pop[rows, :], u_lf, indicator
+>>> 	return new_samples, u_lf, indicator
 
 Class Descriptions
 ^^^^^^^^^^^^^^^^^^^
