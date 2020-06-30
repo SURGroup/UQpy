@@ -642,7 +642,7 @@ class LHS:
 #                                         Stratified Sampling  (STS)
 ########################################################################################################################
 
-class STS:
+class STS_old:
     """
     Generate samples from an assigned probability density function using Stratified Sampling [9]_.
 
@@ -857,7 +857,7 @@ class STS:
 ########################################################################################################################
 
 
-class Strata:
+class Strata_old:
     """
     Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^n with N strata.
 
@@ -951,6 +951,107 @@ class Strata:
         self.weights = np.prod(self.widths, axis=1)
 
     @staticmethod
+    def fullfact_old(levels):
+
+        """
+        Create a full-factorial design
+
+        Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
+        Copyright (C) 2012 - 2013 - Michael Baudin
+        Copyright (C) 2012 - Maria Christopoulou
+        Copyright (C) 2010 - 2011 - INRIA - Michael Baudin
+        Copyright (C) 2009 - Yann Collette
+        Copyright (C) 2009 - CEA - Jean-Marc Martinez
+        Original source code can be found at:
+        https://pythonhosted.org/pyDOE/#
+        or
+        https://pypi.org/project/pyDOE/
+        or
+        https://github.com/tisimst/pyDOE/
+
+        **Input:**
+
+        * **levels** (`list`):
+                A list of integers that indicate the number of levels of each input design factor.
+
+        **Output:**
+
+        * **ff** (`ndarray`):
+                Full-factorial design matrix.
+        """
+        # Number of factors
+        n_factors = len(levels)
+        # Number of combinations
+        n_comb = np.prod(levels)
+        ff = np.zeros((n_comb, n_factors))
+
+        level_repeat = 1
+        range_repeat = np.prod(levels)
+        for i in range(n_factors):
+            range_repeat //= levels[i]
+            lvl = []
+            for j in range(levels[i]):
+                lvl += [j] * level_repeat
+            rng = lvl * range_repeat
+            level_repeat *= levels[i]
+            ff[:, i] = rng
+
+        return ff
+
+
+class Strata:
+    def __init__(self, random_state=None):
+        self.volume = None
+
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
+
+class RectangularStrata(Strata):
+    def __init__(self, nstrata=None, input_file=None, seeds=None, widths=None, random_state=None, verbose=False):
+        super().__init__(random_state)
+        self.input_file = input_file
+        self.nstrata = nstrata
+        self.seeds = seeds
+        self.widths = widths
+        self.random_state = random_state
+        self.verbose = verbose
+
+        self.stratified()
+
+    def stratified(self):
+        # Read a stratified design from an input file.
+        if self.nstrata is None:
+            if self.input_file is None:
+                if self.widths is None or self.seeds is None:
+                    sys.exit('Error: The strata are not fully defined. Must provide [n_strata], '
+                             'input file, or [seeds] and [widths].')
+
+            else:
+                # Read the strata from the specified input file
+                # See documentation for input file formatting
+                array_tmp = np.loadtxt(self.input_file)
+                self.seeds = array_tmp[:, 0:array_tmp.shape[1] // 2]
+                self.widths = array_tmp[:, array_tmp.shape[1] // 2:]
+
+                # Check to see that the strata are space-filling
+                space_fill = np.sum(np.prod(self.widths, 1))
+                if 1 - space_fill > 1e-5:
+                    sys.exit('Error: The stratum design is not space-filling.')
+                if 1 - space_fill < -1e-5:
+                    sys.exit('Error: The stratum design is over-filling.')
+
+        # Define a rectilinear stratification by specifying the number of strata in each dimension via nstrata
+        else:
+            self.seeds = np.divide(self.fullfact(self.nstrata), self.nstrata)
+            self.widths = np.divide(np.ones(self.seeds.shape), self.nstrata)
+
+        self.volume = np.prod(self.widths, axis=1)
+
+    @staticmethod
     def fullfact(levels):
 
         """
@@ -998,6 +1099,759 @@ class Strata:
 
         return ff
 
+class VoronoiStrata(Strata):
+    def __init__(self, seeds=None, nseeds=None, dimension=None, niters=1, random_state=None, verbose=False):
+        super().__init__(random_state)
+        self.seeds = seeds
+        self.nseeds = nseeds
+        self.dimension = dimension
+        self.niters = niters
+        self.random_state = random_state
+        self.verbose = verbose
+
+        self.voronoi = None
+        self.vertices = []
+        self.centroids = []
+
+        if self.seeds is not None:
+            if self.nseeds is not None or self.dimension is not None:
+                print("UQpy: Ignoring 'nseeds' and 'dimension' attributes because 'seeds' are provided")
+            self.dimension = self.seeds.shape[1]
+
+        self.stratified()
+
+    def stratified(self):
+
+        initial_seeds = self.seeds
+        if self.seeds is None:
+            initial_seeds = stats.uniform.rvs(size=[self.nseeds, self.dimension], random_state=self.random_state)
+
+        for i in range(self.niters):
+            self.voronoi = self.voronoi_unit_hypercube(initial_seeds)
+            self.voronoi.bounded_regions: list = self.voronoi.bounded_regions
+            self.voronoi.vertices: list = self.voronoi.vertices
+            self.voronoi.bounded_points: np.ndarray = self.voronoi.bounded_points
+
+            cent, vol = [], []
+            for region in self.voronoi.bounded_regions:
+                vertices = self.voronoi.vertices[region + [region[0]], :]
+                centroid, volume = self.compute_voronoi_centroid_volume(vertices)
+                self.vertices.append(vertices)
+                cent.append(centroid[0, :])
+                vol.append(volume)
+
+            initial_seeds = np.asarray(cent)
+            self.volume = np.asarray(vol)
+
+        self.seeds = self.voronoi.bounded_points
+
+    @staticmethod
+    def voronoi_unit_hypercube(samples):
+        """
+        This function mirror the samples in both low and high directions for each dimension and estimate the voronoi
+        regions for each sample.
+
+        **Inputs:**
+
+        * **samples** (`ndarray`):
+            Coordinates of points to construct a convex hull from ``samples.shape=(1, dimension)
+
+        **Output/Returns:**
+
+        * **vor** (`scipy.spatial.Voronoi` object):
+            Voronoi diagram in N dimension.
+        """
+
+        from scipy.spatial import Voronoi
+
+        # Mirror the samples in both low and high directions for each dimension
+        samples_center = samples
+        dimension = samples.shape[1]
+        for i in range(dimension):
+            samples_del = np.delete(samples_center, i, 1)
+            if i == 0:
+                points_temp1 = np.hstack([np.atleast_2d(-samples_center[:, i]).T, samples_del])
+                points_temp2 = np.hstack([np.atleast_2d(2 - samples_center[:, i]).T, samples_del])
+            elif i == dimension - 1:
+                points_temp1 = np.hstack([samples_del, np.atleast_2d(-samples_center[:, i]).T])
+                points_temp2 = np.hstack([samples_del, np.atleast_2d(2 - samples_center[:, i]).T])
+            else:
+                points_temp1 = np.hstack(
+                    [samples_del[:, :i], np.atleast_2d(-samples_center[:, i]).T, samples_del[:, i:]])
+                points_temp2 = np.hstack(
+                    [samples_del[:, :i], np.atleast_2d(2 - samples_center[:, i]).T, samples_del[:, i:]])
+            samples = np.append(samples, points_temp1, axis=0)
+            samples = np.append(samples, points_temp2, axis=0)
+
+        vor = Voronoi(samples, incremental=True)
+        vor.regions: list = vor.regions
+        vor.point_region: list = vor.point_region
+
+        regions = [None] * samples_center.shape[0]
+
+        for i in range(samples_center.shape[0]):
+            regions[i] = vor.regions[vor.point_region[i]]
+
+        vor.bounded_points= samples_center
+        vor.bounded_regions= regions
+
+        return vor
+
+    @staticmethod
+    def compute_voronoi_centroid_volume(vertices):
+        """
+        This function computes the centroid and volume of voronoi cells created using vertices.
+
+        **Inputs:**
+
+        * **vertices** (`ndarray`):
+            Coordinates of points to construct a voronoi diagram.
+
+        **Output/Returns:**
+
+        * **centroid** (`numpy.ndarray`):
+            Centroid of Voronoi cells.
+
+        * **volume** (`numpy.ndarray`):
+            Volume of Voronoi cells.
+        """
+
+        from scipy.spatial import Delaunay, ConvexHull
+
+        tess = Delaunay(vertices)
+        tess.nsimplex: int = tess.nsimplex
+        tess.simplices: np.ndarray = tess.simplices
+        dimension = np.shape(vertices)[1]
+
+        w = np.zeros((tess.nsimplex, 1))
+        cent = np.zeros((tess.nsimplex, dimension))
+        for i in range(tess.nsimplex):
+            ch = ConvexHull(tess.points[tess.simplices[i]])
+            ch.volume: float = ch.volume
+            w[i] = ch.volume
+            cent[i, :] = np.mean(tess.points[tess.simplices[i]], axis=0)
+
+        volume = np.sum(w)
+        centroid = np.matmul(np.divide(w, volume).T, cent)
+
+        return centroid, volume
+
+class DelaunayStrata(Strata):
+    def __init__(self, seeds=None, nseeds=None, dimension=None, random_state=None, verbose=False):
+        super().__init__(random_state)
+        self.seeds = seeds
+        self.nseeds = nseeds
+        self.dimension = dimension
+        self.random_state = random_state
+        self.verbose = verbose
+
+        self.delaunay = None
+        self.centroids = []
+
+        if self.seeds is not None:
+            if self.nseeds is not None or self.dimension is not None:
+                print("UQpy: Ignoring 'nseeds' and 'dimension' attributes because 'seeds' are provided")
+            self.nseeds, self.dimension =  self.seeds.shape[0], self.seeds.shape[1]
+
+        self.stratified()
+
+    def stratified(self):
+        import itertools
+        from scipy.spatial import Delaunay
+
+        initial_seeds = self.seeds
+        if self.seeds is None:
+            initial_seeds = stats.uniform.rvs(size=[self.nseeds, self.dimension], random_state=self.random_state)
+
+        # Modify seeds to include corner points of (0,1) space
+        corners = list(itertools.product(*zip([0]*self.dimension,[1]*self.dimension)))
+        initial_seeds = np.vstack([initial_seeds, corners])
+        initial_seeds = np.unique([tuple(row) for row in initial_seeds], axis=0)
+
+        self.delaunay = Delaunay(initial_seeds)
+        self.delaunay.simplices: np.ndarray = self.delaunay.simplices
+        self.centroids = np.zeros([self.nseeds, self.dimension])
+        self.volume = np.zeros([self.nseeds, 1])
+        count = 0
+        for sim in self.delaunay.simplices:  # extract simplices from Delaunay triangulation
+            self.centroids[count, :], self.volume[count, :] = self.compute_delaunay_centroid_volume(
+                self.delaunay.points[sim])
+            count = count + 1
+
+    @staticmethod
+    def compute_delaunay_centroid_volume(vertices):
+        """
+        This function computes the centroid and volume of Delaunay triangulation created using vertices.
+
+        **Inputs:**
+
+        * **vertices** (`ndarray`):
+            Coordinates of points to construct a Convex Hull.
+
+        **Output/Returns:**
+
+        * **centroid** (`numpy.ndarray`):
+            Centroid of Voronoi cells.
+
+        * **volume** (`numpy.ndarray`):
+            Volume of Voronoi cells.
+        """
+
+        from scipy.spatial import ConvexHull
+
+        ch = ConvexHull(vertices)
+        volume = ch.volume
+        ch.volume: float = ch.volume
+        centroid = np.mean(vertices, axis=0)
+
+        return centroid, volume
+
+class STS:
+    """
+    Generate samples from an assigned probability density function using Stratified Sampling ([1]_).
+
+    **References:**
+
+    .. [1] M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte
+       Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
+
+    **Inputs:**
+
+    * **dist_object** ((list of) ``Distribution`` object(s)):
+            List of ``Distribution`` objects corresponding to each random variable.
+
+    * **input_file** (`str`):
+            File path to input file specifying stratum origins and stratum widths.
+
+    * **samplesU01** (`ndarray`):
+            `ndarray` containing the generated samples on [0, 1]^dimension.
+
+    * **strata** (`class` object):
+            Instance of the class SampleMethods.Strata.
+
+    * **random_state** (None or `int` or `np.random.RandomState` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
+
+    * **verbose** (`Boolean`):
+            A boolean declaring whether to write text to the terminal.
+
+            Default value: False
+
+    **Attributes:**
+
+    * **samples** (`ndarray`):
+            `ndarray` containing the generated samples.
+
+    **Methods:**
+    """
+    def __init__(self, dist_object, random_state=None, verbose=False):
+
+        self.verbose = verbose
+        self.weights = None
+        self.samplesU01, self.samples = None, None
+
+        # Check if a Distribution object is provided.
+        from UQpy.Distributions import DistributionContinuous1D, JointInd
+
+        if isinstance(dist_object, list):
+            self.dimension = len(dist_object)
+            for i in range(len(dist_object)):
+                if not isinstance(dist_object[i], DistributionContinuous1D):
+                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
+        else:
+            self.dimension = 1
+            if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
+                raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
+
+        self.dist_object = dist_object
+
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
+    def transform_samples(self, samples01):
+        """
+        Transform samples in [0, 1] domain  using inverse CDF.
+
+        **Inputs:**
+
+        * **samples01** (`np.ndarray`):
+            `ndarray` containing the generated samples on [0, 1]^dimension.
+
+        **Outputs:**
+
+        * **samples** (`ndarray`):
+            `ndarray` containing the generated samples.
+
+        """
+
+        samples_u_to_x = np.zeros_like(samples01)
+        for j in range(0, samples01.shape[1]):
+            samples_u_to_x[:, j] = self.dist_object[j].icdf(samples01[:, j])
+
+        self.samples = samples_u_to_x
+
+    def run(self, nsamples_per_stratum=None, nsamples=None):
+        # Check inputs of run methods
+        self.run_checks_p(nsamples_per_stratum, nsamples)
+
+        # Call "create_sampleu01" method and generate samples in  [0, 1] space
+        self.samplesU01 = self.create_samplesu01_p()
+
+        # Call "create_sample" method of parent class and compute inverse cdf of samplesU01
+        self.transform_samples(self.samplesU01)
+
+    # Creating dummy methods to remove pycharm warnings. These methods are overwritten in child classes.
+    def run_checks_p(self, nsamples_per_stratum, nsamples):
+        return self.verbose, nsamples_per_stratum, nsamples
+
+    def create_samplesu01_p(self):
+        if self.verbose: self.verbose = True
+        return np.array([[1]])
+
+
+class RectangularSTS(STS):
+    """
+    Executes Stratified Sampling using Rectangular Stratification.
+
+    **Inputs:**
+
+
+    * **dist_object** ((list of) ``Distribution`` object(s)):
+            List of ``Distribution`` objects corresponding to each random variable.
+
+    * **strata_object** (``RectangularStrata`` object):
+            A ``RectangularStrata`` object which contains the information related to stratification in [0, 1]^dimension
+            domain.
+
+    * **nsamples_per_stratum** (`list`):
+            List of integers specifiying the number of samples in each stratum.
+
+    * **nsamples** (`int`):
+            Total number of samples. This indicates RectangularSTS class to generate proportional sampling.
+
+    * **sts_criterion** (`str`):
+            Random or Centered samples inside a rectangular strata.
+            Options:
+                    1. 'random' - completely random. \n
+                    2. 'centered' - points only at the centre. \n
+
+            Default: 'random'
+
+    * **random_state** (None or `int` or `np.random.RandomState` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
+
+    * **verbose** (`Boolean`):
+            A boolean declaring whether to write text to the terminal.
+
+            Default value: False
+
+
+    **Methods:**
+
+    """
+    def __init__(self, dist_object, strata_object, nsamples_per_stratum=None, nsamples=None, sts_criterion="random",
+                 verbose=False, random_state=None):
+        super().__init__(dist_object, random_state, verbose)
+        self.dist_object = dist_object
+        self.strata_object = strata_object
+        self.sts_criterion = sts_criterion
+        self.nsamples_per_stratum = nsamples_per_stratum
+        self.nsamples = nsamples
+        self.run_checks_p = self.run_checks
+        self.create_samplesu01_p = self.create_samplesu01
+
+        # Check strata_object
+        if not isinstance(self.strata_object, RectangularStrata):
+            raise NotImplementedError("UQpy: strata_object must be an object of RectangularStrata class")
+
+        self.random_state = random_state
+        if self.random_state is None:
+            self.random_state = strata_object.random_state
+
+        self.verbose = verbose
+        if self.verbose is None:
+            self.verbose = strata_object.verbose
+
+        # Check sampling criterion
+        if self.sts_criterion not in ['random', 'centered']:
+            raise NotImplementedError("UQpy: Supported sts_criteria: 'random', 'centered'")
+
+        # If nsamples_per_stratum or nsamples is provided, execute run method
+        if self.nsamples_per_stratum is not None or nsamples is not None:
+            self.run()
+
+    def run_checks(self, nsamples_per_stratum=None, nsamples=None):
+        """
+        Consistency check for input parameters of run method.
+
+        **Inputs:**
+
+
+        * **nsamples_per_stratum** (`list`):
+                List of integers specifiying the number of samples in each stratum.
+
+        * **nsamples** (`int`):
+                Total number of samples. This indicates RectangularSTS class to generate proportional sampling.
+
+        This method doesn't return anything.
+        """
+        if nsamples_per_stratum is not None:
+            self.nsamples_per_stratum = nsamples_per_stratum
+
+        if nsamples is not None:
+            self.nsamples = nsamples
+
+        if self.nsamples is not None:
+            if not isinstance(nsamples, int):
+                raise RuntimeError("UQpy: 'nsamples' must be an integer.")
+            else:
+                if isinstance(self.nsamples_per_stratum, (int, list)):
+                    print("UQpy: STS class is executing proportional sampling, thus ignoring "
+                                         "'nsamples_per_stratum'.")
+
+            if self.sts_criterion == 'centered':
+                if self.nsamples != self.strata_object.nseeds:
+                    raise ValueError("UQpy: 'nsamples' attribute is not consistent with number of seeds for 'centered' "
+                                     "sampling")
+
+        if nsamples_per_stratum is not None:
+            if self.sts_criterion == "centered":
+                self.nsamples_per_stratum = [1] * self.strata_object.widths.shape[0]
+            else:
+                if isinstance(self.nsamples_per_stratum, int):
+                    self.nsamples_per_stratum = [self.nsamples_per_stratum] * self.strata_object.widths.shape[0]
+                elif isinstance(self.nsamples_per_stratum, list):
+                    if len(self.nsamples_per_stratum) != self.strata_object.widths.shape[0]:
+                        raise ValueError("UQpy: Length of 'nsamples_per_stratum' is not correct.")
+                else:
+                    raise ValueError("UQpy: 'nsamples_per_stratum' must be an integer or a list." )
+        else:
+            self.nsamples_per_stratum = [1] * self.strata_object.widths.shape[0]
+
+    def create_samplesu01(self):
+        """
+        This method generates required number of samples in [0, 1]^ dimension domain using the stratification provided
+        to RectangularSTS class.
+
+        **Outputs:**
+
+        * **samplesU01** (`np.ndarray`):
+                 `ndarray` containing the generated samples on [0, 1]^dimension.
+
+        """
+        samples_in_strata, weights = [], []
+
+        if self.nsamples is not None:
+            self.nsamples_per_stratum = (self.strata_object.volume * self.nsamples).round()
+
+        for i in range(self.strata_object.seeds.shape[0]):
+            samples_temp = np.zeros([int(self.nsamples_per_stratum[i]), self.strata_object.seeds.shape[1]])
+            for j in range(self.strata_object.seeds.shape[1]):
+                if self.sts_criterion == "random":
+                    samples_temp[:, j] = stats.uniform.rvs(loc=self.strata_object.seeds[i, j],
+                                                           scale=self.strata_object.widths[i, j],
+                                                           random_state=self.random_state,
+                                                           size=int(self.nsamples_per_stratum[i]))
+                else:
+                    samples_temp[:, j] = self.strata_object.seeds[i, j] + self.strata_object.widths[i, j] / 2.
+                samples_in_strata.append(samples_temp)
+
+            if int(self.nsamples_per_stratum[i]) != 0:
+                weights.extend(
+                    [self.strata_object.volume[i] / self.nsamples_per_stratum[i]] * int(self.nsamples_per_stratum[i]))
+            else:
+                weights.extend([0] * int(self.nsamples_per_stratum[i]))
+
+        self.weights = np.array(weights)
+        return np.concatenate(samples_in_strata, axis=0)
+
+class VoronoiSTS(STS):
+    """
+    Executes Stratified Sampling using Voronoi Stratification.
+
+    **Inputs:**
+
+
+    * **dist_object** ((list of) ``Distribution`` object(s)):
+            List of ``Distribution`` objects corresponding to each random variable.
+
+    * **strata_object** (``RectangularStrata`` object):
+            A ``RectangularStrata`` object which contains the information related to stratification in [0, 1]^dimension
+            domain.
+
+    * **nsamples_per_stratum** (`list`):
+            List of integers specifiying the number of samples in each stratum.
+
+    * **nsamples** (`int`):
+            Total number of samples. This indicates RectangularSTS class to generate proportional sampling.
+
+    * **sts_criterion** (`str`):
+            Random or Centered samples inside a rectangular strata.
+            Options:
+                    1. 'random' - completely random. \n
+                    2. 'centered' - points only at the centre. \n
+
+            Default: 'random'
+
+    * **random_state** (None or `int` or `np.random.RandomState` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
+
+    * **verbose** (`Boolean`):
+            A boolean declaring whether to write text to the terminal.
+
+            Default value: False
+
+
+    **Methods:**
+
+    """
+    def __init__(self, dist_object, strata_object=None, nsamples_per_stratum=1, nsamples=None, random_state=None,
+                 verbose=False):
+        super().__init__(dist_object, random_state, verbose)
+        self.dist_object = dist_object
+        self.strata_object = strata_object
+        self.nsamples_per_stratum = nsamples_per_stratum
+        self.nsamples = nsamples
+        self.run_checks_p = self.run_checks
+        self.create_samplesu01_p = self.create_samplesu01
+
+        # Check strata_object
+        if not isinstance(self.strata_object, VoronoiStrata):
+            raise NotImplementedError("UQpy: strata_object must be an object of VoronoiStrata class")
+
+        self.random_state = random_state
+        if self.random_state is None:
+            self.random_state = strata_object.random_state
+
+        self.verbose = verbose
+        if self.verbose is None:
+            self.verbose = strata_object.verbose
+
+        # If nsamples_per_stratum or nsamples is provided, execute run method
+        if self.nsamples_per_stratum is not None or nsamples is not None:
+            self.run()
+
+    def run_checks(self, nsamples_per_stratum=None, nsamples=None):
+        """
+        Consistency check for input parameters of run method.
+
+        **Inputs:**
+
+
+        * **nsamples_per_stratum** (`list`):
+                List of integers specifiying the number of samples in each stratum.
+
+        * **nsamples** (`int`):
+                Total number of samples. This indicates RectangularSTS class to generate proportional sampling.
+
+        This method doesn't return anything.
+        """
+        if nsamples_per_stratum is not None:
+            self.nsamples_per_stratum = nsamples_per_stratum
+
+        if nsamples is not None:
+            self.nsamples = nsamples
+
+        if self.nsamples is not None:
+            if not isinstance(nsamples, int):
+                raise RuntimeError("UQpy: 'nsamples' must be an integer.")
+            else:
+                if isinstance(self.nsamples_per_stratum, (int, list)):
+                    print("UQpy: STS class is executing proportional sampling, thus ignoring "
+                                         "'nsamples_per_stratum'.")
+
+        if nsamples_per_stratum is not None:
+            if not isinstance(self.nsamples_per_stratum, int):
+                raise ValueError("UQpy: 'nsamples_per_stratum' must be an integer or a list." )
+        else:
+            self.nsamples_per_stratum = 1
+
+    def create_samplesu01(self):
+        from scipy.spatial import Delaunay, ConvexHull
+
+        if self.nsamples is not None:
+            self.nsamples_per_stratum = (self.strata_object.volume * self.nsamples).round()
+        else:
+            self.nsamples_per_stratum = [self.nsamples_per_stratum] * self.strata_object.nseeds
+
+        samples_in_strata, weights = list(), list()
+        for j in range(len(self.strata_object.vertices)):  # For each bounded region (Voronoi stratification)
+            vertices = self.strata_object.vertices[j][:-1, :]
+            seed = self.strata_object.seeds[j, :].reshape(1, -1)
+            seed_and_vertices = np.concatenate([vertices, seed])
+
+            # Create Dealunay Triangulation using seed and vertices of each stratum
+            delaunay_obj = Delaunay(seed_and_vertices)
+            delaunay_obj.vertices: list = delaunay_obj.vertices
+
+            # Compute volume of each delaunay
+            volume = list()
+            for i in range(len(delaunay_obj.vertices)):
+                vert = delaunay_obj.vertices[i]
+                ch = ConvexHull(seed_and_vertices[vert])
+                ch.volume: float = ch.volume
+                volume.append(ch.volume)
+
+            temp_prob = np.array(volume) / sum(volume)
+            a = list(range(len(delaunay_obj.vertices)))
+            for k in range(int(self.nsamples_per_stratum[j])):
+                simplex = np.random.choice(a, p=temp_prob)
+                m = seed_and_vertices.shape[0] - 1
+                while m not in delaunay_obj.vertices[simplex]:
+                    simplex = np.random.choice(a, p=temp_prob)
+
+                new_samples = Simplex(nodes=seed_and_vertices[delaunay_obj.vertices[simplex]], nsamples=1,
+                                      random_state=self.random_state).samples
+
+                samples_in_strata.append(new_samples)
+
+            if int(self.nsamples_per_stratum[j]) != 0:
+                weights.extend(
+                    [self.strata_object.volume[j] / self.nsamples_per_stratum[j]] * int(self.nsamples_per_stratum[j]))
+            else:
+                weights.extend([0] * int(self.nsamples_per_stratum[j]))
+
+        self.weights = weights
+        return np.concatenate(samples_in_strata, axis=0)
+
+
+class DelaunaySTS(STS):
+    """
+    Executes Stratified Sampling using Delaunay Stratification.
+
+    **Inputs:**
+
+
+    * **dist_object** ((list of) ``Distribution`` object(s)):
+            List of ``Distribution`` objects corresponding to each random variable.
+
+    * **strata_object** (``RectangularStrata`` object):
+            A ``RectangularStrata`` object which contains the information related to stratification in [0, 1]^dimension
+            domain.
+
+    * **nsamples_per_stratum** (`list`):
+            List of integers specifiying the number of samples in each stratum.
+
+    * **nsamples** (`int`):
+            Total number of samples. This indicates RectangularSTS class to generate proportional sampling.
+
+    * **sts_criterion** (`str`):
+            Random or Centered samples inside a rectangular strata.
+            Options:
+                    1. 'random' - completely random. \n
+                    2. 'centered' - points only at the centre. \n
+
+            Default: 'random'
+
+    * **random_state** (None or `int` or `np.random.RandomState` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
+
+    * **verbose** (`Boolean`):
+            A boolean declaring whether to write text to the terminal.
+
+            Default value: False
+
+
+    **Methods:**
+
+    """
+    def __init__(self, dist_object, strata_object=None, nsamples_per_stratum=1, nsamples=None, random_state=None,
+                 verbose=False):
+        super().__init__(dist_object, random_state, verbose)
+        self.dist_object = dist_object
+        self.strata_object = strata_object
+        self.nsamples_per_stratum = nsamples_per_stratum
+        self.nsamples = nsamples
+        self.run_checks_p = self.run_checks
+        self.create_samplesu01_p = self.create_samplesu01
+
+        # Check strata_object
+        if not isinstance(self.strata_object, DelaunayStrata):
+            raise NotImplementedError("UQpy: strata_object must be an object of DelaunayStrata class")
+
+        self.random_state = random_state
+        if self.random_state is None:
+            self.random_state = strata_object.random_state
+
+        self.verbose = verbose
+        if self.verbose is None:
+            self.verbose = strata_object.verbose
+
+        # If nsamples_per_stratum or nsamples is provided, execute run method
+        if self.nsamples_per_stratum is not None or nsamples is not None:
+            self.run()
+
+    def run_checks(self, nsamples_per_stratum=None, nsamples=None):
+        """
+        Consistency check for input parameters of run method.
+
+        **Inputs:**
+
+
+        * **nsamples_per_stratum** (`list`):
+                List of integers specifiying the number of samples in each stratum.
+
+        * **nsamples** (`int`):
+                Total number of samples. This indicates RectangularSTS class to generate proportional sampling.
+
+        This method doesn't return anything.
+        """
+        if nsamples_per_stratum is not None:
+            self.nsamples_per_stratum = nsamples_per_stratum
+
+        if nsamples is not None:
+            self.nsamples = nsamples
+
+        if self.nsamples is not None:
+            if not isinstance(nsamples, int):
+                raise RuntimeError("UQpy: 'nsamples' must be an integer.")
+            else:
+                if isinstance(self.nsamples_per_stratum, (int, list)):
+                    print("UQpy: STS class is executing proportional sampling, thus ignoring "
+                                         "'nsamples_per_stratum'.")
+
+        if nsamples_per_stratum is not None:
+            if not isinstance(self.nsamples_per_stratum, int):
+                raise ValueError("UQpy: 'nsamples_per_stratum' must be an integer or a list." )
+        else:
+            self.nsamples_per_stratum = 1
+
+    def create_samplesu01(self):
+        """
+        This method generates required number of samples in [0, 1]^ dimension domain using the stratification provided
+        to RectangularSTS class.
+
+        **Outputs:**
+
+        * **samplesU01** (`np.ndarray`):
+                 `ndarray` containing the generated samples on [0, 1]^dimension.
+
+        """
+        if self.nsamples is not None:
+            self.nsamples_per_stratum = (self.strata_object.volume * self.nsamples).round()
+        else:
+            self.nsamples_per_stratum = [self.nsamples_per_stratum] * self.strata_object.nseeds
+
+        samples_in_strata, weights = [], []
+        count = 0
+        for simplex in self.strata_object.delaunay.simplices:  # extract simplices from Delaunay triangulation
+            samples_temp = Simplex(nodes=self.strata_object.delaunay.points[simplex],
+                                   nsamples=int(self.nsamples_per_stratum[count]), random_state=self.random_state)
+            samples_in_strata.append(samples_temp.samples)
+            if int(self.nsamples_per_stratum[count]) != 0:
+                weights.extend(
+                    [self.strata_object.volume[count] / self.nsamples_per_stratum[count]] * int(
+                        self.nsamples_per_stratum[
+                            count]))
+            else:
+                weights.extend([0] * int(self.nsamples_per_stratum[count]))
+            count = count + 1
+
+        self.weights = np.array(weights)
+        return np.concatenate(samples_in_strata, axis=0)
 
 ########################################################################################################################
 ########################################################################################################################
@@ -1902,8 +2756,8 @@ class AKMCS:
     * **samples** (`ndarray`):
         `ndarray` containing the samples at which the model is evaluated.
 
-    * **error_metric** (`list`)
-        The learning function error metric at each iteration.
+    * **lf_values** (`list`)
+        The learning function evaluated at new sample points.
 
 
     **Methods:**
@@ -1911,8 +2765,7 @@ class AKMCS:
     """
 
     def __init__(self, dist_object, runmodel_object, krig_object, samples=None, nsamples=None, nlearn=10000,
-                 nstart=None, qoi_name=None, learning_function='U', n_add=1, random_state=None, save_pf=None,
-                 verbose=False, **kwargs):
+                 nstart=None, qoi_name=None, learning_function='U', n_add=1, random_state=None, verbose=False, **kwargs):
 
         # Initialize the internal variables of the class.
         self.runmodel_object = runmodel_object
@@ -1923,6 +2776,7 @@ class AKMCS:
         self.qoi_name = qoi_name
 
         self.learning_function = learning_function
+        self.learning_set = None
         self.dist_object = dist_object
         self.nsamples = nsamples
 
@@ -1931,7 +2785,6 @@ class AKMCS:
         self.indicator = False
         self.pf = []
         self.cov_pf = []
-        self.save_pf = save_pf
         self.dimension = 0
         self.qoi = None
         self.krig_model = None
@@ -1943,12 +2796,6 @@ class AKMCS:
         else:
             self.dimension = len(self.dist_object)
 
-        if self.save_pf is None:
-            if self.learning_function not in ['EFF', 'U', 'Weighted-U']:
-                self.save_pf = False
-            else:
-                self.save_pf = True
-
         if type(self.learning_function).__name__ == 'function':
             self.learning_function = self.learning_function
         elif self.learning_function not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
@@ -1956,18 +2803,24 @@ class AKMCS:
         elif self.learning_function == 'EIGF':
             self.learning_function = self.eigf
         elif self.learning_function == 'EIF':
+            if 'eif_stop' not in self.kwargs:
+                self.kwargs['eif_stop'] = 0.01
             self.learning_function = self.eif
         elif self.learning_function == 'U':
+            if 'u_stop' not in self.kwargs:
+                self.kwargs['u_stop'] = 2
             self.learning_function = self.u
         elif self.learning_function == 'Weighted-U':
-            if 'max_p' not in self.kwargs:
-                raise NotImplementedError("UQpy Error: Weighted-U learning function requires the parameter 'max_p'.")
+            if 'u_stop' not in self.kwargs:
+                self.kwargs['u_stop'] = 2
             self.learning_function = self.weighted_u
         else:
             if 'a' not in self.kwargs:
                 self.kwargs['a'] = 0
             if 'epsilon' not in self.kwargs:
                 self.kwargs['epsilon'] = 2
+            if 'eff_stop' not in self.kwargs:
+                self.kwargs['u_stop'] = 0.001
             self.learning_function = self.eff
 
         from UQpy.Distributions import DistributionContinuous1D, JointInd
@@ -1989,10 +2842,12 @@ class AKMCS:
         if hasattr(krig_object, 'fit') and hasattr(krig_object, 'predict'):
             self.krig_object = krig_object
         else:
-            raise NotImplementedError("UQpy Error: krig_object must have 'fit' and 'predict' methods.")
+            raise NotImplementedError("UQpy: krig_object must have 'fit' and 'predict' methods.")
 
         # If the initial sample design does not exists, run the initial calculations.
         if self.samples is None:
+            if self.nstart is None:
+                NotImplementedError("UQpy: User should provide either 'samples' or 'nstart' value.")
             if self.verbose:
                 print('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
             self.samples = LHS(dist_object=self.dist_object, nsamples=self.nstart, random_state=random_state).samples
@@ -2085,15 +2940,16 @@ class AKMCS:
             # Initialize the population of samples at which to evaluate the learning function and from which to draw
             # in the sampling.
 
-            learning_set = LHS(dist_object=self.dist_object, nsamples=self.nlearn,
+            self.learning_set = LHS(dist_object=self.dist_object, nsamples=self.nlearn,
                                random_state=self.random_state).samples
 
             # Find all of the points in the population that have not already been integrated into the training set
-            rest_pop = np.array([x for x in learning_set.tolist() if x not in self.samples.tolist()])
+            rest_pop = np.array([x for x in self.learning_set.tolist() if x not in self.samples.tolist()])
 
             # Apply the learning function to identify the new point to run the model.
 
-            new_point, ind = self.learning_function(self.krig_model, rest_pop)
+            new_point, lf, ind = self.learning_function(self.krig_model, rest_pop, self.n_add, self.kwargs,
+                                                        self.samples, self.qoi, self.dist_object)
 
             # Add the new points to the training set and to the sample set.
             self.samples = np.vstack([self.samples, np.atleast_2d(new_point)])
@@ -2113,21 +2969,13 @@ class AKMCS:
             self.krig_object.fit(self.samples, self.qoi, nopt=1)
             self.krig_model = self.krig_object.predict
 
-            if self.save_pf:
-                g = self.krig_model(learning_set, False)
-                n_ = g.shape[0] + len(self.qoi)
-                pf = (sum(g < 0) + sum(np.array(self.qoi) < 0)) / n_
-                self.pf.append(pf)
-                self.cov_pf.append(np.sqrt((1 - pf) / (pf * n_)))
-
             # Exit the loop, if error criteria is satisfied
             if ind:
-                if self.verbose:
-                    print("UQpy: Learning stops at iteration: ", i)
+                print("UQpy: Learning stops at iteration: ", i)
                 break
-            else:
-                if self.verbose:
-                    print("Iteration:", i)
+
+            if self.verbose:
+                print("Iteration:", i)
 
         if self.verbose:
             print('UQpy: AKMCS complete')
@@ -2135,7 +2983,8 @@ class AKMCS:
     # ------------------
     # LEARNING FUNCTIONS
     # ------------------
-    def eigf(self, surr, pop):
+    @staticmethod
+    def eigf(surr, pop, n_add, parameters, samples, qoi, dist_object):
         """
         Expected Improvement for Global Fit (EIGF) learning function. See [7]_ for a detailed explanation.
 
@@ -2156,6 +3005,16 @@ class AKMCS:
         * **parameters** (`dictionary`)
             Dictionary containing all necessary parameters and the stopping criterion for the learning function. For
             ``EIGF``, this dictionary is empty as no stopping criterion is specified.
+
+        * **samples** (`ndarray`):
+            The initial samples at which to evaluate the model.
+
+        * **qoi** (`list`):
+            A list, which contaains the model evaluations.
+
+        * **dist_object** ((list of) ``Distribution`` object(s)):
+            List of ``Distribution`` objects corresponding to each random variable.
+
 
         **Output/Returns:**
 
@@ -2181,19 +3040,24 @@ class AKMCS:
         # First, find the nearest neighbor in the training set for each point in the population.
         from sklearn.neighbors import NearestNeighbors
         knn = NearestNeighbors(n_neighbors=1)
-        knn.fit(np.atleast_2d(self.samples))
+        knn.fit(np.atleast_2d(samples))
         neighbors = knn.kneighbors(np.atleast_2d(pop), return_distance=False)
 
         # noinspection PyTypeChecker
-        qoi_array = np.array([self.qoi[x] for x in np.squeeze(neighbors)])
+        qoi_array = np.array([qoi[x] for x in np.squeeze(neighbors)])
 
         # Compute the learning function at every point in the population.
-        u = np.square(np.squeeze(g) - qoi_array) + np.square(np.squeeze(sig))
+        u = np.square(g - qoi_array) + np.square(sig)
+        rows = u[:, 0].argsort()[(np.size(g) - n_add):]
 
-        rows = np.argmax(u)
-        return pop[rows, :], False
+        indicator = False
+        new_samples = pop[rows, :]
+        eigf_lf = u[rows, :]
 
-    def u(self, surr, pop):
+        return new_samples, eigf_lf, indicator
+
+    @staticmethod
+    def u(surr, pop, n_add, parameters, samples, qoi, dist_object):
         """
         U-function for reliability analysis. See [3] for a detailed explanation.
 
@@ -2214,6 +3078,15 @@ class AKMCS:
         * **parameters** (`dictionary`)
             Dictionary containing all necessary parameters and the stopping criterion for the learning function. Here
             this includes the parameter `u_stop`.
+
+        * **samples** (`ndarray`):
+            The initial samples at which to evaluate the model.
+
+        * **qoi** (`list`):
+            A list, which contaains the model evaluations.
+
+        * **dist_object** ((list of) ``Distribution`` object(s)):
+            List of ``Distribution`` objects corresponding to each random variable.
 
 
         **Output/Returns:**
@@ -2237,14 +3110,18 @@ class AKMCS:
         sig = sig.reshape([pop.shape[0], 1])
 
         u = abs(g) / sig
-        rows = u[:, 0].argsort()[:self.n_add]
+        rows = u[:, 0].argsort()[:n_add]
 
-        if min(u[:, 0]) >= 2:
-            self.indicator = True
+        indicator = False
+        if min(u[:, 0]) >= parameters['u_stop']:
+            indicator = True
 
-        return pop[rows, :], self.indicator
+        new_samples = pop[rows, :]
+        u_lf = u[rows, 0]
+        return new_samples, u_lf, indicator
 
-    def weighted_u(self, surr, pop):
+    @staticmethod
+    def weighted_u(surr, pop, n_add, parameters, samples, qoi, dist_object):
         """
         Probability Weighted U-function for reliability analysis. See [5]_ for a detailed explanation.
 
@@ -2266,21 +3143,29 @@ class AKMCS:
             Dictionary containing all necessary parameters and the stopping criterion for the learning function. Here
             this includes the parameter `u_stop`.
 
+        * **samples** (`ndarray`):
+            The initial samples at which to evaluate the model.
+
+        * **qoi** (`list`):
+            A list, which contaains the model evaluations.
+
+        * **dist_object** ((list of) ``Distribution`` object(s)):
+            List of ``Distribution`` objects corresponding to each random variable.
+
         **Output/Returns:**
 
         * **new_samples** (`ndarray`):
             Samples selected for model evaluation.
+
+        * **w_lf** (`ndarray`)
+            Weighted U learning function evaluated at the new sample points.
 
         * **indicator** (`boolean`):
             Indicator for stopping criteria.
 
             `indicator = True` specifies that the stopping criterion has been met and the AKMCS.run method stops.
 
-        * **w_lf** (`ndarray`)
-            Weighted U learning function evaluated at the new sample points.
-
         """
-        max_p = self.kwargs['max_p']
         g, sig = surr(pop, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
@@ -2288,20 +3173,26 @@ class AKMCS:
         sig = sig.reshape([pop.shape[0], 1])
 
         u = abs(g) / sig
-        p1, p2 = np.ones([pop.shape[0], pop.shape[1]]), np.ones([pop.shape[0], pop.shape[1]])
-        for j in range(self.dimension):
-            p1[:, j] = self.dist_object[j].pdf(np.atleast_2d(pop[:, j]).T)
+        p1, p2 = np.ones([pop.shape[0], pop.shape[1]]), np.ones([samples.shape[0], pop.shape[1]])
+        for j in range(samples.shape[1]):
+            p1[:, j] = dist_object[j].pdf(np.atleast_2d(pop[:, j]).T)
+            p2[:, j] = dist_object[j].pdf(np.atleast_2d(samples[:, j]).T)
 
         p1 = p1.prod(1).reshape(u.size, 1)
+        max_p = max(p2.prod(1))
         u_ = u * ((max_p - p1) / max_p)
-        rows = u_[:, 0].argsort()[:self.n_add]
+        rows = u_[:, 0].argsort()[:n_add]
 
-        if min(u[:, 0]) >= 2:
-            self.indicator = True
+        indicator = False
+        if min(u[:, 0]) >= parameters['u_stop']:
+            indicator = True
 
-        return pop[rows, :], self.indicator
+        new_samples = pop[rows, :]
+        w_lf = u_[rows, :]
+        return new_samples, w_lf, indicator
 
-    def eff(self, surr, pop):
+    @staticmethod
+    def eff(surr, pop, n_add, parameters, samples, qoi, dist_object):
         """
         Expected Feasibility Function (EFF) for reliability analysis, see [6]_ for a detailed explanation.
 
@@ -2322,6 +3213,16 @@ class AKMCS:
         * **parameters** (`dictionary`)
             Dictionary containing all necessary parameters and the stopping criterion for the learning function. Here
             these include `a`, `epsilon`, and `eff_stop`.
+
+        * **samples** (`ndarray`):
+            The initial samples at which to evaluate the model.
+
+        * **qoi** (`list`):
+            A list, which contaains the model evaluations.
+
+        * **dist_object** ((list of) ``Distribution`` object(s)):
+            List of ``Distribution`` objects corresponding to each random variable.
+
 
         **Output/Returns:**
 
@@ -2344,21 +3245,25 @@ class AKMCS:
         sig = sig.reshape([pop.shape[0], 1])
         # Reliability threshold: a_ = 0
         # EGRA method: epsilon = 2*sigma(x)
-        a_, ep = self.kwargs['a'], self.kwargs['epsilon']*sig
+        a_, ep = parameters['eff_a'], parameters['eff_epsilon']*sig
         t1 = (a_ - g) / sig
         t2 = (a_ - ep - g) / sig
         t3 = (a_ + ep - g) / sig
         eff = (g - a_) * (2 * stats.norm.cdf(t1) - stats.norm.cdf(t2) - stats.norm.cdf(t3))
         eff += -sig * (2 * stats.norm.pdf(t1) - stats.norm.pdf(t2) - stats.norm.pdf(t3))
         eff += ep * (stats.norm.cdf(t3) - stats.norm.cdf(t2))
-        rows = eff[:, 0].argsort()[-self.n_add:]
+        rows = eff[:, 0].argsort()[-n_add:]
 
-        if max(eff[:, 0]) <= 0.001:
-            self.indicator = True
+        indicator = False
+        if max(eff[:, 0]) <= parameters['eff_stop']:
+            indicator = True
 
-        return pop[rows, :], self.indicator
+        new_samples = pop[rows, :]
+        eff_lf = eff[rows, :]
+        return new_samples, eff_lf, indicator
 
-    def eif(self, surr, pop):
+    @staticmethod
+    def eif(surr, pop, n_add, parameters, samples, qoi, dist_object):
         """
         Expected Improvement Function (EIF) for Efficient Global Optimization (EFO). See [4]_ for a detailed
         explanation.
@@ -2381,6 +3286,15 @@ class AKMCS:
             Dictionary containing all necessary parameters and the stopping criterion for the learning function. Here
             this includes the parameter `eif_stop`.
 
+        * **samples** (`ndarray`):
+            The initial samples at which to evaluate the model.
+
+        * **qoi** (`list`):
+            A list, which contaains the model evaluations.
+
+        * **dist_object** ((list of) ``Distribution`` object(s)):
+            List of ``Distribution`` objects corresponding to each random variable.
+
 
         **Output/Returns:**
 
@@ -2401,11 +3315,17 @@ class AKMCS:
         g = g.reshape([pop.shape[0], 1])
         sig = sig.reshape([pop.shape[0], 1])
 
-        fm = min(self.qoi)
-        u = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf((fm - g) / sig)
-        rows = u[:, 0].argsort()[(np.size(g) - self.n_add):]
+        fm = min(qoi)
+        eif = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf((fm - g) / sig)
+        rows = eif[:, 0].argsort()[(np.size(g) - n_add):]
 
-        return pop[rows, :], False
+        indicator = False
+        if max(eif[:, 0]) / abs(fm) <= parameters['eif_stop']:
+            indicator = True
+
+        new_samples = pop[rows, :]
+        eif_lf = eif[rows, :]
+        return new_samples, eif_lf, indicator
 
 ########################################################################################################################
 ########################################################################################################################
