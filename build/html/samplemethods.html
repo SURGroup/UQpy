@@ -414,7 +414,7 @@ of the <code class="docutils literal notranslate"><span class="pre">LHS</span></
 <dl class="class">
 <dt id="UQpy.SampleMethods.STS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">STS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">sts_design=None</em>, <em class="sig-param">sts_criterion='random'</em>, <em class="sig-param">stype='Rectangular'</em>, <em class="sig-param">input_file=None</em>, <em class="sig-param">n_iters=20</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#STS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.STS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate samples from an assigned probability density function using Stratified Sampling (<a href="#id38"><span class="problematic" id="id4">[1]_</span></a>).</p>
+<dd><p>Generate samples from an assigned probability density function using Stratified Sampling (<a href="#id39"><span class="problematic" id="id4">[1]_</span></a>).</p>
 <p><strong>References:</strong></p>
 <dl class="footnote brackets">
 <dt class="label" id="id5"><span class="brackets">1</span></dt>
@@ -549,60 +549,49 @@ class.</p>
 </div>
 <div class="section" id="strata">
 <h2>Strata<a class="headerlink" href="#strata" title="Permalink to this headline">¶</a></h2>
-<p>The <cite>Strata</cite> class is a supporting class for stratified sampling and its variants. The class defines a rectilinear stratification of the unit hypercube. Strata are defined by specifying a stratum origin as the coordinates of the stratum corner nearest to the global origin and a stratum width for each dimension.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class is a supporting class for stratified sampling (<code class="docutils literal notranslate"><span class="pre">STS</span></code> class) and its variants (<code class="docutils literal notranslate"><span class="pre">RSS</span></code> class). The class defines a rectilinear stratification of the unit hypercube. Individual strata are defined by specifying a stratum origin as the coordinates of the stratum corner nearest to the global origin and a stratum width for each dimension.</p>
 <div class="section" id="id6">
 <h3>Class Descriptions<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.Strata">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">Strata</code><span class="sig-paren">(</span><em class="sig-param">n_strata=None</em>, <em class="sig-param">input_file=None</em>, <em class="sig-param">origins=None</em>, <em class="sig-param">widths=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Strata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Strata" title="Permalink to this definition">¶</a></dt>
-<dd><p>Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^dimension with N strata.</p>
+<dd><p>Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^n with N strata.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
 <li><dl>
-<dt><strong>n_strata</strong> (<cite>list</cite> of <cite>int</cite>):</dt><dd><p>A list of dimension n defining the number of strata in each of the n dimensions. Creates an equal
-stratification with strata widths equal to 1/n_strata. The total number of strata, N, is the product of the
-terms of n_strata.
-Example:</p>
+<dt><strong>n_strata</strong> (<cite>list</cite> of <cite>int</cite>):</dt><dd><p>A list of length <cite>n</cite> defining the number of strata in each of the <cite>n</cite> dimensions. Creates an equal
+stratification with strata widths equal to 1/<cite>n_strata</cite>. The total number of strata, <cite>N</cite>, is the product
+of the terms of <cite>n_strata</cite>.</p>
+<p>Example: <cite>n_strata</cite> = [2, 3, 2] creates a 3-dimensional stratification with:</p>
 <blockquote>
-<div><p>n_strata = [2, 3, 2] creates a 3d stratification with:
-2 strata in dimension 0 with stratum widths 1/2
-3 strata in dimension 1 with stratum widths 1/3
-2 strata in dimension 2 with stratum widths 1/2</p>
+<div><p>2 strata in dimension 0 with stratum widths 1/2</p>
+<p>3 strata in dimension 1 with stratum widths 1/3</p>
+<p>2 strata in dimension 2 with stratum widths 1/2</p>
 </div></blockquote>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
+<li><dl>
 <dt><strong>input_file</strong> (<cite>str</cite>):</dt><dd><p>File path to input file specifying stratum origins and stratum widths.</p>
+<p>This is typically used to define irregular stratified designs.</p>
 </dd>
 </dl>
 </li>
 <li><dl>
-<dt><strong>origins</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of dimension N x n specifying the origins of all strata. The origins of the strata are the
-coordinates of the stratum orthotope nearest the global origin.
-Example:</p>
+<dt><strong>origins</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of dimension <cite>N x n</cite> specifying the origins of all strata. The origins of the strata are the
+coordinates of the stratum orthotope nearest the global origin.</p>
+<p>Example: A 2-dimensional stratification with 2 equal strata in each dimension:</p>
 <blockquote>
-<div><p>A 2D stratification with 2 strata in each dimension
-origins = [[0, 0]</p>
-<blockquote>
-<div><p>[0, 0.5]
-[0.5, 0]
-[0.5, 0.5]]</p>
-</div></blockquote>
+<div><p><cite>origins</cite> = [[0, 0], [0, 0.5], [0.5, 0], [0.5, 0.5]]</p>
 </div></blockquote>
 </dd>
 </dl>
 </li>
 <li><dl>
-<dt><strong>widths</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of dimension N x n specifying the widths of all strata in each dimension
-Example: A 2D stratification with 2 strata in each dimension</p>
+<dt><strong>widths</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of dimension <cite>N x n</cite> specifying the widths of all strata in each dimension</p>
+<p>Example: A 2-dimensional stratification with 2 strata in each dimension</p>
 <blockquote>
-<div><dl class="simple">
-<dt>widths = [[0.5, 0.5]</dt><dd><p>[0.5, 0.5]
-[0.5, 0.5]
-[0.5, 0.5]]</p>
-</dd>
-</dl>
+<div><p><cite>widths</cite> = [[0.5, 0.5], [0.5, 0.5], [0.5, 0.5], [0.5, 0.5]]</p>
 </div></blockquote>
 </dd>
 </dl>
@@ -611,8 +600,26 @@ Example: A 2D stratification with 2 strata in each dimension</p>
 <p><strong>Attributes:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>weights</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of dimension 1 x N containing sample weights. Sample weights are equal to the product of the
-strata widths (i.e. they are equal to the size of the strata in the [0, 1]^n space.</p>
+<dt><strong>n_strata</strong> (<cite>list</cite> of <cite>int</cite>):</dt><dd><p>A list of length <cite>n</cite> defining the number of strata in each of the <cite>n</cite> dimensions. Creates an equal
+stratification with strata widths equal to 1/<cite>n_strata</cite>. The total number of strata, <cite>N</cite>, is the product
+of the terms of <cite>n_strata</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>origins</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of dimension <cite>N x n</cite> specifying the origins of all strata. The origins of the strata are the
+coordinates of the stratum orthotope nearest the global origin.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>widths</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of dimension <cite>N x n</cite> specifying the widths of all strata in each dimension</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>weights</strong> (<cite>ndarray</cite>):</dt><dd><p>An array of dimension <cite>1 x N</cite> containing sample weights. Sample weights are equal to the product of the
+strata widths (i.e. they are equal to the volume of the strata in the [0, 1]^n space).</p>
 </dd>
 </dl>
 </li>
@@ -622,18 +629,18 @@ strata widths (i.e. they are equal to the size of the strata in the [0, 1]^n spa
 <dt id="UQpy.SampleMethods.Strata.fullfact">
 <em class="property">static </em><code class="sig-name descname">fullfact</code><span class="sig-paren">(</span><em class="sig-param">levels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Strata.fullfact"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Strata.fullfact" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a full-factorial design</p>
-<p>Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
-Copyright (C) 2012 - 2013 - Michael Baudin
-Copyright (C) 2012 - Maria Christopoulou
-Copyright (C) 2010 - 2011 - INRIA - Michael Baudin
-Copyright (C) 2009 - Yann Collette
-Copyright (C) 2009 - CEA - Jean-Marc Martinez
-Original source code can be found at:
-<a class="reference external" href="https://pythonhosted.org/pyDOE">https://pythonhosted.org/pyDOE</a>/#
-or
-<a class="reference external" href="https://pypi.org/project/pyDOE/">https://pypi.org/project/pyDOE/</a>
-or
-<a class="reference external" href="https://github.com/tisimst/pyDOE/">https://github.com/tisimst/pyDOE/</a></p>
+<p>Note: This function has been modified from pyDOE, released under BSD License (3-Clause)</p>
+<p>Copyright (C) 2012 - 2013 - Michael Baudin</p>
+<p>Copyright (C) 2012 - Maria Christopoulou</p>
+<p>Copyright (C) 2010 - 2011 - INRIA - Michael Baudin</p>
+<p>Copyright (C) 2009 - Yann Collette</p>
+<p>Copyright (C) 2009 - CEA - Jean-Marc Martinez</p>
+<p>Original source code can be found at:</p>
+<p><a class="reference external" href="https://pythonhosted.org/pyDOE">https://pythonhosted.org/pyDOE</a>/#</p>
+<p>or</p>
+<p><a class="reference external" href="https://pypi.org/project/pyDOE/">https://pypi.org/project/pyDOE/</a></p>
+<p>or</p>
+<p><a class="reference external" href="https://github.com/tisimst/pyDOE/">https://github.com/tisimst/pyDOE/</a></p>
 <p><strong>Input:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
@@ -665,7 +672,7 @@ or
 <dt id="UQpy.SampleMethods.RSS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">RSS</code><span class="sig-paren">(</span><em class="sig-param">sample_object=None</em>, <em class="sig-param">runmodel_object=None</em>, <em class="sig-param">krig_object=None</em>, <em class="sig-param">local=False</em>, <em class="sig-param">max_train_size=None</em>, <em class="sig-param">step_size=0.005</em>, <em class="sig-param">qoi_name=None</em>, <em class="sig-param">n_add=1</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#RSS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.RSS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate new samples using adaptive sampling methods, i.e. Refined Stratified Sampling and Gradient
-Enhanced Refined Stratified Sampling (<a href="#id39"><span class="problematic" id="id8">[1]_</span></a>, <a href="#id40"><span class="problematic" id="id9">[2]_</span></a>).</p>
+Enhanced Refined Stratified Sampling (<a href="#id40"><span class="problematic" id="id8">[1]_</span></a>, <a href="#id41"><span class="problematic" id="id9">[2]_</span></a>).</p>
 <p><strong>References:</strong></p>
 <dl class="footnote brackets">
 <dt class="label" id="id10"><span class="brackets">1</span></dt>
@@ -808,24 +815,18 @@ the <code class="docutils literal notranslate"><span class="pre">RSS</span></cod
 </div>
 <div class="section" id="simplex">
 <h2>Simplex<a class="headerlink" href="#simplex" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">Simplex</span></code> class generates uniformly distributed sample inside a simplex, whose coordinates are expressed by <span class="math notranslate nohighlight">\(\zeta_k\)</span> and <span class="math notranslate nohighlight">\(n_d\)</span> is the dimension. First, this class generates <span class="math notranslate nohighlight">\(n_d\)</span> independent uniform random variables on [0, 1], i.e. <span class="math notranslate nohighlight">\(r_q\)</span>, then compute samples inside simplex using following equation:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Simplex</span></code> class generates uniformly distributed samples inside a simplex of dimension <span class="math notranslate nohighlight">\(n_d\)</span>, whose coordinates are expressed by <span class="math notranslate nohighlight">\(\zeta_k\)</span>. First, this class generates <span class="math notranslate nohighlight">\(n_d\)</span> independent uniform random variables on [0, 1], denoted <span class="math notranslate nohighlight">\(r_q\)</span>, then maps them to the simplex as follows:</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{M_{n_d}} = \zeta_0 + \sum_{i=1}^{n_d} \Big{[}\prod_{j=1}^{i} r_{n_d-j+1}^{\frac{1}{n_d-j+1}}\Big{]}(\zeta_i - \zeta_{i-1})\]</div>
-<p>The <span class="math notranslate nohighlight">\(M_{n_d}\)</span> is <span class="math notranslate nohighlight">\(n_d\)</span> dimensional array defining the coordinates of new sample.</p>
+<p>where <span class="math notranslate nohighlight">\(M_{n_d}\)</span> is an <span class="math notranslate nohighlight">\(n_d\)</span> dimensional array defining the coordinates of new sample. This mapping is illustrated below for a two-dimensional simplex.</p>
 <a class="reference internal image-reference" href="_images/SampleMethods_Simplex.png"><img alt="Randomly generated point inside a 2-D simplex" class="align-center" src="_images/SampleMethods_Simplex.png" style="width: 339.0px; height: 261.0px;" /></a>
-<div class="section" id="id12">
-<h3>Class Descriptions<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<p>Additional details can be found in <a class="footnote-reference brackets" href="#id38" id="id12">8</a>.</p>
+<div class="section" id="id13">
+<h3>Class Descriptions<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.Simplex">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">Simplex</code><span class="sig-paren">(</span><em class="sig-param">nodes=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Simplex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Simplex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate random samples inside a simplex using uniform probability distribution.</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id13"><span class="brackets">1</span></dt>
-<dd><p>W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, “Simplex-stochastic collocation method with improved
-calability”,Journal of Computational Physics, 310:301–328 2016.</p>
-</dd>
-</dl>
+<dd><p>Generate uniform random samples inside an n-dimensional simplex.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
 <li><dl class="simple">
@@ -833,19 +834,23 @@ calability”,Journal of Computational Physics, 310:301–328 2016.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
+<li><dl>
 <dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>The number of samples to be generated inside the simplex.</p>
+<p>If <cite>nsamples</cite> is provided when the object is defined, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method will be called automatically. If
+<cite>nsamples</cite> is not provided when the object is defined, the user must invoke the <code class="docutils literal notranslate"><span class="pre">run</span></code> method and specify
+<cite>nsamples</cite>.</p>
 </dd>
 </dl>
 </li>
 <li><dl>
-<dt><strong>random_state</strong> (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator.</p>
-<p>Default is None.</p>
+<dt><strong>random_state</strong> (None or <cite>int</cite> or <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+<p>If an integer is provided, this sets the seed for an object of <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code>. Otherwise, the
+object itself can be passed directly.</p>
 </dd>
 </dl>
 </li>
 </ul>
-<p><strong>Output:</strong></p>
+<p><strong>Attributes:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
 <dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p>New random samples distributed uniformly inside the simplex.</p>
@@ -853,19 +858,19 @@ calability”,Journal of Computational Physics, 310:301–328 2016.</p>
 </dl>
 </li>
 </ul>
-<p><strong>Method:</strong></p>
+<p><strong>Methods:</strong></p>
 <dl class="method">
 <dt id="UQpy.SampleMethods.Simplex.run">
 <code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Simplex.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Simplex.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Execute the random sampling in the <code class="docutils literal notranslate"><span class="pre">Simplex</span></code> class.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is the function that performs random sampling in the <code class="docutils literal notranslate"><span class="pre">Simplex</span></code> class. If <cite>nsamples</cite> is
-provided, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically called when the <code class="docutils literal notranslate"><span class="pre">Simplex</span></code> object is defined. The user may also
+provided called when the <code class="docutils literal notranslate"><span class="pre">Simplex</span></code> object is defined, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically. The user may also
 call the <code class="docutils literal notranslate"><span class="pre">run</span></code> method directly to generate samples. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">Simplex</span></code> class can be invoked
 many times and each time the generated samples are appended to the existing samples.</p>
 <p><strong>Input:</strong></p>
 <ul>
 <li><dl>
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be drawn from each distribution.</p>
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples to be generated inside the simplex.</p>
 <p>If the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is invoked multiple times, the newly generated samples will be appended to the
 existing samples.</p>
 </dd>
@@ -1363,7 +1368,7 @@ this includes the parameter <cite>u_stop</cite>.</p>
 </div>
 <div class="section" id="mcmc">
 <h2>MCMC<a class="headerlink" href="#mcmc" title="Permalink to this headline">¶</a></h2>
-<p>The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution <span class="math notranslate nohighlight">\(p(x)=\frac{\tilde{p}(x)}{Z}\)</span>, where <span class="math notranslate nohighlight">\(\tilde{p}(x)\)</span> is known but <span class="math notranslate nohighlight">\(Z\)</span> is hard to compute (this will often be the case when using Bayes’ theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method, see e.g. (<a href="#id41"><span class="problematic" id="id27">[1]_</span></a>, <a href="#id42"><span class="problematic" id="id28">[2]_</span></a>). More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution <span class="math notranslate nohighlight">\(p(x)\)</span>.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:</p>
+<p>The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution <span class="math notranslate nohighlight">\(p(x)=\frac{\tilde{p}(x)}{Z}\)</span>, where <span class="math notranslate nohighlight">\(\tilde{p}(x)\)</span> is known but <span class="math notranslate nohighlight">\(Z\)</span> is hard to compute (this will often be the case when using Bayes’ theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method, see e.g. (<a href="#id42"><span class="problematic" id="id27">[1]_</span></a>, <a href="#id43"><span class="problematic" id="id28">[2]_</span></a>). More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution <span class="math notranslate nohighlight">\(p(x)\)</span>.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:</p>
 <ul class="simple">
 <li><p>initialize with a seed sample <span class="math notranslate nohighlight">\(x_{0}\)</span></p></li>
 <li><dl class="simple">
@@ -1981,6 +1986,14 @@ samples as log_w_unnormalized) = log(target)-log(proposal).</p>
 </dd>
 <dt class="label" id="id37"><span class="brackets">7</span><span class="fn-backref">(<a href="#id20">1</a>,<a href="#id21">2</a>,<a href="#id25">3</a>)</span></dt>
 <dd><p>C.Q. Lam. “Sequential adaptive designs in computer experiments for response surface model fit.” PhD diss., The Ohio State University, 2008.</p>
+</dd>
+<dt class="label" id="id38"><span class="brackets"><a class="fn-backref" href="#id12">8</a></span></dt>
+<dd><ol class="upperalpha simple" start="23">
+<li><ol class="upperalpha simple" start="14">
+<li><p>Edeling, R. P. Dwight, P. Cinnella, “Simplex-stochastic collocation method with improved scalability”, Journal of Computational Physics, 310:301–328, 2016.</p></li>
+</ol>
+</li>
+</ol>
 </dd>
 </dl>
 <div class="toctree-wrapper compound">

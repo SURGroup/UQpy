@@ -48,7 +48,7 @@ Class Descriptions
 STS
 ----
 
-The ``STS`` class generates random samples from a specified probability distribution(s) using Stratified sampling. It is a variance reduction sampling technique. It aims to distribute random samples on the complete sample space. The sample space is divided into a set of space-filling and disjoint regions, called strata and samples are generated inside each strata.
+The ``STS`` class generates random samples from a specified probability distribution(s) using stratified sampling. Stratified sampling is a variance reduction sampling technique that aims to uniformly distribute the random samples to create a more space-filling design. The sample space is divided into a set of space-filling and disjoint regions, called strata and samples are generated inside each strata.
 
 Class Descriptions
 ^^^^^^^^^^^^^^^^^^^
@@ -60,7 +60,7 @@ Class Descriptions
 Strata
 ----
 
-The `Strata` class is a supporting class for stratified sampling and its variants. The class defines a rectilinear stratification of the unit hypercube. Strata are defined by specifying a stratum origin as the coordinates of the stratum corner nearest to the global origin and a stratum width for each dimension.
+The ``Strata`` class is a supporting class for stratified sampling (``STS`` class) and its variants (``RSS`` class). The class defines a rectilinear stratification of the unit hypercube. Individual strata are defined by specifying a stratum origin as the coordinates of the stratum corner nearest to the global origin and a stratum width for each dimension.
 
 Class Descriptions
 ^^^^^^^^^^^^^^^^^^^
@@ -84,16 +84,18 @@ Class Descriptions
 Simplex
 -------
 
-The ``Simplex`` class generates uniformly distributed sample inside a simplex, whose coordinates are expressed by :math:`\zeta_k` and :math:`n_d` is the dimension. First, this class generates :math:`n_d` independent uniform random variables on [0, 1], i.e. :math:`r_q`, then compute samples inside simplex using following equation:
+The ``Simplex`` class generates uniformly distributed samples inside a simplex of dimension :math:`n_d`, whose coordinates are expressed by :math:`\zeta_k`. First, this class generates :math:`n_d` independent uniform random variables on [0, 1], denoted :math:`r_q`, then maps them to the simplex as follows:
 
 .. math:: \mathbf{M_{n_d}} = \zeta_0 + \sum_{i=1}^{n_d} \Big{[}\prod_{j=1}^{i} r_{n_d-j+1}^{\frac{1}{n_d-j+1}}\Big{]}(\zeta_i - \zeta_{i-1})
 
-The :math:`M_{n_d}` is :math:`n_d` dimensional array defining the coordinates of new sample.
+where :math:`M_{n_d}` is an :math:`n_d` dimensional array defining the coordinates of new sample. This mapping is illustrated below for a two-dimensional simplex.
 
 .. image:: _static/SampleMethods_Simplex.png
    :scale: 50 %
    :alt: Randomly generated point inside a 2-D simplex
    :align: center
+   
+Additional details can be found in [8]_.
 
 Class Descriptions
 ^^^^^^^^^^^^^^^^^^^
@@ -315,6 +317,9 @@ Class Descriptions
 .. [5] V.S. Sundar and Shields, M.D. "Reliablity analysis using adaptive Kriging surrogates and multimodel inference." ASCE-ASME Journal of Risk and Uncertainty in Engineering Systems. Part A: Civil Engineering. 5(2): 04019004, 2019.
 .. [6] B.J. Bichon, M.S. Eldred, L.P. Swiler, S. Mahadevan, and J.M. McFarland. "Efficient global reliablity analysis for nonlinear implicit performance functions." AIAA Journal. 46(10) 2459-2468, (2008).
 .. [7] C.Q. Lam. "Sequential adaptive designs in computer experiments for response surface model fit." PhD diss., The Ohio State University, 2008.
+.. [8] W. N. Edeling, R. P. Dwight, P. Cinnella, "Simplex-stochastic collocation method with improved scalability", Journal of Computational Physics, 310:301–328, 2016.
+.. [9] K. Tocher. "The art of simulation." The English Universities Press, London, UK; 1963.
+.. [10] M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
 
 
 .. toctree::

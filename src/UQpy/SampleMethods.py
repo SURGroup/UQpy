@@ -644,24 +644,23 @@ class LHS:
 
 class STS:
     """
-    Generate samples from an assigned probability density function using Stratified Sampling ([1]_).
+    Generate samples from an assigned probability density function using Stratified Sampling [9]_.
 
-    **References:**
-
-    .. [1] M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte
-       Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
 
     **Inputs:**
 
     * **dist_object** ((list of) ``Distribution`` object(s)):
-            List of ``Distribution`` objects corresponding to each random variable.
+        List of ``Distribution`` objects corresponding to each random variable.
 
     * **nsamples** (`int`):
-            Total number of samples. Required for voronoi stratification.
+        Total number of samples.
+
+        Required for Voronoi stratification. Not required for rectangular stratification.
 
     * **sts_design** (`list`):
-            List of integers specifiying the number of strata in each dimension. Required for rectangular
-            stratification.
+        List of integers specifying the number of strata in each dimension.
+
+        Required for rectangular stratification. Not required for Voronoi stratification.
 
     * **sts_criterion** (`str`):
             Random or Centered samples inside a rectangular strata.
@@ -860,46 +859,58 @@ class STS:
 
 class Strata:
     """
-    Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^dimension with N strata.
+    Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^n with N strata.
 
     **Inputs:**
 
     * **n_strata** (`list` of `int`):
-            A list of dimension n defining the number of strata in each of the n dimensions. Creates an equal
-            stratification with strata widths equal to 1/n_strata. The total number of strata, N, is the product of the
-            terms of n_strata.
-            Example:
-                n_strata = [2, 3, 2] creates a 3d stratification with:
-                2 strata in dimension 0 with stratum widths 1/2
-                3 strata in dimension 1 with stratum widths 1/3
-                2 strata in dimension 2 with stratum widths 1/2
+            A list of length `n` defining the number of strata in each of the `n` dimensions. Creates an equal
+            stratification with strata widths equal to 1/`n_strata`. The total number of strata, `N`, is the product
+            of the terms of `n_strata`.
+
+            Example: `n_strata` = [2, 3, 2] creates a 3-dimensional stratification with:\n
+                    2 strata in dimension 0 with stratum widths 1/2\n
+                    3 strata in dimension 1 with stratum widths 1/3\n
+                    2 strata in dimension 2 with stratum widths 1/2\n
 
     * **input_file** (`str`):
             File path to input file specifying stratum origins and stratum widths.
 
+            This is typically used to define irregular stratified designs.
+
     * **origins** (`ndarray`):
-            An array of dimension N x n specifying the origins of all strata. The origins of the strata are the
+            An array of dimension `N x n` specifying the origins of all strata. The origins of the strata are the
             coordinates of the stratum orthotope nearest the global origin.
-            Example:
-                A 2D stratification with 2 strata in each dimension
-                origins = [[0, 0]
-                           [0, 0.5]
-                           [0.5, 0]
-                           [0.5, 0.5]]
+
+            Example: A 2-dimensional stratification with 2 equal strata in each dimension:
+
+                `origins` = [[0, 0], [0, 0.5], [0.5, 0], [0.5, 0.5]]
 
     * **widths** (`ndarray`):
-            An array of dimension N x n specifying the widths of all strata in each dimension
-            Example: A 2D stratification with 2 strata in each dimension
-                   widths = [[0.5, 0.5]
-                             [0.5, 0.5]
-                             [0.5, 0.5]
-                             [0.5, 0.5]]
+            An array of dimension `N x n` specifying the widths of all strata in each dimension
+
+            Example: A 2-dimensional stratification with 2 strata in each dimension
+
+                `widths` = [[0.5, 0.5], [0.5, 0.5], [0.5, 0.5], [0.5, 0.5]]
 
     **Attributes:**
 
+    * **n_strata** (`list` of `int`):
+            A list of length `n` defining the number of strata in each of the `n` dimensions. Creates an equal
+            stratification with strata widths equal to 1/`n_strata`. The total number of strata, `N`, is the product
+            of the terms of `n_strata`.
+
+    * **origins** (`ndarray`):
+            An array of dimension `N x n` specifying the origins of all strata. The origins of the strata are the
+            coordinates of the stratum orthotope nearest the global origin.
+
+    * **widths** (`ndarray`):
+            An array of dimension `N x n` specifying the widths of all strata in each dimension
+
+
     * **weights** (`ndarray`):
-            An array of dimension 1 x N containing sample weights. Sample weights are equal to the product of the
-            strata widths (i.e. they are equal to the size of the strata in the [0, 1]^n space.
+            An array of dimension `1 x N` containing sample weights. Sample weights are equal to the product of the
+            strata widths (i.e. they are equal to the volume of the strata in the [0, 1]^n space).
 
     **Methods:**
 
@@ -945,18 +956,18 @@ class Strata:
         """
         Create a full-factorial design
 
-        Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
-        Copyright (C) 2012 - 2013 - Michael Baudin
-        Copyright (C) 2012 - Maria Christopoulou
-        Copyright (C) 2010 - 2011 - INRIA - Michael Baudin
-        Copyright (C) 2009 - Yann Collette
-        Copyright (C) 2009 - CEA - Jean-Marc Martinez
-        Original source code can be found at:
-        https://pythonhosted.org/pyDOE/#
-        or
-        https://pypi.org/project/pyDOE/
-        or
-        https://github.com/tisimst/pyDOE/
+        Note: This function has been modified from pyDOE, released under BSD License (3-Clause)\n
+        Copyright (C) 2012 - 2013 - Michael Baudin\n
+        Copyright (C) 2012 - Maria Christopoulou\n
+        Copyright (C) 2010 - 2011 - INRIA - Michael Baudin\n
+        Copyright (C) 2009 - Yann Collette\n
+        Copyright (C) 2009 - CEA - Jean-Marc Martinez\n
+        Original source code can be found at:\n
+        https://pythonhosted.org/pyDOE/#\n
+        or\n
+        https://pypi.org/project/pyDOE/\n
+        or\n
+        https://github.com/tisimst/pyDOE/\n
 
         **Input:**
 
@@ -1703,32 +1714,33 @@ class RSS:
 
 class Simplex:
     """
-    Generate random samples inside a simplex using uniform probability distribution.
+    Generate uniform random samples inside an n-dimensional simplex.
 
-    **References:**
-
-    .. [1] W. N. Edelinga, R. P. Dwightb, P. Cinnellaa, "Simplex-stochastic collocation method with improved
-       calability",Journal of Computational Physics, 310:301–328 2016.
 
     **Inputs:**
 
     * **nodes** (`ndarray` or `list`):
-             The vertices of the simplex.
+        The vertices of the simplex.
 
     * **nsamples** (`int`):
-             The number of samples to be generated inside the simplex.
+        The number of samples to be generated inside the simplex.
 
-    * **random_state** (None or `int` or `np.random.RandomState` object):
-            Random seed used to initialize the pseudo-random number generator.
+        If `nsamples` is provided when the object is defined, the ``run`` method will be called automatically. If
+        `nsamples` is not provided when the object is defined, the user must invoke the ``run`` method and specify
+        `nsamples`.
 
-            Default is None.
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
 
-    **Output:**
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
+
+    **Attributes:**
 
     * **samples** (`ndarray`):
-             New random samples distributed uniformly inside the simplex.
+        New random samples distributed uniformly inside the simplex.
 
-    **Method:**
+    **Methods:**
 
     """
 
@@ -1756,14 +1768,14 @@ class Simplex:
         Execute the random sampling in the ``Simplex`` class.
 
         The ``run`` method is the function that performs random sampling in the ``Simplex`` class. If `nsamples` is
-        provided, the ``run`` method is automatically called when the ``Simplex`` object is defined. The user may also
+        provided called when the ``Simplex`` object is defined, the ``run`` method is automatically. The user may also
         call the ``run`` method directly to generate samples. The ``run`` method of the ``Simplex`` class can be invoked
         many times and each time the generated samples are appended to the existing samples.
 
         **Input:**
 
         * **nsamples** (`int`):
-            Number of samples to be drawn from each distribution.
+            Number of samples to be generated inside the simplex.
 
             If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
             existing samples.
