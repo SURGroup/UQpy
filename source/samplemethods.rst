@@ -48,7 +48,18 @@ Class Descriptions
 Stratified Sampling
 ---------------------
 
-Stratified sampling is a variance reduction technique that divides the parameter space into a set of disjoint and space-filling strata. Samples are then drawn from these strata in order to improve the space-filling properties of the sample design. ``UQpy`` supports several stratified sampling variations that vary from conventional stratified sampling designs to advanced gradient informed methods for adaptive stratified sampling. Stratified sampling capabilities are built in ``UQpy`` from three sets of classes. These class structures facilitate a highly flexible and varied range of stratified sampling designs that can be extended in a straightforward way. Specifically, the existing classes allow stratification of n-dimensional parameter spaces based on three common spatial discretizations: a rectilinear decomposition into hyper-rectangles (orthotopes), a Voronoi decomposition, and a Delaunay decomposition. The three parent classes are:
+Stratified sampling is a variance reduction technique that divides the parameter space into a set of disjoint and space-filling strata. Samples are then drawn from these strata in order to improve the space-filling properties of the sample design. Stratified sampling allows for unequally weighted samples, such that a Monte Carlo estimator of the quantity :math:`E[Y]` takes the following form:
+
+.. math:: E[Y] \approx \sum_{i=1}^N w_i Y_i
+
+where :math:`w_i` are the sample weights and :math:`Y_i` are the model evaluations. The individual sample weights are computed as:
+
+.. math:: w_i = \dfrac{V_{i}}{N_{i}}
+
+where :math:`V_{i}\le 1` is the volume of stratum :math:`i` in the unit hypercube (i.e. the probability that a random sample will fall in stratum :math:`i`) and :math:`N_{i}` is the number of samples drawn from stratum :math:`i`.
+
+
+``UQpy`` supports several stratified sampling variations that vary from conventional stratified sampling designs to advanced gradient informed methods for adaptive stratified sampling. Stratified sampling capabilities are built in ``UQpy`` from three sets of classes. These class structures facilitate a highly flexible and varied range of stratified sampling designs that can be extended in a straightforward way. Specifically, the existing classes allow stratification of n-dimensional parameter spaces based on three common spatial discretizations: a rectilinear decomposition into hyper-rectangles (orthotopes), a Voronoi decomposition, and a Delaunay decomposition. The three parent classes are:
 
 1. The ``Strata`` class defines the geometric structure of the stratification of the parameter space and it has three existing subclasses - ``RectangularStrata``, ``VoronoiStrata``, and ``DelaunayStrata`` that correspond to geometric decompositions of the parameter space based on rectilinear strata of orthotopes, strata composed of Voronoi cells, and strata composed of Delaunay simplexes respectively.
 
@@ -107,9 +118,7 @@ Adding a new type of stratification requires creating a new subclass of the ``St
 STS Class
 ^^^^^^^^^^^
 
-Stratified sampling is a variance reduction sampling technique that aims to uniformly distribute the random samples to create a more space-filling design. The sample space is divided into a set of space-filling and disjoint regions, called strata and samples are generated inside each strata. [9]_ 
-
-The ``STS`` class is the parent class for stratified sampling. The various ``STS`` classes generate random samples from a specified probability distribution(s) using stratified sampling with strata specified by an object of one of the ``Strata`` classes.  
+The ``STS`` class is the parent class for stratified sampling. The various ``STS`` classes generate random samples from a specified probability distribution(s) using stratified sampling with strata specified by an object of one of the ``Strata`` classes. The ``STS`` class currently has three child classes - ``RectangularSTS``, ``VoronoiSTS``, and ``DelaunaySTS`` - corresponding to stratified sampling methods based rectangular, Voronoi, and Delaunay strata respectively. The following details these classes.
 
 Class Descriptions
 ^^^^^^^^^^^^^^^^^^^
@@ -130,7 +139,7 @@ Class Descriptions
 Adding a new ``STS`` class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Adding a new stratified sampling method first requires that an appropriate ``Strata`` class exists. If the new method is based on rectangular, Voronoi, or Delaunay stratification one of the existing ``Strata`` classes can be used. If it relies on a different type of stratification, then a new ``Strata`` class must be written first. Next, the new stratified sampling method must be written as a new subclass of the ``STS`` class. 
+Adding a new stratified sampling method first requires that an appropriate ``Strata`` class exists. If the new method is based on rectangular, Voronoi, or Delaunay stratification one of the existing ``Strata`` classes can be used. If it relies on a different type of stratification, then a new ``Strata`` class must be written first. Next, the new stratified sampling method must be written as a new subclass of the ``STS`` class containing a ``create_samplesu01`` method that performs the stratified sampling on the unit hypercube. This method must take input that are consistent with the ``create_samplesu01`` method described in the ``STS`` class above.
 
 
 RSS Class

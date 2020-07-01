@@ -44,6 +44,7 @@
           <option value="scipy.spatial.qhull.Delaunay.nsimplex" />
           <option value="scipy.spatial.qhull.Delaunay.simplices" />
           <option value="scipy.spatial.qhull.ConvexHull.volume" />
+          <option value="scipy.spatial.qhull.Delaunay.vertices" />
         </list>
       </option>
     </inspection_tool>

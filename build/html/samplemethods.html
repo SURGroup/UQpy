@@ -408,7 +408,14 @@ of the <code class="docutils literal notranslate"><span class="pre">LHS</span></
 </div>
 <div class="section" id="stratified-sampling">
 <h2>Stratified Sampling<a class="headerlink" href="#stratified-sampling" title="Permalink to this headline">¶</a></h2>
-<p>Stratified sampling is a variance reduction technique that divides the parameter space into a set of disjoint and space-filling strata. Samples are then drawn from these strata in order to improve the space-filling properties of the sample design. <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> supports several stratified sampling variations that vary from conventional stratified sampling designs to advanced gradient informed methods for adaptive stratified sampling. Stratified sampling capabilities are built in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> from three sets of classes. These class structures facilitate a highly flexible and varied range of stratified sampling designs that can be extended in a straightforward way. Specifically, the existing classes allow stratification of n-dimensional parameter spaces based on three common spatial discretizations: a rectilinear decomposition into hyper-rectangles (orthotopes), a Voronoi decomposition, and a Delaunay decomposition. The three parent classes are:</p>
+<p>Stratified sampling is a variance reduction technique that divides the parameter space into a set of disjoint and space-filling strata. Samples are then drawn from these strata in order to improve the space-filling properties of the sample design. Stratified sampling allows for unequally weighted samples, such that a Monte Carlo estimator of the quantity <span class="math notranslate nohighlight">\(E[Y]\)</span> takes the following form:</p>
+<div class="math notranslate nohighlight">
+\[E[Y] \approx \sum_{i=1}^N w_i Y_i\]</div>
+<p>where <span class="math notranslate nohighlight">\(w_i\)</span> are the sample weights and <span class="math notranslate nohighlight">\(Y_i\)</span> are the model evaluations. The individual sample weights are computed as:</p>
+<div class="math notranslate nohighlight">
+\[w_i = \dfrac{V_{i}}{N_{i}}\]</div>
+<p>where <span class="math notranslate nohighlight">\(V_{i}\le 1\)</span> is the volume of stratum <span class="math notranslate nohighlight">\(i\)</span> in the unit hypercube (i.e. the probability that a random sample will fall in stratum <span class="math notranslate nohighlight">\(i\)</span>) and <span class="math notranslate nohighlight">\(N_{i}\)</span> is the number of samples drawn from stratum <span class="math notranslate nohighlight">\(i\)</span>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">UQpy</span></code> supports several stratified sampling variations that vary from conventional stratified sampling designs to advanced gradient informed methods for adaptive stratified sampling. Stratified sampling capabilities are built in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> from three sets of classes. These class structures facilitate a highly flexible and varied range of stratified sampling designs that can be extended in a straightforward way. Specifically, the existing classes allow stratification of n-dimensional parameter spaces based on three common spatial discretizations: a rectilinear decomposition into hyper-rectangles (orthotopes), a Voronoi decomposition, and a Delaunay decomposition. The three parent classes are:</p>
 <ol class="arabic simple">
 <li><p>The <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class defines the geometric structure of the stratification of the parameter space and it has three existing subclasses - <code class="docutils literal notranslate"><span class="pre">RectangularStrata</span></code>, <code class="docutils literal notranslate"><span class="pre">VoronoiStrata</span></code>, and <code class="docutils literal notranslate"><span class="pre">DelaunayStrata</span></code> that correspond to geometric decompositions of the parameter space based on rectilinear strata of orthotopes, strata composed of Voronoi cells, and strata composed of Delaunay simplexes respectively.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">STS</span></code> class defines a set of subclasses used to draw samples from strata defined by a <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class object.</p></li>
@@ -874,22 +881,14 @@ any subclass of the <code class="docutils literal notranslate"><span class="pre"
 </div>
 <div class="section" id="sts-class">
 <h3>STS Class<a class="headerlink" href="#sts-class" title="Permalink to this headline">¶</a></h3>
-<p>Stratified sampling is a variance reduction sampling technique that aims to uniformly distribute the random samples to create a more space-filling design. The sample space is divided into a set of space-filling and disjoint regions, called strata and samples are generated inside each strata. <a class="footnote-reference brackets" href="#id40" id="id4">9</a></p>
-<p>The <code class="docutils literal notranslate"><span class="pre">STS</span></code> class is the parent class for stratified sampling. The various <code class="docutils literal notranslate"><span class="pre">STS</span></code> classes generate random samples from a specified probability distribution(s) using stratified sampling with strata specified by an object of one of the <code class="docutils literal notranslate"><span class="pre">Strata</span></code> classes.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">STS</span></code> class is the parent class for stratified sampling. The various <code class="docutils literal notranslate"><span class="pre">STS</span></code> classes generate random samples from a specified probability distribution(s) using stratified sampling with strata specified by an object of one of the <code class="docutils literal notranslate"><span class="pre">Strata</span></code> classes. The <code class="docutils literal notranslate"><span class="pre">STS</span></code> class currently has three child classes - <code class="docutils literal notranslate"><span class="pre">RectangularSTS</span></code>, <code class="docutils literal notranslate"><span class="pre">VoronoiSTS</span></code>, and <code class="docutils literal notranslate"><span class="pre">DelaunaySTS</span></code> - corresponding to stratified sampling methods based rectangular, Voronoi, and Delaunay strata respectively. The following details these classes.</p>
 </div>
-<div class="section" id="id5">
-<h3>Class Descriptions<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h3>Class Descriptions<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.STS">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">STS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#STS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.STS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate samples from an assigned probability density function using Stratified Sampling (<a href="#id42"><span class="problematic" id="id6">[1]_</span></a>).</p>
-<p><strong>References:</strong></p>
-<dl class="footnote brackets">
-<dt class="label" id="id7"><span class="brackets">1</span></dt>
-<dd><p>M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, “Refined Stratified Sampling for efficient Monte
-Carlo based uncertainty quantification,” Reliability Engineering and System Safety,vol.142, pp.310-325,2015.</p>
-</dd>
-</dl>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">STS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">strata_object</em>, <em class="sig-param">nsamples_per_stratum=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#STS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.STS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate samples from an assigned probability density function using Stratified Sampling (<a class="footnote-reference brackets" href="#id38" id="id5">9</a>).</p>
 <p><strong>Inputs:</strong></p>
 <ul>
 <li><dl class="simple">
@@ -898,22 +897,34 @@ Carlo based uncertainty quantification,” Reliability Engineering and System Sa
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>input_file</strong> (<cite>str</cite>):</dt><dd><p>File path to input file specifying stratum origins and stratum widths.</p>
+<dt><strong>strata_object</strong> (<code class="docutils literal notranslate"><span class="pre">Strata</span></code> object)</dt><dd><p>Defines the stratification of the unit hypercube. This must be provided and must be an object of a <code class="docutils literal notranslate"><span class="pre">Strata</span></code>
+child class: <code class="docutils literal notranslate"><span class="pre">RectangularStrata</span></code>, <code class="docutils literal notranslate"><span class="pre">VoronoiStrata</span></code>, or <code class="docutils literal notranslate"><span class="pre">DelaunayStrata</span></code>.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt><strong>samplesU01</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the generated samples on [0, 1]^dimension.</p>
+<li><dl>
+<dt><strong>nsamples_per_stratum</strong> (<cite>int</cite> or <cite>list</cite>):</dt><dd><p>Specifies the number of samples in each stratum. This must be either an integer, in which case an equal number
+of samples are drawn from each stratum, or a list. If it is provided as a list, the length of the list must be
+equal to the number of strata.</p>
+<p>If <cite>nsamples_per_stratum</cite> is provided when the class is defined, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method will be executed
+automatically.  If neither <cite>nsamples_per_stratum</cite> or <cite>nsamples</cite> are provided when the class is defined, the user
+must call the <code class="docutils literal notranslate"><span class="pre">run</span></code> method to perform stratified sampling.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt><strong>strata</strong> (<cite>class</cite> object):</dt><dd><p>Instance of the class SampleMethods.Strata.</p>
+<li><dl>
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Specify the total number of samples. If <cite>nsamples</cite> is specified, the samples will be drawn in proportion to
+the volume of the strata. Thus, each stratum will contain <span class="math notranslate nohighlight">\(round(V_i*nsamples)\)</span> samples.</p>
+<p>If <cite>nsamples</cite> is provided when the class is defined, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method will be executed
+automatically.  If neither <cite>nsamples_per_stratum</cite> or <cite>nsamples</cite> are provided when the class is defined, the user
+must call the <code class="docutils literal notranslate"><span class="pre">run</span></code> method to perform stratified sampling.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt><strong>random_state</strong> (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+<li><dl>
+<dt><strong>random_state</strong> (None or <cite>int</cite> or <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+<p>If an integer is provided, this sets the seed for an object of <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code>. Otherwise, the
+object itself can be passed directly.</p>
 </dd>
 </dl>
 </li>
@@ -927,20 +938,96 @@ Carlo based uncertainty quantification,” Reliability Engineering and System Sa
 <p><strong>Attributes:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the generated samples.</p>
+<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p>The generated samples following the prescribed distribution.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>samplesU01</strong> (<cite>ndarray</cite>)</dt><dd><p>The generated samples on the unit hypercube.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>weights</strong> (<cite>ndarray</cite>)</dt><dd><p>Individual sample weights.</p>
 </dd>
 </dl>
 </li>
 </ul>
 <p><strong>Methods:</strong></p>
 <dl class="method">
+<dt id="UQpy.SampleMethods.STS.create_samplesu01">
+<code class="sig-name descname">create_samplesu01</code><span class="sig-paren">(</span><em class="sig-param">nsamples_per_stratum</em>, <em class="sig-param">nsamples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#STS.create_samplesu01"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.STS.create_samplesu01" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes the specific stratified sampling algorithm. This method is overwritten by each child class of <code class="docutils literal notranslate"><span class="pre">STS</span></code>.</p>
+<p><strong>Input:</strong></p>
+<ul>
+<li><dl>
+<dt><strong>nsamples_per_stratum</strong> (<cite>int</cite> or <cite>list</cite>):</dt><dd><p>Specifies the number of samples in each stratum. This must be either an integer, in which case an equal
+number of samples are drawn from each stratum, or a list. If it is provided as a list, the length of the
+list must be equal to the number of strata.</p>
+<p>Either <cite>nsamples_per_stratum</cite> or <cite>nsamples</cite> must be provided.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Specify the total number of samples. If <cite>nsamples</cite> is specified, the samples will be drawn in proportion to
+the volume of the strata. Thus, each stratum will contain <span class="math notranslate nohighlight">\(round(V_i*nsamples)\)</span> samples where
+<span class="math notranslate nohighlight">\(V_i \le 1\)</span> is the volume of stratum <cite>i</cite> in the unit hypercube.</p>
+<p>Either <cite>nsamples_per_stratum</cite> or <cite>nsamples</cite> must be provided.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Outputs:</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">create_samplesu01</span></code> method has no output, although it modifies the <cite>samplesu01</cite> and <cite>weights</cite> attributes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.SampleMethods.STS.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples_per_stratum=None</em>, <em class="sig-param">nsamples=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#STS.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.STS.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes stratified sampling.</p>
+<p>This method performs the sampling for each of the child classes by running two methods:
+<code class="docutils literal notranslate"><span class="pre">create_samplesu01</span></code>, and <code class="docutils literal notranslate"><span class="pre">transform_samples</span></code>. The <code class="docutils literal notranslate"><span class="pre">create_samplesu01</span></code> method is
+unique to each child class and therefore must be overwritten when a new child class is defined. The
+<code class="docutils literal notranslate"><span class="pre">transform_samples</span></code> method is common to all stratified sampling classes and is therefore defined by the parent
+class. It does not need to be modified.</p>
+<p>If <cite>nsamples</cite> or <cite>nsamples_per_stratum</cite> is provided when the class is defined, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method will be
+executed automatically.  If neither <cite>nsamples_per_stratum</cite> or <cite>nsamples</cite> are provided when the class is defined,
+the user must call the <code class="docutils literal notranslate"><span class="pre">run</span></code> method to perform stratified sampling.</p>
+<p><strong>Input:</strong></p>
+<ul>
+<li><dl>
+<dt><strong>nsamples_per_stratum</strong> (<cite>int</cite> or <cite>list</cite>):</dt><dd><p>Specifies the number of samples in each stratum. This must be either an integer, in which case an equal
+number of samples are drawn from each stratum, or a list. If it is provided as a list, the length of the
+list must be equal to the number of strata.</p>
+<p>If <cite>nsamples_per_stratum</cite> is provided when the class is defined, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method will be executed
+automatically.  If neither <cite>nsamples_per_stratum</cite> or <cite>nsamples</cite> are provided when the class is defined, the
+user must call the <code class="docutils literal notranslate"><span class="pre">run</span></code> method to perform stratified sampling.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Specify the total number of samples. If <cite>nsamples</cite> is specified, the samples will be drawn in proportion to
+the volume of the strata. Thus, each stratum will contain <span class="math notranslate nohighlight">\(round(V_i*nsamples)\)</span> samples where
+<span class="math notranslate nohighlight">\(V_i \le 1\)</span> is the volume of stratum <cite>i</cite> in the unit hypercube.</p>
+<p>If <cite>nsamples</cite> is provided when the class is defined, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method will be executed
+automatically.  If neither <cite>nsamples_per_stratum</cite> or <cite>nsamples</cite> are provided when the class is defined, the
+user must call the <code class="docutils literal notranslate"><span class="pre">run</span></code> method to perform stratified sampling.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Outputs:</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method has no output, although it modifies the <cite>samples</cite>, <cite>samplesu01</cite>, and <cite>weights</cite> attributes.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="UQpy.SampleMethods.STS.transform_samples">
 <code class="sig-name descname">transform_samples</code><span class="sig-paren">(</span><em class="sig-param">samples01</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#STS.transform_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.STS.transform_samples" title="Permalink to this definition">¶</a></dt>
-<dd><p>Transform samples in [0, 1] domain  using inverse CDF.</p>
+<dd><p>Transform samples in the unit hypercube <span class="math notranslate nohighlight">\([0, 1]^n\)</span> to the prescribed distribution using the inverse CDF.</p>
 <p><strong>Inputs:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>samples01</strong> (<cite>np.ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the generated samples on [0, 1]^dimension.</p>
+<dt><strong>samplesU01</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the generated samples on [0, 1]^dimension.</p>
 </dd>
 </dl>
 </li>
@@ -948,7 +1035,7 @@ Carlo based uncertainty quantification,” Reliability Engineering and System Sa
 <p><strong>Outputs:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the generated samples.</p>
+<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the generated samples following the prescribed distribution.</p>
 </dd>
 </dl>
 </li>
@@ -961,50 +1048,26 @@ Carlo based uncertainty quantification,” Reliability Engineering and System Sa
 <dt id="UQpy.SampleMethods.RectangularSTS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">RectangularSTS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">strata_object</em>, <em class="sig-param">nsamples_per_stratum=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">sts_criterion='random'</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#RectangularSTS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.RectangularSTS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Executes Stratified Sampling using Rectangular Stratification.</p>
+<p><code class="docutils literal notranslate"><span class="pre">RectangularSTS</span></code> is a child class of <code class="docutils literal notranslate"><span class="pre">STS</span></code>. <code class="docutils literal notranslate"><span class="pre">RectangularSTS</span></code> takes in all parameters defined in the parent
+<code class="docutils literal notranslate"><span class="pre">STS</span></code> class with differences note below. Only those inputs and attributes that differ from the parent class are
+listed below. See documentation for <code class="docutils literal notranslate"><span class="pre">STS</span></code> for additional details.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
 <li><dl class="simple">
-<dt><strong>dist_object</strong> ((list of) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>List of <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> objects corresponding to each random variable.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>strata_object</strong> (<code class="docutils literal notranslate"><span class="pre">RectangularStrata</span></code> object):</dt><dd><p>A <code class="docutils literal notranslate"><span class="pre">RectangularStrata</span></code> object which contains the information related to stratification in [0, 1]^dimension
-domain.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nsamples_per_stratum</strong> (<cite>list</cite>):</dt><dd><p>List of integers specifiying the number of samples in each stratum.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Total number of samples. This indicates RectangularSTS class to generate proportional sampling.</p>
+<dt><strong>strata_object</strong> (<code class="docutils literal notranslate"><span class="pre">RectangularStrata</span></code> object):</dt><dd><p>The <cite>strata_object</cite> for <code class="docutils literal notranslate"><span class="pre">RectangularSTS</span></code> must be an object of tyhe <code class="docutils literal notranslate"><span class="pre">RectangularStrata</span></code> class.</p>
 </dd>
 </dl>
 </li>
 <li><dl>
-<dt><strong>sts_criterion</strong> (<cite>str</cite>):</dt><dd><p>Random or Centered samples inside a rectangular strata.
+<dt><strong>sts_criterion</strong> (<cite>str</cite>):</dt><dd><p>Random or Centered samples inside the rectangular strata.
 Options:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li><p>‘random’ - completely random.</p></li>
-<li><p>‘centered’ - points only at the centre.</p></li>
+<li><p>‘random’ - Samples are drawn randomly within the strata.</p></li>
+<li><p>‘centered’ - Samples are drawn at the center of the strata.</p></li>
 </ol>
 </div></blockquote>
 <p>Default: ‘random’</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>random_state</strong> (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>verbose</strong> (<cite>Boolean</cite>):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
-<p>Default value: False</p>
 </dd>
 </dl>
 </li>
@@ -1012,164 +1075,51 @@ Options:</p>
 <p><strong>Methods:</strong></p>
 <dl class="method">
 <dt id="UQpy.SampleMethods.RectangularSTS.create_samplesu01">
-<code class="sig-name descname">create_samplesu01</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#RectangularSTS.create_samplesu01"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.RectangularSTS.create_samplesu01" title="Permalink to this definition">¶</a></dt>
-<dd><p>This method generates required number of samples in [0, 1]^ dimension domain using the stratification provided
-to RectangularSTS class.</p>
-<p><strong>Outputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>samplesU01</strong> (<cite>np.ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the generated samples on [0, 1]^dimension.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
-
-<dl class="method">
-<dt id="UQpy.SampleMethods.RectangularSTS.run_checks">
-<code class="sig-name descname">run_checks</code><span class="sig-paren">(</span><em class="sig-param">nsamples_per_stratum=None</em>, <em class="sig-param">nsamples=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#RectangularSTS.run_checks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.RectangularSTS.run_checks" title="Permalink to this definition">¶</a></dt>
-<dd><p>Consistency check for input parameters of run method.</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>nsamples_per_stratum</strong> (<cite>list</cite>):</dt><dd><p>List of integers specifiying the number of samples in each stratum.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Total number of samples. This indicates RectangularSTS class to generate proportional sampling.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>This method doesn’t return anything.</p>
+<code class="sig-name descname">create_samplesu01</code><span class="sig-paren">(</span><em class="sig-param">nsamples_per_stratum=None</em>, <em class="sig-param">nsamples=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#RectangularSTS.create_samplesu01"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.RectangularSTS.create_samplesu01" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overwrites the <code class="docutils literal notranslate"><span class="pre">create_samplesu01</span></code> method in the parent class to generate samples in rectangular strata on the
+unit hypercube. It has the same inputs and outputs as the <code class="docutils literal notranslate"><span class="pre">create_samplesu01</span></code> method in the parent class. See
+the <code class="docutils literal notranslate"><span class="pre">STS</span></code> class for additional details.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="UQpy.SampleMethods.VoronoiSTS">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">VoronoiSTS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">strata_object=None</em>, <em class="sig-param">nsamples_per_stratum=1</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#VoronoiSTS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.VoronoiSTS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">VoronoiSTS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">strata_object</em>, <em class="sig-param">nsamples_per_stratum=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#VoronoiSTS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.VoronoiSTS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Executes Stratified Sampling using Voronoi Stratification.</p>
+<p><code class="docutils literal notranslate"><span class="pre">VoronoiSTS</span></code> is a child class of <code class="docutils literal notranslate"><span class="pre">STS</span></code>. <code class="docutils literal notranslate"><span class="pre">VoronoiSTS</span></code> takes in all parameters defined in the parent
+<code class="docutils literal notranslate"><span class="pre">STS</span></code> class with differences note below. Only those inputs and attributes that differ from the parent class are
+listed below. See documentation for <code class="docutils literal notranslate"><span class="pre">STS</span></code> for additional details.</p>
 <p><strong>Inputs:</strong></p>
-<ul>
+<ul class="simple">
 <li><dl class="simple">
-<dt><strong>dist_object</strong> ((list of) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>List of <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> objects corresponding to each random variable.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>strata_object</strong> (<code class="docutils literal notranslate"><span class="pre">RectangularStrata</span></code> object):</dt><dd><p>A <code class="docutils literal notranslate"><span class="pre">RectangularStrata</span></code> object which contains the information related to stratification in [0, 1]^dimension
-domain.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nsamples_per_stratum</strong> (<cite>list</cite>):</dt><dd><p>List of integers specifiying the number of samples in each stratum.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Total number of samples. This indicates RectangularSTS class to generate proportional sampling.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>sts_criterion</strong> (<cite>str</cite>):</dt><dd><p>Random or Centered samples inside a rectangular strata.
-Options:</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>‘random’ - completely random.</p></li>
-<li><p>‘centered’ - points only at the centre.</p></li>
-</ol>
-</div></blockquote>
-<p>Default: ‘random’</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>random_state</strong> (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>verbose</strong> (<cite>Boolean</cite>):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
-<p>Default value: False</p>
+<dt><strong>strata_object</strong> (<code class="docutils literal notranslate"><span class="pre">VoronoiStrata</span></code> object):</dt><dd><p>The <cite>strata_object</cite> for <code class="docutils literal notranslate"><span class="pre">VoronoiSTS</span></code> must be an object of the <code class="docutils literal notranslate"><span class="pre">VoronoiStrata</span></code> class.</p>
 </dd>
 </dl>
 </li>
 </ul>
 <p><strong>Methods:</strong></p>
 <dl class="method">
-<dt id="UQpy.SampleMethods.VoronoiSTS.run_checks">
-<code class="sig-name descname">run_checks</code><span class="sig-paren">(</span><em class="sig-param">nsamples_per_stratum=None</em>, <em class="sig-param">nsamples=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#VoronoiSTS.run_checks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.VoronoiSTS.run_checks" title="Permalink to this definition">¶</a></dt>
-<dd><p>Consistency check for input parameters of run method.</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>nsamples_per_stratum</strong> (<cite>list</cite>):</dt><dd><p>List of integers specifiying the number of samples in each stratum.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Total number of samples. This indicates RectangularSTS class to generate proportional sampling.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>This method doesn’t return anything.</p>
+<dt id="UQpy.SampleMethods.VoronoiSTS.create_samplesu01">
+<code class="sig-name descname">create_samplesu01</code><span class="sig-paren">(</span><em class="sig-param">nsamples_per_stratum=None</em>, <em class="sig-param">nsamples=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#VoronoiSTS.create_samplesu01"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.VoronoiSTS.create_samplesu01" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overwrites the <code class="docutils literal notranslate"><span class="pre">create_samplesu01</span></code> method in the parent class to generate samples in Voronoi strata on the
+unit hypercube. It has the same inputs and outputs as the <code class="docutils literal notranslate"><span class="pre">create_samplesu01</span></code> method in the parent class. See
+the <code class="docutils literal notranslate"><span class="pre">STS</span></code> class for additional details.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="UQpy.SampleMethods.DelaunaySTS">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">DelaunaySTS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">strata_object=None</em>, <em class="sig-param">nsamples_per_stratum=1</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DelaunaySTS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DelaunaySTS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">DelaunaySTS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">strata_object</em>, <em class="sig-param">nsamples_per_stratum=1</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DelaunaySTS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DelaunaySTS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Executes Stratified Sampling using Delaunay Stratification.</p>
+<p><code class="docutils literal notranslate"><span class="pre">DelaunaySTS</span></code> is a child class of <code class="docutils literal notranslate"><span class="pre">STS</span></code>. <code class="docutils literal notranslate"><span class="pre">DelaunaySTS</span></code> takes in all parameters defined in the parent
+<code class="docutils literal notranslate"><span class="pre">STS</span></code> class with differences note below. Only those inputs and attributes that differ from the parent class are
+listed below. See documentation for <code class="docutils literal notranslate"><span class="pre">STS</span></code> for additional details.</p>
 <p><strong>Inputs:</strong></p>
-<ul>
+<ul class="simple">
 <li><dl class="simple">
-<dt><strong>dist_object</strong> ((list of) <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object(s)):</dt><dd><p>List of <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> objects corresponding to each random variable.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>strata_object</strong> (<code class="docutils literal notranslate"><span class="pre">RectangularStrata</span></code> object):</dt><dd><p>A <code class="docutils literal notranslate"><span class="pre">RectangularStrata</span></code> object which contains the information related to stratification in [0, 1]^dimension
-domain.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nsamples_per_stratum</strong> (<cite>list</cite>):</dt><dd><p>List of integers specifiying the number of samples in each stratum.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Total number of samples. This indicates RectangularSTS class to generate proportional sampling.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>sts_criterion</strong> (<cite>str</cite>):</dt><dd><p>Random or Centered samples inside a rectangular strata.
-Options:</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>‘random’ - completely random.</p></li>
-<li><p>‘centered’ - points only at the centre.</p></li>
-</ol>
-</div></blockquote>
-<p>Default: ‘random’</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>random_state</strong> (None or <cite>int</cite> or <cite>np.random.RandomState</cite> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><strong>verbose</strong> (<cite>Boolean</cite>):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
-<p>Default value: False</p>
+<dt><strong>strata_object</strong> (<code class="docutils literal notranslate"><span class="pre">DelaunayStrata</span></code> object):</dt><dd><p>The <cite>strata_object</cite> for <code class="docutils literal notranslate"><span class="pre">DelaunaySTS</span></code> must be an object of the <code class="docutils literal notranslate"><span class="pre">DelaunayStrata</span></code> class.</p>
 </dd>
 </dl>
 </li>
@@ -1177,37 +1127,10 @@ Options:</p>
 <p><strong>Methods:</strong></p>
 <dl class="method">
 <dt id="UQpy.SampleMethods.DelaunaySTS.create_samplesu01">
-<code class="sig-name descname">create_samplesu01</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DelaunaySTS.create_samplesu01"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DelaunaySTS.create_samplesu01" title="Permalink to this definition">¶</a></dt>
-<dd><p>This method generates required number of samples in [0, 1]^ dimension domain using the stratification provided
-to RectangularSTS class.</p>
-<p><strong>Outputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>samplesU01</strong> (<cite>np.ndarray</cite>):</dt><dd><p><cite>ndarray</cite> containing the generated samples on [0, 1]^dimension.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
-
-<dl class="method">
-<dt id="UQpy.SampleMethods.DelaunaySTS.run_checks">
-<code class="sig-name descname">run_checks</code><span class="sig-paren">(</span><em class="sig-param">nsamples_per_stratum=None</em>, <em class="sig-param">nsamples=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DelaunaySTS.run_checks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DelaunaySTS.run_checks" title="Permalink to this definition">¶</a></dt>
-<dd><p>Consistency check for input parameters of run method.</p>
-<p><strong>Inputs:</strong></p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>nsamples_per_stratum</strong> (<cite>list</cite>):</dt><dd><p>List of integers specifiying the number of samples in each stratum.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Total number of samples. This indicates RectangularSTS class to generate proportional sampling.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>This method doesn’t return anything.</p>
+<code class="sig-name descname">create_samplesu01</code><span class="sig-paren">(</span><em class="sig-param">nsamples_per_stratum=None</em>, <em class="sig-param">nsamples=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#DelaunaySTS.create_samplesu01"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.DelaunaySTS.create_samplesu01" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overwrites the <code class="docutils literal notranslate"><span class="pre">create_samplesu01</span></code> method in the parent class to generate samples in Delaunay strata on the
+unit hypercube. It has the same inputs and outputs as the <code class="docutils literal notranslate"><span class="pre">create_samplesu01</span></code> method in the parent class. See
+the <code class="docutils literal notranslate"><span class="pre">STS</span></code> class for additional details.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1215,27 +1138,27 @@ to RectangularSTS class.</p>
 </div>
 <div class="section" id="adding-a-new-sts-class">
 <h3>Adding a new <code class="docutils literal notranslate"><span class="pre">STS</span></code> class<a class="headerlink" href="#adding-a-new-sts-class" title="Permalink to this headline">¶</a></h3>
-<p>Adding a new stratified sampling method first requires that an appropriate <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class exists. If the new method is based on rectangular, Voronoi, or Delaunay stratification one of the existing <code class="docutils literal notranslate"><span class="pre">Strata</span></code> classes can be used. If it relies on a different type of stratification, then a new <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class must be written first. Next, the new stratified sampling method must be written as a new subclass of the <code class="docutils literal notranslate"><span class="pre">STS</span></code> class.</p>
+<p>Adding a new stratified sampling method first requires that an appropriate <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class exists. If the new method is based on rectangular, Voronoi, or Delaunay stratification one of the existing <code class="docutils literal notranslate"><span class="pre">Strata</span></code> classes can be used. If it relies on a different type of stratification, then a new <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class must be written first. Next, the new stratified sampling method must be written as a new subclass of the <code class="docutils literal notranslate"><span class="pre">STS</span></code> class containing a <code class="docutils literal notranslate"><span class="pre">create_samplesu01</span></code> method that performs the stratified sampling on the unit hypercube. This method must take input that are consistent with the <code class="docutils literal notranslate"><span class="pre">create_samplesu01</span></code> method described in the <code class="docutils literal notranslate"><span class="pre">STS</span></code> class above.</p>
 </div>
 <div class="section" id="rss-class">
 <h3>RSS Class<a class="headerlink" href="#rss-class" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">RSS</span></code> class generated samples randomly or uses gradient-based adaptive approach to reduce the variance of output statistical estimates. The method used to generate samples is define by <cite>runmodel_object</cite> parameter. If, it is not defined then RSS class executes Refined Stratified sampling, otherwise Gradient Enhanced Refined Stratified sampling is executed. Refined Stratified sampling randomly selects the stratum to refine from the strata/cells with maximum weight. Whereas, Gradient Enhaced Refined Stratified sampling selects the strata/cells with maximum stratum variance. This class divides the sample domain using either rectangular stratification or voronoi cells, this is define by the <cite>sample_object</cite> parameter. In case of rectangular stratification, selected strata is divided along the maximum width to define new strata. In case of Voronoi cells, the new sample is drawn from a sub-simplex, which is used for refinement.</p>
 </div>
-<div class="section" id="id8">
-<h3>Class Descriptions<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id6">
+<h3>Class Descriptions<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.RSS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">RSS</code><span class="sig-paren">(</span><em class="sig-param">sample_object=None</em>, <em class="sig-param">runmodel_object=None</em>, <em class="sig-param">krig_object=None</em>, <em class="sig-param">local=False</em>, <em class="sig-param">max_train_size=None</em>, <em class="sig-param">step_size=0.005</em>, <em class="sig-param">qoi_name=None</em>, <em class="sig-param">n_add=1</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#RSS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.RSS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate new samples using adaptive sampling methods, i.e. Refined Stratified Sampling and Gradient
-Enhanced Refined Stratified Sampling (<a href="#id43"><span class="problematic" id="id9">[1]_</span></a>, <a href="#id44"><span class="problematic" id="id10">[2]_</span></a>).</p>
+Enhanced Refined Stratified Sampling (<a href="#id40"><span class="problematic" id="id7">[1]_</span></a>, <a href="#id41"><span class="problematic" id="id8">[2]_</span></a>).</p>
 <p><strong>References:</strong></p>
 <dl class="footnote brackets">
-<dt class="label" id="id11"><span class="brackets">1</span></dt>
+<dt class="label" id="id9"><span class="brackets">1</span></dt>
 <dd><p>Michael D. Shields, Kirubel Teferra, Adam Hapij and Raymond P. Daddazio, “Refined Stratified Sampling for
 efficient Monte Carlo based uncertainty quantification”, Reliability Engineering &amp; System Safety,
 ISSN: 0951-8320, Vol: 142, Page: 310-325, 2015.</p>
 </dd>
-<dt class="label" id="id12"><span class="brackets">2</span></dt>
+<dt class="label" id="id10"><span class="brackets">2</span></dt>
 <dd><p>M. D. Shields, “Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems”,
 Reliability Engineering &amp; System Safety, ISSN: 0951-8320, Vol: 175, Page: 207-224, 2018.</p>
 </dd>
@@ -1375,9 +1298,9 @@ the <code class="docutils literal notranslate"><span class="pre">RSS</span></cod
 \[\mathbf{M_{n_d}} = \zeta_0 + \sum_{i=1}^{n_d} \Big{[}\prod_{j=1}^{i} r_{n_d-j+1}^{\frac{1}{n_d-j+1}}\Big{]}(\zeta_i - \zeta_{i-1})\]</div>
 <p>where <span class="math notranslate nohighlight">\(M_{n_d}\)</span> is an <span class="math notranslate nohighlight">\(n_d\)</span> dimensional array defining the coordinates of new sample. This mapping is illustrated below for a two-dimensional simplex.</p>
 <a class="reference internal image-reference" href="_images/SampleMethods_Simplex.png"><img alt="Randomly generated point inside a 2-D simplex" class="align-center" src="_images/SampleMethods_Simplex.png" style="width: 339.0px; height: 261.0px;" /></a>
-<p>Additional details can be found in <a class="footnote-reference brackets" href="#id39" id="id13">8</a>.</p>
-<div class="section" id="id14">
-<h3>Class Descriptions<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<p>Additional details can be found in <a class="footnote-reference brackets" href="#id37" id="id11">8</a>.</p>
+<div class="section" id="id12">
+<h3>Class Descriptions<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.Simplex">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">Simplex</code><span class="sig-paren">(</span><em class="sig-param">nodes=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#Simplex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.Simplex" title="Permalink to this definition">¶</a></dt>
@@ -1443,13 +1366,13 @@ class.</p>
 </div>
 <div class="section" id="akmcs">
 <h2>AKMCS<a class="headerlink" href="#akmcs" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class generates samples adaptively using a specified Kriging-based learning function in a general Adaptive Kriging-Monte Carlo Sampling (AKMCS) framework. Based on the specified learning function, different objectives can be achieved. In particular, the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class has learning functions for reliabliity analysis (probability of failure estimation), global optimization, best global fit surrogate models, and can also accept user-defined learning functions for these and other objectives.  Note that the term AKMCS is adopted from <a class="footnote-reference brackets" href="#id34" id="id15">3</a> although the procedure is referred to by different names depending on the specific learning function employed. For example, when applied for optimization the algorithm leverages the expected improvement function and is known under the name Efficient Global Optimization (EGO) <a class="footnote-reference brackets" href="#id35" id="id16">4</a>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class generates samples adaptively using a specified Kriging-based learning function in a general Adaptive Kriging-Monte Carlo Sampling (AKMCS) framework. Based on the specified learning function, different objectives can be achieved. In particular, the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class has learning functions for reliabliity analysis (probability of failure estimation), global optimization, best global fit surrogate models, and can also accept user-defined learning functions for these and other objectives.  Note that the term AKMCS is adopted from <a class="footnote-reference brackets" href="#id32" id="id13">3</a> although the procedure is referred to by different names depending on the specific learning function employed. For example, when applied for optimization the algorithm leverages the expected improvement function and is known under the name Efficient Global Optimization (EGO) <a class="footnote-reference brackets" href="#id33" id="id14">4</a>.</p>
 <div class="section" id="learning-functions">
 <h3>Learning Functions<a class="headerlink" href="#learning-functions" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> provides a number of built-in learning functions as well as allowing the user to proviee a custom learning function. These learning functions are described below.</p>
 <div class="section" id="u-function">
 <h4>U-Function<a class="headerlink" href="#u-function" title="Permalink to this headline">¶</a></h4>
-<p>The U-function is a learning function adopted for Kriging-based reliability analysis adopted from <a class="footnote-reference brackets" href="#id34" id="id17">3</a>. Given a Kriging model <span class="math notranslate nohighlight">\(\hat{y}(\mathbf{x})\)</span>, point estimator of its standard devaition <span class="math notranslate nohighlight">\(\sigma_{\hat{y}}(\mathbf{x})\)</span>, and a set of learning points <span class="math notranslate nohighlight">\(S\)</span>, the U-function seeks out the point <span class="math notranslate nohighlight">\(\mathbf{x}\in S\)</span> that minimizes the function:</p>
+<p>The U-function is a learning function adopted for Kriging-based reliability analysis adopted from <a class="footnote-reference brackets" href="#id32" id="id15">3</a>. Given a Kriging model <span class="math notranslate nohighlight">\(\hat{y}(\mathbf{x})\)</span>, point estimator of its standard devaition <span class="math notranslate nohighlight">\(\sigma_{\hat{y}}(\mathbf{x})\)</span>, and a set of learning points <span class="math notranslate nohighlight">\(S\)</span>, the U-function seeks out the point <span class="math notranslate nohighlight">\(\mathbf{x}\in S\)</span> that minimizes the function:</p>
 <div class="math notranslate nohighlight">
 \[U(\mathbf{x}) = \dfrac{|\hat{y}(\mathbf{x})|}{\sigma_{\hat{y}}(\mathbf{x})}\]</div>
 <p>This point can be interpreted as the point in <span class="math notranslate nohighlight">\(S\)</span> where the Kriging model has the highest probabability of incorrectly identifying the sign of the performance function (i.e. incorrectly predicting the safe/fail state of the system).</p>
@@ -1460,7 +1383,7 @@ class.</p>
 </div>
 <div class="section" id="weighted-u-function">
 <h4>Weighted U-Function<a class="headerlink" href="#weighted-u-function" title="Permalink to this headline">¶</a></h4>
-<p>The probability weighted U-function is a learning function for reliability analysis adapted from the U-function in <a class="footnote-reference brackets" href="#id36" id="id18">5</a>. It modifies the U-function as follows:</p>
+<p>The probability weighted U-function is a learning function for reliability analysis adapted from the U-function in <a class="footnote-reference brackets" href="#id34" id="id16">5</a>. It modifies the U-function as follows:</p>
 <div class="math notranslate nohighlight">
 \[W(\mathbf{x}) = \dfrac{\max_x[p(\mathbf{x})] - p(\mathbf{x})}{\max_x[p(\mathbf{x})]} U(\mathbf{x})\]</div>
 <p>where <span class="math notranslate nohighlight">\(p(\mathbf{x})\)</span> is the probability density function of <span class="math notranslate nohighlight">\(\mathbf{x}\)</span>. This has the effect of decreasing the learning function for points that have higher probability of occurrence. Thus, given two points with identical values of <span class="math notranslate nohighlight">\(U(x)\)</span>, the weighted learning function will select the point with higher probability of occurrence.</p>
@@ -1468,7 +1391,7 @@ class.</p>
 </div>
 <div class="section" id="expected-feasibility-function">
 <h4>Expected Feasibility Function<a class="headerlink" href="#expected-feasibility-function" title="Permalink to this headline">¶</a></h4>
-<p>The Expected Feasibility Function (EFF) is a learning function for reliability analysis introduced as part of the Efficient Global Reliability Analysis (EGRA) method <a class="footnote-reference brackets" href="#id37" id="id19">6</a>. The EFF provides assesses how well the true value of the peformance function, <span class="math notranslate nohighlight">\(y(\mathbf{x})\)</span>, is expected to satisfy the constraint <span class="math notranslate nohighlight">\(y(\mathbf{x}) = a\)</span> over a region <span class="math notranslate nohighlight">\(a-\epsilon \le y(\mathbf{x}) \le a+\epsilon\)</span>. It is given by:</p>
+<p>The Expected Feasibility Function (EFF) is a learning function for reliability analysis introduced as part of the Efficient Global Reliability Analysis (EGRA) method <a class="footnote-reference brackets" href="#id35" id="id17">6</a>. The EFF provides assesses how well the true value of the peformance function, <span class="math notranslate nohighlight">\(y(\mathbf{x})\)</span>, is expected to satisfy the constraint <span class="math notranslate nohighlight">\(y(\mathbf{x}) = a\)</span> over a region <span class="math notranslate nohighlight">\(a-\epsilon \le y(\mathbf{x}) \le a+\epsilon\)</span>. It is given by:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align} EFF(\mathbf{x}) &amp;= (\hat{y}(\mathbf{x})-a)\bigg[2\Phi\bigg(\dfrac{a-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) - \Phi\bigg(\dfrac{(a-\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) - \Phi\bigg(\dfrac{(a+\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) \bigg] \\ &amp;-\sigma_{\hat{y}}(\mathbf{x})\bigg[2\phi\bigg(\dfrac{a-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) - \phi\bigg(\dfrac{(a-\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) - \phi\bigg(\dfrac{(a+\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) \bigg] \\ &amp;+ \bigg[ \Phi\bigg(\dfrac{(a+\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) - \Phi\bigg(\dfrac{(a-\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) \bigg] \end{align}\end{split}\]</div>
 <p>where <span class="math notranslate nohighlight">\(\Phi(\cdot)\)</span> and <span class="math notranslate nohighlight">\(\phi(\cdot)\)</span> are the standard normal cdf and pdf, respectively. For reliabilty, <span class="math notranslate nohighlight">\(a=0\)</span>, and it is suggest to use <span class="math notranslate nohighlight">\(\epsilon=2\sigma_{\hat{y}}^2\)</span>.</p>
@@ -1478,7 +1401,7 @@ class.</p>
 </div>
 <div class="section" id="expected-improvement-function">
 <h4>Expected Improvement Function<a class="headerlink" href="#expected-improvement-function" title="Permalink to this headline">¶</a></h4>
-<p>The Expected Improvement Function (EIF) is a Kriging-based learning function for global optimization introduced as part of the Efficient Global Optimization (EGO) method in <a class="footnote-reference brackets" href="#id35" id="id20">4</a>. The EIF seeks to find the global minimum of a function. It searches the space by placing samples at locations that maximize the expected improvement, where the improvement is defined as <span class="math notranslate nohighlight">\(I(\mathbf{x})=\max(y_{min}-y(\mathbf{x}), 0)\)</span>, where the model response <span class="math notranslate nohighlight">\(y(\mathbf{x})\)</span> is assumed to be a Gaussian random variable and <span class="math notranslate nohighlight">\(y_{min}\)</span> is the current minimum model response. The EIF is then expressed as:</p>
+<p>The Expected Improvement Function (EIF) is a Kriging-based learning function for global optimization introduced as part of the Efficient Global Optimization (EGO) method in <a class="footnote-reference brackets" href="#id33" id="id18">4</a>. The EIF seeks to find the global minimum of a function. It searches the space by placing samples at locations that maximize the expected improvement, where the improvement is defined as <span class="math notranslate nohighlight">\(I(\mathbf{x})=\max(y_{min}-y(\mathbf{x}), 0)\)</span>, where the model response <span class="math notranslate nohighlight">\(y(\mathbf{x})\)</span> is assumed to be a Gaussian random variable and <span class="math notranslate nohighlight">\(y_{min}\)</span> is the current minimum model response. The EIF is then expressed as:</p>
 <div class="math notranslate nohighlight">
 \[EIF(\mathbf{x}) = E[I(\mathbf{x})] = (y_{min}-\hat{y}(\mathbf{x})) \Phi \bigg(\dfrac{y_{min}-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) + \sigma_{\hat{y}}(\mathbf{x})\phi \bigg(\dfrac{y_{min}-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg)\]</div>
 <p>where <span class="math notranslate nohighlight">\(\Phi(\cdot)\)</span> and <span class="math notranslate nohighlight">\(\phi(\cdot)\)</span> are the standard normal cdf and pdf, respectively.</p>
@@ -1489,11 +1412,11 @@ class.</p>
 </div>
 <div class="section" id="expected-improvement-for-global-fit">
 <h4>Expected Improvement for Global Fit<a class="headerlink" href="#expected-improvement-for-global-fit" title="Permalink to this headline">¶</a></h4>
-<p>The Expected Improvement for Global Fit (EIGF) learning function aims to build the surrogate model that is the best global representation of model. It was introduced in <a class="footnote-reference brackets" href="#id38" id="id21">7</a>. It aims to balance between even space-filling design and sampling in regions of high variation and is given by:</p>
+<p>The Expected Improvement for Global Fit (EIGF) learning function aims to build the surrogate model that is the best global representation of model. It was introduced in <a class="footnote-reference brackets" href="#id36" id="id19">7</a>. It aims to balance between even space-filling design and sampling in regions of high variation and is given by:</p>
 <div class="math notranslate nohighlight">
 \[EIGF(\mathbf{x}) = (\hat{y}(\mathbf{x}) - y(\mathbf{x}_*))^2 + \sigma_{\hat{y}}(\mathbf{x})^2\]</div>
 <p>where <span class="math notranslate nohighlight">\(\mathbf{x}_*\)</span> is the point in the training set closest in distance to the point <span class="math notranslate nohighlight">\(\mathbf{x}\)</span> and <span class="math notranslate nohighlight">\(y(\mathbf{x}_*)\)</span> is the model response at that point.</p>
-<p>No stopping criterion is suggested by the authors of <a class="footnote-reference brackets" href="#id38" id="id22">7</a>, thus its implementation in <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> uses a fixed number of iterations.</p>
+<p>No stopping criterion is suggested by the authors of <a class="footnote-reference brackets" href="#id36" id="id20">7</a>, thus its implementation in <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> uses a fixed number of iterations.</p>
 </div>
 <div class="section" id="user-defined-learning-functions">
 <h4>User-Defined Learning Functions<a class="headerlink" href="#user-defined-learning-functions" title="Permalink to this headline">¶</a></h4>
@@ -1514,8 +1437,8 @@ class.</p>
 </div>
 </div>
 </div>
-<div class="section" id="id23">
-<h3>Class Descriptions<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id21">
+<h3>Class Descriptions<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.AKMCS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">AKMCS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">runmodel_object</em>, <em class="sig-param">krig_object</em>, <em class="sig-param">samples=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nlearn=10000</em>, <em class="sig-param">nstart=None</em>, <em class="sig-param">qoi_name=None</em>, <em class="sig-param">learning_function='U'</em>, <em class="sig-param">n_add=1</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS" title="Permalink to this definition">¶</a></dt>
@@ -1634,7 +1557,7 @@ object itself can be passed directly.</p>
 <dl class="method">
 <dt id="UQpy.SampleMethods.AKMCS.eff">
 <em class="property">static </em><code class="sig-name descname">eff</code><span class="sig-paren">(</span><em class="sig-param">surr</em>, <em class="sig-param">pop</em>, <em class="sig-param">n_add</em>, <em class="sig-param">parameters</em>, <em class="sig-param">samples</em>, <em class="sig-param">qoi</em>, <em class="sig-param">dist_object</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.eff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.eff" title="Permalink to this definition">¶</a></dt>
-<dd><p>Expected Feasibility Function (EFF) for reliability analysis, see <a class="footnote-reference brackets" href="#id37" id="id24">6</a> for a detailed explanation.</p>
+<dd><p>Expected Feasibility Function (EFF) for reliability analysis, see <a class="footnote-reference brackets" href="#id35" id="id22">6</a> for a detailed explanation.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
 <li><dl class="simple">
@@ -1699,7 +1622,7 @@ these include <cite>a</cite>, <cite>epsilon</cite>, and <cite>eff_stop</cite>.</
 <dl class="method">
 <dt id="UQpy.SampleMethods.AKMCS.eif">
 <em class="property">static </em><code class="sig-name descname">eif</code><span class="sig-paren">(</span><em class="sig-param">surr</em>, <em class="sig-param">pop</em>, <em class="sig-param">n_add</em>, <em class="sig-param">parameters</em>, <em class="sig-param">samples</em>, <em class="sig-param">qoi</em>, <em class="sig-param">dist_object</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.eif"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.eif" title="Permalink to this definition">¶</a></dt>
-<dd><p>Expected Improvement Function (EIF) for Efficient Global Optimization (EFO). See <a class="footnote-reference brackets" href="#id35" id="id25">4</a> for a detailed
+<dd><p>Expected Improvement Function (EIF) for Efficient Global Optimization (EFO). See <a class="footnote-reference brackets" href="#id33" id="id23">4</a> for a detailed
 explanation.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
@@ -1765,7 +1688,7 @@ this includes the parameter <cite>eif_stop</cite>.</p>
 <dl class="method">
 <dt id="UQpy.SampleMethods.AKMCS.eigf">
 <em class="property">static </em><code class="sig-name descname">eigf</code><span class="sig-paren">(</span><em class="sig-param">surr</em>, <em class="sig-param">pop</em>, <em class="sig-param">n_add</em>, <em class="sig-param">parameters</em>, <em class="sig-param">samples</em>, <em class="sig-param">qoi</em>, <em class="sig-param">dist_object</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.eigf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.eigf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Expected Improvement for Global Fit (EIGF) learning function. See <a class="footnote-reference brackets" href="#id38" id="id26">7</a> for a detailed explanation.</p>
+<dd><p>Expected Improvement for Global Fit (EIGF) learning function. See <a class="footnote-reference brackets" href="#id36" id="id24">7</a> for a detailed explanation.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
 <li><dl class="simple">
@@ -1930,7 +1853,7 @@ this includes the parameter <cite>u_stop</cite>.</p>
 <dl class="method">
 <dt id="UQpy.SampleMethods.AKMCS.weighted_u">
 <em class="property">static </em><code class="sig-name descname">weighted_u</code><span class="sig-paren">(</span><em class="sig-param">surr</em>, <em class="sig-param">pop</em>, <em class="sig-param">n_add</em>, <em class="sig-param">parameters</em>, <em class="sig-param">samples</em>, <em class="sig-param">qoi</em>, <em class="sig-param">dist_object</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#AKMCS.weighted_u"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.AKMCS.weighted_u" title="Permalink to this definition">¶</a></dt>
-<dd><p>Probability Weighted U-function for reliability analysis. See <a class="footnote-reference brackets" href="#id36" id="id27">5</a> for a detailed explanation.</p>
+<dd><p>Probability Weighted U-function for reliability analysis. See <a class="footnote-reference brackets" href="#id34" id="id25">5</a> for a detailed explanation.</p>
 <p><strong>Inputs:</strong></p>
 <ul>
 <li><dl class="simple">
@@ -1998,7 +1921,7 @@ this includes the parameter <cite>u_stop</cite>.</p>
 </div>
 <div class="section" id="mcmc">
 <h2>MCMC<a class="headerlink" href="#mcmc" title="Permalink to this headline">¶</a></h2>
-<p>The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution <span class="math notranslate nohighlight">\(p(x)=\frac{\tilde{p}(x)}{Z}\)</span>, where <span class="math notranslate nohighlight">\(\tilde{p}(x)\)</span> is known but <span class="math notranslate nohighlight">\(Z\)</span> is hard to compute (this will often be the case when using Bayes’ theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method, see e.g. (<a href="#id45"><span class="problematic" id="id28">[1]_</span></a>, <a href="#id46"><span class="problematic" id="id29">[2]_</span></a>). More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution <span class="math notranslate nohighlight">\(p(x)\)</span>.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:</p>
+<p>The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution <span class="math notranslate nohighlight">\(p(x)=\frac{\tilde{p}(x)}{Z}\)</span>, where <span class="math notranslate nohighlight">\(\tilde{p}(x)\)</span> is known but <span class="math notranslate nohighlight">\(Z\)</span> is hard to compute (this will often be the case when using Bayes’ theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method, see e.g. (<a href="#id42"><span class="problematic" id="id26">[1]_</span></a>, <a href="#id43"><span class="problematic" id="id27">[2]_</span></a>). More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution <span class="math notranslate nohighlight">\(p(x)\)</span>.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:</p>
 <ul class="simple">
 <li><p>initialize with a seed sample <span class="math notranslate nohighlight">\(x_{0}\)</span></p></li>
 <li><dl class="simple">
@@ -2029,8 +1952,8 @@ this includes the parameter <cite>u_stop</cite>.</p>
 <li><p>the <code class="docutils literal notranslate"><span class="pre">_check_methods_proposal</span></code> method checks whether a given proposal is adequate (i.e., has <code class="docutils literal notranslate"><span class="pre">rvs</span></code> and <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>/<code class="docutils literal notranslate"><span class="pre">pdf</span></code> methods).</p></li>
 </ul>
 </div>
-<div class="section" id="id30">
-<h3>Class Descriptions<a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id28">
+<h3>Class Descriptions<a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.MCMC">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MCMC</code><span class="sig-paren">(</span><em class="sig-param">dimension=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">nchains=None</em>, <em class="sig-param">save_log_pdf=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">concat_chains=True</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCMC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCMC" title="Permalink to this definition">¶</a></dt>
@@ -2465,8 +2388,8 @@ prints out the number of outlier chains.</p>
 \[w(\textbf{x}) = \frac{p(\textbf{x})}{q(\textbf{x})}\]</div>
 <p>If <span class="math notranslate nohighlight">\(p\)</span> is only known up to a constant, i.e., one can only evaluate <span class="math notranslate nohighlight">\(\tilde{p}(\textbf{x})\)</span>, where <span class="math notranslate nohighlight">\(p(\textbf{x})=\frac{\tilde{p}(\textbf{x})}{Z}\)</span>, IS can be used by further normalizing the weights (self-normalized IS). The following figure shows the weighted samples obtained when using IS to estimate a 2d Gaussian target distribution <span class="math notranslate nohighlight">\(p\)</span>, sampling from a uniform proposal distribution <span class="math notranslate nohighlight">\(q\)</span>.</p>
 <a class="reference internal image-reference" href="_images/SampleMethods_IS_samples.png"><img alt="IS weighted samples" class="align-center" src="_images/SampleMethods_IS_samples.png" style="width: 220.8px; height: 226.4px;" /></a>
-<div class="section" id="id31">
-<h3>Class Descriptions<a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id29">
+<h3>Class Descriptions<a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.IS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">IS</code><span class="sig-paren">(</span><em class="sig-param">nsamples=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">args_target=None</em>, <em class="sig-param">proposal=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS" title="Permalink to this definition">¶</a></dt>
@@ -2594,30 +2517,30 @@ samples as log_w_unnormalized) = log(target)-log(proposal).</p>
 </dd></dl>
 
 <dl class="footnote brackets">
-<dt class="label" id="id32"><span class="brackets">1</span></dt>
+<dt class="label" id="id30"><span class="brackets">1</span></dt>
 <dd><p>Gelman et al., “Bayesian data analysis”, Chapman and Hall/CRC, 2013</p>
 </dd>
-<dt class="label" id="id33"><span class="brackets">2</span></dt>
+<dt class="label" id="id31"><span class="brackets">2</span></dt>
 <dd><p>R.C. Smith, “Uncertainty Quantification - Theory, Implementation and Applications”, CS&amp;E, 2014</p>
 </dd>
-<dt class="label" id="id34"><span class="brackets">3</span><span class="fn-backref">(<a href="#id15">1</a>,<a href="#id17">2</a>)</span></dt>
+<dt class="label" id="id32"><span class="brackets">3</span><span class="fn-backref">(<a href="#id13">1</a>,<a href="#id15">2</a>)</span></dt>
 <dd><ol class="upperalpha simple" start="2">
 <li><p>Echard, N. Gayton and M. Lemaire, “AK-MCS: An active learning reliability method combining Kriging and Monte Carlo Simulation”, Structural Safety, Pages 145-154, 2011.</p></li>
 </ol>
 </dd>
-<dt class="label" id="id35"><span class="brackets">4</span><span class="fn-backref">(<a href="#id16">1</a>,<a href="#id20">2</a>,<a href="#id25">3</a>)</span></dt>
+<dt class="label" id="id33"><span class="brackets">4</span><span class="fn-backref">(<a href="#id14">1</a>,<a href="#id18">2</a>,<a href="#id23">3</a>)</span></dt>
 <dd><p>Jones, D. R., Schonlau, M., &amp; Welch, W. J. “Efficient global optimization of expensive black-box functions.” Journal of Global optimization, 13(4), 455-492, 1998.</p>
 </dd>
-<dt class="label" id="id36"><span class="brackets">5</span><span class="fn-backref">(<a href="#id18">1</a>,<a href="#id27">2</a>)</span></dt>
+<dt class="label" id="id34"><span class="brackets">5</span><span class="fn-backref">(<a href="#id16">1</a>,<a href="#id25">2</a>)</span></dt>
 <dd><p>V.S. Sundar and Shields, M.D. “Reliablity analysis using adaptive Kriging surrogates and multimodel inference.” ASCE-ASME Journal of Risk and Uncertainty in Engineering Systems. Part A: Civil Engineering. 5(2): 04019004, 2019.</p>
 </dd>
-<dt class="label" id="id37"><span class="brackets">6</span><span class="fn-backref">(<a href="#id19">1</a>,<a href="#id24">2</a>)</span></dt>
+<dt class="label" id="id35"><span class="brackets">6</span><span class="fn-backref">(<a href="#id17">1</a>,<a href="#id22">2</a>)</span></dt>
 <dd><p>B.J. Bichon, M.S. Eldred, L.P. Swiler, S. Mahadevan, and J.M. McFarland. “Efficient global reliablity analysis for nonlinear implicit performance functions.” AIAA Journal. 46(10) 2459-2468, (2008).</p>
 </dd>
-<dt class="label" id="id38"><span class="brackets">7</span><span class="fn-backref">(<a href="#id21">1</a>,<a href="#id22">2</a>,<a href="#id26">3</a>)</span></dt>
+<dt class="label" id="id36"><span class="brackets">7</span><span class="fn-backref">(<a href="#id19">1</a>,<a href="#id20">2</a>,<a href="#id24">3</a>)</span></dt>
 <dd><p>C.Q. Lam. “Sequential adaptive designs in computer experiments for response surface model fit.” PhD diss., The Ohio State University, 2008.</p>
 </dd>
-<dt class="label" id="id39"><span class="brackets"><a class="fn-backref" href="#id13">8</a></span></dt>
+<dt class="label" id="id37"><span class="brackets"><a class="fn-backref" href="#id11">8</a></span></dt>
 <dd><ol class="upperalpha simple" start="23">
 <li><ol class="upperalpha simple" start="14">
 <li><p>Edeling, R. P. Dwight, P. Cinnella, “Simplex-stochastic collocation method with improved scalability”, Journal of Computational Physics, 310:301–328, 2016.</p></li>
@@ -2625,12 +2548,12 @@ samples as log_w_unnormalized) = log(target)-log(proposal).</p>
 </li>
 </ol>
 </dd>
-<dt class="label" id="id40"><span class="brackets"><a class="fn-backref" href="#id4">9</a></span></dt>
+<dt class="label" id="id38"><span class="brackets"><a class="fn-backref" href="#id5">9</a></span></dt>
 <dd><ol class="upperalpha simple" start="11">
 <li><p>Tocher. “The art of simulation.” The English Universities Press, London, UK; 1963.</p></li>
 </ol>
 </dd>
-<dt class="label" id="id41"><span class="brackets">10</span></dt>
+<dt class="label" id="id39"><span class="brackets">10</span></dt>
 <dd><p>M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, “Refined Stratified Sampling for efficient Monte Carlo based uncertainty quantification,” Reliability Engineering and System Safety,vol.142, pp.310-325,2015.</p>
 </dd>
 </dl>

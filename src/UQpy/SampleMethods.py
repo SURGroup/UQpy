@@ -1523,18 +1523,22 @@ class DelaunayStrata(Strata):
             initial_seeds = stats.uniform.rvs(size=[self.nseeds, self.dimension], random_state=self.random_state)
 
         # Modify seeds to include corner points of (0,1) space
-        corners = list(itertools.product(*zip([0]*self.dimension,[1]*self.dimension)))
+        corners = list(itertools.product(*zip([0]*self.dimension, [1]*self.dimension)))
         initial_seeds = np.vstack([initial_seeds, corners])
         initial_seeds = np.unique([tuple(row) for row in initial_seeds], axis=0)
 
         self.delaunay = Delaunay(initial_seeds)
         self.centroids = np.zeros([0, self.dimension])
-        self.volume = np.zeros([0, 1])
+        self.volume = np.zeros([0])
         count = 0
         for sim in self.delaunay.simplices:  # extract simplices from Delaunay triangulation
             cent, vol = self.compute_delaunay_centroid_volume(self.delaunay.points[sim])
             self.centroids = np.vstack([self.centroids, cent])
-            self.volume = np.vstack([self.volume, vol])
+            # print(np.array([vol]))
+            # print(np.shape(np.array([vol])))
+            # print(self.volume)
+            print(np.shape(self.volume))
+            self.volume = np.hstack([self.volume, np.array([vol])])
             count = count + 1
 
     @staticmethod
@@ -1568,46 +1572,66 @@ class DelaunayStrata(Strata):
 
 class STS:
     """
-    Generate samples from an assigned probability density function using Stratified Sampling ([1]_).
-
-    **References:**
-
-    .. [1] M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte
-       Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
+    Generate samples from an assigned probability density function using Stratified Sampling ([9]_).
 
     **Inputs:**
 
     * **dist_object** ((list of) ``Distribution`` object(s)):
-            List of ``Distribution`` objects corresponding to each random variable.
+        List of ``Distribution`` objects corresponding to each random variable.
 
-    * **input_file** (`str`):
-            File path to input file specifying stratum origins and stratum widths.
+    * **strata_object** (``Strata`` object)
+        Defines the stratification of the unit hypercube. This must be provided and must be an object of a ``Strata``
+        child class: ``RectangularStrata``, ``VoronoiStrata``, or ``DelaunayStrata``.
 
-    * **samplesU01** (`ndarray`):
-            `ndarray` containing the generated samples on [0, 1]^dimension.
+    * **nsamples_per_stratum** (`int` or `list`):
+        Specifies the number of samples in each stratum. This must be either an integer, in which case an equal number
+        of samples are drawn from each stratum, or a list. If it is provided as a list, the length of the list must be
+        equal to the number of strata.
 
-    * **strata** (`class` object):
-            Instance of the class SampleMethods.Strata.
+        If `nsamples_per_stratum` is provided when the class is defined, the ``run`` method will be executed
+        automatically.  If neither `nsamples_per_stratum` or `nsamples` are provided when the class is defined, the user
+        must call the ``run`` method to perform stratified sampling.
 
-    * **random_state** (None or `int` or `np.random.RandomState` object):
-            Random seed used to initialize the pseudo-random number generator. Default is None.
+    * **nsamples** (`int`):
+        Specify the total number of samples. If `nsamples` is specified, the samples will be drawn in proportion to
+        the volume of the strata. Thus, each stratum will contain :math:`round(V_i*nsamples)` samples.
+
+        If `nsamples` is provided when the class is defined, the ``run`` method will be executed
+        automatically.  If neither `nsamples_per_stratum` or `nsamples` are provided when the class is defined, the user
+        must call the ``run`` method to perform stratified sampling.
+
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
 
     * **verbose** (`Boolean`):
-            A boolean declaring whether to write text to the terminal.
+        A boolean declaring whether to write text to the terminal.
 
-            Default value: False
+        Default value: False
 
     **Attributes:**
 
     * **samples** (`ndarray`):
-            `ndarray` containing the generated samples.
+        The generated samples following the prescribed distribution.
+
+    * **samplesU01** (`ndarray`)
+        The generated samples on the unit hypercube.
+
+    * **weights** (`ndarray`)
+        Individual sample weights.
 
     **Methods:**
     """
-    def __init__(self, dist_object, random_state=None, verbose=False):
+    def __init__(self, dist_object, strata_object, nsamples_per_stratum=None, nsamples=None, random_state=None,
+                 verbose=False):
 
         self.verbose = verbose
         self.weights = None
+        self.strata_object = strata_object
+        self.nsamples_per_stratum = nsamples_per_stratum
+        self.nsamples = nsamples
         self.samplesU01, self.samples = None, None
 
         # Check if a Distribution object is provided.
@@ -1630,21 +1654,26 @@ class STS:
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        if self.random_state is None:
+            self.random_state = self.strata_object.random_state
+
+        # If nsamples_per_stratum or nsamples is provided, execute run method
+        if self.nsamples_per_stratum is not None or self.nsamples is not None:
+            self.run(nsamples_per_stratum=self.nsamples_per_stratum, nsamples=self.nsamples)
 
     def transform_samples(self, samples01):
         """
-        Transform samples in [0, 1] domain  using inverse CDF.
+        Transform samples in the unit hypercube :math:`[0, 1]^n` to the prescribed distribution using the inverse CDF.
 
         **Inputs:**
 
-        * **samples01** (`np.ndarray`):
+        * **samplesU01** (`ndarray`):
             `ndarray` containing the generated samples on [0, 1]^dimension.
 
         **Outputs:**
 
         * **samples** (`ndarray`):
-            `ndarray` containing the generated samples.
-
+            `ndarray` containing the generated samples following the prescribed distribution.
         """
 
         samples_u_to_x = np.zeros_like(samples01)
@@ -1654,157 +1683,157 @@ class STS:
         self.samples = samples_u_to_x
 
     def run(self, nsamples_per_stratum=None, nsamples=None):
+        """
+        Executes stratified sampling.
+
+        This method performs the sampling for each of the child classes by running two methods:
+        ``create_samplesu01``, and ``transform_samples``. The ``create_samplesu01`` method is
+        unique to each child class and therefore must be overwritten when a new child class is defined. The
+        ``transform_samples`` method is common to all stratified sampling classes and is therefore defined by the parent
+        class. It does not need to be modified.
+
+        If `nsamples` or `nsamples_per_stratum` is provided when the class is defined, the ``run`` method will be
+        executed automatically.  If neither `nsamples_per_stratum` or `nsamples` are provided when the class is defined,
+        the user must call the ``run`` method to perform stratified sampling.
+
+        **Input:**
+
+        * **nsamples_per_stratum** (`int` or `list`):
+            Specifies the number of samples in each stratum. This must be either an integer, in which case an equal
+            number of samples are drawn from each stratum, or a list. If it is provided as a list, the length of the
+            list must be equal to the number of strata.
+
+            If `nsamples_per_stratum` is provided when the class is defined, the ``run`` method will be executed
+            automatically.  If neither `nsamples_per_stratum` or `nsamples` are provided when the class is defined, the
+            user must call the ``run`` method to perform stratified sampling.
+
+        * **nsamples** (`int`):
+            Specify the total number of samples. If `nsamples` is specified, the samples will be drawn in proportion to
+            the volume of the strata. Thus, each stratum will contain :math:`round(V_i*nsamples)` samples where
+            :math:`V_i \le 1` is the volume of stratum `i` in the unit hypercube.
+
+            If `nsamples` is provided when the class is defined, the ``run`` method will be executed
+            automatically.  If neither `nsamples_per_stratum` or `nsamples` are provided when the class is defined, the
+            user must call the ``run`` method to perform stratified sampling.
+
+        **Outputs:**
+
+        The ``run`` method has no output, although it modifies the `samples`, `samplesu01`, and `weights` attributes.
+        """
+
         # Check inputs of run methods
-        self.run_checks(nsamples_per_stratum, nsamples)
+        self.nsamples_per_stratum = nsamples_per_stratum
+        self.nsamples = nsamples
+        self._run_checks()
 
-        # Call "create_sampleu01" method and generate samples in  [0, 1] space
-        self.samplesU01 = self.create_samplesu01()
+        # Call "create_sampleu01" method and generate samples in  the unit hypercube
+        self.create_samplesu01(nsamples_per_stratum, nsamples)
 
-        # Call "create_sample" method of parent class and compute inverse cdf of samplesU01
+        # Compute inverse cdf of samplesU01
         self.transform_samples(self.samplesU01)
 
-    # Creating dummy methods to remove pycharm warnings. These methods are overwritten in child classes.
-    def run_checks(self, nsamples_per_stratum, nsamples):
-        return self.verbose, nsamples_per_stratum, nsamples
+    def _run_checks(self):
+        if self.nsamples is not None:
+            if not isinstance(self.nsamples, int):
+                raise RuntimeError("UQpy: 'nsamples' must be an integer.")
+            else:
+                if isinstance(self.nsamples_per_stratum, (int, list)):
+                    print("UQpy: STS class is executing proportional sampling, thus ignoring "
+                          "'nsamples_per_stratum'.")
+            self.nsamples_per_stratum = (self.strata_object.volume * self.nsamples).round()
 
-    def create_samplesu01(self):
-        if self.verbose: self.verbose = True
-        return np.array([[1]])
+        if self.nsamples_per_stratum is not None:
+            if isinstance(self.nsamples_per_stratum, int):
+                self.nsamples_per_stratum = [self.nsamples_per_stratum] * self.strata_object.volume.shape[0]
+            elif isinstance(self.nsamples_per_stratum, list):
+                if len(self.nsamples_per_stratum) != self.strata_object.volume.shape[0]:
+                    raise ValueError("UQpy: Length of 'nsamples_per_stratum' must match the number of strata.")
+            elif self.nsamples is None:
+                raise ValueError("UQpy: 'nsamples_per_stratum' must be an integer or a list.")
+        else:
+            self.nsamples_per_stratum = [1] * self.strata_object.volume.shape[0]
+
+    # Creating dummy method for create_samplesu01. These methods are overwritten in child classes.
+    def create_samplesu01(self, nsamples_per_stratum, nsamples):
+        """
+        Executes the specific stratified sampling algorithm. This method is overwritten by each child class of ``STS``.
+
+        **Input:**
+
+        * **nsamples_per_stratum** (`int` or `list`):
+            Specifies the number of samples in each stratum. This must be either an integer, in which case an equal
+            number of samples are drawn from each stratum, or a list. If it is provided as a list, the length of the
+            list must be equal to the number of strata.
+
+            Either `nsamples_per_stratum` or `nsamples` must be provided.
+
+        * **nsamples** (`int`):
+            Specify the total number of samples. If `nsamples` is specified, the samples will be drawn in proportion to
+            the volume of the strata. Thus, each stratum will contain :math:`round(V_i*nsamples)` samples where
+            :math:`V_i \le 1` is the volume of stratum `i` in the unit hypercube.
+
+            Either `nsamples_per_stratum` or `nsamples` must be provided.
+
+        **Outputs:**
+
+        The ``create_samplesu01`` method has no output, although it modifies the `samplesu01` and `weights` attributes.
+        """
+        return None
 
 
 class RectangularSTS(STS):
     """
     Executes Stratified Sampling using Rectangular Stratification.
 
+    ``RectangularSTS`` is a child class of ``STS``. ``RectangularSTS`` takes in all parameters defined in the parent
+    ``STS`` class with differences note below. Only those inputs and attributes that differ from the parent class are
+    listed below. See documentation for ``STS`` for additional details.
+
     **Inputs:**
 
-
-    * **dist_object** ((list of) ``Distribution`` object(s)):
-            List of ``Distribution`` objects corresponding to each random variable.
-
     * **strata_object** (``RectangularStrata`` object):
-            A ``RectangularStrata`` object which contains the information related to stratification in [0, 1]^dimension
-            domain.
-
-    * **nsamples_per_stratum** (`list`):
-            List of integers specifiying the number of samples in each stratum.
-
-    * **nsamples** (`int`):
-            Total number of samples. This indicates RectangularSTS class to generate proportional sampling.
+        The `strata_object` for ``RectangularSTS`` must be an object of tyhe ``RectangularStrata`` class.
 
     * **sts_criterion** (`str`):
-            Random or Centered samples inside a rectangular strata.
+            Random or Centered samples inside the rectangular strata.
             Options:
-                    1. 'random' - completely random. \n
-                    2. 'centered' - points only at the centre. \n
+                    1. 'random' - Samples are drawn randomly within the strata. \n
+                    2. 'centered' - Samples are drawn at the center of the strata. \n
 
             Default: 'random'
-
-    * **random_state** (None or `int` or `np.random.RandomState` object):
-            Random seed used to initialize the pseudo-random number generator. Default is None.
-
-    * **verbose** (`Boolean`):
-            A boolean declaring whether to write text to the terminal.
-
-            Default value: False
-
 
     **Methods:**
 
     """
     def __init__(self, dist_object, strata_object, nsamples_per_stratum=None, nsamples=None, sts_criterion="random",
                  verbose=False, random_state=None):
-        super().__init__(dist_object=dist_object, random_state=random_state, verbose=verbose)
-        self.dist_object = dist_object
-        self.strata_object = strata_object
-        self.sts_criterion = sts_criterion
-        self.nsamples_per_stratum = nsamples_per_stratum
-        self.nsamples = nsamples
-
-        # Check strata_object
-        if not isinstance(self.strata_object, RectangularStrata):
+        if not isinstance(strata_object, RectangularStrata):
             raise NotImplementedError("UQpy: strata_object must be an object of RectangularStrata class")
 
-        self.random_state = random_state
-        if self.random_state is None:
-            self.random_state = strata_object.random_state
-
-        self.verbose = verbose
-        if self.verbose is None:
-            self.verbose = strata_object.verbose
-
-        # Check sampling criterion
+        self.sts_criterion = sts_criterion
         if self.sts_criterion not in ['random', 'centered']:
             raise NotImplementedError("UQpy: Supported sts_criteria: 'random', 'centered'")
-
-        # If nsamples_per_stratum or nsamples is provided, execute run method
-        if self.nsamples_per_stratum is not None or nsamples is not None:
-            self.run()
-
-    def run_checks(self, nsamples_per_stratum=None, nsamples=None):
-        """
-        Consistency check for input parameters of run method.
-
-        **Inputs:**
-
-
-        * **nsamples_per_stratum** (`list`):
-                List of integers specifiying the number of samples in each stratum.
-
-        * **nsamples** (`int`):
-                Total number of samples. This indicates RectangularSTS class to generate proportional sampling.
-
-        This method doesn't return anything.
-        """
-
-        if nsamples_per_stratum is not None:
-            self.nsamples_per_stratum = nsamples_per_stratum
-
         if nsamples is not None:
-            self.nsamples = nsamples
-
-        if self.nsamples is not None:
-            if not isinstance(nsamples, int):
-                raise RuntimeError("UQpy: 'nsamples' must be an integer.")
-            else:
-                if isinstance(self.nsamples_per_stratum, (int, list)):
-                    print("UQpy: STS class is executing proportional sampling, thus ignoring "
-                                         "'nsamples_per_stratum'.")
-
             if self.sts_criterion == 'centered':
-                if self.nsamples != self.strata_object.nseeds:
+                if nsamples != len(strata_object.volume):
                     raise ValueError("UQpy: 'nsamples' attribute is not consistent with number of seeds for 'centered' "
                                      "sampling")
-
         if nsamples_per_stratum is not None:
             if self.sts_criterion == "centered":
-                self.nsamples_per_stratum = [1] * self.strata_object.widths.shape[0]
-            else:
-                if isinstance(self.nsamples_per_stratum, int):
-                    self.nsamples_per_stratum = [self.nsamples_per_stratum] * self.strata_object.widths.shape[0]
-                elif isinstance(self.nsamples_per_stratum, list):
-                    if len(self.nsamples_per_stratum) != self.strata_object.widths.shape[0]:
-                        raise ValueError("UQpy: Length of 'nsamples_per_stratum' is not correct.")
-                else:
-                    raise ValueError("UQpy: 'nsamples_per_stratum' must be an integer or a list." )
-        else:
-            self.nsamples_per_stratum = [1] * self.strata_object.widths.shape[0]
+                nsamples_per_stratum = [1] * strata_object.widths.shape[0]
 
-    def create_samplesu01(self):
+        super().__init__(dist_object=dist_object, strata_object=strata_object,
+                         nsamples_per_stratum=nsamples_per_stratum, nsamples=nsamples, random_state=random_state,
+                         verbose=verbose)
+
+    def create_samplesu01(self, nsamples_per_stratum=None, nsamples=None):
         """
-        This method generates required number of samples in [0, 1]^ dimension domain using the stratification provided
-        to RectangularSTS class.
-
-        **Outputs:**
-
-        * **samplesU01** (`np.ndarray`):
-                 `ndarray` containing the generated samples on [0, 1]^dimension.
-
+        Overwrites the ``create_samplesu01`` method in the parent class to generate samples in rectangular strata on the
+        unit hypercube. It has the same inputs and outputs as the ``create_samplesu01`` method in the parent class. See
+        the ``STS`` class for additional details.
         """
+
         samples_in_strata, weights = [], []
-
-        if self.nsamples is not None:
-            self.nsamples_per_stratum = (self.strata_object.volume * self.nsamples).round()
 
         for i in range(self.strata_object.seeds.shape[0]):
             samples_temp = np.zeros([int(self.nsamples_per_stratum[i]), self.strata_object.seeds.shape[1]])
@@ -1825,117 +1854,43 @@ class RectangularSTS(STS):
                 weights.extend([0] * int(self.nsamples_per_stratum[i]))
 
         self.weights = np.array(weights)
-        return np.concatenate(samples_in_strata, axis=0)
+        self.samplesU01 = np.concatenate(samples_in_strata, axis=0)
+        # return samplesU01
 
 
 class VoronoiSTS(STS):
     """
     Executes Stratified Sampling using Voronoi Stratification.
 
+    ``VoronoiSTS`` is a child class of ``STS``. ``VoronoiSTS`` takes in all parameters defined in the parent
+    ``STS`` class with differences note below. Only those inputs and attributes that differ from the parent class are
+    listed below. See documentation for ``STS`` for additional details.
+
     **Inputs:**
 
-
-    * **dist_object** ((list of) ``Distribution`` object(s)):
-            List of ``Distribution`` objects corresponding to each random variable.
-
-    * **strata_object** (``RectangularStrata`` object):
-            A ``RectangularStrata`` object which contains the information related to stratification in [0, 1]^dimension
-            domain.
-
-    * **nsamples_per_stratum** (`list`):
-            List of integers specifiying the number of samples in each stratum.
-
-    * **nsamples** (`int`):
-            Total number of samples. This indicates RectangularSTS class to generate proportional sampling.
-
-    * **sts_criterion** (`str`):
-            Random or Centered samples inside a rectangular strata.
-            Options:
-                    1. 'random' - completely random. \n
-                    2. 'centered' - points only at the centre. \n
-
-            Default: 'random'
-
-    * **random_state** (None or `int` or `np.random.RandomState` object):
-            Random seed used to initialize the pseudo-random number generator. Default is None.
-
-    * **verbose** (`Boolean`):
-            A boolean declaring whether to write text to the terminal.
-
-            Default value: False
-
+    * **strata_object** (``VoronoiStrata`` object):
+        The `strata_object` for ``VoronoiSTS`` must be an object of the ``VoronoiStrata`` class.
 
     **Methods:**
 
     """
-    def __init__(self, dist_object, strata_object=None, nsamples_per_stratum=1, nsamples=None, random_state=None,
+    def __init__(self, dist_object, strata_object, nsamples_per_stratum=None, nsamples=None, random_state=None,
                  verbose=False):
-        super().__init__(dist_object, random_state, verbose)
-        self.dist_object = dist_object
-        self.strata_object = strata_object
-        self.nsamples_per_stratum = nsamples_per_stratum
-        self.nsamples = nsamples
-        self.run_checks_p = self.run_checks
-        self.create_samplesu01_p = self.create_samplesu01
-
         # Check strata_object
-        if not isinstance(self.strata_object, VoronoiStrata):
+        if not isinstance(strata_object, VoronoiStrata):
             raise NotImplementedError("UQpy: strata_object must be an object of VoronoiStrata class")
 
-        self.random_state = random_state
-        if self.random_state is None:
-            self.random_state = strata_object.random_state
+        super().__init__(dist_object=dist_object, strata_object=strata_object,
+                         nsamples_per_stratum=nsamples_per_stratum, nsamples=nsamples, random_state=random_state,
+                         verbose=verbose)
 
-        self.verbose = verbose
-        if self.verbose is None:
-            self.verbose = strata_object.verbose
-
-        # If nsamples_per_stratum or nsamples is provided, execute run method
-        if self.nsamples_per_stratum is not None or nsamples is not None:
-            self.run()
-
-    def run_checks(self, nsamples_per_stratum=None, nsamples=None):
+    def create_samplesu01(self, nsamples_per_stratum=None, nsamples=None):
         """
-        Consistency check for input parameters of run method.
-
-        **Inputs:**
-
-
-        * **nsamples_per_stratum** (`list`):
-                List of integers specifiying the number of samples in each stratum.
-
-        * **nsamples** (`int`):
-                Total number of samples. This indicates RectangularSTS class to generate proportional sampling.
-
-        This method doesn't return anything.
+        Overwrites the ``create_samplesu01`` method in the parent class to generate samples in Voronoi strata on the
+        unit hypercube. It has the same inputs and outputs as the ``create_samplesu01`` method in the parent class. See
+        the ``STS`` class for additional details.
         """
-        if nsamples_per_stratum is not None:
-            self.nsamples_per_stratum = nsamples_per_stratum
-
-        if nsamples is not None:
-            self.nsamples = nsamples
-
-        if self.nsamples is not None:
-            if not isinstance(nsamples, int):
-                raise RuntimeError("UQpy: 'nsamples' must be an integer.")
-            else:
-                if isinstance(self.nsamples_per_stratum, (int, list)):
-                    print("UQpy: STS class is executing proportional sampling, thus ignoring "
-                                         "'nsamples_per_stratum'.")
-
-        if nsamples_per_stratum is not None:
-            if not isinstance(self.nsamples_per_stratum, int):
-                raise ValueError("UQpy: 'nsamples_per_stratum' must be an integer or a list." )
-        else:
-            self.nsamples_per_stratum = 1
-
-    def create_samplesu01(self):
         from scipy.spatial import Delaunay, ConvexHull
-
-        if self.nsamples is not None:
-            self.nsamples_per_stratum = (self.strata_object.volume * self.nsamples).round()
-        else:
-            self.nsamples_per_stratum = [self.nsamples_per_stratum] * self.strata_object.nseeds
 
         samples_in_strata, weights = list(), list()
         for j in range(len(self.strata_object.vertices)):  # For each bounded region (Voronoi stratification)
@@ -1945,22 +1900,17 @@ class VoronoiSTS(STS):
 
             # Create Dealunay Triangulation using seed and vertices of each stratum
             delaunay_obj = Delaunay(seed_and_vertices)
-            delaunay_obj.vertices: list = delaunay_obj.vertices
 
             # Compute volume of each delaunay
             volume = list()
             for i in range(len(delaunay_obj.vertices)):
                 vert = delaunay_obj.vertices[i]
                 ch = ConvexHull(seed_and_vertices[vert])
-                ch.volume: float = ch.volume
                 volume.append(ch.volume)
 
             temp_prob = np.array(volume) / sum(volume)
             a = list(range(len(delaunay_obj.vertices)))
             for k in range(int(self.nsamples_per_stratum[j])):
-                # if self.random_state is None:
-                #     simplex = np.random.choice(a, p=temp_prob)
-                # else:
                 simplex = self.random_state.choice(a, p=temp_prob)
 
                 new_samples = Simplex(nodes=seed_and_vertices[delaunay_obj.vertices[simplex]], nsamples=1,
@@ -1975,125 +1925,41 @@ class VoronoiSTS(STS):
                 weights.extend([0] * int(self.nsamples_per_stratum[j]))
 
         self.weights = weights
-        return np.concatenate(samples_in_strata, axis=0)
+        self.samplesU01 = np.concatenate(samples_in_strata, axis=0)
 
 
 class DelaunaySTS(STS):
     """
     Executes Stratified Sampling using Delaunay Stratification.
 
+    ``DelaunaySTS`` is a child class of ``STS``. ``DelaunaySTS`` takes in all parameters defined in the parent
+    ``STS`` class with differences note below. Only those inputs and attributes that differ from the parent class are
+    listed below. See documentation for ``STS`` for additional details.
+
     **Inputs:**
 
-
-    * **dist_object** ((list of) ``Distribution`` object(s)):
-            List of ``Distribution`` objects corresponding to each random variable.
-
-    * **strata_object** (``RectangularStrata`` object):
-            A ``RectangularStrata`` object which contains the information related to stratification in [0, 1]^dimension
-            domain.
-
-    * **nsamples_per_stratum** (`list`):
-            List of integers specifiying the number of samples in each stratum.
-
-    * **nsamples** (`int`):
-            Total number of samples. This indicates RectangularSTS class to generate proportional sampling.
-
-    * **sts_criterion** (`str`):
-            Random or Centered samples inside a rectangular strata.
-            Options:
-                    1. 'random' - completely random. \n
-                    2. 'centered' - points only at the centre. \n
-
-            Default: 'random'
-
-    * **random_state** (None or `int` or `np.random.RandomState` object):
-            Random seed used to initialize the pseudo-random number generator. Default is None.
-
-    * **verbose** (`Boolean`):
-            A boolean declaring whether to write text to the terminal.
-
-            Default value: False
-
+    * **strata_object** (``DelaunayStrata`` object):
+        The `strata_object` for ``DelaunaySTS`` must be an object of the ``DelaunayStrata`` class.
 
     **Methods:**
 
     """
-    def __init__(self, dist_object, strata_object=None, nsamples_per_stratum=1, nsamples=None, random_state=None,
+    def __init__(self, dist_object, strata_object, nsamples_per_stratum=1, nsamples=None, random_state=None,
                  verbose=False):
-        super().__init__(dist_object, random_state, verbose)
-        self.dist_object = dist_object
-        self.strata_object = strata_object
-        self.nsamples_per_stratum = nsamples_per_stratum
-        self.nsamples = nsamples
-        self.run_checks_p = self.run_checks
-        self.create_samplesu01_p = self.create_samplesu01
 
-        # Check strata_object
-        if not isinstance(self.strata_object, DelaunayStrata):
+        if not isinstance(strata_object, DelaunayStrata):
             raise NotImplementedError("UQpy: strata_object must be an object of DelaunayStrata class")
 
-        self.random_state = random_state
-        if self.random_state is None:
-            self.random_state = strata_object.random_state
+        super().__init__(dist_object=dist_object, strata_object=strata_object,
+                         nsamples_per_stratum=nsamples_per_stratum, nsamples=nsamples, random_state=random_state,
+                         verbose=verbose)
 
-        self.verbose = verbose
-        if self.verbose is None:
-            self.verbose = strata_object.verbose
-
-        # If nsamples_per_stratum or nsamples is provided, execute run method
-        if self.nsamples_per_stratum is not None or nsamples is not None:
-            self.run()
-
-    def run_checks(self, nsamples_per_stratum=None, nsamples=None):
+    def create_samplesu01(self, nsamples_per_stratum=None, nsamples=None):
         """
-        Consistency check for input parameters of run method.
-
-        **Inputs:**
-
-
-        * **nsamples_per_stratum** (`list`):
-                List of integers specifiying the number of samples in each stratum.
-
-        * **nsamples** (`int`):
-                Total number of samples. This indicates RectangularSTS class to generate proportional sampling.
-
-        This method doesn't return anything.
+        Overwrites the ``create_samplesu01`` method in the parent class to generate samples in Delaunay strata on the
+        unit hypercube. It has the same inputs and outputs as the ``create_samplesu01`` method in the parent class. See
+        the ``STS`` class for additional details.
         """
-        if nsamples_per_stratum is not None:
-            self.nsamples_per_stratum = nsamples_per_stratum
-
-        if nsamples is not None:
-            self.nsamples = nsamples
-
-        if self.nsamples is not None:
-            if not isinstance(nsamples, int):
-                raise RuntimeError("UQpy: 'nsamples' must be an integer.")
-            else:
-                if isinstance(self.nsamples_per_stratum, (int, list)):
-                    print("UQpy: STS class is executing proportional sampling, thus ignoring "
-                                         "'nsamples_per_stratum'.")
-
-        if nsamples_per_stratum is not None:
-            if not isinstance(self.nsamples_per_stratum, int):
-                raise ValueError("UQpy: 'nsamples_per_stratum' must be an integer or a list." )
-        else:
-            self.nsamples_per_stratum = 1
-
-    def create_samplesu01(self):
-        """
-        This method generates required number of samples in [0, 1]^ dimension domain using the stratification provided
-        to RectangularSTS class.
-
-        **Outputs:**
-
-        * **samplesU01** (`np.ndarray`):
-                 `ndarray` containing the generated samples on [0, 1]^dimension.
-
-        """
-        if self.nsamples is not None:
-            self.nsamples_per_stratum = (self.strata_object.volume * self.nsamples).round()
-        else:
-            self.nsamples_per_stratum = [self.nsamples_per_stratum] * self.strata_object.nseeds
 
         samples_in_strata, weights = [], []
         count = 0
@@ -2111,7 +1977,7 @@ class DelaunaySTS(STS):
             count = count + 1
 
         self.weights = np.array(weights)
-        return np.concatenate(samples_in_strata, axis=0)
+        self.samplesU01 = np.concatenate(samples_in_strata, axis=0)
 
 ########################################################################################################################
 ########################################################################################################################
