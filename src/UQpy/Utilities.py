@@ -325,34 +325,6 @@ def gradient(runmodel_object=None, point=None, order='first', df_step=None):
         return d2u_dij
 
 
-def compute_delaunay_centroid_volume(vertices):
-    """
-    This function computes the centroid and volume of Delaunay triangulation created using vertices.
-
-    **Inputs:**
-
-    * **vertices** (`ndarray`):
-        Coordinates of points to construct a Convex Hull.
-
-    **Output/Returns:**
-
-    * **centroid** (`numpy.ndarray`):
-        Centroid of Voronoi cells.
-
-    * **volume** (`numpy.ndarray`):
-        Volume of Voronoi cells.
-    """
-
-    from scipy.spatial import ConvexHull
-
-    ch = ConvexHull(vertices)
-    volume = ch.volume
-    ch.volume: float = ch.volume
-    centroid = np.mean(vertices, axis=0)
-
-    return centroid, volume
-
-
 def _bi_variate_normal_pdf(x1, x2, rho):
    return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
            np.exp(-1/(2*(1-rho**2)) *

@@ -45,10 +45,80 @@ Class Descriptions
 	:members:
 
 
-STS
-----
+Stratified Sampling
+---------------------
 
-The ``STS`` class generates random samples from a specified probability distribution(s) using Stratified sampling. It is a variance reduction sampling technique. It aims to distribute random samples on the complete sample space. The sample space is divided into a set of space-filling and disjoint regions, called strata and samples are generated inside each strata.
+Stratified sampling is a variance reduction technique that divides the parameter space into a set of disjoint and space-filling strata. Samples are then drawn from these strata in order to improve the space-filling properties of the sample design. Stratified sampling allows for unequally weighted samples, such that a Monte Carlo estimator of the quantity :math:`E[Y]` takes the following form:
+
+.. math:: E[Y] \approx \sum_{i=1}^N w_i Y_i
+
+where :math:`w_i` are the sample weights and :math:`Y_i` are the model evaluations. The individual sample weights are computed as:
+
+.. math:: w_i = \dfrac{V_{i}}{N_{i}}
+
+where :math:`V_{i}\le 1` is the volume of stratum :math:`i` in the unit hypercube (i.e. the probability that a random sample will fall in stratum :math:`i`) and :math:`N_{i}` is the number of samples drawn from stratum :math:`i`.
+
+
+``UQpy`` supports several stratified sampling variations that vary from conventional stratified sampling designs to advanced gradient informed methods for adaptive stratified sampling. Stratified sampling capabilities are built in ``UQpy`` from three sets of classes. These class structures facilitate a highly flexible and varied range of stratified sampling designs that can be extended in a straightforward way. Specifically, the existing classes allow stratification of n-dimensional parameter spaces based on three common spatial discretizations: a rectilinear decomposition into hyper-rectangles (orthotopes), a Voronoi decomposition, and a Delaunay decomposition. The three parent classes are:
+
+1. The ``Strata`` class defines the geometric structure of the stratification of the parameter space and it has three existing subclasses - ``RectangularStrata``, ``VoronoiStrata``, and ``DelaunayStrata`` that correspond to geometric decompositions of the parameter space based on rectilinear strata of orthotopes, strata composed of Voronoi cells, and strata composed of Delaunay simplexes respectively.
+
+2. The ``STS`` class defines a set of subclasses used to draw samples from strata defined by a ``Strata`` class object.
+
+3. The ``RSS`` class defines a set of subclasses for refinement of ``STS`` stratified sampling designs.
+
+New Stratified Sampling Methods
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Extension of the stratified sampling capabilities in ``UQpy`` can be performed through subclassing from the three main classes. First, the user can define a new geometric decomposition of the parameter space by creating a new subclass of the ``Strata`` class. To draw samples from this  new stratification, the user can define a new subclass of the ``STS`` class. Finally, to enable refinement of the strata based on any user-specified criteria the user can define a new subclass of the ``RSS`` class. 
+
+In summary:
+
+To implement a new stratified sampling method based on a new stratification, the user must write two new classes:
+
+1. A new subclass of the ``Strata`` class defining the new decomposition.
+2. A new subclass of the ``STS`` class to perform the sampling from the newly design ``Strata`` class.
+
+To implement a new refined stratified sampling method based on a new stratified, the user must write three new classes:
+
+1. A new subclass of the ``Strata`` class defining the new decomposition.
+2. A new subclass of the ``STS`` class to perform the sampling from the newly design ``Strata`` class.
+3. A new subclass of the ``RSS`` class to perform the stratum refinement and subsequent sampling.
+
+The details of these subclasses and their requirements are outlined in the sections below discussing the respective classes.
+
+
+Strata Class
+^^^^^^^^^^^^^
+
+The ``Strata`` class is the parent class that defines the geometric decomposition of the parameter space. All geometric decompositions in the ``Strata`` class are performed on the `n`-dimensional unit :math:`[0, 1]^n` hypercube. Specific stratifications are performed by subclassing the ``Strata`` class. There are currently three stratifications available in the ``Strata`` class, defined through the subclasses ``RectangularStrata``, ``VoronoiStrata``, and ``DelaunayStrata``. 
+
+
+Class Descriptions
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: UQpy.SampleMethods.Strata
+	:members:
+	
+.. autoclass:: UQpy.SampleMethods.RectangularStrata
+	:members:
+	
+.. autoclass:: UQpy.SampleMethods.VoronoiStrata
+	:members:
+	
+.. autoclass:: UQpy.SampleMethods.DelaunayStrata
+	:members:
+	
+Adding a new ``Strata`` class
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Adding a new type of stratification requires creating a new subclass of the ``Strata`` class that defines the desired geometric decomposition. This subclass must have a ``stratify`` method that overwrites the corresponding method in the parent class and performs the stratification.
+	
+
+STS Class
+^^^^^^^^^^^
+
+The ``STS`` class is the parent class for stratified sampling. The various ``STS`` classes generate random samples from a specified probability distribution(s) using stratified sampling with strata specified by an object of one of the ``Strata`` classes. The ``STS`` class currently has three child classes - ``RectangularSTS``, ``VoronoiSTS``, and ``DelaunaySTS`` - corresponding to stratified sampling methods based rectangular, Voronoi, and Delaunay strata respectively. The following details these classes.
 
 Class Descriptions
 ^^^^^^^^^^^^^^^^^^^
@@ -56,21 +126,24 @@ Class Descriptions
 .. autoclass:: UQpy.SampleMethods.STS
 	:members:
 
-
-Strata
-----
-
-The `Strata` class is a supporting class for stratified sampling and its variants. The class defines a rectilinear stratification of the unit hypercube. Strata are defined by specifying a stratum origin as the coordinates of the stratum corner nearest to the global origin and a stratum width for each dimension.
-
-Class Descriptions
-^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: UQpy.SampleMethods.Strata
+.. autoclass:: UQpy.SampleMethods.RectangularSTS
+	:members:
+	
+.. autoclass:: UQpy.SampleMethods.VoronoiSTS
+	:members:
+	
+.. autoclass:: UQpy.SampleMethods.DelaunaySTS
 	:members:
 
 
-RSS
-----
+Adding a new ``STS`` class
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Adding a new stratified sampling method first requires that an appropriate ``Strata`` class exists. If the new method is based on rectangular, Voronoi, or Delaunay stratification one of the existing ``Strata`` classes can be used. If it relies on a different type of stratification, then a new ``Strata`` class must be written first. Next, the new stratified sampling method must be written as a new subclass of the ``STS`` class containing a ``create_samplesu01`` method that performs the stratified sampling on the unit hypercube. This method must take input that are consistent with the ``create_samplesu01`` method described in the ``STS`` class above.
+
+
+RSS Class
+^^^^^^^^^^
 
 The ``RSS`` class generated samples randomly or uses gradient-based adaptive approach to reduce the variance of output statistical estimates. The method used to generate samples is define by `runmodel_object` parameter. If, it is not defined then RSS class executes Refined Stratified sampling, otherwise Gradient Enhanced Refined Stratified sampling is executed. Refined Stratified sampling randomly selects the stratum to refine from the strata/cells with maximum weight. Whereas, Gradient Enhaced Refined Stratified sampling selects the strata/cells with maximum stratum variance. This class divides the sample domain using either rectangular stratification or voronoi cells, this is define by the `sample_object` parameter. In case of rectangular stratification, selected strata is divided along the maximum width to define new strata. In case of Voronoi cells, the new sample is drawn from a sub-simplex, which is used for refinement.
 
@@ -84,16 +157,18 @@ Class Descriptions
 Simplex
 -------
 
-The ``Simplex`` class generates uniformly distributed sample inside a simplex, whose coordinates are expressed by :math:`\zeta_k` and :math:`n_d` is the dimension. First, this class generates :math:`n_d` independent uniform random variables on [0, 1], i.e. :math:`r_q`, then compute samples inside simplex using following equation:
+The ``Simplex`` class generates uniformly distributed samples inside a simplex of dimension :math:`n_d`, whose coordinates are expressed by :math:`\zeta_k`. First, this class generates :math:`n_d` independent uniform random variables on [0, 1], denoted :math:`r_q`, then maps them to the simplex as follows:
 
 .. math:: \mathbf{M_{n_d}} = \zeta_0 + \sum_{i=1}^{n_d} \Big{[}\prod_{j=1}^{i} r_{n_d-j+1}^{\frac{1}{n_d-j+1}}\Big{]}(\zeta_i - \zeta_{i-1})
 
-The :math:`M_{n_d}` is :math:`n_d` dimensional array defining the coordinates of new sample.
+where :math:`M_{n_d}` is an :math:`n_d` dimensional array defining the coordinates of new sample. This mapping is illustrated below for a two-dimensional simplex.
 
 .. image:: _static/SampleMethods_Simplex.png
    :scale: 50 %
    :alt: Randomly generated point inside a 2-D simplex
    :align: center
+   
+Additional details can be found in [8]_.
 
 Class Descriptions
 ^^^^^^^^^^^^^^^^^^^
@@ -315,6 +390,9 @@ Class Descriptions
 .. [5] V.S. Sundar and Shields, M.D. "Reliablity analysis using adaptive Kriging surrogates and multimodel inference." ASCE-ASME Journal of Risk and Uncertainty in Engineering Systems. Part A: Civil Engineering. 5(2): 04019004, 2019.
 .. [6] B.J. Bichon, M.S. Eldred, L.P. Swiler, S. Mahadevan, and J.M. McFarland. "Efficient global reliablity analysis for nonlinear implicit performance functions." AIAA Journal. 46(10) 2459-2468, (2008).
 .. [7] C.Q. Lam. "Sequential adaptive designs in computer experiments for response surface model fit." PhD diss., The Ohio State University, 2008.
+.. [8] W. N. Edeling, R. P. Dwight, P. Cinnella, "Simplex-stochastic collocation method with improved scalability", Journal of Computational Physics, 310:301–328, 2016.
+.. [9] K. Tocher. "The art of simulation." The English Universities Press, London, UK; 1963.
+.. [10] M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
 
 
 .. toctree::
