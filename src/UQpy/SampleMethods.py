@@ -642,214 +642,214 @@ class LHS:
 #                                         Stratified Sampling  (STS)
 ########################################################################################################################
 
-class STS_old:
-    """
-    Generate samples from an assigned probability density function using Stratified Sampling [9]_.
-
-
-    **Inputs:**
-
-    * **dist_object** ((list of) ``Distribution`` object(s)):
-        List of ``Distribution`` objects corresponding to each random variable.
-
-    * **nsamples** (`int`):
-        Total number of samples.
-
-        Required for Voronoi stratification. Not required for rectangular stratification.
-
-    * **sts_design** (`list`):
-        List of integers specifying the number of strata in each dimension.
-
-        Required for rectangular stratification. Not required for Voronoi stratification.
-
-    * **sts_criterion** (`str`):
-            Random or Centered samples inside a rectangular strata.
-            Options:
-                    1. 'random' - completely random. \n
-                    2. 'centered' - points only at the centre. \n
-
-            Default: 'random'
-
-    * **stype** (`str`):
-            Type of the strata (Rectangular or Voronoi).
-
-    * **n_iters** (`int`):
-            Default: 20
-
-    * **input_file** (`str`):
-            File path to input file specifying stratum origins and stratum widths.
-
-            Default: None.
-
-    * **random_state** (None or `int` or `np.random.RandomState` object):
-            Random seed used to initialize the pseudo-random number generator. Default is None.
-
-    * **verbose** (`Boolean`):
-            A boolean declaring whether to write text to the terminal.
-
-            Default value: False
-
-    **Attributes:**
-
-    * **samples** (`ndarray`):
-            `ndarray` containing the generated samples.
-
-    * **samplesU01** (`ndarray`):
-            `ndarray` containing the generated samples on [0, 1]^dimension.
-
-    * **strata** (`class` object):
-            Instance of the class SampleMethods.Strata.
-
-    **Methods:**
-    """
-    def __init__(self, dist_object, nsamples=None, sts_design=None, sts_criterion="random", stype='Rectangular',
-                 input_file=None, n_iters=20, random_state=None, verbose=False):
-
-        self.stype = stype
-        self.input_file = input_file
-        self.strata = None
-        self.sts_criterion = sts_criterion
-        self.verbose = verbose
-        self.nsamples = nsamples
-        self.sts_design = sts_design
-        self.n_iters = n_iters
-        self.samplesU01, self.samples = None, None
-
-        # Check if a Distribution object is provided.
-        from UQpy.Distributions import DistributionContinuous1D, JointInd
-
-        if isinstance(dist_object, list):
-            self.dimension = len(dist_object)
-            for i in range(len(dist_object)):
-                if not isinstance(dist_object[i], DistributionContinuous1D):
-                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
-        else:
-            self.dimension = 1
-            if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
-                raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
-
-        self.dist_object = dist_object
-
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
-
-        # Check sampling criterion
-        if self.sts_criterion not in ['random', 'centered']:
-            raise NotImplementedError("Exit code: Supported sts criteria: 'random', 'centered'")
-
-        if self.stype == 'Rectangular':
-            if sts_design is not None:
-                self.run(sts_design=sts_design)
-            if input_file is not None:
-                self.run(input_file=input_file)
-        elif self.stype == 'Voronoi' and nsamples is not None:
-            self.run(nsamples=nsamples)
-
-    def run(self, nsamples=None, sts_design=None, input_file=None, random_state=None):
-        """
-        Execute the random sampling in the ``STS`` class.
-
-        The ``run`` method is the function that performs random sampling in the ``STS`` class. If `nsamples`,
-        `sts_design` or `input_file` is provided, the ``run`` method is automatically called when the ``STS`` object is
-        defined. The user may also call the ``run`` method directly to generate samples. The ``run`` method of the
-        ``STS`` class can be invoked many times and each time the generated samples are appended to the existing samples.
-
-        **Inputs:**
-
-        * **nsamples** (`int`):
-                Number of samples to be drawn from each distribution.
-                If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
-                existing samples.
-
-        * **sts_design** (`list`):
-                List of integers specifiying the number of strata in each dimension. Required for rectangular
-                stratification.
-
-        * **input_file** (`str`):
-                File path to input file specifying stratum origins and stratum widths.
-
-                Default: None.
-
-        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-                Random seed used to initialize the pseudo-random number generator. If an integer is provided, this sets
-                the seed for an object of ``numpy.random.RandomState``. Otherwise, the object itself can be passed
-                directly.
-
-                Default is None.
-
-        **Output/Return:**
-
-        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``STS``
-        class.
-        """
-        self.nsamples = nsamples
-        self.sts_design = sts_design
-        self.input_file = input_file
-
-        if self.verbose:
-            print('UQpy: Running Stratified Sampling...')
-
-        if random_state is not None:
-            self.random_state = random_state
-            if isinstance(self.random_state, int):
-                self.random_state = np.random.RandomState(self.random_state)
-            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
-
-        if self.stype == 'Rectangular':
-            if self.sts_design is None:
-                if self.input_file is None:
-                    raise NotImplementedError("UQpy: Stratum design is not defined.")
-                else:
-                    self.strata = Strata(input_file=self.input_file)
-            else:
-                self.strata = Strata(n_strata=self.sts_design)
-
-            samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
-            samples_u_to_x = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
-            for j in range(0, self.strata.origins.shape[1]):
-                i_cdf = self.dist_object[j].icdf
-                if self.sts_criterion == "random":
-                    for i in range(0, self.strata.origins.shape[0]):
-                        samples[i, j] = stats.uniform.rvs(loc=self.strata.origins[i, j], scale=self.strata.widths[i, j],
-                                                          random_state=self.random_state)
-                elif self.sts_criterion == "centered":
-                    for i in range(0, self.strata.origins.shape[0]):
-                        samples[i, j] = self.strata.origins[i, j] + self.strata.widths[i, j] / 2.
-
-                samples_u_to_x[:, j] = i_cdf(samples[:, j])
-
-            self.samples, self.samplesU01 = samples_u_to_x, samples
-
-        elif self.stype == 'Voronoi':
-            from UQpy.Utilities import compute_voronoi_centroid_volume, voronoi_unit_hypercube
-
-            samples_init = stats.uniform.rvs(size=[self.nsamples, self.dimension], random_state=self.random_state)
-
-            for i in range(self.n_iters):
-                self.strata = voronoi_unit_hypercube(samples_init)
-
-                self.strata.centroids = []
-                self.strata.weights = []
-                for region in self.strata.bounded_regions:
-                    vertices = self.strata.vertices[region + [region[0]], :]
-                    centroid, volume = compute_voronoi_centroid_volume(vertices)
-                    self.strata.centroids.append(centroid[0, :])
-                    self.strata.weights.append(volume)
-
-                samples_init = np.asarray(self.strata.centroids)
-
-            self.samplesU01 = self.strata.bounded_points
-
-            self.samples = np.zeros(np.shape(self.samplesU01))
-            for i in range(self.samples.shape[1]):
-                self.samples[:, i] = self.dist_object[i].icdf(np.atleast_2d(self.samplesU01[:, i]).T).T
-
-        if self.verbose:
-            print('Successful execution of STS design.')
+# class STS_old:
+#     """
+#     Generate samples from an assigned probability density function using Stratified Sampling [9]_.
+#
+#
+#     **Inputs:**
+#
+#     * **dist_object** ((list of) ``Distribution`` object(s)):
+#         List of ``Distribution`` objects corresponding to each random variable.
+#
+#     * **nsamples** (`int`):
+#         Total number of samples.
+#
+#         Required for Voronoi stratification. Not required for rectangular stratification.
+#
+#     * **sts_design** (`list`):
+#         List of integers specifying the number of strata in each dimension.
+#
+#         Required for rectangular stratification. Not required for Voronoi stratification.
+#
+#     * **sts_criterion** (`str`):
+#             Random or Centered samples inside a rectangular strata.
+#             Options:
+#                     1. 'random' - completely random. \n
+#                     2. 'centered' - points only at the centre. \n
+#
+#             Default: 'random'
+#
+#     * **stype** (`str`):
+#             Type of the strata (Rectangular or Voronoi).
+#
+#     * **n_iters** (`int`):
+#             Default: 20
+#
+#     * **input_file** (`str`):
+#             File path to input file specifying stratum origins and stratum widths.
+#
+#             Default: None.
+#
+#     * **random_state** (None or `int` or `np.random.RandomState` object):
+#             Random seed used to initialize the pseudo-random number generator. Default is None.
+#
+#     * **verbose** (`Boolean`):
+#             A boolean declaring whether to write text to the terminal.
+#
+#             Default value: False
+#
+#     **Attributes:**
+#
+#     * **samples** (`ndarray`):
+#             `ndarray` containing the generated samples.
+#
+#     * **samplesU01** (`ndarray`):
+#             `ndarray` containing the generated samples on [0, 1]^dimension.
+#
+#     * **strata** (`class` object):
+#             Instance of the class SampleMethods.Strata.
+#
+#     **Methods:**
+#     """
+#     def __init__(self, dist_object, nsamples=None, sts_design=None, sts_criterion="random", stype='Rectangular',
+#                  input_file=None, n_iters=20, random_state=None, verbose=False):
+#
+#         self.stype = stype
+#         self.input_file = input_file
+#         self.strata = None
+#         self.sts_criterion = sts_criterion
+#         self.verbose = verbose
+#         self.nsamples = nsamples
+#         self.sts_design = sts_design
+#         self.n_iters = n_iters
+#         self.samplesU01, self.samples = None, None
+#
+#         # Check if a Distribution object is provided.
+#         from UQpy.Distributions import DistributionContinuous1D, JointInd
+#
+#         if isinstance(dist_object, list):
+#             self.dimension = len(dist_object)
+#             for i in range(len(dist_object)):
+#                 if not isinstance(dist_object[i], DistributionContinuous1D):
+#                     raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
+#         else:
+#             self.dimension = 1
+#             if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
+#                 raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
+#
+#         self.dist_object = dist_object
+#
+#         self.random_state = random_state
+#         if isinstance(self.random_state, int):
+#             self.random_state = np.random.RandomState(self.random_state)
+#         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+#             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+#
+#         # Check sampling criterion
+#         if self.sts_criterion not in ['random', 'centered']:
+#             raise NotImplementedError("Exit code: Supported sts criteria: 'random', 'centered'")
+#
+#         if self.stype == 'Rectangular':
+#             if sts_design is not None:
+#                 self.run(sts_design=sts_design)
+#             if input_file is not None:
+#                 self.run(input_file=input_file)
+#         elif self.stype == 'Voronoi' and nsamples is not None:
+#             self.run(nsamples=nsamples)
+#
+#     def run(self, nsamples=None, sts_design=None, input_file=None, random_state=None):
+#         """
+#         Execute the random sampling in the ``STS`` class.
+#
+#         The ``run`` method is the function that performs random sampling in the ``STS`` class. If `nsamples`,
+#         `sts_design` or `input_file` is provided, the ``run`` method is automatically called when the ``STS`` object is
+#         defined. The user may also call the ``run`` method directly to generate samples. The ``run`` method of the
+#         ``STS`` class can be invoked many times and each time the generated samples are appended to the existing samples.
+#
+#         **Inputs:**
+#
+#         * **nsamples** (`int`):
+#                 Number of samples to be drawn from each distribution.
+#                 If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+#                 existing samples.
+#
+#         * **sts_design** (`list`):
+#                 List of integers specifiying the number of strata in each dimension. Required for rectangular
+#                 stratification.
+#
+#         * **input_file** (`str`):
+#                 File path to input file specifying stratum origins and stratum widths.
+#
+#                 Default: None.
+#
+#         * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+#                 Random seed used to initialize the pseudo-random number generator. If an integer is provided, this sets
+#                 the seed for an object of ``numpy.random.RandomState``. Otherwise, the object itself can be passed
+#                 directly.
+#
+#                 Default is None.
+#
+#         **Output/Return:**
+#
+#         The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``STS``
+#         class.
+#         """
+#         self.nsamples = nsamples
+#         self.sts_design = sts_design
+#         self.input_file = input_file
+#
+#         if self.verbose:
+#             print('UQpy: Running Stratified Sampling...')
+#
+#         if random_state is not None:
+#             self.random_state = random_state
+#             if isinstance(self.random_state, int):
+#                 self.random_state = np.random.RandomState(self.random_state)
+#             elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+#                 raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+#
+#         if self.stype == 'Rectangular':
+#             if self.sts_design is None:
+#                 if self.input_file is None:
+#                     raise NotImplementedError("UQpy: Stratum design is not defined.")
+#                 else:
+#                     self.strata = Strata(input_file=self.input_file)
+#             else:
+#                 self.strata = Strata(n_strata=self.sts_design)
+#
+#             samples = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
+#             samples_u_to_x = np.empty([self.strata.origins.shape[0], self.strata.origins.shape[1]], dtype=np.float32)
+#             for j in range(0, self.strata.origins.shape[1]):
+#                 i_cdf = self.dist_object[j].icdf
+#                 if self.sts_criterion == "random":
+#                     for i in range(0, self.strata.origins.shape[0]):
+#                         samples[i, j] = stats.uniform.rvs(loc=self.strata.origins[i, j], scale=self.strata.widths[i, j],
+#                                                           random_state=self.random_state)
+#                 elif self.sts_criterion == "centered":
+#                     for i in range(0, self.strata.origins.shape[0]):
+#                         samples[i, j] = self.strata.origins[i, j] + self.strata.widths[i, j] / 2.
+#
+#                 samples_u_to_x[:, j] = i_cdf(samples[:, j])
+#
+#             self.samples, self.samplesU01 = samples_u_to_x, samples
+#
+#         elif self.stype == 'Voronoi':
+#             from UQpy.Utilities import compute_voronoi_centroid_volume, voronoi_unit_hypercube
+#
+#             samples_init = stats.uniform.rvs(size=[self.nsamples, self.dimension], random_state=self.random_state)
+#
+#             for i in range(self.n_iters):
+#                 self.strata = voronoi_unit_hypercube(samples_init)
+#
+#                 self.strata.centroids = []
+#                 self.strata.weights = []
+#                 for region in self.strata.bounded_regions:
+#                     vertices = self.strata.vertices[region + [region[0]], :]
+#                     centroid, volume = compute_voronoi_centroid_volume(vertices)
+#                     self.strata.centroids.append(centroid[0, :])
+#                     self.strata.weights.append(volume)
+#
+#                 samples_init = np.asarray(self.strata.centroids)
+#
+#             self.samplesU01 = self.strata.bounded_points
+#
+#             self.samples = np.zeros(np.shape(self.samplesU01))
+#             for i in range(self.samples.shape[1]):
+#                 self.samples[:, i] = self.dist_object[i].icdf(np.atleast_2d(self.samplesU01[:, i]).T).T
+#
+#         if self.verbose:
+#             print('Successful execution of STS design.')
 
 ########################################################################################################################
 ########################################################################################################################
@@ -857,178 +857,305 @@ class STS_old:
 ########################################################################################################################
 
 
-class Strata_old:
-    """
-    Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^n with N strata.
-
-    **Inputs:**
-
-    * **n_strata** (`list` of `int`):
-            A list of length `n` defining the number of strata in each of the `n` dimensions. Creates an equal
-            stratification with strata widths equal to 1/`n_strata`. The total number of strata, `N`, is the product
-            of the terms of `n_strata`.
-
-            Example: `n_strata` = [2, 3, 2] creates a 3-dimensional stratification with:\n
-                    2 strata in dimension 0 with stratum widths 1/2\n
-                    3 strata in dimension 1 with stratum widths 1/3\n
-                    2 strata in dimension 2 with stratum widths 1/2\n
-
-    * **input_file** (`str`):
-            File path to input file specifying stratum origins and stratum widths.
-
-            This is typically used to define irregular stratified designs.
-
-    * **origins** (`ndarray`):
-            An array of dimension `N x n` specifying the origins of all strata. The origins of the strata are the
-            coordinates of the stratum orthotope nearest the global origin.
-
-            Example: A 2-dimensional stratification with 2 equal strata in each dimension:
-
-                `origins` = [[0, 0], [0, 0.5], [0.5, 0], [0.5, 0.5]]
-
-    * **widths** (`ndarray`):
-            An array of dimension `N x n` specifying the widths of all strata in each dimension
-
-            Example: A 2-dimensional stratification with 2 strata in each dimension
-
-                `widths` = [[0.5, 0.5], [0.5, 0.5], [0.5, 0.5], [0.5, 0.5]]
-
-    **Attributes:**
-
-    * **n_strata** (`list` of `int`):
-            A list of length `n` defining the number of strata in each of the `n` dimensions. Creates an equal
-            stratification with strata widths equal to 1/`n_strata`. The total number of strata, `N`, is the product
-            of the terms of `n_strata`.
-
-    * **origins** (`ndarray`):
-            An array of dimension `N x n` specifying the origins of all strata. The origins of the strata are the
-            coordinates of the stratum orthotope nearest the global origin.
-
-    * **widths** (`ndarray`):
-            An array of dimension `N x n` specifying the widths of all strata in each dimension
-
-
-    * **weights** (`ndarray`):
-            An array of dimension `1 x N` containing sample weights. Sample weights are equal to the product of the
-            strata widths (i.e. they are equal to the volume of the strata in the [0, 1]^n space).
-
-    **Methods:**
-
-    """
-    def __init__(self, n_strata=None, input_file=None, origins=None, widths=None):
-
-        self.input_file = input_file
-        self.n_strata = n_strata
-        self.origins = origins
-        self.widths = widths
-
-        # Read a stratified design from an input file.
-        if self.n_strata is None:
-            if self.input_file is None:
-                if self.widths is None or self.origins is None:
-                    sys.exit('Error: The strata are not fully defined. Must provide [n_strata], '
-                             'input file, or [origins] and [widths].')
-
-            else:
-                # Read the strata from the specified input file
-                # See documentation for input file formatting
-                array_tmp = np.loadtxt(input_file)
-                self.origins = array_tmp[:, 0:array_tmp.shape[1] // 2]
-                self.widths = array_tmp[:, array_tmp.shape[1] // 2:]
-
-                # Check to see that the strata are space-filling
-                space_fill = np.sum(np.prod(self.widths, 1))
-                if 1 - space_fill > 1e-5:
-                    sys.exit('Error: The stratum design is not space-filling.')
-                if 1 - space_fill < -1e-5:
-                    sys.exit('Error: The stratum design is over-filling.')
-
-        # Define a rectilinear stratification by specifying the number of strata in each dimension via nstrata
-        else:
-            self.origins = np.divide(self.fullfact(self.n_strata), self.n_strata)
-            self.widths = np.divide(np.ones(self.origins.shape), self.n_strata)
-
-        self.weights = np.prod(self.widths, axis=1)
-
-    @staticmethod
-    def fullfact_old(levels):
-
-        """
-        Create a full-factorial design
-
-        Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
-        Copyright (C) 2012 - 2013 - Michael Baudin
-        Copyright (C) 2012 - Maria Christopoulou
-        Copyright (C) 2010 - 2011 - INRIA - Michael Baudin
-        Copyright (C) 2009 - Yann Collette
-        Copyright (C) 2009 - CEA - Jean-Marc Martinez
-        Original source code can be found at:
-        https://pythonhosted.org/pyDOE/#
-        or
-        https://pypi.org/project/pyDOE/
-        or
-        https://github.com/tisimst/pyDOE/
-
-        **Input:**
-
-        * **levels** (`list`):
-                A list of integers that indicate the number of levels of each input design factor.
-
-        **Output:**
-
-        * **ff** (`ndarray`):
-                Full-factorial design matrix.
-        """
-        # Number of factors
-        n_factors = len(levels)
-        # Number of combinations
-        n_comb = np.prod(levels)
-        ff = np.zeros((n_comb, n_factors))
-
-        level_repeat = 1
-        range_repeat = np.prod(levels)
-        for i in range(n_factors):
-            range_repeat //= levels[i]
-            lvl = []
-            for j in range(levels[i]):
-                lvl += [j] * level_repeat
-            rng = lvl * range_repeat
-            level_repeat *= levels[i]
-            ff[:, i] = rng
-
-        return ff
+# class Strata_old:
+#     """
+#     Define a rectilinear stratification of the n-dimensional unit hypercube [0, 1]^n with N strata.
+#
+#     **Inputs:**
+#
+#     * **n_strata** (`list` of `int`):
+#             A list of length `n` defining the number of strata in each of the `n` dimensions. Creates an equal
+#             stratification with strata widths equal to 1/`n_strata`. The total number of strata, `N`, is the product
+#             of the terms of `n_strata`.
+#
+#             Example: `n_strata` = [2, 3, 2] creates a 3-dimensional stratification with:\n
+#                     2 strata in dimension 0 with stratum widths 1/2\n
+#                     3 strata in dimension 1 with stratum widths 1/3\n
+#                     2 strata in dimension 2 with stratum widths 1/2\n
+#
+#     * **input_file** (`str`):
+#             File path to input file specifying stratum origins and stratum widths.
+#
+#             This is typically used to define irregular stratified designs.
+#
+#     * **origins** (`ndarray`):
+#             An array of dimension `N x n` specifying the origins of all strata. The origins of the strata are the
+#             coordinates of the stratum orthotope nearest the global origin.
+#
+#             Example: A 2-dimensional stratification with 2 equal strata in each dimension:
+#
+#                 `origins` = [[0, 0], [0, 0.5], [0.5, 0], [0.5, 0.5]]
+#
+#     * **widths** (`ndarray`):
+#             An array of dimension `N x n` specifying the widths of all strata in each dimension
+#
+#             Example: A 2-dimensional stratification with 2 strata in each dimension
+#
+#                 `widths` = [[0.5, 0.5], [0.5, 0.5], [0.5, 0.5], [0.5, 0.5]]
+#
+#     **Attributes:**
+#
+#     * **n_strata** (`list` of `int`):
+#             A list of length `n` defining the number of strata in each of the `n` dimensions. Creates an equal
+#             stratification with strata widths equal to 1/`n_strata`. The total number of strata, `N`, is the product
+#             of the terms of `n_strata`.
+#
+#     * **origins** (`ndarray`):
+#             An array of dimension `N x n` specifying the origins of all strata. The origins of the strata are the
+#             coordinates of the stratum orthotope nearest the global origin.
+#
+#     * **widths** (`ndarray`):
+#             An array of dimension `N x n` specifying the widths of all strata in each dimension
+#
+#
+#     * **weights** (`ndarray`):
+#             An array of dimension `1 x N` containing sample weights. Sample weights are equal to the product of the
+#             strata widths (i.e. they are equal to the volume of the strata in the [0, 1]^n space).
+#
+#     **Methods:**
+#
+#     """
+#     def __init__(self, n_strata=None, input_file=None, origins=None, widths=None):
+#
+#         self.input_file = input_file
+#         self.n_strata = n_strata
+#         self.origins = origins
+#         self.widths = widths
+#
+#         # Read a stratified design from an input file.
+#         if self.n_strata is None:
+#             if self.input_file is None:
+#                 if self.widths is None or self.origins is None:
+#                     sys.exit('Error: The strata are not fully defined. Must provide [n_strata], '
+#                              'input file, or [origins] and [widths].')
+#
+#             else:
+#                 # Read the strata from the specified input file
+#                 # See documentation for input file formatting
+#                 array_tmp = np.loadtxt(input_file)
+#                 self.origins = array_tmp[:, 0:array_tmp.shape[1] // 2]
+#                 self.widths = array_tmp[:, array_tmp.shape[1] // 2:]
+#
+#                 # Check to see that the strata are space-filling
+#                 space_fill = np.sum(np.prod(self.widths, 1))
+#                 if 1 - space_fill > 1e-5:
+#                     sys.exit('Error: The stratum design is not space-filling.')
+#                 if 1 - space_fill < -1e-5:
+#                     sys.exit('Error: The stratum design is over-filling.')
+#
+#         # Define a rectilinear stratification by specifying the number of strata in each dimension via nstrata
+#         else:
+#             self.origins = np.divide(self.fullfact(self.n_strata), self.n_strata)
+#             self.widths = np.divide(np.ones(self.origins.shape), self.n_strata)
+#
+#         self.weights = np.prod(self.widths, axis=1)
+#
+#     @staticmethod
+#     def fullfact_old(levels):
+#
+#         """
+#         Create a full-factorial design
+#
+#         Note: This function has been modified from pyDOE, released under BSD License (3-Clause)
+#         Copyright (C) 2012 - 2013 - Michael Baudin
+#         Copyright (C) 2012 - Maria Christopoulou
+#         Copyright (C) 2010 - 2011 - INRIA - Michael Baudin
+#         Copyright (C) 2009 - Yann Collette
+#         Copyright (C) 2009 - CEA - Jean-Marc Martinez
+#         Original source code can be found at:
+#         https://pythonhosted.org/pyDOE/#
+#         or
+#         https://pypi.org/project/pyDOE/
+#         or
+#         https://github.com/tisimst/pyDOE/
+#
+#         **Input:**
+#
+#         * **levels** (`list`):
+#                 A list of integers that indicate the number of levels of each input design factor.
+#
+#         **Output:**
+#
+#         * **ff** (`ndarray`):
+#                 Full-factorial design matrix.
+#         """
+#         # Number of factors
+#         n_factors = len(levels)
+#         # Number of combinations
+#         n_comb = np.prod(levels)
+#         ff = np.zeros((n_comb, n_factors))
+#
+#         level_repeat = 1
+#         range_repeat = np.prod(levels)
+#         for i in range(n_factors):
+#             range_repeat //= levels[i]
+#             lvl = []
+#             for j in range(levels[i]):
+#                 lvl += [j] * level_repeat
+#             rng = lvl * range_repeat
+#             level_repeat *= levels[i]
+#             ff[:, i] = rng
+#
+#         return ff
 
 
 class Strata:
-    def __init__(self, random_state=None):
+    """
+    Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling strata.
+
+    This is the parent class for all spatial stratifications. This parent class only provides the framework for
+    stratification and cannot be used directly for the stratification. Stratification is done by calling the child
+    class for the desired stratification.
+
+
+    **Inputs:**
+
+    * **seeds** (`ndarray`)
+        Define the seed points for the strata. See specific subclass for definition of the seed points.
+
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
+
+    * **verbose** (`Boolean`):
+        A boolean declaring whether to write text to the terminal.
+
+
+    **Attributes:**
+
+    * **seeds** (`ndarray`)
+        Seed points for the strata. See specific subclass for definition of the seed points.
+
+    **Methods:**
+    """
+
+    def __init__(self, seeds=None, random_state=None, verbose=False):
+
+        self.seeds = seeds
         self.volume = None
+        self.verbose = verbose
 
         self.random_state = random_state
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+        elif self.random_state is None:
+            self.random_state = np.random.RandomState()
+        elif not isinstance(self.random_state, np.random.RandomState):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
+    def stratify(self):
+
+        """
+        Perform the stratification of the unit hypercube. It is overwritten by the subclass. This method must exist in
+        any subclass of the ``Strata`` class.
+
+        **Outputs/Returns:**
+
+        The method has no returns, but it modifies the relevant attributes of the subclass.
+
+        """
+
+        return None
 
 
 class RectangularStrata(Strata):
+    """
+    Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling
+    rectangular strata.
+
+    ``RectangularStrata`` is a child class of the ``Strata`` class
+
+    **Inputs:**
+
+    * **nstrata** (`list` of `int`):
+        A list of length `n` defining the number of strata in each of the `n` dimensions. Creates an equal
+        stratification with strata widths equal to 1/`n_strata`. The total number of strata, `N`, is the product
+        of the terms of `n_strata`.
+
+        Example: `n_strata` = [2, 3, 2] creates a 3-dimensional stratification with:\n
+                2 strata in dimension 0 with stratum widths 1/2\n
+                3 strata in dimension 1 with stratum widths 1/3\n
+                2 strata in dimension 2 with stratum widths 1/2\n
+
+        The user must pass one of `n_strata` OR `input_file` OR `seeds` and `widths`
+
+    * **input_file** (`str`):
+        File path to an input file specifying stratum seeds and stratum widths.
+
+        This is typically used to define irregular stratified designs.
+
+        The user must pass one of `n_strata` OR `input_file` OR `seeds` and `widths`
+
+    * **seeds** (`ndarray`):
+        An array of dimension `N x n` specifying the seeds of all strata. The seeds of the strata are the
+        coordinates of the stratum orthotope nearest the global origin.
+
+        Example: A 2-dimensional stratification with 2 equal strata in each dimension:
+
+            `origins` = [[0, 0], [0, 0.5], [0.5, 0], [0.5, 0.5]]
+
+        The user must pass one of `n_strata` OR `input_file` OR `seeds` and `widths`
+
+    * **widths** (`ndarray`):
+        An array of dimension `N x n` specifying the widths of all strata in each dimension
+
+        Example: A 2-dimensional stratification with 2 strata in each dimension
+
+            `widths` = [[0.5, 0.5], [0.5, 0.5], [0.5, 0.5], [0.5, 0.5]]
+
+        The user must pass one of `n_strata` OR `input_file` OR `seeds` and `widths`
+
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
+
+    * **verbose** (`Boolean`):
+        A boolean declaring whether to write text to the terminal.
+
+
+    **Attributes:**
+
+    * **nstrata** (`list` of `int`):
+        A list of length `n` defining the number of strata in each of the `n` dimensions. Creates an equal
+        stratification with strata widths equal to 1/`n_strata`. The total number of strata, `N`, is the product
+        of the terms of `n_strata`.
+
+    * **seeds** (`ndarray`):
+        An array of dimension `N x n` specifying the seeds of all strata. The seeds of the strata are the
+        coordinates of the stratum orthotope nearest the global origin.
+
+    * **widths** (`ndarray`):
+        An array of dimension `N x n` specifying the widths of all strata in each dimension
+
+    * **volume** (`ndarray`):
+        An array of dimension `1 x N` containing the volume of each stratum. Stratum volumes are equal to the product of
+        the strata widths.
+
+    **Methods:**
+    """
     def __init__(self, nstrata=None, input_file=None, seeds=None, widths=None, random_state=None, verbose=False):
-        super().__init__(random_state)
+        super().__init__(random_state=random_state, seeds=seeds, verbose=verbose)
+
         self.input_file = input_file
         self.nstrata = nstrata
-        self.seeds = seeds
         self.widths = widths
-        self.random_state = random_state
-        self.verbose = verbose
 
-        self.stratified()
+        self.stratify()
 
-    def stratified(self):
-        # Read a stratified design from an input file.
+    def stratify(self):
+        """
+        Performs the rectangular stratification.
+        """
+
         if self.nstrata is None:
             if self.input_file is None:
                 if self.widths is None or self.seeds is None:
-                    sys.exit('Error: The strata are not fully defined. Must provide [n_strata], '
-                             'input file, or [seeds] and [widths].')
+                    sys.exit('UQpy Error - The strata are not fully defined. Must provide `n_strata`, '
+                             '`input_file`, or `seeds` and `widths`.')
 
             else:
                 # Read the strata from the specified input file
@@ -1040,9 +1167,9 @@ class RectangularStrata(Strata):
                 # Check to see that the strata are space-filling
                 space_fill = np.sum(np.prod(self.widths, 1))
                 if 1 - space_fill > 1e-5:
-                    sys.exit('Error: The stratum design is not space-filling.')
+                    sys.exit('UQpy: Error - The stratum design is not space-filling.')
                 if 1 - space_fill < -1e-5:
-                    sys.exit('Error: The stratum design is over-filling.')
+                    sys.exit('UQpy: Error - The stratum design is over-filling.')
 
         # Define a rectilinear stratification by specifying the number of strata in each dimension via nstrata
         else:
@@ -1073,12 +1200,12 @@ class RectangularStrata(Strata):
         **Input:**
 
         * **levels** (`list`):
-                A list of integers that indicate the number of levels of each input design factor.
+            A list of integers that indicate the number of levels of each input design factor.
 
         **Output:**
 
         * **ff** (`ndarray`):
-                Full-factorial design matrix.
+            Full-factorial design matrix.
         """
         # Number of factors
         n_factors = len(levels)
@@ -1099,135 +1226,214 @@ class RectangularStrata(Strata):
 
         return ff
 
+
 class VoronoiStrata(Strata):
+    """
+    Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling
+    Voronoi strata.
+
+    ``VoronoiStrata`` is a child class of the ``Strata`` class.
+
+    **Inputs:**
+
+    * **seeds** (`ndarray`):
+        An array of dimension `N x n` specifying the seeds of all strata. The seeds of the strata are the
+        coordinates of the point inside each stratum that defines the stratum.
+
+        The user must provide `seeds` or `nseeds` and `dimension`
+
+    * **nseeds** (`int`):
+        The number of seeds to randomly generate. Seeds are generated by random sampling on the unit hypercube.
+
+        The user must provide `seeds` or `nseeds` and `dimension`
+
+    * **dimension** (`ndarray`):
+        The dimension of the unit hypercube in which to generate random seeds. Used only if `nseeds` is provided.
+
+        The user must provide `seeds` or `nseeds` and `dimension`
+
+    * **niters** (`int`)
+        Number of iterations to perform to create a Centroidal Voronoi decomposition.
+
+        If `niters = 0`, the Voronoi decomposition is based on the provided or generated seeds.
+
+        If :math:`niters \ge 1`, the seed points are moved to the centroids of the Voronoi cells in each iteration and
+        the a new Voronoi decomposition is performed. This process is repeated `niters` times to create a Centroidal
+        Voronoi decomposition.
+
+    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+        Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+        object itself can be passed directly.
+
+    * **verbose** (`Boolean`):
+        A boolean declaring whether to write text to the terminal.
+
+
+    **Attributes:**
+
+    * **seeds** (`ndarray`):
+        An array of dimension `N x n` containing the seeds of all strata. The seeds of the strata are the
+        coordinates of the point inside each stratum that defines the stratum.
+
+        If :math:`niters > 1` the `seeds` attribute will differ from the `seeds` input due to the iterations.
+
+    * **vertices** (`list`)
+        A list of the vertices for each Voronoi stratum on the unit hypercube.
+
+    * **voronoi** (`object` of ``scipy.spatial.Voronoi``)
+        Defines a Voronoi decomposition of the set of reflected points. When creating the Voronoi decomposition on
+        the unit hypercube, the code reflects the points on the unit hypercube across all faces of the unit hypercube.
+        This causes the Voronoi decomposition to create edges along the faces of the hypercube.
+
+        This object is not the Voronoi decomposition of the unit hypercube. It is the Voronoi decomposition of all
+        points and their reflections from which the unit hypercube is extracted.
+
+        To access the vertices in the unit hypercube, see the attribute `vertices`.
+
+    * **volume** (`ndarray`):
+        An array of dimension `1 x N` containing the volume of each Voronoi stratum in the unit hypercube.
+
+    **Methods:**
+    """
+
     def __init__(self, seeds=None, nseeds=None, dimension=None, niters=1, random_state=None, verbose=False):
-        super().__init__(random_state)
-        self.seeds = seeds
+        super().__init__(random_state=random_state, seeds=seeds, verbose=verbose)
+
         self.nseeds = nseeds
         self.dimension = dimension
         self.niters = niters
-        self.random_state = random_state
-        self.verbose = verbose
-
         self.voronoi = None
         self.vertices = []
-        self.centroids = []
 
         if self.seeds is not None:
             if self.nseeds is not None or self.dimension is not None:
                 print("UQpy: Ignoring 'nseeds' and 'dimension' attributes because 'seeds' are provided")
             self.dimension = self.seeds.shape[1]
 
-        self.stratified()
+        self.stratify()
 
-    def stratified(self):
+    def stratify(self):
+        """
+        Performs the Voronoi stratification.
+        """
 
         initial_seeds = self.seeds
         if self.seeds is None:
             initial_seeds = stats.uniform.rvs(size=[self.nseeds, self.dimension], random_state=self.random_state)
 
-        for i in range(self.niters):
-            self.voronoi = self.voronoi_unit_hypercube(initial_seeds)
-            self.voronoi.bounded_regions: list = self.voronoi.bounded_regions
-            self.voronoi.vertices: list = self.voronoi.vertices
-            self.voronoi.bounded_points: np.ndarray = self.voronoi.bounded_points
+        if self.niters == 0:
+            self.voronoi, bounded_regions = self.voronoi_unit_hypercube(initial_seeds)
 
             cent, vol = [], []
-            for region in self.voronoi.bounded_regions:
+            for region in bounded_regions:
                 vertices = self.voronoi.vertices[region + [region[0]], :]
                 centroid, volume = self.compute_voronoi_centroid_volume(vertices)
                 self.vertices.append(vertices)
                 cent.append(centroid[0, :])
                 vol.append(volume)
 
-            initial_seeds = np.asarray(cent)
             self.volume = np.asarray(vol)
+        else:
+            for i in range(self.niters):
+                self.voronoi, bounded_regions = self.voronoi_unit_hypercube(initial_seeds)
 
-        self.seeds = self.voronoi.bounded_points
+                cent, vol = [], []
+                for region in bounded_regions:
+                    vertices = self.voronoi.vertices[region + [region[0]], :]
+                    centroid, volume = self.compute_voronoi_centroid_volume(vertices)
+                    self.vertices.append(vertices)
+                    cent.append(centroid[0, :])
+                    vol.append(volume)
+
+                initial_seeds = np.asarray(cent)
+                self.volume = np.asarray(vol)
+
+        self.seeds = initial_seeds
 
     @staticmethod
-    def voronoi_unit_hypercube(samples):
+    def voronoi_unit_hypercube(seeds):
         """
-        This function mirror the samples in both low and high directions for each dimension and estimate the voronoi
-        regions for each sample.
+        This function reflects the seeds across all faces of the unit hypercube and creates a Voronoi decomposition of
+        using all the points and their reflections. This allows a Voronoi decomposition that is bounded on the unit
+        hypercube to be extracted.
 
         **Inputs:**
 
-        * **samples** (`ndarray`):
-            Coordinates of points to construct a convex hull from ``samples.shape=(1, dimension)
+        * **seeds** (`ndarray`):
+            Coordinates of points in the unit hypercube from which to define the Voronoi decomposition.
 
         **Output/Returns:**
 
-        * **vor** (`scipy.spatial.Voronoi` object):
-            Voronoi diagram in N dimension.
+        * **vor** (``scipy.spatial.Voronoi`` object):
+            Voronoi decomposition of the complete set of points and their reflections.
+
+        * **bounded_regions** (see `regions` attribute of ``scipy.spatial.Voronoi``)
+            Indices of the Voronoi vertices forming each Voronoi region for those regions lying inside the unit
+            hypercube.
         """
 
         from scipy.spatial import Voronoi
 
-        # Mirror the samples in both low and high directions for each dimension
-        samples_center = samples
-        dimension = samples.shape[1]
+        # Mirror the seeds in both low and high directions for each dimension
+        bounded_points = seeds
+        dimension = seeds.shape[1]
         for i in range(dimension):
-            samples_del = np.delete(samples_center, i, 1)
+            seeds_del = np.delete(bounded_points, i, 1)
             if i == 0:
-                points_temp1 = np.hstack([np.atleast_2d(-samples_center[:, i]).T, samples_del])
-                points_temp2 = np.hstack([np.atleast_2d(2 - samples_center[:, i]).T, samples_del])
+                points_temp1 = np.hstack([np.atleast_2d(-bounded_points[:, i]).T, seeds_del])
+                points_temp2 = np.hstack([np.atleast_2d(2 - bounded_points[:, i]).T, seeds_del])
             elif i == dimension - 1:
-                points_temp1 = np.hstack([samples_del, np.atleast_2d(-samples_center[:, i]).T])
-                points_temp2 = np.hstack([samples_del, np.atleast_2d(2 - samples_center[:, i]).T])
+                points_temp1 = np.hstack([seeds_del, np.atleast_2d(-bounded_points[:, i]).T])
+                points_temp2 = np.hstack([seeds_del, np.atleast_2d(2 - bounded_points[:, i]).T])
             else:
                 points_temp1 = np.hstack(
-                    [samples_del[:, :i], np.atleast_2d(-samples_center[:, i]).T, samples_del[:, i:]])
+                    [seeds_del[:, :i], np.atleast_2d(-bounded_points[:, i]).T, seeds_del[:, i:]])
                 points_temp2 = np.hstack(
-                    [samples_del[:, :i], np.atleast_2d(2 - samples_center[:, i]).T, samples_del[:, i:]])
-            samples = np.append(samples, points_temp1, axis=0)
-            samples = np.append(samples, points_temp2, axis=0)
+                    [seeds_del[:, :i], np.atleast_2d(2 - bounded_points[:, i]).T, seeds_del[:, i:]])
+            seeds = np.append(seeds, points_temp1, axis=0)
+            seeds = np.append(seeds, points_temp2, axis=0)
 
-        vor = Voronoi(samples, incremental=True)
-        vor.regions: list = vor.regions
-        vor.point_region: list = vor.point_region
+        vor = Voronoi(seeds, incremental=True)
 
-        regions = [None] * samples_center.shape[0]
+        regions = [None] * bounded_points.shape[0]
 
-        for i in range(samples_center.shape[0]):
+        for i in range(bounded_points.shape[0]):
             regions[i] = vor.regions[vor.point_region[i]]
 
-        vor.bounded_points= samples_center
-        vor.bounded_regions= regions
+        bounded_regions = regions
 
-        return vor
+        return vor, bounded_regions
 
     @staticmethod
     def compute_voronoi_centroid_volume(vertices):
         """
-        This function computes the centroid and volume of voronoi cells created using vertices.
+        This function computes the centroid and volume of a Voronoi cell from its vertices.
 
         **Inputs:**
 
         * **vertices** (`ndarray`):
-            Coordinates of points to construct a voronoi diagram.
+            Coordinates of the vertices that define the Voronoi cell.
 
         **Output/Returns:**
 
-        * **centroid** (`numpy.ndarray`):
-            Centroid of Voronoi cells.
+        * **centroid** (`ndarray`):
+            Centroid of the Voronoi cell.
 
-        * **volume** (`numpy.ndarray`):
-            Volume of Voronoi cells.
+        * **volume** (`ndarray`):
+            Volume of the Voronoi cell.
         """
 
         from scipy.spatial import Delaunay, ConvexHull
 
         tess = Delaunay(vertices)
-        tess.nsimplex: int = tess.nsimplex
-        tess.simplices: np.ndarray = tess.simplices
         dimension = np.shape(vertices)[1]
 
         w = np.zeros((tess.nsimplex, 1))
         cent = np.zeros((tess.nsimplex, dimension))
         for i in range(tess.nsimplex):
             ch = ConvexHull(tess.points[tess.simplices[i]])
-            ch.volume: float = ch.volume
             w[i] = ch.volume
             cent[i, :] = np.mean(tess.points[tess.simplices[i]], axis=0)
 
@@ -1236,26 +1442,79 @@ class VoronoiStrata(Strata):
 
         return centroid, volume
 
+
 class DelaunayStrata(Strata):
+    """
+        Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling
+        Delaunay strata of n-dimensional simplexes.
+
+        ``DelaunayStrata`` is a child class of the ``Strata`` class.
+
+        **Inputs:**
+
+        * **seeds** (`ndarray`):
+            An array of dimension `N x n` specifying the seeds of all strata. The seeds of the strata are the
+            coordinates of the vertices of the Delaunay cells.
+
+            The user must provide `seeds` or `nseeds` and `dimension`
+
+            Note that, if `seeds` does not include all corners of the unit hypercube, they are added.
+
+        * **nseeds** (`int`):
+            The number of seeds to randomly generate. Seeds are generated by random sampling on the unit hypercube. In
+            addition, the class also adds seed points at all corners of the unit hypercube.
+
+            The user must provide `seeds` or `nseeds` and `dimension`
+
+        * **dimension** (`ndarray`):
+            The dimension of the unit hypercube in which to generate random seeds. Used only if `nseeds` is provided.
+
+            The user must provide `seeds` or `nseeds` and `dimension`
+
+        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
+
+            If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+            object itself can be passed directly.
+
+        * **verbose** (`Boolean`):
+            A boolean declaring whether to write text to the terminal.
+
+
+        **Attributes:**
+
+        * **seeds** (`ndarray`):
+            An array of dimension `N x n` containing the seeds of all strata. The seeds of the strata are the
+            coordinates of the vertices of the Delaunay cells.
+
+        * **centroids** (`ndarray`)
+            A list of the vertices for each Voronoi stratum on the unit hypercube.
+
+        * **delaunay** (`object` of ``scipy.spatial.Delaunay``)
+            Defines a Delaunay decomposition of the set of seed points and all corner points.
+
+        * **volume** (`ndarray`):
+            An array of dimension `1 x N` containing the volume of each Voronoi stratum in the unit hypercube.
+
+        **Methods:**
+        """
+
     def __init__(self, seeds=None, nseeds=None, dimension=None, random_state=None, verbose=False):
-        super().__init__(random_state)
-        self.seeds = seeds
+        super().__init__(random_state=random_state, seeds=seeds, verbose=verbose)
+
         self.nseeds = nseeds
         self.dimension = dimension
-        self.random_state = random_state
-        self.verbose = verbose
-
         self.delaunay = None
         self.centroids = []
 
         if self.seeds is not None:
             if self.nseeds is not None or self.dimension is not None:
                 print("UQpy: Ignoring 'nseeds' and 'dimension' attributes because 'seeds' are provided")
-            self.nseeds, self.dimension =  self.seeds.shape[0], self.seeds.shape[1]
+            self.nseeds, self.dimension = self.seeds.shape[0], self.seeds.shape[1]
 
-        self.stratified()
+        self.stratify()
 
-    def stratified(self):
+    def stratify(self):
         import itertools
         from scipy.spatial import Delaunay
 
@@ -1269,42 +1528,43 @@ class DelaunayStrata(Strata):
         initial_seeds = np.unique([tuple(row) for row in initial_seeds], axis=0)
 
         self.delaunay = Delaunay(initial_seeds)
-        self.delaunay.simplices: np.ndarray = self.delaunay.simplices
-        self.centroids = np.zeros([self.nseeds, self.dimension])
-        self.volume = np.zeros([self.nseeds, 1])
+        self.centroids = np.zeros([0, self.dimension])
+        self.volume = np.zeros([0, 1])
         count = 0
         for sim in self.delaunay.simplices:  # extract simplices from Delaunay triangulation
-            self.centroids[count, :], self.volume[count, :] = self.compute_delaunay_centroid_volume(
-                self.delaunay.points[sim])
+            cent, vol = self.compute_delaunay_centroid_volume(self.delaunay.points[sim])
+            self.centroids = np.vstack([self.centroids, cent])
+            self.volume = np.vstack([self.volume, vol])
             count = count + 1
 
     @staticmethod
     def compute_delaunay_centroid_volume(vertices):
         """
-        This function computes the centroid and volume of Delaunay triangulation created using vertices.
+        This function computes the centroid and volume of a Delaunay simplex from its vertices.
 
         **Inputs:**
 
         * **vertices** (`ndarray`):
-            Coordinates of points to construct a Convex Hull.
+            Coordinates of the vertices of the simplex.
 
         **Output/Returns:**
 
         * **centroid** (`numpy.ndarray`):
-            Centroid of Voronoi cells.
+            Centroid of the Delaunay simplex.
 
         * **volume** (`numpy.ndarray`):
-            Volume of Voronoi cells.
+            Volume of the Delaunay simplex.
         """
 
         from scipy.spatial import ConvexHull
 
         ch = ConvexHull(vertices)
         volume = ch.volume
-        ch.volume: float = ch.volume
+        # ch.volume: float = ch.volume
         centroid = np.mean(vertices, axis=0)
 
         return centroid, volume
+
 
 class STS:
     """
@@ -1395,19 +1655,19 @@ class STS:
 
     def run(self, nsamples_per_stratum=None, nsamples=None):
         # Check inputs of run methods
-        self.run_checks_p(nsamples_per_stratum, nsamples)
+        self.run_checks(nsamples_per_stratum, nsamples)
 
         # Call "create_sampleu01" method and generate samples in  [0, 1] space
-        self.samplesU01 = self.create_samplesu01_p()
+        self.samplesU01 = self.create_samplesu01()
 
         # Call "create_sample" method of parent class and compute inverse cdf of samplesU01
         self.transform_samples(self.samplesU01)
 
     # Creating dummy methods to remove pycharm warnings. These methods are overwritten in child classes.
-    def run_checks_p(self, nsamples_per_stratum, nsamples):
+    def run_checks(self, nsamples_per_stratum, nsamples):
         return self.verbose, nsamples_per_stratum, nsamples
 
-    def create_samplesu01_p(self):
+    def create_samplesu01(self):
         if self.verbose: self.verbose = True
         return np.array([[1]])
 
@@ -1454,14 +1714,12 @@ class RectangularSTS(STS):
     """
     def __init__(self, dist_object, strata_object, nsamples_per_stratum=None, nsamples=None, sts_criterion="random",
                  verbose=False, random_state=None):
-        super().__init__(dist_object, random_state, verbose)
+        super().__init__(dist_object=dist_object, random_state=random_state, verbose=verbose)
         self.dist_object = dist_object
         self.strata_object = strata_object
         self.sts_criterion = sts_criterion
         self.nsamples_per_stratum = nsamples_per_stratum
         self.nsamples = nsamples
-        self.run_checks_p = self.run_checks
-        self.create_samplesu01_p = self.create_samplesu01
 
         # Check strata_object
         if not isinstance(self.strata_object, RectangularStrata):
@@ -1498,6 +1756,7 @@ class RectangularSTS(STS):
 
         This method doesn't return anything.
         """
+
         if nsamples_per_stratum is not None:
             self.nsamples_per_stratum = nsamples_per_stratum
 
@@ -1567,6 +1826,7 @@ class RectangularSTS(STS):
 
         self.weights = np.array(weights)
         return np.concatenate(samples_in_strata, axis=0)
+
 
 class VoronoiSTS(STS):
     """
@@ -1698,10 +1958,10 @@ class VoronoiSTS(STS):
             temp_prob = np.array(volume) / sum(volume)
             a = list(range(len(delaunay_obj.vertices)))
             for k in range(int(self.nsamples_per_stratum[j])):
-                simplex = np.random.choice(a, p=temp_prob)
-                m = seed_and_vertices.shape[0] - 1
-                while m not in delaunay_obj.vertices[simplex]:
-                    simplex = np.random.choice(a, p=temp_prob)
+                # if self.random_state is None:
+                #     simplex = np.random.choice(a, p=temp_prob)
+                # else:
+                simplex = self.random_state.choice(a, p=temp_prob)
 
                 new_samples = Simplex(nodes=seed_and_vertices[delaunay_obj.vertices[simplex]], nsamples=1,
                                       random_state=self.random_state).samples
@@ -2765,7 +3025,8 @@ class AKMCS:
     """
 
     def __init__(self, dist_object, runmodel_object, krig_object, samples=None, nsamples=None, nlearn=10000,
-                 nstart=None, qoi_name=None, learning_function='U', n_add=1, random_state=None, verbose=False, **kwargs):
+                 nstart=None, qoi_name=None, learning_function='U', n_add=1, random_state=None, verbose=False,
+                 **kwargs):
 
         # Initialize the internal variables of the class.
         self.runmodel_object = runmodel_object

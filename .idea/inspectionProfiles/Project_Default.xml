@@ -38,6 +38,12 @@
           <option value="params_dict" />
           <option value="UQpy.Distributions.Distribution.rvs" />
           <option value="UQpy.Distributions.Distribution.cdf" />
+          <option value="scipy.spatial.qhull.Voronoi.regions" />
+          <option value="scipy.spatial.qhull.Voronoi.point_region" />
+          <option value="scipy.spatial.qhull.Voronoi.vertices" />
+          <option value="scipy.spatial.qhull.Delaunay.nsimplex" />
+          <option value="scipy.spatial.qhull.Delaunay.simplices" />
+          <option value="scipy.spatial.qhull.ConvexHull.volume" />
         </list>
       </option>
     </inspection_tool>
