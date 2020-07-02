@@ -142,17 +142,37 @@ Adding a new ``STS`` class
 Adding a new stratified sampling method first requires that an appropriate ``Strata`` class exists. If the new method is based on rectangular, Voronoi, or Delaunay stratification one of the existing ``Strata`` classes can be used. If it relies on a different type of stratification, then a new ``Strata`` class must be written first. Next, the new stratified sampling method must be written as a new subclass of the ``STS`` class containing a ``create_samplesu01`` method that performs the stratified sampling on the unit hypercube. This method must take input that are consistent with the ``create_samplesu01`` method described in the ``STS`` class above.
 
 
+Refined Stratified Sampling
+-----------------------------
+
+Refined Stratified Sampling (RSS) is a sequential sampling procedure that adaptively refines the stratification of the parameter space to add samples. There are four variations of RSS currently available in ``UQpy``. First, the procedure works with either rectangular stratification (i.e. using ``RectangularStrata``) or Voronoi stratification (i.e. using ``VoronoiStrata``). For each of these, two refinement procedures are available. The first is a randomized algorithm where strata are selected at random according to their probability weight. This algorithm is described in [11]_. The second is a gradient-enhanced version (so-called GE-RSS) that draws samples in stata that possess both large probability weight and have high variance. This algorithm is described in [12]_.
+
 RSS Class
 ^^^^^^^^^^
 
-The ``RSS`` class generated samples randomly or uses gradient-based adaptive approach to reduce the variance of output statistical estimates. The method used to generate samples is define by `runmodel_object` parameter. If, it is not defined then RSS class executes Refined Stratified sampling, otherwise Gradient Enhanced Refined Stratified sampling is executed. Refined Stratified sampling randomly selects the stratum to refine from the strata/cells with maximum weight. Whereas, Gradient Enhaced Refined Stratified sampling selects the strata/cells with maximum stratum variance. This class divides the sample domain using either rectangular stratification or voronoi cells, this is define by the `sample_object` parameter. In case of rectangular stratification, selected strata is divided along the maximum width to define new strata. In case of Voronoi cells, the new sample is drawn from a sub-simplex, which is used for refinement.
+All variations of Refined Stratifed Sampling are implemented in the ``RSS`` class. ``RSS`` is the parent class that includes all Refined Stratified Sampling algorithms, which are implemented as child class, specifically ``RectangularRSS`` and ``VoronoiRSS``. The details of these classes are provided below. 
+
+Extension of the RSS class for new algorithms can be accomplished by adding new a new child class with the appropriate algorithm. Depending on the type of stratification, this may require the additional development of new ``Strata`` and ``STS`` classes to accommodate the RSS. This is discussed in more details below.
+
 
 Class Descriptions
 ^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.SampleMethods.RSS
 	:members:
+	
+.. autoclass:: UQpy.SampleMethods.RectangularRSS
+	:members:
 
+.. autoclass:: UQpy.SampleMethods.VoronoiRSS
+	:members:
+	
+Adding a new ``RSS`` class
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+New refined stratified sampling methods can be implemented by subclassing the ``RSS`` class. The subclass should inherit inputs from the parent class and may also take additional inputs as necessary. Any ``RSS`` subclass must have a ``run_rss`` method that is invoked by the ``RSS.run`` method. The ``run_rss`` method is an instance method that should not take any additional arguments and executes the refined stratifed sampling algorithm.
+
+It is noted that any new ``RSS`` class must have a corresponding ``Strata`` object that defines the type of stratification and may also require a corresponding ``STS`` class. New ``RSS`` algorithms that do not utilize the existing ``Strata`` classes (``RectangularStrata``, ``VoronoiStrata``, or ``DelaunayStrata``) will require that a new ``Strata``subclass be written.
 
 Simplex
 -------
@@ -393,6 +413,8 @@ Class Descriptions
 .. [8] W. N. Edeling, R. P. Dwight, P. Cinnella, "Simplex-stochastic collocation method with improved scalability", Journal of Computational Physics, 310:301–328, 2016.
 .. [9] K. Tocher. "The art of simulation." The English Universities Press, London, UK; 1963.
 .. [10] M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
+.. [11] M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined stratified sampling for efficient Monte Carlo based uncertainty quantification." Reliability Engineering & System Safety 142 (2015): 310-325.
+.. [12] M.D. Shields, "Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems." Reliability Engineering & System Safety 175 (2018): 207-224.
 
 
 .. toctree::

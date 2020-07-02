@@ -15,9 +15,9 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import sys
 import numpy as np
 import scipy.stats as stats
+
 from UQpy.RunModel import RunModel
 
 
@@ -165,27 +165,18 @@ def _is_pd(input_matrix):
     except np.linalg.LinAlgError:
         return False
 
-# TODO: Add Documentation (if public)
+
 def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
     """
-    Execute the python model in parallel
-    :param sample: One sample point where the model has to be evaluated
-    :return:
+    Method needed by ``RunModel`` to execute a python model in parallel
     """
 
     exec('from ' + model_script[:-3] + ' import ' + model_object_name)
-    # if kwargs is not None:
-    #     par_res = eval(model_object_name + '(sample, kwargs)')
-    # else:
+
     if dict_kwargs is None:
         par_res = eval(model_object_name + '(sample)')
     else:
         par_res = eval(model_object_name + '(sample, **dict_kwargs)')
-    # par_res = parallel_output
-    # if self.model_is_class:
-    #     par_res = parallel_output.qoi
-    # else:
-    #     par_res = parallel_output
 
     return par_res
 
@@ -331,32 +322,31 @@ def _bi_variate_normal_pdf(x1, x2, rho):
                   (x1**2 - 2 * rho * x1 * x2 + x2**2)))
 
 
-# TODO: Add Documentation (if public)
-def estimate_psd(samples, nt, t):
-
-    """
-        Description: A function to estimate the Power Spectrum of a stochastic process given an ensemble of samples
-
-        Input:
-            :param samples: Samples of the stochastic process
-            :param nt: Number of time discretisations in the time domain
-            :param t: Total simulation time
-
-        Output:
-            :return: Power Spectrum
-            :rtype: ndarray
-
-    """
-
-    sample_size = nt
-    sample_max_time = t
-    dt = t / (nt - 1)
-    x_w = np.fft.fft(samples, sample_size, axis=1)
-    x_w = x_w[:, 0: int(sample_size / 2)]
-    m_ps = np.mean(np.absolute(x_w) ** 2 * sample_max_time / sample_size ** 2, axis=0)
-    num = int(t / (2 * dt))
-
-    return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
+# def estimate_psd(samples, nt, t):
+#
+#     """
+#         Description: A function to estimate the Power Spectrum of a stochastic process given an ensemble of samples
+#
+#         Input:
+#             :param samples: Samples of the stochastic process
+#             :param nt: Number of time discretisations in the time domain
+#             :param t: Total simulation time
+#
+#         Output:
+#             :return: Power Spectrum
+#             :rtype: ndarray
+#
+#     """
+#
+#     sample_size = nt
+#     sample_max_time = t
+#     dt = t / (nt - 1)
+#     x_w = np.fft.fft(samples, sample_size, axis=1)
+#     x_w = x_w[:, 0: int(sample_size / 2)]
+#     m_ps = np.mean(np.absolute(x_w) ** 2 * sample_max_time / sample_size ** 2, axis=0)
+#     num = int(t / (2 * dt))
+#
+#     return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
 
 def _get_a_plus(a):
     eig_val, eig_vec = np.linalg.eig(a)
@@ -538,8 +528,26 @@ def _nn_coord(x, k):
     #idx = idx[k+1:]
     return idx
 
-# TODO: Add Documentation (if public)
+
 def correlation_distortion(dist_object, rho):
+    """
+        This method computes the corelation distortion from Gaussian distribution to any other distribution defined in
+        UQpy.Distributions
+
+        **Inputs:**
+
+        * **dist_object** (``Distribution`` object):
+            The object of the Distribution the corelation needs to be calculated.
+
+        * **rho** (`float`):
+            The Gaussian  correlation value.
+
+        **Output/Returns:**
+
+        * **rho_non** (`float`):
+            The distorted correlation value.
+
+        """
     if rho == 1.0:
         rho = 0.999
     n = 1024
