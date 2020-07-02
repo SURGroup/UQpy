@@ -1845,7 +1845,7 @@ class RectangularSTS(STS):
                                                            size=int(self.nsamples_per_stratum[i]))
                 else:
                     samples_temp[:, j] = self.strata_object.seeds[i, j] + self.strata_object.widths[i, j] / 2.
-                samples_in_strata.append(samples_temp)
+            samples_in_strata.append(samples_temp)
 
             if int(self.nsamples_per_stratum[i]) != 0:
                 weights.extend(
