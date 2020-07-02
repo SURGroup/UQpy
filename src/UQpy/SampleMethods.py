@@ -2504,7 +2504,7 @@ class VoronoiRSS(RSS):
             # Create 'p' sub-simplex within the simplex with maximum variance
             new_points = np.zeros([p, self.dimension])
             for j in range(p):
-                new_points[j, :] = self.generate_sample(bin2add[j])
+                new_points[j, :] = self._generate_sample(bin2add[j])
 
             # ###########################
             # ---------------------------
@@ -2516,7 +2516,7 @@ class VoronoiRSS(RSS):
             # ---------------------------
             # 3. Update strata attributes
             # ---------------------------
-            self.update_strata(new_point=new_points)
+            self._update_strata(new_point=new_points)
 
             if self.verbose:
                 print("Iteration:", i)
