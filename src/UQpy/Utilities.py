@@ -15,9 +15,9 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import sys
 import numpy as np
 import scipy.stats as stats
+
 from UQpy.RunModel import RunModel
 
 
@@ -165,27 +165,18 @@ def _is_pd(input_matrix):
     except np.linalg.LinAlgError:
         return False
 
-# TODO: Add Documentation (if public)
+
 def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
     """
-    Execute the python model in parallel
-    :param sample: One sample point where the model has to be evaluated
-    :return:
+    Method needed by ``RunModel`` to execute a python model in parallel
     """
 
     exec('from ' + model_script[:-3] + ' import ' + model_object_name)
-    # if kwargs is not None:
-    #     par_res = eval(model_object_name + '(sample, kwargs)')
-    # else:
+
     if dict_kwargs is None:
         par_res = eval(model_object_name + '(sample)')
     else:
         par_res = eval(model_object_name + '(sample, **dict_kwargs)')
-    # par_res = parallel_output
-    # if self.model_is_class:
-    #     par_res = parallel_output.qoi
-    # else:
-    #     par_res = parallel_output
 
     return par_res
 
