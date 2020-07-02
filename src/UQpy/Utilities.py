@@ -331,32 +331,31 @@ def _bi_variate_normal_pdf(x1, x2, rho):
                   (x1**2 - 2 * rho * x1 * x2 + x2**2)))
 
 
-# TODO: Add Documentation (if public)
-def estimate_psd(samples, nt, t):
-
-    """
-        Description: A function to estimate the Power Spectrum of a stochastic process given an ensemble of samples
-
-        Input:
-            :param samples: Samples of the stochastic process
-            :param nt: Number of time discretisations in the time domain
-            :param t: Total simulation time
-
-        Output:
-            :return: Power Spectrum
-            :rtype: ndarray
-
-    """
-
-    sample_size = nt
-    sample_max_time = t
-    dt = t / (nt - 1)
-    x_w = np.fft.fft(samples, sample_size, axis=1)
-    x_w = x_w[:, 0: int(sample_size / 2)]
-    m_ps = np.mean(np.absolute(x_w) ** 2 * sample_max_time / sample_size ** 2, axis=0)
-    num = int(t / (2 * dt))
-
-    return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
+# def estimate_psd(samples, nt, t):
+#
+#     """
+#         Description: A function to estimate the Power Spectrum of a stochastic process given an ensemble of samples
+#
+#         Input:
+#             :param samples: Samples of the stochastic process
+#             :param nt: Number of time discretisations in the time domain
+#             :param t: Total simulation time
+#
+#         Output:
+#             :return: Power Spectrum
+#             :rtype: ndarray
+#
+#     """
+#
+#     sample_size = nt
+#     sample_max_time = t
+#     dt = t / (nt - 1)
+#     x_w = np.fft.fft(samples, sample_size, axis=1)
+#     x_w = x_w[:, 0: int(sample_size / 2)]
+#     m_ps = np.mean(np.absolute(x_w) ** 2 * sample_max_time / sample_size ** 2, axis=0)
+#     num = int(t / (2 * dt))
+#
+#     return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
 
 def _get_a_plus(a):
     eig_val, eig_vec = np.linalg.eig(a)
@@ -538,8 +537,26 @@ def _nn_coord(x, k):
     #idx = idx[k+1:]
     return idx
 
-# TODO: Add Documentation (if public)
+
 def correlation_distortion(dist_object, rho):
+    """
+        This method computes the corelation distortion from Gaussian distribution to any other distribution defined in
+        UQpy.Distributions
+
+        **Inputs:**
+
+        * **dist_object** (``Distribution`` object):
+            The object of the Distribution the corelation needs to be calculated.
+
+        * **rho** (`float`):
+            The Gaussian  correlation value.
+
+        **Output/Returns:**
+
+        * **rho_non** (`float`):
+            The distorted correlation value.
+
+        """
     if rho == 1.0:
         rho = 0.999
     n = 1024
