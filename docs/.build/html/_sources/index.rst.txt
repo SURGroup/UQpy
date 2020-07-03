@@ -23,6 +23,7 @@ Table of contents
    surrogates_doc
    reliability_doc
    inference_doc
+   dimension_reduction_doc
    utilities_doc
    news_doc
 
