@@ -23,7 +23,6 @@ Table of contents
    surrogates
    reliability
    inference
-   dimension_reduction
    utilities
    news
 

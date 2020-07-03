@@ -15,8 +15,6 @@
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Utilities" href="utilities.html" />
-    <link rel="prev" title="Inference" href="inference.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -54,11 +52,11 @@ the Grassmann manifold to be employed in techniques using subspaces.</p>
 <div class="section" id="grassmann">
 <h2>Grassmann<a class="headerlink" href="#grassmann" title="Permalink to this headline">¶</a></h2>
 <p>In differential geometry the Grassmann manifold <span class="math notranslate nohighlight">\(\mathcal{G}_{n,p}\)</span> refers to a collection of <span class="math notranslate nohighlight">\(p\)</span>-dimensional subspaces embedded in a <span class="math notranslate nohighlight">\(n\)</span>-dimensional vector space. The <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> class contains methods to perform the projection of matrices onto the Grassmann manifold via singular value decomposition (SVD), where their dimensionality are reduced. Further, a tangent space, where standard interpolation can be performed, is constructed at a given reference point. Therefore, the mapping from the Grassmann manifold to the tangent space and from the tangent space to the manifold are performed via the logarithmic and exponential mapping, respectively. Moreover, additional quantities such as the Karcher mean, which correspond to the point on the Grassmann manifold minimizing the squared distances to the other points on the same manifold. Further, the kernel defined on the Grassmann manifold is implemented to estimate an affinity matrix to be used in kernel-based machine learning techniques.</p>
-<p>A tangent space <span class="math notranslate nohighlight">\(\mathcal{T}_{\mathcal{X}}\mathcal{G}(p,n)\)</span>, which is a flat inner-product space, is defined as a set of all tangent vectors at <span class="math notranslate nohighlight">\(\mathcal{X}\)</span> <a class="footnote-reference brackets" href="#id10" id="id1">1</a>, <a class="footnote-reference brackets" href="#id11" id="id2">2</a>, <a class="footnote-reference brackets" href="#id12" id="id3">3</a>; such as</p>
+<p>A tangent space <span class="math notranslate nohighlight">\(\mathcal{T}_{\mathcal{X}}\mathcal{G}(p,n)\)</span>, which is a flat inner-product space, is defined as a set of all tangent vectors at <span class="math notranslate nohighlight">\(\mathcal{X}\)</span> <a class="footnote-reference brackets" href="#id9" id="id1">1</a>, <a class="footnote-reference brackets" href="#id10" id="id2">2</a>, <a class="footnote-reference brackets" href="#id11" id="id3">3</a>; such as</p>
 <div class="math notranslate nohighlight">
 \[\mathcal{T}_{\mathcal{X}}\mathcal{G}(p,n) = \{\mathbf{\Gamma} \in \mathbb{R}^{n \times p} : \mathbf{\Gamma}^T\mathbf{\Psi}=\mathbf{0}\}\]</div>
 <p>Where a point <span class="math notranslate nohighlight">\(\mathcal{X} = \mathrm{span}\left(\mathbf{\Psi}\right) \in \mathcal{G}(p,n)\)</span> is invariant to the choice of basis such that <span class="math notranslate nohighlight">\(\mathrm{span}\left(\mathbf{\Psi}\right) = \mathrm{span}\left(\mathbf{R\Psi}\right)\)</span>, with <span class="math notranslate nohighlight">\(\mathbf{R} \in SO(p)\)</span>, where <span class="math notranslate nohighlight">\(SO(p)\)</span> is the special orthogonal group.</p>
-<p>One can write the exponential map (from the tangent space to the manifold) locally as (<a class="footnote-reference brackets" href="#id13" id="id4">4</a>, <a class="footnote-reference brackets" href="#id14" id="id5">5</a>)</p>
+<p>One can write the exponential map (from the tangent space to the manifold) locally as (<a class="footnote-reference brackets" href="#id12" id="id4">4</a>, <a class="footnote-reference brackets" href="#id13" id="id5">5</a>)</p>
 <div class="math notranslate nohighlight">
 \[\mathrm{exp}_{\mathcal{X}_0}(\mathbf{\Gamma}) = \mathbf{\Psi}_1\]</div>
 <p>Denoting <span class="math notranslate nohighlight">\(\mathbf{\Gamma}\)</span> by its singular value decomposition <span class="math notranslate nohighlight">\(\mathbf{\Gamma} = \mathbf{U}\mathbf{S}\mathbf{V}^T\)</span> one can write a point on the Grassmann manifold <span class="math notranslate nohighlight">\(\mathbf{\Psi}_1\)</span>, considering a reference point <span class="math notranslate nohighlight">\(\mathbf{\Psi}_0\)</span>, as</p>
@@ -75,9 +73,9 @@ the Grassmann manifold to be employed in techniques using subspaces.</p>
 <div class="math notranslate nohighlight">
 \[d_{\mathcal{G}(p,n)}\left(\mathbf{\Psi}_0,\mathbf{\Psi}_1\right) = ||\mathbf{\Theta}||_2\]</div>
 <p>where <span class="math notranslate nohighlight">\(\mathbf{\Theta} = \left(\theta_1, \theta_2, \dots, \theta_p \right)\)</span> contains the principal angles. Several definitions of distance on <span class="math notranslate nohighlight">\(\mathcal{G}(p,n)\)</span> can be found in the literature.</p>
-<p>In several applications the use of subspaces is essential to describe the underlying geometry of data. However, it is well-known that subspaces do not follow the Euclidean geometry because they lie on the Grassmann manifold. Therefore, working with subspaces requires the definition of an embedding structure of the Grassmann manifold into a Hilbert space. Thus, using positive definite kernels is studied as a solution to this problem. In this regard, a real-valued positive definite kernel is defined as a symmetric function <span class="math notranslate nohighlight">\(k:\mathcal{X}\times \mathcal{X} \rightarrow \mathbb{R}\)</span> if and only if <span class="math notranslate nohighlight">\(\sum^n_{I,j=1}c_i c_j k(x_i,x_j) \leq 0\)</span> for <span class="math notranslate nohighlight">\(n \in \mathbb{N}\)</span>, <span class="math notranslate nohighlight">\(x_i in \mathcal{X}\)</span> and <span class="math notranslate nohighlight">\(c_i \in \mathbb{R}\)</span>. Further, the Grassmann kernel can be defined as a function <span class="math notranslate nohighlight">\(k:\mathcal{G}(p,n)\times \mathcal{G}(p,n) \rightarrow \mathbb{R}\)</span> if it is well-defined and positive definite <a class="footnote-reference brackets" href="#id15" id="id6">6</a>.</p>
-<div class="section" id="class-descriptions">
-<h3>Class Descriptions<a class="headerlink" href="#class-descriptions" title="Permalink to this headline">¶</a></h3>
+<p>In several applications the use of subspaces is essential to describe the underlying geometry of data. However, it is well-known that subspaces do not follow the Euclidean geometry because they lie on the Grassmann manifold. Therefore, working with subspaces requires the definition of an embedding structure of the Grassmann manifold into a Hilbert space. Thus, using positive definite kernels is studied as a solution to this problem. In this regard, a real-valued positive definite kernel is defined as a symmetric function <span class="math notranslate nohighlight">\(k:\mathcal{X}\times \mathcal{X} \rightarrow \mathbb{R}\)</span> if and only if <span class="math notranslate nohighlight">\(\sum^n_{I,j=1}c_i c_j k(x_i,x_j) \leq 0\)</span> for <span class="math notranslate nohighlight">\(n \in \mathbb{N}\)</span>, <span class="math notranslate nohighlight">\(x_i in \mathcal{X}\)</span> and <span class="math notranslate nohighlight">\(c_i \in \mathbb{R}\)</span>. Further, the Grassmann kernel can be defined as a function <span class="math notranslate nohighlight">\(k:\mathcal{G}(p,n)\times \mathcal{G}(p,n) \rightarrow \mathbb{R}\)</span> if it is well-defined and positive definite <a class="footnote-reference brackets" href="#id14" id="id6">6</a>.</p>
+<div class="section" id="grassmann-class-descriptions">
+<h3>Grassmann Class Descriptions<a class="headerlink" href="#grassmann-class-descriptions" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> class is imported using the following command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">DimensionReduction</span> <span class="k">import</span> <span class="n">Grassmann</span>
 </pre></div>
@@ -113,13 +111,8 @@ the class <code class="docutils literal notranslate"><span class="pre">Grassmann
 an object containing the attribute <cite>distance_method</cite> is passed as <cite>Grassmann.distance_method</cite>. Second, the user
 can pass either a method of a class or a function. For example, if the user wish to
 use <cite>grassmann_distance</cite> to compute the distance, one can use the following command:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Grassmann</span><span class="p">(</span><span class="n">distance_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">grassmann_distance</span><span class="p">)</span>
-</pre></div>
-</div>
-<blockquote>
-<div><p>On the other hand, if the user implemented a function</p>
-</div></blockquote>
-<p>(e.g., <cite>user_distance</cite>) to compute the distance, <cite>distance_method</cite> must assume the following value
+<p>On the other hand, if the user implemented a function
+(e.g., <cite>user_distance</cite>) to compute the distance, <cite>distance_method</cite> must assume the following value
 <cite>distance_method = user_distance</cite>, which must be pre-loaded using import. In this regard, the
 function input must contain the first (x0) and second (x1) matrices as arguments (e.g, user_distance(x0,x1))</p>
 </dd>
@@ -136,9 +129,6 @@ ways. First, the user can pass one of the methods implemented in the class <code
 Second, the user can pass callable objects either as a method of a class or as a function.
 For example, if the user wish to use <cite>projection_kernel</cite> to estimate the kernel matrix, one can use the
 following command:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Grassmann</span><span class="p">(</span><span class="n">kernel_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">projection_kernel</span><span class="p">)</span>
-</pre></div>
-</div>
 <p>On the other hand, if the user implemented
 a function (e.g., <cite>user_kernel</cite>) to compute the kernel matrix, <cite>kernel_method</cite> must assume the following value
 <cite>kernel_object = user_kernel</cite>, which must be pre-loaded using import. In this regard, the function
@@ -317,10 +307,6 @@ The current built-in options are the <cite>grassmann_distance</cite>, <cite>chor
 distance definition. In this case, the user must be aware that the matrices in <cite>points_grassmann</cite> must represent
 points on the Grassmann manifold. For example, given the points on the Grassmann manifold one can compute the
 pairwise distances in the following way:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">distance_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">grassmann_distance</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">points_grassmann</span><span class="o">=</span><span class="n">points_grassmann</span><span class="p">)</span>
-</pre></div>
-</div>
 <p><strong>Input:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
@@ -487,23 +473,7 @@ Further, this method is called by the method <code class="docutils literal notra
 Further, the user must select the option <cite>element_wise</cite> to perform the interpolation in the entries of the input
 matrices, if <cite>point</cite> and <cite>samples</cite> are matrices. The samples related to <cite>coordinates</cite> are set using
 <cite>manifold</cite>. For example, the following command is used to perform the interpolation.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">UQpy.Surrogates</span> <span class="k">import</span> <span class="n">Kriging</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">Krig</span> <span class="o">=</span> <span class="n">Kriging</span><span class="p">(</span><span class="n">reg_model</span><span class="o">=</span><span class="s1">&#39;Linear&#39;</span><span class="p">,</span> <span class="n">corr_model</span><span class="o">=</span><span class="s1">&#39;Exponential&#39;</span><span class="p">,</span> <span class="n">n_opt</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dimension</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">distance_object</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">grassmann_distance</span><span class="p">,</span>
-<span class="gp">&gt;&gt;&gt; </span>               <span class="n">interp_object</span><span class="o">=</span><span class="n">Krig</span><span class="p">,</span> <span class="n">karcher_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">gradient_descent</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span><span class="o">.</span><span class="n">manifold</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span><span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">interpolated</span> <span class="o">=</span> <span class="n">Gr</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">coordinates</span><span class="o">=</span><span class="n">coordinates</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="n">point</span><span class="p">,</span> <span class="n">element_wise</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
 <p>On the other hand, if a scikit learn gaussian_process object is provided, one can use the following commands:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.gaussian_process</span> <span class="k">import</span> <span class="n">GaussianProcessRegressor</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gp</span> <span class="o">=</span> <span class="n">GaussianProcessRegressor</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">distance_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">grassmann_distance</span><span class="p">,</span>
-<span class="go">                   interp_object=gp,karcher_method=Grassmann.gradient_descent)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span><span class="o">.</span><span class="n">manifold</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span><span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">interpolated</span> <span class="o">=</span> <span class="n">Gr</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">coordinates</span><span class="o">=</span><span class="n">coordinates</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="p">[</span><span class="n">point</span><span class="p">],</span> <span class="n">element_wise</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
 <p><strong>Input:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
@@ -582,11 +552,6 @@ the TANGENT SPACE.</p>
 estimated by the minimization of the Frechet variance, where the Frechet variance corresponds to the sum of the
 square distances, defined on the Grassmann manifold, to a given point. The command to compute the Karcher mean
 given a seto of points on the Grassmann manifold is.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">karcher_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">gradient_descent</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span><span class="o">.</span><span class="n">manifold</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span><span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span><span class="n">append_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">karcher_left</span><span class="p">,</span> <span class="n">karcher_right</span> <span class="o">=</span> <span class="n">Gr</span><span class="o">.</span><span class="n">karcher_mean</span><span class="p">()</span>
-</pre></div>
-</div>
 <p>In this case two values are returned corresponding to the ones related to the manifolds defined by the left and
 right singular eigenvectors.</p>
 <p><strong>Input:</strong></p>
@@ -636,10 +601,6 @@ The current built-in options are the <cite>projection_kernel</cite> and the <cit
 the option to implement their own kernel definition. However, the user must be aware that the points used
 to compute the kernel must be the points on the same manifold; therefore, it is important to ensure that the
 dimension of all the input matrices are the same. Therefore, the following commands can be used:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">kernel_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">projection_kernel</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">points_grassmann</span><span class="o">=</span><span class="n">points_grassmann</span><span class="p">)</span>
-</pre></div>
-</div>
 <p><strong>Input:</strong></p>
 <ul class="simple">
 <li><dl class="simple">
@@ -745,9 +706,6 @@ in <cite>points_grassmann</cite> must belong to the same manifold.</p>
 are passed through the argument <cite>samples</cite> containing a list of lists or a list of ndarrays. Moreover, this
 method serves to set the manifold and to verify the consistency of the input data. This method can be called
 using the following command:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Grassmann</span><span class="o">.</span><span class="n">manifold</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span><span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span><span class="n">append_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</pre></div>
-</div>
 <p>In this case, append_samples is a boolean variable used to define if new sample will replace the previous ones
 or will just get appended (<cite>append_samples=True</cite>).</p>
 <p><strong>Input:</strong></p>
@@ -902,7 +860,7 @@ appended.</p>
 <div class="section" id="diffusionmaps">
 <h2>DiffusionMaps<a class="headerlink" href="#diffusionmaps" title="Permalink to this headline">¶</a></h2>
 <p>In nonlinear dimensionality reduction Diffusion Maps corresponds to a technique used to reveal the intrinsic structure of data sets based on a diffusion process over the data. In particular, the eigenfunctions of Markov matrices defining a random walk on the data are used to obtain a coordinate system represented by the diffusion coordinates revealing the embedded geometry of the data. Moreover, the diffusion coordinates are defined on a Euclidean space where usual metrics define the distances between pairs of data points. Thus, the diffusion maps create a connection between the spectral properties of the diffusion process and the intrinsic geometry of the data resulting in a multiscale representation of the data.</p>
-<p>To present this method let’s assume measure space <span class="math notranslate nohighlight">\((X, \mathcal{A}, \mu)\)</span>, where <span class="math notranslate nohighlight">\(X\)</span> is the dataset, <span class="math notranslate nohighlight">\(\mathcal{A}\)</span> is a <span class="math notranslate nohighlight">\(\sigma-\)</span>, and <span class="math notranslate nohighlight">\(\mu\)</span> a measure; and a non-negative symmetric kernel <span class="math notranslate nohighlight">\(k: X \times X \rightarrow \mathbb{R}\)</span> representing the pairwise affinity of the data points in a symmetric graph; one can define the connectivity between two points as the transition probability in a random walk using the kernel <span class="math notranslate nohighlight">\(k\)</span>. Therefore, the diffusion maps technique can be based on a normalized graph Laplacian construction <a class="footnote-reference brackets" href="#id16" id="id7">7</a>, <a class="footnote-reference brackets" href="#id17" id="id8">8</a>, where</p>
+<p>To present this method let’s assume measure space <span class="math notranslate nohighlight">\((X, \mathcal{A}, \mu)\)</span>, where <span class="math notranslate nohighlight">\(X\)</span> is the dataset, <span class="math notranslate nohighlight">\(\mathcal{A}\)</span> is a <span class="math notranslate nohighlight">\(\sigma-\)</span>, and <span class="math notranslate nohighlight">\(\mu\)</span> a measure; and a non-negative symmetric kernel <span class="math notranslate nohighlight">\(k: X \times X \rightarrow \mathbb{R}\)</span> representing the pairwise affinity of the data points in a symmetric graph; one can define the connectivity between two points as the transition probability in a random walk using the kernel <span class="math notranslate nohighlight">\(k\)</span>. Therefore, the diffusion maps technique can be based on a normalized graph Laplacian construction <a class="footnote-reference brackets" href="#id15" id="id7">7</a>, <a class="footnote-reference brackets" href="#id16" id="id8">8</a>, where</p>
 <div class="math notranslate nohighlight">
 \[p(x, y) = \frac{k(x,y)}{\int_X k(x,y)d\mu(y)}\]</div>
 <p>with</p>
@@ -916,8 +874,8 @@ appended.</p>
 <div class="math notranslate nohighlight">
 \[M = \tilde{D}^{-1}\tilde{L}\]</div>
 <p>From the eigendecomposition of <span class="math notranslate nohighlight">\(M\)</span>, one can obtain the eigenvectors <span class="math notranslate nohighlight">\((\psi_0, \psi_1, \dots, \psi_N)\)</span> and their respective eigenvalues <span class="math notranslate nohighlight">\((\lambda_0, \lambda_1, \dots, \lambda_N)\)</span>. However, only <span class="math notranslate nohighlight">\(k\)</span> eigenvectors and eigenvalues suffice. Thus, the diffusion coordinates are given by <span class="math notranslate nohighlight">\(\Psi_i = \lambda_i \psi_i\)</span> with <span class="math notranslate nohighlight">\(i=1,\dots,k\)</span>.</p>
-<div class="section" id="id9">
-<h3>Class Descriptions<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="diffusion-maps-class-descriptions">
+<h3>Diffusion Maps Class Descriptions<a class="headerlink" href="#diffusion-maps-class-descriptions" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">DiffusionMaps</span></code> class is imported using the following command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">DimensionReduction</span> <span class="k">import</span> <span class="n">DiffusionMaps</span>
 </pre></div>
@@ -933,7 +891,7 @@ matrix containing the degree of similarity of the data points is either estimate
 using a Gaussian kernel, or it is computed using any other Kernel definition passed to the main
 method (e.g., defining a kernel on the Grassmann manifold).</p>
 <p><strong>Input:</strong></p>
-<ul>
+<ul class="simple">
 <li><dl class="simple">
 <dt><strong>alpha</strong> (<cite>float</cite>)</dt><dd><p>Assumes a value between 0 and 1 and corresponding to different diffusion operators. In this regard, one can use
 this parameter to take into consideration the distribution of the data points on the diffusion process.
@@ -964,19 +922,17 @@ transition kernel of the Markov chain.</p>
 </dd>
 </dl>
 </li>
-<li><dl>
+<li><dl class="simple">
 <dt><strong>kernel_object</strong> (<cite>function</cite>)</dt><dd><p>An object of a callable object used to compute the kernel matrix. Three different options are provided:</p>
-<ul class="simple">
+<ul>
 <li><p>Using the <code class="docutils literal notranslate"><span class="pre">DiffusionMaps</span></code> method <code class="docutils literal notranslate"><span class="pre">gaussian_kernel</span></code> as
 DiffusionMaps(kernel_object=DiffusionMaps.gaussian_kernel);</p></li>
 <li><p>Using an user defined function as DiffusionMaps(kernel_object=user_kernel);</p></li>
-<li><p>Passing a <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> class object DiffusionMaps(kernel_object=Grassmann_Object). In this case, the user has</p></li>
-</ul>
-<blockquote>
-<div><p>to select <code class="docutils literal notranslate"><span class="pre">kernel_grassmann</span></code> in order to define which kernel matrix will be used because when the the
+<li><p>Passing a <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> class object DiffusionMaps(kernel_object=Grassmann_Object). In this case, the user has
+to select <code class="docutils literal notranslate"><span class="pre">kernel_grassmann</span></code> in order to define which kernel matrix will be used because when the the
 <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> class is used in a dataset a kernel matrix can be constructed with both the left and right
-singular eigenvectors.</p>
-</div></blockquote>
+singular eigenvectors.</p></li>
+</ul>
 </dd>
 </dl>
 </li>
@@ -1056,19 +1012,9 @@ input dataset.</p>
 <p>In this method, the users have the option to work with input data defined by subspaces obtained via projection
 of input data points on the Grassmann manifold, or directly with the input data points. For example,
 considering that a <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> object is provided using the following command:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span> <span class="o">=</span> <span class="n">Grassmann</span><span class="p">(</span><span class="n">kernel_method</span><span class="o">=</span><span class="n">Grassmann</span><span class="o">.</span><span class="n">projection_kernel</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">Gr</span><span class="o">.</span><span class="n">manifold</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span><span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span><span class="n">append_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>one can instantiate the DiffusionMaps class and run the diffusion maps as follows:
-&gt;&gt;&gt; dfm = DiffusionMaps(alpha=0.5, n_evecs=10, kernel_object=Gr, kernel_grassmann = ‘prod’)
-&gt;&gt;&gt; diff_coords, evals, evecs = dfm.mapping()</p>
+<p>one can instantiate the DiffusionMaps class and run the diffusion maps as follows:</p>
 <p>On the other hand, if the user wish to pass a dataset (samples) to compute the diffusion coordinates using the Gaussian
 kernel, one can use the following commands:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dfm</span> <span class="o">=</span> <span class="n">DiffusionMaps</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">n_evecs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">kernel_object</span><span class="o">=</span><span class="n">DiffusionMaps</span><span class="o">.</span><span class="n">gaussian_kernel</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">diff_coords</span><span class="p">,</span> <span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">dfm</span><span class="o">.</span><span class="n">mapping</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="n">epsilon</span><span class="p">)</span>
-</pre></div>
-</div>
 <p>In the latest case, if <cite>epsilon</cite> is not provided it is estimated based on the median of the square of the
 euclidian distances between data points.</p>
 <p><strong>Input:</strong></p>
@@ -1107,32 +1053,32 @@ euclidian distances between data points.</p>
 </dd></dl>
 
 <dl class="footnote brackets">
-<dt class="label" id="id10"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dt class="label" id="id9"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
 <dd><ol class="upperalpha simple" start="10">
 <li><p>Maruskin, Introduction to Dynamical Systems and Geometric Mechanics, Solar Crest Publishing, LLC, 2012:p.165.</p></li>
 </ol>
 </dd>
-<dt class="label" id="id11"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dt class="label" id="id10"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
 <dd><ol class="upperalpha simple" start="2">
 <li><p>Wang, Y. Hu, J. Gao, Y. Sun, B. Yin, Low rank represen6tation on Grassmann   manifolds: An extrinsic perspective, 2015, 167arXiv:1504.01807.168.</p></li>
 </ol>
 </dd>
-<dt class="label" id="id12"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
+<dt class="label" id="id11"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
 <dd><ol class="upperalpha simple" start="19">
 <li><p>Sommer, T. Fletcher, X. Pennec, 1 - introduction to differential and Riemannian  geometry, in: X. Pennec, S. Sommer, T. Fletcher (Eds.), Riemannian Geometric Statistics in Medical Image Analysis, Academic Press, 2020, p.3–37.</p></li>
 </ol>
 </dd>
-<dt class="label" id="id13"><span class="brackets"><a class="fn-backref" href="#id4">4</a></span></dt>
+<dt class="label" id="id12"><span class="brackets"><a class="fn-backref" href="#id4">4</a></span></dt>
 <dd><ol class="upperalpha simple" start="4">
 <li><p>Giovanis, M. Shields, Uncertainty  quantification for complex systems with very high dimensional response using Grassmann manifold variations, Journal of Computational Physics, 2018, 364, p.393–415.</p></li>
 </ol>
 </dd>
-<dt class="label" id="id14"><span class="brackets"><a class="fn-backref" href="#id5">5</a></span></dt>
+<dt class="label" id="id13"><span class="brackets"><a class="fn-backref" href="#id5">5</a></span></dt>
 <dd><ol class="upperalpha simple" start="2">
 <li><p>Wang, Y. Hu, J. Gao, Y. Sun, B. Yin, Low rank representation on Grassmann manifolds: An extrinsic perspective, 2015, 167arXiv:1504.01807.</p></li>
 </ol>
 </dd>
-<dt class="label" id="id15"><span class="brackets"><a class="fn-backref" href="#id6">6</a></span></dt>
+<dt class="label" id="id14"><span class="brackets"><a class="fn-backref" href="#id6">6</a></span></dt>
 <dd><ol class="upperalpha simple" start="13">
 <li><ol class="upperalpha simple" start="20">
 <li><p>Harandi, M. Salzmann, S. Jayasumana, R. Hartley, H. Li, Expanding the family of Grassmannian kernels: An embedding perspective, 2014, 1622014.arXiv:1407.1123.</p></li>
@@ -1140,7 +1086,7 @@ euclidian distances between data points.</p>
 </li>
 </ol>
 </dd>
-<dt class="label" id="id16"><span class="brackets"><a class="fn-backref" href="#id7">7</a></span></dt>
+<dt class="label" id="id15"><span class="brackets"><a class="fn-backref" href="#id7">7</a></span></dt>
 <dd><ol class="upperalpha simple" start="18">
 <li><ol class="upperalpha simple" start="18">
 <li><p>Coifman, S. Lafon. Diffusion maps. Applied Computational Harmonic Analysis, 2006, 21(1), p.5–30.</p></li>
@@ -1148,7 +1094,7 @@ euclidian distances between data points.</p>
 </li>
 </ol>
 </dd>
-<dt class="label" id="id17"><span class="brackets"><a class="fn-backref" href="#id8">8</a></span></dt>
+<dt class="label" id="id16"><span class="brackets"><a class="fn-backref" href="#id8">8</a></span></dt>
 <dd><ol class="upperalpha simple" start="18">
 <li><ol class="upperalpha simple" start="18">
 <li><p>Coifman, I. G. Kevrekidis, S. Lafon, M. Maggioni, and B. Nadler, Diffusionmaps, reduction coordinates, and low dimensional representation of stochastic systems, Multiscale Modeling and Simulation, 2008, 7(2), p.842–864.</p></li>
@@ -1194,7 +1140,7 @@ euclidian distances between data points.</p>
 
 
 <h3>Navigation</h3>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="runmodel.html">RunModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="distributions.html">Distributions</a></li>
@@ -1204,11 +1150,6 @@ euclidian distances between data points.</p>
 <li class="toctree-l1"><a class="reference internal" href="surrogates.html">Surrogates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reliability.html">Reliability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">DimensionReduction</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#grassmann">Grassmann</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#diffusionmaps">DiffusionMaps</a></li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="news.html">News</a></li>
 </ul>
@@ -1217,8 +1158,6 @@ euclidian distances between data points.</p>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="inference.html" title="previous chapter">Inference</a></li>
-      <li>Next: <a href="utilities.html" title="next chapter">Utilities</a></li>
   </ul></li>
 </ul>
 </div>

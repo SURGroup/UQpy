@@ -52,8 +52,8 @@ where :math:`\mathbf{\Theta} = \left(\theta_1, \theta_2, \dots, \theta_p \right)
 
 In several applications the use of subspaces is essential to describe the underlying geometry of data. However, it is well-known that subspaces do not follow the Euclidean geometry because they lie on the Grassmann manifold. Therefore, working with subspaces requires the definition of an embedding structure of the Grassmann manifold into a Hilbert space. Thus, using positive definite kernels is studied as a solution to this problem. In this regard, a real-valued positive definite kernel is defined as a symmetric function :math:`k:\mathcal{X}\times \mathcal{X} \rightarrow \mathbb{R}` if and only if :math:`\sum^n_{I,j=1}c_i c_j k(x_i,x_j) \leq 0` for :math:`n \in \mathbb{N}`, :math:`x_i in \mathcal{X}` and :math:`c_i \in \mathbb{R}`. Further, the Grassmann kernel can be defined as a function :math:`k:\mathcal{G}(p,n)\times \mathcal{G}(p,n) \rightarrow \mathbb{R}` if it is well-defined and positive definite [6]_.
 
-Class Descriptions
-^^^^^^^^^^^^^^^^^^^^
+Grassmann Class Descriptions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``Grassmann`` class is imported using the following command:
 
@@ -92,8 +92,8 @@ Therefore, the transition probability :math:`M_{i,j} = p(x_j,t|x_i)` can be obta
 From the eigendecomposition of :math:`M`, one can obtain the eigenvectors :math:`(\psi_0, \psi_1, \dots, \psi_N)` and their respective eigenvalues :math:`(\lambda_0, \lambda_1, \dots, \lambda_N)`. However, only :math:`k` eigenvectors and eigenvalues suffice. Thus, the diffusion coordinates are given by :math:`\Psi_i = \lambda_i \psi_i` with :math:`i=1,\dots,k`. 
 
 
-Class Descriptions
-^^^^^^^^^^^^^^^^^^^^
+Diffusion Maps Class Descriptions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``DiffusionMaps`` class is imported using the following command:
 
