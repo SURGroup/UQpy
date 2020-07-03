@@ -42,12 +42,17 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">LHS</span></code>: Class to perform Latin hypercube sampling.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">MCMC</span></code>: Class to perform Markov Chain Monte Carlo sampling.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">IS</span></code>: Class to perform Importance sampling.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AKMCS</span></code>: Class to perform adaptive Kriging Monte Carlo sampling.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">STS</span></code>: Class to perform stratified sampling.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RSS</span></code>: Class to perform refined stratified sampling.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Strata</span></code>: Class to perform stratification of the unit hypercube.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Simplex</span></code>: Class to uniformly sample from a simplex.</p></li>
 </ul>
 <div class="section" id="mcs">
 <h2>MCS<a class="headerlink" href="#mcs" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">MCS</span></code> class generates random samples from a specified probability distribution(s).  The <code class="docutils literal notranslate"><span class="pre">MCS</span></code> class utilizes the <code class="docutils literal notranslate"><span class="pre">Distributions</span></code> class to define probability distributions.  The advantage of using the <code class="docutils literal notranslate"><span class="pre">MCS</span></code> class for <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> operations, as opposed to simply generating samples with the <code class="docutils literal notranslate"><span class="pre">scipy.stats</span></code> package, is that it allows building an object containing the samples and their distributions for integration with other <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> modules.</p>
-<div class="section" id="class-descriptions">
-<h3>Class Descriptions<a class="headerlink" href="#class-descriptions" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="mcs-class-descriptions">
+<h3>MCS Class Descriptions<a class="headerlink" href="#mcs-class-descriptions" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="UQpy.SampleMethods.MCS">
 <em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MCS</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCS" title="Permalink to this definition">¶</a></dt>

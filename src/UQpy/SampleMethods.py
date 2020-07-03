@@ -23,6 +23,11 @@ The module currently contains the following classes:
 - ``LHS``: Class to perform Latin hypercube sampling.
 - ``MCMC``: Class to perform Markov Chain Monte Carlo sampling.
 - ``IS``: Class to perform Importance sampling.
+- ``AKMCS``: Class to perform adaptive Kriging Monte Carlo sampling.
+- ``STS``: Class to perform stratified sampling.
+- ``RSS``: Class to perform refined stratified sampling.
+- ``Strata``: Class to perform stratification of the unit hypercube.
+- ``Simplex``: Class to uniformly sample from a simplex.
 """
 
 import copy
