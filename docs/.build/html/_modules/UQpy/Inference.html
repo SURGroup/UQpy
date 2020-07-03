@@ -1,0 +1,825 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>UQpy.Inference &#8212; UQpy v3.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for UQpy.Inference</h1><div class="highlight"><pre>
+<span></span><span class="c1"># UQpy is distributed under the MIT license.</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (C) 2018  -- Michael D. Shields</span>
+<span class="c1">#</span>
+<span class="c1"># Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated</span>
+<span class="c1"># documentation files (the &quot;Software&quot;), to deal in the Software without restriction, including without limitation the</span>
+<span class="c1"># rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit</span>
+<span class="c1"># persons to whom the Software is furnished to do so, subject to the following conditions:</span>
+<span class="c1">#</span>
+<span class="c1"># The above copyright notice and this permission notice shall be included in all copies or substantial portions of the</span>
+<span class="c1"># Software.</span>
+<span class="c1">#</span>
+<span class="c1"># THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE</span>
+<span class="c1"># WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR</span>
+<span class="c1"># COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR</span>
+<span class="c1"># OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</span>
+
+<span class="sd">&quot;&quot;&quot;This module contains functionality for all the Inference supported in UQpy.&quot;&quot;&quot;</span>
+
+
+<span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">multivariate_normal</span>
+<span class="kn">from</span> <span class="nn">UQpy.RunModel</span> <span class="k">import</span> <span class="n">RunModel</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="k">import</span> <span class="n">minimize</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+
+<span class="c1">########################################################################################################################</span>
+<span class="c1">########################################################################################################################</span>
+<span class="c1">#                            Define the model - probability model or python model</span>
+<span class="c1">########################################################################################################################</span>
+
+<span class="k">class</span> <span class="nc">Model</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_script</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">n_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fixed_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">error_adapt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">error_covariance</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                 <span class="n">prior_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prior_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prior_copula</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prior_copula_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">prior_error_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prior_error_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prior_error_copula</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">prior_error_copula_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">model_object_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_template</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_script</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">output_object_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ntasks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cores_per_task</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">resume</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">model_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cluster</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log_likelihood</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                 <span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Define the model, either as a python script, or a probability model</span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            :param model_type: model type (python script or probability model)</span>
+<span class="sd">            :type model_type: str, &#39;python&#39; or &#39;pdf&#39;</span>
+
+<span class="sd">            :param model_name: name of the model, required only if model_type = &#39;pdf&#39; (name of the distribution)</span>
+<span class="sd">            :type model_name: str</span>
+
+<span class="sd">            :param model_script: python script that encodes the model, required only if model_type = &#39;python&#39;</span>
+<span class="sd">            :type model_script: str, format &#39;&lt; &gt;.py&#39;</span>
+
+<span class="sd">            :param n_params: number of parameters to be estimated, required</span>
+<span class="sd">            :type n_params: int</span>
+
+<span class="sd">            :param error_adapt: if set to True, the algorithm learns the covariance term,</span>
+<span class="sd">                   can only be used when model is defined as a python script</span>
+<span class="sd">            :type error_adapt: boolean</span>
+
+<span class="sd">            :param error_covariance: covariance of the Gaussian error for model defined by a python script</span>
+<span class="sd">            :type error_covariance: ndarray (full covariance matrix) or float (diagonal values)</span>
+
+<span class="sd">            :param prior_name: distribution name of the prior pdf</span>
+<span class="sd">            :type prior_name: str or list of str</span>
+
+<span class="sd">            :param prior_params: parameters of the prior pdf</span>
+<span class="sd">            :type prior_params: ndarray or list of ndarrays</span>
+
+<span class="sd">            :param prior_copula: copula of the prior, if necessary</span>
+<span class="sd">            :param prior_copula: str</span>
+
+<span class="sd">            :param prior_copula_params: parameters of the copula of the prior, if necessary</span>
+<span class="sd">            :param prior_copula_params: str</span>
+
+<span class="sd">            :param log_likelihood: name of log-likelihood function. Default is None. The log-likelihood function takes</span>
+<span class="sd">            the data, model prediction, and the corresponding model parameters as input. Any additional arguments can be</span>
+<span class="sd">            passed through the dictionary kwargs.</span>
+<span class="sd">            :type log_likelihood: function or None</span>
+
+<span class="sd">            :param kwargs: all additional keyword arguments for the log-likelihood function, if necessary</span>
+<span class="sd">            :type kwargs: dictionary</span>
+
+<span class="sd">            :param model_object_name, input_template, var_names, output_script, output_object_name, ntasks,</span>
+<span class="sd">                   cores_per_task, nodes, resume, verbose, model_dir, cluster: parameters of the python model, see</span>
+<span class="sd">                   RunModel.py for explanations, required only if model_type == &#39;python&#39;</span>
+<span class="sd">            :param model_object_name, input_template, var_names, output_script, output_object_name, ntasks,</span>
+<span class="sd">                   cores_per_task, nodes, resume, verbose, model_dir, cluster: see RunModel</span>
+
+<span class="sd">        Output:</span>
+
+<span class="sd">            :return Model.log_like: function that computes the log likelihood, given some data and a parameter value</span>
+<span class="sd">            :rtype Model.log_like: method</span>
+
+<span class="sd">            :return Model.prior: probability distribution of the prior</span>
+<span class="sd">            :rtype Model.prior: instance from Distribution class</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">model_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">model_name</span>
+        <span class="k">if</span> <span class="n">n_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;A number of parameters must be defined.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_params</span> <span class="o">=</span> <span class="n">n_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">fixed_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fixed_params</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Fixed_params should be provided as a list&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fixed_params</span> <span class="o">=</span> <span class="n">fixed_params</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;python&#39;</span><span class="p">:</span>
+            <span class="c1"># Check that the script is a python file</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">model_script</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.py&#39;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;A python script, with extension .py, must be provided.&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">script</span> <span class="o">=</span> <span class="n">model_script</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span> <span class="o">=</span> <span class="n">model_object_name</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">script</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span> <span class="o">=</span> <span class="n">var_names</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;theta_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_params</span><span class="p">)]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error_adapt</span> <span class="o">=</span> <span class="n">error_adapt</span>
+            <span class="k">if</span> <span class="n">error_adapt</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">error_covariance</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">error_covariance</span> <span class="o">=</span> <span class="n">error_covariance</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">runModel_props</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;output_object_name&#39;</span><span class="p">:</span> <span class="n">output_object_name</span><span class="p">,</span>
+                                   <span class="s1">&#39;input_template&#39;</span><span class="p">:</span> <span class="n">input_template</span><span class="p">,</span>
+                                   <span class="s1">&#39;output_script&#39;</span><span class="p">:</span> <span class="n">output_script</span><span class="p">,</span>
+                                   <span class="s1">&#39;ntasks&#39;</span><span class="p">:</span> <span class="n">ntasks</span><span class="p">,</span>
+                                   <span class="s1">&#39;cores_per_task&#39;</span><span class="p">:</span> <span class="n">cores_per_task</span><span class="p">,</span>
+                                   <span class="s1">&#39;nodes&#39;</span><span class="p">:</span> <span class="n">nodes</span><span class="p">,</span>
+                                   <span class="s1">&#39;resume&#39;</span><span class="p">:</span> <span class="n">resume</span><span class="p">,</span>
+                                   <span class="s1">&#39;cluster&#39;</span><span class="p">:</span> <span class="n">cluster</span><span class="p">,</span>
+                                   <span class="s1">&#39;model_dir&#39;</span><span class="p">:</span> <span class="n">model_dir</span><span class="p">}</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;pdf&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error_adapt</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pdf</span> <span class="o">=</span> <span class="n">Distribution</span><span class="p">(</span><span class="n">dist_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy error: model_type must be defined, as either &quot;pdf&quot; of &quot;python&quot;.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Define prior if it is given</span>
+        <span class="k">if</span> <span class="n">prior_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prior</span> <span class="o">=</span> <span class="n">Distribution</span><span class="p">(</span><span class="n">dist_name</span><span class="o">=</span><span class="n">prior_name</span><span class="p">,</span> <span class="n">copula</span><span class="o">=</span><span class="n">prior_copula</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prior_params</span> <span class="o">=</span> <span class="n">prior_params</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prior_copula_params</span> <span class="o">=</span> <span class="n">prior_copula_params</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prior</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Define prior for the error covariance if it is given</span>
+        <span class="k">if</span> <span class="n">prior_error_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prior_error</span> <span class="o">=</span> <span class="n">Distribution</span><span class="p">(</span><span class="n">dist_name</span><span class="o">=</span><span class="n">prior_error_name</span><span class="p">,</span> <span class="n">copula</span><span class="o">=</span><span class="n">prior_error_copula</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prior_error_params</span> <span class="o">=</span> <span class="n">prior_error_params</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prior_error_copula_params</span> <span class="o">=</span> <span class="n">prior_error_copula_params</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prior_error</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Define log likelihood</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood_function</span> <span class="o">=</span> <span class="n">log_likelihood</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+
+    <span class="k">def</span> <span class="nf">log_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">error_cov</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Computes the log-likelihood of model</span>
+<span class="sd">            inputs: data, ndarray of dimension (ndata, )</span>
+<span class="sd">                    params, ndarray of dimension (nsamples, n_params) or (n_params,)</span>
+<span class="sd">            output: ndarray of size (nsamples, ), contains log likelihood of p(data | params[i,:])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_params</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_params</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_params</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;the nb of columns in params should be equal to model.n_params&#39;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">params</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fixed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_params</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">params</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                                            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_params</span><span class="p">)))</span>
+            <span class="n">samples_with_fixed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">params</span><span class="p">,</span> <span class="n">fixed</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">samples_with_fixed</span> <span class="o">=</span> <span class="n">params</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;python&#39;</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">RunModel</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="n">samples_with_fixed</span><span class="p">,</span>
+                         <span class="n">model_script</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">script</span><span class="p">,</span> <span class="n">model_object_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_object_name</span><span class="p">,</span>
+                         <span class="n">var_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+                         <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">runModel_props</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_adapt</span><span class="p">:</span>
+                <span class="n">error_cov_value</span> <span class="o">=</span> <span class="n">error_cov</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">error_cov_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_covariance</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples_with_fixed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">qoi_list</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,))</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood_function</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">multivariate_normal</span><span class="o">.</span><span class="n">logpdf</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="n">mean</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">error_cov_value</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood_function</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="n">mean</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                                              <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;pdf&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples_with_fixed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">param_i</span> <span class="o">=</span> <span class="n">samples_with_fixed</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,))</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pdf</span><span class="o">.</span><span class="n">log_pdf</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">param_i</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pdf</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">param_i</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+
+<span class="c1">########################################################################################################################</span>
+<span class="c1">########################################################################################################################</span>
+<span class="c1">#                                  Maximum Likelihood Estimation</span>
+<span class="c1">########################################################################################################################</span>
+
+<div class="viewcode-block" id="MLEstimation"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.MLEstimation">[docs]</a><span class="k">class</span> <span class="nc">MLEstimation</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method_optim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iter_optim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform maximum likelihood estimation, i.e., given some data y, compute the parameter vector that maximizes the</span>
+<span class="sd">        likelihood p(y|theta).</span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            :param model: the model</span>
+<span class="sd">            :type model: instance of class Model</span>
+
+<span class="sd">            :param data: Available data</span>
+<span class="sd">            :type data: ndarray of size (ndata, )</span>
+
+<span class="sd">            :param iter_optim: number of iterations for the maximization procedure</span>
+<span class="sd">                (each iteration starts at a random point)</span>
+<span class="sd">            :type iter_optim: an integer &gt;= 1, default 1</span>
+
+<span class="sd">            :param method_optim: method for optimization, see scipy.optimize.minimize</span>
+<span class="sd">            :type method_optim: str</span>
+
+<span class="sd">            :param bounds: bounds in each dimension</span>
+<span class="sd">            :type bounds: list (of length n_params) of lists (each of dimension 2)</span>
+
+<span class="sd">        Output:</span>
+<span class="sd">            :return: MLEstimation.param: value of parameter vector that maximizes the likelihood</span>
+<span class="sd">            :rtype: MLEstimation.param: ndarray</span>
+
+<span class="sd">            :return: MLEstimation.max_log_like: value of the maximum likelihood</span>
+<span class="sd">            :rtype: MLEstimation.max_log_like: float</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy error: model should be of type Model&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method_optim</span> <span class="o">=</span> <span class="n">method_optim</span>
+        <span class="k">if</span> <span class="n">iter_optim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">iter_optim</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter_optim</span> <span class="o">=</span> <span class="n">iter_optim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">bounds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;python&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Evaluating max likelihood estimate for model &#39;</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; using optimization.&#39;</span><span class="p">)</span>
+            <span class="n">param</span><span class="p">,</span> <span class="n">max_log_like</span><span class="p">,</span> <span class="n">error_cov_estimate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_by_optimization</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">param</span> <span class="o">=</span> <span class="n">param</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_log_like</span> <span class="o">=</span> <span class="n">max_log_like</span>
+            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">error_adapt</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">error_cov_estimate</span> <span class="o">=</span> <span class="n">error_cov_estimate</span>
+
+        <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;pdf&#39;</span><span class="p">:</span>
+            <span class="c1"># Use the fit method if it exists</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">param</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">pdf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">max_log_like</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">log_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Evaluating max likelihood estimate for model &#39;</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; using its fit method.&#39;</span><span class="p">)</span>
+            <span class="c1"># Else use the optimization procedure</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Evaluating max likelihood estimate for model &#39;</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; using optimization.&#39;</span><span class="p">)</span>
+                <span class="n">param</span><span class="p">,</span> <span class="n">max_log_like</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_by_optimization</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">param</span> <span class="o">=</span> <span class="n">param</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">max_log_like</span> <span class="o">=</span> <span class="n">max_log_like</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Max likelihood estimation completed.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">max_by_optimization</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">neg_log_like_data</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">error_adapt</span><span class="p">:</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">log_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">error_cov</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">log_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">param</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">list_param</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">list_max_log_like</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_optim</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_optim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">n_params</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
+                <span class="n">x0</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="n">bounds</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">bounds</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">x0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x0</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="c1"># second case: use any other method that does not require a Jacobian</span>
+        <span class="c1"># TODO: a maximization that uses a Jacobian which can be given analytically by user</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_optim</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">neg_log_like_data</span><span class="p">,</span> <span class="n">x0</span><span class="p">[</span><span class="n">i</span><span class="p">,:],</span> <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method_optim</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
+            <span class="n">list_param</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">list_max_log_like</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">res</span><span class="o">.</span><span class="n">fun</span><span class="p">)</span>
+        <span class="n">idx_max</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">list_max_log_like</span><span class="p">))</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">list_param</span><span class="p">[</span><span class="n">idx_max</span><span class="p">])</span>
+        <span class="n">max_log_like</span> <span class="o">=</span> <span class="n">list_max_log_like</span><span class="p">[</span><span class="n">idx_max</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">error_adapt</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fixed_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">samples_with_fixed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">param</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span>
+                                                     <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fixed_params</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))),</span>
+                                                    <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">samples_with_fixed</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">RunModel</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="n">samples_with_fixed</span><span class="p">,</span>
+                         <span class="n">model_script</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">script</span><span class="p">,</span> <span class="n">model_object_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">model_object_name</span><span class="p">,</span>
+                         <span class="n">var_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">var_names</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+                         <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">runModel_props</span><span class="p">)</span>
+            <span class="n">output_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">qoi_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,))</span>
+            <span class="n">error_cov_estimate</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">output_val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">n_params</span><span class="p">)</span> <span class="o">*</span> \
+                                 <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,))</span><span class="o">-</span><span class="n">output_val</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">param</span><span class="p">,</span> <span class="n">max_log_like</span><span class="p">,</span> <span class="n">error_cov_estimate</span>
+        <span class="k">return</span> <span class="n">param</span><span class="p">,</span> <span class="n">max_log_like</span><span class="p">,</span> <span class="kc">None</span></div>
+
+
+<span class="c1">########################################################################################################################</span>
+<span class="c1">########################################################################################################################</span>
+<span class="c1">#                                  Model Selection Using Information Theoretic Criteria</span>
+<span class="c1">########################################################################################################################</span>
+
+<div class="viewcode-block" id="InfoModelSelection"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.InfoModelSelection">[docs]</a><span class="k">class</span> <span class="nc">InfoModelSelection</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate_models</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method_optim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iter_optim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sorted_outputs</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Perform model selection using information theoretic criteria. Supported criteria are BIC, AIC (default), AICc.</span>
+
+<span class="sd">            Inputs:</span>
+
+<span class="sd">            :param candidate_models: Candidate models, must be a list of instances of class Model</span>
+<span class="sd">            :type candidate_models: list</span>
+
+<span class="sd">            :param data: Available data</span>
+<span class="sd">            :type data: ndarray</span>
+
+<span class="sd">            :param method: Method to be used</span>
+<span class="sd">            :type method: str</span>
+
+<span class="sd">            :param method_optim, x0, iter_optim, bounds: inputs to the maximum likelihood estimator, for each model</span>
+<span class="sd">            :type method_optim, x0, iter_optim, bounds: lists of length len(candidate_models), see MLEstimation</span>
+
+<span class="sd">            :param sorted_outputs: indicates if results are returned in sorted order, according to model</span>
+<span class="sd">             probabilities</span>
+<span class="sd">            :type sorted_outputs: bool</span>
+
+<span class="sd">            Outputs:</span>
+
+<span class="sd">            A list of (sorted) models, their probability based on data and the given criterion, and the parameters</span>
+<span class="sd">            that maximize the log likelihood. The penalty term (Ockam razor) is also given.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Check inputs: candidate_models is a list of instances of Model, data must be provided, and input arguments</span>
+        <span class="c1"># for ML estimation must be provided as a list of length len(candidat_models)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">candidate_models</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate_models</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;A list of models is required.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Model</span><span class="p">)</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">candidate_models</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;All candidate models should be of type Model.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;data must be provided&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
+        <span class="n">input_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">method_optim</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">iter_optim</span><span class="p">,</span> <span class="n">bounds</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">input_arg</span> <span class="ow">in</span> <span class="n">input_args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">input_arg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_arg</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">input_arg</span><span class="p">)</span><span class="o">!=</span><span class="nb">len</span><span class="p">(</span><span class="n">candidate_models</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy error: input argument should be given as a list of len=nb of models.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># First evaluate ML estimate for all models</span>
+        <span class="n">fitted_params</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">criteria</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">penalty_terms</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">candidate_models</span><span class="p">):</span>
+            <span class="n">ml_estimator</span> <span class="o">=</span> <span class="n">MLEstimation</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                                        <span class="n">method_optim</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="n">method_optim</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">method_optim</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                                        <span class="n">x0</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">x0</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                                        <span class="n">iter_optim</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="n">iter_optim</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">iter_optim</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                                        <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">bounds</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                                        <span class="p">)</span>
+            <span class="n">fitted_params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ml_estimator</span><span class="o">.</span><span class="n">param</span><span class="p">)</span>
+            <span class="n">max_log_like</span> <span class="o">=</span> <span class="n">ml_estimator</span><span class="o">.</span><span class="n">max_log_like</span>
+
+            <span class="n">k</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">n_params</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;BIC&#39;</span><span class="p">:</span>
+                <span class="n">criterion_value</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">max_log_like</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">k</span>
+                <span class="n">penalty_term</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">k</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;AICc&#39;</span><span class="p">:</span>
+                <span class="n">criterion_value</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">max_log_like</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">k</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">k</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">k</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">penalty_term</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">k</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">k</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">k</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span> <span class="c1"># default: do AIC</span>
+                <span class="n">criterion_value</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">max_log_like</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">k</span>
+                <span class="n">penalty_term</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">k</span>
+            <span class="n">criteria</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">criterion_value</span><span class="p">)</span>
+            <span class="n">penalty_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">penalty_term</span><span class="p">)</span>
+
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">criteria</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">criteria</span><span class="p">)</span>
+        <span class="n">prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">delta</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">probabilities</span> <span class="o">=</span> <span class="n">prob</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">prob</span><span class="p">)</span>
+
+        <span class="c1"># return outputs in sorted order, from most probable model to least probable model</span>
+        <span class="k">if</span> <span class="n">sorted_outputs</span><span class="p">:</span>
+            <span class="n">sort_idx</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">criteria</span><span class="p">)))</span>
+        <span class="c1"># or in initial order</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sort_idx</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">candidate_models</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="n">candidate_models</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fitted_params</span> <span class="o">=</span> <span class="p">[</span><span class="n">fitted_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">criteria</span> <span class="o">=</span> <span class="p">[</span><span class="n">criteria</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">penalty_terms</span> <span class="o">=</span> <span class="p">[</span><span class="n">penalty_terms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span> <span class="o">=</span> <span class="p">[</span><span class="n">probabilities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span></div>
+
+
+<span class="c1">########################################################################################################################</span>
+<span class="c1">########################################################################################################################</span>
+<span class="c1">#                                  Bayesian Parameter estimation</span>
+<span class="c1">########################################################################################################################</span>
+
+<div class="viewcode-block" id="BayesParameterEstimation"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.BayesParameterEstimation">[docs]</a><span class="k">class</span> <span class="nc">BayesParameterEstimation</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sampling_method</span><span class="o">=</span><span class="s1">&#39;MCMC&#39;</span><span class="p">,</span>
+                 <span class="n">pdf_proposal_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pdf_proposal_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">pdf_proposal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pdf_proposal_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">algorithm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">jump</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nburn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Generates samples from the posterior distribution, using MCMC or IS.</span>
+
+<span class="sd">            Inputs:</span>
+
+<span class="sd">            :param model: model, must be an instance of class Model</span>
+<span class="sd">            :type model: list</span>
+
+<span class="sd">            :param data: Available data</span>
+<span class="sd">            :type data: ndarray</span>
+
+<span class="sd">            :param sampling_method: Method to be used</span>
+<span class="sd">            :type sampling_method: str, &#39;MCMC&#39; or &#39;IS&#39;</span>
+
+<span class="sd">            :param pdf_proposal_type, pdf_proposal_scale, pdf_proposal, pdf_proposal_params, algorithm, jump, nsamples, nburn,</span>
+<span class="sd">             seed: inputs to the sampling method, see MCMC and IS</span>
+<span class="sd">            :type pdf_proposal_type, pdf_proposal_scale, pdf_proposal, pdf_proposal_params, algorithm, jump, nsamples, nburn,</span>
+<span class="sd">             seed: see MCMC and IS</span>
+
+<span class="sd">            Outputs:</span>
+
+<span class="sd">            Attributes of bayes = BayesParameterEstimation(...). For MCMC, bayes.samples are samples from the posterior</span>
+<span class="sd">             pdf. For IS, bayes.samples in combination with bayes.weights provide an estimate of the posterior.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;model should be of type Model&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;data should be provided&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nsamples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;nsamples should be defined&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampling_method</span> <span class="o">=</span> <span class="n">sampling_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling_method</span> <span class="o">==</span> <span class="s1">&#39;MCMC&#39;</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Running parameter estimation for candidate model &#39;</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">mle</span> <span class="o">=</span> <span class="n">MLEstimation</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">error_adapt</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mle</span><span class="o">.</span><span class="n">param</span><span class="p">,</span> <span class="n">mle</span><span class="o">.</span><span class="n">error_cov_estimate</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">mle</span><span class="o">.</span><span class="n">param</span>
+            <span class="n">dimension</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">n_params</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">error_adapt</span><span class="p">:</span>
+                <span class="n">dimension</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">n_params</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">MCMC</span><span class="p">(</span><span class="n">dimension</span><span class="o">=</span><span class="n">dimension</span><span class="p">,</span> <span class="n">pdf_proposal_type</span><span class="o">=</span><span class="n">pdf_proposal_type</span><span class="p">,</span>
+                     <span class="n">pdf_proposal_scale</span><span class="o">=</span><span class="n">pdf_proposal_scale</span><span class="p">,</span>
+                     <span class="n">algorithm</span><span class="o">=</span><span class="n">algorithm</span><span class="p">,</span> <span class="n">jump</span><span class="o">=</span><span class="n">jump</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="n">nburn</span><span class="o">=</span><span class="n">nburn</span><span class="p">,</span>
+                     <span class="n">nsamples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">log_pdf_target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log_posterior</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Parameter estimation analysis completed!&#39;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">samples</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">accept_ratio</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">accept_ratio</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling_method</span> <span class="o">==</span> <span class="s1">&#39;IS&#39;</span><span class="p">:</span>
+
+            <span class="c1"># importance distribution is either given by the user, or it is set as the prior of the model</span>
+            <span class="k">if</span> <span class="n">pdf_proposal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;a proposal density or a prior should be given&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">copula</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;when the prior is the proposal density, it cannot have a copula&#39;</span><span class="p">)</span>
+                <span class="n">pdf_proposal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">dist_name</span>
+                <span class="n">pdf_proposal_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior_params</span>
+
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Running parameter estimation for candidate model:&#39;</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+            <span class="n">z</span> <span class="o">=</span> <span class="n">IS</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">,</span>
+                   <span class="n">pdf_proposal</span><span class="o">=</span><span class="n">pdf_proposal</span><span class="p">,</span> <span class="n">pdf_proposal_params</span><span class="o">=</span><span class="n">pdf_proposal_params</span><span class="p">,</span>
+                   <span class="n">log_pdf_target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log_posterior</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Parameter estimation analysis completed!&#39;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">samples</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">weights</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Sampling_method should be either &quot;MCMC&quot; or &quot;IS&quot;&#39;</span><span class="p">)</span>
+
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+
+    <span class="k">def</span> <span class="nf">log_posterior</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">theta</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">theta</span><span class="p">)))</span>
+        <span class="c1"># if you are learning the error covariance, separate the parameters</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">error_adapt</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">n_params</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">error_cov</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">n_params</span><span class="p">:][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">theta</span>
+            <span class="n">error_cov</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># non-informative priors, p(theta)=1 everywhere, otherwise use the defined priors</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">log_pdf_prior_params</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">log_pdf_prior_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">log_pdf</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior_params</span><span class="p">,</span>
+                                                                <span class="n">copula_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior_copula_params</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="n">log_pdf_prior_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior_params</span><span class="p">,</span>
+                                                                   <span class="n">copula_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior_copula_params</span><span class="p">))</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior_error</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">error_adapt</span><span class="p">):</span>
+            <span class="n">log_pdf_prior_error</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log_pdf_prior_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior_error</span><span class="o">.</span><span class="n">log_pdf</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">error_cov</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior_error_params</span><span class="p">,</span>
+                                                                 <span class="n">copula_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior_error_copula_params</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">log_like</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">error_cov</span><span class="o">=</span><span class="n">error_cov</span><span class="p">)</span> <span class="o">+</span> \
+               <span class="n">log_pdf_prior_params</span> <span class="o">+</span> <span class="n">log_pdf_prior_error</span></div>
+
+<span class="c1">########################################################################################################################</span>
+<span class="c1">########################################################################################################################</span>
+<span class="c1">#                                  Bayesian Model Selection</span>
+<span class="c1">########################################################################################################################</span>
+
+
+<div class="viewcode-block" id="BayesModelSelection"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.BayesModelSelection">[docs]</a><span class="k">class</span> <span class="nc">BayesModelSelection</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate_models</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prior_probabilities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">pdf_proposal_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pdf_proposal_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">algorithm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">jump</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">nburn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sorted_outputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Perform model selection using Bayesian criteria.</span>
+
+<span class="sd">            Inputs:</span>
+
+<span class="sd">                :param candidate_models: candidate models, must be a list of instances of class Model</span>
+<span class="sd">                :type candidate_models: list</span>
+
+<span class="sd">                :param data: available data</span>
+<span class="sd">                :type data: ndarray</span>
+
+<span class="sd">                :param prior_probabilities: prior probabilities of each model</span>
+<span class="sd">                :type prior_probabilities: list of floats</span>
+
+<span class="sd">                :param pdf_proposal_type, pdf_proposal_scale, algorithm, jump, nsamples, nburn, seed:</span>
+<span class="sd">                inputs to the sampling method, see MCMC</span>
+<span class="sd">                :type pdf_proposal_type, pdf_proposal_scale, algorithm, jump, nsamples, nburn, seed:</span>
+<span class="sd">                see MCMC - must be lists of values, of len = len(candidate_models)</span>
+
+<span class="sd">                :param sorted_outputs: indicates if results are returned in sorted order, according to model</span>
+<span class="sd">                 probabilities</span>
+<span class="sd">                :type sorted_outputs: bool</span>
+
+<span class="sd">            Outputs:</span>
+
+<span class="sd">            A list of sorted models, their posterior probability based on data, the evidence of the model and the</span>
+<span class="sd">            samples representing the posterior pdf.</span>
+
+<span class="sd">            # Authors: Yuchen Zhou</span>
+<span class="sd">            # Updated: 12/17/18 by Audrey Olivier</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Check inputs: candidate_models is a list of instances of Model, data must be provided, and input arguments</span>
+        <span class="c1"># for MCMC must be provided as a list of length len(candidate_models)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">candidate_models</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate_models</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;A list of models is required.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Model</span><span class="p">)</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">candidate_models</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;All candidate models should be of type Model.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span> <span class="o">=</span> <span class="n">candidate_models</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;data must be provided&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">for</span> <span class="n">input_item</span> <span class="ow">in</span> <span class="p">[</span><span class="n">algorithm</span><span class="p">,</span> <span class="n">jump</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">nburn</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">pdf_proposal_type</span><span class="p">,</span> <span class="n">pdf_proposal_scale</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">input_item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_item</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">input_item</span><span class="p">)</span><span class="o">!=</span><span class="nb">len</span><span class="p">(</span><span class="n">candidate_models</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Inputs of model selection using MCMC nust be given as lists of len=nb of models.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdf_proposal_type</span> <span class="o">=</span> <span class="n">pdf_proposal_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdf_proposal_scale</span> <span class="o">=</span> <span class="n">pdf_proposal_scale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">algorithm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jump</span> <span class="o">=</span> <span class="n">jump</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nburn</span> <span class="o">=</span> <span class="n">nburn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tmp_candidate_model</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span>
+
+        <span class="k">if</span> <span class="n">prior_probabilities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prior_probabilities</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prior_probabilities</span> <span class="o">=</span> <span class="n">prior_probabilities</span>
+
+        <span class="n">model_probabilities</span><span class="p">,</span> <span class="n">evidence</span><span class="p">,</span> <span class="n">parameter_estimation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_multi_bayes_ms</span><span class="p">()</span>
+
+        <span class="c1"># sort the models</span>
+        <span class="k">if</span> <span class="n">sorted_outputs</span><span class="p">:</span>
+            <span class="n">sort_idx</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">model_probabilities</span><span class="p">)))[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sort_idx</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">candidate_models</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="n">candidate_models</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">parameter_estimation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span> <span class="o">=</span> <span class="p">[</span><span class="n">model_probabilities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evidences</span> <span class="o">=</span> <span class="p">[</span><span class="n">evidence</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">run_multi_bayes_ms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Running Bayesian MS...&#39;</span><span class="p">)</span>
+        <span class="c1"># Initialize the evidence or marginal likelihood</span>
+        <span class="n">evi_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span><span class="p">),))</span>
+        <span class="n">scaled_evi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">evi_value</span><span class="p">)</span>
+        <span class="n">pe</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span><span class="p">)</span>
+        <span class="c1"># Perform MCMC for all candidate models</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tmp_candidate_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Running MCMC for model &#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">tmp_candidate_model</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+            <span class="n">pe_i</span> <span class="o">=</span> <span class="n">BayesParameterEstimation</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmp_candidate_model</span><span class="p">,</span>
+                                            <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+                                            <span class="n">sampling_method</span><span class="o">=</span><span class="s1">&#39;MCMC&#39;</span><span class="p">,</span>
+                                            <span class="n">pdf_proposal_type</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdf_proposal_type</span> <span class="ow">is</span> <span class="kc">None</span>
+                                                               <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdf_proposal_type</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                                            <span class="n">pdf_proposal_scale</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdf_proposal_scale</span> <span class="ow">is</span> <span class="kc">None</span>
+                                                                <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdf_proposal_scale</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                                            <span class="n">algorithm</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                                            <span class="n">jump</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">jump</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">jump</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                                            <span class="n">nsamples</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                                            <span class="n">nburn</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nburn</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">nburn</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                                            <span class="n">seed</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                            <span class="p">)</span>
+            <span class="n">pe</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">pe_i</span>
+            <span class="n">evi_value</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate_evidence</span><span class="p">(</span><span class="n">pe_i</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+            <span class="n">scaled_evi</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">evi_value</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">prior_probabilities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="n">sum_evi_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">scaled_evi</span><span class="p">)</span>
+        <span class="n">model_prob</span> <span class="o">=</span> <span class="n">scaled_evi</span> <span class="o">/</span> <span class="n">sum_evi_value</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Bayesian MS analysis completed!&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">model_prob</span><span class="p">,</span> <span class="n">evi_value</span><span class="p">,</span> <span class="n">pe</span>
+
+    <span class="k">def</span> <span class="nf">estimate_evidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">samples</span><span class="p">):</span>
+        <span class="c1"># The method used here is the harmonic mean</span>
+        <span class="n">likelihood_given_sample</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tmp_candidate_model</span><span class="o">.</span><span class="n">log_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+                                   <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)):]]</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="mi">1</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">likelihood_given_sample</span><span class="p">])</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="n">temp</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../index.html">
+    <img class="logo" src="../../_static/logo.jpg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Uncertainty quantification with Python </p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=SURG&repo=UQpy&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../distributions.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samplemethods.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../transformations.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../surrogates.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reliability.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dimension_reduction.html">DimensionReduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, SURG, JHU.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/SURG/UQpy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

@@ -40,6 +40,10 @@ import subprocess
 
 import numpy as np
 
+* **output_object_name** (`str`)
+        The name of the function or class within `output_script` that is used to collect and process the output values
+        from third-party software model output files. If the object is a class, the output must be saved as an attribute
+        called `qoi`. If it is a function, it should return the output quantity of interest.
 
 class RunModel:
     """
@@ -645,6 +649,9 @@ class RunModel:
                     self.qoi_list[i] = self.model_output.qoi
                 else:
                     self.qoi_list[i] = self.model_output
+
+        if self.verbose:
+            print('\nUQpy: Serial execution of the python model complete.\n')
 
         if self.verbose:
             print('\nUQpy: Serial execution of the python model complete.\n')
