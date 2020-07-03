@@ -7,8 +7,7 @@ Uncertainty Quantification with python (UQpy)
 
 ====
 
-:Authors: Michael D. Shields, Dimitris G. Giovanis
-:Contributors: Aakash Bangalore Satish, Mohit Singh Chauhan, Audrey Olivier, Lohit Vandanapu, Ketson RM dos Santos
+:Authors: Michael D. Shields, Dimitris G. Giovanis, Audrey Olivier, Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu, Ketson RM dos Santos
 :Contact: UQpy.info@gmail.com
 :Version: 3.0
 
@@ -46,33 +45,39 @@ From PyPI
 
             * ::
 
-                        $pip install UQpy 
+                        pip install UQpy
 
 In order to uninstall it
 
             * ::
 
-                        $pip uninstall UQpy
+                        pip uninstall UQpy
+
+Using Conda
+
+            * ::
+
+                        conda install --channel  ``SURG_JHU``  uqpy
 
 Clone your fork of the UQpy repo from your GitHub account to your local disk (to get the latest version): 
 
             * ::
 
-                        $git clone https://github.com/SURGroup/UQpy.git
-                        $cd UQpy/
-                        $python setup.py install  (user installation)
-                        $python setup.py develop (developer installation)
+                        git clone https://github.com/SURGroup/UQpy.git
+                        cd UQpy/
+                        python setup.py install  (user installation)
+                        python setup.py develop (developer installation)
 
 Help and Support
 ===========
 
 Website:
-           www.ce.jhu.edu/surg
+           https://uqpyproject.readthedocs.io
 
 
 
 .. |logo| image:: logo.jpg
-    :scale: 50 %
+    :scale: 25 %
     :target: https://gihub.com/SURGroup/UQpy
     
     

@@ -8,7 +8,7 @@ setup(
     url='https://github.com/SURGroup/UQpy',
     description="UQpy is a general purpose toolbox for Uncertainty Quantification",
     author="Michael D. Shields, Dimitris G. Giovanis, Audrey Olivier, Aakash Bangalore-Satish, Mohit Chauhan, "
-           "Lohit Vandanapu, Ketson correlation_function.M. dos Santos",
+           "Lohit Vandanapu, Ketson R.M. dos Santos",
     author_email="UQpy.info@gmail.com",
     license='MIT',
     platforms=["OSX", "Windows", "Linux"],
