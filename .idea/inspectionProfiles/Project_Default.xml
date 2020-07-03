@@ -1,0 +1,55 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="DuplicatedCode" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <Languages>
+        <language minSize="111" name="Python" />
+      </Languages>
+    </inspection_tool>
+    <inspection_tool class="PyPep8Inspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="W605" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="pdf_values" />
+          <option value="cdf_values" />
+          <option value="icdf_values" />
+          <option value="log_pdf_values" />
+          <option value="params_fit" />
+          <option value="mean" />
+          <option value="var" />
+          <option value="skew" />
+          <option value="kurt" />
+          <option value="c" />
+          <option value="method_exist" />
+          <option value="pdf_val" />
+          <option value="cdf_val" />
+          <option value="icdf_val" />
+          <option value="samples" />
+          <option value="logpdf_val" />
+          <option value="mle_params" />
+          <option value="moments" />
+          <option value="dist" />
+          <option value="params_dict" />
+          <option value="UQpy.Distributions.Distribution.rvs" />
+          <option value="UQpy.Distributions.Distribution.cdf" />
+          <option value="scipy.spatial.qhull.Voronoi.regions" />
+          <option value="scipy.spatial.qhull.Voronoi.point_region" />
+          <option value="scipy.spatial.qhull.Voronoi.vertices" />
+          <option value="scipy.spatial.qhull.Delaunay.nsimplex" />
+          <option value="scipy.spatial.qhull.Delaunay.simplices" />
+          <option value="scipy.spatial.qhull.ConvexHull.volume" />
+          <option value="scipy.spatial.qhull.Delaunay.vertices" />
+          <option value="list.vertices" />
+          <option value="list.nsimplex" />
+          <option value="list.simplices" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
