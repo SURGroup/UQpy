@@ -73,7 +73,7 @@
 <span class="c1">########################################################################################################################</span>
 
 
-<div class="viewcode-block" id="MCS"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MCS">[docs]</a><span class="k">class</span> <span class="nc">MCS</span><span class="p">:</span>
+<div class="viewcode-block" id="MCS"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.MCS">[docs]</a><span class="k">class</span> <span class="nc">MCS</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform Monte Carlo sampling (MCS) of random variables.</span>
 
@@ -178,7 +178,7 @@
         <span class="k">if</span> <span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MCS.run"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MCS.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MCS.run"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.MCS.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Execute the random sampling in the ``MCS`` class.</span>
 
@@ -260,7 +260,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Monte Carlo Sampling Complete.&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MCS.transform_u01"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MCS.transform_u01">[docs]</a>    <span class="k">def</span> <span class="nf">transform_u01</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MCS.transform_u01"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.MCS.transform_u01">[docs]</a>    <span class="k">def</span> <span class="nf">transform_u01</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Transform random samples to uniform on the unit hypercube.</span>
 
@@ -317,7 +317,7 @@
 <span class="c1">########################################################################################################################</span>
 
 
-<div class="viewcode-block" id="LHS"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS">[docs]</a><span class="k">class</span> <span class="nc">LHS</span><span class="p">:</span>
+<div class="viewcode-block" id="LHS"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.LHS">[docs]</a><span class="k">class</span> <span class="nc">LHS</span><span class="p">:</span>
 
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform Latin hypercube sampling (MCS) of random variables.</span>
@@ -419,7 +419,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LHS.run"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
+<div class="viewcode-block" id="LHS.run"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.LHS.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
 
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Execute the random sampling in the ``LHS`` class.</span>
@@ -492,7 +492,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Successful execution of LHS design.&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="LHS.random"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.random">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="LHS.random"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.LHS.random">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">random</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Method for generating a Latin hypercube design by sampling randomly inside each bin.</span>
@@ -525,7 +525,7 @@
 
         <span class="k">return</span> <span class="n">lhs_samples</span></div>
 
-<div class="viewcode-block" id="LHS.max_min"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.max_min">[docs]</a>    <span class="k">def</span> <span class="nf">max_min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="LHS.max_min"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.LHS.max_min">[docs]</a>    <span class="k">def</span> <span class="nf">max_min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Method for generating a Latin hypercube design that aims to maximize the minimum sample distance.</span>
 
@@ -590,7 +590,7 @@
 
         <span class="k">return</span> <span class="n">lhs_samples</span></div>
 
-<div class="viewcode-block" id="LHS.correlate"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.correlate">[docs]</a>    <span class="k">def</span> <span class="nf">correlate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+<div class="viewcode-block" id="LHS.correlate"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.LHS.correlate">[docs]</a>    <span class="k">def</span> <span class="nf">correlate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Method for generating a Latin hypercube design that aims to minimize spurious correlations.</span>
 
@@ -635,7 +635,7 @@
 
         <span class="k">return</span> <span class="n">lhs_samples</span></div>
 
-<div class="viewcode-block" id="LHS.centered"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.LHS.centered">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="LHS.centered"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.LHS.centered">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">centered</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Method for generating a Latin hypercube design with samples centered in the bins.</span>
@@ -676,7 +676,7 @@
 <span class="c1">########################################################################################################################</span>
 
 
-<div class="viewcode-block" id="Strata"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.Strata">[docs]</a><span class="k">class</span> <span class="nc">Strata</span><span class="p">:</span>
+<div class="viewcode-block" id="Strata"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.Strata">[docs]</a><span class="k">class</span> <span class="nc">Strata</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling strata.</span>
 
@@ -722,7 +722,7 @@
         <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Strata.stratify"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.Strata.stratify">[docs]</a>    <span class="k">def</span> <span class="nf">stratify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Strata.stratify"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.Strata.stratify">[docs]</a>    <span class="k">def</span> <span class="nf">stratify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform the stratification of the unit hypercube. It is overwritten by the subclass. This method must exist in</span>
@@ -737,7 +737,7 @@
         <span class="k">return</span> <span class="kc">None</span></div></div>
 
 
-<div class="viewcode-block" id="RectangularStrata"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.RectangularStrata">[docs]</a><span class="k">class</span> <span class="nc">RectangularStrata</span><span class="p">(</span><span class="n">Strata</span><span class="p">):</span>
+<div class="viewcode-block" id="RectangularStrata"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.RectangularStrata">[docs]</a><span class="k">class</span> <span class="nc">RectangularStrata</span><span class="p">(</span><span class="n">Strata</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling</span>
 <span class="sd">    rectangular strata.</span>
@@ -823,7 +823,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">stratify</span><span class="p">()</span>
 
-<div class="viewcode-block" id="RectangularStrata.stratify"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.RectangularStrata.stratify">[docs]</a>    <span class="k">def</span> <span class="nf">stratify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="RectangularStrata.stratify"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.RectangularStrata.stratify">[docs]</a>    <span class="k">def</span> <span class="nf">stratify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Performs the rectangular stratification.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -860,7 +860,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Rectangular stratification created.&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="RectangularStrata.fullfact"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.RectangularStrata.fullfact">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="RectangularStrata.fullfact"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.RectangularStrata.fullfact">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">fullfact</span><span class="p">(</span><span class="n">levels</span><span class="p">):</span>
 
         <span class="sd">&quot;&quot;&quot;</span>
@@ -908,7 +908,7 @@
 
         <span class="k">return</span> <span class="n">ff</span></div>
 
-<div class="viewcode-block" id="RectangularStrata.plot_2d"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.RectangularStrata.plot_2d">[docs]</a>    <span class="k">def</span> <span class="nf">plot_2d</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="RectangularStrata.plot_2d"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.RectangularStrata.plot_2d">[docs]</a>    <span class="k">def</span> <span class="nf">plot_2d</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plot the rectangular stratification.</span>
 
@@ -930,7 +930,7 @@
         <span class="k">return</span> <span class="n">fig</span></div></div>
 
 
-<div class="viewcode-block" id="VoronoiStrata"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.VoronoiStrata">[docs]</a><span class="k">class</span> <span class="nc">VoronoiStrata</span><span class="p">(</span><span class="n">Strata</span><span class="p">):</span>
+<div class="viewcode-block" id="VoronoiStrata"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.VoronoiStrata">[docs]</a><span class="k">class</span> <span class="nc">VoronoiStrata</span><span class="p">(</span><span class="n">Strata</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling</span>
 <span class="sd">    Voronoi strata.</span>
@@ -1017,7 +1017,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">stratify</span><span class="p">()</span>
 
-<div class="viewcode-block" id="VoronoiStrata.stratify"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.VoronoiStrata.stratify">[docs]</a>    <span class="k">def</span> <span class="nf">stratify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VoronoiStrata.stratify"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.VoronoiStrata.stratify">[docs]</a>    <span class="k">def</span> <span class="nf">stratify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Performs the Voronoi stratification.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1060,7 +1060,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Voronoi stratification created.&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VoronoiStrata.voronoi_unit_hypercube"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.VoronoiStrata.voronoi_unit_hypercube">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="VoronoiStrata.voronoi_unit_hypercube"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.VoronoiStrata.voronoi_unit_hypercube">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">voronoi_unit_hypercube</span><span class="p">(</span><span class="n">seeds</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This function reflects the seeds across all faces of the unit hypercube and creates a Voronoi decomposition of</span>
@@ -1114,7 +1114,7 @@
 
         <span class="k">return</span> <span class="n">vor</span><span class="p">,</span> <span class="n">bounded_regions</span></div>
 
-<div class="viewcode-block" id="VoronoiStrata.compute_voronoi_centroid_volume"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.VoronoiStrata.compute_voronoi_centroid_volume">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="VoronoiStrata.compute_voronoi_centroid_volume"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.VoronoiStrata.compute_voronoi_centroid_volume">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">compute_voronoi_centroid_volume</span><span class="p">(</span><span class="n">vertices</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This function computes the centroid and volume of a Voronoi cell from its vertices.</span>
@@ -1151,7 +1151,7 @@
         <span class="k">return</span> <span class="n">centroid</span><span class="p">,</span> <span class="n">volume</span></div></div>
 
 
-<div class="viewcode-block" id="DelaunayStrata"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.DelaunayStrata">[docs]</a><span class="k">class</span> <span class="nc">DelaunayStrata</span><span class="p">(</span><span class="n">Strata</span><span class="p">):</span>
+<div class="viewcode-block" id="DelaunayStrata"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.DelaunayStrata">[docs]</a><span class="k">class</span> <span class="nc">DelaunayStrata</span><span class="p">(</span><span class="n">Strata</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling</span>
 <span class="sd">        Delaunay strata of n-dimensional simplexes.</span>
@@ -1222,7 +1222,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">stratify</span><span class="p">()</span>
 
-<div class="viewcode-block" id="DelaunayStrata.stratify"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.DelaunayStrata.stratify">[docs]</a>    <span class="k">def</span> <span class="nf">stratify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DelaunayStrata.stratify"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.DelaunayStrata.stratify">[docs]</a>    <span class="k">def</span> <span class="nf">stratify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="kn">import</span> <span class="nn">itertools</span>
         <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="k">import</span> <span class="n">Delaunay</span>
 
@@ -1251,7 +1251,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Delaunay stratification created.&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DelaunayStrata.compute_delaunay_centroid_volume"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.DelaunayStrata.compute_delaunay_centroid_volume">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="DelaunayStrata.compute_delaunay_centroid_volume"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.DelaunayStrata.compute_delaunay_centroid_volume">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">compute_delaunay_centroid_volume</span><span class="p">(</span><span class="n">vertices</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This function computes the centroid and volume of a Delaunay simplex from its vertices.</span>
@@ -1285,7 +1285,7 @@
 <span class="c1">########################################################################################################################</span>
 
 
-<div class="viewcode-block" id="STS"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.STS">[docs]</a><span class="k">class</span> <span class="nc">STS</span><span class="p">:</span>
+<div class="viewcode-block" id="STS"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.STS">[docs]</a><span class="k">class</span> <span class="nc">STS</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parent class for Stratified Sampling ([9]_).</span>
 
@@ -1383,7 +1383,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples_per_stratum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples_per_stratum</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples_per_stratum</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
 
-<div class="viewcode-block" id="STS.transform_samples"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.STS.transform_samples">[docs]</a>    <span class="k">def</span> <span class="nf">transform_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples01</span><span class="p">):</span>
+<div class="viewcode-block" id="STS.transform_samples"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.STS.transform_samples">[docs]</a>    <span class="k">def</span> <span class="nf">transform_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples01</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Transform samples in the unit hypercube :math:`[0, 1]^n` to the prescribed distribution using the inverse CDF.</span>
 
@@ -1404,7 +1404,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">samples_u_to_x</span></div>
 
-<div class="viewcode-block" id="STS.run"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.STS.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples_per_stratum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="STS.run"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.STS.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples_per_stratum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Executes stratified sampling.</span>
 
@@ -1482,7 +1482,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">nsamples_per_stratum</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">strata_object</span><span class="o">.</span><span class="n">volume</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="c1"># Creating dummy method for create_samplesu01. These methods are overwritten in child classes.</span>
-<div class="viewcode-block" id="STS.create_samplesu01"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.STS.create_samplesu01">[docs]</a>    <span class="k">def</span> <span class="nf">create_samplesu01</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples_per_stratum</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
+<div class="viewcode-block" id="STS.create_samplesu01"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.STS.create_samplesu01">[docs]</a>    <span class="k">def</span> <span class="nf">create_samplesu01</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples_per_stratum</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Executes the specific stratified sampling algorithm. This method is overwritten by each child class of ``STS``.</span>
 
@@ -1509,7 +1509,7 @@
         <span class="k">return</span> <span class="kc">None</span></div></div>
 
 
-<div class="viewcode-block" id="RectangularSTS"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.RectangularSTS">[docs]</a><span class="k">class</span> <span class="nc">RectangularSTS</span><span class="p">(</span><span class="n">STS</span><span class="p">):</span>
+<div class="viewcode-block" id="RectangularSTS"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.RectangularSTS">[docs]</a><span class="k">class</span> <span class="nc">RectangularSTS</span><span class="p">(</span><span class="n">STS</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Executes Stratified Sampling using Rectangular Stratification.</span>
 
@@ -1520,15 +1520,15 @@
 <span class="sd">    **Inputs:**</span>
 
 <span class="sd">    * **strata_object** (``RectangularStrata`` object):</span>
-<span class="sd">        The `strata_object` for ``RectangularSTS`` must be an object of tyhe ``RectangularStrata`` class.</span>
+<span class="sd">        The `strata_object` for ``RectangularSTS`` must be an object of type ``RectangularStrata`` class.</span>
 
 <span class="sd">    * **sts_criterion** (`str`):</span>
-<span class="sd">            Random or Centered samples inside the rectangular strata.</span>
-<span class="sd">            Options:</span>
-<span class="sd">                    1. &#39;random&#39; - Samples are drawn randomly within the strata. \n</span>
-<span class="sd">                    2. &#39;centered&#39; - Samples are drawn at the center of the strata. \n</span>
+<span class="sd">        Random or Centered samples inside the rectangular strata.</span>
+<span class="sd">        Options:</span>
+<span class="sd">        1. &#39;random&#39; - Samples are drawn randomly within the strata. \n</span>
+<span class="sd">        2. &#39;centered&#39; - Samples are drawn at the center of the strata. \n</span>
 
-<span class="sd">            Default: &#39;random&#39;</span>
+<span class="sd">        Default: &#39;random&#39;</span>
 
 <span class="sd">    **Methods:**</span>
 
@@ -1554,7 +1554,7 @@
                          <span class="n">nsamples_per_stratum</span><span class="o">=</span><span class="n">nsamples_per_stratum</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
                          <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
 
-<div class="viewcode-block" id="RectangularSTS.create_samplesu01"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.RectangularSTS.create_samplesu01">[docs]</a>    <span class="k">def</span> <span class="nf">create_samplesu01</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples_per_stratum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="RectangularSTS.create_samplesu01"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.RectangularSTS.create_samplesu01">[docs]</a>    <span class="k">def</span> <span class="nf">create_samplesu01</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples_per_stratum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Overwrites the ``create_samplesu01`` method in the parent class to generate samples in rectangular strata on the</span>
 <span class="sd">        unit hypercube. It has the same inputs and outputs as the ``create_samplesu01`` method in the parent class. See</span>
@@ -1585,7 +1585,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">samplesU01</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">samples_in_strata</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="VoronoiSTS"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.VoronoiSTS">[docs]</a><span class="k">class</span> <span class="nc">VoronoiSTS</span><span class="p">(</span><span class="n">STS</span><span class="p">):</span>
+<div class="viewcode-block" id="VoronoiSTS"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.VoronoiSTS">[docs]</a><span class="k">class</span> <span class="nc">VoronoiSTS</span><span class="p">(</span><span class="n">STS</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Executes Stratified Sampling using Voronoi Stratification.</span>
 
@@ -1611,7 +1611,7 @@
                          <span class="n">nsamples_per_stratum</span><span class="o">=</span><span class="n">nsamples_per_stratum</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
                          <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VoronoiSTS.create_samplesu01"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.VoronoiSTS.create_samplesu01">[docs]</a>    <span class="k">def</span> <span class="nf">create_samplesu01</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples_per_stratum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="VoronoiSTS.create_samplesu01"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.VoronoiSTS.create_samplesu01">[docs]</a>    <span class="k">def</span> <span class="nf">create_samplesu01</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples_per_stratum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Overwrites the ``create_samplesu01`` method in the parent class to generate samples in Voronoi strata on the</span>
 <span class="sd">        unit hypercube. It has the same inputs and outputs as the ``create_samplesu01`` method in the parent class. See</span>
@@ -1655,7 +1655,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">samplesU01</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">samples_in_strata</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="DelaunaySTS"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.DelaunaySTS">[docs]</a><span class="k">class</span> <span class="nc">DelaunaySTS</span><span class="p">(</span><span class="n">STS</span><span class="p">):</span>
+<div class="viewcode-block" id="DelaunaySTS"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.DelaunaySTS">[docs]</a><span class="k">class</span> <span class="nc">DelaunaySTS</span><span class="p">(</span><span class="n">STS</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Executes Stratified Sampling using Delaunay Stratification.</span>
 
@@ -1681,7 +1681,7 @@
                          <span class="n">nsamples_per_stratum</span><span class="o">=</span><span class="n">nsamples_per_stratum</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
                          <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DelaunaySTS.create_samplesu01"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.DelaunaySTS.create_samplesu01">[docs]</a>    <span class="k">def</span> <span class="nf">create_samplesu01</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples_per_stratum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="DelaunaySTS.create_samplesu01"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.DelaunaySTS.create_samplesu01">[docs]</a>    <span class="k">def</span> <span class="nf">create_samplesu01</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples_per_stratum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Overwrites the ``create_samplesu01`` method in the parent class to generate samples in Delaunay strata on the</span>
 <span class="sd">        unit hypercube. It has the same inputs and outputs as the ``create_samplesu01`` method in the parent class. See</span>
@@ -1712,9 +1712,9 @@
 <span class="c1">#                                         Refined Stratified Sampling (RSS)</span>
 <span class="c1">########################################################################################################################</span>
 
-<div class="viewcode-block" id="RSS"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.RSS">[docs]</a><span class="k">class</span> <span class="nc">RSS</span><span class="p">:</span>
+<div class="viewcode-block" id="RSS"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.RSS">[docs]</a><span class="k">class</span> <span class="nc">RSS</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Parent class for Refined Stratified Sampling [11]_, [12]_.</span>
+<span class="sd">    Parent class for Refined Stratified Sampling [10]_, [11]_.</span>
 
 <span class="sd">    This is the parent class for all refined stratified sampling methods. This parent class only provides the</span>
 <span class="sd">    framework for refined stratified sampling and cannot be used directly for the sampling. Sampling is done by</span>
@@ -1861,7 +1861,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;UQpy: nsamples msut be a positive integer.&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="RSS.run"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.RSS.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
+<div class="viewcode-block" id="RSS.run"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.RSS.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Execute the random sampling in the ``RSS`` class.</span>
 
@@ -1898,7 +1898,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">run_rss</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="RSS.estimate_gradient"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.RSS.estimate_gradient">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">xt</span><span class="p">):</span>
+<div class="viewcode-block" id="RSS.estimate_gradient"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.RSS.estimate_gradient">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">xt</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Estimating gradients with a Kriging metamodel (surrogate).</span>
 
@@ -1950,7 +1950,7 @@
         <span class="n">bin2break_</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">bin2break_</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">bin2break_</span>
 
-<div class="viewcode-block" id="RSS.run_rss"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.RSS.run_rss">[docs]</a>    <span class="k">def</span> <span class="nf">run_rss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="RSS.run_rss"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.RSS.run_rss">[docs]</a>    <span class="k">def</span> <span class="nf">run_rss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This method is overwritten by each subclass in order to perform the refined stratified sampling.</span>
 
@@ -1961,7 +1961,7 @@
         <span class="k">pass</span></div></div>
 
 
-<div class="viewcode-block" id="RectangularRSS"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.RectangularRSS">[docs]</a><span class="k">class</span> <span class="nc">RectangularRSS</span><span class="p">(</span><span class="n">RSS</span><span class="p">):</span>
+<div class="viewcode-block" id="RectangularRSS"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.RectangularRSS">[docs]</a><span class="k">class</span> <span class="nc">RectangularRSS</span><span class="p">(</span><span class="n">RSS</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Executes Refined Stratified Sampling using Rectangular Stratification.</span>
 
@@ -1988,7 +1988,7 @@
                          <span class="n">local</span><span class="o">=</span><span class="n">local</span><span class="p">,</span> <span class="n">max_train_size</span><span class="o">=</span><span class="n">max_train_size</span><span class="p">,</span> <span class="n">step_size</span><span class="o">=</span><span class="n">step_size</span><span class="p">,</span> <span class="n">qoi_name</span><span class="o">=</span><span class="n">qoi_name</span><span class="p">,</span>
                          <span class="n">n_add</span><span class="o">=</span><span class="n">n_add</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
 
-<div class="viewcode-block" id="RectangularRSS.run_rss"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.RectangularRSS.run_rss">[docs]</a>    <span class="k">def</span> <span class="nf">run_rss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="RectangularRSS.run_rss"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.RectangularRSS.run_rss">[docs]</a>    <span class="k">def</span> <span class="nf">run_rss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Overwrites the ``run_rss`` method in the parent class to perform refined stratified sampling with rectangular</span>
 <span class="sd">        strata. It is an instance method that does not take any additional input arguments. See</span>
@@ -2163,7 +2163,7 @@
         <span class="k">return</span> <span class="n">new</span></div>
 
 
-<div class="viewcode-block" id="VoronoiRSS"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.VoronoiRSS">[docs]</a><span class="k">class</span> <span class="nc">VoronoiRSS</span><span class="p">(</span><span class="n">RSS</span><span class="p">):</span>
+<div class="viewcode-block" id="VoronoiRSS"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.VoronoiRSS">[docs]</a><span class="k">class</span> <span class="nc">VoronoiRSS</span><span class="p">(</span><span class="n">RSS</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Executes Refined Stratified Sampling using Voronoi Stratification.</span>
 
@@ -2197,7 +2197,7 @@
                          <span class="n">local</span><span class="o">=</span><span class="n">local</span><span class="p">,</span> <span class="n">max_train_size</span><span class="o">=</span><span class="n">max_train_size</span><span class="p">,</span> <span class="n">step_size</span><span class="o">=</span><span class="n">step_size</span><span class="p">,</span> <span class="n">qoi_name</span><span class="o">=</span><span class="n">qoi_name</span><span class="p">,</span>
                          <span class="n">n_add</span><span class="o">=</span><span class="n">n_add</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VoronoiRSS.run_rss"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.VoronoiRSS.run_rss">[docs]</a>    <span class="k">def</span> <span class="nf">run_rss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VoronoiRSS.run_rss"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.VoronoiRSS.run_rss">[docs]</a>    <span class="k">def</span> <span class="nf">run_rss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Overwrites the ``run_rss`` method in the parent class to perform refined stratified sampling with Voronoi</span>
 <span class="sd">        strata. It is an instance method that does not take any additional input arguments. See</span>
@@ -2494,7 +2494,7 @@
 <span class="c1">########################################################################################################################</span>
 
 
-<div class="viewcode-block" id="Simplex"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.Simplex">[docs]</a><span class="k">class</span> <span class="nc">Simplex</span><span class="p">:</span>
+<div class="viewcode-block" id="Simplex"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.Simplex">[docs]</a><span class="k">class</span> <span class="nc">Simplex</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate uniform random samples inside an n-dimensional simplex.</span>
 
@@ -2545,7 +2545,7 @@
                                           <span class="s2">&quot;integer.&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Simplex.run"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.Simplex.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
+<div class="viewcode-block" id="Simplex.run"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.Simplex.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Execute the random sampling in the ``Simplex`` class.</span>
 
@@ -2596,7 +2596,7 @@
 <span class="c1">########################################################################################################################</span>
 <span class="c1">#                                  Adaptive Kriging-Monte Carlo Simulation (AK-MCS)</span>
 <span class="c1">########################################################################################################################</span>
-<div class="viewcode-block" id="AKMCS"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.AKMCS">[docs]</a><span class="k">class</span> <span class="nc">AKMCS</span><span class="p">:</span>
+<div class="viewcode-block" id="AKMCS"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.AKMCS">[docs]</a><span class="k">class</span> <span class="nc">AKMCS</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Adaptively sample for construction of a Kriging surrogate for different objectives including reliability,</span>
 <span class="sd">    optimization, and global fit.</span>
@@ -2798,7 +2798,7 @@
                                           <span class="s2">&quot;integer.&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
 
-<div class="viewcode-block" id="AKMCS.run"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.AKMCS.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">append_samples</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="AKMCS.run"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.AKMCS.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">append_samples</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Execute the ``AKMCS`` learning iterations.</span>
 
@@ -2912,7 +2912,7 @@
     <span class="c1"># ------------------</span>
     <span class="c1"># LEARNING FUNCTIONS</span>
     <span class="c1"># ------------------</span>
-<div class="viewcode-block" id="AKMCS.eigf"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.AKMCS.eigf">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AKMCS.eigf"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.AKMCS.eigf">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">eigf</span><span class="p">(</span><span class="n">surr</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">n_add</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">qoi</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Expected Improvement for Global Fit (EIGF) learning function. See [7]_ for a detailed explanation.</span>
@@ -2985,7 +2985,7 @@
 
         <span class="k">return</span> <span class="n">new_samples</span><span class="p">,</span> <span class="n">eigf_lf</span><span class="p">,</span> <span class="n">indicator</span></div>
 
-<div class="viewcode-block" id="AKMCS.u"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.AKMCS.u">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AKMCS.u"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.AKMCS.u">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">u</span><span class="p">(</span><span class="n">surr</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">n_add</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">qoi</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        U-function for reliability analysis. See [3] for a detailed explanation.</span>
@@ -3049,7 +3049,7 @@
         <span class="n">u_lf</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">new_samples</span><span class="p">,</span> <span class="n">u_lf</span><span class="p">,</span> <span class="n">indicator</span></div>
 
-<div class="viewcode-block" id="AKMCS.weighted_u"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.AKMCS.weighted_u">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AKMCS.weighted_u"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.AKMCS.weighted_u">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">weighted_u</span><span class="p">(</span><span class="n">surr</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">n_add</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">qoi</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Probability Weighted U-function for reliability analysis. See [5]_ for a detailed explanation.</span>
@@ -3120,7 +3120,7 @@
         <span class="n">w_lf</span> <span class="o">=</span> <span class="n">u_</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="p">:]</span>
         <span class="k">return</span> <span class="n">new_samples</span><span class="p">,</span> <span class="n">w_lf</span><span class="p">,</span> <span class="n">indicator</span></div>
 
-<div class="viewcode-block" id="AKMCS.eff"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.AKMCS.eff">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AKMCS.eff"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.AKMCS.eff">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">eff</span><span class="p">(</span><span class="n">surr</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">n_add</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">qoi</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Expected Feasibility Function (EFF) for reliability analysis, see [6]_ for a detailed explanation.</span>
@@ -3191,7 +3191,7 @@
         <span class="n">eff_lf</span> <span class="o">=</span> <span class="n">eff</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="p">:]</span>
         <span class="k">return</span> <span class="n">new_samples</span><span class="p">,</span> <span class="n">eff_lf</span><span class="p">,</span> <span class="n">indicator</span></div>
 
-<div class="viewcode-block" id="AKMCS.eif"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.AKMCS.eif">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AKMCS.eif"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.AKMCS.eif">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">eif</span><span class="p">(</span><span class="n">surr</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">n_add</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">qoi</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Expected Improvement Function (EIF) for Efficient Global Optimization (EFO). See [4]_ for a detailed</span>
@@ -3262,7 +3262,7 @@
 <span class="c1">########################################################################################################################</span>
 
 
-<div class="viewcode-block" id="MCMC"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MCMC">[docs]</a><span class="k">class</span> <span class="nc">MCMC</span><span class="p">:</span>
+<div class="viewcode-block" id="MCMC"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.MCMC">[docs]</a><span class="k">class</span> <span class="nc">MCMC</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.</span>
 
@@ -3396,7 +3396,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples_per_chain</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">niterations</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># total nb of iterations, grows if you call run several times</span>
 
-<div class="viewcode-block" id="MCMC.run"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MCMC.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MCMC.run"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.MCMC.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the MCMC algorithm.</span>
 
@@ -3444,7 +3444,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">concat_chains</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_concatenate_chains</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="MCMC.run_one_iteration"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MCMC.run_one_iteration">[docs]</a>    <span class="k">def</span> <span class="nf">run_one_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_state</span><span class="p">,</span> <span class="n">current_log_pdf</span><span class="p">):</span>
+<div class="viewcode-block" id="MCMC.run_one_iteration"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.MCMC.run_one_iteration">[docs]</a>    <span class="k">def</span> <span class="nf">run_one_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_state</span><span class="p">,</span> <span class="n">current_log_pdf</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run one iteration of the MCMC algorithm, starting at `current_state`.</span>
 
@@ -3713,7 +3713,7 @@
 <span class="c1">#################################################################################################################</span>
 
 
-<div class="viewcode-block" id="MH"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MH">[docs]</a><span class="k">class</span> <span class="nc">MH</span><span class="p">(</span><span class="n">MCMC</span><span class="p">):</span>
+<div class="viewcode-block" id="MH"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.MH">[docs]</a><span class="k">class</span> <span class="nc">MH</span><span class="p">(</span><span class="n">MCMC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Metropolis-Hastings algorithm</span>
 
@@ -3763,7 +3763,7 @@
         <span class="k">if</span> <span class="p">(</span><span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">nsamples_per_chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="n">nsamples_per_chain</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MH.run_one_iteration"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MH.run_one_iteration">[docs]</a>    <span class="k">def</span> <span class="nf">run_one_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_state</span><span class="p">,</span> <span class="n">current_log_pdf</span><span class="p">):</span>
+<div class="viewcode-block" id="MH.run_one_iteration"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.MH.run_one_iteration">[docs]</a>    <span class="k">def</span> <span class="nf">run_one_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_state</span><span class="p">,</span> <span class="n">current_log_pdf</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run one iteration of the MCMC chain for MH algorithm, starting at current state - see ``MCMC`` class.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -3798,7 +3798,7 @@
 
 <span class="c1">####################################################################################################################</span>
 
-<div class="viewcode-block" id="MMH"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MMH">[docs]</a><span class="k">class</span> <span class="nc">MMH</span><span class="p">(</span><span class="n">MCMC</span><span class="p">):</span>
+<div class="viewcode-block" id="MMH"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.MMH">[docs]</a><span class="k">class</span> <span class="nc">MMH</span><span class="p">(</span><span class="n">MCMC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    Component-wise Modified Metropolis-Hastings algorithm.</span>
@@ -3881,7 +3881,7 @@
         <span class="k">if</span> <span class="p">(</span><span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">nsamples_per_chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="n">nsamples_per_chain</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MMH.run_one_iteration"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.MMH.run_one_iteration">[docs]</a>    <span class="k">def</span> <span class="nf">run_one_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_state</span><span class="p">,</span> <span class="n">current_log_pdf</span><span class="p">):</span>
+<div class="viewcode-block" id="MMH.run_one_iteration"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.MMH.run_one_iteration">[docs]</a>    <span class="k">def</span> <span class="nf">run_one_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_state</span><span class="p">,</span> <span class="n">current_log_pdf</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run one iteration of the MCMC chain for MMH algorithm, starting at current state - see ``MCMC`` class.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -3956,7 +3956,7 @@
 <span class="c1">####################################################################################################################</span>
 
 
-<div class="viewcode-block" id="Stretch"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.Stretch">[docs]</a><span class="k">class</span> <span class="nc">Stretch</span><span class="p">(</span><span class="n">MCMC</span><span class="p">):</span>
+<div class="viewcode-block" id="Stretch"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.Stretch">[docs]</a><span class="k">class</span> <span class="nc">Stretch</span><span class="p">(</span><span class="n">MCMC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Affine-invariant sampler with Stretch moves, parallel implementation.</span>
 
@@ -4009,7 +4009,7 @@
         <span class="k">if</span> <span class="p">(</span><span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">nsamples_per_chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="n">nsamples_per_chain</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Stretch.run_one_iteration"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.Stretch.run_one_iteration">[docs]</a>    <span class="k">def</span> <span class="nf">run_one_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_state</span><span class="p">,</span> <span class="n">current_log_pdf</span><span class="p">):</span>
+<div class="viewcode-block" id="Stretch.run_one_iteration"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.Stretch.run_one_iteration">[docs]</a>    <span class="k">def</span> <span class="nf">run_one_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_state</span><span class="p">,</span> <span class="n">current_log_pdf</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run one iteration of the MCMC chain for Stretch algorithm, starting at current state - see ``MCMC`` class.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -4056,7 +4056,7 @@
 <span class="c1">####################################################################################################################</span>
 
 
-<div class="viewcode-block" id="DRAM"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.DRAM">[docs]</a><span class="k">class</span> <span class="nc">DRAM</span><span class="p">(</span><span class="n">MCMC</span><span class="p">):</span>
+<div class="viewcode-block" id="DRAM"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.DRAM">[docs]</a><span class="k">class</span> <span class="nc">DRAM</span><span class="p">(</span><span class="n">MCMC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Delayed Rejection Adaptive Metropolis algorithm</span>
 
@@ -4132,7 +4132,7 @@
         <span class="k">if</span> <span class="p">(</span><span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">nsamples_per_chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="n">nsamples_per_chain</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DRAM.run_one_iteration"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.DRAM.run_one_iteration">[docs]</a>    <span class="k">def</span> <span class="nf">run_one_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_state</span><span class="p">,</span> <span class="n">current_log_pdf</span><span class="p">):</span>
+<div class="viewcode-block" id="DRAM.run_one_iteration"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.DRAM.run_one_iteration">[docs]</a>    <span class="k">def</span> <span class="nf">run_one_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_state</span><span class="p">,</span> <span class="n">current_log_pdf</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run one iteration of the MCMC chain for DRAM algorithm, starting at current state - see ``MCMC`` class.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -4242,7 +4242,7 @@
 <span class="c1">####################################################################################################################</span>
 
 
-<div class="viewcode-block" id="DREAM"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.DREAM">[docs]</a><span class="k">class</span> <span class="nc">DREAM</span><span class="p">(</span><span class="n">MCMC</span><span class="p">):</span>
+<div class="viewcode-block" id="DREAM"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.DREAM">[docs]</a><span class="k">class</span> <span class="nc">DREAM</span><span class="p">(</span><span class="n">MCMC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    DiffeRential Evolution Adaptive Metropolis algorithm</span>
 
@@ -4328,7 +4328,7 @@
         <span class="k">if</span> <span class="p">(</span><span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">nsamples_per_chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="n">nsamples_per_chain</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DREAM.run_one_iteration"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.DREAM.run_one_iteration">[docs]</a>    <span class="k">def</span> <span class="nf">run_one_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_state</span><span class="p">,</span> <span class="n">current_log_pdf</span><span class="p">):</span>
+<div class="viewcode-block" id="DREAM.run_one_iteration"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.DREAM.run_one_iteration">[docs]</a>    <span class="k">def</span> <span class="nf">run_one_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_state</span><span class="p">,</span> <span class="n">current_log_pdf</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run one iteration of the MCMC chain for DREAM algorithm, starting at current state - see ``MCMC`` class.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -4401,7 +4401,7 @@
 
         <span class="k">return</span> <span class="n">current_state</span><span class="p">,</span> <span class="n">current_log_pdf</span></div>
 
-<div class="viewcode-block" id="DREAM.check_outlier_chains"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.DREAM.check_outlier_chains">[docs]</a>    <span class="k">def</span> <span class="nf">check_outlier_chains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">replace_with_best</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="DREAM.check_outlier_chains"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.DREAM.check_outlier_chains">[docs]</a>    <span class="k">def</span> <span class="nf">check_outlier_chains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">replace_with_best</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check outlier chains in DREAM algorithm.</span>
 
@@ -4443,7 +4443,7 @@
 <span class="c1">#                                         Importance Sampling</span>
 <span class="c1">########################################################################################################################</span>
 
-<div class="viewcode-block" id="IS"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.IS">[docs]</a><span class="k">class</span> <span class="nc">IS</span><span class="p">:</span>
+<div class="viewcode-block" id="IS"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.IS">[docs]</a><span class="k">class</span> <span class="nc">IS</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sample from a user-defined target density using importance sampling.</span>
 
@@ -4530,7 +4530,7 @@
         <span class="k">if</span> <span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">nsamples</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="p">)</span>
 
-<div class="viewcode-block" id="IS.run"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.IS.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
+<div class="viewcode-block" id="IS.run"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.IS.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate and weight samples.</span>
 
@@ -4601,7 +4601,7 @@
     <span class="c1">#     from .Utilities import resample</span>
     <span class="c1">#     return resample(self.samples, self.weights, method=method, size=nsamples)</span>
 
-<div class="viewcode-block" id="IS.resample"><a class="viewcode-back" href="../../samplemethods.html#UQpy.SampleMethods.IS.resample">[docs]</a>    <span class="k">def</span> <span class="nf">resample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;multinomial&#39;</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="IS.resample"><a class="viewcode-back" href="../../samplemethods_doc.html#UQpy.SampleMethods.IS.resample">[docs]</a>    <span class="k">def</span> <span class="nf">resample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;multinomial&#39;</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Resample to get a set of un-weighted samples that represent the target pdf.</span>
 
@@ -4712,17 +4712,17 @@
 
 <h3>Navigation</h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../distributions.html">Distributions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samplemethods.html">SampleMethods</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../transformations.html">Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process.html">StochasticProcess</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../surrogates.html">Surrogates</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../reliability.html">Reliability</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation_doc.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runmodel_doc.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../distributions_doc.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samplemethods_doc.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../transformations_doc.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process_doc.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../surrogates_doc.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reliability_doc.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../inference_doc.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities_doc.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../news_doc.html">News</a></li>
 </ul>
 
 <div class="relations">

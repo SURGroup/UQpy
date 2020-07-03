@@ -74,7 +74,7 @@
 <span class="c1">#                            Define the model - probability model or python model</span>
 <span class="c1">########################################################################################################################</span>
 
-<div class="viewcode-block" id="InferenceModel"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.InferenceModel">[docs]</a><span class="k">class</span> <span class="nc">InferenceModel</span><span class="p">:</span>
+<div class="viewcode-block" id="InferenceModel"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.InferenceModel">[docs]</a><span class="k">class</span> <span class="nc">InferenceModel</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define a probabilistic model for inference.</span>
 
@@ -172,7 +172,7 @@
                     <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Input prior should have a log_pdf or pdf method.&#39;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">log_pdf</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
 
-<div class="viewcode-block" id="InferenceModel.evaluate_log_likelihood"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.InferenceModel.evaluate_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<div class="viewcode-block" id="InferenceModel.evaluate_log_likelihood"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.InferenceModel.evaluate_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Evaluate the log likelihood, `log p(data|params)`.</span>
 
@@ -255,7 +255,7 @@
 
         <span class="k">return</span> <span class="n">log_like_values</span></div>
 
-<div class="viewcode-block" id="InferenceModel.evaluate_log_posterior"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.InferenceModel.evaluate_log_posterior">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate_log_posterior</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<div class="viewcode-block" id="InferenceModel.evaluate_log_posterior"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.InferenceModel.evaluate_log_posterior">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate_log_posterior</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Evaluate the scaled log posterior `log(p(data|params)p(params))`.</span>
 
@@ -294,7 +294,7 @@
 <span class="c1">#                                  Maximum Likelihood Estimation</span>
 <span class="c1">########################################################################################################################</span>
 
-<div class="viewcode-block" id="MLEstimation"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.MLEstimation">[docs]</a><span class="k">class</span> <span class="nc">MLEstimation</span><span class="p">:</span>
+<div class="viewcode-block" id="MLEstimation"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.MLEstimation">[docs]</a><span class="k">class</span> <span class="nc">MLEstimation</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Estimate the maximum likelihood parameters of a model given some data.</span>
 
@@ -382,7 +382,7 @@
         <span class="k">if</span> <span class="p">(</span><span class="n">nopt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">x0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nopt</span><span class="o">=</span><span class="n">nopt</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MLEstimation.run"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.MLEstimation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MLEstimation.run"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.MLEstimation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the maximum likelihood estimation procedure.</span>
 
@@ -487,7 +487,7 @@
 <span class="c1">#                                  Bayesian Parameter estimation</span>
 <span class="c1">########################################################################################################################</span>
 
-<div class="viewcode-block" id="BayesParameterEstimation"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.BayesParameterEstimation">[docs]</a><span class="k">class</span> <span class="nc">BayesParameterEstimation</span><span class="p">:</span>
+<div class="viewcode-block" id="BayesParameterEstimation"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.BayesParameterEstimation">[docs]</a><span class="k">class</span> <span class="nc">BayesParameterEstimation</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Estimate the parameter posterior density given some data.</span>
 
@@ -589,7 +589,7 @@
         <span class="k">if</span> <span class="p">(</span><span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">nsamples_per_chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="n">nsamples_per_chain</span><span class="p">)</span>
 
-<div class="viewcode-block" id="BayesParameterEstimation.run"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.BayesParameterEstimation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="BayesParameterEstimation.run"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.BayesParameterEstimation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the Bayesian inference procedure, i.e., sample from the parameter posterior distribution.</span>
 
@@ -626,7 +626,7 @@
 <span class="c1">#                                  Model Selection Using Information Theoretic Criteria</span>
 <span class="c1">########################################################################################################################</span>
 
-<div class="viewcode-block" id="InfoModelSelection"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.InfoModelSelection">[docs]</a><span class="k">class</span> <span class="nc">InfoModelSelection</span><span class="p">:</span>
+<div class="viewcode-block" id="InfoModelSelection"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.InfoModelSelection">[docs]</a><span class="k">class</span> <span class="nc">InfoModelSelection</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform model selection using information theoretic criteria.</span>
 
@@ -734,7 +734,7 @@
         <span class="k">if</span> <span class="p">(</span><span class="n">nopt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">x0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nopt</span><span class="o">=</span><span class="n">nopt</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">)</span>
 
-<div class="viewcode-block" id="InfoModelSelection.run"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.InfoModelSelection.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="InfoModelSelection.run"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.InfoModelSelection.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the model selection procedure, i.e. compute criterion value for all models.</span>
 
@@ -775,7 +775,7 @@
         <span class="c1"># Compute probabilities from criterion values</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_probabilities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">criterion_values</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="InfoModelSelection.sort_models"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.InfoModelSelection.sort_models">[docs]</a>    <span class="k">def</span> <span class="nf">sort_models</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="InfoModelSelection.sort_models"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.InfoModelSelection.sort_models">[docs]</a>    <span class="k">def</span> <span class="nf">sort_models</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sort models in descending order of model probability (increasing order of `criterion` value).</span>
 
@@ -876,7 +876,7 @@
 <span class="c1">########################################################################################################################</span>
 
 
-<div class="viewcode-block" id="BayesModelSelection"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.BayesModelSelection">[docs]</a><span class="k">class</span> <span class="nc">BayesModelSelection</span><span class="p">:</span>
+<div class="viewcode-block" id="BayesModelSelection"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.BayesModelSelection">[docs]</a><span class="k">class</span> <span class="nc">BayesModelSelection</span><span class="p">:</span>
 
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform model selection via Bayesian inference, i.e., compute model posterior probabilities given data.</span>
@@ -988,7 +988,7 @@
         <span class="k">if</span> <span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">nsamples_per_chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="n">nsamples_per_chain</span><span class="p">)</span>
 
-<div class="viewcode-block" id="BayesModelSelection.run"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.BayesModelSelection.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="BayesModelSelection.run"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.BayesModelSelection.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the Bayesian model selection procedure, i.e., compute model posterior probabilities.</span>
 
@@ -1039,7 +1039,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Bayesian Model Selection analysis completed!&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BayesModelSelection.sort_models"><a class="viewcode-back" href="../../inference.html#UQpy.Inference.BayesModelSelection.sort_models">[docs]</a>    <span class="k">def</span> <span class="nf">sort_models</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BayesModelSelection.sort_models"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.BayesModelSelection.sort_models">[docs]</a>    <span class="k">def</span> <span class="nf">sort_models</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sort models in descending order of model probability (increasing order of criterion value).</span>
 
@@ -1151,17 +1151,17 @@
 
 <h3>Navigation</h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../distributions.html">Distributions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samplemethods.html">SampleMethods</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../transformations.html">Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process.html">StochasticProcess</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../surrogates.html">Surrogates</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../reliability.html">Reliability</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation_doc.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runmodel_doc.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../distributions_doc.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samplemethods_doc.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../transformations_doc.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process_doc.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../surrogates_doc.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reliability_doc.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../inference_doc.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities_doc.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../news_doc.html">News</a></li>
 </ul>
 
 <div class="relations">

@@ -18,8 +18,9 @@ sys.path.insert(0, os.path.abspath('./src/UQpy/'))
 # -- Project information -----------------------------------------------------
 
 project = 'UQpy'
-copyright = '2020, SURG, JHU'
-author = ' Michael D. Shields, Dimitrs G. Giovanis'
+copyright = '2020, Michael D. Shields'
+author = 'Michael D. Shields, Dimitrs G. Giovanis, Audrey Olivier, B.S. Aakash, Mohit Singh Chauhan, Lohit Vandanapu, ' \
+         'Ketson RM dos Santos'
 
 # The full version, including alpha/beta/rc tags
 release = 'v3.0'
@@ -31,7 +32,6 @@ release = 'v3.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'recommonmark',
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.doctest',
@@ -65,7 +65,6 @@ html_theme = 'alabaster'
 
 html_theme_options = {
     "github_user": "SURG",
-    "display_github": True,
     "github_repo": "UQpy",
     "github_banner": True,
     "logo": "logo.jpg",

@@ -62,7 +62,7 @@
 <span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="o">*</span>
 
 
-<div class="viewcode-block" id="Nataf"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf">[docs]</a><span class="k">class</span> <span class="nc">Nataf</span><span class="p">:</span>
+<div class="viewcode-block" id="Nataf"><a class="viewcode-back" href="../../transformations_doc.html#UQpy.Transformations.Nataf">[docs]</a><span class="k">class</span> <span class="nc">Nataf</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Transform random variables using the Nataf or Inverse Nataf transformation</span>
 
@@ -225,7 +225,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples_x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples_z</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples_z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jacobian</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Nataf.run"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">samples_z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">jacobian</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Nataf.run"><a class="viewcode-back" href="../../transformations_doc.html#UQpy.Transformations.Nataf.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">samples_z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">jacobian</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Execute the Nataf transformation or its inverse.</span>
 
@@ -260,7 +260,7 @@
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">jacobian</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">samples_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jzx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_z2x</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_z</span><span class="p">,</span> <span class="n">jacobian</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">jacobian</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Nataf.itam"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf.itam">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Nataf.itam"><a class="viewcode-back" href="../../transformations_doc.html#UQpy.Transformations.Nataf.itam">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">itam</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">corr_x</span><span class="p">,</span>  <span class="n">itam_max_iter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">itam_threshold1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">itam_threshold2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
              <span class="n">verbose</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -385,7 +385,7 @@
 
         <span class="k">return</span> <span class="n">corr_z</span><span class="p">,</span> <span class="n">itam_error1</span><span class="p">,</span> <span class="n">itam_error2</span></div>
 
-<div class="viewcode-block" id="Nataf.distortion_z2x"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf.distortion_z2x">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Nataf.distortion_z2x"><a class="viewcode-back" href="../../transformations_doc.html#UQpy.Transformations.Nataf.distortion_z2x">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">distortion_z2x</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">corr_z</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This is a method to calculate the correlation matrix :math:`\mathbf{C_x}` of the random vector</span>
@@ -616,7 +616,7 @@
 
             <span class="k">return</span> <span class="n">samples_x</span><span class="p">,</span> <span class="n">jzx</span>
 
-<div class="viewcode-block" id="Nataf.rvs"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Nataf.rvs">[docs]</a>    <span class="k">def</span> <span class="nf">rvs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
+<div class="viewcode-block" id="Nataf.rvs"><a class="viewcode-back" href="../../transformations_doc.html#UQpy.Transformations.Nataf.rvs">[docs]</a>    <span class="k">def</span> <span class="nf">rvs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate realizations from the joint pdf of the random vector **X**.</span>
 
@@ -643,7 +643,7 @@
         <span class="k">return</span> <span class="n">samples_x</span></div></div>
 
 
-<div class="viewcode-block" id="Correlate"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Correlate">[docs]</a><span class="k">class</span> <span class="nc">Correlate</span><span class="p">:</span>
+<div class="viewcode-block" id="Correlate"><a class="viewcode-back" href="../../transformations_doc.html#UQpy.Transformations.Correlate">[docs]</a><span class="k">class</span> <span class="nc">Correlate</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class to induce correlation to standard normal random variables.</span>
 
@@ -675,7 +675,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">samples_z</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">samples_u</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
 
 
-<div class="viewcode-block" id="Decorrelate"><a class="viewcode-back" href="../../transformations.html#UQpy.Transformations.Decorrelate">[docs]</a><span class="k">class</span> <span class="nc">Decorrelate</span><span class="p">:</span>
+<div class="viewcode-block" id="Decorrelate"><a class="viewcode-back" href="../../transformations_doc.html#UQpy.Transformations.Decorrelate">[docs]</a><span class="k">class</span> <span class="nc">Decorrelate</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class to remove correlation from correlated standard normal random variables.</span>
 
@@ -744,17 +744,17 @@
 
 <h3>Navigation</h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../distributions.html">Distributions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samplemethods.html">SampleMethods</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../transformations.html">Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process.html">StochasticProcess</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../surrogates.html">Surrogates</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../reliability.html">Reliability</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation_doc.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runmodel_doc.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../distributions_doc.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samplemethods_doc.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../transformations_doc.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process_doc.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../surrogates_doc.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reliability_doc.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../inference_doc.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities_doc.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../news_doc.html">News</a></li>
 </ul>
 
 <div class="relations">

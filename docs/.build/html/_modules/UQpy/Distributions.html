@@ -82,7 +82,7 @@
 <span class="c1">########################################################################################################################</span>
 
 
-<div class="viewcode-block" id="Distribution"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Distribution">[docs]</a><span class="k">class</span> <span class="nc">Distribution</span><span class="p">:</span>
+<div class="viewcode-block" id="Distribution"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Distribution">[docs]</a><span class="k">class</span> <span class="nc">Distribution</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A parent class to all ``Distribution`` classes.</span>
 
@@ -255,7 +255,7 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order_params</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Inconsistent dimensions between order_params tuple and params dictionary.&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Distribution.update_params"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Distribution.update_params">[docs]</a>    <span class="k">def</span> <span class="nf">update_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Distribution.update_params"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Distribution.update_params">[docs]</a>    <span class="k">def</span> <span class="nf">update_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the parameters of a ``Distributions`` object.</span>
 
@@ -274,7 +274,7 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Wrong parameter name.&#39;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Distribution.get_params"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Distribution.get_params">[docs]</a>    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Distribution.get_params"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Distribution.get_params">[docs]</a>    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the parameters of a ``Distributions`` object.</span>
 
@@ -291,7 +291,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span></div></div>
 
 
-<div class="viewcode-block" id="DistributionContinuous1D"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.DistributionContinuous1D">[docs]</a><span class="k">class</span> <span class="nc">DistributionContinuous1D</span><span class="p">(</span><span class="n">Distribution</span><span class="p">):</span>
+<div class="viewcode-block" id="DistributionContinuous1D"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.DistributionContinuous1D">[docs]</a><span class="k">class</span> <span class="nc">DistributionContinuous1D</span><span class="p">(</span><span class="n">Distribution</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parent class for univariate continuous probability distributions.</span>
 
@@ -335,7 +335,7 @@
 <span class="c1">########################################################################################################################</span>
 
 
-<div class="viewcode-block" id="Beta"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Beta">[docs]</a><span class="k">class</span> <span class="nc">Beta</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="Beta"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Beta">[docs]</a><span class="k">class</span> <span class="nc">Beta</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Beta distribution having probability density function</span>
 
@@ -367,7 +367,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Cauchy"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Cauchy">[docs]</a><span class="k">class</span> <span class="nc">Cauchy</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="Cauchy"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Cauchy">[docs]</a><span class="k">class</span> <span class="nc">Cauchy</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Cauchy distribution having probability density function</span>
 
@@ -392,7 +392,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">cauchy</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ChiSquare"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.ChiSquare">[docs]</a><span class="k">class</span> <span class="nc">ChiSquare</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="ChiSquare"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.ChiSquare">[docs]</a><span class="k">class</span> <span class="nc">ChiSquare</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Chi-square distribution having probability density:</span>
 
@@ -421,7 +421,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">chi2</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Exponential"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Exponential">[docs]</a><span class="k">class</span> <span class="nc">Exponential</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="Exponential"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Exponential">[docs]</a><span class="k">class</span> <span class="nc">Exponential</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Exponential distribution having probability density function:</span>
 
@@ -449,7 +449,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">expon</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Gamma"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Gamma">[docs]</a><span class="k">class</span> <span class="nc">Gamma</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="Gamma"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Gamma">[docs]</a><span class="k">class</span> <span class="nc">Gamma</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Gamma distribution having probability density function:</span>
 
@@ -478,7 +478,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GenExtreme"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.GenExtreme">[docs]</a><span class="k">class</span> <span class="nc">GenExtreme</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="GenExtreme"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.GenExtreme">[docs]</a><span class="k">class</span> <span class="nc">GenExtreme</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generalized Extreme Value distribution having probability density function:</span>
 
@@ -511,7 +511,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">genextreme</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="InvGauss"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.InvGauss">[docs]</a><span class="k">class</span> <span class="nc">InvGauss</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="InvGauss"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.InvGauss">[docs]</a><span class="k">class</span> <span class="nc">InvGauss</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Inverse Gaussian distribution having probability density function</span>
 
@@ -540,7 +540,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">invgauss</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Laplace"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Laplace">[docs]</a><span class="k">class</span> <span class="nc">Laplace</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="Laplace"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Laplace">[docs]</a><span class="k">class</span> <span class="nc">Laplace</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Laplace distribution having probability density function</span>
 
@@ -565,7 +565,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">laplace</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Levy"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Levy">[docs]</a><span class="k">class</span> <span class="nc">Levy</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="Levy"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Levy">[docs]</a><span class="k">class</span> <span class="nc">Levy</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Levy distribution having probability density function</span>
 
@@ -592,7 +592,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">levy</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Logistic"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Logistic">[docs]</a><span class="k">class</span> <span class="nc">Logistic</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="Logistic"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Logistic">[docs]</a><span class="k">class</span> <span class="nc">Logistic</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Logistic distribution having probability density function</span>
 
@@ -617,7 +617,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">logistic</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Lognormal"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Lognormal">[docs]</a><span class="k">class</span> <span class="nc">Lognormal</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="Lognormal"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Lognormal">[docs]</a><span class="k">class</span> <span class="nc">Lognormal</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Lognormal distribution having probability density function</span>
 
@@ -647,7 +647,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">lognorm</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Maxwell"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Maxwell">[docs]</a><span class="k">class</span> <span class="nc">Maxwell</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="Maxwell"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Maxwell">[docs]</a><span class="k">class</span> <span class="nc">Maxwell</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Maxwell-Boltzmann distribution having probability density function</span>
 
@@ -673,7 +673,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">maxwell</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Normal"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Normal">[docs]</a><span class="k">class</span> <span class="nc">Normal</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="Normal"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Normal">[docs]</a><span class="k">class</span> <span class="nc">Normal</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Normal distribution having probability density function</span>
 
@@ -707,7 +707,7 @@
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;loc&#39;</span><span class="p">:</span> <span class="n">mle_loc</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">:</span> <span class="n">mle_scale</span><span class="p">}</span></div>
 
 
-<div class="viewcode-block" id="Pareto"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Pareto">[docs]</a><span class="k">class</span> <span class="nc">Pareto</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="Pareto"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Pareto">[docs]</a><span class="k">class</span> <span class="nc">Pareto</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Pareto distribution having probability density function</span>
 
@@ -736,7 +736,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">pareto</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Rayleigh"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Rayleigh">[docs]</a><span class="k">class</span> <span class="nc">Rayleigh</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="Rayleigh"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Rayleigh">[docs]</a><span class="k">class</span> <span class="nc">Rayleigh</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Rayleigh distribution having probability density function</span>
 
@@ -763,7 +763,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">rayleigh</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="TruncNorm"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.TruncNorm">[docs]</a><span class="k">class</span> <span class="nc">TruncNorm</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="TruncNorm"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.TruncNorm">[docs]</a><span class="k">class</span> <span class="nc">TruncNorm</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Truncated normal distribution</span>
 
@@ -790,7 +790,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">truncnorm</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Uniform"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Uniform">[docs]</a><span class="k">class</span> <span class="nc">Uniform</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
+<div class="viewcode-block" id="Uniform"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Uniform">[docs]</a><span class="k">class</span> <span class="nc">Uniform</span><span class="p">(</span><span class="n">DistributionContinuous1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Uniform distribution having probability density function</span>
 
@@ -818,7 +818,7 @@
 <span class="c1">#        Univariate Discrete Distributions</span>
 <span class="c1">########################################################################################################################</span>
 
-<div class="viewcode-block" id="DistributionDiscrete1D"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.DistributionDiscrete1D">[docs]</a><span class="k">class</span> <span class="nc">DistributionDiscrete1D</span><span class="p">(</span><span class="n">Distribution</span><span class="p">):</span>
+<div class="viewcode-block" id="DistributionDiscrete1D"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.DistributionDiscrete1D">[docs]</a><span class="k">class</span> <span class="nc">DistributionDiscrete1D</span><span class="p">(</span><span class="n">Distribution</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parent class for univariate discrete distributions.</span>
 
@@ -846,7 +846,7 @@
             <span class="n">size</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nsamples</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="Binomial"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Binomial">[docs]</a><span class="k">class</span> <span class="nc">Binomial</span><span class="p">(</span><span class="n">DistributionDiscrete1D</span><span class="p">):</span>
+<div class="viewcode-block" id="Binomial"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Binomial">[docs]</a><span class="k">class</span> <span class="nc">Binomial</span><span class="p">(</span><span class="n">DistributionDiscrete1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Binomial distribution having probability mass function:</span>
 
@@ -875,7 +875,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_from_scipy</span><span class="p">(</span><span class="n">scipy_name</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">binom</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Poisson"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Poisson">[docs]</a><span class="k">class</span> <span class="nc">Poisson</span><span class="p">(</span><span class="n">DistributionDiscrete1D</span><span class="p">):</span>
+<div class="viewcode-block" id="Poisson"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Poisson">[docs]</a><span class="k">class</span> <span class="nc">Poisson</span><span class="p">(</span><span class="n">DistributionDiscrete1D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Poisson distribution having probability mass function:</span>
 
@@ -906,7 +906,7 @@
 <span class="c1">#        Multivariate Continuous Distributions</span>
 <span class="c1">########################################################################################################################</span>
 
-<div class="viewcode-block" id="DistributionND"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.DistributionND">[docs]</a><span class="k">class</span> <span class="nc">DistributionND</span><span class="p">(</span><span class="n">Distribution</span><span class="p">):</span>
+<div class="viewcode-block" id="DistributionND"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.DistributionND">[docs]</a><span class="k">class</span> <span class="nc">DistributionND</span><span class="p">(</span><span class="n">Distribution</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parent class for multivariate probability distributions.</span>
 
@@ -927,7 +927,7 @@
         <span class="k">return</span> <span class="n">x</span></div>
 
 
-<div class="viewcode-block" id="MVNormal"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.MVNormal">[docs]</a><span class="k">class</span> <span class="nc">MVNormal</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
+<div class="viewcode-block" id="MVNormal"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.MVNormal">[docs]</a><span class="k">class</span> <span class="nc">MVNormal</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Multivariate normal distribution having probability density function</span>
 
@@ -991,7 +991,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: moments2return must be &quot;number_of_variables&quot;, &quot;v&quot; or &quot;mv&quot;.&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Multinomial"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Multinomial">[docs]</a><span class="k">class</span> <span class="nc">Multinomial</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
+<div class="viewcode-block" id="Multinomial"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Multinomial">[docs]</a><span class="k">class</span> <span class="nc">Multinomial</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Multinomial distribution having probability mass function</span>
 
@@ -1048,7 +1048,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: moments2return must be &quot;number_of_variables&quot;, &quot;v&quot; or &quot;mv&quot;.&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="JointInd"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.JointInd">[docs]</a><span class="k">class</span> <span class="nc">JointInd</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
+<div class="viewcode-block" id="JointInd"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.JointInd">[docs]</a><span class="k">class</span> <span class="nc">JointInd</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define a joint distribution from its independent marginals. ``JointInd`` is a child class of ``DistributionND``.</span>
 
@@ -1201,7 +1201,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">marginals</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div>
 
 
-<div class="viewcode-block" id="JointCopula"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.JointCopula">[docs]</a><span class="k">class</span> <span class="nc">JointCopula</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
+<div class="viewcode-block" id="JointCopula"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.JointCopula">[docs]</a><span class="k">class</span> <span class="nc">JointCopula</span><span class="p">(</span><span class="n">DistributionND</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define a joint distribution from a list of marginals and a copula to introduce dependency. ``JointCopula`` is a</span>
 <span class="sd">    child class of ``DistributionND``.</span>
@@ -1334,7 +1334,7 @@
 <span class="c1">#        Copulas</span>
 <span class="c1">########################################################################################################################</span>
 
-<div class="viewcode-block" id="Copula"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Copula">[docs]</a><span class="k">class</span> <span class="nc">Copula</span><span class="p">:</span>
+<div class="viewcode-block" id="Copula"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Copula">[docs]</a><span class="k">class</span> <span class="nc">Copula</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define a copula for a multivariate distribution whose dependence structure is defined with a copula.</span>
 
@@ -1400,7 +1400,7 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order_params</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Inconsistent dimensions between order_params tuple and params dictionary.&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Copula.check_marginals"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Copula.check_marginals">[docs]</a>    <span class="k">def</span> <span class="nf">check_marginals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marginals</span><span class="p">):</span>
+<div class="viewcode-block" id="Copula.check_marginals"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Copula.check_marginals">[docs]</a>    <span class="k">def</span> <span class="nf">check_marginals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marginals</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform some checks on the marginals, raise errors if necessary.</span>
 
@@ -1430,7 +1430,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="Gumbel"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Gumbel">[docs]</a><span class="k">class</span> <span class="nc">Gumbel</span><span class="p">(</span><span class="n">Copula</span><span class="p">):</span>
+<div class="viewcode-block" id="Gumbel"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Gumbel">[docs]</a><span class="k">class</span> <span class="nc">Gumbel</span><span class="p">(</span><span class="n">Copula</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Gumbel copula having cumulative distribution function</span>
 
@@ -1494,7 +1494,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Marginals should be 1d continuous distributions.&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Clayton"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Clayton">[docs]</a><span class="k">class</span> <span class="nc">Clayton</span><span class="p">(</span><span class="n">Copula</span><span class="p">):</span>
+<div class="viewcode-block" id="Clayton"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Clayton">[docs]</a><span class="k">class</span> <span class="nc">Clayton</span><span class="p">(</span><span class="n">Copula</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Clayton copula having cumulative distribution function</span>
 
@@ -1538,7 +1538,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Marginals should be 1d continuous distributions.&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Frank"><a class="viewcode-back" href="../../distributions.html#UQpy.Distributions.Frank">[docs]</a><span class="k">class</span> <span class="nc">Frank</span><span class="p">(</span><span class="n">Copula</span><span class="p">):</span>
+<div class="viewcode-block" id="Frank"><a class="viewcode-back" href="../../distributions_doc.html#UQpy.Distributions.Frank">[docs]</a><span class="k">class</span> <span class="nc">Frank</span><span class="p">(</span><span class="n">Copula</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Frank copula having cumulative distribution function</span>
 
@@ -1614,17 +1614,17 @@
 
 <h3>Navigation</h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../distributions.html">Distributions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samplemethods.html">SampleMethods</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../transformations.html">Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process.html">StochasticProcess</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../surrogates.html">Surrogates</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../reliability.html">Reliability</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation_doc.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runmodel_doc.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../distributions_doc.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samplemethods_doc.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../transformations_doc.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process_doc.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../surrogates_doc.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reliability_doc.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../inference_doc.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities_doc.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../news_doc.html">News</a></li>
 </ul>
 
 <div class="relations">

@@ -1486,15 +1486,15 @@ class RectangularSTS(STS):
     **Inputs:**
 
     * **strata_object** (``RectangularStrata`` object):
-        The `strata_object` for ``RectangularSTS`` must be an object of tyhe ``RectangularStrata`` class.
+        The `strata_object` for ``RectangularSTS`` must be an object of type ``RectangularStrata`` class.
 
     * **sts_criterion** (`str`):
-            Random or Centered samples inside the rectangular strata.
-            Options:
-                    1. 'random' - Samples are drawn randomly within the strata. \n
-                    2. 'centered' - Samples are drawn at the center of the strata. \n
+        Random or Centered samples inside the rectangular strata.
+        Options:
+        1. 'random' - Samples are drawn randomly within the strata. \n
+        2. 'centered' - Samples are drawn at the center of the strata. \n
 
-            Default: 'random'
+        Default: 'random'
 
     **Methods:**
 
@@ -1680,7 +1680,7 @@ class DelaunaySTS(STS):
 
 class RSS:
     """
-    Parent class for Refined Stratified Sampling [11]_, [12]_.
+    Parent class for Refined Stratified Sampling [10]_, [11]_.
 
     This is the parent class for all refined stratified sampling methods. This parent class only provides the
     framework for refined stratified sampling and cannot be used directly for the sampling. Sampling is done by

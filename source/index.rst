@@ -14,17 +14,17 @@ Table of contents
 .. toctree::
    :maxdepth: 2
 	
-   installation
-   runmodel
-   distributions
-   samplemethods
-   transformations
-   stochastic_process
-   surrogates
-   reliability
-   inference
-   utilities
-   news
+   installation_doc
+   runmodel_doc
+   distributions_doc
+   samplemethods_doc
+   transformations_doc
+   stochastic_process_doc
+   surrogates_doc
+   reliability_doc
+   inference_doc
+   utilities_doc
+   news_doc
 
 * :ref:`genindex`
 * :ref:`modindex`

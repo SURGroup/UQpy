@@ -73,12 +73,7 @@ def svd(matrix, rank=None, tol=None):
 
 def nearest_psd(input_matrix, iterations=10):
     """
-    A function to compute the nearest positive semi-definite matrix of a given matrix [1]_.
-
-    **References**
-
-    .. [1] Houduo Qi, Defeng Sun, A Quadratically Convergent Newton Method for Computing the Nearest Correlation
-        Matrix, SIAM Journal on Matrix Analysis and Applications 28(2):360-385, 2006.
+    A function to compute the nearest positive semi-definite matrix of a given matrix [3]_.
 
     **Inputs:**
 
@@ -116,13 +111,6 @@ def nearest_psd(input_matrix, iterations=10):
 def nearest_pd(input_matrix):
     """
     This is a method to find the nearest positive-definite matrix to input ([1]_, [2]_).
-
-    **References**
-
-    .. [1] N.J. Higham, "Computing a nearest symmetric positive semidefinite matrix" (1988),
-        https://doi.org/10.1016/0024-3795(88)90223-6.
-
-    .. [2] https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd
 
     **Inputs:**
 

@@ -72,7 +72,7 @@
 <span class="c1">########################################################################################################################</span>
 
 
-<div class="viewcode-block" id="SubsetSimulation"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.SubsetSimulation">[docs]</a><span class="k">class</span> <span class="nc">SubsetSimulation</span><span class="p">:</span>
+<div class="viewcode-block" id="SubsetSimulation"><a class="viewcode-back" href="../../reliability_doc.html#UQpy.Reliability.SubsetSimulation">[docs]</a><span class="k">class</span> <span class="nc">SubsetSimulation</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform Subset Simulation to estimate probability of failure.</span>
 
@@ -188,7 +188,7 @@
 
     <span class="c1"># -----------------------------------------------------------------------------------------------------------------------</span>
     <span class="c1"># The run function executes the chosen subset simulation algorithm</span>
-<div class="viewcode-block" id="SubsetSimulation.run"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.SubsetSimulation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SubsetSimulation.run"><a class="viewcode-back" href="../../reliability_doc.html#UQpy.Reliability.SubsetSimulation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Execute subset simulation</span>
 
@@ -508,7 +508,7 @@
 <span class="c1">########################################################################################################################</span>
 <span class="c1">#                                        First/Second order reliability method</span>
 <span class="c1">########################################################################################################################</span>
-<div class="viewcode-block" id="TaylorSeries"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.TaylorSeries">[docs]</a><span class="k">class</span> <span class="nc">TaylorSeries</span><span class="p">:</span>
+<div class="viewcode-block" id="TaylorSeries"><a class="viewcode-back" href="../../reliability_doc.html#UQpy.Reliability.TaylorSeries">[docs]</a><span class="k">class</span> <span class="nc">TaylorSeries</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform First and Second Order Reliability (FORM/SORM) methods.</span>
 
@@ -618,7 +618,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">df_step</span> <span class="o">=</span> <span class="n">df_step</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
 
-<div class="viewcode-block" id="TaylorSeries.derivatives"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.TaylorSeries.derivatives">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="TaylorSeries.derivatives"><a class="viewcode-back" href="../../reliability_doc.html#UQpy.Reliability.TaylorSeries.derivatives">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">derivatives</span><span class="p">(</span><span class="n">point_u</span><span class="p">,</span> <span class="n">point_x</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="p">,</span> <span class="n">nataf_object</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">,</span> <span class="n">point_qoi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">df_step</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
                     <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -808,7 +808,7 @@
             <span class="k">return</span> <span class="n">hessian</span></div></div>
 
 
-<div class="viewcode-block" id="FORM"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.FORM">[docs]</a><span class="k">class</span> <span class="nc">FORM</span><span class="p">(</span><span class="n">TaylorSeries</span><span class="p">):</span>
+<div class="viewcode-block" id="FORM"><a class="viewcode-back" href="../../reliability_doc.html#UQpy.Reliability.FORM">[docs]</a><span class="k">class</span> <span class="nc">FORM</span><span class="p">(</span><span class="n">TaylorSeries</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class perform the First Order Reliability Method. The ``run`` method of the ``FORM`` class can be invoked many</span>
 <span class="sd">    times and each time the results are appended to the existing ones.</span>
@@ -910,7 +910,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">pass</span>
 
-<div class="viewcode-block" id="FORM.run"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.FORM.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed_u</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="FORM.run"><a class="viewcode-back" href="../../reliability_doc.html#UQpy.Reliability.FORM.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed_u</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run FORM</span>
 
@@ -1114,7 +1114,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">call</span> <span class="o">=</span> <span class="kc">True</span></div></div>
 
 
-<div class="viewcode-block" id="SORM"><a class="viewcode-back" href="../../reliability.html#UQpy.Reliability.SORM">[docs]</a><span class="k">class</span> <span class="nc">SORM</span><span class="p">(</span><span class="n">TaylorSeries</span><span class="p">):</span>
+<div class="viewcode-block" id="SORM"><a class="viewcode-back" href="../../reliability_doc.html#UQpy.Reliability.SORM">[docs]</a><span class="k">class</span> <span class="nc">SORM</span><span class="p">(</span><span class="n">TaylorSeries</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class to perform the Second Order Reliability Method. This class is used to correct the estimated FORM probability</span>
 <span class="sd">     using second-order information.</span>
@@ -1269,17 +1269,17 @@
 
 <h3>Navigation</h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../distributions.html">Distributions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samplemethods.html">SampleMethods</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../transformations.html">Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process.html">StochasticProcess</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../surrogates.html">Surrogates</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../reliability.html">Reliability</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation_doc.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runmodel_doc.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../distributions_doc.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samplemethods_doc.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../transformations_doc.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process_doc.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../surrogates_doc.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reliability_doc.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../inference_doc.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities_doc.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../news_doc.html">News</a></li>
 </ul>
 
 <div class="relations">

@@ -55,7 +55,7 @@
 <span class="kn">from</span> <span class="nn">UQpy.RunModel</span> <span class="k">import</span> <span class="n">RunModel</span>
 
 
-<div class="viewcode-block" id="svd"><a class="viewcode-back" href="../../utilities.html#UQpy.Utilities.svd">[docs]</a><span class="k">def</span> <span class="nf">svd</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="svd"><a class="viewcode-back" href="../../utilities_doc.html#UQpy.Utilities.svd">[docs]</a><span class="k">def</span> <span class="nf">svd</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute the singular value decomposition (SVD) of a matrix.</span>
 
@@ -105,14 +105,9 @@
     <span class="k">return</span> <span class="n">u</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">v</span></div>
 
 
-<div class="viewcode-block" id="nearest_psd"><a class="viewcode-back" href="../../utilities.html#UQpy.Utilities.nearest_psd">[docs]</a><span class="k">def</span> <span class="nf">nearest_psd</span><span class="p">(</span><span class="n">input_matrix</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<div class="viewcode-block" id="nearest_psd"><a class="viewcode-back" href="../../utilities_doc.html#UQpy.Utilities.nearest_psd">[docs]</a><span class="k">def</span> <span class="nf">nearest_psd</span><span class="p">(</span><span class="n">input_matrix</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A function to compute the nearest positive semi-definite matrix of a given matrix [1]_.</span>
-
-<span class="sd">    **References**</span>
-
-<span class="sd">    .. [1] Houduo Qi, Defeng Sun, A Quadratically Convergent Newton Method for Computing the Nearest Correlation</span>
-<span class="sd">        Matrix, SIAM Journal on Matrix Analysis and Applications 28(2):360-385, 2006.</span>
+<span class="sd">    A function to compute the nearest positive semi-definite matrix of a given matrix [3]_.</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -147,16 +142,9 @@
     <span class="k">return</span> <span class="n">psd_matrix</span></div>
 
 
-<div class="viewcode-block" id="nearest_pd"><a class="viewcode-back" href="../../utilities.html#UQpy.Utilities.nearest_pd">[docs]</a><span class="k">def</span> <span class="nf">nearest_pd</span><span class="p">(</span><span class="n">input_matrix</span><span class="p">):</span>
+<div class="viewcode-block" id="nearest_pd"><a class="viewcode-back" href="../../utilities_doc.html#UQpy.Utilities.nearest_pd">[docs]</a><span class="k">def</span> <span class="nf">nearest_pd</span><span class="p">(</span><span class="n">input_matrix</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is a method to find the nearest positive-definite matrix to input ([1]_, [2]_).</span>
-
-<span class="sd">    **References**</span>
-
-<span class="sd">    .. [1] N.J. Higham, &quot;Computing a nearest symmetric positive semidefinite matrix&quot; (1988),</span>
-<span class="sd">        https://doi.org/10.1016/0024-3795(88)90223-6.</span>
-
-<span class="sd">    .. [2] https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd</span>
 
 <span class="sd">    **Inputs:**</span>
 
@@ -200,7 +188,7 @@
         <span class="k">return</span> <span class="kc">False</span>
 
 
-<div class="viewcode-block" id="run_parallel_python"><a class="viewcode-back" href="../../utilities.html#UQpy.Utilities.run_parallel_python">[docs]</a><span class="k">def</span> <span class="nf">run_parallel_python</span><span class="p">(</span><span class="n">model_script</span><span class="p">,</span> <span class="n">model_object_name</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">dict_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="run_parallel_python"><a class="viewcode-back" href="../../utilities_doc.html#UQpy.Utilities.run_parallel_python">[docs]</a><span class="k">def</span> <span class="nf">run_parallel_python</span><span class="p">(</span><span class="n">model_script</span><span class="p">,</span> <span class="n">model_object_name</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">dict_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Method needed by ``RunModel`` to execute a python model in parallel</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -215,7 +203,7 @@
     <span class="k">return</span> <span class="n">par_res</span></div>
 
 
-<div class="viewcode-block" id="gradient"><a class="viewcode-back" href="../../utilities.html#UQpy.Utilities.gradient">[docs]</a><span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="n">runmodel_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">,</span> <span class="n">df_step</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="gradient"><a class="viewcode-back" href="../../utilities_doc.html#UQpy.Utilities.gradient">[docs]</a><span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="n">runmodel_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">,</span> <span class="n">df_step</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This method estimates the gradients (1st, 2nd, mixed) of a function using a finite difference scheme in the</span>
 <span class="sd">    standard normal space. First order gradients are calculated using central finite differences.</span>
@@ -444,7 +432,7 @@
     <span class="k">return</span> <span class="n">idx</span>
 
 
-<div class="viewcode-block" id="correlation_distortion"><a class="viewcode-back" href="../../utilities.html#UQpy.Utilities.correlation_distortion">[docs]</a><span class="k">def</span> <span class="nf">correlation_distortion</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">rho</span><span class="p">):</span>
+<div class="viewcode-block" id="correlation_distortion"><a class="viewcode-back" href="../../utilities_doc.html#UQpy.Utilities.correlation_distortion">[docs]</a><span class="k">def</span> <span class="nf">correlation_distortion</span><span class="p">(</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">rho</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This method computes the corelation distortion from Gaussian distribution to any other distribution defined in</span>
 <span class="sd">        UQpy.Distributions</span>
@@ -522,17 +510,17 @@
 
 <h3>Navigation</h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../runmodel.html">RunModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../distributions.html">Distributions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samplemethods.html">SampleMethods</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../transformations.html">Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process.html">StochasticProcess</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../surrogates.html">Surrogates</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../reliability.html">Reliability</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation_doc.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runmodel_doc.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../distributions_doc.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samplemethods_doc.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../transformations_doc.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process_doc.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../surrogates_doc.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reliability_doc.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../inference_doc.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities_doc.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../news_doc.html">News</a></li>
 </ul>
 
 <div class="relations">
