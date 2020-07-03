@@ -35,7 +35,6 @@
             
   <div class="section" id="inference">
 <span id="id1"></span><h1>Inference<a class="headerlink" href="#inference" title="Permalink to this headline">¶</a></h1>
-<span class="target" id="module-UQpy.Inference"></span><p>This module contains functionality for all the Inference supported in UQpy.</p>
 <p>The goal in inference can be twofold: 1) given a model, parameterized by parameter vector <span class="math notranslate nohighlight">\(\theta\)</span>, and some data <span class="math notranslate nohighlight">\(\mathcal{D}\)</span>, learn the value of the parameter vector that best explains the data; 2) given a set of candidate models <span class="math notranslate nohighlight">\(\lbrace m_{i} \rbrace_{i=1:M}\)</span> and some data <span class="math notranslate nohighlight">\(\mathcal{D}\)</span>, learn which model best explains the data. <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> currently supports the following inference algorithms for parameter estimation (see e.g. <a class="footnote-reference brackets" href="#id9" id="id2">1</a> for theory on parameter estimation in frequentist vs. Bayesian frameworks):</p>
 <ul class="simple">
 <li><p>Maximum Likelihood estimation,</p></li>
@@ -86,11 +85,6 @@ probability distribution.</p></li>
 <p>A numerical optimization procedure is performed to compute the MLE. By default, the <cite>minimize</cite> function of the <code class="docutils literal notranslate"><span class="pre">scipy.optimize</span></code> module is used, however other optimizers can be leveraged via the <cite>optimizer</cite> input of the  <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class.</p>
 <div class="section" id="id3">
 <h3>Class Descriptions<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="UQpy.Inference.MLEstimation">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">MLEstimation</code><span class="sig-paren">(</span><em class="sig-param">model=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">method_optim=None</em>, <em class="sig-param">x0=None</em>, <em class="sig-param">iter_optim=1</em>, <em class="sig-param">bounds=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#MLEstimation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.MLEstimation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <p><strong>Note on subclassing</strong> <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code></p>
 <p>More generally, the user may want to compute a parameter estimate by minimizing an error function between the data and model outputs. This can be easily done by subclassing the <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class and overwriting the method <cite>_evaluate_func_to_minimize</cite>.</p>
 </div>
@@ -104,11 +98,6 @@ probability distribution.</p></li>
 <p>The <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> leverages the <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> or <code class="docutils literal notranslate"><span class="pre">IS</span></code> classes of the <code class="docutils literal notranslate"><span class="pre">SampleMethods</span></code> module of <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>. When creating a <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> object, an object of class <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> or <code class="docutils literal notranslate"><span class="pre">IS</span></code> is created and saved as an attribute <cite>sampler</cite>. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class then calls the <code class="docutils literal notranslate"><span class="pre">run</span></code> method of that sampler, thus the user can add samples as they wish by calling the <code class="docutils literal notranslate"><span class="pre">run</span></code> method several times.</p>
 <div class="section" id="id4">
 <h3>Class Descriptions<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="UQpy.Inference.BayesParameterEstimation">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">BayesParameterEstimation</code><span class="sig-paren">(</span><em class="sig-param">model=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">sampling_method='MCMC'</em>, <em class="sig-param">pdf_proposal_type=None</em>, <em class="sig-param">pdf_proposal_scale=None</em>, <em class="sig-param">pdf_proposal=None</em>, <em class="sig-param">pdf_proposal_params=None</em>, <em class="sig-param">algorithm=None</em>, <em class="sig-param">jump=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nburn=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#BayesParameterEstimation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.BayesParameterEstimation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </div>
 </div>
 <div class="section" id="model-selection">
@@ -127,11 +116,6 @@ probability distribution.</p></li>
 <p>A probability can be defined for each model as <span class="math notranslate nohighlight">\(P(m_{i}) \propto \exp\left(  -\frac{\text{criterion}}{2} \right)\)</span>.</p>
 <div class="section" id="id6">
 <h3>Class Descriptions<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="UQpy.Inference.InfoModelSelection">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">InfoModelSelection</code><span class="sig-paren">(</span><em class="sig-param">candidate_models=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">method=None</em>, <em class="sig-param">method_optim=None</em>, <em class="sig-param">x0=None</em>, <em class="sig-param">iter_optim=None</em>, <em class="sig-param">bounds=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">sorted_outputs=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#InfoModelSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.InfoModelSelection" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </div>
 </div>
 <div class="section" id="bayesmodelselection">
@@ -148,11 +132,6 @@ probability distribution.</p></li>
 <p>where <span class="math notranslate nohighlight">\(\theta_{1,\cdots,B}\)</span> are samples from the posterior pdf of <span class="math notranslate nohighlight">\(\theta\)</span>. In UQpy, these samples are obtained via the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class. However, note that this method is known to yield evidence estimates with large variance. Future releases of <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> will include more robust methods for computation of model evidences. Also, it is known that results of such Bayesian model selection procedure usually highly depends on the choice of prior for the parameters of the competing models, thus the user should carefully define such priors when creating instances of the <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code> class.</p>
 <div class="section" id="id8">
 <h3>Class Descriptions<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="UQpy.Inference.BayesModelSelection">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">BayesModelSelection</code><span class="sig-paren">(</span><em class="sig-param">candidate_models=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">prior_probabilities=None</em>, <em class="sig-param">pdf_proposal_type=None</em>, <em class="sig-param">pdf_proposal_scale=None</em>, <em class="sig-param">algorithm=None</em>, <em class="sig-param">jump=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nburn=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">sorted_outputs=True</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#BayesModelSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.BayesModelSelection" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <dl class="footnote brackets">
 <dt class="label" id="id9"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
 <dd><p>R.C. Smith, “Uncertainty Quantification - Theory, Implementation and Applications”, CS&amp;E, 2014</p>
@@ -249,7 +228,7 @@ probability distribution.</p></li>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2020, SURG, JHU.
+      &copy;2020, Michael D. Shields.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>

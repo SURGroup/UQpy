@@ -38,87 +38,18 @@
 <p>Reliability of a system refers to the assessment of its probability of failure (i.e the system no longer satisfies some performance measures), given the model uncertainty in the structural, environmental and load parameters. Given a vector of random variables <span class="math notranslate nohighlight">\(\textbf{X}=\{X_1, X_2, \ldots, X_n\} \in \mathcal{D}_\textbf{X}\subset \mathbb{R}^n\)</span>, where <span class="math notranslate nohighlight">\(\mathcal{D}\)</span> is the domain of interest and <span class="math notranslate nohighlight">\(f_{\textbf{X}}(\textbf{x})\)</span> is its joint probability density function then, the probability that the system will fail is defined as</p>
 <div class="math notranslate nohighlight">
 \[P_f =\mathbb{P}(g(\textbf{X}) \leq 0) = \int_{D_f} f_{\textbf{X}}(\textbf{x})d\textbf{x} = \int_{\{\textbf{X}:g(\textbf{X})\leq 0 \}} f_{\textbf{X}}(\textbf{x})d\textbf{x}\]</div>
-<p>where <span class="math notranslate nohighlight">\(g(\textbf{X})\)</span> is the so-called performance function. The reliability problem is often formulated in the standard normal space <span class="math notranslate nohighlight">\(\textbf{Y}\sim \mathcal{N}(\textbf{0}, \textbf{I}_n)\)</span>, which means that a nonlinear isoprobabilistic  transformation from the generally non-normal parameter space <span class="math notranslate nohighlight">\(\textbf{X}\sim f_{\textbf{X}}(\cdot)\)</span> to the standard normal is required (see the <code class="docutils literal notranslate"><span class="pre">Tansformations</span></code> module). The performance function in the standard normal space is denoted <span class="math notranslate nohighlight">\(G(\textbf{Y})\)</span>.</p>
-<span class="target" id="module-UQpy.Reliability"></span><p>This module contains functionality for all the reliability methods supported in UQpy.</p>
+<p>where <span class="math notranslate nohighlight">\(g(\textbf{X})\)</span> is the so-called performance function. The reliability problem is often formulated in the standard normal space <span class="math notranslate nohighlight">\(\textbf{U}\sim \mathcal{N}(\textbf{0}, \textbf{I}_n)\)</span>, which means that a nonlinear isoprobabilistic  transformation from the generally non-normal parameter space <span class="math notranslate nohighlight">\(\textbf{X}\sim f_{\textbf{X}}(\cdot)\)</span> to the standard normal is required (see the <code class="docutils literal notranslate"><span class="pre">Tansformations</span></code> module). The performance function in the standard normal space is denoted <span class="math notranslate nohighlight">\(G(\textbf{U})\)</span>. <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> does not require this transformation and can support reliability analysis for problems with arbitrarily distributed parameters.</p>
 <div class="section" id="subset-simulation">
 <h2>Subset Simulation<a class="headerlink" href="#subset-simulation" title="Permalink to this headline">¶</a></h2>
-<p>In the subset simulation method <a class="footnote-reference brackets" href="#id8" id="id2">3</a> the probability of failure <span class="math notranslate nohighlight">\(P_f\)</span>  is approximated by a product of probabilities of more frequent events. That is, the failure event <span class="math notranslate nohighlight">\(G = \{\textbf{y} \in \mathbb{R}^n:G(\textbf{y}) \leq 0\}\)</span>, is expressed as the of union of <cite>M</cite> nested intermediate events <span class="math notranslate nohighlight">\(G_1,G_2,\cdots,G_M\)</span> such that <span class="math notranslate nohighlight">\(G_1 \supset G_2 \supset \cdots \supset G_M\)</span>, and <span class="math notranslate nohighlight">\(G = \cap_{i=1}^{M} G_i\)</span>. The intermediate failure events are defined as <span class="math notranslate nohighlight">\(G_i=\{G(\textbf{y})\le b_i\}\)</span>, where <span class="math notranslate nohighlight">\(b_1&gt;b_2&gt;\cdots&gt;b_i=0\)</span> are positive thresholds selected such that each conditional probability <span class="math notranslate nohighlight">\(P(G_i | G_{i-1}), ~i=2,3,\cdots,M-1\)</span> equals a target probability value <span class="math notranslate nohighlight">\(p_0\)</span>. The probability of failure <span class="math notranslate nohighlight">\(P_f\)</span> is estimated as:</p>
+<p>In the subset simulation method <a class="footnote-reference brackets" href="#id8" id="id2">3</a> the probability of failure <span class="math notranslate nohighlight">\(P_f\)</span>  is approximated by a product of probabilities of more frequent events. That is, the failure event <span class="math notranslate nohighlight">\(G = \{\textbf{x} \in \mathbb{R}^n:G(\textbf{x}) \leq 0\}\)</span>, is expressed as the of union of <cite>M</cite> nested intermediate events <span class="math notranslate nohighlight">\(G_1,G_2,\cdots,G_M\)</span> such that <span class="math notranslate nohighlight">\(G_1 \supset G_2 \supset \cdots \supset G_M\)</span>, and <span class="math notranslate nohighlight">\(G = \cap_{i=1}^{M} G_i\)</span>. The intermediate failure events are defined as <span class="math notranslate nohighlight">\(G_i=\{G(\textbf{x})\le b_i\}\)</span>, where <span class="math notranslate nohighlight">\(b_1&gt;b_2&gt;\cdots&gt;b_i=0\)</span> are positive thresholds selected such that each conditional probability <span class="math notranslate nohighlight">\(P(G_i | G_{i-1}), ~i=2,3,\cdots,M-1\)</span> equals a target probability value <span class="math notranslate nohighlight">\(p_0\)</span>. The probability of failure <span class="math notranslate nohighlight">\(P_f\)</span> is estimated as:</p>
 <div class="math notranslate nohighlight">
 \[P_f = P\left(\cap_{i=1}^M G_i\right) = P(G_1)\prod_{i=2}^M P(G_i | G_{i-1})\]</div>
-<p>where the probability <span class="math notranslate nohighlight">\(P(G_1)\)</span> is computed through Monte Carlo simulations. In order to estimate the conditional probabilities <span class="math notranslate nohighlight">\(P(G_i|G_{i-1}),~j=2,3,\cdots,M\)</span> generation of Markov Chain Monte Carlo (MCMC) samples from the conditional pdf <span class="math notranslate nohighlight">\(p_{\textbf{Y}}(\textbf{y}|G_{i-1})\)</span> is required. In the context of subset simulation, the Markov chains are constructed through a two-step acceptance/rejection criterion. Starting from a Markov chain state <span class="math notranslate nohighlight">\(\textbf{x}\)</span> and a proposal distribution <span class="math notranslate nohighlight">\(q(\cdot|\textbf{x})\)</span>, a candidate sample <span class="math notranslate nohighlight">\(\textbf{w}\)</span> is generated. In the first stage, the sample <span class="math notranslate nohighlight">\(\textbf{w}\)</span> is accepted/rejected with probability</p>
+<p>where the probability <span class="math notranslate nohighlight">\(P(G_1)\)</span> is computed through Monte Carlo simulations. In order to estimate the conditional probabilities <span class="math notranslate nohighlight">\(P(G_i|G_{i-1}),~j=2,3,\cdots,M\)</span> generation of Markov Chain Monte Carlo (MCMC) samples from the conditional pdf <span class="math notranslate nohighlight">\(p_{\textbf{U}}(\textbf{u}|G_{i-1})\)</span> is required. In the context of subset simulation, the Markov chains are constructed through a two-step acceptance/rejection criterion. Starting from a Markov chain state <span class="math notranslate nohighlight">\(\textbf{x}\)</span> and a proposal distribution <span class="math notranslate nohighlight">\(q(\cdot|\textbf{x})\)</span>, a candidate sample <span class="math notranslate nohighlight">\(\textbf{w}\)</span> is generated. In the first stage, the sample <span class="math notranslate nohighlight">\(\textbf{w}\)</span> is accepted/rejected with probability</p>
 <div class="math notranslate nohighlight">
 \[\alpha=\min\bigg\{1, \frac{p(\textbf{w})q(\textbf{x}|\textbf{w})}{p(\textbf{x})q(\textbf{w}|\textbf{x})}\bigg\}\]</div>
 <p>and in the second stage is accepted/rejected based on whether the sample belongs to the failure region <span class="math notranslate nohighlight">\(G_j\)</span>. <code class="docutils literal notranslate"><span class="pre">SubSetSimulation</span></code> can be used with any of the available (or custom) <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> classes in the <code class="docutils literal notranslate"><span class="pre">SampleMethods</span></code> module.</p>
 <div class="section" id="class-descriptions">
 <h3>Class Descriptions<a class="headerlink" href="#class-descriptions" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="UQpy.Reliability.SubsetSimulation">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">SubsetSimulation</code><span class="sig-paren">(</span><em class="sig-param">dimension=None</em>, <em class="sig-param">pdf_proposal_type=None</em>, <em class="sig-param">pdf_proposal_scale=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">pdf_target_params=None</em>, <em class="sig-param">pdf_target_copula=None</em>, <em class="sig-param">pdf_target_copula_params=None</em>, <em class="sig-param">pdf_target_type='joint_pdf'</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">algorithm='MH'</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">nsamples_ss=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">samples_init=None</em>, <em class="sig-param">p_cond=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">model_script=None</em>, <em class="sig-param">model_object_name=None</em>, <em class="sig-param">input_template=None</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">output_script=None</em>, <em class="sig-param">output_object_name=None</em>, <em class="sig-param">n_tasks=1</em>, <em class="sig-param">cores_per_task=1</em>, <em class="sig-param">nodes=1</em>, <em class="sig-param">resume=False</em>, <em class="sig-param">model_dir=None</em>, <em class="sig-param">cluster=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#SubsetSimulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.SubsetSimulation" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Description:</p>
-<blockquote>
-<div><p>A class used to perform Subset Simulation.</p>
-<p>This class estimates probability of failure for a user-defined model using Subset Simulation</p>
-<p>References:
-S.-K. Au and J. L. Beck, “Estimation of small failure probabilities in high dimensions by
-subset simulation,” Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.</p>
-</div></blockquote>
-<dl>
-<dt>Input:</dt><dd><dl class="field-list simple">
-<dt class="field-odd">param dimension</dt>
-<dd class="field-odd"><p>A scalar value defining the dimension of target density function.
-Default: 1</p>
-</dd>
-<dt class="field-even">type dimension</dt>
-<dd class="field-even"><p>int</p>
-</dd>
-<dt class="field-odd">param nsamples_ss</dt>
-<dd class="field-odd"><p>Number of samples to generate in each conditional subset
-No Default Value: nsamples_ss must be prescribed</p>
-</dd>
-<dt class="field-even">type nsamples_ss</dt>
-<dd class="field-even"><p>int</p>
-</dd>
-<dt class="field-odd">param p_cond</dt>
-<dd class="field-odd"><p>Conditional probability at each level
-Default: p_cond = 0.1</p>
-</dd>
-<dt class="field-even">type p_cond</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>:param pdf_proposal_type, pdf_proposal_scale, pdf_target, log_pdf_target, pdf_target_params, jump, nburn,</dt><dd><p>pdf_target_copula, pdf_target_copula_params, pdf_target_type, algorithm: See MCMC in SampleMethods</p>
-</dd>
-<dt>:param model_script, model_object_name, input_template, var_names, output_script, output_object_name,</dt><dd><p>ntasks, cores_per_task, nodes, resume, verbose, model_dir, cluster: See RunModel class.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</div></blockquote>
-<p>Output:</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return self.pf</dt>
-<dd class="field-odd"><p>Probability of failure estimate</p>
-</dd>
-<dt class="field-even">Rtype self.pf</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Return self.cov1</dt>
-<dd class="field-odd"><p>Coefficient of variation - Au &amp; Beck, Independent Chains</p>
-</dd>
-<dt class="field-even">Rtype self.cov1</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Return self.cov2</dt>
-<dd class="field-odd"><p>Coefficient of variation - New Dependent Chains</p>
-</dd>
-<dt class="field-even">Rtype self.cov2</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 </div>
 <div class="section" id="taylor-series">
@@ -126,20 +57,22 @@ Default: p_cond = 0.1</p>
 <p><code class="docutils literal notranslate"><span class="pre">TaylorSeries</span></code> is a class that calculates the reliability  of a model using the First Order Reliability Method (FORM) or the Second Order Reliability Method (SORM) based on the first-order and second-order Taylor series expansion approximation of the performance function, respectively (<a class="footnote-reference brackets" href="#id6" id="id3">1</a>, <a class="footnote-reference brackets" href="#id7" id="id4">2</a>).</p>
 <p>In FORM, the performance function is linearized according to</p>
 <div class="math notranslate nohighlight">
-\[G(\textbf{Y})  \approx  G(\textbf{Y}^\star) + \nabla G_{|_{\textbf{Y}^\star}}(\textbf{Y}-\textbf{Y}^\star)^\intercal\]</div>
-<p>where <span class="math notranslate nohighlight">\(\textbf{Y}^\star\)</span> is the expansion point, <span class="math notranslate nohighlight">\(G(\textbf{Y})\)</span> is the performance function evaluated in the standard normal space and <span class="math notranslate nohighlight">\(\nabla G_{|_{\textbf{Y}^\star}}\)</span> is the gradient of <span class="math notranslate nohighlight">\(G(\textbf{Y})\)</span> evaluated at <span class="math notranslate nohighlight">\(\textbf{Y}^\star\)</span>. The probability failure can be calculated by</p>
+\[G(\textbf{U})  \approx  G(\textbf{U}^\star) + \nabla G(\textbf{U}^\star)(\textbf{U}-\textbf{U}^\star)^\intercal\]</div>
+<p>where <span class="math notranslate nohighlight">\(\textbf{U}^\star\)</span> is the expansion point, <span class="math notranslate nohighlight">\(G(\textbf{U})\)</span> is the performance function evaluated in the standard normal space and <span class="math notranslate nohighlight">\(\nabla G(\textbf{U}^\star)\)</span> is the gradient of <span class="math notranslate nohighlight">\(G(\textbf{U})\)</span> evaluated at <span class="math notranslate nohighlight">\(\textbf{U}^\star\)</span>. The probability failure can be calculated by</p>
 <div class="math notranslate nohighlight">
 \[P_{f, \text{form}} = \Phi(-\beta_{HL})\]</div>
-<p>where <span class="math notranslate nohighlight">\(\Phi(\cdot)\)</span> is the standard normal cumulative distribution function and <span class="math notranslate nohighlight">\(\beta_{HL}=||\textbf{Y}^*||\)</span> is the norm of the design point known as the Hasofer-Lind reliability index calculated with the iterative Hasofer-Lind-Rackwitz-Fiessler (HLRF) algorithm.  The convergence criteria used for HLRF algorithm are:</p>
+<p>where <span class="math notranslate nohighlight">\(\Phi(\cdot)\)</span> is the standard normal cumulative distribution function and <span class="math notranslate nohighlight">\(\beta_{HL}=||\textbf{U}^*||\)</span> is the norm of the design point known as the Hasofer-Lind reliability index calculated with the iterative Hasofer-Lind-Rackwitz-Fiessler (HLRF) algorithm.  The convergence criteria used for HLRF algorithm are:</p>
 <div class="math notranslate nohighlight">
-\[tol1: ||\textbf{Y}^{k} - \textbf{Y}^{k-1}||_2 \leq 10^{-3}\]</div>
+\[e1: ||\textbf{U}^{k} - \textbf{U}^{k-1}||_2 \leq 10^{-3}\]</div>
 <div class="math notranslate nohighlight">
-\[tol2: G(\textbf{Y}^{k}) \leq 10^{-6}\]</div>
+\[e2: ||\beta_{HL}^{k} - \beta_{HL}^{k-1}||_2 \leq 10^{-3}\]</div>
+<div class="math notranslate nohighlight">
+\[e3: ||\nabla G(\textbf{U}^{k})- \nabla G(\textbf{U}^{k-1})||_2 \leq 10^{-3}\]</div>
 <a class="reference internal image-reference" href="_images/Reliability_FORM.png"><img alt="Graphical representation of the FORM." class="align-center" src="_images/Reliability_FORM.png" style="width: 544.0px; height: 355.20000000000005px;" /></a>
 <p>In SORM the performance function is approximated by a second-order Taylor series around the design point according to</p>
 <div class="math notranslate nohighlight">
-\[G(\textbf{Y}) = G(\textbf{Y}^\star) + \nabla G_{|_{\textbf{Y}^\star}}(\textbf{Y}-\textbf{Y}^\star)^\intercal + \frac{1}{2}(\textbf{Y}-\textbf{Y}^\star)\textbf{H}(\textbf{Y}-\textbf{Y}^\star)\]</div>
-<p>where <span class="math notranslate nohighlight">\(\textbf{H}\)</span> is the Hessian matrix of the second derivatives of <span class="math notranslate nohighlight">\(G(\textbf{Y})\)</span> evaluated at <span class="math notranslate nohighlight">\(\textbf{Y}^*\)</span>. After the design point <span class="math notranslate nohighlight">\(\textbf{Y}^*\)</span> is identified and the probability of failure <span class="math notranslate nohighlight">\(P_{f, \text{form}}\)</span> is calculated with FORM a correction is made according to</p>
+\[G(\textbf{U}) = G(\textbf{U}^\star) +  \nabla G(\textbf{U}^\star)(\textbf{U}-\textbf{U}^\star)^\intercal + \frac{1}{2}(\textbf{U}-\textbf{U}^\star)\textbf{H}(\textbf{U}-\textbf{U}^\star)\]</div>
+<p>where <span class="math notranslate nohighlight">\(\textbf{H}\)</span> is the Hessian matrix of the second derivatives of <span class="math notranslate nohighlight">\(G(\textbf{U})\)</span> evaluated at <span class="math notranslate nohighlight">\(\textbf{U}^*\)</span>. After the design point <span class="math notranslate nohighlight">\(\textbf{U}^*\)</span> is identified and the probability of failure <span class="math notranslate nohighlight">\(P_{f, \text{form}}\)</span> is calculated with FORM a correction is made according to</p>
 <div class="math notranslate nohighlight">
 \[P_{f, \text{sorm}} = \Phi(-\beta_{HL}) \prod_{i=1}^{n-1} (1+\beta_{HL}\kappa_i)^{-\frac{1}{2}}\]</div>
 <p>where <span class="math notranslate nohighlight">\(\kappa_i\)</span> is the <cite>i-th</cite>  curvature.</p>
@@ -149,11 +82,6 @@ Default: p_cond = 0.1</p>
 </div>
 <div class="section" id="id5">
 <h3>Class Descriptions<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="UQpy.Reliability.TaylorSeries">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.Reliability.</code><code class="sig-name descname">TaylorSeries</code><span class="sig-paren">(</span><em class="sig-param">dimension=None</em>, <em class="sig-param">dist_name=None</em>, <em class="sig-param">dist_params=None</em>, <em class="sig-param">n_iter=1000</em>, <em class="sig-param">corr=None</em>, <em class="sig-param">method=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">algorithm=None</em>, <em class="sig-param">model_script=None</em>, <em class="sig-param">model_object_name=None</em>, <em class="sig-param">input_template=None</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">output_script=None</em>, <em class="sig-param">output_object_name=None</em>, <em class="sig-param">n_tasks=1</em>, <em class="sig-param">cores_per_task=1</em>, <em class="sig-param">nodes=1</em>, <em class="sig-param">resume=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">model_dir=None</em>, <em class="sig-param">cluster=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Reliability.html#TaylorSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Reliability.TaylorSeries" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <div class="section" id="form">
 <h4>FORM<a class="headerlink" href="#form" title="Permalink to this headline">¶</a></h4>
 </div>
@@ -259,7 +187,7 @@ Default: p_cond = 0.1</p>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2020, SURG, JHU.
+      &copy;2020, Michael D. Shields.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>

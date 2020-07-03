@@ -7,12 +7,12 @@
     <title>SampleMethods &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Transformations" href="transformations.html" />
@@ -48,7 +48,7 @@
 <div class="section" id="adding-new-latin-hypercube-design-criteria">
 <h3>Adding New Latin Hypercube Design Criteria<a class="headerlink" href="#adding-new-latin-hypercube-design-criteria" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">LHS</span></code> class offers a variety of methods for pairing the samples in a Latin hypercube design. These are specified by the <cite>criterion</cite> parameter (i.e. ‘random’, ‘centered’, ‘minmax’, ‘correlate’). However, adding a new method is straightforward. This is done by creating a new method that contains the algorithm for pairing the samples. This method takes as input the randomly generated samples in equal probability bins in each dimension and returns a set of samples that is paired according to the user’s desired criterion. The user may also pass criterion-specific parameters into the custom method. These parameters are input to the <code class="docutils literal notranslate"><span class="pre">LHS</span></code> class through the <cite>**kwargs</cite>. The output of this function should be a numpy array of at least two-dimensions with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined criterion is given below:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">criterion</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">criterion</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">lhs_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
 <span class="gp">&gt;&gt;&gt; </span>            <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -202,7 +202,7 @@
 <div class="section" id="user-defined-learning-functions">
 <h4>User-Defined Learning Functions<a class="headerlink" href="#user-defined-learning-functions" title="Permalink to this headline">¶</a></h4>
 <p>The <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class also allows new, user-defined learning functions to be specified in a straightforward way. This is done by creating a new method that contains the algorithm for selecting a new samples. This method takes as input the surrogate model, the randomly generated learning points, the number of points to be added in each iteration, any requisite parameters including a stopping criterion, existing samples, model evaluate at samples and distribution object. It returns a set of samples that are selected according to the user’s desired learning function and the corresponding learning function values. The outputs of this function should be (1) a numpy array of samples to be added; (2) the learning function values at the new sample points, and (3) a boolean stopping criterion indicating whether the iterations should continue (<cite>False</cite>) or stop (<cite>True</cite>). The numpy array of samples should be a two-dimensional array with the first dimension being the number of samples and the second dimension being the number of variables. An example user-defined learning function is given below:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">u_function</span><span class="p">(</span><span class="n">surr</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">n_add</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">qoi</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">u_function</span><span class="p">(</span><span class="n">surr</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">n_add</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">qoi</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">g</span><span class="p">,</span> <span class="n">sig</span> <span class="o">=</span> <span class="n">surr</span><span class="p">(</span><span class="n">pop</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">pop</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">sig</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">pop</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
@@ -410,7 +410,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -419,7 +419,7 @@
       &copy;2020, Michael D. Shields.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

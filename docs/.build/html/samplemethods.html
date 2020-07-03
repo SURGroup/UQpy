@@ -35,75 +35,11 @@
             
   <div class="section" id="samplemethods">
 <span id="id1"></span><h1>SampleMethods<a class="headerlink" href="#samplemethods" title="Permalink to this headline">¶</a></h1>
-<span class="target" id="module-UQpy.SampleMethods"></span><p>This module contains functionality for all the sampling methods supported in UQpy.</p>
 <div class="section" id="mcs">
 <h2>MCS<a class="headerlink" href="#mcs" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">MCS</span></code> class generates random samples from a specified probability distribution(s).  The <code class="docutils literal notranslate"><span class="pre">MCS</span></code> class utilizes the <code class="docutils literal notranslate"><span class="pre">Distributions</span></code> class to define probability distributions.  The advantage of using the <code class="docutils literal notranslate"><span class="pre">MCS</span></code> class for <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> operations, as opposed to simply generating samples with the <code class="docutils literal notranslate"><span class="pre">scipy.stats</span></code> package, is that it allows building an object containing the samples and their distributions for integration with other <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> modules.</p>
 <div class="section" id="class-descriptions">
 <h3>Class Descriptions<a class="headerlink" href="#class-descriptions" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="UQpy.SampleMethods.MCS">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MCS</code><span class="sig-paren">(</span><em class="sig-param">dist_name=None</em>, <em class="sig-param">dist_params=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Description:</p>
-<blockquote>
-<div><p>Perform Monte Carlo sampling (MCS) of independent random variables from a user-specified probability
-distribution using inverse transform method.</p>
-</div></blockquote>
-<dl>
-<dt>Input:</dt><dd><dl class="field-list simple">
-<dt class="field-odd">param dist_name</dt>
-<dd class="field-odd"><p>A string or string list containing the names of the distributions of the random variables.</p>
-</dd>
-</dl>
-<p>Distribution names must match those in the Distributions module.
-If the distribution does not match one from the Distributions module, the user must provide a custom
-distribution file with name dist_name.py. See documentation for the Distributions module. The length of the
-list must equal the dimension of the random vector.
-:type dist_name: string or string list</p>
-<dl class="field-list simple">
-<dt class="field-odd">param dist_params</dt>
-<dd class="field-odd"><p>Parameters of the distribution.</p>
-</dd>
-</dl>
-<p>Parameters for each random variable are defined as ndarrays.
-Each item in the list, dist_params[i], specifies the parameters for the corresponding distribution,
-dist_name[i]. Relevant parameters for each distribution can be found in the documentation for the
-Distributions module.
-:type dist_params: ndarray or list</p>
-<dl class="field-list simple">
-<dt class="field-odd">param nsamples</dt>
-<dd class="field-odd"><p>Number of samples to generate.</p>
-</dd>
-</dl>
-<p>No Default Value: nsamples must be prescribed.
-:type nsamples: int</p>
-<dl class="field-list simple">
-<dt class="field-odd">param var_names</dt>
-<dd class="field-odd"><p>names of variables</p>
-</dd>
-<dt class="field-even">type var_names</dt>
-<dd class="field-even"><p>list of strings</p>
-</dd>
-<dt class="field-odd">param verbose</dt>
-<dd class="field-odd"><p>A boolean declaring whether to write text to the terminal.</p>
-</dd>
-<dt class="field-even">type verbose</dt>
-<dd class="field-even"><p>bool</p>
-</dd>
-</dl>
-</dd>
-<dt>Output:</dt><dd><dl class="field-list simple">
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p>MCS.samples: Set of generated samples</p>
-</dd>
-<dt class="field-even">rtype</dt>
-<dd class="field-even"><p>MCS.samples: ndarray of dimension (nsamples, ndim)</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 </div>
 <div class="section" id="lhs">
@@ -123,121 +59,172 @@ Distributions module.
 </div>
 <div class="section" id="id2">
 <h3>Class Descriptions<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="UQpy.SampleMethods.LHS">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">LHS</code><span class="sig-paren">(</span><em class="sig-param">dist_name=None</em>, <em class="sig-param">dist_params=None</em>, <em class="sig-param">lhs_criterion='random'</em>, <em class="sig-param">lhs_metric='euclidean'</em>, <em class="sig-param">lhs_iter=100</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#LHS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.LHS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Description:</p>
-<blockquote>
-<div><p>A class that creates a Latin Hypercube Design for experiments. Samples on hypercube [0, 1]^n  and on the
-parameter space are generated.</p>
-</div></blockquote>
-<dl>
-<dt>Input:</dt><dd><dl class="field-list simple">
-<dt class="field-odd">param dimension</dt>
-<dd class="field-odd"><p>A scalar value defining the dimension of the random variables.
-If dimension is not provided then dimension is equal to the length of the dist_name.</p>
-</dd>
-<dt class="field-even">type dimension</dt>
-<dd class="field-even"><p>int</p>
-</dd>
-<dt class="field-odd">param dist_name</dt>
-<dd class="field-odd"><p>A list containing the names of the distributions of the random variables.
-Distribution names must match those in the Distributions module.
-If the distribution does not match one from the Distributions module, the user must
-provide custom_dist.py.
-The length of the string must be 1 (if all distributions are the same) or equal to
-dimension.</p>
-</dd>
-<dt class="field-even">type dist_name</dt>
-<dd class="field-even"><p>string list</p>
-</dd>
-<dt class="field-odd">param dist_params</dt>
-<dd class="field-odd"><p>Parameters of the distribution.
-Parameters for each random variable are defined as ndarrays.
-Each item in the list, dist_params[i], specifies the parameters for the corresponding
-distribution, dist[i].</p>
-</dd>
-<dt class="field-even">type dist_params</dt>
-<dd class="field-even"><p>list</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>param: distribution: An object list containing the distributions of the random variables.</dt><dd><p>Each item in the list is an object of the Distribution class (see Distributions.py).
-The list has length equal to dimension.</p>
-</dd>
-</dl>
-<dl class="field-list">
-<dt class="field-odd">type distribution</dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-<dt class="field-even">param lhs_criterion</dt>
-<dd class="field-even"><p>The criterion for generating sample points
-Options:</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>‘random’ - completely random</p></li>
-<li><p>‘centered’ - points only at the centre</p></li>
-<li><p>‘maximin’ - maximising the minimum distance between points</p></li>
-<li><p>‘correlate’ - minimizing the correlation between the points</p></li>
+</div>
+</div>
+<div class="section" id="stratified-sampling">
+<h2>Stratified Sampling<a class="headerlink" href="#stratified-sampling" title="Permalink to this headline">¶</a></h2>
+<p>Stratified sampling is a variance reduction technique that divides the parameter space into a set of disjoint and space-filling strata. Samples are then drawn from these strata in order to improve the space-filling properties of the sample design. Stratified sampling allows for unequally weighted samples, such that a Monte Carlo estimator of the quantity <span class="math notranslate nohighlight">\(E[Y]\)</span> takes the following form:</p>
+<div class="math notranslate nohighlight">
+\[E[Y] \approx \sum_{i=1}^N w_i Y_i\]</div>
+<p>where <span class="math notranslate nohighlight">\(w_i\)</span> are the sample weights and <span class="math notranslate nohighlight">\(Y_i\)</span> are the model evaluations. The individual sample weights are computed as:</p>
+<div class="math notranslate nohighlight">
+\[w_i = \dfrac{V_{i}}{N_{i}}\]</div>
+<p>where <span class="math notranslate nohighlight">\(V_{i}\le 1\)</span> is the volume of stratum <span class="math notranslate nohighlight">\(i\)</span> in the unit hypercube (i.e. the probability that a random sample will fall in stratum <span class="math notranslate nohighlight">\(i\)</span>) and <span class="math notranslate nohighlight">\(N_{i}\)</span> is the number of samples drawn from stratum <span class="math notranslate nohighlight">\(i\)</span>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">UQpy</span></code> supports several stratified sampling variations that vary from conventional stratified sampling designs to advanced gradient informed methods for adaptive stratified sampling. Stratified sampling capabilities are built in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> from three sets of classes. These class structures facilitate a highly flexible and varied range of stratified sampling designs that can be extended in a straightforward way. Specifically, the existing classes allow stratification of n-dimensional parameter spaces based on three common spatial discretizations: a rectilinear decomposition into hyper-rectangles (orthotopes), a Voronoi decomposition, and a Delaunay decomposition. The three parent classes are:</p>
+<ol class="arabic simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class defines the geometric structure of the stratification of the parameter space and it has three existing subclasses - <code class="docutils literal notranslate"><span class="pre">RectangularStrata</span></code>, <code class="docutils literal notranslate"><span class="pre">VoronoiStrata</span></code>, and <code class="docutils literal notranslate"><span class="pre">DelaunayStrata</span></code> that correspond to geometric decompositions of the parameter space based on rectilinear strata of orthotopes, strata composed of Voronoi cells, and strata composed of Delaunay simplexes respectively.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">STS</span></code> class defines a set of subclasses used to draw samples from strata defined by a <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class object.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">RSS</span></code> class defines a set of subclasses for refinement of <code class="docutils literal notranslate"><span class="pre">STS</span></code> stratified sampling designs.</p></li>
 </ol>
-</div></blockquote>
-<p>Default: ‘random’</p>
-</dd>
-<dt class="field-odd">type lhs_criterion</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-<dt class="field-even">param lhs_metric</dt>
-<dd class="field-even"><p>The distance metric to use. Supported metrics are:
-‘braycurtis’, ‘canberra’, ‘chebyshev’, ‘cityblock’, ‘correlation’, ‘cosine’, ‘dice’,
-‘euclidean’, ‘hamming’, ‘jaccard’, ‘kulsinski’, ‘mahalanobis’, ‘matching’, ‘minkowski’,
-‘rogerstanimoto’, ‘russellrao’, ‘seuclidean’, ‘sokalmichener’, ‘sokalsneath’,
-‘sqeuclidean’, ‘yule’.</p>
-<blockquote>
-<div><p>Default: ‘euclidean’.</p>
-</div></blockquote>
-</dd>
-<dt class="field-odd">type lhs_metric</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-<dt class="field-even">param lhs_iter</dt>
-<dd class="field-even"><p>The number of iteration to run. Required only for maximin, correlate and criterion.
-Default: 100</p>
-</dd>
-<dt class="field-odd">type lhs_iter</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-<dt class="field-even">param nsamples</dt>
-<dd class="field-even"><p>Number of samples to generate.
-No Default Value: nsamples must be prescribed.</p>
-</dd>
-<dt class="field-odd">type nsamples</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd>
-<dt>Output:</dt><dd><dl class="field-list simple">
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p>LHS.samples: Set of LHS samples</p>
-</dd>
-<dt class="field-even">rtype</dt>
-<dd class="field-even"><p>LHS.samples: ndarray</p>
-</dd>
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p>LHS.samplesU01: Set of uniform LHS samples on [0, 1]^dimension.</p>
-</dd>
-<dt class="field-even">rtype</dt>
-<dd class="field-even"><p>LHS.samplesU01: ndarray.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
+<div class="section" id="new-stratified-sampling-methods">
+<h3>New Stratified Sampling Methods<a class="headerlink" href="#new-stratified-sampling-methods" title="Permalink to this headline">¶</a></h3>
+<p>Extension of the stratified sampling capabilities in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> can be performed through subclassing from the three main classes. First, the user can define a new geometric decomposition of the parameter space by creating a new subclass of the <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class. To draw samples from this  new stratification, the user can define a new subclass of the <code class="docutils literal notranslate"><span class="pre">STS</span></code> class. Finally, to enable refinement of the strata based on any user-specified criteria the user can define a new subclass of the <code class="docutils literal notranslate"><span class="pre">RSS</span></code> class.</p>
+<p>In summary:</p>
+<p>To implement a new stratified sampling method based on a new stratification, the user must write two new classes:</p>
+<ol class="arabic simple">
+<li><p>A new subclass of the <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class defining the new decomposition.</p></li>
+<li><p>A new subclass of the <code class="docutils literal notranslate"><span class="pre">STS</span></code> class to perform the sampling from the newly design <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class.</p></li>
+</ol>
+<p>To implement a new refined stratified sampling method based on a new stratified, the user must write three new classes:</p>
+<ol class="arabic simple">
+<li><p>A new subclass of the <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class defining the new decomposition.</p></li>
+<li><p>A new subclass of the <code class="docutils literal notranslate"><span class="pre">STS</span></code> class to perform the sampling from the newly design <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class.</p></li>
+<li><p>A new subclass of the <code class="docutils literal notranslate"><span class="pre">RSS</span></code> class to perform the stratum refinement and subsequent sampling.</p></li>
+</ol>
+<p>The details of these subclasses and their requirements are outlined in the sections below discussing the respective classes.</p>
+</div>
+<div class="section" id="strata-class">
+<h3>Strata Class<a class="headerlink" href="#strata-class" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class is the parent class that defines the geometric decomposition of the parameter space. All geometric decompositions in the <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class are performed on the <cite>n</cite>-dimensional unit <span class="math notranslate nohighlight">\([0, 1]^n\)</span> hypercube. Specific stratifications are performed by subclassing the <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class. There are currently three stratifications available in the <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class, defined through the subclasses <code class="docutils literal notranslate"><span class="pre">RectangularStrata</span></code>, <code class="docutils literal notranslate"><span class="pre">VoronoiStrata</span></code>, and <code class="docutils literal notranslate"><span class="pre">DelaunayStrata</span></code>.</p>
+</div>
+<div class="section" id="id3">
+<h3>Class Descriptions<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="adding-a-new-strata-class">
+<h3>Adding a new <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class<a class="headerlink" href="#adding-a-new-strata-class" title="Permalink to this headline">¶</a></h3>
+<p>Adding a new type of stratification requires creating a new subclass of the <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class that defines the desired geometric decomposition. This subclass must have a <code class="docutils literal notranslate"><span class="pre">stratify</span></code> method that overwrites the corresponding method in the parent class and performs the stratification.</p>
+</div>
+<div class="section" id="sts-class">
+<h3>STS Class<a class="headerlink" href="#sts-class" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">STS</span></code> class is the parent class for stratified sampling. The various <code class="docutils literal notranslate"><span class="pre">STS</span></code> classes generate random samples from a specified probability distribution(s) using stratified sampling with strata specified by an object of one of the <code class="docutils literal notranslate"><span class="pre">Strata</span></code> classes. The <code class="docutils literal notranslate"><span class="pre">STS</span></code> class currently has three child classes - <code class="docutils literal notranslate"><span class="pre">RectangularSTS</span></code>, <code class="docutils literal notranslate"><span class="pre">VoronoiSTS</span></code>, and <code class="docutils literal notranslate"><span class="pre">DelaunaySTS</span></code> - corresponding to stratified sampling methods based rectangular, Voronoi, and Delaunay strata respectively. The following details these classes.</p>
+</div>
+<div class="section" id="id4">
+<h3>Class Descriptions<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="adding-a-new-sts-class">
+<h3>Adding a new <code class="docutils literal notranslate"><span class="pre">STS</span></code> class<a class="headerlink" href="#adding-a-new-sts-class" title="Permalink to this headline">¶</a></h3>
+<p>Adding a new stratified sampling method first requires that an appropriate <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class exists. If the new method is based on rectangular, Voronoi, or Delaunay stratification one of the existing <code class="docutils literal notranslate"><span class="pre">Strata</span></code> classes can be used. If it relies on a different type of stratification, then a new <code class="docutils literal notranslate"><span class="pre">Strata</span></code> class must be written first. Next, the new stratified sampling method must be written as a new subclass of the <code class="docutils literal notranslate"><span class="pre">STS</span></code> class containing a <code class="docutils literal notranslate"><span class="pre">create_samplesu01</span></code> method that performs the stratified sampling on the unit hypercube. This method must take input that are consistent with the <code class="docutils literal notranslate"><span class="pre">create_samplesu01</span></code> method described in the <code class="docutils literal notranslate"><span class="pre">STS</span></code> class above.</p>
+</div>
+</div>
+<div class="section" id="refined-stratified-sampling">
+<h2>Refined Stratified Sampling<a class="headerlink" href="#refined-stratified-sampling" title="Permalink to this headline">¶</a></h2>
+<p>Refined Stratified Sampling (RSS) is a sequential sampling procedure that adaptively refines the stratification of the parameter space to add samples. There are four variations of RSS currently available in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>. First, the procedure works with either rectangular stratification (i.e. using <code class="docutils literal notranslate"><span class="pre">RectangularStrata</span></code>) or Voronoi stratification (i.e. using <code class="docutils literal notranslate"><span class="pre">VoronoiStrata</span></code>). For each of these, two refinement procedures are available. The first is a randomized algorithm where strata are selected at random according to their probability weight. This algorithm is described in <a class="footnote-reference brackets" href="#id35" id="id5">11</a>. The second is a gradient-enhanced version (so-called GE-RSS) that draws samples in stata that possess both large probability weight and have high variance. This algorithm is described in <a class="footnote-reference brackets" href="#id36" id="id6">12</a>.</p>
+<div class="section" id="rss-class">
+<h3>RSS Class<a class="headerlink" href="#rss-class" title="Permalink to this headline">¶</a></h3>
+<p>All variations of Refined Stratifed Sampling are implemented in the <code class="docutils literal notranslate"><span class="pre">RSS</span></code> class. <code class="docutils literal notranslate"><span class="pre">RSS</span></code> is the parent class that includes all Refined Stratified Sampling algorithms, which are implemented as child class, specifically <code class="docutils literal notranslate"><span class="pre">RectangularRSS</span></code> and <code class="docutils literal notranslate"><span class="pre">VoronoiRSS</span></code>. The details of these classes are provided below.</p>
+<p>Extension of the RSS class for new algorithms can be accomplished by adding new a new child class with the appropriate algorithm. Depending on the type of stratification, this may require the additional development of new <code class="docutils literal notranslate"><span class="pre">Strata</span></code> and <code class="docutils literal notranslate"><span class="pre">STS</span></code> classes to accommodate the RSS. This is discussed in more details below.</p>
+</div>
+<div class="section" id="id7">
+<h3>Class Descriptions<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="adding-a-new-rss-class">
+<h3>Adding a new <code class="docutils literal notranslate"><span class="pre">RSS</span></code> class<a class="headerlink" href="#adding-a-new-rss-class" title="Permalink to this headline">¶</a></h3>
+<p>New refined stratified sampling methods can be implemented by subclassing the <code class="docutils literal notranslate"><span class="pre">RSS</span></code> class. The subclass should inherit inputs from the parent class and may also take additional inputs as necessary. Any <code class="docutils literal notranslate"><span class="pre">RSS</span></code> subclass must have a <code class="docutils literal notranslate"><span class="pre">run_rss</span></code> method that is invoked by the <code class="docutils literal notranslate"><span class="pre">RSS.run</span></code> method. The <code class="docutils literal notranslate"><span class="pre">run_rss</span></code> method is an instance method that should not take any additional arguments and executes the refined stratifed sampling algorithm.</p>
+<p>It is noted that any new <code class="docutils literal notranslate"><span class="pre">RSS</span></code> class must have a corresponding <code class="docutils literal notranslate"><span class="pre">Strata</span></code> object that defines the type of stratification and may also require a corresponding <code class="docutils literal notranslate"><span class="pre">STS</span></code> class. New <code class="docutils literal notranslate"><span class="pre">RSS</span></code> algorithms that do not utilize the existing <code class="docutils literal notranslate"><span class="pre">Strata</span></code> classes (<code class="docutils literal notranslate"><span class="pre">RectangularStrata</span></code>, <code class="docutils literal notranslate"><span class="pre">VoronoiStrata</span></code>, or <code class="docutils literal notranslate"><span class="pre">DelaunayStrata</span></code>) will require that a new <a href="#id8"><span class="problematic" id="id9">``</span></a>Strata``subclass be written.</p>
+</div>
+</div>
+<div class="section" id="simplex">
+<h2>Simplex<a class="headerlink" href="#simplex" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">Simplex</span></code> class generates uniformly distributed samples inside a simplex of dimension <span class="math notranslate nohighlight">\(n_d\)</span>, whose coordinates are expressed by <span class="math notranslate nohighlight">\(\zeta_k\)</span>. First, this class generates <span class="math notranslate nohighlight">\(n_d\)</span> independent uniform random variables on [0, 1], denoted <span class="math notranslate nohighlight">\(r_q\)</span>, then maps them to the simplex as follows:</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{M_{n_d}} = \zeta_0 + \sum_{i=1}^{n_d} \Big{[}\prod_{j=1}^{i} r_{n_d-j+1}^{\frac{1}{n_d-j+1}}\Big{]}(\zeta_i - \zeta_{i-1})\]</div>
+<p>where <span class="math notranslate nohighlight">\(M_{n_d}\)</span> is an <span class="math notranslate nohighlight">\(n_d\)</span> dimensional array defining the coordinates of new sample. This mapping is illustrated below for a two-dimensional simplex.</p>
+<a class="reference internal image-reference" href="_images/SampleMethods_Simplex.png"><img alt="Randomly generated point inside a 2-D simplex" class="align-center" src="_images/SampleMethods_Simplex.png" style="width: 339.0px; height: 261.0px;" /></a>
+<p>Additional details can be found in <a class="footnote-reference brackets" href="#id32" id="id10">8</a>.</p>
+<div class="section" id="id11">
+<h3>Class Descriptions<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="akmcs">
+<h2>AKMCS<a class="headerlink" href="#akmcs" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class generates samples adaptively using a specified Kriging-based learning function in a general Adaptive Kriging-Monte Carlo Sampling (AKMCS) framework. Based on the specified learning function, different objectives can be achieved. In particular, the <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class has learning functions for reliabliity analysis (probability of failure estimation), global optimization, best global fit surrogate models, and can also accept user-defined learning functions for these and other objectives.  Note that the term AKMCS is adopted from <a class="footnote-reference brackets" href="#id27" id="id12">3</a> although the procedure is referred to by different names depending on the specific learning function employed. For example, when applied for optimization the algorithm leverages the expected improvement function and is known under the name Efficient Global Optimization (EGO) <a class="footnote-reference brackets" href="#id28" id="id13">4</a>.</p>
+<div class="section" id="learning-functions">
+<h3>Learning Functions<a class="headerlink" href="#learning-functions" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> provides a number of built-in learning functions as well as allowing the user to proviee a custom learning function. These learning functions are described below.</p>
+<div class="section" id="u-function">
+<h4>U-Function<a class="headerlink" href="#u-function" title="Permalink to this headline">¶</a></h4>
+<p>The U-function is a learning function adopted for Kriging-based reliability analysis adopted from <a class="footnote-reference brackets" href="#id27" id="id14">3</a>. Given a Kriging model <span class="math notranslate nohighlight">\(\hat{y}(\mathbf{x})\)</span>, point estimator of its standard devaition <span class="math notranslate nohighlight">\(\sigma_{\hat{y}}(\mathbf{x})\)</span>, and a set of learning points <span class="math notranslate nohighlight">\(S\)</span>, the U-function seeks out the point <span class="math notranslate nohighlight">\(\mathbf{x}\in S\)</span> that minimizes the function:</p>
+<div class="math notranslate nohighlight">
+\[U(\mathbf{x}) = \dfrac{|\hat{y}(\mathbf{x})|}{\sigma_{\hat{y}}(\mathbf{x})}\]</div>
+<p>This point can be interpreted as the point in <span class="math notranslate nohighlight">\(S\)</span> where the Kriging model has the highest probabability of incorrectly identifying the sign of the performance function (i.e. incorrectly predicting the safe/fail state of the system).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> then adds the corresponding point to the training set, re-fits the Kriging model and repeats the procedure until the following stopping criterion in met:</p>
+<div class="math notranslate nohighlight">
+\[\min(U(\mathbf{x})) &gt; \epsilon_u\]</div>
+<p>where <span class="math notranslate nohighlight">\(\epsilon_u\)</span> is a user-defined error threshold (typically set to 2).</p>
+</div>
+<div class="section" id="weighted-u-function">
+<h4>Weighted U-Function<a class="headerlink" href="#weighted-u-function" title="Permalink to this headline">¶</a></h4>
+<p>The probability weighted U-function is a learning function for reliability analysis adapted from the U-function in <a class="footnote-reference brackets" href="#id29" id="id15">5</a>. It modifies the U-function as follows:</p>
+<div class="math notranslate nohighlight">
+\[W(\mathbf{x}) = \dfrac{\max_x[p(\mathbf{x})] - p(\mathbf{x})}{\max_x[p(\mathbf{x})]} U(\mathbf{x})\]</div>
+<p>where <span class="math notranslate nohighlight">\(p(\mathbf{x})\)</span> is the probability density function of <span class="math notranslate nohighlight">\(\mathbf{x}\)</span>. This has the effect of decreasing the learning function for points that have higher probability of occurrence. Thus, given two points with identical values of <span class="math notranslate nohighlight">\(U(x)\)</span>, the weighted learning function will select the point with higher probability of occurrence.</p>
+<p>As with the standard U-function, <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> with the weighted U-function iterates until <span class="math notranslate nohighlight">\(\min(U(\mathbf{x})) &gt; \epsilon_u\)</span> (the same stopping criterion as the U-function).</p>
+</div>
+<div class="section" id="expected-feasibility-function">
+<h4>Expected Feasibility Function<a class="headerlink" href="#expected-feasibility-function" title="Permalink to this headline">¶</a></h4>
+<p>The Expected Feasibility Function (EFF) is a learning function for reliability analysis introduced as part of the Efficient Global Reliability Analysis (EGRA) method <a class="footnote-reference brackets" href="#id30" id="id16">6</a>. The EFF provides assesses how well the true value of the peformance function, <span class="math notranslate nohighlight">\(y(\mathbf{x})\)</span>, is expected to satisfy the constraint <span class="math notranslate nohighlight">\(y(\mathbf{x}) = a\)</span> over a region <span class="math notranslate nohighlight">\(a-\epsilon \le y(\mathbf{x}) \le a+\epsilon\)</span>. It is given by:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align} EFF(\mathbf{x}) &amp;= (\hat{y}(\mathbf{x})-a)\bigg[2\Phi\bigg(\dfrac{a-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) - \Phi\bigg(\dfrac{(a-\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) - \Phi\bigg(\dfrac{(a+\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) \bigg] \\ &amp;-\sigma_{\hat{y}}(\mathbf{x})\bigg[2\phi\bigg(\dfrac{a-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) - \phi\bigg(\dfrac{(a-\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) - \phi\bigg(\dfrac{(a+\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) \bigg] \\ &amp;+ \bigg[ \Phi\bigg(\dfrac{(a+\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) - \Phi\bigg(\dfrac{(a-\epsilon)-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) \bigg] \end{align}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\Phi(\cdot)\)</span> and <span class="math notranslate nohighlight">\(\phi(\cdot)\)</span> are the standard normal cdf and pdf, respectively. For reliabilty, <span class="math notranslate nohighlight">\(a=0\)</span>, and it is suggest to use <span class="math notranslate nohighlight">\(\epsilon=2\sigma_{\hat{y}}^2\)</span>.</p>
+<p>At each iteration, the new point that is selected is the point that maximizes the EFF and iterations continue until</p>
+<div class="math notranslate nohighlight">
+\[\max_x(EFF(\mathbf{x})) &lt; \epsilon_{eff}\]</div>
+</div>
+<div class="section" id="expected-improvement-function">
+<h4>Expected Improvement Function<a class="headerlink" href="#expected-improvement-function" title="Permalink to this headline">¶</a></h4>
+<p>The Expected Improvement Function (EIF) is a Kriging-based learning function for global optimization introduced as part of the Efficient Global Optimization (EGO) method in <a class="footnote-reference brackets" href="#id28" id="id17">4</a>. The EIF seeks to find the global minimum of a function. It searches the space by placing samples at locations that maximize the expected improvement, where the improvement is defined as <span class="math notranslate nohighlight">\(I(\mathbf{x})=\max(y_{min}-y(\mathbf{x}), 0)\)</span>, where the model response <span class="math notranslate nohighlight">\(y(\mathbf{x})\)</span> is assumed to be a Gaussian random variable and <span class="math notranslate nohighlight">\(y_{min}\)</span> is the current minimum model response. The EIF is then expressed as:</p>
+<div class="math notranslate nohighlight">
+\[EIF(\mathbf{x}) = E[I(\mathbf{x})] = (y_{min}-\hat{y}(\mathbf{x})) \Phi \bigg(\dfrac{y_{min}-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg) + \sigma_{\hat{y}}(\mathbf{x})\phi \bigg(\dfrac{y_{min}-\hat{y}(\mathbf{x})}{\sigma_{\hat{y}}(\mathbf{x})} \bigg)\]</div>
+<p>where <span class="math notranslate nohighlight">\(\Phi(\cdot)\)</span> and <span class="math notranslate nohighlight">\(\phi(\cdot)\)</span> are the standard normal cdf and pdf, respectively.</p>
+<p>At each iteration, the EGO algorithm selects the point in the learning set that maximizes the EIF. The algorithm continues until the maximum number of iterations or until:</p>
+<div class="math notranslate nohighlight">
+\[\dfrac{EIF(\mathbf{x})}{|y_{min}|} &lt; \epsilon_{eif}.\]</div>
+<p>Typically a value of 0.01 is used for <span class="math notranslate nohighlight">\(\epsilon_{eif}\)</span>.</p>
+</div>
+<div class="section" id="expected-improvement-for-global-fit">
+<h4>Expected Improvement for Global Fit<a class="headerlink" href="#expected-improvement-for-global-fit" title="Permalink to this headline">¶</a></h4>
+<p>The Expected Improvement for Global Fit (EIGF) learning function aims to build the surrogate model that is the best global representation of model. It was introduced in <a class="footnote-reference brackets" href="#id31" id="id18">7</a>. It aims to balance between even space-filling design and sampling in regions of high variation and is given by:</p>
+<div class="math notranslate nohighlight">
+\[EIGF(\mathbf{x}) = (\hat{y}(\mathbf{x}) - y(\mathbf{x}_*))^2 + \sigma_{\hat{y}}(\mathbf{x})^2\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathbf{x}_*\)</span> is the point in the training set closest in distance to the point <span class="math notranslate nohighlight">\(\mathbf{x}\)</span> and <span class="math notranslate nohighlight">\(y(\mathbf{x}_*)\)</span> is the model response at that point.</p>
+<p>No stopping criterion is suggested by the authors of <a class="footnote-reference brackets" href="#id31" id="id19">7</a>, thus its implementation in <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> uses a fixed number of iterations.</p>
+</div>
+<div class="section" id="user-defined-learning-functions">
+<h4>User-Defined Learning Functions<a class="headerlink" href="#user-defined-learning-functions" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">AKMCS</span></code> class also allows new, user-defined learning functions to be specified in a straightforward way. This is done by creating a new method that contains the algorithm for selecting a new samples. This method takes as input the surrogate model, the randomly generated learning points, the number of points to be added in each iteration, any requisite parameters including a stopping criterion, existing samples, model evaluate at samples and distribution object. It returns a set of samples that are selected according to the user’s desired learning function and the corresponding learning function values. The outputs of this function should be (1) a numpy array of samples to be added; (2) the learning function values at the new sample points, and (3) a boolean stopping criterion indicating whether the iterations should continue (<cite>False</cite>) or stop (<cite>True</cite>). The numpy array of samples should be a two-dimensional array with the first dimension being the number of samples and the second dimension being the number of variables. An example user-defined learning function is given below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">u_function</span><span class="p">(</span><span class="n">surr</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">n_add</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">qoi</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">g</span><span class="p">,</span> <span class="n">sig</span> <span class="o">=</span> <span class="n">surr</span><span class="p">(</span><span class="n">pop</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">pop</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">sig</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">pop</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">u</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">/</span> <span class="n">sig</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">rows</span> <span class="o">=</span> <span class="n">u</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[:</span><span class="n">n_add</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">new_samples</span> <span class="o">=</span> <span class="n">pop</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="p">:]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">u_lf</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">indicator</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="n">u</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;u_stop&#39;</span><span class="p">]:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">indicator</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">new_samples</span><span class="p">,</span> <span class="n">u_lf</span><span class="p">,</span> <span class="n">indicator</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="id20">
+<h3>Class Descriptions<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
 </div>
 </div>
 <div class="section" id="mcmc">
 <h2>MCMC<a class="headerlink" href="#mcmc" title="Permalink to this headline">¶</a></h2>
-<p>The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution <span class="math notranslate nohighlight">\(p(x)=\frac{\tilde{p}(x)}{Z}\)</span>, where <span class="math notranslate nohighlight">\(\tilde{p}(x)\)</span> is known but <span class="math notranslate nohighlight">\(Z\)</span> is hard to compute (this will often be the case when using Bayes’ theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method, see e.g. (<a class="footnote-reference brackets" href="#id7" id="id3">1</a>, <a class="footnote-reference brackets" href="#id8" id="id4">2</a>). More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution <span class="math notranslate nohighlight">\(p(x)\)</span>.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:</p>
+<p>The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution <span class="math notranslate nohighlight">\(p(x)=\frac{\tilde{p}(x)}{Z}\)</span>, where <span class="math notranslate nohighlight">\(\tilde{p}(x)\)</span> is known but <span class="math notranslate nohighlight">\(Z\)</span> is hard to compute (this will often be the case when using Bayes’ theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method, see e.g. (<a class="footnote-reference brackets" href="#id25" id="id21">1</a>, <a class="footnote-reference brackets" href="#id26" id="id22">2</a>). More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution <span class="math notranslate nohighlight">\(p(x)\)</span>.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:</p>
 <ul class="simple">
 <li><p>initialize with a seed sample <span class="math notranslate nohighlight">\(x_{0}\)</span></p></li>
 <li><dl class="simple">
@@ -268,179 +255,8 @@ No Default Value: nsamples must be prescribed.</p>
 <li><p>the <code class="docutils literal notranslate"><span class="pre">_check_methods_proposal</span></code> method checks whether a given proposal is adequate (i.e., has <code class="docutils literal notranslate"><span class="pre">rvs</span></code> and <code class="docutils literal notranslate"><span class="pre">log_pdf</span></code>/<code class="docutils literal notranslate"><span class="pre">pdf</span></code> methods).</p></li>
 </ul>
 </div>
-<div class="section" id="id5">
-<h3>Class Descriptions<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="UQpy.SampleMethods.MCMC">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">MCMC</code><span class="sig-paren">(</span><em class="sig-param">dimension=None</em>, <em class="sig-param">pdf_proposal_type=None</em>, <em class="sig-param">pdf_proposal_scale=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">pdf_target_params=None</em>, <em class="sig-param">pdf_target_copula=None</em>, <em class="sig-param">pdf_target_copula_params=None</em>, <em class="sig-param">pdf_target_type='joint_pdf'</em>, <em class="sig-param">algorithm='MH'</em>, <em class="sig-param">jump=1</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">nburn=0</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#MCMC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.MCMC" title="Permalink to this definition">¶</a></dt>
-<dd><dl>
-<dt>Description:</dt><dd><p>Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
-This class generates samples using Metropolis-Hastings(MH), Modified Metropolis-Hastings,
-or Affine Invariant Ensemble Sampler with stretch moves.
-References:
-S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”</p>
-<blockquote>
-<div><p>Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.</p>
-</div></blockquote>
-<ol class="upperalpha simple" start="10">
-<li><dl class="simple">
-<dt>Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,</dt><dd><p>no. 1, pp. 65–80, 2010.</p>
-</dd>
-</dl>
-</li>
-</ol>
-</dd>
-<dt>Input:</dt><dd><dl class="field-list">
-<dt class="field-odd">param dimension</dt>
-<dd class="field-odd"><p>A scalar value defining the dimension of target density function.
-Default: 1</p>
-</dd>
-<dt class="field-even">type dimension</dt>
-<dd class="field-even"><p>int</p>
-</dd>
-<dt class="field-odd">param pdf_proposal_type</dt>
-<dd class="field-odd"><p>Type of proposal density function for MCMC. Only used with algorithm =’MH’ or’MMH’
-Options:</p>
-<blockquote>
-<div><p>‘Normal’ : Normal proposal density.
-‘Uniform’ : Uniform proposal density.</p>
-</div></blockquote>
-<p>Default: ‘Uniform’
-If dimension &gt; 1 and algorithm = ‘MMH’, this may be input as a list to assign different
-proposal densities to each dimension. Example pdf_proposal_name = [‘Normal’,’Uniform’].
-If dimension &gt; 1, algorithm = ‘MMH’ and this is input as a string, the proposal densities
-for all dimensions are set equal to the assigned proposal type.</p>
-</dd>
-<dt class="field-even">type pdf_proposal_type</dt>
-<dd class="field-even"><p>str or str list</p>
-</dd>
-<dt class="field-odd">param pdf_proposal_scale</dt>
-<dd class="field-odd"><p>Scale of the proposal distribution
-If algorithm == ‘MH’ or ‘MMH’</p>
-<blockquote>
-<div><dl class="simple">
-<dt>For pdf_proposal_type = ‘Uniform’</dt><dd><p>Proposal is Uniform in [x-pdf_proposal_scale/2, x+pdf_proposal_scale/2].</p>
-</dd>
-<dt>For pdf_proposal_type = ‘Normal’</dt><dd><p>Proposal is Normal with standard deviation equal to pdf_proposal_scale.</p>
-</dd>
-</dl>
-</div></blockquote>
-<dl class="simple">
-<dt>If algorithm == ‘Stretch’</dt><dd><dl class="simple">
-<dt>pdf_proposal_scale sets the scale of the stretch density.</dt><dd><p>g(z) = 1/sqrt(z) for z in [1/pdf_proposal_scale, pdf_proposal_scale].</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p>Default value: dimension x 1 list of ones.</p>
-</dd>
-<dt class="field-even">type pdf_proposal_scale</dt>
-<dd class="field-even"><p>float or float list
-If dimension &gt; 1, this may be defined as float or float list.</p>
-<blockquote>
-<div><p>If input as float, pdf_proposal_scale is assigned to all dimensions.
-If input as float list, each element is assigned to the corresponding dimension.</p>
-</div></blockquote>
-</dd>
-<dt class="field-odd">param pdf_target</dt>
-<dd class="field-odd"><p>Target density function from which to draw random samples
-The target joint probability density must be a function, or list of functions, or a string.
-If type == ‘str’</p>
-<blockquote>
-<div><dl class="simple">
-<dt>The assigned string must refer to a custom pdf defined in the file custom_pdf.py in the</dt><dd><p>working directory.</p>
-</dd>
-</dl>
-</div></blockquote>
-<dl class="simple">
-<dt>If type == function</dt><dd><p>The function must be defined in the python script calling MCMC.</p>
-</dd>
-</dl>
-<p>If dimension &gt; 1 and pdf_target_type=’marginal_pdf’, the input to pdf_target is a list of
-size [dimensions x 1] where each item of the list defines a marginal pdf.
-Default: Multivariate normal distribution having zero mean and unit standard deviation.</p>
-</dd>
-<dt class="field-even">type pdf_target</dt>
-<dd class="field-even"><p>function, function list, or str</p>
-</dd>
-<dt class="field-odd">param pdf_target_params</dt>
-<dd class="field-odd"><p>Parameters of the target pdf.</p>
-</dd>
-<dt class="field-even">type pdf_target_params</dt>
-<dd class="field-even"><p>list</p>
-</dd>
-<dt class="field-odd">param algorithm</dt>
-<dd class="field-odd"><p>Algorithm used to generate random samples.
-Options:</p>
-<blockquote>
-<div><p>‘MH’: Metropolis Hastings Algorithm
-‘MMH’: Component-wise Modified Metropolis Hastings Algorithm
-‘Stretch’: Affine Invariant Ensemble MCMC with stretch moves</p>
-</div></blockquote>
-<p>Default: ‘MMH’</p>
-</dd>
-<dt class="field-even">type algorithm</dt>
-<dd class="field-even"><p>str</p>
-</dd>
-<dt class="field-odd">param jump</dt>
-<dd class="field-odd"><p>Number of samples between accepted states of the Markov chain.
-Default value: 1 (Accepts every state)</p>
-</dd>
-<dt class="field-even">type</dt>
-<dd class="field-even"><p>jump: int</p>
-</dd>
-<dt class="field-odd">param nsamples</dt>
-<dd class="field-odd"><p>Number of samples to generate
-No Default Value: nsamples must be prescribed</p>
-</dd>
-<dt class="field-even">type nsamples</dt>
-<dd class="field-even"><p>int</p>
-</dd>
-<dt class="field-odd">param seed</dt>
-<dd class="field-odd"><p>Seed of the Markov chain(s)
-For ‘MH’ and ‘MMH’, this is a single point, defined as a numpy array of dimension</p>
-<blockquote>
-<div><p>(1 x dimension).</p>
-</div></blockquote>
-<p>For ‘Stretch’, this is a numpy array of dimension N x dimension, where N is the ensemble
-size.
-Default:</p>
-<blockquote>
-<div><p>For ‘MH’ and ‘MMH’: zeros(1 x dimension)
-For ‘Stretch’: No default, this must be specified.</p>
-</div></blockquote>
-</dd>
-<dt class="field-even">type seed</dt>
-<dd class="field-even"><p>float or numpy array</p>
-</dd>
-<dt class="field-odd">param nburn</dt>
-<dd class="field-odd"><p>Length of burn-in. Number of samples at the beginning of the chain to discard.
-This option is only used for the ‘MMH’ and ‘MH’ algorithms.
-Default: nburn = 0</p>
-</dd>
-<dt class="field-even">type nburn</dt>
-<dd class="field-even"><p>int</p>
-</dd>
-</dl>
-</dd>
-<dt>Output:</dt><dd><dl class="field-list simple">
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p>MCMC.samples: Set of MCMC samples following the target distribution</p>
-</dd>
-<dt class="field-even">rtype</dt>
-<dd class="field-even"><p>MCMC.samples: ndarray</p>
-</dd>
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p>MCMC.accept_ratio: Acceptance ratio of the MCMC samples</p>
-</dd>
-<dt class="field-even">rtype</dt>
-<dd class="field-even"><p>MCMC.accept_ratio: float</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
+<div class="section" id="id23">
+<h3>Class Descriptions<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="mh">
 <h4>MH<a class="headerlink" href="#mh" title="Permalink to this headline">¶</a></h4>
 </div>
@@ -465,91 +281,53 @@ Default: nburn = 0</p>
 \[w(\textbf{x}) = \frac{p(\textbf{x})}{q(\textbf{x})}\]</div>
 <p>If <span class="math notranslate nohighlight">\(p\)</span> is only known up to a constant, i.e., one can only evaluate <span class="math notranslate nohighlight">\(\tilde{p}(\textbf{x})\)</span>, where <span class="math notranslate nohighlight">\(p(\textbf{x})=\frac{\tilde{p}(\textbf{x})}{Z}\)</span>, IS can be used by further normalizing the weights (self-normalized IS). The following figure shows the weighted samples obtained when using IS to estimate a 2d Gaussian target distribution <span class="math notranslate nohighlight">\(p\)</span>, sampling from a uniform proposal distribution <span class="math notranslate nohighlight">\(q\)</span>.</p>
 <a class="reference internal image-reference" href="_images/SampleMethods_IS_samples.png"><img alt="IS weighted samples" class="align-center" src="_images/SampleMethods_IS_samples.png" style="width: 220.8px; height: 226.4px;" /></a>
-<div class="section" id="id6">
-<h3>Class Descriptions<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="UQpy.SampleMethods.IS">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.SampleMethods.</code><code class="sig-name descname">IS</code><span class="sig-paren">(</span><em class="sig-param">nsamples=None</em>, <em class="sig-param">pdf_proposal=None</em>, <em class="sig-param">pdf_proposal_params=None</em>, <em class="sig-param">pdf_target=None</em>, <em class="sig-param">log_pdf_target=None</em>, <em class="sig-param">pdf_target_params=None</em>, <em class="sig-param">pdf_target_copula=None</em>, <em class="sig-param">pdf_target_copula_params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/SampleMethods.html#IS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.SampleMethods.IS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Description:</p>
-<blockquote>
-<div><p>Perform Importance Sampling (IS) of independent random variables given a target and a
-proposal distribution.</p>
-</div></blockquote>
-<p>Input:</p>
-<blockquote>
-<div><dl class="field-list simple">
-<dt class="field-odd">param pdf_proposal</dt>
-<dd class="field-odd"><p>A list containing the names of the proposal distribution for each random variable.
-Distribution names must match those in the Distributions module.
-If the distribution does not match one from the Distributions module, the user
-must provide custom_dist.py. The length of the string must be 1 (if all
-distributions are the same) or equal to dimension.</p>
-</dd>
-<dt class="field-even">type pdf_proposal</dt>
-<dd class="field-even"><p>string list</p>
-</dd>
-<dt class="field-odd">param pdf_proposal_params</dt>
-<dd class="field-odd"><p>Parameters of the proposal distribution.
-Parameters for each random variable are defined as ndarrays.
-Each item in the list, pdf_proposal_params[i], specifies the parameters for the
-corresponding proposal distribution, pdf_proposal[i].</p>
-</dd>
-<dt class="field-even">type pdf_proposal_params</dt>
-<dd class="field-even"><p>list</p>
-</dd>
-<dt class="field-odd">param pdf_target</dt>
-<dd class="field-odd"><p>A list containing the names of the target distribution for each random variable.
-Distribution names must match those in the Distributions module.
-If the distribution does not match one from the Distributions module, the user
-must provide custom_dist.py. The length of the string must be 1 (if all
-distributions are the same) or equal to dimension.</p>
-</dd>
-<dt class="field-even">type pdf_target</dt>
-<dd class="field-even"><p>string list</p>
-</dd>
-<dt class="field-odd">param pdf_target_params</dt>
-<dd class="field-odd"><p>Parameters of the target distribution.
-Parameters for each random variable are defined as ndarrays.
-Each item in the list, pdf_target_params[i], specifies the parameters for the
-corresponding target distribution, pdf_target[i].</p>
-</dd>
-<dt class="field-even">type pdf_target_params</dt>
-<dd class="field-even"><p>list</p>
-</dd>
-<dt class="field-odd">param nsamples</dt>
-<dd class="field-odd"><p>Number of samples to generate.
-No Default Value: nsamples must be prescribed.</p>
-</dd>
-<dt class="field-even">type nsamples</dt>
-<dd class="field-even"><p>int</p>
-</dd>
-</dl>
-</div></blockquote>
-<dl class="simple">
-<dt>Output:</dt><dd><dl class="field-list simple">
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p>IS.samples: Set of generated samples</p>
-</dd>
-<dt class="field-even">rtype</dt>
-<dd class="field-even"><p>IS.samples: ndarray</p>
-</dd>
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p>IS.weights: Importance weights of samples</p>
-</dd>
-<dt class="field-even">rtype</dt>
-<dd class="field-even"><p>IS.weights: ndarray</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
+<div class="section" id="id24">
+<h3>Class Descriptions<a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h3>
 <dl class="footnote brackets">
-<dt class="label" id="id7"><span class="brackets"><a class="fn-backref" href="#id3">1</a></span></dt>
+<dt class="label" id="id25"><span class="brackets"><a class="fn-backref" href="#id21">1</a></span></dt>
 <dd><p>Gelman et al., “Bayesian data analysis”, Chapman and Hall/CRC, 2013</p>
 </dd>
-<dt class="label" id="id8"><span class="brackets"><a class="fn-backref" href="#id4">2</a></span></dt>
+<dt class="label" id="id26"><span class="brackets"><a class="fn-backref" href="#id22">2</a></span></dt>
 <dd><p>R.C. Smith, “Uncertainty Quantification - Theory, Implementation and Applications”, CS&amp;E, 2014</p>
+</dd>
+<dt class="label" id="id27"><span class="brackets">3</span><span class="fn-backref">(<a href="#id12">1</a>,<a href="#id14">2</a>)</span></dt>
+<dd><ol class="upperalpha simple" start="2">
+<li><p>Echard, N. Gayton and M. Lemaire, “AK-MCS: An active learning reliability method combining Kriging and Monte Carlo Simulation”, Structural Safety, Pages 145-154, 2011.</p></li>
+</ol>
+</dd>
+<dt class="label" id="id28"><span class="brackets">4</span><span class="fn-backref">(<a href="#id13">1</a>,<a href="#id17">2</a>)</span></dt>
+<dd><p>Jones, D. R., Schonlau, M., &amp; Welch, W. J. “Efficient global optimization of expensive black-box functions.” Journal of Global optimization, 13(4), 455-492, 1998.</p>
+</dd>
+<dt class="label" id="id29"><span class="brackets"><a class="fn-backref" href="#id15">5</a></span></dt>
+<dd><p>V.S. Sundar and Shields, M.D. “Reliablity analysis using adaptive Kriging surrogates and multimodel inference.” ASCE-ASME Journal of Risk and Uncertainty in Engineering Systems. Part A: Civil Engineering. 5(2): 04019004, 2019.</p>
+</dd>
+<dt class="label" id="id30"><span class="brackets"><a class="fn-backref" href="#id16">6</a></span></dt>
+<dd><p>B.J. Bichon, M.S. Eldred, L.P. Swiler, S. Mahadevan, and J.M. McFarland. “Efficient global reliablity analysis for nonlinear implicit performance functions.” AIAA Journal. 46(10) 2459-2468, (2008).</p>
+</dd>
+<dt class="label" id="id31"><span class="brackets">7</span><span class="fn-backref">(<a href="#id18">1</a>,<a href="#id19">2</a>)</span></dt>
+<dd><p>C.Q. Lam. “Sequential adaptive designs in computer experiments for response surface model fit.” PhD diss., The Ohio State University, 2008.</p>
+</dd>
+<dt class="label" id="id32"><span class="brackets"><a class="fn-backref" href="#id10">8</a></span></dt>
+<dd><ol class="upperalpha simple" start="23">
+<li><ol class="upperalpha simple" start="14">
+<li><p>Edeling, R. P. Dwight, P. Cinnella, “Simplex-stochastic collocation method with improved scalability”, Journal of Computational Physics, 310:301–328, 2016.</p></li>
+</ol>
+</li>
+</ol>
+</dd>
+<dt class="label" id="id33"><span class="brackets">9</span></dt>
+<dd><ol class="upperalpha simple" start="11">
+<li><p>Tocher. “The art of simulation.” The English Universities Press, London, UK; 1963.</p></li>
+</ol>
+</dd>
+<dt class="label" id="id34"><span class="brackets">10</span></dt>
+<dd><p>M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, “Refined Stratified Sampling for efficient Monte Carlo based uncertainty quantification,” Reliability Engineering and System Safety,vol.142, pp.310-325,2015.</p>
+</dd>
+<dt class="label" id="id35"><span class="brackets"><a class="fn-backref" href="#id5">11</a></span></dt>
+<dd><p>M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, “Refined stratified sampling for efficient Monte Carlo based uncertainty quantification.” Reliability Engineering &amp; System Safety 142 (2015): 310-325.</p>
+</dd>
+<dt class="label" id="id36"><span class="brackets"><a class="fn-backref" href="#id6">12</a></span></dt>
+<dd><p>M.D. Shields, “Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems.” Reliability Engineering &amp; System Safety 175 (2018): 207-224.</p>
 </dd>
 </dl>
 <div class="toctree-wrapper compound">
@@ -596,6 +374,10 @@ No Default Value: nsamples must be prescribed.</p>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">SampleMethods</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#mcs">MCS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#lhs">LHS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#stratified-sampling">Stratified Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#refined-stratified-sampling">Refined Stratified Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simplex">Simplex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#akmcs">AKMCS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#mcmc">MCMC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#is">IS</a></li>
 </ul>
@@ -634,7 +416,7 @@ No Default Value: nsamples must be prescribed.</p>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2020, SURG, JHU.
+      &copy;2020, Michael D. Shields.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
