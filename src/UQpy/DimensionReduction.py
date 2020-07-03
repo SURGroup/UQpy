@@ -1729,9 +1729,9 @@ class DiffusionMaps:
           DiffusionMaps(kernel_object=DiffusionMaps.gaussian_kernel);
         - Using an user defined function as DiffusionMaps(kernel_object=user_kernel);
         - Passing a ``Grassmann`` class object DiffusionMaps(kernel_object=Grassmann_Object). In this case, the user has
-         to select ``kernel_grassmann`` in order to define which kernel matrix will be used because when the the
-         ``Grassmann`` class is used in a dataset a kernel matrix can be constructed with both the left and right
-         singular eigenvectors.
+          to select ``kernel_grassmann`` in order to define which kernel matrix will be used because when the the
+          ``Grassmann`` class is used in a dataset a kernel matrix can be constructed with both the left and right
+          singular eigenvectors.
 
     * **kernel_grassmann** (`str`)
         It assumes the values 'left' and 'right' for the left and right singular eigenvectors used to compute the kernel
