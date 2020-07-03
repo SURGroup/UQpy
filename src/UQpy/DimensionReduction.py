@@ -31,18 +31,18 @@ The module currently contains the following classes:
 
 """
 
-from UQpy.Surrogates import Kriging  
-from UQpy.Utilities import * 
-from UQpy.Utilities import _nn_coord
-import scipy as sp
-import numpy as np
-import itertools
-from scipy.interpolate import LinearNDInterpolator
 import copy
+import itertools
 
+import numpy as np
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsl
 import scipy.spatial.distance as sd
+from scipy.interpolate import LinearNDInterpolator
+
+from UQpy.Surrogates import Kriging
+from UQpy.Utilities import *
+from UQpy.Utilities import _nn_coord
 
 
 ########################################################################################################################
@@ -159,6 +159,7 @@ class Grassmann:
         representing a point on the Grassmann manifold.
 
     **Methods:**
+
     """
 
     def __init__(self, distance_method=None, kernel_method=None, interp_object=None, karcher_method=None):
@@ -238,6 +239,7 @@ class Grassmann:
         * **append_samples** (`bool`)
             The attributes are replaced when manifold is called if `append_samples` is False, otherwise the lists are 
             appended.
+
         """
 
         # If manifold called for the first time 
@@ -418,6 +420,7 @@ class Grassmann:
         * **points_distance_phi** (`list`)
             Pairwise distance of points on the manifold defined by the right singular eigenvectors if `points_grassmann` 
             is not provided.
+
         """
 
         # Show an error message if no distance_object is identified.
@@ -480,6 +483,7 @@ class Grassmann:
 
         * **distance_list** (`list`)
             Pairwise distance.
+
         """
 
         # Check points for type and shape consistency.
@@ -541,6 +545,7 @@ class Grassmann:
 
         * **distance** (`float`)
             Grassmann distance between x0 and x1.
+
         """
 
         if not isinstance(x0, list) and not isinstance(x0, np.ndarray):
@@ -587,6 +592,7 @@ class Grassmann:
 
         * **distance** (`float`)
             Chordal distance between x0 and x1.
+
         """
 
         if not isinstance(x0, list) and not isinstance(x0, np.ndarray):
@@ -633,6 +639,7 @@ class Grassmann:
 
         * **distance** (`float`)
             Procrustes distance between x0 and x1.
+
         """
 
         if not isinstance(x0, list) and not isinstance(x0, np.ndarray):
@@ -679,6 +686,7 @@ class Grassmann:
 
         * **distance** (`float`)
             Projection distance between x0 and x1.
+
         """
 
         if not isinstance(x0, list) and not isinstance(x0, np.ndarray):
@@ -725,6 +733,7 @@ class Grassmann:
 
         * **distance** (`float`)
             Projection distance between x0 and x1.
+
         """
 
         if not isinstance(x0, list) and not isinstance(x0, np.ndarray):
@@ -787,6 +796,7 @@ class Grassmann:
         * **kernel_matrix_phi** (`list`)
             Kernel matrix on the manifold defined by the right singular eigenvectors if `points_grassmann` 
             is not provided.
+
         """
 
         # If points_grassmann is None get the information set using the method manifold.
@@ -852,6 +862,7 @@ class Grassmann:
 
         * **kernel_matrix** (`list`)
             Kernel matrix.
+
         """
 
         # Check points for type and shape consistency.
@@ -923,6 +934,7 @@ class Grassmann:
 
         * **distance** (`float`)
             Kernel value for x0 and x1.
+
         """
 
         if not isinstance(x0, list) and not isinstance(x0, np.ndarray):
@@ -960,6 +972,7 @@ class Grassmann:
 
         * **distance** (`float`)
             Kernel value for x0 and x1.
+
         """
 
         if not isinstance(x0, list) and not isinstance(x0, np.ndarray):
@@ -1001,6 +1014,7 @@ class Grassmann:
 
         * **points_tan**: (`list`)
             Point on the tangent space.
+
         """
 
         # Show an error message if points_grassmann is not provided.
@@ -1084,6 +1098,7 @@ class Grassmann:
 
         * **points_manifold**: (`list`)
             Point on the tangent space.
+
         """
 
         # Show an error message if points_tangent is not provided.
@@ -1177,6 +1192,7 @@ class Grassmann:
             
         * **kr_mean_phi** (`list`)
             Karcher mean for right singular eigenvectors if `points_grassmann` is not provided.
+
         """
 
         # Show an error message if karcher_object is not provided.
@@ -1249,6 +1265,7 @@ class Grassmann:
 
         * **mean_element** (`list`)
             Karcher mean.
+
         """
 
         # acc is a boolean varible to activate the Nesterov acceleration scheme.
@@ -1364,6 +1381,7 @@ class Grassmann:
 
         * **mean_element** (`list`)
             Karcher mean.
+
         """
 
         if 'tol' in kwargs.keys():
@@ -1447,6 +1465,7 @@ class Grassmann:
 
         * **frechet_var** (`list`)
             Frechet variance.
+
         """
         p_dim = []
         for i in range(len(points_grassmann)):
@@ -1506,6 +1525,7 @@ class Grassmann:
 
         * **interpolated** (`list`)
             Interpolated point.
+
         """
 
         # Find the Karcher mean.
@@ -1568,6 +1588,7 @@ class Grassmann:
 
         * **interp_point** (`ndarray`)
             Interpolated point on the tangent space.
+
         """
 
         if isinstance(samples, list):
@@ -1667,6 +1688,7 @@ class Grassmann:
 
         * **interp_point** (`ndarray`)
             Interpolated point.
+
         """
 
         if not isinstance(coordinates, list) and not isinstance(coordinates, np.ndarray):
@@ -1767,6 +1789,7 @@ class DiffusionMaps:
         Eigenvalues of the transition kernel of a Markov chanin on the data.
 
     **Methods:**
+
     """
 
     def __init__(self, alpha=0.5, n_evecs=2, sparse=False, k_neighbors=1, kernel_object=None, kernel_grassmann=None):
@@ -1848,6 +1871,7 @@ class DiffusionMaps:
 
         * **evecs** (`ndarray`)
             eigenvectors.
+
         """
 
         alpha = self.alpha
@@ -1950,6 +1974,7 @@ class DiffusionMaps:
 
         * **Kernel matrix** (`ndarray`)
             Kernel matrix.
+
         """
 
         sparse = self.sparse
@@ -2013,6 +2038,7 @@ class DiffusionMaps:
 
         * **D_inv** (`list`)
             Inverse of matrix D.
+
         """
 
         nrows = np.shape(kernel_matrix)[0]
@@ -2051,6 +2077,7 @@ class DiffusionMaps:
 
         * **d_inv** (`list`)
             Inverse of matrix D.
+
         """
 
         d = np.array(kernel_matrix.sum(axis=1)).flatten()
@@ -2079,6 +2106,7 @@ class DiffusionMaps:
 
         * **normalized_kernel** (`list` or `ndarray`)
             Normalized kernel.
+            
         """
 
         sparse = self.sparse
