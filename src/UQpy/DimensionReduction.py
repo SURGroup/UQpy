@@ -34,7 +34,6 @@ The module currently contains the following classes:
 import copy
 import itertools
 
-import numpy as np
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsl
 import scipy.spatial.distance as sd
@@ -2106,7 +2105,7 @@ class DiffusionMaps:
 
         * **normalized_kernel** (`list` or `ndarray`)
             Normalized kernel.
-            
+
         """
 
         sparse = self.sparse
