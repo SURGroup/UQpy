@@ -35,6 +35,16 @@
             
   <div class="section" id="inference">
 <span id="id1"></span><h1>Inference<a class="headerlink" href="#inference" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-UQpy.Inference"></span><p>This module contains classes and functions for statistical inference from data.</p>
+<p>The module currently contains the
+following classes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code>: Define a probabilistic model for Inference.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code>: Compute maximum likelihood parameter estimate.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">InfoModelSelection</span></code>: Perform model selection using information theoretic criteria.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code>: Perform Bayesian parameter estimation (estimate posterior density) via MCMC or IS.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BayesModelSelection</span></code>: Estimate model posterior probabilities.</p></li>
+</ul>
 <p>The goal in inference can be twofold: 1) given a model, parameterized by parameter vector <span class="math notranslate nohighlight">\(\theta\)</span>, and some data <span class="math notranslate nohighlight">\(\mathcal{D}\)</span>, learn the value of the parameter vector that best explains the data; 2) given a set of candidate models <span class="math notranslate nohighlight">\(\lbrace m_{i} \rbrace_{i=1:M}\)</span> and some data <span class="math notranslate nohighlight">\(\mathcal{D}\)</span>, learn which model best explains the data. <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> currently supports the following inference algorithms for parameter estimation (see e.g. <a class="footnote-reference brackets" href="#id9" id="id2">1</a> for theory on parameter estimation in frequentist vs. Bayesian frameworks):</p>
 <ul class="simple">
 <li><p>Maximum Likelihood estimation,</p></li>
@@ -70,6 +80,132 @@ probability distribution.</p></li>
 </div>
 <div class="section" id="class-descriptions">
 <h3>Class Descriptions<a class="headerlink" href="#class-descriptions" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.Inference.InferenceModel">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">InferenceModel</code><span class="sig-paren">(</span><em class="sig-param">nparams</em>, <em class="sig-param">runmodel_object=None</em>, <em class="sig-param">log_likelihood=None</em>, <em class="sig-param">dist_object=None</em>, <em class="sig-param">name=''</em>, <em class="sig-param">error_covariance=1.0</em>, <em class="sig-param">prior=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">**kwargs_likelihood</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#InferenceModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.InferenceModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define a probabilistic model for inference.</p>
+<p><strong>Input:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>nparams</strong> (<cite>int</cite>):</dt><dd><p>Number of parameters to be estimated.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>name</strong> (<cite>string</cite>):</dt><dd><p>Name of model - optional but useful in a model selection setting.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>runmodel_object</strong> (object of class <code class="docutils literal notranslate"><span class="pre">RunModel</span></code>):</dt><dd><p><code class="docutils literal notranslate"><span class="pre">RunModel</span></code> class object that defines the forward model. This input is required for cases 1a and 1b.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>log_likelihood</strong> (callable):</dt><dd><p>Function that defines the log-likelihood model, possibly in conjunction with the <cite>runmodel_object</cite> (cases 1b
+and 2). Default is None, and a Gaussian-error model is considered (case 1a).</p>
+<div class="line-block">
+<div class="line">If a <cite>runmodel_object</cite> is also defined (case 1b), this function is called as:</div>
+<div class="line"><cite>model_outputs = runmodel_object.run(samples=params).qoi_list</cite></div>
+<div class="line"><cite>log_likelihood(params, model_outputs, data, **kwargs_likelihood)</cite></div>
+</div>
+<div class="line-block">
+<div class="line">If no <cite>runmodel_object</cite> is defined (case 2), this function is called as:</div>
+<div class="line"><cite>log_likelihood(params, data, **kwargs_likelihood)</cite></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>kwargs_likelihood</strong>:</dt><dd><p>Keyword arguments transferred to the log-likelihood function.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>dist_object</strong> (object of class <code class="docutils literal notranslate"><span class="pre">Distribution</span></code>):</dt><dd><p>Distribution <span class="math notranslate nohighlight">\(\pi\)</span> for which to learn parameters from iid data (case 3).</p>
+<p>When creating this <code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object, the parameters to be learned should be set to <cite>None</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>error_covariance</strong> (<cite>ndarray</cite> or <cite>float</cite>):</dt><dd><p>Covariance for Gaussian error model (case 1a). It can be a scalar (in which case the covariance matrix is the
+identity times that value), a 1d <cite>ndarray</cite> in which case the covariance is assumed to be diagonal, or a full
+covariance matrix (2D <cite>ndarray</cite>). Default value is 1.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>prior</strong> (object of class <code class="docutils literal notranslate"><span class="pre">Distribution</span></code>):</dt><dd><p>Prior distribution, must have a <cite>log_pdf</cite> or <cite>pdf</cite> method.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<dl class="method">
+<dt id="UQpy.Inference.InferenceModel.evaluate_log_likelihood">
+<code class="sig-name descname">evaluate_log_likelihood</code><span class="sig-paren">(</span><em class="sig-param">params</em>, <em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#InferenceModel.evaluate_log_likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.InferenceModel.evaluate_log_likelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate the log likelihood, <cite>log p(data|params)</cite>.</p>
+<p>This method is the central piece of the <code class="docutils literal notranslate"><span class="pre">Inference</span></code> module, it is being called repeatedly by all other
+<code class="docutils literal notranslate"><span class="pre">Inference</span></code> classes to evaluate the likelihood of the data. The log-likelihood can be evaluated at several
+parameter vectors at once, i.e., <cite>params</cite> is an <cite>ndarray</cite> of shape (nsamples, nparams). If the
+<code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code> is powered by <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> the <code class="docutils literal notranslate"><span class="pre">RunModel.run</span></code> method is called here, possibly leveraging
+its parallel execution.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>params</strong> (<cite>ndarray</cite>):</dt><dd><p>Parameter vector(s) at which to evaluate the likelihood function, <cite>ndarray</cite> of shape <cite>(nsamples, nparams)</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>data</strong> (<cite>ndarray</cite>):</dt><dd><p>Data from which to learn. For case 1b, this should be an <cite>ndarray</cite> of shape <cite>(ndata, )</cite>. For case 3, it must
+be an <cite>ndarray</cite> of shape <cite>(ndata, dimension)</cite>. For other cases it must be consistent with the definition of
+the <code class="docutils literal notranslate"><span class="pre">log_likelihood</span></code> callable input.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>(<cite>ndarray</cite>):</dt><dd><p>Log-likelihood evaluated at all <cite>nsamples</cite> parameter vector values, <cite>ndarray</cite> of shape (nsamples, ).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Inference.InferenceModel.evaluate_log_posterior">
+<code class="sig-name descname">evaluate_log_posterior</code><span class="sig-paren">(</span><em class="sig-param">params</em>, <em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#InferenceModel.evaluate_log_posterior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.InferenceModel.evaluate_log_posterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate the scaled log posterior <cite>log(p(data|params)p(params))</cite>.</p>
+<p>This method is called by classes that perform Bayesian inference. If the <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code> object does not
+possess a prior, an uninformative prior <cite>p(params)=1</cite> is assumed. Warning: This is an improper prior.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>params</strong> (<cite>ndarray</cite>):</dt><dd><p>Parameter vector(s) at which to evaluate the log-posterior, <cite>ndarray</cite> of shape (nsamples, nparams).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>data</strong> (<cite>ndarray</cite>):</dt><dd><p>Data from which to learn. See <cite>evaluate_log_likelihood</cite> method for details.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>(<cite>ndarray</cite>):</dt><dd><p>Log-posterior evaluated at all <cite>nsamples</cite> parameter vector values, <cite>ndarray</cite> of shape (nsamples, ).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 <div class="section" id="parameter-estimation">
@@ -85,6 +221,106 @@ probability distribution.</p></li>
 <p>A numerical optimization procedure is performed to compute the MLE. By default, the <cite>minimize</cite> function of the <code class="docutils literal notranslate"><span class="pre">scipy.optimize</span></code> module is used, however other optimizers can be leveraged via the <cite>optimizer</cite> input of the  <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class.</p>
 <div class="section" id="id3">
 <h3>Class Descriptions<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.Inference.MLEstimation">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">MLEstimation</code><span class="sig-paren">(</span><em class="sig-param">inference_model</em>, <em class="sig-param">data</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">nopt=None</em>, <em class="sig-param">x0=None</em>, <em class="sig-param">optimizer=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">**kwargs_optimizer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#MLEstimation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.MLEstimation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the maximum likelihood parameters of a model given some data.</p>
+<p><strong>Inputs:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>inference_model</strong> (object of class <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code>):</dt><dd><p>The inference model that defines the likelihood function.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>data</strong> (<cite>ndarray</cite>):</dt><dd><p>Available data, <cite>ndarray</cite> of shape consistent with log likelihood function in <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code></p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>optimizer</strong> (callable):</dt><dd><p>Optimization algorithm used to compute the mle.</p>
+<div class="line-block">
+<div class="line">This callable takes in as first input the function to be minimized and as second input an initial guess
+(<cite>ndarray</cite> of shape (n_params, )), along with optional keyword arguments if needed, i.e., it is called within
+the code as:</div>
+<div class="line"><cite>optimizer(func, x0, **kwargs_optimizer)</cite></div>
+</div>
+<p>It must return an object with attributes <cite>x</cite> (minimizer) and <cite>fun</cite> (minimum function value).</p>
+<p>Default is <cite>scipy.optimize.minimize</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>kwargs_optimizer</strong>:</dt><dd><p>Keyword arguments that will be transferred to the optimizer.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>random_state</strong> (None or <cite>int</cite> or <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+<p>If an integer is provided, this sets the seed for an object of <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code>. Otherwise, the
+object itself can be passed directly.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>x0</strong> (<cite>ndarray</cite>):</dt><dd><p>Starting point(s) for optimization, see <cite>run_estimation</cite>. Default is <cite>None</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nopt</strong> (<cite>int</cite>):</dt><dd><p>Number of iterations that the optimization is run, starting at random initial guesses. See <cite>run_estimation</cite>.
+Default is <cite>None</cite>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>If both <cite>x0</cite> and <cite>nopt</cite> are <cite>None</cite>, the object is created but the optimization procedure is not run, one must
+call the <code class="docutils literal notranslate"><span class="pre">run</span></code> method.</p>
+<p><strong>Attributes:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>mle</strong> (<cite>ndarray</cite>):</dt><dd><p>Value of parameter vector that maximizes the likelihood function.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>max_log_like</strong> (<cite>float</cite>):</dt><dd><p>Value of the likelihood function at the MLE.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<dl class="method">
+<dt id="UQpy.Inference.MLEstimation.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nopt=1</em>, <em class="sig-param">x0=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#MLEstimation.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.MLEstimation.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the maximum likelihood estimation procedure.</p>
+<p>This function runs the optimization and updates the <cite>mle</cite> and <cite>max_log_like</cite> attributes of the class. When
+learning the parameters of a distribution, if <cite>dist_object</cite> possesses an <code class="docutils literal notranslate"><span class="pre">mle</span></code> method this method is used. If
+<cite>x0</cite> or <cite>nopt</cite> are given when creating the <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> object, this method is called automatically when the
+object is created.</p>
+<p><strong>Inputs:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>x0</strong> (<cite>ndarray</cite>):</dt><dd><p>Initial guess(es) for optimization, <cite>ndarray</cite> of shape <cite>(nstarts, nparams)</cite> or <cite>(nparams, )</cite>, where
+<cite>nstarts</cite> is the number of times the optimizer will be called. Alternatively, the user can provide input
+<cite>nopt</cite> to randomly sample initial guess(es). The identified MLE is the one that yields the maximum log
+likelihood over all calls of the optimizer.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>nopt</strong> (<cite>int</cite>):</dt><dd><p>Number of iterations that the optimization is run, starting at random initial guesses. It is only used if
+<cite>x0</cite> is not provided. Default is 1.</p>
+<p>The random initial guesses are sampled uniformly between 0 and 1, or uniformly between user-defined bounds
+if an input bounds is provided as a keyword argument to the <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> object.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
 <p><strong>Note on subclassing</strong> <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code></p>
 <p>More generally, the user may want to compute a parameter estimate by minimizing an error function between the data and model outputs. This can be easily done by subclassing the <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class and overwriting the method <cite>_evaluate_func_to_minimize</cite>.</p>
 </div>
@@ -98,6 +334,91 @@ probability distribution.</p></li>
 <p>The <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> leverages the <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> or <code class="docutils literal notranslate"><span class="pre">IS</span></code> classes of the <code class="docutils literal notranslate"><span class="pre">SampleMethods</span></code> module of <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>. When creating a <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> object, an object of class <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> or <code class="docutils literal notranslate"><span class="pre">IS</span></code> is created and saved as an attribute <cite>sampler</cite>. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class then calls the <code class="docutils literal notranslate"><span class="pre">run</span></code> method of that sampler, thus the user can add samples as they wish by calling the <code class="docutils literal notranslate"><span class="pre">run</span></code> method several times.</p>
 <div class="section" id="id4">
 <h3>Class Descriptions<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.Inference.BayesParameterEstimation">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">BayesParameterEstimation</code><span class="sig-paren">(</span><em class="sig-param">inference_model</em>, <em class="sig-param">data</em>, <em class="sig-param">sampling_class=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">**kwargs_sampler</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#BayesParameterEstimation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.BayesParameterEstimation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the parameter posterior density given some data.</p>
+<p>This class generates samples from the parameter posterior distribution using Markov Chain Monte Carlo or Importance
+Sampling. It leverages the <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> and <code class="docutils literal notranslate"><span class="pre">IS</span></code> classes from the <code class="docutils literal notranslate"><span class="pre">SampleMethods</span></code> module.</p>
+<p><strong>Inputs:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>inference_model</strong> (object of class <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code>):</dt><dd><p>The inference model that defines the likelihood function.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>data</strong> (<cite>ndarray</cite>):</dt><dd><p>Available data, <cite>ndarray</cite> of shape consistent with log-likelihood function in <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code></p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>sampling_class</strong> (class instance):</dt><dd><p>Class instance, must be a subclass of <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> or <code class="docutils literal notranslate"><span class="pre">IS</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>kwargs_sampler</strong>:</dt><dd><p>Keyword arguments of the sampling class, see <code class="docutils literal notranslate"><span class="pre">SampleMethods.MCMC</span></code> or <code class="docutils literal notranslate"><span class="pre">SampleMethods.IS</span></code>.</p>
+<p>Note on the seed for <code class="docutils literal notranslate"><span class="pre">MCMC</span></code>: if input <cite>seed</cite> is not provided, a seed (<cite>ndarray</cite> of shape
+<cite>(nchains, dimension)</cite>) is sampled from the prior pdf, which must have an <cite>rvs</cite> method.</p>
+<p>Note on the proposal for <code class="docutils literal notranslate"><span class="pre">IS</span></code>: if no input <cite>proposal</cite> is provided, the prior is used as proposal.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>random_state</strong> (None or <cite>int</cite> or <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+<p>If an integer is provided, this sets the seed for an object of <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code>. Otherwise, the
+object itself can be passed directly.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples used in MCMC/IS, see <cite>run</cite> method.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>samples_per_chain</strong> (<cite>int</cite>):</dt><dd><p>Number of samples per chain used in MCMC, see <cite>run</cite> method.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>If both <cite>nsamples</cite> and <cite>nsamples_per_chain</cite> are <cite>None</cite>, the object is created but the sampling procedure is not run,
+one must call the <code class="docutils literal notranslate"><span class="pre">run</span></code> method.</p>
+<p><strong>Attributes:</strong></p>
+<ul>
+<li><dl>
+<dt><strong>sampler</strong> (object of <code class="docutils literal notranslate"><span class="pre">SampleMethods</span></code> class specified by <cite>sampling_class</cite>):</dt><dd><p>Sampling method object, contains e.g. the posterior samples.</p>
+<p>This object is created along with the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> object, and its <cite>run</cite> method is called
+whenever the <cite>run</cite> method of the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> is called.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<dl class="method">
+<dt id="UQpy.Inference.BayesParameterEstimation.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#BayesParameterEstimation.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.BayesParameterEstimation.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the Bayesian inference procedure, i.e., sample from the parameter posterior distribution.</p>
+<p>This function calls the <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <cite>sampler</cite> attribute to generate samples from the parameter
+posterior distribution.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples used in <code class="docutils literal notranslate"><span class="pre">MCMC</span></code>/<code class="docutils literal notranslate"><span class="pre">IS</span></code></p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>samples_per_chain</strong> (<cite>int</cite>):</dt><dd><p>Number of samples per chain used in <code class="docutils literal notranslate"><span class="pre">MCMC</span></code></p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 <div class="section" id="model-selection">
@@ -116,6 +437,122 @@ probability distribution.</p></li>
 <p>A probability can be defined for each model as <span class="math notranslate nohighlight">\(P(m_{i}) \propto \exp\left(  -\frac{\text{criterion}}{2} \right)\)</span>.</p>
 <div class="section" id="id6">
 <h3>Class Descriptions<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.Inference.InfoModelSelection">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">InfoModelSelection</code><span class="sig-paren">(</span><em class="sig-param">candidate_models</em>, <em class="sig-param">data</em>, <em class="sig-param">criterion='AIC'</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">nopt=None</em>, <em class="sig-param">x0=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#InfoModelSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.InfoModelSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform model selection using information theoretic criteria.</p>
+<p>Supported criteria are BIC, AIC (default), AICc. This class leverages the <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class for maximum
+likelihood estimation, thus inputs to <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> can also be provided to <code class="docutils literal notranslate"><span class="pre">InfoModelSelection</span></code>, as lists of
+length equal to the number of models.</p>
+<p><strong>Inputs:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>candidate_models</strong> (<cite>list</cite> of <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code> objects):</dt><dd><p>Candidate models</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>data</strong> (<cite>ndarray</cite>):</dt><dd><p>Available data</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>criterion</strong> (<cite>str</cite>):</dt><dd><p>Criterion to be used (‘AIC’, ‘BIC’, ‘AICc’). Default is ‘AIC’</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>kwargs</strong>:</dt><dd><p>Additional keyword inputs to the maximum likelihood estimators.</p>
+<p>Keys must refer to input names to the <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class, and values must be lists of length <cite>nmodels</cite>,
+ordered in the same way as input <cite>candidate_models</cite>. For example, setting
+<cite>kwargs={`method’: [`Nelder-Mead’, `Powell’]}</cite> means that the Nelder-Mead minimization algorithm will be used
+for ML estimation of the first candidate model, while the Powell method will be used for the second candidate
+model.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>random_state</strong> (None or <cite>int</cite> or <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+<p>If an integer is provided, this sets the seed for an object of <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code>. Otherwise, the
+object itself can be passed directly.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>x0</strong> (<cite>list</cite> of <cite>ndarrays</cite>):</dt><dd><p>Starting points for optimization - see <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code></p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nopt</strong> (<cite>list</cite> of <cite>int</cite>):</dt><dd><p>Number of iterations for the maximization procedure - see <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code></p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>If <cite>x0</cite> and <cite>nopt</cite> are both <cite>None</cite>, the object is created but the model selection procedure is not run, one
+must then call the <code class="docutils literal notranslate"><span class="pre">run</span></code> method.</p>
+<p><strong>Attributes:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>ml_estimators</strong> (<cite>list</cite> of <cite>MLEstimation</cite> objects):</dt><dd><p><code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> results for each model (contains e.g. fitted parameters)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>criterion_values</strong> (<cite>list</cite> of <cite>floats</cite>):</dt><dd><p>Value of the criterion for all models.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>penalty_terms</strong> (<cite>list</cite> of <cite>floats</cite>):</dt><dd><p>Value of the penalty term for all models. Data fit term is then criterion_value - penalty_term.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>probabilities</strong> (<cite>list</cite> of <cite>floats</cite>):</dt><dd><p>Value of the model probabilities, computed as</p>
+<div class="math notranslate nohighlight">
+\[P(M_i|d) = \dfrac{\exp(-\Delta_i/2)}{\sum_i \exp(-\Delta_i/2)}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\Delta_i = criterion_i - min_i(criterion)\)</span></p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<dl class="method">
+<dt id="UQpy.Inference.InfoModelSelection.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nopt=1</em>, <em class="sig-param">x0=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#InfoModelSelection.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.InfoModelSelection.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the model selection procedure, i.e. compute criterion value for all models.</p>
+<p>This function calls the <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> object for each model to compute the maximum
+log-likelihood, then computes the criterion value and probability for each model.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>x0</strong> (<cite>list</cite> of <cite>ndarrays</cite>):</dt><dd><p>Starting point(s) for optimization for all models. Default is <cite>None</cite>. If not provided, see <cite>nopt</cite>. See
+<code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nopt</strong> (<cite>int</cite> or <cite>list</cite> of <cite>ints</cite>):</dt><dd><p>Number of iterations that the optimization is run, starting at random initial guesses. It is only used if
+<cite>x0</cite> is not provided. Default is 1. See <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Inference.InfoModelSelection.sort_models">
+<code class="sig-name descname">sort_models</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#InfoModelSelection.sort_models"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.InfoModelSelection.sort_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort models in descending order of model probability (increasing order of <cite>criterion</cite> value).</p>
+<p>This function sorts - in place - the attribute lists <cite>candidate_models, ml_estimators, criterion_values,
+penalty_terms</cite> and <cite>probabilities</cite> so that they are sorted from most probable to least probable model. It is a
+stand-alone function that is provided to help the user to easily visualize which model is the best.</p>
+<p>No inputs/outputs.</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 <div class="section" id="bayesmodelselection">
@@ -132,6 +569,124 @@ probability distribution.</p></li>
 <p>where <span class="math notranslate nohighlight">\(\theta_{1,\cdots,B}\)</span> are samples from the posterior pdf of <span class="math notranslate nohighlight">\(\theta\)</span>. In UQpy, these samples are obtained via the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class. However, note that this method is known to yield evidence estimates with large variance. Future releases of <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> will include more robust methods for computation of model evidences. Also, it is known that results of such Bayesian model selection procedure usually highly depends on the choice of prior for the parameters of the competing models, thus the user should carefully define such priors when creating instances of the <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code> class.</p>
 <div class="section" id="id8">
 <h3>Class Descriptions<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.Inference.BayesModelSelection">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">BayesModelSelection</code><span class="sig-paren">(</span><em class="sig-param">candidate_models</em>, <em class="sig-param">data</em>, <em class="sig-param">prior_probabilities=None</em>, <em class="sig-param">method_evidence_computation='harmonic_mean'</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#BayesModelSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.BayesModelSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform model selection via Bayesian inference, i.e., compute model posterior probabilities given data.</p>
+<p>This class leverages the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class to get samples from the parameter posterior densities.
+These samples are then used to compute the model evidence <cite>p(data|model)</cite> for all models and the model posterior
+probabilities.</p>
+<p><strong>References:</strong></p>
+<ol class="arabic simple">
+<li><p>A.E. Raftery, M.A. Newton, J.M. Satagopan, and P.N. Krivitsky. “Estimating the integrated likelihood via
+posterior simulation using the harmonic mean identity”. In Bayesian Statistics 8, pages 1–45, 2007.</p></li>
+</ol>
+<p><strong>Inputs:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>candidate_models</strong> (<cite>list</cite> of <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code> objects):</dt><dd><p>Candidate models</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>data</strong> (<cite>ndarray</cite>):</dt><dd><p>Available data</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>prior_probabilities</strong> (<cite>list</cite> of <cite>floats</cite>):</dt><dd><p>Prior probabilities of each model, default is [1/nmodels, ] * nmodels</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>method_evidence_computation</strong> (<cite>str</cite>):</dt><dd><p>as of v3, only the harmonic mean method is supported</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>kwargs</strong>:</dt><dd><p>Keyword arguments to the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class, for each model.</p>
+<p>Keys must refer to names of inputs to the <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class, and values should be lists of length
+<cite>nmodels</cite>, ordered in the same way as input candidate_models. For example, setting
+<cite>kwargs={`sampling_class’: [MH, Stretch]}</cite> means that the MH algorithm will be used for sampling from the
+parameter posterior pdf of the 1st candidate model, while the Stretch algorithm will be used for the 2nd model.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>random_state</strong> (None or <cite>int</cite> or <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+<p>If an integer is provided, this sets the seed for an object of <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code>. Otherwise, the
+object itself can be passed directly.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nsamples</strong> (<cite>list</cite> of <cite>int</cite>):</dt><dd><p>Number of samples used in <code class="docutils literal notranslate"><span class="pre">MCMC</span></code>/<code class="docutils literal notranslate"><span class="pre">IS</span></code>, for each model</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>samples_per_chain</strong> (<cite>list</cite> of <cite>int</cite>):</dt><dd><p>Number of samples per chain used in <code class="docutils literal notranslate"><span class="pre">MCMC</span></code>, for each model</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>If <cite>nsamples</cite> and <cite>nsamples_per_chain</cite> are both <cite>None</cite>, the object is created but the model selection procedure is
+not run, one must then call the <code class="docutils literal notranslate"><span class="pre">run</span></code> method.</p>
+<p><strong>Attributes:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>bayes_estimators</strong> (<cite>list</cite> of <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> objects):</dt><dd><p>Results of the Bayesian parameter estimation</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>self.evidences</strong> (<cite>list</cite> of <cite>floats</cite>):</dt><dd><p>Value of the evidence for all models</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>probabilities</strong> (<cite>list</cite> of <cite>floats</cite>):</dt><dd><p>Posterior probability for all models</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<dl class="method">
+<dt id="UQpy.Inference.BayesModelSelection.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples=None</em>, <em class="sig-param">nsamples_per_chain=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#BayesModelSelection.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.BayesModelSelection.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the Bayesian model selection procedure, i.e., compute model posterior probabilities.</p>
+<p>This function calls the <code class="docutils literal notranslate"><span class="pre">run_estimation</span></code> method of the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> object for each model to
+sample from the parameter posterior probability, then computes the model evidence and model posterior
+probability. This function updates attributes <cite>bayes_estimators</cite>, <cite>evidences</cite> and <cite>probabilities</cite>. If <cite>nsamples</cite>
+or <cite>nsamples_per_chain</cite> are given when creating the object, this method is called directly when the object is
+created. It can also be called separately.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>nsamples</strong> (<cite>list</cite> of <cite>int</cite>):</dt><dd><p>Number of samples used in <code class="docutils literal notranslate"><span class="pre">MCMC</span></code>/<code class="docutils literal notranslate"><span class="pre">IS</span></code>, for each model</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>samples_per_chain</strong> (<cite>list</cite> of <cite>int</cite>):</dt><dd><p>Number of samples per chain used in <code class="docutils literal notranslate"><span class="pre">MCMC</span></code>, for each model</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.Inference.BayesModelSelection.sort_models">
+<code class="sig-name descname">sort_models</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#BayesModelSelection.sort_models"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.BayesModelSelection.sort_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort models in descending order of model probability (increasing order of criterion value).</p>
+<p>This function sorts - in place - the attribute lists <cite>candidate_models</cite>, <cite>prior_probabilities</cite>, <cite>probabilities</cite>
+and <cite>evidences</cite> so that they are sorted from most probable to least probable model. It is a stand-alone function
+that is provided to help the user to easily visualize which model is the best.</p>
+<p>No inputs/outputs.</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="footnote brackets">
 <dt class="label" id="id9"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
 <dd><p>R.C. Smith, “Uncertainty Quantification - Theory, Implementation and Applications”, CS&amp;E, 2014</p>
