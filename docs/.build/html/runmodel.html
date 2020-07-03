@@ -35,7 +35,7 @@
             
   <div class="section" id="runmodel">
 <span id="id1"></span><h1>RunModel<a class="headerlink" href="#runmodel" title="Permalink to this headline">¶</a></h1>
-<span class="target" id="module-UQpy.RunModel"></span><div class="section" id="architecture-workflow">
+<div class="section" id="architecture-workflow">
 <h2>Architecture &amp; Workflow<a class="headerlink" href="#architecture-workflow" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> class has four basic workflows delineated in two levels. At the first level, <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> can be used for execution of either a Python computational model, in which case the model is imported and run directly, or for execution of a third-party software model. When running with a third-party software model, <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> interfaces with the model through text-based input files and serves as the “driver” to initiate the necessary calculations. At the second level, the jobs that are run by <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> can either be executed
 in series or in parallel. Within the third-party model parallel execution workflow, there are two cases, which are triggered by the <code class="docutils literal notranslate"><span class="pre">cluster</span></code> variable. In the following sections the workflow is discussed in detail.</p>
@@ -263,169 +263,6 @@ the command line as</p>
 </div>
 <div class="section" id="runmodel-class">
 <h2>RunModel Class<a class="headerlink" href="#runmodel-class" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="UQpy.RunModel.RunModel">
-<em class="property">class </em><code class="sig-prename descclassname">UQpy.RunModel.</code><code class="sig-name descname">RunModel</code><span class="sig-paren">(</span><em class="sig-param">samples=None</em>, <em class="sig-param">model_script=None</em>, <em class="sig-param">model_object_name=None</em>, <em class="sig-param">input_template=None</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">output_script=None</em>, <em class="sig-param">output_object_name=None</em>, <em class="sig-param">ntasks=1</em>, <em class="sig-param">cores_per_task=1</em>, <em class="sig-param">nodes=1</em>, <em class="sig-param">resume=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">model_dir=None</em>, <em class="sig-param">cluster=False</em>, <em class="sig-param">fmt=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/RunModel.html#RunModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.RunModel.RunModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run a computational model at specified sample points.</p>
-<p>This class is the interface between UQpy and computational models. The model is called in a Python script whose
-name must be passed as one the arguments to the RunModel call. If the model is in Python, UQpy can interface with
-the model without the need for an input file. In this case, UQpy imports the model module and executes the model
-object. If the model is not in Python, RunModel must be provided the name of a template input file and an output
-Python script along with the name of the Python script that runs the model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>samples</strong> – Samples to be passed as inputs to the model. Samples can be passed either as an ndarray or a list.</p>
-</dd>
-</dl>
-<p>If an ndarray is passed, each row of the ndarray contains one set of samples required for one execution of the
-model. (The first dimension of the ndarray is considered to be the number of rows.)
-If a list is passed, each item of the list contains one set of samples required for one execution of the model.
-:type samples: ndarray or list</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model_script</strong> – The filename (with extension) of the Python script which contains commands to execute the</p>
-</dd>
-</dl>
-<p>model. The model script must be present in the current working directory from which RunModel is called.
-:type model_script: str</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model_object_name</strong> – In the Python model workflow, model_object_name specifies the name of the function or</p>
-</dd>
-</dl>
-<p>class within model_script which executes the model. If there is only one function or class in the model_script, then
-it is not necessary to specify the model_object_name. If there are multiple objects within the model_script, then
-model_object_name must be specified.
-model_object_name is not used in the third-party software model workflow.
-:type model_object_name: str</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>input_template</strong> – The name of the template input file which will be used to generate input files for each</p>
-</dd>
-</dl>
-<p>run of the model. When operating RunModel with a third-party software model, input_template must be specified.
-input_template is not used in the Python model workflow.
-:type input_template: str</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>var_names</strong> – A list containing the names of the variables present in the template input file. If an</p>
-</dd>
-</dl>
-<p>input template is provided and a list of variable names is not passed, ie if var_names=None, then the default
-variable names x0, x1, x2,…,xn are created and used by RunModel, where n is the number of variables. The
-number of variables is equal to the shape of the first row if samples is passed as an ndarray or the shape of the
-first item if samples is passed as a list.
-varnamesis not used in the Python model workflow.
-:type var_names: list of str or None</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>output_script</strong> – The filename of the Python script which contains the commands to process the output from</p>
-</dd>
-</dl>
-<p>third-party software model evaluation. The output_script is used to return the output quantities of interest to
-RunModel for subsequent UQpy processing (e.g. for adaptive methods that utilize the results of previous simualtions
-to initialize new simulations).
-output_script is not used in the Python model workflow. In the Python model workflow, all model postprocessing is
-handled within model_script.
-If, in the third-party software model workflow, output_script = None (the default), then RunModel.qoi_list is empty
-and postprocessing must be handled outside of UQpy.
-:type output_script: str</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>output_object_name</strong> – The name of the function or class that is used to collect the output values from</p>
-</dd>
-</dl>
-<p>third-party software model output files.
-If the object is aclass named cls, for example, the output must be saved as cls.qoi. If it is a function, it should
-return the output quantity of interest. If there is only one function or only one class in output_script, then it is
-not necessary to specify output_object_name. If there are multiple objects in output_script, then output_object_name
-must be specified.
-outputobjectname is not used in the Python model workflow.
-:type output_object_name: str</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>ntasks</strong> – Number of tasks to be run in parallel.</p>
-</dd>
-</dl>
-<p>By default, ntasks = 1 and the models are executed serially. Setting ntasks equal to a positive integer greater than
-1 will trigger the parallel workflow.
-RunModel uses GNU parallel to execute models which require an input template in parallel and the concurrent module
-to execute Python models in parallel.
-:type ntasks: int</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>cores_per_task</strong> – Number of cores to be used by each task.</p>
-</dd>
-</dl>
-<p>In cases where a third-party model runs across multiple CPUs, this optional attribute allocates the necessary
-resources to each model evaluation.
-cores_per_task is not used in the Python model workflow
-:type cores_per_task: int</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>nodes</strong> – Number of nodes across which to distribute parallel jobs on an HPC cluster in the third-party software</p>
-</dd>
-</dl>
-<p>model workflow.
-If more than one compute node is required to execute the runs in parallel, nodes must be specified. For example, on
-the Maryland Advanced Research Computing Center (MARCC), an HPC shared by Johns Hopkins University and the
-University of Maryland, each compute node has 24 cores. To run an analysis with more than 24 parallel jobs on MARCC
-requires nodes &gt; 1.
-nodes is not used in the Python model workflow.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>resume</strong> – If resume = True, GNU parallel enables UQpy to resume execution of any model evaluations that failed</p>
-</dd>
-</dl>
-<p>to execute in the third-party software model workflow.
-To use this feature, execute the same call to RunModel which failed to complete but with resume = True.  The same
-set of samples must be passed to resume processing from the last successful execution of the model.
-resume is not used in the Python model workflow.
-:type resume: Boolean</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>verbose</strong> – Set verbose = True if you want RunModel to print status messages to the terminal during execution.</p>
-</dd>
-</dl>
-<p>verbose = False by default.
-:type verbose: Boolean</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model_dir</strong> – Specifies the name of the sub-directory from which the model will be executed and to which output</p>
-</dd>
-</dl>
-<p>files will be saved.
-model_dir = None by default, which results in model execution from the Python current working directory. If
-model_dir is passed a string, then a new directory is created by RunModel within the current directory whose name is
-model_dir appended with a timestamp.
-:type model_dir: str</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>cluster</strong> – Set cluster = True if executing on an HPC cluster. Setting cluster = True enables RunModel to</p>
-</dd>
-</dl>
-<p>execute the model using the necessary SLURM commands. cluster = False by default.
-RunModel is configured for HPC clusters that operate with the SLURM scheduler. In order to execute a third-party
-model with RunModel on an HPC cluster, the HPC must use SLURM.
-cluster is not used for the Python model workflow.
-:type cluster: Boolean</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>fmt</strong> – If the input file requires variables to be written in specific format, this format can be specified</p>
-</dd>
-</dl>
-<p>here.
-The default is fmt = None
-Existing formats include:
-fmt = ‘ls-dyna’: This format is used for ls-dyna .k files where each card is required to be exactly 10 characters
-:type fmt: String</p>
-<p>Output:
-:return: RunModel.qoi_list: A list containing the output quantities of interest extracted from the model output
-files by output_script. This is a list of length equal to the number of simulations. Each item of this list contains
-the quantity of interest from the associated simulation.
-:rtype: RunModel.qoi_list: list</p>
-</dd></dl>
-
 <dl class="footnote brackets">
 <dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
 <dd><p>Tange, Ole. (2018). GNU Parallel 2018, <a class="reference external" href="https://doi.org/10.5281/zenodo.1146014">https://doi.org/10.5281/zenodo.1146014</a></p>
@@ -512,7 +349,7 @@ the quantity of interest from the associated simulation.
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2020, SURG, JHU.
+      &copy;2020, Michael D. Shields.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
