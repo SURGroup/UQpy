@@ -82,9 +82,7 @@ class Grassmann:
         can pass either a method of a class or a function. For example, if the user wish to
         use `grassmann_distance` to compute the distance, one can use the following command:
 
-        >>> Grassmann(distance_method=Grassmann.grassmann_distance)
-
-         On the other hand, if the user implemented a function
+        On the other hand, if the user implemented a function
         (e.g., `user_distance`) to compute the distance, `distance_method` must assume the following value
         `distance_method = user_distance`, which must be pre-loaded using import. In this regard, the
         function input must contain the first (x0) and second (x1) matrices as arguments (e.g, user_distance(x0,x1))
@@ -100,8 +98,6 @@ class Grassmann:
         Second, the user can pass callable objects either as a method of a class or as a function. 
         For example, if the user wish to use `projection_kernel` to estimate the kernel matrix, one can use the
         following command:
-
-        >>> Grassmann(kernel_method=Grassmann.projection_kernel)
 
         On the other hand, if the user implemented
         a function (e.g., `user_kernel`) to compute the kernel matrix, `kernel_method` must assume the following value
@@ -216,8 +212,6 @@ class Grassmann:
         are passed through the argument `samples` containing a list of lists or a list of ndarrays. Moreover, this
         method serves to set the manifold and to verify the consistency of the input data. This method can be called
         using the following command:
-
-        >>> Grassmann.manifold(p=p,samples=samples,append_samples=False)
 
         In this case, append_samples is a boolean variable used to define if new sample will replace the previous ones
         or will just get appended (`append_samples=True`).
@@ -396,9 +390,6 @@ class Grassmann:
         distance definition. In this case, the user must be aware that the matrices in `points_grassmann` must represent 
         points on the Grassmann manifold. For example, given the points on the Grassmann manifold one can compute the 
         pairwise distances in the following way:
-
-        >>> Gr = Grassmann(distance_method=Grassmann.grassmann_distance)
-        >>> Gr.distance(points_grassmann=points_grassmann)
 
         **Input:**
 
@@ -772,9 +763,6 @@ class Grassmann:
         the option to implement their own kernel definition. However, the user must be aware that the points used
         to compute the kernel must be the points on the same manifold; therefore, it is important to ensure that the 
         dimension of all the input matrices are the same. Therefore, the following commands can be used:
-
-        >>> Gr = Grassmann(kernel_method=Grassmann.projection_kernel)
-        >>> Gr.kernel(points_grassmann=points_grassmann)
 
         **Input:**
 
@@ -1163,10 +1151,6 @@ class Grassmann:
         square distances, defined on the Grassmann manifold, to a given point. The command to compute the Karcher mean
         given a seto of points on the Grassmann manifold is.
 
-        >>> Gr = Grassmann(karcher_method=Grassmann.gradient_descent)
-        >>> Gr.manifold(p=p,samples=samples,append_samples=False)
-        >>> karcher_left, karcher_right = Gr.karcher_mean()
-
         In this case two values are returned corresponding to the ones related to the manifolds defined by the left and
         right singular eigenvectors.
 
@@ -1493,21 +1477,7 @@ class Grassmann:
         matrices, if `point` and `samples` are matrices. The samples related to `coordinates` are set using
         `manifold`. For example, the following command is used to perform the interpolation.
 
-        >>> from UQpy.Surrogates import Kriging
-        >>> Krig = Kriging(reg_model='Linear', corr_model='Exponential', n_opt=1, dimension=2)
-        >>> Gr = Grassmann(distance_object=Grassmann.grassmann_distance,
-        >>>                interp_object=Krig, karcher_method=Grassmann.gradient_descent)
-        >>> Gr.manifold(p=p,samples=samples)
-        >>> interpolated = Gr.interpolate(coordinates=coordinates, point=point, element_wise=True)
-
         On the other hand, if a scikit learn gaussian_process object is provided, one can use the following commands:
-        
-        >>> from sklearn.gaussian_process import GaussianProcessRegressor
-        >>> gp = GaussianProcessRegressor()
-        >>> Gr = Grassmann(distance_method=Grassmann.grassmann_distance, 
-                           interp_object=gp,karcher_method=Grassmann.gradient_descent)
-        >>> Gr.manifold(p=p,samples=samples)
-        >>> interpolated = Gr.interpolate(coordinates=coordinates, point=[point], element_wise=True)
 
         **Input:**
 
@@ -1836,18 +1806,10 @@ class DiffusionMaps:
         of input data points on the Grassmann manifold, or directly with the input data points. For example,
         considering that a ``Grassmann`` object is provided using the following command:
 
-        >>> Gr = Grassmann(kernel_method=Grassmann.projection_kernel)
-        >>> Gr.manifold(p=p,samples=samples,append_samples=False)
-
         one can instantiate the DiffusionMaps class and run the diffusion maps as follows:
-        >>> dfm = DiffusionMaps(alpha=0.5, n_evecs=10, kernel_object=Gr, kernel_grassmann = 'prod')
-        >>> diff_coords, evals, evecs = dfm.mapping()
 
         On the other hand, if the user wish to pass a dataset (samples) to compute the diffusion coordinates using the Gaussian
         kernel, one can use the following commands:
-
-        >>> dfm = DiffusionMaps(alpha=0.5, n_evecs=10, kernel_object=DiffusionMaps.gaussian_kernel)
-        >>> diff_coords, evals, evecs = dfm.mapping(samples=samples, epsilon=epsilon)
 
         In the latest case, if `epsilon` is not provided it is estimated based on the median of the square of the
         euclidian distances between data points.
