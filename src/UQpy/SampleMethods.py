@@ -875,6 +875,12 @@ class RectangularStrata(Strata):
         return ff
 
     def plot_2d(self):
+        """
+        Plot the rectangular stratification.
+
+        This is an instance method of the ``RectangularStrata`` class that can be called to plot the boundaries of a
+        two-dimensional ``RectangularStrata`` object on :math:`[0, 1]^2`.
+        """
         import matplotlib.pyplot as plt
         import matplotlib.patches as patches
 
