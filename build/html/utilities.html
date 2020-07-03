@@ -7,12 +7,12 @@
     <title>Utilities &#8212; UQpy v3.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="News" href="news.html" />
@@ -37,59 +37,31 @@
 <span id="id1"></span><h1>Utilities<a class="headerlink" href="#utilities" title="Permalink to this headline">¶</a></h1>
 <p>A module that contains miscalleneous methods used in various modules of <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p>
 <span class="target" id="module-UQpy.Utilities"></span><dl class="function">
-<dt id="UQpy.Utilities.check_arguments">
-<code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">check_arguments</code><span class="sig-paren">(</span><em class="sig-param">argv</em>, <em class="sig-param">min_num_matrix</em>, <em class="sig-param">ortho</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#check_arguments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.check_arguments" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check input arguments for consistency.</p>
-<p>Check the input matrices for consistency given the minimum number of matrices (min_num_matrix)
-and the boolean varible (ortho) to test the orthogonality.</p>
-<p><strong>Input:</strong></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>argv</strong> (<em>list of arguments</em>) – Matrices to be tested.</p></li>
-<li><p><strong>min_num_matrix</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Minimum number of matrices.</p></li>
-<li><p><strong>ortho</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – boolean varible to test the orthogonality.</p></li>
-</ul>
+<dt id="UQpy.Utilities.correlation_distortion">
+<code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">correlation_distortion</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">rho</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#correlation_distortion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.correlation_distortion" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method computes the corelation distortion from Gaussian distribution to any other distribution defined in
+UQpy.Distributions</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>dist_object</strong> (<code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object):</dt><dd><p>The object of the Distribution the corelation needs to be calculated.</p>
 </dd>
 </dl>
+</li>
+<li><dl class="simple">
+<dt><strong>rho</strong> (<cite>float</cite>):</dt><dd><p>The Gaussian  correlation value.</p>
+</dd>
+</dl>
+</li>
+</ul>
 <p><strong>Output/Returns:</strong></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>numpy array</em>) – Return the input matrices.</p></li>
-<li><p><strong>nargs</strong> (<em>numpy array</em>) – Number of matrices.</p></li>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>rho_non</strong> (<cite>float</cite>):</dt><dd><p>The distorted correlation value.</p>
+</dd>
+</dl>
+</li>
 </ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="UQpy.Utilities.estimate_psd">
-<code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">estimate_psd</code><span class="sig-paren">(</span><em class="sig-param">samples</em>, <em class="sig-param">nt</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#estimate_psd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.estimate_psd" title="Permalink to this definition">¶</a></dt>
-<dd><p>Description: A function to estimate the Power Spectrum of a stochastic process given an ensemble of samples</p>
-<dl class="simple">
-<dt>Input:</dt><dd><dl class="field-list simple">
-<dt class="field-odd">param samples</dt>
-<dd class="field-odd"><p>Samples of the stochastic process</p>
-</dd>
-<dt class="field-even">param nt</dt>
-<dd class="field-even"><p>Number of time discretisations in the time domain</p>
-</dd>
-<dt class="field-odd">param t</dt>
-<dd class="field-odd"><p>Total simulation time</p>
-</dd>
-</dl>
-</dd>
-<dt>Output:</dt><dd><dl class="field-list simple">
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p>Power Spectrum</p>
-</dd>
-<dt class="field-even">rtype</dt>
-<dd class="field-even"><p>ndarray</p>
-</dd>
-</dl>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="function">
@@ -212,9 +184,7 @@ Matrix, SIAM Journal on Matrix Analysis and Applications 28(2):360-385, 2006.</p
 <dl class="function">
 <dt id="UQpy.Utilities.run_parallel_python">
 <code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">run_parallel_python</code><span class="sig-paren">(</span><em class="sig-param">model_script</em>, <em class="sig-param">model_object_name</em>, <em class="sig-param">sample</em>, <em class="sig-param">dict_kwargs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#run_parallel_python"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.run_parallel_python" title="Permalink to this definition">¶</a></dt>
-<dd><p>Execute the python model in parallel
-:param sample: One sample point where the model has to be evaluated
-:return:</p>
+<dd><p>Method needed by <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> to execute a python model in parallel</p>
 </dd></dl>
 
 <dl class="function">
@@ -259,28 +229,6 @@ Matrix, SIAM Journal on Matrix Analysis and Applications 28(2):360-385, 2006.</p
 </dl>
 </li>
 </ul>
-</dd></dl>
-
-<dl class="function">
-<dt id="UQpy.Utilities.test_type">
-<code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">test_type</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">ortho</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#test_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.test_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>Test the datatype of X.</p>
-<p>Check if the datatype of the matrix X is consistent.</p>
-<p><strong>Input:</strong></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em> or </em><em>numpy array</em>) – Matrices to be tested.</p></li>
-<li><p><strong>ortho</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – boolean varible to test the orthogonality.</p></li>
-</ul>
-</dd>
-</dl>
-<p><strong>Output/Returns:</strong></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>Y</strong> (<em>numpy array</em>) – Tested and adjusted matrices.</p>
-</dd>
-</dl>
 </dd></dl>
 
 </div>
@@ -349,7 +297,7 @@ Matrix, SIAM Journal on Matrix Analysis and Applications 28(2):360-385, 2006.</p
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -358,7 +306,7 @@ Matrix, SIAM Journal on Matrix Analysis and Applications 28(2):360-385, 2006.</p
       &copy;2020, SURG, JHU.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
