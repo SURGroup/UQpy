@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Inference &#8212; UQpy v3.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DimensionReduction" href="dimension_reduction.html" />
+    <link rel="prev" title="Reliability" href="reliability.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="inference">
+<span id="id1"></span><h1>Inference<a class="headerlink" href="#inference" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-UQpy.Inference"></span><p>This module contains functionality for all the Inference supported in UQpy.</p>
+<p>The goal in inference can be twofold: 1) given a model, parameterized by parameter vector <span class="math notranslate nohighlight">\(\theta\)</span>, and some data <span class="math notranslate nohighlight">\(\mathcal{D}\)</span>, learn the value of the parameter vector that best explains the data; 2) given a set of candidate models <span class="math notranslate nohighlight">\(\lbrace m_{i} \rbrace_{i=1:M}\)</span> and some data <span class="math notranslate nohighlight">\(\mathcal{D}\)</span>, learn which model best explains the data. <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> currently supports the following inference algorithms for parameter estimation (see e.g. <a class="footnote-reference brackets" href="#id9" id="id2">1</a> for theory on parameter estimation in frequentist vs. Bayesian frameworks):</p>
+<ul class="simple">
+<li><p>Maximum Likelihood estimation,</p></li>
+<li><p>Bayesian approach: estimation of posterior pdf via sampling methods (MCMC/IS).</p></li>
+</ul>
+<p>and the following algorithms for model selection:</p>
+<ul class="simple">
+<li><p>Model selection using information theoretic criteria,</p></li>
+<li><p>Bayesian model class selection, i.e., estimation of model posterior probabilities.</p></li>
+</ul>
+<p>The capabilities of <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> and associated classes are summarized in the following figure.</p>
+<a class="reference internal image-reference" href="_images/Inference_schematic.png"><img alt="_images/Inference_schematic.png" class="align-left" src="_images/Inference_schematic.png" style="width: 584.8000000000001px; height: 333.6px;" /></a>
+<div class="section" id="inferencemodel">
+<h2>InferenceModel<a class="headerlink" href="#inferencemodel" title="Permalink to this headline">¶</a></h2>
+<p>For any inference task, the user must first create, for each model studied, an instance of the class <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code> that defines the problem at hand. This class defines an inference model that will serve as input for all remaining inference classes. A model can be defined in various ways. The following summarizes the four types of inference models that are supported by <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>. These four types are further summarized in the figure below.</p>
+<ul class="simple">
+<li><p><strong>Case 1a</strong> - <cite>Gaussian error model powered by</cite> <code class="docutils literal notranslate"><span class="pre">RunModel</span></code>: In this case, the data is assumed to come form a model of the following
+form,  <cite>data ~ h(theta) + eps</cite>, where <cite>eps</cite> is iid Gaussian and <cite>h</cite> consists of a computational
+model executed using <code class="docutils literal notranslate"><span class="pre">RunModel</span></code>. Data is a 1D ndarray in this setting.</p></li>
+<li><p><strong>Case 1b</strong> - <cite>non-Gaussian error model powered by</cite> <code class="docutils literal notranslate"><span class="pre">RunModel</span></code>: In this case, the user must provide the likelihood
+function in addition to a <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object. The data type is user-defined and must be consistent with the
+likelihood function definition.</p></li>
+<li><p><strong>Case 2:</strong> - <cite>User-defined likelihood without</cite> <code class="docutils literal notranslate"><span class="pre">RunModel</span></code>: Here, the likelihood function is user-defined and
+does not leverage <code class="docutils literal notranslate"><span class="pre">RunModel</span></code>. The data type must be consistent with the likelihood function definition.</p></li>
+<li><p><strong>Case 3:</strong> <cite>Learn parameters of a probability distribution:</cite> Here, the user must define an object of the
+<code class="docutils literal notranslate"><span class="pre">Distribution</span></code> class. Data is an ndarray of shape <cite>(ndata, dim)</cite> and consists in <cite>ndata</cite> iid samples from the
+probability distribution.</p></li>
+</ul>
+<a class="reference internal image-reference" href="_images/Inference_models.png"><img alt="_images/Inference_models.png" class="align-left" src="_images/Inference_models.png" style="width: 617.4px; height: 371.4px;" /></a>
+<div class="section" id="defining-a-log-likelihood-function">
+<h3>Defining a Log-likelihood function<a class="headerlink" href="#defining-a-log-likelihood-function" title="Permalink to this headline">¶</a></h3>
+<p>The critical component of the <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code> class is the evaluation of the log-likelihood function. <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code> has been constructed to be flexible in how the user specifies the log-likelihood function. The log-likelihood function can be specified as a user-defined callable method that is passed directly into the <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code> class. As the cases suggest, a user-defined log-likelihood function must take as input, at minimum, both the parameters of the model and the data points at which to evaluate the log-likelihood. It may also take additional keyword arguments. The method may compute the log-likelihood at the data points on its own, or it may rely on a computational model defined through the <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> class. If the log-likelihood function relies on a <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object, this object is also passed into <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code> and the log-likelihood method should also take as input, the output (<cite>qoi_list</cite>) of the <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object evaluated at the specified parameter values.</p>
+</div>
+<div class="section" id="class-descriptions">
+<h3>Class Descriptions<a class="headerlink" href="#class-descriptions" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="parameter-estimation">
+<h2>Parameter estimation<a class="headerlink" href="#parameter-estimation" title="Permalink to this headline">¶</a></h2>
+<p>Parameter estimation refers to process of estimating the parameter vector of a given model. Depending on the nature of the method, parameter estimation may provide a point estimator or a probability distribution for the parameter vector. <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> supports two different types of parameter estimation: Maximum Likelihood estimation through the <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class and Bayesian parameter estimation through the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class.</p>
+</div>
+<div class="section" id="mlestimation">
+<h2>MLEstimation<a class="headerlink" href="#mlestimation" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class evaluates the maximum likelihood estimate <span class="math notranslate nohighlight">\(\hat{\theta}\)</span> of the model parameters, i.e.</p>
+<div class="math notranslate nohighlight">
+\[\hat{\theta} = \text{argmax}_{\Theta} \quad p(\mathcal{D} \vert \theta)\]</div>
+<p>Note: for a Gaussian-error model of the form <span class="math notranslate nohighlight">\(\mathcal{D}=h(\theta)+\epsilon\)</span>, <span class="math notranslate nohighlight">\(\epsilon \sim N(0, \sigma)\)</span> with fixed <span class="math notranslate nohighlight">\(\sigma\)</span> and independent measurements <span class="math notranslate nohighlight">\(\mathcal{D}_{i}\)</span>, maximizing the likelihood is mathematically equivalent to minimizing the sum of squared residuals <span class="math notranslate nohighlight">\(\sum_{i} \left( \mathcal{D}_{i}-h(\theta) \right)^{2}\)</span>.</p>
+<p>A numerical optimization procedure is performed to compute the MLE. By default, the <cite>minimize</cite> function of the <code class="docutils literal notranslate"><span class="pre">scipy.optimize</span></code> module is used, however other optimizers can be leveraged via the <cite>optimizer</cite> input of the  <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class.</p>
+<div class="section" id="id3">
+<h3>Class Descriptions<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.Inference.MLEstimation">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">MLEstimation</code><span class="sig-paren">(</span><em class="sig-param">model=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">method_optim=None</em>, <em class="sig-param">x0=None</em>, <em class="sig-param">iter_optim=1</em>, <em class="sig-param">bounds=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#MLEstimation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.MLEstimation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p><strong>Note on subclassing</strong> <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code></p>
+<p>More generally, the user may want to compute a parameter estimate by minimizing an error function between the data and model outputs. This can be easily done by subclassing the <code class="docutils literal notranslate"><span class="pre">MLEstimation</span></code> class and overwriting the method <cite>_evaluate_func_to_minimize</cite>.</p>
+</div>
+</div>
+<div class="section" id="bayesparameterestimation">
+<h2>BayesParameterEstimation<a class="headerlink" href="#bayesparameterestimation" title="Permalink to this headline">¶</a></h2>
+<p>Given some data <span class="math notranslate nohighlight">\(\mathcal{D}\)</span>, a parameterized model for the data, and a prior probability density for the model parameters <span class="math notranslate nohighlight">\(p(\theta)\)</span>, the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class is leveraged to draw samples from the posterior pdf of the model parameters using Markov Chain Monte Carlo or Importance Sampling. Via Bayes theorem, the posterior pdf is defined as follows:</p>
+<div class="math notranslate nohighlight">
+\[p(\theta \vert \mathcal{D}) = \frac{p(\mathcal{D} \vert \theta)p(\theta)}{p(\mathcal{D})}\]</div>
+<p>Note that if no prior is defined in the model, the prior pdf is chosen as uninformative, i.e., <span class="math notranslate nohighlight">\(p(\theta) = 1\)</span> (cautionary note, this is an improper prior).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> leverages the <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> or <code class="docutils literal notranslate"><span class="pre">IS</span></code> classes of the <code class="docutils literal notranslate"><span class="pre">SampleMethods</span></code> module of <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>. When creating a <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> object, an object of class <code class="docutils literal notranslate"><span class="pre">MCMC</span></code> or <code class="docutils literal notranslate"><span class="pre">IS</span></code> is created and saved as an attribute <cite>sampler</cite>. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class then calls the <code class="docutils literal notranslate"><span class="pre">run</span></code> method of that sampler, thus the user can add samples as they wish by calling the <code class="docutils literal notranslate"><span class="pre">run</span></code> method several times.</p>
+<div class="section" id="id4">
+<h3>Class Descriptions<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.Inference.BayesParameterEstimation">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">BayesParameterEstimation</code><span class="sig-paren">(</span><em class="sig-param">model=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">sampling_method='MCMC'</em>, <em class="sig-param">pdf_proposal_type=None</em>, <em class="sig-param">pdf_proposal_scale=None</em>, <em class="sig-param">pdf_proposal=None</em>, <em class="sig-param">pdf_proposal_params=None</em>, <em class="sig-param">algorithm=None</em>, <em class="sig-param">jump=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nburn=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#BayesParameterEstimation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.BayesParameterEstimation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+<div class="section" id="model-selection">
+<h2>Model Selection<a class="headerlink" href="#model-selection" title="Permalink to this headline">¶</a></h2>
+<p>Model selection refers to the task of selecting a statistical model from a set of candidate models, given some data. A good model is one that is capable of explaining the data well. Given models of the same explanatory power, the simplest model should be chosen (Occam’s razor).</p>
+</div>
+<div class="section" id="infomodelselection">
+<h2>InfoModelSelection<a class="headerlink" href="#infomodelselection" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">InfoModelSelection</span></code> class employs information-theoretic criteria for model selection. Several simple information theoretic criteria can be used to compute a model’s quality and perform model selection <a class="footnote-reference brackets" href="#id10" id="id5">2</a>. <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> implements three criteria:</p>
+<ul class="simple">
+<li><p>Bayesian information criterion,  <span class="math notranslate nohighlight">\(BIC = \ln(n) k - 2 \ln(\hat{L})\)</span></p></li>
+<li><p>Akaike information criterion, <span class="math notranslate nohighlight">\(AIC = 2 k - 2 \ln (\hat{L})\)</span></p></li>
+<li><p>Corrected formula for AIC (AICc), for small data sets , <span class="math notranslate nohighlight">\(AICc = AIC + \frac{2k(k+1)}{n-k-1}\)</span></p></li>
+</ul>
+<p>where <span class="math notranslate nohighlight">\(k\)</span> is the number of parameters characterizing the model, <span class="math notranslate nohighlight">\(\hat{L}\)</span> is the maximum value of the likelihood function, and <span class="math notranslate nohighlight">\(n\)</span> is the number of data points. The best model is the one that minimizes the criterion, which is a combination of a model fit term (find the model that minimizes the negative log likelihood) and a penalty term that increases as the number of model parameters (model complexity) increases.</p>
+<p>A probability can be defined for each model as <span class="math notranslate nohighlight">\(P(m_{i}) \propto \exp\left(  -\frac{\text{criterion}}{2} \right)\)</span>.</p>
+<div class="section" id="id6">
+<h3>Class Descriptions<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.Inference.InfoModelSelection">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">InfoModelSelection</code><span class="sig-paren">(</span><em class="sig-param">candidate_models=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">method=None</em>, <em class="sig-param">method_optim=None</em>, <em class="sig-param">x0=None</em>, <em class="sig-param">iter_optim=None</em>, <em class="sig-param">bounds=None</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">sorted_outputs=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#InfoModelSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.InfoModelSelection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+<div class="section" id="bayesmodelselection">
+<h2>BayesModelSelection<a class="headerlink" href="#bayesmodelselection" title="Permalink to this headline">¶</a></h2>
+<p>In the Bayesian approach to model selection, the posterior probability of each model is computed as</p>
+<div class="math notranslate nohighlight">
+\[P(m_{i} \vert \mathcal{D}) = \frac{p(\mathcal{D} \vert m_{i})P(m_{i})}{\sum_{j} p(\mathcal{D} \vert m_{j})P(m_{j})}\]</div>
+<p>where the evidence (also called marginal likelihood) <span class="math notranslate nohighlight">\(p(\mathcal{D} \vert m_{i})\)</span> involves an integration over the parameter space:</p>
+<div class="math notranslate nohighlight">
+\[p(\mathcal{D} \vert m_{i}) = \int_{\Theta} p(\mathcal{D} \vert m_{i}, \theta) p(\theta \vert m_{i}) d\theta\]</div>
+<p>Currently, calculation of the evidence is performed using the method of the harmonic mean <a class="footnote-reference brackets" href="#id11" id="id7">3</a>:</p>
+<div class="math notranslate nohighlight">
+\[p(\mathcal{D} \vert m_{i}) = \left[ \frac{1}{B} \sum_{b=1}^{B} \frac{1}{p(\mathcal{D} \vert m_{i}, \theta_{b})} \right]^{-1}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\theta_{1,\cdots,B}\)</span> are samples from the posterior pdf of <span class="math notranslate nohighlight">\(\theta\)</span>. In UQpy, these samples are obtained via the <code class="docutils literal notranslate"><span class="pre">BayesParameterEstimation</span></code> class. However, note that this method is known to yield evidence estimates with large variance. Future releases of <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> will include more robust methods for computation of model evidences. Also, it is known that results of such Bayesian model selection procedure usually highly depends on the choice of prior for the parameters of the competing models, thus the user should carefully define such priors when creating instances of the <code class="docutils literal notranslate"><span class="pre">InferenceModel</span></code> class.</p>
+<div class="section" id="id8">
+<h3>Class Descriptions<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.Inference.BayesModelSelection">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.Inference.</code><code class="sig-name descname">BayesModelSelection</code><span class="sig-paren">(</span><em class="sig-param">candidate_models=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">prior_probabilities=None</em>, <em class="sig-param">pdf_proposal_type=None</em>, <em class="sig-param">pdf_proposal_scale=None</em>, <em class="sig-param">algorithm=None</em>, <em class="sig-param">jump=None</em>, <em class="sig-param">nsamples=None</em>, <em class="sig-param">nburn=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">sorted_outputs=True</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Inference.html#BayesModelSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Inference.BayesModelSelection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="footnote brackets">
+<dt class="label" id="id9"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
+<dd><p>R.C. Smith, “Uncertainty Quantification - Theory, Implementation and Applications”, CS&amp;E, 2014</p>
+</dd>
+<dt class="label" id="id10"><span class="brackets"><a class="fn-backref" href="#id5">2</a></span></dt>
+<dd><p>Burnham, K. P. and Anderson, D. R., “Model Selection and Multimodel Inference: A Practical Information-Theoretic Approach”, Springer-Verlag, 2002</p>
+</dd>
+<dt class="label" id="id11"><span class="brackets"><a class="fn-backref" href="#id7">3</a></span></dt>
+<dd><p>A.E. Raftery, M.A. Newton, J.M. Satagopan and P.N. Krivitsky, “Estimating the Integrated Likelihood via Posterior Simulation Using the Harmonic Mean Identity”, Bayesian Statistics 8, 2007</p>
+</dd>
+</dl>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.jpg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Uncertainty quantification with Python </p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=SURG&repo=UQpy&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runmodel.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributions.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samplemethods.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transformations.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stochastic_process.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="surrogates.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reliability.html">Reliability</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Inference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#inferencemodel">InferenceModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#parameter-estimation">Parameter estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mlestimation">MLEstimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bayesparameterestimation">BayesParameterEstimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#model-selection">Model Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#infomodelselection">InfoModelSelection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bayesmodelselection">BayesModelSelection</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">DimensionReduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="news.html">News</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="reliability.html" title="previous chapter">Reliability</a></li>
+      <li>Next: <a href="dimension_reduction.html" title="next chapter">DimensionReduction</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, SURG, JHU.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/inference.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/SURG/UQpy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

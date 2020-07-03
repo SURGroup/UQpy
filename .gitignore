@@ -27,7 +27,6 @@ octave-workspace
 
 ### OSX ###
 *.DS_Store
-*.DS_Store?
 .AppleDouble
 .LSOverride
 
@@ -45,7 +44,6 @@ Icon
 .Trashes
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
-.DS_Store
 
 # Directories potentially created on remote AFP share
 .AppleDB
@@ -188,9 +186,6 @@ instance/
 
 # Scrapy stuff:
 .scrapy
-
-# Sphinx documentation
-#docs/_build/
 
 # PyBuilder
 target/
