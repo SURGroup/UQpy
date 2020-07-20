@@ -34,6 +34,7 @@ from UQpy.Distributions import DistributionContinuous1D
 ########################################################################################################################
 ########################################################################################################################
 
+
 class SROM:
 
     """
@@ -216,26 +217,25 @@ class SROM:
         if self.verbose:
             print('UQpy: Performing SROM...')
 
-
         def f(p0, samples, wd, wm, wc, mar, n, d, m, alpha, prop, correlation):
             e1 = 0.
             e2 = 0.
             e22 = 0.
             e3 = 0.
-            com = np.append(samples, np.transpose(np.matrix(p0)), 1)
+            com = np.append(samples, np.atleast_2d(p0).T, 1)
             for j in range(d):
                 srt = com[np.argsort(com[:, j].flatten())]
-                s = srt[0, :, j]
-                a = srt[0, :, d]
+                s = srt[:, j]
+                a = srt[:, d]
                 a0 = np.cumsum(a)
                 marginal = mar[j].cdf
 
                 if prop[0] is True:
                     for i in range(n):
-                        e1 += wd[i, j] * (a0[0, i] - marginal(s[0, i])) ** 2
+                        e1 += wd[i, j] * (a0[i] - marginal(s[i])) ** 2
 
                 if prop[1] is True:
-                    e2 += wm[0, j] * (np.sum(np.array(p0) * samples[:, j]) - m[0, j]) ** 2
+                    e2 += wm[0, j] * (np.sum(p0 * samples[:, j]) - m[0, j]) ** 2
 
                 if prop[2] is True:
                     e22 += wm[1, j] * (
@@ -246,31 +246,20 @@ class SROM:
                         if k > j:
                             r = correlation[j, k] * np.sqrt((m[1, j] - m[0, j] ** 2) * (m[1, k] - m[0, k] ** 2)) + \
                                 m[0, j] * m[0, k]
-                            e3 += wc[k, j] * (
-                                    np.sum(np.array(p_) * (
-                                                np.array(samples[:, j]) * np.array(samples[:, k]))) - r) ** 2
+                            e3 += wc[k, j] * (np.sum(p0 * (samples[:, j] * samples[:, k])) - r) ** 2
 
             return alpha[0] * e1 + alpha[1] * (e2 + e22) + alpha[2] * e3
 
         def constraint(x):
             return np.sum(x) - 1
 
-        def constraint2(y):
-            n = np.size(y)
-            return np.ones(n) - y
-
-        def constraint3(z):
-            n = np.size(z)
-            return z - np.zeros(n)
-
-        cons = ({'type': 'eq', 'fun': constraint}, {'type': 'ineq', 'fun': constraint2},
-                {'type': 'ineq', 'fun': constraint3})
+        cons = {'type': 'eq', 'fun': constraint}
 
         p_ = optimize.minimize(f, np.zeros(self.nsamples),
                                args=(self.samples, self.weights_distribution, self.weights_moments,
                                      self.weights_correlation, self.target_dist_object, self.nsamples, self.dimension,
                                      self.moments, self.weights_errors, self.properties, self.correlation),
-                               constraints=cons, method='SLSQP')
+                               constraints=cons, method='SLSQP', bounds=[[0, 1]]*self.nsamples)
 
         self.sample_weights = p_.x
         if self.verbose:
@@ -486,7 +475,7 @@ class Kriging:
             self.corr_model = self.corr_model
         elif self.corr_model in ['Exponential', 'Gaussian', 'Linear', 'Spherical', 'Cubic', 'Spline', 'Other']:
             self.cmodel = self.corr_model
-            self.corr_model: function = self._corr()
+            self.corr_model: callable = self._corr()
         else:
             raise NotImplementedError("UQpy: Doesn't recognize the Correlation model.")
 
@@ -578,7 +567,7 @@ class Kriging:
             return ll, grad_mle
 
         if nopt is not None:
-            self.nopt=nopt
+            self.nopt = nopt
         if corr_model_params is not None:
             self.corr_model_params = corr_model_params
         self.samples = np.array(samples)
@@ -622,14 +611,11 @@ class Kriging:
 
         # Updated Correlation matrix corresponding to MLE estimates of hyperparameters
         self.R = self.corr_model(x=s_, s=s_, params=self.corr_model_params)
-
         # Compute the regression coefficient (solving this linear equation: F * beta = Y)
         c = np.linalg.cholesky(self.R)                   # Eq: 3.8, DACE
         c_inv = np.linalg.inv(c)
         f_dash = np.linalg.solve(c, self.F)
         y_dash = np.linalg.solve(c, y_)
-        # f_dash = np.matmul(c_inv, self.F)
-        # y_dash = np.matmul(c_inv, y_)
         q_, g_ = np.linalg.qr(f_dash)                 # Eq: 3.11, DACE
         # Check if F is a full rank matrix
         if np.linalg.matrix_rank(g_) != min(np.size(self.F, 0), np.size(self.F, 1)):
@@ -638,12 +624,13 @@ class Kriging:
         self.beta = np.linalg.solve(g_, np.matmul(np.transpose(q_), y_dash))
 
         # Design parameter (R * gamma = Y - F * beta = residual)
-        self.gamma = np.matmul(np.matmul(c_inv.T, c_inv), (y_ - np.matmul(self.F, self.beta)))
+        self.gamma = np.linalg.solve(c.T, (y_dash - np.matmul(f_dash, self.beta)))
+        # self.gamma = np.matmul(c_inv.T, (y_dash - np.matmul(f_dash, self.beta)))
 
         # Computing the process variance (Eq: 3.13, DACE)
         self.err_var = np.zeros(output_dim)
-        for l in range(output_dim):
-            self.err_var[l] = (1 / nsamples) * (np.linalg.norm(y_dash[:, l] - np.matmul(f_dash, self.beta[:, l])) ** 2)
+        for i in range(output_dim):
+            self.err_var[i] = (1 / nsamples) * (np.linalg.norm(y_dash[:, i] - np.matmul(f_dash, self.beta[:, i])) ** 2)
 
         self.F_dash, self.C_inv, self.G = f_dash, c_inv, g_
 
@@ -674,16 +661,15 @@ class Kriging:
                 Standard deviation of predicted values at the new points.
 
         """
-        x = np.atleast_2d(x)
+        x_ = np.atleast_2d(x)
         if self.normalize:
-            x = (x - self.sample_mean)/self.sample_std
+            x_ = (x_ - self.sample_mean)/self.sample_std
             s_ = (self.samples - self.sample_mean) / self.sample_std
         else:
             s_ = self.samples
-        fx, jf = self.reg_model(x)
-        rx = self.corr_model(x=x, s=s_, params=self.corr_model_params)
+        fx, jf = self.reg_model(x_)
+        rx = self.corr_model(x=x_, s=s_, params=self.corr_model_params)
         y = np.einsum('ij,jk->ik', fx, self.beta) + np.einsum('ij,jk->ik', rx, self.gamma)
-
         if self.normalize:
             y = self.value_mean + y * self.value_std
         if x.shape[1] == 1:
@@ -720,15 +706,15 @@ class Kriging:
                 Gradient of the surrogate model evaluated at the new points.
 
         """
-        x = np.atleast_2d(x)
+        x_ = np.atleast_2d(x)
         if self.normalize:
-            x = (x - self.sample_mean) / self.sample_std
+            x_ = (x_ - self.sample_mean) / self.sample_std
             s_ = (self.samples - self.sample_mean) / self.sample_std
         else:
             s_ = self.samples
 
-        fx, jf = self.reg_model(x)
-        rx, drdx = self.corr_model(x=x, s=s_, params=self.corr_model_params, dx=True)
+        fx, jf = self.reg_model(x_)
+        rx, drdx = self.corr_model(x=x_, s=s_, params=self.corr_model_params, dx=True)
         y_grad = np.einsum('ikj,jm->ik', jf, self.beta) + np.einsum('ijk,jm->ki', drdx.T, self.gamma)
         if self.normalize:
             y_grad = y_grad * self.value_std/self.sample_std
@@ -781,6 +767,31 @@ class Kriging:
 
     # Defining Correlation model (Gaussian Process)
     def _corr(self):
+        def derivatives(x_, s_, params):
+            x_, s_ = np.atleast_2d(x_), np.atleast_2d(s_)
+            # Create stack matrix, where each block is x_i with all s
+            stack = np.tile(np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)) - np.tile(s_, (
+                np.size(x_, 0),
+                1, 1))
+            # Taking stack and creating array of all thetaj*dij
+            after_parameters = params * abs(stack)
+            # Create matrix of all ones to compare
+            comp_ones = np.ones((np.size(x_, 0), np.size(s_, 0), np.size(s_, 1)))
+            # zeta_matrix has all values min{1,theta*dij}
+            zeta_matrix_ = np.minimum(after_parameters, comp_ones)
+            # Copy zeta_matrix to another matrix that will used to find where derivative should be zero
+            indices = zeta_matrix_.copy()
+            # If value of min{1,theta*dij} is 1, the derivative should be 0.
+            # So, replace all values of 1 with 0, then perform the .astype(bool).astype(int)
+            # operation like in the linear example, so you end up with an array of 1's where
+            # the derivative should be caluclated and 0 where it should be zero
+            indices[indices == 1] = 0
+            # Create matrix of all |dij| (where non zero) to be used in calculation of dR/dtheta
+            dtheta_derivs_ = indices.astype(bool).astype(int) * abs(stack)
+            # Same as above, but for matrix of all thetaj where non-zero
+            dx_derivs_ = indices.astype(bool).astype(int) * params * np.sign(stack)
+            return zeta_matrix_, dtheta_derivs_, dx_derivs_
+
         if self.corr_model == 'Exponential':
             def c(x, s, params, dt=False, dx=False):
                 x, s = np.atleast_2d(x), np.atleast_2d(s)
@@ -837,40 +848,19 @@ class Kriging:
                 drdt = np.multiply(first_dtheta, ones_and_zeros)
                 drdx = np.multiply(first_dx, ones_and_zeros)
                 if dt:
-                    # Loop over parameters, shifting max_matrix and multiplying over derivative matrix with each iteration
+                    # Loop over parameters, shifting max_matrix and multiplying over derivative matrix with each iter
                     for i in range(len(params) - 1):
                         drdt = drdt * np.roll(max_matrix, i + 1, axis=2)
                     return rx, drdt
                 if dx:
-                    # Loop over parameters, shifting max_matrix and multiplying over derivative matrix with each iteration
+                    # Loop over parameters, shifting max_matrix and multiplying over derivative matrix with each iter
                     for i in range(len(params) - 1):
                         drdx = drdx * np.roll(max_matrix, i + 1, axis=2)
                     return rx, drdx
                 return rx
         elif self.corr_model == 'Spherical':
             def c(x, s, params, dt=False, dx=False):
-                x, s = np.atleast_2d(x), np.atleast_2d(s)
-                # Create stack matrix, where each block is x_i with all s
-                stack = np.tile(np.swapaxes(np.atleast_3d(x), 1, 2), (1, np.size(s, 0), 1)) - np.tile(s, (
-                    np.size(x, 0),
-                    1, 1))
-                # Taking stack and creating array of all thetaj*dij
-                after_parameters = params * abs(stack)
-                # Create matrix of all ones to compare
-                comp_ones = np.ones((np.size(x, 0), np.size(s, 0), np.size(s, 1)))
-                # zeta_matrix has all values min{1,theta*dij}
-                zeta_matrix = np.minimum(after_parameters, comp_ones)
-                # Copy zeta_matrix to another matrix that will used to find where derivative should be zero
-                indices = zeta_matrix.copy()
-                # If value of min{1,theta*dij} is 1, the derivative should be 0.
-                # So, replace all values of 1 with 0, then perform the .astype(bool).astype(int)
-                # operation like in the linear example, so you end up with an array of 1's where
-                # the derivative should be caluclated and 0 where it should be zero
-                indices[indices == 1] = 0
-                # Create matrix of all |dij| (where non zero) to be used in calculation of dR/dtheta
-                dtheta_derivs = indices.astype(bool).astype(int) * abs(stack)
-                # Same as above, but for matrix of all thetaj where non-zero
-                dx_derivs = indices.astype(bool).astype(int) * params * np.sign(stack)
+                zeta_matrix, dtheta_derivs, dx_derivs = derivatives(x_=x, s_=s, params=params)
                 # Initial matrices containing derivates for all values in array. Note since
                 # dtheta_s and dx_s already accounted for where derivative should be zero, all
                 # that must be done is multiplying the |dij| or thetaj matrix on top of a
@@ -893,28 +883,7 @@ class Kriging:
                 return rx
         elif self.corr_model == 'Cubic':
             def c(x, s, params, dt=False, dx=False):
-                x, s = np.atleast_2d(x), np.atleast_2d(s)
-                # Create stack matrix, where each block is x_i with all s
-                stack = np.tile(np.swapaxes(np.atleast_3d(x), 1, 2), (1, np.size(s, 0), 1)) - np.tile(s, (
-                    np.size(x, 0),
-                    1, 1))
-                # Taking stack and creating array of all thetaj*dij
-                after_parameters = params * abs(stack)
-                # Create matrix of all ones to compare
-                comp_ones = np.ones((np.size(x, 0), np.size(s, 0), np.size(s, 1)))
-                # zeta_matrix has all values min{1,theta*dij}
-                zeta_matrix = np.minimum(after_parameters, comp_ones)
-                # Copy zeta_matrix to another matrix that will used to find where derivative should be zero
-                indices = zeta_matrix.copy()
-                # If value of min{1,theta*dij} is 1, the derivative should be 0.
-                # So, replace all values of 1 with 0, then perform the .astype(bool).astype(int)
-                # operation like in the linear example, so you end up with an array of 1's where
-                # the derivative should be caluclated and 0 where it should be zero
-                indices[indices == 1] = 0
-                # Create matrix of all |dij| (where non zero) to be used in calculation of dR/dtheta
-                dtheta_derivs = indices.astype(bool).astype(int) * abs(stack)
-                # Same as above, but for matrix of all thetaj where non-zero
-                dx_derivs = indices.astype(bool).astype(int) * params * np.sign(stack)
+                zeta_matrix, dtheta_derivs, dx_derivs = derivatives(x_=x, s_=s, params=params)
                 # Initial matrices containing derivates for all values in array. Note since
                 # dtheta_s and dx_s already accounted for where derivative should be zero, all
                 # that must be done is multiplying the |dij| or thetaj matrix on top of a
