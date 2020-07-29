@@ -85,7 +85,7 @@ Olivier, A., Giovanis, D.G., Aakash, B.S., Chauhan, M., Vandanapu, L., and Shiel
 Help and Support
 ===========
 
-For assistance with the UQpy software package....
+For assistance with the UQpy software package, please raise an issue on the Github Issues page. Please use the appropriate labels to indicate which module you are specifically inquiring about.
 
 
 
