@@ -7,6 +7,10 @@ Dependencies required::
     
 	macOS, Linux, Windows
 	Python >= 3.6
+	
+
+Installation
+-------------
 
 Installation on a macOS can be made with the following commands.
 
@@ -44,4 +48,7 @@ Olivier, A., Giovanis, D.G., Aakash, B.S., Chauhan, M., Vandanapu, L., and Shiel
 Help & Support
 ---------------------------
 
-For assistance with the ``UQpy`` software package, please raise an issue on the Github Issues page. Please use the appropriate labels to indicate which module you are specifically inquiring about. Alternatively, please contact ``uqpy.info@gmail.com``.
+For assistance with the ``UQpy`` software package, please raise an issue on the Github `issues`_ page. Please use the appropriate labels to indicate which module you are specifically inquiring about. Alternatively, please contact ``uqpy.info@gmail.com``.
+
+
+.. _issues: https://github.com/SURGroup/UQpy/issues
