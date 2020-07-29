@@ -68,6 +68,14 @@ Clone your fork of the UQpy repo from your GitHub account to your local disk (to
                         python setup.py install  (user installation)
                         python setup.py develop (developer installation)
 
+Referencing UQpy
+=================
+
+If you are using this software in a work that will be published, please cite this paper:
+
+Olivier, A., Giovanis, D.G., Aakash, B.S., Chauhan, M., Vandanapu, L., and Shields, M.D. (2020). "UQpy: A general purpose Python package and development environment for uncertainty quantification". Journal of Computational Science.
+
+
 Help and Support
 ===========
 
