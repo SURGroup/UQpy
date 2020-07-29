@@ -1,13 +1,12 @@
 .. _installation_doc:
 
-Installation
-============
+Introduction
+==============
 
 Dependencies required::
     
 	macOS, Linux, Windows
 	Python >= 3.6
-	Git >= 2.13.1
 
 Installation on a macOS can be made with the following commands.
 
@@ -18,6 +17,7 @@ Using Python package index (PyPI)::
 Using Conda::
 
 	conda install --channel  ``SURG_JHU``  uqpy
+	conda install -c conda-forge uqpy
 	
 
 From GitHub: Clone your fork of the UQpy repo from your GitHub account to your local disk (to get the latest version::
@@ -34,13 +34,14 @@ UQpy is designed to serve as a platform for developing new UQ methodologies and 
 
     python setup.py develop 
 
-Documentation
+Referencing
 -------------
 
-If you are using this software in a work that will be published, please cite this
-paper as ...
+If you are using this software in a work that will be published, please cite this paper:
+
+Olivier, A., Giovanis, D.G., Aakash, B.S., Chauhan, M., Vandanapu, L., and Shields, M.D. (2020). "UQpy: A general purpose Python package and development environment for uncertainty quantification". Journal of Computational Science.
 
 Help & Support
 ---------------------------
 
-For any problems and questions you might have related to ``UQpy``, please contact ``uqpy.info@gmail.com``.
+For assistance with the ``UQpy`` software package, please raise an issue on the Github Issues page. Please use the appropriate labels to indicate which module you are specifically inquiring about. Alternatively, please contact ``uqpy.info@gmail.com``.
