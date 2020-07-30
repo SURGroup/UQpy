@@ -33,7 +33,7 @@ SROM Class Descriptions
 Gaussian Process Regression / Kriging
 ---------------------------------------
 
-The ``Kriging`` class defines an approximate surrogate model or response surface which can be used to predict the model response and its uncertainty at points wehre the model has not been previously evaluated. Kriging gives the best unbiased linear predictor at the interpolated points. This class generates a model :math:`\hat{y}` that express the response as a realization of regression model and Gaussian random process as:
+The ``Kriging`` class defines an approximate surrogate model or response surface which can be used to predict the model response and its uncertainty at points where the model has not been previously evaluated. Kriging gives the best unbiased linear predictor at the interpolated points. This class generates a model :math:`\hat{y}` that express the response as a realization of regression model and Gaussian random process as:
 
 .. math:: \hat{y}(x) = \mathcal{F}(\beta, x) + z(x).
 
