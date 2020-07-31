@@ -1893,9 +1893,10 @@ class RSS:
         # Adding new sample to training points, samplesU01 and samples attributes
         self.training_points = np.vstack([self.training_points, new_point])
         self.samplesU01 = np.vstack([self.samplesU01, new_point])
+        new_point_ = np.zeros_like(new_point)
         for k in range(self.dimension):
-            new_point[:, k] = self.sample_object.dist_object[k].icdf(new_point[:, k])
-        self.samples = np.vstack([self.samples, new_point])
+            new_point_[:, k] = self.sample_object.dist_object[k].icdf(new_point[:, k])
+        self.samples = np.vstack([self.samples, new_point_])
 
     def identify_bins(self, strata_metric, p_):
         bin2break_, p_left = np.array([]), p_
@@ -2046,7 +2047,7 @@ class RectangularRSS(RSS):
             # -------------------------------
             # 4. Execute model at new samples
             # -------------------------------
-            self.runmodel_object.run(samples=np.atleast_2d(new_points), append_samples=True)
+            self.runmodel_object.run(samples=np.atleast_2d(self.samples[-self.n_add:]), append_samples=True)
 
             if self.verbose:
                 print("Iteration:", i)
@@ -2111,7 +2112,6 @@ class RectangularRSS(RSS):
         else:
             self.strata_object.seeds[bin_, dir2break] = self.strata_object.seeds[bin_, dir2break] + \
                                                         self.strata_object.widths[bin_, dir2break]
-
 
         self.strata_object.volume[bin_] = self.strata_object.volume[bin_] / 2
         self.strata_object.volume = np.append(self.strata_object.volume, self.strata_object.volume[bin_])
@@ -2207,7 +2207,8 @@ class VoronoiRSS(RSS):
             # --------------------------------
 
             # Compute the gradients at the existing sample points
-            if self.max_train_size is None or len(self.training_points) <= self.max_train_size or i == self.samples.shape[0]:
+            if self.max_train_size is None or len(self.training_points) <= self.max_train_size or \
+                    i == self.samples.shape[0]:
                 # Use the entire sample set to train the surrogate model (more expensive option)
                 dy_dx = self.estimate_gradient(np.atleast_2d(self.training_points), qoi, self.mesh.centroids)
             else:
@@ -2307,7 +2308,7 @@ class VoronoiRSS(RSS):
             # -------------------------------
             # 4. Execute model at new samples
             # -------------------------------
-            self.runmodel_object.run(samples=new_points)
+            self.runmodel_object.run(samples=self.samples[-self.n_add:])
 
             if self.verbose:
                 print("Iteration:", i)
@@ -2432,7 +2433,7 @@ class VoronoiRSS(RSS):
         """
         from scipy.spatial.qhull import Delaunay
 
-        self.mesh_vertices = self.training_points
+        self.mesh_vertices = self.training_points.copy()
         self.points_to_samplesU01 = np.arange(0, self.training_points.shape[0])
         for i in range(np.shape(self.strata_object.voronoi.vertices)[0]):
             if any(np.logical_and(self.strata_object.voronoi.vertices[i, :] >= -1e-10,
