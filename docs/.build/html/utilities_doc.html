@@ -1,0 +1,319 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Utilities &#8212; UQpy v3.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="News" href="news_doc.html" />
+    <link rel="prev" title="DimensionReduction" href="dimension_reduction_doc.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="utilities">
+<span id="utilities-doc"></span><h1>Utilities<a class="headerlink" href="#utilities" title="Permalink to this headline">¶</a></h1>
+<p>A module that contains miscalleneous methods used in various modules of <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>.</p>
+<span class="target" id="module-UQpy.Utilities"></span><dl class="function">
+<dt id="UQpy.Utilities.correlation_distortion">
+<code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">correlation_distortion</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">rho</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#correlation_distortion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.correlation_distortion" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method computes the corelation distortion from Gaussian distribution to any other distribution defined in
+UQpy.Distributions</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>dist_object</strong> (<code class="docutils literal notranslate"><span class="pre">Distribution</span></code> object):</dt><dd><p>The object of the Distribution the corelation needs to be calculated.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>rho</strong> (<cite>float</cite>):</dt><dd><p>The Gaussian  correlation value.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>rho_non</strong> (<cite>float</cite>):</dt><dd><p>The distorted correlation value.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="UQpy.Utilities.gradient">
+<code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">gradient</code><span class="sig-paren">(</span><em class="sig-param">runmodel_object=None</em>, <em class="sig-param">point=None</em>, <em class="sig-param">order='first'</em>, <em class="sig-param">df_step=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method estimates the gradients (1st, 2nd, mixed) of a function using a finite difference scheme in the
+standard normal space. First order gradients are calculated using central finite differences.</p>
+<p><strong>Inputs:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>runmodel_object</strong> (<code class="docutils literal notranslate"><span class="pre">RunModel</span></code> object or a <cite>callable</cite> ):</dt><dd><p>The numerical model. It should be of type <cite>RunModel</cite> (see <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> class) or a <cite>callable</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>point</strong> (<cite>ndarray</cite>):</dt><dd><p>The point to evaluate the gradient with shape <code class="docutils literal notranslate"><span class="pre">point</span></code>.shape=(1, dimension)</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>order</strong> (<cite>str</cite>):</dt><dd><p>Order of the gradient. Available options: ‘first’, ‘second’, ‘mixed’.</p>
+<p>Default: ‘First’.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>df_step</strong> (<cite>float</cite>):</dt><dd><p>Finite difference step.</p>
+<p>Default: 0.001.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>du_dj</strong> (<cite>ndarray</cite>):</dt><dd><p>Vector of first-order gradients (if order = ‘first’).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>d2u_dj</strong> (<cite>ndarray</cite>):</dt><dd><p>Vector of second-order gradients (if order = ‘second’).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>d2u_dij</strong> (<cite>ndarray</cite>):</dt><dd><p>Vector of mixed gradients (if order = ‘mixed’).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="UQpy.Utilities.nearest_pd">
+<code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">nearest_pd</code><span class="sig-paren">(</span><em class="sig-param">input_matrix</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#nearest_pd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.nearest_pd" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a method to find the nearest positive-definite matrix to input (<a class="footnote-reference brackets" href="#id4" id="id1">1</a>, <a class="footnote-reference brackets" href="#id5" id="id2">2</a>).</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>input_matrix</strong> (<cite>ndarray</cite>):</dt><dd><p>Matrix to find the nearest PD.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>pd_matrix</strong> (<cite>ndarray</cite>):</dt><dd><p>Nearest PD matrix to input_matrix.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="UQpy.Utilities.nearest_psd">
+<code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">nearest_psd</code><span class="sig-paren">(</span><em class="sig-param">input_matrix</em>, <em class="sig-param">iterations=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#nearest_psd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.nearest_psd" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to compute the nearest positive semi-definite matrix of a given matrix <a class="footnote-reference brackets" href="#id6" id="id3">3</a>.</p>
+<p><strong>Inputs:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>input_matrix</strong> (<cite>ndarray</cite>):</dt><dd><p>Matrix to find the nearest PD.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>iterations</strong> (<cite>int</cite>):</dt><dd><p>Number of iterations to perform.</p>
+<p>Default: 10</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>psd_matrix</strong> (<cite>ndarray</cite>):</dt><dd><p>Nearest PSD matrix to input_matrix.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="UQpy.Utilities.run_parallel_python">
+<code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">run_parallel_python</code><span class="sig-paren">(</span><em class="sig-param">model_script</em>, <em class="sig-param">model_object_name</em>, <em class="sig-param">sample</em>, <em class="sig-param">dict_kwargs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#run_parallel_python"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.run_parallel_python" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method needed by <code class="docutils literal notranslate"><span class="pre">RunModel</span></code> to execute a python model in parallel</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="UQpy.Utilities.svd">
+<code class="sig-prename descclassname">UQpy.Utilities.</code><code class="sig-name descname">svd</code><span class="sig-paren">(</span><em class="sig-param">matrix</em>, <em class="sig-param">rank=None</em>, <em class="sig-param">tol=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/Utilities.html#svd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.Utilities.svd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the singular value decomposition (SVD) of a matrix.</p>
+<p><strong>Inputs:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>matrix</strong> (<cite>ndarray</cite>):</dt><dd><p>Matrix of <code class="docutils literal notranslate"><span class="pre">shape=(m,</span> <span class="pre">n)</span></code> to perform the factorization using thin SVD</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>tol</strong> (<cite>float</cite>):</dt><dd><p>Tolerance to estimate the rank of the matrix.</p>
+<p>Default: Machine precision</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>iterations</strong> (<cite>rank</cite>):</dt><dd><p>Number of eigenvalues to keep.</p>
+<p>Default: None</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>u</strong> (<cite>ndarray</cite>):</dt><dd><p>Matrix of left eigenvectors of <code class="docutils literal notranslate"><span class="pre">shape=(m,</span> <span class="pre">rank)</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>v</strong> (<cite>ndarray</cite>):</dt><dd><p>Matrix of right eigenvectors of <code class="docutils literal notranslate"><span class="pre">shape=(rank,</span> <span class="pre">n)</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>s</strong> (<cite>ndarray</cite>):</dt><dd><p>Matrix of eigenvalues <code class="docutils literal notranslate"><span class="pre">shape=(rank,</span> <span class="pre">rank)</span></code>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="footnote brackets">
+<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>N.J. Higham, “Computing a nearest symmetric positive semidefinite matrix” (1988), <a class="reference external" href="https://doi.org/10.1016/0024-3795(88)90223-6">https://doi.org/10.1016/0024-3795(88)90223-6</a>.</p>
+</dd>
+<dt class="label" id="id5"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dd><p><a class="reference external" href="https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd">https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd</a></p>
+</dd>
+<dt class="label" id="id6"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
+<dd><p>Houduo Qi, Defeng Sun, A Quadratically Convergent Newton Method for Computing the Nearest Correlation Matrix, SIAM Journal on Matrix Analysis and Applications 28(2):360-385, 2006.</p>
+</dd>
+</dl>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.jpg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Uncertainty quantification with Python </p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=SURG&repo=UQpy&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation_doc.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runmodel_doc.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributions_doc.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samplemethods_doc.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transformations_doc.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stochastic_process_doc.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="surrogates_doc.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reliability_doc.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference_doc.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dimension_reduction_doc.html">DimensionReduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="news_doc.html">News</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="dimension_reduction_doc.html" title="previous chapter">DimensionReduction</a></li>
+      <li>Next: <a href="news_doc.html" title="next chapter">News</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Michael D. Shields.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/utilities_doc.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/SURG/UQpy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

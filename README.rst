@@ -7,8 +7,7 @@ Uncertainty Quantification with python (UQpy)
 
 ====
 
-:Authors: Michael D. Shields, Dimitris G. Giovanis
-:Contributors: Aakash Bangalore Satish, Mohit Singh Chauhan, Audrey Olivier, Lohit Vandanapu, Ketson RM dos Santos
+:Authors: Michael D. Shields, Dimitris G. Giovanis, Audrey Olivier, Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu, Ketson RM dos Santos
 :Contact: UQpy.info@gmail.com
 :Version: 3.0
 
@@ -17,6 +16,12 @@ Description
 ===========
 
 UQpy (Uncertainty Quantification with python) is a general purpose Python toolbox for modeling uncertainty in physical and mathematical systems.
+
+Documentation
+================
+
+Website:
+           https://uqpyproject.readthedocs.io
 
 Dependencies
 ===========
@@ -46,33 +51,46 @@ From PyPI
 
             * ::
 
-                        $pip install UQpy 
+                        pip install UQpy
 
 In order to uninstall it
 
             * ::
 
-                        $pip uninstall UQpy
+                        pip uninstall UQpy
+
+Using Conda
+
+            * ::
+
+                        conda install --channel  ``SURG_JHU``  uqpy
 
 Clone your fork of the UQpy repo from your GitHub account to your local disk (to get the latest version): 
 
             * ::
 
-                        $git clone https://github.com/SURGroup/UQpy.git
-                        $cd UQpy/
-                        $python setup.py install  (user installation)
-                        $python setup.py develop (developer installation)
+                        git clone https://github.com/SURGroup/UQpy.git
+                        cd UQpy/
+                        python setup.py install  (user installation)
+                        python setup.py develop (developer installation)
+
+Referencing UQpy
+=================
+
+If you are using this software in a work that will be published, please cite this paper:
+
+Olivier, A., Giovanis, D.G., Aakash, B.S., Chauhan, M., Vandanapu, L., and Shields, M.D. (2020). "UQpy: A general purpose Python package and development environment for uncertainty quantification". Journal of Computational Science.
+
 
 Help and Support
 ===========
 
-Website:
-           www.ce.jhu.edu/surg
+For assistance with the UQpy software package, please raise an issue on the Github Issues page. Please use the appropriate labels to indicate which module you are specifically inquiring about.
 
 
 
 .. |logo| image:: logo.jpg
-    :scale: 50 %
+    :scale: 25 %
     :target: https://gihub.com/SURGroup/UQpy
     
     

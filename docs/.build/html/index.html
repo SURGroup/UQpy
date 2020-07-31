@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Welcome to UQpy’s documentation! &#8212; UQpy v3.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation_doc.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-uqpy-s-documentation">
+<h1>Welcome to UQpy’s documentation!<a class="headerlink" href="#welcome-to-uqpy-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>UQpy (Uncertainty Quantification with python) is a general purpose Python toolbox
+for modeling uncertainty in physical and mathematical systems. The code is organized
+as a set of modules centered around core capabilities in Uncertainty Quantification (UQ).</p>
+<div class="section" id="table-of-contents">
+<span id="toc"></span><h2>Table of contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation_doc.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation_doc.html#development">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation_doc.html#documentation">Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation_doc.html#help-support">Help &amp; Support</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="runmodel_doc.html">RunModel</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="runmodel_doc.html#architecture-workflow">Architecture &amp; Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runmodel_doc.html#examples-template-files">Examples &amp; Template Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runmodel_doc.html#runmodel-class">RunModel Class</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="distributions_doc.html">Distributions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="distributions_doc.html#parent-distribution-class">Parent Distribution Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distributions_doc.html#d-continuous-distributions">1D Continuous Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distributions_doc.html#d-discrete-distributions">1D Discrete Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distributions_doc.html#multivariate-distributions">Multivariate Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distributions_doc.html#copula">Copula</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distributions_doc.html#user-defined-distributions-and-copulas">User-defined Distributions and Copulas</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="samplemethods_doc.html">SampleMethods</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="samplemethods_doc.html#mcs">MCS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="samplemethods_doc.html#lhs">LHS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="samplemethods_doc.html#stratified-sampling">Stratified Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="samplemethods_doc.html#refined-stratified-sampling">Refined Stratified Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="samplemethods_doc.html#simplex">Simplex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="samplemethods_doc.html#akmcs">AKMCS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="samplemethods_doc.html#mcmc">MCMC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="samplemethods_doc.html#is">IS</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="transformations_doc.html">Transformations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="transformations_doc.html#nataf">Nataf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transformations_doc.html#correlate">Correlate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transformations_doc.html#decorrelate">Decorrelate</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="stochastic_process_doc.html">StochasticProcess</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="stochastic_process_doc.html#spectral-representation-method">Spectral Representation Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stochastic_process_doc.html#third-order-spectral-representation-method">Third-order Spectral Representation Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stochastic_process_doc.html#karhunen-loeve-expansion">Karhunen Loève Expansion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stochastic_process_doc.html#non-gaussian-translation-processes">Non-Gaussian Translation Processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="surrogates_doc.html">Surrogates</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="surrogates_doc.html#stochatic-reduced-order-models-sroms">Stochatic Reduced Order Models - SROMs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="surrogates_doc.html#gaussian-process-regression-kriging">Gaussian Process Regression / Kriging</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reliability_doc.html">Reliability</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reliability_doc.html#subset-simulation">Subset Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reliability_doc.html#taylor-series">Taylor Series</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="inference_doc.html">Inference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="inference_doc.html#inferencemodel">InferenceModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference_doc.html#parameter-estimation">Parameter estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference_doc.html#mlestimation">MLEstimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference_doc.html#bayesparameterestimation">BayesParameterEstimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference_doc.html#model-selection">Model Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference_doc.html#infomodelselection">InfoModelSelection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference_doc.html#bayesmodelselection">BayesModelSelection</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dimension_reduction_doc.html">DimensionReduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dimension_reduction_doc.html#grassmann">Grassmann</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimension_reduction_doc.html#diffusionmaps">DiffusionMaps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utilities_doc.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="news_doc.html">News</a></li>
+</ul>
+</div>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="#">
+    <img class="logo" src="_static/logo.jpg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Uncertainty quantification with Python </p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=SURG&repo=UQpy&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation_doc.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runmodel_doc.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributions_doc.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samplemethods_doc.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transformations_doc.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stochastic_process_doc.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="surrogates_doc.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reliability_doc.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference_doc.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dimension_reduction_doc.html">DimensionReduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities_doc.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="news_doc.html">News</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="installation_doc.html" title="next chapter">Installation</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Michael D. Shields.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/SURG/UQpy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

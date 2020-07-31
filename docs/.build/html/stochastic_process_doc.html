@@ -1,0 +1,754 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>StochasticProcess &#8212; UQpy v3.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Surrogates" href="surrogates_doc.html" />
+    <link rel="prev" title="Transformations" href="transformations_doc.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="stochasticprocess">
+<span id="stochastic-process-doc"></span><h1>StochasticProcess<a class="headerlink" href="#stochasticprocess" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">StochasticProcess</span></code> module consists of classes and functions to generate samples of stochastic processes from prescribed properties of the process (e.g. power spectrum, bispectrum and/or autocorrelation function). The existing classes rely on stochastic expansions taking the following general form,</p>
+<div class="math notranslate nohighlight">
+\[A(x) = \sum_{i=1}^N \theta(\omega) \phi(x),\]</div>
+<p>such that the process can be expressed in terms of a set of uncorrelated random variables, <span class="math notranslate nohighlight">\(\theta(\omega)\)</span>, and deterministic basis functions <span class="math notranslate nohighlight">\(\phi(x)\)</span>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">StochasticProcess</span></code> module supports simulation of uni-variate, multi-variate, multi-dimensional, Gaussian and non-Gaussian stochastic processes. Gaussian stochasitc processes can be simulated using the widely-used Spectral Representation Method (<a class="footnote-reference brackets" href="#id21" id="id1">1</a>, <a class="footnote-reference brackets" href="#id22" id="id2">2</a>, <a class="footnote-reference brackets" href="#id23" id="id3">3</a>, <a class="footnote-reference brackets" href="#id24" id="id4">4</a>) and the Karhunen-Loeve Expansion (<a class="footnote-reference brackets" href="#id25" id="id5">5</a>, <a class="footnote-reference brackets" href="#id26" id="id6">6</a>, <a class="footnote-reference brackets" href="#id27" id="id7">7</a>). Non-Gaussian stochastic processes can be generated through higher-order spectral representations (<a class="footnote-reference brackets" href="#id28" id="id8">8</a>, <a class="footnote-reference brackets" href="#id29" id="id9">9</a>, <a class="footnote-reference brackets" href="#id30" id="id10">10</a>) or through a nonlinear transformation from a Gaussian stochastic process to a prescribed marginal distribution using translation process theory <a class="footnote-reference brackets" href="#id31" id="id11">11</a>. Modeling of arbitrarily distributed random processes with specified correlation and/or power spectrum can be performed using the Iterative Translation Approximation Method (ITAM) (<a class="footnote-reference brackets" href="#id32" id="id12">12</a>, <a class="footnote-reference brackets" href="#id33" id="id13">13</a>) for inverse translation process modeling.</p>
+<span class="target" id="module-UQpy.StochasticProcess"></span><p>The module currently contains the following classes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SRM</span></code>: Class for simulation of Gaussian stochastic processes and random fields using the Spectral Representation
+Method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BSRM</span></code>: Class for simulation of third-order non-Gaussian stochastic processes and random fields using the
+Bispectral Representation Method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">KLE</span></code>: Class for simulation of stochastic processes using the Karhunen-Loeve Expansion.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Translation</span></code>: Class for transforming a Gaussian stochastic process to a non-Gaussian stochastic process with
+prescribed marginal probability distribution.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">InverseTranslation</span></code>: Call for identifying an underlying Gaussian stochastic process for a non-Gaussian process with
+prescribed marginal probability distribution and autocorrelation function / power spectrum.</p></li>
+</ul>
+<p>As with other modules of <code class="docutils literal notranslate"><span class="pre">UQpy</span></code>, adding simulation methods requires the user to build a new class to support the desired functionality. It does not require modification of any existing classes or methods.</p>
+<div class="section" id="spectral-representation-method">
+<h2>Spectral Representation Method<a class="headerlink" href="#spectral-representation-method" title="Permalink to this headline">¶</a></h2>
+<p>The Spectral Representation Method (SRM) expands the stochastic process in a Fourier-type expansion of cosines. The version of the SRM implemented in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> uses a summation of cosines with random phase angles as:</p>
+<div class="math notranslate nohighlight">
+\[A(t) = \sqrt{2}\sum_{i=1}^N\sqrt{2S(\omega_i)\Delta\omega}\cos(\omega_i t+\phi_i)\]</div>
+<p>where <span class="math notranslate nohighlight">\(S(\omega_i)\)</span> is the discretized power spectrum at frequency <span class="math notranslate nohighlight">\(\omega_i\)</span>, <span class="math notranslate nohighlight">\(\Delta\omega\)</span> is the frequency discretization, and <span class="math notranslate nohighlight">\(\phi_i\)</span> are random phase angles uniformly distributed in <span class="math notranslate nohighlight">\([0, 2\pi]\)</span>. For computational efficiency, the SRM is implemented using the Fast Fourier Transform (FFT).</p>
+<div class="section" id="srm-class-descriptions">
+<h3>SRM Class Descriptions<a class="headerlink" href="#srm-class-descriptions" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.StochasticProcess.SRM">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.StochasticProcess.</code><code class="sig-name descname">SRM</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em>, <em class="sig-param">power_spectrum</em>, <em class="sig-param">time_interval</em>, <em class="sig-param">frequency_interval</em>, <em class="sig-param">number_time_intervals</em>, <em class="sig-param">number_frequency_intervals</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/StochasticProcess.html#SRM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.StochasticProcess.SRM" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to simulate stochastic processes from a given power spectrum density using the Spectral Representation
+Method. This class can simulate uni-variate, multi-variate, and multi-dimensional stochastic processes. The class
+uses Singular Value Decomposition, as opposed to Cholesky Decomposition, to ensure robust, near-positive definite
+multi-dimensional power spectra.</p>
+<p><strong>Input:</strong></p>
+<ul>
+<li><dl>
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples of the stochastic process to be simulated.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically called if <cite>nsamples</cite> is provided. If <cite>nsamples</cite> is not provided, then the
+<code class="docutils literal notranslate"><span class="pre">SRM</span></code> object is created but samples are not generated.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>power_spectrum</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>The discretized power spectrum.</p>
+<p>For uni-variate, one-dimensional processes <cite>power_spectrum</cite> will be <cite>list</cite> or <cite>ndarray</cite> of length
+<cite>number_frequency_intervals</cite>.</p>
+<p>For multi-variate, one-dimensional processes, <cite>power_spectrum</cite> will be a <cite>list</cite> or <cite>ndarray</cite> of size
+(<cite>number_of_variables</cite>, <cite>number_of_variables</cite>, <cite>number_frequency_intervals</cite>).</p>
+<p>For uni-variate, multi-dimensional processes, <cite>power_spectrum</cite> will be a <cite>list</cite> or <cite>ndarray</cite> of size
+(<cite>number_frequency_intervals[0]</cite>, …, <cite>number_frequency_intervals[number_of_dimensions-1]</cite>)</p>
+<p>For multi-variate, multi-dimensional processes, <cite>power_spectrum</cite> will be a <cite>list</cite> or <cite>ndarray</cite> of size
+(<cite>number_of_variables</cite>, <cite>number_of_variables</cite>, <cite>number_frequency_intervals[0]</cite>, …
+<cite>number_frequency_intervals[number_of_dimensions-1]`</cite>).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>time_interval</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>Length of time discretizations (<span class="math notranslate nohighlight">\(\Delta t\)</span>) for each dimension of size <cite>number_of_dimensions</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>frequency_interval</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>Length of frequency discretizations (<span class="math notranslate nohighlight">\(\Delta \omega\)</span>) for each dimension of size <cite>number_of_dimensions</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>number_frequency_intervals</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>Number of frequency discretizations for each dimension of size <cite>number_of_dimensions</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>number_time_intervals</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>Number of time discretizations for each dimensions of size <cite>number_of_dimensions</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>random_state</strong> (None or <cite>int</cite> or <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+<p>If an integer is provided, this sets the seed for an object of <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code>. Otherwise, the
+object itself can be passed directly.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>verbose</strong> (Boolean):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Attributes:</strong></p>
+<ul>
+<li><dl>
+<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p>Generated samples.</p>
+<p>The shape of the samples is (<cite>nsamples</cite>, <cite>number_of_variables</cite>, <cite>number_time_intervals[0]</cite>, …,
+<cite>number_time_intervals[number_of_dimensions-1]</cite>)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>number_of_dimensions</strong> (<cite>int</cite>):</dt><dd><p>The dimensionality of the stochastic process.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>number_of_variables</strong> (<cite>int</cite>):</dt><dd><p>Number of variables in the stochastic process.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>phi</strong> (<cite>ndarray</cite>):</dt><dd><p>The random phase angles used in the simulation of the stochastic process.</p>
+<p>The shape of the phase angles (<cite>nsamples</cite>, <cite>number_of_variables</cite>, <cite>number_frequency_intervals[0]</cite>, …,
+<cite>number_frequency_intervals[number_of_dimensions-1]</cite>)</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods</strong></p>
+<dl class="method">
+<dt id="UQpy.StochasticProcess.SRM.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/StochasticProcess.html#SRM.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.StochasticProcess.SRM.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the random sampling in the <code class="docutils literal notranslate"><span class="pre">SRM</span></code> class.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is the function that performs random sampling in the <code class="docutils literal notranslate"><span class="pre">SRM</span></code> class. If <cite>nsamples</cite> is
+provided when the <code class="docutils literal notranslate"><span class="pre">SRM</span></code> object is defined, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically called. The user may also call
+the <code class="docutils literal notranslate"><span class="pre">run</span></code> method directly to generate samples. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">SRM</span></code> class can be invoked many
+times and each time the generated samples are appended to the existing samples.</p>
+<p><strong>Input:</strong></p>
+<ul>
+<li><dl>
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples of the stochastic process to be simulated.</p>
+<p>If the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is invoked multiple times, the newly generated samples will be appended to the
+existing samples.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method has no returns, although it creates and/or appends the <cite>samples</cite> attribute of the <code class="docutils literal notranslate"><span class="pre">SRM</span></code>
+class.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="third-order-spectral-representation-method">
+<h2>Third-order Spectral Representation Method<a class="headerlink" href="#third-order-spectral-representation-method" title="Permalink to this headline">¶</a></h2>
+<p>The third-order Spectral Representation Method (or Bispectral Representation Method) is a generalization of the SRM for processes posessing a known power spectrum and bispectrum. Implementation follows from references <a class="footnote-reference brackets" href="#id28" id="id14">8</a> and <a class="footnote-reference brackets" href="#id29" id="id15">9</a>. The multi-variate formulation from reference <a class="footnote-reference brackets" href="#id30" id="id16">10</a> is not currently implemented.</p>
+<div class="section" id="bsrm-class-descriptions">
+<h3>BSRM Class Descriptions<a class="headerlink" href="#bsrm-class-descriptions" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.StochasticProcess.BSRM">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.StochasticProcess.</code><code class="sig-name descname">BSRM</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em>, <em class="sig-param">power_spectrum</em>, <em class="sig-param">bispectrum</em>, <em class="sig-param">time_interval</em>, <em class="sig-param">frequency_interval</em>, <em class="sig-param">number_time_intervals</em>, <em class="sig-param">number_frequency_intervals</em>, <em class="sig-param">case='uni'</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/StochasticProcess.html#BSRM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.StochasticProcess.BSRM" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to simulate non-Gaussian stochastic processes from a given power spectrum and bispectrum based on the 3-rd
+order Spectral Representation Method. This class can simulate uni-variate, one-dimensional and multi-dimensional
+stochastic processes.</p>
+<p><strong>Input:</strong></p>
+<ul>
+<li><dl>
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples of the stochastic process to be simulated.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically called if <cite>nsamples</cite> is provided. If <cite>nsamples</cite> is not provided, then the
+<code class="docutils literal notranslate"><span class="pre">BSRM</span></code> object is created but samples are not generated.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>power_spectrum</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>The discretized power spectrum.</p>
+<p>For uni-variate, one-dimensional processes <cite>power_spectrum</cite> will be <cite>list</cite> or <cite>ndarray</cite> of length
+<cite>number_frequency_intervals</cite>.</p>
+<p>For uni-variate, multi-dimensional processes, <cite>power_spectrum</cite> will be a <cite>list</cite> or <cite>ndarray</cite> of size
+(<cite>number_frequency_intervals[0]</cite>, …, <cite>number_frequency_intervals[number_of_dimensions-1]</cite>)</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>bispectrum</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>The prescribed bispectrum.</p>
+<p>For uni-variate, one-dimensional processes, <cite>bispectrum</cite> will be a <cite>list</cite> or <cite>ndarray</cite> of size
+(<cite>number_frequency_intervals</cite>, <cite>number_frequency_intervals</cite>)</p>
+<p>For uni-variate, multi-dimensional processes, <cite>bispectrum</cite> will be a <cite>list</cite> or <cite>ndarray</cite> of size
+(<cite>number_frequency_intervals[0]</cite>, …, <cite>number_frequency_intervals[number_of_dimensions-1]</cite>,
+<cite>number_frequency_intervals[0]</cite>, …, <cite>number_frequency_intervals[number_of_dimensions-1]</cite>)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>time_interval</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>Length of time discretizations (<span class="math notranslate nohighlight">\(\Delta t\)</span>) for each dimension of size <cite>number_of_dimensions</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>frequency_interval</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>Length of frequency discretizations (<span class="math notranslate nohighlight">\(\Delta \omega\)</span>) for each dimension of size <cite>number_of_dimensions</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>number_frequency_intervals</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>Number of frequency discretizations for each dimension of size <cite>number_of_dimensions</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>number_time_intervals</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>Number of time discretizations for each dimensions of size <cite>number_of_dimensions</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>random_state</strong> (None or <cite>int</cite> or <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+<p>If an integer is provided, this sets the seed for an object of <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code>. Otherwise, the
+object itself can be passed directly.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>verbose</strong> (Boolean):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Attributes:</strong></p>
+<ul>
+<li><dl>
+<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p>Generated samples.</p>
+<p>The shape of the samples is (<cite>nsamples</cite>, <cite>number_of_variables</cite>, <cite>number_time_intervals[0]</cite>, …,
+<cite>number_time_intervals[number_of_dimensions-1]</cite>)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>number_of_dimensions</strong> (<cite>int</cite>):</dt><dd><p>The dimensionality of the stochastic process.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>number_of_variables</strong> (<cite>int</cite>):</dt><dd><p>Number of variables in the stochastic process.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>phi</strong> (<cite>ndarray</cite>):</dt><dd><p>The random phase angles used in the simulation of the stochastic process.</p>
+<p>The shape of the phase angles (<cite>nsamples</cite>, <cite>number_of_variables</cite>, <cite>number_frequency_intervals[0]</cite>, …,
+<cite>number_frequency_intervals[number_of_dimensions-1]</cite>)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>b_ampl</strong> (<cite>ndarray</cite>):</dt><dd><p>The amplitude of the bispectrum.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>b_real</strong> (<cite>ndarray</cite>):</dt><dd><p>The real part of the bispectrum.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>b_imag</strong> (<cite>ndarray</cite>):</dt><dd><p>The imaginary part of the bispectrum.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>biphase</strong> (<cite>ndarray</cite>):</dt><dd><p>The biphase values of the bispectrum.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>pure_power_spectrum</strong> (<cite>ndarray</cite>):</dt><dd><p>The pure part of the power spectrum.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>bc2</strong> (<cite>ndarray</cite>):</dt><dd><p>The bicoherence values of the power spectrum and bispectrum.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>sum_bc2</strong> (<cite>ndarray</cite>):</dt><dd><p>The sum of the bicoherence values for single frequencies.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods</strong></p>
+<dl class="method">
+<dt id="UQpy.StochasticProcess.BSRM.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/StochasticProcess.html#BSRM.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.StochasticProcess.BSRM.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the random sampling in the <code class="docutils literal notranslate"><span class="pre">BSRM</span></code> class.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is the function that performs random sampling in the <code class="docutils literal notranslate"><span class="pre">BSRM</span></code> class. If <cite>nsamples</cite> is
+provided, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically called when the <code class="docutils literal notranslate"><span class="pre">BSRM</span></code> object is defined. The user may also call
+the <code class="docutils literal notranslate"><span class="pre">run</span></code> method directly to generate samples. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">BSRM</span></code> class can be invoked many
+times and each time the generated samples are appended to the existing samples.</p>
+<p>** Input:**</p>
+<ul>
+<li><dl>
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples of the stochastic process to be simulated.</p>
+<p>If the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is invoked multiple times, the newly generated samples will be appended to the
+existing samples.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method has no returns, although it creates and/or appends the <cite>samples</cite> attribute of the
+<code class="docutils literal notranslate"><span class="pre">BSRM</span></code> class.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="karhunen-loeve-expansion">
+<h2>Karhunen Loève Expansion<a class="headerlink" href="#karhunen-loeve-expansion" title="Permalink to this headline">¶</a></h2>
+<p>The Karhunen Loève Expansion expands the stochastic process as follows:</p>
+<div class="math notranslate nohighlight">
+\[A(x) = \sum_{i=1}^N \sqrt{\lambda_i} \theta_i(\omega)f_i(x)\]</div>
+<p>where <span class="math notranslate nohighlight">\(\theta_i(\omega)\)</span> are uncorrelated standardized random variables and <span class="math notranslate nohighlight">\(\lambda_i\)</span> and <span class="math notranslate nohighlight">\(f_i(x)\)</span> are the eigenvalues and eigenvectors repsectively of the covariance function <span class="math notranslate nohighlight">\(C(x_1, x_2)\)</span>.</p>
+<div class="section" id="kle-class-descriptions">
+<h3>KLE Class Descriptions<a class="headerlink" href="#kle-class-descriptions" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.StochasticProcess.KLE">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.StochasticProcess.</code><code class="sig-name descname">KLE</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em>, <em class="sig-param">correlation_function</em>, <em class="sig-param">time_interval</em>, <em class="sig-param">threshold=None</em>, <em class="sig-param">random_state=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/StochasticProcess.html#KLE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.StochasticProcess.KLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to simulate stochastic processes from a given auto-correlation function based on the Karhunen-Loeve
+Expansion</p>
+<p><strong>Input:</strong></p>
+<ul>
+<li><dl>
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples of the stochastic process to be simulated.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically called if <cite>nsamples</cite> is provided. If <cite>nsamples</cite> is not provided, then the
+<code class="docutils literal notranslate"><span class="pre">KLE</span></code> object is created but samples are not generated.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>correlation_function</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>The correlation function of the stochastic process of size (<cite>number_time_intervals</cite>, <cite>number_time_intervals</cite>)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>time_interval</strong> (<cite>float</cite>):</dt><dd><p>The length of time discretization.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>threshold</strong> (<cite>int</cite>):</dt><dd><p>The threshold number of eigenvalues to be used in the expansion.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>random_state</strong> (None or <cite>int</cite> or <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> object):</dt><dd><p>Random seed used to initialize the pseudo-random number generator. Default is None.</p>
+<p>If an integer is provided, this sets the seed for an object of <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code>. Otherwise, the
+object itself can be passed directly.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>verbose</strong> (Boolean):</dt><dd><p>A boolean declaring whether to write text to the terminal.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Attributes:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>samples</strong> (<cite>ndarray</cite>):</dt><dd><p>Array of generated samples.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>xi</strong> (<cite>ndarray</cite>):</dt><dd><p>The independent gaussian random variables used in the expansion.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods</strong></p>
+<dl class="method">
+<dt id="UQpy.StochasticProcess.KLE.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">nsamples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/StochasticProcess.html#KLE.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.StochasticProcess.KLE.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the random sampling in the <code class="docutils literal notranslate"><span class="pre">KLE</span></code> class.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method is the function that performs random sampling in the <code class="docutils literal notranslate"><span class="pre">KLE</span></code> class. If <cite>nsamples</cite> is
+provided when the <code class="docutils literal notranslate"><span class="pre">KLE</span></code> object is defined, the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is automatically called. The user may also call
+the <code class="docutils literal notranslate"><span class="pre">run</span></code> method directly to generate samples. The <code class="docutils literal notranslate"><span class="pre">run</span></code> method of the <code class="docutils literal notranslate"><span class="pre">KLE</span></code> class can be invoked many
+times and each time the generated samples are appended to the existing samples.</p>
+<p>** Input:**</p>
+<ul>
+<li><dl>
+<dt><strong>nsamples</strong> (<cite>int</cite>):</dt><dd><p>Number of samples of the stochastic process to be simulated.</p>
+<p>If the <code class="docutils literal notranslate"><span class="pre">run</span></code> method is invoked multiple times, the newly generated samples will be appended to the
+existing samples.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method has no returns, although it creates and/or appends the <cite>samples</cite> attribute of the
+<code class="docutils literal notranslate"><span class="pre">KLE</span></code> class.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="non-gaussian-translation-processes">
+<h2>Non-Gaussian Translation Processes<a class="headerlink" href="#non-gaussian-translation-processes" title="Permalink to this headline">¶</a></h2>
+<p>A translation processes results from the nonlinear transformation of a Gaussian stochastic process. The standard translation process, introduced and extensively studied by Grigoriu <a class="footnote-reference brackets" href="#id31" id="id17">11</a> and implemented in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> arises from the pointwise transformation of a Gaussian process through the inverse cumulative distribution function of a specified marginal probability distribution as:</p>
+<div class="math notranslate nohighlight">
+\[X(t) = F^{-1}(\Phi(Y(t)))\]</div>
+<p>where <span class="math notranslate nohighlight">\(Y(x)\)</span> is a Gaussian random process with zero mean and unit standard deviation, <span class="math notranslate nohighlight">\(\Phi(x)\)</span> is the standard normal cumulative distribution function and <span class="math notranslate nohighlight">\(F^{-1}(\cdot)\)</span> is the inverse cumulative distribution function of the prescribed non-Gaussian probability distribution.</p>
+<p>The nonlinear translation in the equation above has the effect of distorting the correlation of the stochastic process. That is, if the Gaussian process has correlation function <span class="math notranslate nohighlight">\(\rho(\tau)\)</span> where <span class="math notranslate nohighlight">\(\tau=t_2-t_1\)</span> is a time lag, then the non-Gaussian correlation function of the process <span class="math notranslate nohighlight">\(X(t)\)</span> can be compuated as:</p>
+<div class="math notranslate nohighlight">
+\[\xi(\tau) = \int_{-\infty}^{\infty} \int_{-\infty}^{\infty} F^{-1}(\Phi(y_1)) F^{-1}(\Phi(y_2)) \phi(y_1, y_2; \rho(\tau)) dy_1 dy_2\]</div>
+<p>where <span class="math notranslate nohighlight">\(\phi(y_1, y_2; \rho(\tau))\)</span> is the bivariate normal probability density function having correlation <span class="math notranslate nohighlight">\(\rho(\tau)\)</span>. This operation is known as correlation distortion and is not, in general, invertible. That is, given the non-Gaussian correlation function <span class="math notranslate nohighlight">\(\xi(\tau) \)</span>, it is not always possible to identify a correponding Gaussian process having correlation function <span class="math notranslate nohighlight">\(\rho(\tau)\)</span> that can be translated to this non-Gaussian process through the equations above <a class="footnote-reference brackets" href="#id31" id="id18">11</a>.</p>
+<p>This gives rise to the challenge of inverse translation process modeling, where the objective is to find the an underlying Gaussian process and its correlation function such that it maps as closely as possible to the desired non-Gaussian stochastic process with its arbitrarily prescribed distribution and correlation function. This problem is solved in <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> using the Iterative Translation Approximation Method (ITAM) developed in <a class="footnote-reference brackets" href="#id32" id="id19">12</a> for processes described by their power spectrum (and using <code class="docutils literal notranslate"><span class="pre">SRM</span></code> for simulation) and in <a class="footnote-reference brackets" href="#id33" id="id20">13</a> for processes described through their correlation function (and using <code class="docutils literal notranslate"><span class="pre">KLE</span></code> for simulation). This is implemented in the <code class="docutils literal notranslate"><span class="pre">InverseTranslation</span></code> class.</p>
+<div class="section" id="translation-class-descriptions">
+<h3>Translation Class Descriptions<a class="headerlink" href="#translation-class-descriptions" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="UQpy.StochasticProcess.Translation">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.StochasticProcess.</code><code class="sig-name descname">Translation</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">time_interval</em>, <em class="sig-param">frequency_interval</em>, <em class="sig-param">number_time_intervals</em>, <em class="sig-param">number_frequency_intervals</em>, <em class="sig-param">power_spectrum_gaussian=None</em>, <em class="sig-param">correlation_function_gaussian=None</em>, <em class="sig-param">samples_gaussian=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/StochasticProcess.html#Translation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.StochasticProcess.Translation" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to translate Gaussian Stochastic Processes to non-Gaussian Stochastic Processes</p>
+<p><strong>Input:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>dist_object</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>An instance of the UQpy <code class="docutils literal notranslate"><span class="pre">Distributions</span></code> class defining the marginal distribution to which the Gaussian
+stochastic process should be translated to.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>time_interval</strong> (<cite>float</cite>):</dt><dd><p>The value of time discretization.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>frequency_interval</strong> (<cite>float</cite>):</dt><dd><p>The value of frequency discretization.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>number_time_intervals</strong> (<cite>int</cite>):</dt><dd><p>The number of time discretizations.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>number_frequency_intervals</strong> (<cite>int</cite>):</dt><dd><p>The number of frequency discretizations.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>power_spectrum_gaussian</strong> (‘list or numpy.ndarray’):</dt><dd><p>The power spectrum of the gaussian stochastic process to be translated.</p>
+<p><cite>power_spectrum_gaussian</cite> must be of size (<cite>number_frequency_intervals</cite>).</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>correlation_function_gaussian</strong> (‘list or numpy.ndarray’):</dt><dd><p>The auto correlation function of the Gaussian stochastic process to be translated.</p>
+<p>Either the power spectrum or the auto correlation function of the gaussian stochastic process needs to be
+defined.</p>
+<p><cite>correlation_function_gaussian</cite> must be of size (<cite>number_time_intervals</cite>).</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>samples_gaussian</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>Samples of Gaussian stochastic process to be translated.</p>
+<p><cite>samples_gaussian</cite> is optional. If no samples are passed, the <code class="docutils literal notranslate"><span class="pre">Translation</span></code> class will compute the correlation
+distortion.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Attributes:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>samples_non_gaussian</strong> (<cite>numpy.ndarray</cite>):</dt><dd><p>Translated non-Gaussian stochastic process from Gaussian samples.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>power_spectrum_non_gaussian</strong> (<cite>numpy.ndarray</cite>):</dt><dd><p>The power spectrum of the translated non-Gaussian stochastic processes.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>correlation_function_non_gaussian</strong> (<cite>numpy.ndarray</cite>):</dt><dd><p>The correlation function of the translated non-Gaussian stochastic processes obtained by distorting the Gaussian
+correlation function.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scaled_correlation_function_non_gaussian</strong> (<cite>numpy.ndarray</cite>):</dt><dd><p>This obtained by scaling the correlation function of the non-Gaussian stochastic processes to make the
+correlation at ‘0’ lag to be 1</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="UQpy.StochasticProcess.InverseTranslation">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.StochasticProcess.</code><code class="sig-name descname">InverseTranslation</code><span class="sig-paren">(</span><em class="sig-param">dist_object</em>, <em class="sig-param">time_interval</em>, <em class="sig-param">frequency_interval</em>, <em class="sig-param">number_time_intervals</em>, <em class="sig-param">number_frequency_intervals</em>, <em class="sig-param">correlation_function_non_gaussian=None</em>, <em class="sig-param">power_spectrum_non_gaussian=None</em>, <em class="sig-param">samples_non_gaussian=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/StochasticProcess.html#InverseTranslation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.StochasticProcess.InverseTranslation" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to perform Iterative Translation Approximation Method to find the underlying  Gaussian Stochastic Processes
+which upon translation would yield the necessary non-Gaussian Stochastic Processes.</p>
+<p><strong>Input:</strong></p>
+<ul>
+<li><dl class="simple">
+<dt><strong>dist_object</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>An instance of the <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> <code class="docutils literal notranslate"><span class="pre">Distributions</span></code> class defining the marginal distribution of the non-Gaussian
+stochastic process.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>time_interval</strong> (<cite>float</cite>):</dt><dd><p>The value of time discretization.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>frequency_interval</strong> (<cite>float</cite>):</dt><dd><p>The value of frequency discretization.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>number_time_intervals</strong> (<cite>int</cite>):</dt><dd><p>The number of time discretizations.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>number_frequency_intervals</strong> (<cite>int</cite>):</dt><dd><p>The number of frequency discretizations.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>power_spectrum_non_gaussian</strong> (‘list or numpy.ndarray’):</dt><dd><p>The power spectrum of the non-Gaussian stochastic processes.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>correlation_function_non_gaussian</strong> (‘list or numpy.ndarray’):</dt><dd><p>The auto correlation function of the non-Gaussian stochastic processes.</p>
+<p>Either the power spectrum or the auto correlation function of the Gaussian stochastic process needs to be
+defined.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>samples_non_gaussian</strong> (<cite>list or numpy.ndarray</cite>):</dt><dd><p>Samples of non-Gaussian stochastic processes.</p>
+<p><cite>samples_non_gaussian</cite> is optional. If no samples are passed, the <code class="docutils literal notranslate"><span class="pre">InverseTranslation</span></code> class will compute the
+underlying Gaussian correlation using the ITAM.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Attributes:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>samples_gaussian</strong> (<cite>numpy.ndarray</cite>):</dt><dd><p>The inverse translated Gaussian samples from the non-Gaussian samples.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>power_spectrum_gaussian</strong> (<cite>numpy.ndarray</cite>):</dt><dd><p>The power spectrum of the inverse translated Gaussian stochastic processes.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>correlation_function_gaussian</strong> (<cite>numpy.ndarray</cite>):</dt><dd><p>The correlation function of the inverse translated Gaussian stochastic processes.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>scaled_correlation_function_non_gaussian</strong> (<cite>numpy.ndarray</cite>):</dt><dd><p>This obtained by scaling the correlation function of the Gaussian stochastic processes to make the correlation
+at ‘0’ distance to be 1</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="footnote brackets">
+<dt class="label" id="id21"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Shinozuka, M. and Jan, C. M. (1972). “Digital simulation of random processes and its applications,” Journal of Sound and Vibration. 25: 111–128.</p>
+</dd>
+<dt class="label" id="id22"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dd><p>Shinozuka, M. and Deodatis, G. (1991) “Simulation of Stochastic Processes by Spectral representation” Applied Mechanics Reviews. 44.</p>
+</dd>
+<dt class="label" id="id23"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
+<dd><p>Shinozuka, M. and Deodatis, G. (1996) “Simulation of multi-dimensional Gaussian stochastic fields by spectral representation,” Applied Mechanics Reviews. 49: 29–53.</p>
+</dd>
+<dt class="label" id="id24"><span class="brackets"><a class="fn-backref" href="#id4">4</a></span></dt>
+<dd><p>Deodatis, G. “Simulation of Ergodic Multivariate Stochastic Processes,” Journal of Engineering Mechanics. 122: 778–787.</p>
+</dd>
+<dt class="label" id="id25"><span class="brackets"><a class="fn-backref" href="#id5">5</a></span></dt>
+<dd><p>Huang, S.P., Quek, S. T., and Phoon, K. K. (2001). “Convergence study of the truncated Karhunen-Loeve expansion for simulation of stochastic processes,” International Journal for Numerical Methods in Engineering. 52: 1029–1043.</p>
+</dd>
+<dt class="label" id="id26"><span class="brackets"><a class="fn-backref" href="#id6">6</a></span></dt>
+<dd><p>Phoon K.K., Huang S.P., Quek S.T. (2002). “Simulation of second-order processes using Karhunen–Loève expansion.” Computers and Structures 80(12):1049–60.</p>
+</dd>
+<dt class="label" id="id27"><span class="brackets"><a class="fn-backref" href="#id7">7</a></span></dt>
+<dd><p>Betz, W., Papaioannou, I., &amp; Straub, D. (2014). “Numerical methods for the discretization of random fields by means of the Karhunen–Loève expansion.” Computer Methods in Applied Mechanics and Engineering, 271: 109-129.</p>
+</dd>
+<dt class="label" id="id28"><span class="brackets">8</span><span class="fn-backref">(<a href="#id8">1</a>,<a href="#id14">2</a>)</span></dt>
+<dd><p>Shields, M.D. and Kim, H. (2017). “Simulation of higher-order stochastic processes by spectral representation,” Probabilistic Engineering Mechanics. 47: 1-15.</p>
+</dd>
+<dt class="label" id="id29"><span class="brackets">9</span><span class="fn-backref">(<a href="#id9">1</a>,<a href="#id15">2</a>)</span></dt>
+<dd><p>Vandanapu, L. and Shields, M.D. (2020). “3rd-order Spectral Representation Methods: Multi-dimensional random fields with fast Fourier transform implementation.” arXiv:1910.06420</p>
+</dd>
+<dt class="label" id="id30"><span class="brackets">10</span><span class="fn-backref">(<a href="#id10">1</a>,<a href="#id16">2</a>)</span></dt>
+<dd><p>Vandanapu, L. and Shields, M.D. (2020). “3rd-order Spectral Representation Methods: Ergodic multi-variate random processes with fast Fourier transform.” arXiv:1910.06420</p>
+</dd>
+<dt class="label" id="id31"><span class="brackets">11</span><span class="fn-backref">(<a href="#id11">1</a>,<a href="#id17">2</a>,<a href="#id18">3</a>)</span></dt>
+<dd><p>Grigoriu, M. (1995). “Applied Non-Gaussian Processes,” Pretice Hall.</p>
+</dd>
+<dt class="label" id="id32"><span class="brackets">12</span><span class="fn-backref">(<a href="#id12">1</a>,<a href="#id19">2</a>)</span></dt>
+<dd><p>Shields, M.D., Deodatis, G., and Bocchini, P. (2011). “A simple and efficient methodology to approximate a general non-Gaussian stationary stochastic process by a translation process,” Probabilistic Engineering Mechanics. 26: 511-519.</p>
+</dd>
+<dt class="label" id="id33"><span class="brackets">13</span><span class="fn-backref">(<a href="#id13">1</a>,<a href="#id20">2</a>)</span></dt>
+<dd><p>Kim, H. and Shields, M.D. (2105). “Modeling strongly non-Gaussian non-stationary stochastic processes using the Iterative Translation Approximation Method and Karhunen–Loève expansion,” Computers and Structures. 161: 31-42.</p>
+</dd>
+</dl>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.jpg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Uncertainty quantification with Python </p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=SURG&repo=UQpy&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation_doc.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runmodel_doc.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributions_doc.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samplemethods_doc.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transformations_doc.html">Transformations</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">StochasticProcess</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#spectral-representation-method">Spectral Representation Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#third-order-spectral-representation-method">Third-order Spectral Representation Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#karhunen-loeve-expansion">Karhunen Loève Expansion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#non-gaussian-translation-processes">Non-Gaussian Translation Processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="surrogates_doc.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reliability_doc.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference_doc.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dimension_reduction_doc.html">DimensionReduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities_doc.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="news_doc.html">News</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="transformations_doc.html" title="previous chapter">Transformations</a></li>
+      <li>Next: <a href="surrogates_doc.html" title="next chapter">Surrogates</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Michael D. Shields.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/stochastic_process_doc.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/SURG/UQpy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

@@ -73,12 +73,7 @@ def svd(matrix, rank=None, tol=None):
 
 def nearest_psd(input_matrix, iterations=10):
     """
-    A function to compute the nearest positive semi-definite matrix of a given matrix [1]_.
-
-    **References**
-
-    .. [1] Houduo Qi, Defeng Sun, A Quadratically Convergent Newton Method for Computing the Nearest Correlation
-        Matrix, SIAM Journal on Matrix Analysis and Applications 28(2):360-385, 2006.
+    A function to compute the nearest positive semi-definite matrix of a given matrix [3]_.
 
     **Inputs:**
 
@@ -116,13 +111,6 @@ def nearest_psd(input_matrix, iterations=10):
 def nearest_pd(input_matrix):
     """
     This is a method to find the nearest positive-definite matrix to input ([1]_, [2]_).
-
-    **References**
-
-    .. [1] N.J. Higham, "Computing a nearest symmetric positive semidefinite matrix" (1988),
-        https://doi.org/10.1016/0024-3795(88)90223-6.
-
-    .. [2] https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd
 
     **Inputs:**
 
@@ -170,7 +158,7 @@ def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=Non
     """
     Method needed by ``RunModel`` to execute a python model in parallel
     """
-
+    _ = sample
     exec('from ' + model_script[:-3] + ' import ' + model_object_name)
 
     if dict_kwargs is None:
@@ -317,9 +305,8 @@ def gradient(runmodel_object=None, point=None, order='first', df_step=None):
 
 
 def _bi_variate_normal_pdf(x1, x2, rho):
-   return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
-           np.exp(-1/(2*(1-rho**2)) *
-                  (x1**2 - 2 * rho * x1 * x2 + x2**2)))
+    return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
+            np.exp(-1/(2*(1-rho**2)) * (x1**2 - 2 * rho * x1 * x2 + x2**2)))
 
 
 # def estimate_psd(samples, nt, t):
@@ -368,124 +355,6 @@ def _get_pu(a, w=None):
     return np.array(a_ret)
 
 
-# TODO: Check if still in use - Add Documentation (if public)
-def check_arguments(argv, min_num_matrix, ortho):
-    
-    """
-    Check input arguments for consistency.
-
-    Check the input matrices for consistency given the minimum number of matrices (min_num_matrix) 
-    and the boolean varible (ortho) to test the orthogonality.
-
-    **Input:**
-
-    :param argv: Matrices to be tested.
-    :type  argv: list of arguments
-
-    :param min_num_matrix: Minimum number of matrices.
-    :type  min_num_matrix: int
-    
-    :param ortho: boolean varible to test the orthogonality.
-    :type  ortho: bool
-
-    **Output/Returns:**
-
-    :param inputs: Return the input matrices.
-    :type  inputs: numpy array
-
-    :param nargs: Number of matrices.
-    :type  nargs: numpy array
-    """
-        
-    # Check the minimum number of matrices involved in the operations
-    if type(min_num_matrix) != int:
-        raise ValueError('The minimum number of matrices MUST be an integer number!')
-    elif min_num_matrix < 1:
-        raise ValueError('Number of arguments MUST be larger than or equal to one!')
-
-    # Check if the variable controlling the orthogonalization is boolean
-    if type(ortho) != bool:
-        raise ValueError('The last argument MUST be a boolean!')
-
-    nargv = len(argv)
-
-    # If the number of provided inputs are zero exit the code
-    if nargv == 0:
-        raise ValueError('Missing input arguments!')
-
-    # Else if the number of arguments is equal to 1 
-    elif nargv == 1:
-
-        # Check if the number of expected matrices are higher than or equal to 2
-        args = argv[0]
-        nargs = len(args)
-      
-        if np.shape(args)[0] == 1 or len(np.shape(args)) == 2:
-            nargs = 1
-        # if it is lower than two exit the code, otherwise store them in a list
-        if nargs < min_num_matrix:
-            raise ValueError('The number of points must be higher than:', min_num_matrix)
-
-        else:
-            inputs = []
-            if nargs == 1:
-                inputs = [args]
-            else:
-
-                # Loop over all elements
-                for i in range(nargs):                  
-                    # Verify the type of the input variables and store in a list
-                    inputs.append(test_type(args[i], ortho))
-
-    else:
-
-        nargs = nargv
-        # Each argument MUST be a matrix
-        inputs = []
-        for i in range(nargv):
-            # Verify the type of the input variables and store in a list
-            inputs.append(test_type(argv[i], ortho))
-
-    return inputs, nargs
-
-# TODO: Check if still in use - Add Documentation (if public)
-def test_type(X, ortho):
-    
-    """
-    Test the datatype of X.
-
-    Check if the datatype of the matrix X is consistent.
-
-    **Input:**
-
-    :param X: Matrices to be tested.
-    :type  X: list or numpy array
-    
-    :param ortho: boolean varible to test the orthogonality.
-    :type  ortho: bool
-
-    **Output/Returns:**
-
-    :param Y: Tested and adjusted matrices.
-    :type  Y: numpy array
-    """
-        
-    if not isinstance(X, (list, np.ndarray)):
-        raise TypeError('Elements of input arguments should be provided either as list or array')
-    elif type(X) == list:
-        Y = np.array(X)
-    else:
-        Y = X
-
-    if ortho:
-        Ytest = np.dot(Y.T, Y)
-        if not np.array_equal(Ytest, np.identity(np.shape(Ytest)[0])):
-            Y, unused = np.linalg.qr(Y)
-
-    return Y
-
-
-# TODO: Check if still in use - Add Documentation (if public)
 def _nn_coord(x, k):
     
     """
@@ -504,8 +373,8 @@ def _nn_coord(x, k):
 
     **Output/Returns:**
 
-    :param idx: Indices of the closer points.
-    :type  idx: int
+    :return idx: Indices of the closer points.
+    :rtype  idx: int
     """
         
     if isinstance(x, list):
@@ -519,13 +388,13 @@ def _nn_coord(x, k):
     if not isinstance(k, int):
         raise TypeError('k MUST be integer.')
 
-    if k<1:
+    if k < 1:
         raise ValueError('k MUST be larger than or equal to 1.')
     
-    #idx = x.argsort()[::-1][:k]
+    # idx = x.argsort()[::-1][:k]
     idx = x.argsort()[:len(x)-k]
-    #idx = idx[0:k]
-    #idx = idx[k+1:]
+    # idx = idx[0:k]
+    # idx = idx[k+1:]
     return idx
 
 

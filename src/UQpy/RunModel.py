@@ -649,6 +649,9 @@ class RunModel:
         if self.verbose:
             print('\nUQpy: Serial execution of the python model complete.\n')
 
+        if self.verbose:
+            print('\nUQpy: Serial execution of the python model complete.\n')
+
     ####################################################################################################################
     def _parallel_python_execution(self):
         """

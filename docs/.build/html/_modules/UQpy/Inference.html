@@ -1,0 +1,1208 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>UQpy.Inference &#8212; UQpy v3.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for UQpy.Inference</h1><div class="highlight"><pre>
+<span></span><span class="c1"># UQpy is distributed under the MIT license.</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (C) 2018  -- Michael D. Shields</span>
+<span class="c1">#</span>
+<span class="c1"># Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated</span>
+<span class="c1"># documentation files (the &quot;Software&quot;), to deal in the Software without restriction, including without limitation the</span>
+<span class="c1"># rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit</span>
+<span class="c1"># persons to whom the Software is furnished to do so, subject to the following conditions:</span>
+<span class="c1">#</span>
+<span class="c1"># The above copyright notice and this permission notice shall be included in all copies or substantial portions of the</span>
+<span class="c1"># Software.</span>
+<span class="c1">#</span>
+<span class="c1"># THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE</span>
+<span class="c1"># WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR</span>
+<span class="c1"># COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR</span>
+<span class="c1"># OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains classes and functions for statistical inference from data.</span>
+
+<span class="sd">The module currently contains the</span>
+<span class="sd">following classes:</span>
+
+<span class="sd">* ``InferenceModel``: Define a probabilistic model for Inference.</span>
+<span class="sd">* ``MLEstimation``: Compute maximum likelihood parameter estimate.</span>
+<span class="sd">* ``InfoModelSelection``: Perform model selection using information theoretic criteria.</span>
+<span class="sd">* ``BayesParameterEstimation``: Perform Bayesian parameter estimation (estimate posterior density) via MCMC or IS.</span>
+<span class="sd">* ``BayesModelSelection``: Estimate model posterior probabilities.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Distribution</span><span class="p">,</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">MVNormal</span>
+<span class="kn">from</span> <span class="nn">UQpy.RunModel</span> <span class="k">import</span> <span class="n">RunModel</span>
+<span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">MCMC</span><span class="p">,</span> <span class="n">IS</span>
+
+
+<span class="c1">########################################################################################################################</span>
+<span class="c1">########################################################################################################################</span>
+<span class="c1">#                            Define the model - probability model or python model</span>
+<span class="c1">########################################################################################################################</span>
+
+<div class="viewcode-block" id="InferenceModel"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.InferenceModel">[docs]</a><span class="k">class</span> <span class="nc">InferenceModel</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Define a probabilistic model for inference.</span>
+
+<span class="sd">    **Input:**</span>
+
+<span class="sd">    * **nparams** (`int`):</span>
+<span class="sd">        Number of parameters to be estimated.</span>
+
+<span class="sd">    * **name** (`string`):</span>
+<span class="sd">        Name of model - optional but useful in a model selection setting.</span>
+
+<span class="sd">    * **runmodel_object** (object of class ``RunModel``):</span>
+<span class="sd">        ``RunModel`` class object that defines the forward model. This input is required for cases 1a and 1b.</span>
+
+<span class="sd">    * **log_likelihood** (callable):</span>
+<span class="sd">        Function that defines the log-likelihood model, possibly in conjunction with the `runmodel_object` (cases 1b</span>
+<span class="sd">        and 2). Default is None, and a Gaussian-error model is considered (case 1a).</span>
+
+<span class="sd">        |  If a `runmodel_object` is also defined (case 1b), this function is called as:</span>
+<span class="sd">        |  `model_outputs = runmodel_object.run(samples=params).qoi_list`</span>
+<span class="sd">        |  `log_likelihood(params, model_outputs, data, **kwargs_likelihood)`</span>
+
+<span class="sd">        |  If no `runmodel_object` is defined (case 2), this function is called as:</span>
+<span class="sd">        |  `log_likelihood(params, data, **kwargs_likelihood)`</span>
+
+<span class="sd">    * **kwargs_likelihood**:</span>
+<span class="sd">        Keyword arguments transferred to the log-likelihood function.</span>
+
+<span class="sd">    * **dist_object** (object of class ``Distribution``):</span>
+<span class="sd">        Distribution :math:`\pi` for which to learn parameters from iid data (case 3).</span>
+
+<span class="sd">        When creating this ``Distribution`` object, the parameters to be learned should be set to `None`.</span>
+
+<span class="sd">    * **error_covariance** (`ndarray` or `float`):</span>
+<span class="sd">        Covariance for Gaussian error model (case 1a). It can be a scalar (in which case the covariance matrix is the</span>
+<span class="sd">        identity times that value), a 1d `ndarray` in which case the covariance is assumed to be diagonal, or a full</span>
+<span class="sd">        covariance matrix (2D `ndarray`). Default value is 1.</span>
+
+<span class="sd">    * **prior** (object of class ``Distribution``):</span>
+<span class="sd">        Prior distribution, must have a `log_pdf` or `pdf` method.</span>
+
+<span class="sd">    **Methods:**</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Last Modified: 05/13/2020 by Audrey Olivier</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nparams</span><span class="p">,</span> <span class="n">runmodel_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_likelihood</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dist_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">error_covariance</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_likelihood</span>
+                 <span class="p">):</span>
+
+        <span class="c1"># Initialize some parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nparams</span> <span class="o">=</span> <span class="n">nparams</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nparams</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">nparams</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Input nparams must be an integer &gt; 0.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Input name must be a string.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">runmodel_object</span> <span class="o">=</span> <span class="n">runmodel_object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error_covariance</span> <span class="o">=</span> <span class="n">error_covariance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood</span> <span class="o">=</span> <span class="n">log_likelihood</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="o">=</span> <span class="n">dist_object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs_likelihood</span> <span class="o">=</span> <span class="n">kwargs_likelihood</span>
+        <span class="c1"># Perform checks on inputs runmodel_object, log_likelihood, distribution_object that define the inference model</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runmodel_object</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: One of runmodel_object, log_likelihood or dist_object inputs must be provided.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">runmodel_object</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runmodel_object</span><span class="p">,</span> <span class="n">RunModel</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Input runmodel_object should be an object of class RunModel.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Input log_likelihood should be a callable.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runmodel_object</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Input dist_object cannot be provided concurrently with log_likelihood &#39;</span>
+                                 <span class="s1">&#39;or runmodel_object.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="n">Distribution</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Input dist_object should be an object of class Distribution.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="s1">&#39;log_pdf&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="s1">&#39;pdf&#39;</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;UQpy: dist_object should have a log_pdf or pdf method.&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">log_pdf</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="c1"># Check which parameters need to be updated (i.e., those set as None)</span>
+            <span class="n">init_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">list_params</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">order_params</span> <span class="k">if</span> <span class="n">init_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list_params</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nparams</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Incorrect dimensions between nparams and number of inputs set to None.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Define prior if it is given</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prior</span> <span class="o">=</span> <span class="n">prior</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="p">,</span> <span class="n">Distribution</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Input prior should be an object of class Distribution.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="p">,</span> <span class="s1">&#39;log_pdf&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="p">,</span> <span class="s1">&#39;pdf&#39;</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Input prior should have a log_pdf or pdf method.&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">log_pdf</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+<div class="viewcode-block" id="InferenceModel.evaluate_log_likelihood"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.InferenceModel.evaluate_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the log likelihood, `log p(data|params)`.</span>
+
+<span class="sd">        This method is the central piece of the ``Inference`` module, it is being called repeatedly by all other</span>
+<span class="sd">        ``Inference`` classes to evaluate the likelihood of the data. The log-likelihood can be evaluated at several</span>
+<span class="sd">        parameter vectors at once, i.e., `params` is an `ndarray` of shape (nsamples, nparams). If the</span>
+<span class="sd">        ``InferenceModel`` is powered by ``RunModel`` the ``RunModel.run`` method is called here, possibly leveraging</span>
+<span class="sd">        its parallel execution.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **params** (`ndarray`):</span>
+<span class="sd">            Parameter vector(s) at which to evaluate the likelihood function, `ndarray` of shape `(nsamples, nparams)`.</span>
+
+<span class="sd">        * **data** (`ndarray`):</span>
+<span class="sd">            Data from which to learn. For case 1b, this should be an `ndarray` of shape `(ndata, )`. For case 3, it must</span>
+<span class="sd">            be an `ndarray` of shape `(ndata, dimension)`. For other cases it must be consistent with the definition of</span>
+<span class="sd">            the ``log_likelihood`` callable input.</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        * (`ndarray`):</span>
+<span class="sd">            Log-likelihood evaluated at all `nsamples` parameter vector values, `ndarray` of shape (nsamples, ).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Check params</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: input params should be a nested list or 2d ndarray of shape (nsamples, dimension).&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nparams</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Wrong dimensions in params.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Case 1 - Forward model is given by RunModel</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">runmodel_object</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">runmodel_object</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">append_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">model_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">runmodel_object</span><span class="o">.</span><span class="n">qoi_list</span>
+
+            <span class="c1"># Case 1.a: Gaussian error model</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">error_covariance</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+                    <span class="n">norm</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">error_covariance</span><span class="p">))</span>
+                    <span class="n">log_like_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                        <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">norm</span><span class="o">.</span><span class="n">log_pdf</span><span class="p">(</span><span class="n">data_i</span><span class="o">-</span><span class="n">outpt_i</span><span class="p">)</span> <span class="k">for</span> <span class="n">data_i</span><span class="p">,</span> <span class="n">outpt_i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">outpt</span><span class="p">)])</span>
+                         <span class="k">for</span> <span class="n">outpt</span> <span class="ow">in</span> <span class="n">model_outputs</span><span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">mvnorm</span> <span class="o">=</span> <span class="n">MVNormal</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">error_covariance</span><span class="p">)</span>
+                    <span class="n">log_like_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                        <span class="p">[</span><span class="n">mvnorm</span><span class="o">.</span><span class="n">log_pdf</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">outpt</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,)))</span> <span class="k">for</span> <span class="n">outpt</span> <span class="ow">in</span> <span class="n">model_outputs</span><span class="p">]</span>
+                    <span class="p">)</span>
+
+            <span class="c1"># Case 1.b: likelihood is user-defined</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log_like_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span>
+                    <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">model_outputs</span><span class="o">=</span><span class="n">model_outputs</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs_likelihood</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">log_like_values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                    <span class="n">log_like_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">log_like_values</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">log_like_values</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Likelihood function should output a (nsamples, ) ndarray of likelihood &#39;</span>
+                                     <span class="s1">&#39;values.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Case 2 - Log likelihood is user defined</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">log_like_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs_likelihood</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">log_like_values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">log_like_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">log_like_values</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">log_like_values</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Likelihood function should output a (nsamples, ) ndarray of likelihood values.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Case 3 - Learn parameters of a probability distribution pi. Data consists in iid sampled from pi.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log_like_values</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">params_</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">update_params</span><span class="p">(</span><span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list_params</span><span class="p">,</span> <span class="n">params_</span><span class="p">)))</span>
+                <span class="n">log_like_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">log_pdf</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">data</span><span class="p">)))</span>
+            <span class="n">log_like_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">log_like_values</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">log_like_values</span></div>
+
+<div class="viewcode-block" id="InferenceModel.evaluate_log_posterior"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.InferenceModel.evaluate_log_posterior">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate_log_posterior</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the scaled log posterior `log(p(data|params)p(params))`.</span>
+
+<span class="sd">        This method is called by classes that perform Bayesian inference. If the ``InferenceModel`` object does not</span>
+<span class="sd">        possess a prior, an uninformative prior `p(params)=1` is assumed. Warning: This is an improper prior.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **params** (`ndarray`):</span>
+<span class="sd">            Parameter vector(s) at which to evaluate the log-posterior, `ndarray` of shape (nsamples, nparams).</span>
+
+<span class="sd">        * **data** (`ndarray`):</span>
+<span class="sd">            Data from which to learn. See `evaluate_log_likelihood` method for details.</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        * (`ndarray`):</span>
+<span class="sd">            Log-posterior evaluated at all `nsamples` parameter vector values, `ndarray` of shape (nsamples, ).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Compute log likelihood</span>
+        <span class="n">log_likelihood_eval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_log_likelihood</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># If the prior is not provided it is set to an non-informative prior p(theta)=1, log_posterior = log_likelihood</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">log_likelihood_eval</span>
+
+        <span class="c1"># Otherwise, use prior provided in the InferenceModel setup</span>
+        <span class="n">log_prior_eval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">log_pdf</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">log_likelihood_eval</span> <span class="o">+</span> <span class="n">log_prior_eval</span></div></div>
+
+
+<span class="c1">########################################################################################################################</span>
+<span class="c1">########################################################################################################################</span>
+<span class="c1">#                                  Maximum Likelihood Estimation</span>
+<span class="c1">########################################################################################################################</span>
+
+<div class="viewcode-block" id="MLEstimation"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.MLEstimation">[docs]</a><span class="k">class</span> <span class="nc">MLEstimation</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Estimate the maximum likelihood parameters of a model given some data.</span>
+
+<span class="sd">    **Inputs:**</span>
+
+<span class="sd">    * **inference_model** (object of class ``InferenceModel``):</span>
+<span class="sd">        The inference model that defines the likelihood function.</span>
+
+<span class="sd">    * **data** (`ndarray`):</span>
+<span class="sd">        Available data, `ndarray` of shape consistent with log likelihood function in ``InferenceModel``</span>
+
+<span class="sd">    * **optimizer** (callable):</span>
+<span class="sd">        Optimization algorithm used to compute the mle.</span>
+
+<span class="sd">        | This callable takes in as first input the function to be minimized and as second input an initial guess</span>
+<span class="sd">          (`ndarray` of shape (n_params, )), along with optional keyword arguments if needed, i.e., it is called within</span>
+<span class="sd">          the code as:</span>
+<span class="sd">        | `optimizer(func, x0, **kwargs_optimizer)`</span>
+
+<span class="sd">        It must return an object with attributes `x` (minimizer) and `fun` (minimum function value).</span>
+
+<span class="sd">        Default is `scipy.optimize.minimize`.</span>
+
+<span class="sd">    * **kwargs_optimizer**:</span>
+<span class="sd">        Keyword arguments that will be transferred to the optimizer.</span>
+
+<span class="sd">    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):</span>
+<span class="sd">        Random seed used to initialize the pseudo-random number generator. Default is None.</span>
+
+<span class="sd">        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the</span>
+<span class="sd">        object itself can be passed directly.</span>
+
+<span class="sd">    * **x0** (`ndarray`):</span>
+<span class="sd">        Starting point(s) for optimization, see `run_estimation`. Default is `None`.</span>
+
+<span class="sd">    * **nopt** (`int`):</span>
+<span class="sd">        Number of iterations that the optimization is run, starting at random initial guesses. See `run_estimation`.</span>
+<span class="sd">        Default is `None`.</span>
+
+<span class="sd">    If both `x0` and `nopt` are `None`, the object is created but the optimization procedure is not run, one must</span>
+<span class="sd">    call the ``run`` method.</span>
+
+<span class="sd">    **Attributes:**</span>
+
+<span class="sd">    * **mle** (`ndarray`):</span>
+<span class="sd">        Value of parameter vector that maximizes the likelihood function.</span>
+
+<span class="sd">    * **max_log_like** (`float`):</span>
+<span class="sd">        Value of the likelihood function at the MLE.</span>
+
+<span class="sd">    **Methods:**</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Authors: Audrey Olivier, Dimitris Giovanis</span>
+    <span class="c1"># Last Modified: 12/19 by Audrey Olivier</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inference_model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs_optimizer</span><span class="p">):</span>
+
+        <span class="c1"># Initialize variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span> <span class="o">=</span> <span class="n">inference_model</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inference_model</span><span class="p">,</span> <span class="n">InferenceModel</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Input inference_model should be of type InferenceModel&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs_optimizer</span> <span class="o">=</span> <span class="n">kwargs_optimizer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="k">if</span> <span class="n">optimizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="k">import</span> <span class="n">minimize</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">minimize</span>
+        <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">optimizer</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Input optimizer should be None (set to scipy.optimize.minimize) or a callable.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mle</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_log_like</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Initialization of MLEstimation object completed.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Run the optimization procedure</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">nopt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">x0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nopt</span><span class="o">=</span><span class="n">nopt</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MLEstimation.run"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.MLEstimation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the maximum likelihood estimation procedure.</span>
+
+<span class="sd">        This function runs the optimization and updates the `mle` and `max_log_like` attributes of the class. When</span>
+<span class="sd">        learning the parameters of a distribution, if `dist_object` possesses an ``mle`` method this method is used. If</span>
+<span class="sd">        `x0` or `nopt` are given when creating the ``MLEstimation`` object, this method is called automatically when the</span>
+<span class="sd">        object is created.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **x0** (`ndarray`):</span>
+<span class="sd">            Initial guess(es) for optimization, `ndarray` of shape `(nstarts, nparams)` or `(nparams, )`, where</span>
+<span class="sd">            `nstarts` is the number of times the optimizer will be called. Alternatively, the user can provide input</span>
+<span class="sd">            `nopt` to randomly sample initial guess(es). The identified MLE is the one that yields the maximum log</span>
+<span class="sd">            likelihood over all calls of the optimizer.</span>
+
+<span class="sd">        * **nopt** (`int`):</span>
+<span class="sd">            Number of iterations that the optimization is run, starting at random initial guesses. It is only used if</span>
+<span class="sd">            `x0` is not provided. Default is 1.</span>
+
+<span class="sd">            The random initial guesses are sampled uniformly between 0 and 1, or uniformly between user-defined bounds</span>
+<span class="sd">            if an input bounds is provided as a keyword argument to the ``MLEstimation`` object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Run optimization (use x0 if provided, otherwise sample starting point from [0, 1] or bounds)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Evaluating maximum likelihood estimate for inference model &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="c1"># Case 3: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization below.</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">dist_object</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="s1">&#39;fit&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">nopt</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">nopt</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: nopt should be an integer &gt;= 1.&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nopt</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">update_params</span><span class="p">(</span>
+                    <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">list_params</span><span class="p">})</span>
+                <span class="n">mle_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">dist_object</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                <span class="n">mle_tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mle_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">list_params</span><span class="p">])</span>
+                <span class="n">max_log_like_tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">evaluate_log_likelihood</span><span class="p">(</span>
+                    <span class="n">params</span><span class="o">=</span><span class="n">mle_tmp</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:],</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="c1"># Save result</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mle</span> <span class="o">=</span> <span class="n">mle_tmp</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">max_log_like</span> <span class="o">=</span> <span class="n">max_log_like_tmp</span>
+                <span class="k">elif</span> <span class="n">max_log_like_tmp</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_log_like</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mle</span> <span class="o">=</span> <span class="n">mle_tmp</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">max_log_like</span> <span class="o">=</span> <span class="n">max_log_like_tmp</span>
+
+        <span class="c1"># Otherwise run optimization</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">nopt</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">nopt</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: nopt should be an integer &gt;= 1.&#39;</span><span class="p">)</span>
+                <span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="n">Uniform</span>
+                <span class="n">x0</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">()</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
+                    <span class="n">nsamples</span><span class="o">=</span><span class="n">nopt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">nparams</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">nopt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">nparams</span><span class="p">))</span>
+                <span class="k">if</span> <span class="s1">&#39;bounds&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs_optimizer</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs_optimizer</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">])</span>
+                    <span class="n">x0</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="n">bounds</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">x0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">x0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">nparams</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Wrong dimensions in x0&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">x0_</span> <span class="ow">in</span> <span class="n">x0</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_evaluate_func_to_minimize</span><span class="p">,</span> <span class="n">x0_</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs_optimizer</span><span class="p">)</span>
+                <span class="n">mle_tmp</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">x</span>
+                <span class="n">max_log_like_tmp</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span> <span class="o">*</span> <span class="n">res</span><span class="o">.</span><span class="n">fun</span>
+                <span class="c1"># Save result</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mle</span> <span class="o">=</span> <span class="n">mle_tmp</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">max_log_like</span> <span class="o">=</span> <span class="n">max_log_like_tmp</span>
+                <span class="k">elif</span> <span class="n">max_log_like_tmp</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_log_like</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mle</span> <span class="o">=</span> <span class="n">mle_tmp</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">max_log_like</span> <span class="o">=</span> <span class="n">max_log_like_tmp</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: ML estimation completed.&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_evaluate_func_to_minimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">one_param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute negative log likelihood for one parameter vector.</span>
+
+<span class="sd">        This is the function to be minimized in the optimization procedure. This is a utility function that will not be</span>
+<span class="sd">        called by the user.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **one_param** (`ndarray`):</span>
+<span class="sd">            A parameter vector, `ndarray` of shape (nparams, ).</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        * (`float`):</span>
+<span class="sd">            Value of negative log-likelihood.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">evaluate_log_likelihood</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">one_param</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<span class="c1">########################################################################################################################</span>
+<span class="c1">########################################################################################################################</span>
+<span class="c1">#                                  Bayesian Parameter estimation</span>
+<span class="c1">########################################################################################################################</span>
+
+<div class="viewcode-block" id="BayesParameterEstimation"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.BayesParameterEstimation">[docs]</a><span class="k">class</span> <span class="nc">BayesParameterEstimation</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Estimate the parameter posterior density given some data.</span>
+
+<span class="sd">    This class generates samples from the parameter posterior distribution using Markov Chain Monte Carlo or Importance</span>
+<span class="sd">    Sampling. It leverages the ``MCMC`` and ``IS`` classes from the ``SampleMethods`` module.</span>
+
+
+<span class="sd">    **Inputs:**</span>
+
+<span class="sd">    * **inference_model** (object of class ``InferenceModel``):</span>
+<span class="sd">        The inference model that defines the likelihood function.</span>
+
+<span class="sd">    * **data** (`ndarray`):</span>
+<span class="sd">        Available data, `ndarray` of shape consistent with log-likelihood function in ``InferenceModel``</span>
+
+<span class="sd">    * **sampling_class** (class instance):</span>
+<span class="sd">        Class instance, must be a subclass of ``MCMC`` or ``IS``.</span>
+
+<span class="sd">    * **kwargs_sampler**:</span>
+<span class="sd">        Keyword arguments of the sampling class, see ``SampleMethods.MCMC`` or ``SampleMethods.IS``.</span>
+
+<span class="sd">        Note on the seed for ``MCMC``: if input `seed` is not provided, a seed (`ndarray` of shape</span>
+<span class="sd">        `(nchains, dimension)`) is sampled from the prior pdf, which must have an `rvs` method.</span>
+
+<span class="sd">        Note on the proposal for ``IS``: if no input `proposal` is provided, the prior is used as proposal.</span>
+
+<span class="sd">    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):</span>
+<span class="sd">        Random seed used to initialize the pseudo-random number generator. Default is None.</span>
+
+<span class="sd">        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the</span>
+<span class="sd">        object itself can be passed directly.</span>
+
+<span class="sd">    * **nsamples** (`int`):</span>
+<span class="sd">        Number of samples used in MCMC/IS, see `run` method.</span>
+
+<span class="sd">    * **samples_per_chain** (`int`):</span>
+<span class="sd">        Number of samples per chain used in MCMC, see `run` method.</span>
+
+<span class="sd">    If both `nsamples` and `nsamples_per_chain` are `None`, the object is created but the sampling procedure is not run,</span>
+<span class="sd">    one must call the ``run`` method.</span>
+
+<span class="sd">    **Attributes:**</span>
+
+<span class="sd">    * **sampler** (object of ``SampleMethods`` class specified by `sampling_class`):</span>
+<span class="sd">        Sampling method object, contains e.g. the posterior samples.</span>
+
+<span class="sd">        This object is created along with the ``BayesParameterEstimation`` object, and its `run` method is called</span>
+<span class="sd">        whenever the `run` method of the ``BayesParameterEstimation`` is called.</span>
+
+<span class="sd">    **Methods:**</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Authors: Audrey Olivier, Dimitris Giovanis</span>
+    <span class="c1"># Last Modified: 12/19 by Audrey Olivier</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inference_model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sampling_class</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_sampler</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span> <span class="o">=</span> <span class="n">inference_model</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="p">,</span> <span class="n">InferenceModel</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Input inference_model should be of type InferenceModel&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="kn">from</span> <span class="nn">UQpy.SampleMethods</span> <span class="k">import</span> <span class="n">MCMC</span><span class="p">,</span> <span class="n">IS</span>
+        <span class="c1"># MCMC algorithm</span>
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">sampling_class</span><span class="p">,</span> <span class="n">MCMC</span><span class="p">):</span>
+            <span class="c1"># If the seed is not provided, sample one from the prior pdf of the parameters</span>
+            <span class="k">if</span> <span class="s1">&#39;seed&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs_sampler</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">or</span> <span class="n">kwargs_sampler</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">prior</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">prior</span><span class="p">,</span> <span class="s1">&#39;rvs&#39;</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;UQpy: A prior with a rvs method or a seed must be provided for MCMC.&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">kwargs_sampler</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
+                        <span class="n">nsamples</span><span class="o">=</span><span class="n">kwargs_sampler</span><span class="p">[</span><span class="s1">&#39;nchains&#39;</span><span class="p">],</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span> <span class="o">=</span> <span class="n">sampling_class</span><span class="p">(</span>
+                <span class="n">dimension</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">nparams</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span>
+                <span class="n">log_pdf_target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">evaluate_log_posterior</span><span class="p">,</span> <span class="n">args_target</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="p">),</span>
+                <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_sampler</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">sampling_class</span><span class="p">,</span> <span class="n">IS</span><span class="p">):</span>
+            <span class="c1"># Importance distribution is either given by the user, or it is set as the prior of the model</span>
+            <span class="k">if</span> <span class="s1">&#39;proposal&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs_sampler</span> <span class="ow">or</span> <span class="n">kwargs_sampler</span><span class="p">[</span><span class="s1">&#39;proposal&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">prior</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;UQpy: A proposal density or a prior must be provided.&#39;</span><span class="p">)</span>
+                <span class="n">kwargs_sampler</span><span class="p">[</span><span class="s1">&#39;proposal&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">prior</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span> <span class="o">=</span> <span class="n">sampling_class</span><span class="p">(</span>
+                <span class="n">log_pdf_target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">evaluate_log_posterior</span><span class="p">,</span> <span class="n">args_target</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="p">),</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_sampler</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Sampling_class should be either a MCMC algorithm or IS.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Run the analysis if a certain number of samples was provided</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">nsamples_per_chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="n">nsamples_per_chain</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BayesParameterEstimation.run"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.BayesParameterEstimation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the Bayesian inference procedure, i.e., sample from the parameter posterior distribution.</span>
+
+<span class="sd">        This function calls the ``run`` method of the `sampler` attribute to generate samples from the parameter</span>
+<span class="sd">        posterior distribution.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **nsamples** (`int`):</span>
+<span class="sd">            Number of samples used in ``MCMC``/``IS``</span>
+
+<span class="sd">        * **samples_per_chain** (`int`):</span>
+<span class="sd">            Number of samples per chain used in ``MCMC``</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sampler</span><span class="p">,</span> <span class="n">MCMC</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="n">nsamples_per_chain</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sampler</span><span class="p">,</span> <span class="n">IS</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">nsamples_per_chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: nsamples_per_chain is not an appropriate input for IS.&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: sampling class should be a subclass of MCMC or IS&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Parameter estimation with &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s1">&#39; completed successfully!&#39;</span><span class="p">)</span></div></div>
+
+
+<span class="c1">########################################################################################################################</span>
+<span class="c1">########################################################################################################################</span>
+<span class="c1">#                                  Model Selection Using Information Theoretic Criteria</span>
+<span class="c1">########################################################################################################################</span>
+
+<div class="viewcode-block" id="InfoModelSelection"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.InfoModelSelection">[docs]</a><span class="k">class</span> <span class="nc">InfoModelSelection</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform model selection using information theoretic criteria.</span>
+
+<span class="sd">    Supported criteria are BIC, AIC (default), AICc. This class leverages the ``MLEstimation`` class for maximum</span>
+<span class="sd">    likelihood estimation, thus inputs to ``MLEstimation`` can also be provided to ``InfoModelSelection``, as lists of</span>
+<span class="sd">    length equal to the number of models.</span>
+
+
+<span class="sd">    **Inputs:**</span>
+
+<span class="sd">    * **candidate_models** (`list` of ``InferenceModel`` objects):</span>
+<span class="sd">        Candidate models</span>
+
+<span class="sd">    * **data** (`ndarray`):</span>
+<span class="sd">        Available data</span>
+
+<span class="sd">    * **criterion** (`str`):</span>
+<span class="sd">        Criterion to be used (&#39;AIC&#39;, &#39;BIC&#39;, &#39;AICc&#39;). Default is &#39;AIC&#39;</span>
+
+<span class="sd">    * **kwargs**:</span>
+<span class="sd">        Additional keyword inputs to the maximum likelihood estimators.</span>
+
+<span class="sd">        Keys must refer to input names to the ``MLEstimation`` class, and values must be lists of length `nmodels`,</span>
+<span class="sd">        ordered in the same way as input `candidate_models`. For example, setting</span>
+<span class="sd">        `kwargs={`method&#39;: [`Nelder-Mead&#39;, `Powell&#39;]}` means that the Nelder-Mead minimization algorithm will be used</span>
+<span class="sd">        for ML estimation of the first candidate model, while the Powell method will be used for the second candidate</span>
+<span class="sd">        model.</span>
+
+<span class="sd">    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):</span>
+<span class="sd">        Random seed used to initialize the pseudo-random number generator. Default is None.</span>
+
+<span class="sd">        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the</span>
+<span class="sd">        object itself can be passed directly.</span>
+
+<span class="sd">    * **x0** (`list` of `ndarrays`):</span>
+<span class="sd">        Starting points for optimization - see ``MLEstimation``</span>
+
+<span class="sd">    * **nopt** (`list` of `int`):</span>
+<span class="sd">        Number of iterations for the maximization procedure - see ``MLEstimation``</span>
+
+<span class="sd">    If `x0` and `nopt` are both `None`, the object is created but the model selection procedure is not run, one</span>
+<span class="sd">    must then call the ``run`` method.</span>
+
+<span class="sd">    **Attributes:**</span>
+
+<span class="sd">    * **ml_estimators** (`list` of `MLEstimation` objects):</span>
+<span class="sd">        ``MLEstimation`` results for each model (contains e.g. fitted parameters)</span>
+
+<span class="sd">    * **criterion_values** (`list` of `floats`):</span>
+<span class="sd">        Value of the criterion for all models.</span>
+
+<span class="sd">    * **penalty_terms** (`list` of `floats`):</span>
+<span class="sd">        Value of the penalty term for all models. Data fit term is then criterion_value - penalty_term.</span>
+
+<span class="sd">    * **probabilities** (`list` of `floats`):</span>
+<span class="sd">        Value of the model probabilities, computed as</span>
+
+<span class="sd">        .. math:: P(M_i|d) = \dfrac{\exp(-\Delta_i/2)}{\sum_i \exp(-\Delta_i/2)}</span>
+
+<span class="sd">        where :math:`\Delta_i = criterion_i - min_i(criterion)`</span>
+
+<span class="sd">    **Methods:**</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Authors: Audrey Olivier, Dimitris Giovanis</span>
+    <span class="c1"># Last Modified: 12/19 by Audrey Olivier</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate_models</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;AIC&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="c1"># Check inputs</span>
+        <span class="c1"># candidate_models is a list of InferenceModel objects</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate_models</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">InferenceModel</span><span class="p">)</span>
+                                                                      <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">candidate_models</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Input candidate_models must be a list of InferenceModel objects.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidate_models</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span> <span class="o">=</span> <span class="n">candidate_models</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">if</span> <span class="n">criterion</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;AIC&#39;</span><span class="p">,</span> <span class="s1">&#39;BIC&#39;</span><span class="p">,</span> <span class="s1">&#39;AICc&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Criterion should be AIC (default), BIC or AICc&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">=</span> <span class="n">criterion</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="c1"># Instantiate the ML estimators</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="ow">or</span> \
+                <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidate_models</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Extra inputs to model selection must be lists of length len(candidate_models)&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ml_estimators</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inference_model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span><span class="p">):</span>
+            <span class="n">kwargs_i</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+            <span class="n">ml_estimator</span> <span class="o">=</span> <span class="n">MLEstimation</span><span class="p">(</span><span class="n">inference_model</span><span class="o">=</span><span class="n">inference_model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+                                        <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_i</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ml_estimators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ml_estimator</span><span class="p">)</span>
+
+        <span class="c1"># Initialize the outputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">criterion_values</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">penalty_terms</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
+
+        <span class="c1"># Run the model selection procedure</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">nopt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">x0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nopt</span><span class="o">=</span><span class="n">nopt</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="InfoModelSelection.run"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.InfoModelSelection.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nopt</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the model selection procedure, i.e. compute criterion value for all models.</span>
+
+<span class="sd">        This function calls the ``run`` method of the ``MLEstimation`` object for each model to compute the maximum</span>
+<span class="sd">        log-likelihood, then computes the criterion value and probability for each model.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **x0** (`list` of `ndarrays`):</span>
+<span class="sd">            Starting point(s) for optimization for all models. Default is `None`. If not provided, see `nopt`. See</span>
+<span class="sd">            ``MLEstimation`` class.</span>
+
+<span class="sd">        * **nopt** (`int` or `list` of `ints`):</span>
+<span class="sd">            Number of iterations that the optimization is run, starting at random initial guesses. It is only used if</span>
+<span class="sd">            `x0` is not provided. Default is 1. See ``MLEstimation`` class.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check inputs x0, nopt</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nopt</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">nopt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nopt</span> <span class="o">=</span> <span class="p">[</span><span class="n">nopt</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">nopt</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">nopt</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: nopt should be an int or list of length nmodels&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: x0 should be a list of length nmodels (or None).&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Loop over all the models</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">inference_model</span><span class="p">,</span> <span class="n">ml_estimator</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ml_estimators</span><span class="p">)):</span>
+            <span class="c1"># First evaluate ML estimate for all models, do several iterations if demanded</span>
+            <span class="n">ml_estimator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nopt</span><span class="o">=</span><span class="n">nopt</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+            <span class="c1"># Then minimize the criterion</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">criterion_values</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">penalty_terms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_info_criterion</span><span class="p">(</span>
+                <span class="n">criterion</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">inference_model</span><span class="o">=</span><span class="n">inference_model</span><span class="p">,</span>
+                <span class="n">max_log_like</span><span class="o">=</span><span class="n">ml_estimator</span><span class="o">.</span><span class="n">max_log_like</span><span class="p">,</span> <span class="n">return_penalty</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Compute probabilities from criterion values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_probabilities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">criterion_values</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="InfoModelSelection.sort_models"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.InfoModelSelection.sort_models">[docs]</a>    <span class="k">def</span> <span class="nf">sort_models</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sort models in descending order of model probability (increasing order of `criterion` value).</span>
+
+<span class="sd">        This function sorts - in place - the attribute lists `candidate_models, ml_estimators, criterion_values,</span>
+<span class="sd">        penalty_terms` and `probabilities` so that they are sorted from most probable to least probable model. It is a</span>
+<span class="sd">        stand-alone function that is provided to help the user to easily visualize which model is the best.</span>
+
+<span class="sd">        No inputs/outputs.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sort_idx</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">criterion_values</span><span class="p">)))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ml_estimators</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ml_estimators</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">criterion_values</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">criterion_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">penalty_terms</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">penalty_terms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_compute_info_criterion</span><span class="p">(</span><span class="n">criterion</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">inference_model</span><span class="p">,</span> <span class="n">max_log_like</span><span class="p">,</span> <span class="n">return_penalty</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the criterion value for a given model, given a max_log_likelihood value.</span>
+
+<span class="sd">        The criterion value is -2 * max_log_like + penalty, the penalty depends on the chosen criterion. This function</span>
+<span class="sd">        is a utility function (static method), called within the run_estimation method.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        :param criterion: Chosen criterion.</span>
+<span class="sd">        :type criterion: str</span>
+
+<span class="sd">        :param data: Available data.</span>
+<span class="sd">        :type data: ndarray</span>
+
+<span class="sd">        :param inference_model: Inference model.</span>
+<span class="sd">        :type inference_model: object of class InferenceModel</span>
+
+<span class="sd">        :param max_log_like: Value of likelihood function at MLE.</span>
+<span class="sd">        :type max_log_like: float</span>
+
+<span class="sd">        :param return_penalty: Boolean that sets whether to return the penalty term as additional output.</span>
+
+<span class="sd">                               Default is False</span>
+<span class="sd">        :type return_penalty: bool</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        :return criterion_value: Value of criterion.</span>
+<span class="sd">        :rtype criterion_value: float</span>
+
+<span class="sd">        :return penalty_term: Value of penalty term.</span>
+<span class="sd">        :rtype penalty_term: float</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">n_params</span> <span class="o">=</span> <span class="n">inference_model</span><span class="o">.</span><span class="n">nparams</span>
+        <span class="n">ndata</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;BIC&#39;</span><span class="p">:</span>
+            <span class="n">penalty_term</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">ndata</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_params</span>
+        <span class="k">elif</span> <span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;AICc&#39;</span><span class="p">:</span>
+            <span class="n">penalty_term</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_params</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n_params</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_params</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">ndata</span> <span class="o">-</span> <span class="n">n_params</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;AIC&#39;</span><span class="p">:</span>  <span class="c1"># default</span>
+            <span class="n">penalty_term</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_params</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Criterion should be AIC (default), BIC or AICc&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">return_penalty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">max_log_like</span> <span class="o">+</span> <span class="n">penalty_term</span><span class="p">,</span> <span class="n">penalty_term</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">max_log_like</span> <span class="o">+</span> <span class="n">penalty_term</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_compute_probabilities</span><span class="p">(</span><span class="n">criterion_values</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the model probability given criterion values for all models.</span>
+
+<span class="sd">        Model probability is proportional to exp(-criterion/2), model probabilities over all models sum up to 1. This</span>
+<span class="sd">        function is a utility function (static method), called within the run_estimation method.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        :param criterion_values: Values of criterion for all models.</span>
+<span class="sd">        :type criterion_values: list (length nmodels) of floats</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        :return probabilities: Values of model probabilities</span>
+<span class="sd">        :rtype probabilities: list (length nmodels) of floats</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">criterion_values</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">criterion_values</span><span class="p">)</span>
+        <span class="n">prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">delta</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">prob</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">prob</span><span class="p">)</span></div>
+
+
+<span class="c1">########################################################################################################################</span>
+<span class="c1">########################################################################################################################</span>
+<span class="c1">#                                  Bayesian Model Selection</span>
+<span class="c1">########################################################################################################################</span>
+
+
+<div class="viewcode-block" id="BayesModelSelection"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.BayesModelSelection">[docs]</a><span class="k">class</span> <span class="nc">BayesModelSelection</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform model selection via Bayesian inference, i.e., compute model posterior probabilities given data.</span>
+
+<span class="sd">    This class leverages the ``BayesParameterEstimation`` class to get samples from the parameter posterior densities.</span>
+<span class="sd">    These samples are then used to compute the model evidence `p(data|model)` for all models and the model posterior</span>
+<span class="sd">    probabilities.</span>
+
+<span class="sd">    **References:**</span>
+
+<span class="sd">    1. A.E. Raftery, M.A. Newton, J.M. Satagopan, and P.N. Krivitsky. &quot;Estimating the integrated likelihood via</span>
+<span class="sd">       posterior simulation using the harmonic mean identity&quot;. In Bayesian Statistics 8, pages 1–45, 2007.</span>
+
+<span class="sd">    **Inputs:**</span>
+
+<span class="sd">    * **candidate_models** (`list` of ``InferenceModel`` objects):</span>
+<span class="sd">        Candidate models</span>
+
+<span class="sd">    * **data** (`ndarray`):</span>
+<span class="sd">        Available data</span>
+
+<span class="sd">    * **prior_probabilities** (`list` of `floats`):</span>
+<span class="sd">        Prior probabilities of each model, default is [1/nmodels, ] * nmodels</span>
+
+<span class="sd">    * **method_evidence_computation** (`str`):</span>
+<span class="sd">        as of v3, only the harmonic mean method is supported</span>
+
+<span class="sd">    * **kwargs**:</span>
+<span class="sd">        Keyword arguments to the ``BayesParameterEstimation`` class, for each model.</span>
+
+<span class="sd">        Keys must refer to names of inputs to the ``MLEstimation`` class, and values should be lists of length</span>
+<span class="sd">        `nmodels`, ordered in the same way as input candidate_models. For example, setting</span>
+<span class="sd">        `kwargs={`sampling_class&#39;: [MH, Stretch]}` means that the MH algorithm will be used for sampling from the</span>
+<span class="sd">        parameter posterior pdf of the 1st candidate model, while the Stretch algorithm will be used for the 2nd model.</span>
+
+<span class="sd">    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):</span>
+<span class="sd">        Random seed used to initialize the pseudo-random number generator. Default is None.</span>
+
+<span class="sd">        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the</span>
+<span class="sd">        object itself can be passed directly.</span>
+
+<span class="sd">    * **nsamples** (`list` of `int`):</span>
+<span class="sd">        Number of samples used in ``MCMC``/``IS``, for each model</span>
+
+<span class="sd">    * **samples_per_chain** (`list` of `int`):</span>
+<span class="sd">        Number of samples per chain used in ``MCMC``, for each model</span>
+
+<span class="sd">    If `nsamples` and `nsamples_per_chain` are both `None`, the object is created but the model selection procedure is</span>
+<span class="sd">    not run, one must then call the ``run`` method.</span>
+
+<span class="sd">    **Attributes:**</span>
+
+<span class="sd">    * **bayes_estimators** (`list` of ``BayesParameterEstimation`` objects):</span>
+<span class="sd">        Results of the Bayesian parameter estimation</span>
+
+<span class="sd">    * **self.evidences** (`list` of `floats`):</span>
+<span class="sd">        Value of the evidence for all models</span>
+
+<span class="sd">    * **probabilities** (`list` of `floats`):</span>
+<span class="sd">        Posterior probability for all models</span>
+
+<span class="sd">    **Methods:**</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Authors: Audrey Olivier, Yuchen Zhou</span>
+    <span class="c1"># Last modified: 01/24/2020 by Audrey Olivier</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate_models</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">prior_probabilities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method_evidence_computation</span><span class="o">=</span><span class="s1">&#39;harmonic_mean&#39;</span><span class="p">,</span>
+                 <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="c1"># Check inputs: candidate_models is a list of instances of Model, data must be provided, and input arguments</span>
+        <span class="c1"># for MCMC must be provided as a list of length len(candidate_models)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate_models</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">InferenceModel</span><span class="p">)</span>
+                                                                <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">candidate_models</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: A list InferenceModel objects must be provided.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span> <span class="o">=</span> <span class="n">candidate_models</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidate_models</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method_evidence_computation</span> <span class="o">=</span> <span class="n">method_evidence_computation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="k">if</span> <span class="n">prior_probabilities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prior_probabilities</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidate_models</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">candidate_models</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prior_probabilities</span> <span class="o">=</span> <span class="n">prior_probabilities</span>
+
+        <span class="c1"># Instantiate the Bayesian parameter estimators (without running them)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bayes_estimators</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidate_models</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Extra inputs to model selection must be lists of length len(candidate_models)&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inference_model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span><span class="p">):</span>
+            <span class="n">kwargs_i</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+            <span class="n">kwargs_i</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;concat_chains&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;save_log_pdf&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+            <span class="n">bayes_estimator</span> <span class="o">=</span> <span class="n">BayesParameterEstimation</span><span class="p">(</span>
+                <span class="n">inference_model</span><span class="o">=</span><span class="n">inference_model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_i</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bayes_estimators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bayes_estimator</span><span class="p">)</span>
+
+        <span class="c1"># Initialize the outputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evidences</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
+
+        <span class="c1"># Run the model selection procedure</span>
+        <span class="k">if</span> <span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">nsamples_per_chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="n">nsamples_per_chain</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BayesModelSelection.run"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.BayesModelSelection.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsamples_per_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the Bayesian model selection procedure, i.e., compute model posterior probabilities.</span>
+
+<span class="sd">        This function calls the ``run_estimation`` method of the ``BayesParameterEstimation`` object for each model to</span>
+<span class="sd">        sample from the parameter posterior probability, then computes the model evidence and model posterior</span>
+<span class="sd">        probability. This function updates attributes `bayes_estimators`, `evidences` and `probabilities`. If `nsamples`</span>
+<span class="sd">        or `nsamples_per_chain` are given when creating the object, this method is called directly when the object is</span>
+<span class="sd">        created. It can also be called separately.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        * **nsamples** (`list` of `int`):</span>
+<span class="sd">            Number of samples used in ``MCMC``/``IS``, for each model</span>
+
+<span class="sd">        * **samples_per_chain** (`list` of `int`):</span>
+<span class="sd">            Number of samples per chain used in ``MCMC``, for each model</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">nsamples</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">nsamples</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
+                                         <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nsamples</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: nsamples should be a list of integers&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nsamples_per_chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">nsamples_per_chain</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+                                                   <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">nsamples_per_chain</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmodels</span>
+                                                   <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nsamples_per_chain</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: nsamples_per_chain should be a list of integers&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Running Bayesian Model Selection.&#39;</span><span class="p">)</span>
+        <span class="c1"># Perform MCMC for all candidate models</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">inference_model</span><span class="p">,</span> <span class="n">bayes_estimator</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bayes_estimators</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Running MCMC for model &#39;</span><span class="o">+</span><span class="n">inference_model</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">bayes_estimator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">nsamples_per_chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">bayes_estimator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples_per_chain</span><span class="o">=</span><span class="n">nsamples_per_chain</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: ither nsamples or nsamples_per_chain should be non None&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">evidences</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_evidence</span><span class="p">(</span>
+                <span class="n">method_evidence_computation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method_evidence_computation</span><span class="p">,</span>
+                <span class="n">inference_model</span><span class="o">=</span><span class="n">inference_model</span><span class="p">,</span> <span class="n">posterior_samples</span><span class="o">=</span><span class="n">bayes_estimator</span><span class="o">.</span><span class="n">sampler</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span>
+                <span class="n">log_posterior_values</span><span class="o">=</span><span class="n">bayes_estimator</span><span class="o">.</span><span class="n">sampler</span><span class="o">.</span><span class="n">log_pdf_values</span><span class="p">)</span>
+
+        <span class="c1"># Compute posterior probabilities</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_posterior_probabilities</span><span class="p">(</span>
+            <span class="n">prior_probabilities</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prior_probabilities</span><span class="p">,</span> <span class="n">evidence_values</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">evidences</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Bayesian Model Selection analysis completed!&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BayesModelSelection.sort_models"><a class="viewcode-back" href="../../inference_doc.html#UQpy.Inference.BayesModelSelection.sort_models">[docs]</a>    <span class="k">def</span> <span class="nf">sort_models</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sort models in descending order of model probability (increasing order of criterion value).</span>
+
+<span class="sd">        This function sorts - in place - the attribute lists `candidate_models`, `prior_probabilities`, `probabilities`</span>
+<span class="sd">        and `evidences` so that they are sorted from most probable to least probable model. It is a stand-alone function</span>
+<span class="sd">        that is provided to help the user to easily visualize which model is the best.</span>
+
+<span class="sd">        No inputs/outputs.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sort_idx</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span><span class="p">)))[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_models</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prior_probabilities</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">prior_probabilities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evidences</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">evidences</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_idx</span><span class="p">]</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_estimate_evidence</span><span class="p">(</span><span class="n">method_evidence_computation</span><span class="p">,</span> <span class="n">inference_model</span><span class="p">,</span> <span class="n">posterior_samples</span><span class="p">,</span> <span class="n">log_posterior_values</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the model evidence, given samples from the parameter posterior pdf.</span>
+
+<span class="sd">        As of V3, only the harmonic mean method is supported for evidence computation. This function</span>
+<span class="sd">        is a utility function (static method), called within the run_estimation method.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        :param method_evidence_computation: Method for evidence computation. As of v3, only the harmonic mean is</span>
+<span class="sd">                                            supported.</span>
+<span class="sd">        :type method_evidence_computation: str</span>
+
+<span class="sd">        :param inference_model: Inference model.</span>
+<span class="sd">        :type inference_model: object of class InferenceModel</span>
+
+<span class="sd">        :param posterior_samples: Samples from parameter posterior density.</span>
+<span class="sd">        :type posterior_samples: ndarray of shape (nsamples, nparams)</span>
+
+<span class="sd">        :param log_posterior_values: Log-posterior values of the posterior samples.</span>
+<span class="sd">        :type log_posterior_values: ndarray of shape (nsamples, )</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        :return evidence: Value of evidence p(data|M).</span>
+<span class="sd">        :rtype evidence: float</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">method_evidence_computation</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;harmonic_mean&#39;</span><span class="p">:</span>
+            <span class="c1"># samples[int(0.5 * len(samples)):]</span>
+            <span class="n">log_likelihood_values</span> <span class="o">=</span> <span class="n">log_posterior_values</span> <span class="o">-</span> <span class="n">inference_model</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">log_pdf</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">posterior_samples</span><span class="p">)</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_likelihood_values</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Only the harmonic mean method is currently supported&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mf">1.</span><span class="o">/</span><span class="n">temp</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_compute_posterior_probabilities</span><span class="p">(</span><span class="n">prior_probabilities</span><span class="p">,</span> <span class="n">evidence_values</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the model probability given prior probabilities P(M) and evidence values p(data|M).</span>
+
+<span class="sd">        Model posterior probability P(M|data) is proportional to p(data|M)P(M). Posterior probabilities sum up to 1 over</span>
+<span class="sd">        all models. This function is a utility function (static method), called within the run_estimation method.</span>
+
+<span class="sd">        **Inputs:**</span>
+
+<span class="sd">        :param prior_probabilities: Values of prior probabilities for all models.</span>
+<span class="sd">        :type prior_probabilities: list (length nmodels) of floats</span>
+
+<span class="sd">        :param prior_probabilities: Values of evidence for all models.</span>
+<span class="sd">        :type prior_probabilities: list (length nmodels) of floats</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        :return probabilities: Values of model posterior probabilities</span>
+<span class="sd">        :rtype probabilities: list (length nmodels) of floats</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scaled_evidences</span> <span class="o">=</span> <span class="p">[</span><span class="n">evi</span> <span class="o">*</span> <span class="n">prior_prob</span> <span class="k">for</span> <span class="p">(</span><span class="n">evi</span><span class="p">,</span> <span class="n">prior_prob</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">evidence_values</span><span class="p">,</span> <span class="n">prior_probabilities</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">scaled_evidences</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">scaled_evidences</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../index.html">
+    <img class="logo" src="../../_static/logo.jpg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Uncertainty quantification with Python </p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=SURG&repo=UQpy&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation_doc.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runmodel_doc.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../distributions_doc.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samplemethods_doc.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../transformations_doc.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process_doc.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../surrogates_doc.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reliability_doc.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../inference_doc.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dimension_reduction_doc.html">DimensionReduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities_doc.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../news_doc.html">News</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Michael D. Shields.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/SURG/UQpy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

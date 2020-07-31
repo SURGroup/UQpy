@@ -1,0 +1,1091 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>UQpy.StochasticProcess &#8212; UQpy v3.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for UQpy.StochasticProcess</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The module currently contains the following classes:</span>
+
+<span class="sd">* ``SRM``: Class for simulation of Gaussian stochastic processes and random fields using the Spectral Representation</span>
+<span class="sd">  Method.</span>
+<span class="sd">* ``BSRM``: Class for simulation of third-order non-Gaussian stochastic processes and random fields using the</span>
+<span class="sd">  Bispectral Representation Method.</span>
+<span class="sd">* ``KLE``: Class for simulation of stochastic processes using the Karhunen-Loeve Expansion.</span>
+<span class="sd">* ``Translation``: Class for transforming a Gaussian stochastic process to a non-Gaussian stochastic process with</span>
+<span class="sd">  prescribed marginal probability distribution.</span>
+<span class="sd">* ``InverseTranslation``: Call for identifying an underlying Gaussian stochastic process for a non-Gaussian process with</span>
+<span class="sd">  prescribed marginal probability distribution and autocorrelation function / power spectrum.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">sqrtm</span>
+
+<span class="kn">from</span> <span class="nn">UQpy.Distributions</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">UQpy.Utilities</span> <span class="k">import</span> <span class="o">*</span>
+
+
+<span class="c1"># TODO: add non-stationary-methods for all the classes</span>
+
+
+<div class="viewcode-block" id="SRM"><a class="viewcode-back" href="../../stochastic_process_doc.html#UQpy.StochasticProcess.SRM">[docs]</a><span class="k">class</span> <span class="nc">SRM</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class to simulate stochastic processes from a given power spectrum density using the Spectral Representation</span>
+<span class="sd">    Method. This class can simulate uni-variate, multi-variate, and multi-dimensional stochastic processes. The class</span>
+<span class="sd">    uses Singular Value Decomposition, as opposed to Cholesky Decomposition, to ensure robust, near-positive definite</span>
+<span class="sd">    multi-dimensional power spectra.</span>
+
+<span class="sd">    **Input:**</span>
+
+<span class="sd">    * **nsamples** (`int`):</span>
+<span class="sd">        Number of samples of the stochastic process to be simulated.</span>
+
+<span class="sd">        The ``run`` method is automatically called if `nsamples` is provided. If `nsamples` is not provided, then the</span>
+<span class="sd">        ``SRM`` object is created but samples are not generated.</span>
+
+<span class="sd">    * **power_spectrum** (`list or numpy.ndarray`):</span>
+<span class="sd">        The discretized power spectrum.</span>
+
+<span class="sd">        For uni-variate, one-dimensional processes `power_spectrum` will be `list` or `ndarray` of length</span>
+<span class="sd">        `number_frequency_intervals`.</span>
+
+<span class="sd">        For multi-variate, one-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size</span>
+<span class="sd">        (`number_of_variables`, `number_of_variables`, `number_frequency_intervals`).</span>
+
+<span class="sd">        For uni-variate, multi-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size</span>
+<span class="sd">        (`number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`)</span>
+
+<span class="sd">        For multi-variate, multi-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size</span>
+<span class="sd">        (`number_of_variables`, `number_of_variables`, `number_frequency_intervals[0]`, ...</span>
+<span class="sd">        `number_frequency_intervals[number_of_dimensions-1]``).</span>
+
+<span class="sd">    * **time_interval** (`list or numpy.ndarray`):</span>
+<span class="sd">        Length of time discretizations (:math:`\Delta t`) for each dimension of size `number_of_dimensions`.</span>
+
+<span class="sd">    * **frequency_interval** (`list or numpy.ndarray`):</span>
+<span class="sd">        Length of frequency discretizations (:math:`\Delta \omega`) for each dimension of size `number_of_dimensions`.</span>
+
+<span class="sd">    * **number_frequency_intervals** (`list or numpy.ndarray`):</span>
+<span class="sd">        Number of frequency discretizations for each dimension of size `number_of_dimensions`.</span>
+
+<span class="sd">    * **number_time_intervals** (`list or numpy.ndarray`):</span>
+<span class="sd">        Number of time discretizations for each dimensions of size `number_of_dimensions`.</span>
+
+<span class="sd">    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):</span>
+<span class="sd">        Random seed used to initialize the pseudo-random number generator. Default is None.</span>
+
+<span class="sd">        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the</span>
+<span class="sd">        object itself can be passed directly.</span>
+
+<span class="sd">    * **verbose** (Boolean):</span>
+<span class="sd">        A boolean declaring whether to write text to the terminal.</span>
+
+<span class="sd">    **Attributes:**</span>
+
+<span class="sd">    * **samples** (`ndarray`):</span>
+<span class="sd">        Generated samples.</span>
+
+<span class="sd">        The shape of the samples is (`nsamples`, `number_of_variables`, `number_time_intervals[0]`, ...,</span>
+<span class="sd">        `number_time_intervals[number_of_dimensions-1]`)</span>
+
+<span class="sd">    * **number_of_dimensions** (`int`):</span>
+<span class="sd">        The dimensionality of the stochastic process.</span>
+
+<span class="sd">    * **number_of_variables** (`int`):</span>
+<span class="sd">        Number of variables in the stochastic process.</span>
+
+<span class="sd">    * **phi** (`ndarray`):</span>
+<span class="sd">        The random phase angles used in the simulation of the stochastic process.</span>
+
+<span class="sd">        The shape of the phase angles (`nsamples`, `number_of_variables`, `number_frequency_intervals[0]`, ...,</span>
+<span class="sd">        `number_frequency_intervals[number_of_dimensions-1]`)</span>
+
+<span class="sd">    **Methods**</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">power_spectrum</span><span class="p">,</span> <span class="n">time_interval</span><span class="p">,</span> <span class="n">frequency_interval</span><span class="p">,</span> <span class="n">number_time_intervals</span><span class="p">,</span>
+                 <span class="n">number_frequency_intervals</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span> <span class="o">=</span> <span class="n">power_spectrum</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_interval</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">frequency_interval</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> \
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">number_time_intervals</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">number_frequency_intervals</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">time_interval</span> <span class="o">=</span> <span class="p">[</span><span class="n">time_interval</span><span class="p">]</span>
+            <span class="n">frequency_interval</span> <span class="o">=</span> <span class="p">[</span><span class="n">frequency_interval</span><span class="p">]</span>
+            <span class="n">number_time_intervals</span> <span class="o">=</span> <span class="p">[</span><span class="n">number_time_intervals</span><span class="p">]</span>
+            <span class="n">number_frequency_intervals</span> <span class="o">=</span> <span class="p">[</span><span class="n">number_frequency_intervals</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_interval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">time_interval</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frequency_interval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">frequency_interval</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_time_intervals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">number_time_intervals</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_frequency_intervals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">number_frequency_intervals</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span>
+
+        <span class="c1"># Error checks</span>
+        <span class="n">t_u</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_frequency_intervals</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency_interval</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_interval</span> <span class="o">&gt;</span> <span class="n">t_u</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Aliasing might occur during execution&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_variables</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_frequency_intervals</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">case</span> <span class="o">=</span> <span class="s1">&#39;uni&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">number_of_variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">case</span> <span class="o">=</span> <span class="s1">&#39;multi&#39;</span>
+
+        <span class="c1"># Run Spectral Representation Method</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SRM.run"><a class="viewcode-back" href="../../stochastic_process_doc.html#UQpy.StochasticProcess.SRM.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute the random sampling in the ``SRM`` class.</span>
+
+<span class="sd">        The ``run`` method is the function that performs random sampling in the ``SRM`` class. If `nsamples` is</span>
+<span class="sd">        provided when the ``SRM`` object is defined, the ``run`` method is automatically called. The user may also call</span>
+<span class="sd">        the ``run`` method directly to generate samples. The ``run`` method of the ``SRM`` class can be invoked many</span>
+<span class="sd">        times and each time the generated samples are appended to the existing samples.</span>
+
+<span class="sd">        **Input:**</span>
+
+<span class="sd">        * **nsamples** (`int`):</span>
+<span class="sd">            Number of samples of the stochastic process to be simulated.</span>
+
+<span class="sd">            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the</span>
+<span class="sd">            existing samples.</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``SRM``</span>
+<span class="sd">        class.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">nsamples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: Number of samples must be defined.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nsamples</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: nsamples should be an integer.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: Running Spectral Representation Method.&#39;</span><span class="p">)</span>
+
+        <span class="n">samples</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">case</span> <span class="o">==</span> <span class="s1">&#39;uni&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: Starting simulation of uni-variate Stochastic Processes.&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: The number of dimensions is :&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span><span class="p">)</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span>
+                <span class="n">size</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+                               <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_frequency_intervals</span><span class="p">))</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulate_uni</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">case</span> <span class="o">==</span> <span class="s1">&#39;multi&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: Starting simulation of multi-variate Stochastic Processes.&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: The number of variables is :&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_variables</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: The number of dimensions is :&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span><span class="p">)</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_frequency_intervals</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">number_of_variables</span><span class="p">)))</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulate_multi</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">samples</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span> <span class="n">samples</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">,</span> <span class="n">phi</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: Spectral Representation Method Complete.&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_simulate_uni</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+        <span class="n">fourier_coefficient</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">phi</span> <span class="o">*</span> <span class="mf">1.0</span><span class="n">j</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequency_interval</span><span class="p">))</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftn</span><span class="p">(</span><span class="n">fourier_coefficient</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_time_intervals</span><span class="p">)</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">samples</span>
+
+    <span class="k">def</span> <span class="nf">_simulate_multi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+        <span class="n">power_spectrum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij...-&gt;...ij&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">)</span>
+        <span class="n">coefficient</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequency_interval</span><span class="p">))</span>
+        <span class="n">u</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">power_spectrum</span><span class="p">)</span>
+        <span class="n">power_spectrum_decomposed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;...ij,...j-&gt;...ij&#39;</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+        <span class="n">fourier_coefficient</span> <span class="o">=</span> <span class="n">coefficient</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;...ij,n...j -&gt; n...i&#39;</span><span class="p">,</span>
+                                                      <span class="n">power_spectrum_decomposed</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">phi</span> <span class="o">*</span> <span class="mf">1.0</span><span class="n">j</span><span class="p">))</span>
+        <span class="n">fourier_coefficient</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">fourier_coefficient</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftn</span><span class="p">(</span><span class="n">fourier_coefficient</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">number_time_intervals</span><span class="p">,</span>
+                                      <span class="n">axes</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span><span class="p">))))</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;n...m-&gt;nm...&#39;</span><span class="p">,</span> <span class="n">samples</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">samples</span></div>
+
+
+<div class="viewcode-block" id="BSRM"><a class="viewcode-back" href="../../stochastic_process_doc.html#UQpy.StochasticProcess.BSRM">[docs]</a><span class="k">class</span> <span class="nc">BSRM</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class to simulate non-Gaussian stochastic processes from a given power spectrum and bispectrum based on the 3-rd</span>
+<span class="sd">    order Spectral Representation Method. This class can simulate uni-variate, one-dimensional and multi-dimensional</span>
+<span class="sd">    stochastic processes.</span>
+
+<span class="sd">    **Input:**</span>
+
+<span class="sd">    * **nsamples** (`int`):</span>
+<span class="sd">        Number of samples of the stochastic process to be simulated.</span>
+
+<span class="sd">        The ``run`` method is automatically called if `nsamples` is provided. If `nsamples` is not provided, then the</span>
+<span class="sd">        ``BSRM`` object is created but samples are not generated.</span>
+
+<span class="sd">    * **power_spectrum** (`list or numpy.ndarray`):</span>
+<span class="sd">        The discretized power spectrum.</span>
+
+<span class="sd">        For uni-variate, one-dimensional processes `power_spectrum` will be `list` or `ndarray` of length</span>
+<span class="sd">        `number_frequency_intervals`.</span>
+
+<span class="sd">        For uni-variate, multi-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size</span>
+<span class="sd">        (`number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`)</span>
+
+<span class="sd">    * **bispectrum** (`list or numpy.ndarray`):</span>
+<span class="sd">        The prescribed bispectrum.</span>
+
+<span class="sd">        For uni-variate, one-dimensional processes, `bispectrum` will be a `list` or `ndarray` of size</span>
+<span class="sd">        (`number_frequency_intervals`, `number_frequency_intervals`)</span>
+
+<span class="sd">        For uni-variate, multi-dimensional processes, `bispectrum` will be a `list` or `ndarray` of size</span>
+<span class="sd">        (`number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`,</span>
+<span class="sd">        `number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`)</span>
+
+<span class="sd">    * **time_interval** (`list or numpy.ndarray`):</span>
+<span class="sd">        Length of time discretizations (:math:`\Delta t`) for each dimension of size `number_of_dimensions`.</span>
+
+<span class="sd">    * **frequency_interval** (`list or numpy.ndarray`):</span>
+<span class="sd">        Length of frequency discretizations (:math:`\Delta \omega`) for each dimension of size `number_of_dimensions`.</span>
+
+<span class="sd">    * **number_frequency_intervals** (`list or numpy.ndarray`):</span>
+<span class="sd">        Number of frequency discretizations for each dimension of size `number_of_dimensions`.</span>
+
+<span class="sd">    * **number_time_intervals** (`list or numpy.ndarray`):</span>
+<span class="sd">        Number of time discretizations for each dimensions of size `number_of_dimensions`.</span>
+
+<span class="sd">    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):</span>
+<span class="sd">        Random seed used to initialize the pseudo-random number generator. Default is None.</span>
+
+<span class="sd">        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the</span>
+<span class="sd">        object itself can be passed directly.</span>
+
+<span class="sd">    * **verbose** (Boolean):</span>
+<span class="sd">        A boolean declaring whether to write text to the terminal.</span>
+
+<span class="sd">    **Attributes:**</span>
+
+<span class="sd">    * **samples** (`ndarray`):</span>
+<span class="sd">        Generated samples.</span>
+
+<span class="sd">        The shape of the samples is (`nsamples`, `number_of_variables`, `number_time_intervals[0]`, ...,</span>
+<span class="sd">        `number_time_intervals[number_of_dimensions-1]`)</span>
+
+<span class="sd">    * **number_of_dimensions** (`int`):</span>
+<span class="sd">        The dimensionality of the stochastic process.</span>
+
+<span class="sd">    * **number_of_variables** (`int`):</span>
+<span class="sd">        Number of variables in the stochastic process.</span>
+
+<span class="sd">    * **phi** (`ndarray`):</span>
+<span class="sd">        The random phase angles used in the simulation of the stochastic process.</span>
+
+<span class="sd">        The shape of the phase angles (`nsamples`, `number_of_variables`, `number_frequency_intervals[0]`, ...,</span>
+<span class="sd">        `number_frequency_intervals[number_of_dimensions-1]`)</span>
+
+<span class="sd">    * **b_ampl** (`ndarray`):</span>
+<span class="sd">        The amplitude of the bispectrum.</span>
+
+<span class="sd">    * **b_real** (`ndarray`):</span>
+<span class="sd">        The real part of the bispectrum.</span>
+
+<span class="sd">    * **b_imag** (`ndarray`):</span>
+<span class="sd">        The imaginary part of the bispectrum.</span>
+
+<span class="sd">    * **biphase** (`ndarray`):</span>
+<span class="sd">        The biphase values of the bispectrum.</span>
+
+<span class="sd">    * **pure_power_spectrum** (`ndarray`):</span>
+<span class="sd">        The pure part of the power spectrum.</span>
+
+<span class="sd">    * **bc2** (`ndarray`):</span>
+<span class="sd">        The bicoherence values of the power spectrum and bispectrum.</span>
+
+<span class="sd">    * **sum_bc2** (`ndarray`):</span>
+<span class="sd">        The sum of the bicoherence values for single frequencies.</span>
+
+<span class="sd">    **Methods**</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">power_spectrum</span><span class="p">,</span> <span class="n">bispectrum</span><span class="p">,</span> <span class="n">time_interval</span><span class="p">,</span> <span class="n">frequency_interval</span><span class="p">,</span> <span class="n">number_time_intervals</span><span class="p">,</span>
+                 <span class="n">number_frequency_intervals</span><span class="p">,</span> <span class="n">case</span><span class="o">=</span><span class="s1">&#39;uni&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_frequency_intervals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">number_frequency_intervals</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_time_intervals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">number_time_intervals</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frequency_interval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">frequency_interval</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_interval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">time_interval</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">power_spectrum</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span> <span class="o">=</span> <span class="n">power_spectrum</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bispectrum</span> <span class="o">=</span> <span class="n">bispectrum</span>
+
+        <span class="c1"># Error checks</span>
+        <span class="n">t_u</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_frequency_intervals</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency_interval</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_interval</span> <span class="o">&gt;</span> <span class="n">t_u</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;UQpy: Aliasing might occur during execution&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_ampl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">bispectrum</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_real</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">bispectrum</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_imag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">bispectrum</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">biphase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_imag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_real</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">biphase</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">biphase</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">case</span> <span class="o">=</span> <span class="n">case</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">case</span> <span class="o">=</span> <span class="s1">&#39;uni&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">number_of_variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">case</span> <span class="o">=</span> <span class="s1">&#39;multi&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compute_bicoherence_uni</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: Computing the partial bicoherence values.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bc2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_real</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sum_bc2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ranges</span> <span class="o">=</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_frequency_intervals</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span><span class="p">)]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">ranges</span><span class="p">):</span>
+            <span class="n">wk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">k</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="n">wk</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]):</span>
+                <span class="n">wj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                <span class="n">wi</span> <span class="o">=</span> <span class="n">wk</span> <span class="o">-</span> <span class="n">wj</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_ampl</span><span class="p">[(</span><span class="o">*</span><span class="n">wi</span><span class="p">,</span> <span class="o">*</span><span class="n">wj</span><span class="p">)]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[(</span><span class="o">*</span><span class="n">wi</span><span class="p">,</span> <span class="o">*</span><span class="p">[])]</span> <span class="o">*</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[(</span><span class="o">*</span><span class="n">wj</span><span class="p">,</span> <span class="o">*</span><span class="p">[])]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bc2</span><span class="p">[(</span><span class="o">*</span><span class="n">wi</span><span class="p">,</span> <span class="o">*</span><span class="n">wj</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_ampl</span><span class="p">[(</span><span class="o">*</span><span class="n">wi</span><span class="p">,</span> <span class="o">*</span><span class="n">wj</span><span class="p">)]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[(</span><span class="o">*</span><span class="n">wi</span><span class="p">,</span> <span class="o">*</span><span class="p">[])]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[(</span><span class="o">*</span><span class="n">wj</span><span class="p">,</span> <span class="o">*</span><span class="p">[])]</span> <span class="o">*</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">[(</span><span class="o">*</span><span class="n">wk</span><span class="p">,</span> <span class="o">*</span><span class="p">[])])</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency_interval</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sum_bc2</span><span class="p">[(</span><span class="o">*</span><span class="n">wk</span><span class="p">,</span> <span class="o">*</span><span class="p">[])]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sum_bc2</span><span class="p">[(</span><span class="o">*</span><span class="n">wk</span><span class="p">,</span> <span class="o">*</span><span class="p">[])]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bc2</span><span class="p">[(</span><span class="o">*</span><span class="n">wi</span><span class="p">,</span> <span class="o">*</span><span class="n">wj</span><span class="p">)]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bc2</span><span class="p">[(</span><span class="o">*</span><span class="n">wi</span><span class="p">,</span> <span class="o">*</span><span class="n">wj</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sum_bc2</span><span class="p">[(</span><span class="o">*</span><span class="n">wk</span><span class="p">,</span> <span class="o">*</span><span class="p">[])]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: Results may not be as expected as sum of partial bicoherences is &#39;</span>
+                      <span class="s1">&#39;greater than 1&#39;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="n">wk</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)]):</span>
+                    <span class="n">wj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                    <span class="n">wi</span> <span class="o">=</span> <span class="n">wk</span> <span class="o">-</span> <span class="n">wj</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bc2</span><span class="p">[(</span><span class="o">*</span><span class="n">wi</span><span class="p">,</span> <span class="o">*</span><span class="n">wj</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bc2</span><span class="p">[(</span><span class="o">*</span><span class="n">wi</span><span class="p">,</span> <span class="o">*</span><span class="n">wj</span><span class="p">)]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sum_bc2</span><span class="p">[(</span><span class="o">*</span><span class="n">wk</span><span class="p">,</span> <span class="o">*</span><span class="p">[])]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sum_bc2</span><span class="p">[(</span><span class="o">*</span><span class="n">wk</span><span class="p">,</span> <span class="o">*</span><span class="p">[])]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pure_power_sepctrum</span><span class="p">[(</span><span class="o">*</span><span class="n">wk</span><span class="p">,</span> <span class="o">*</span><span class="p">[])]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span><span class="p">[(</span><span class="o">*</span><span class="n">wk</span><span class="p">,</span> <span class="o">*</span><span class="p">[])]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">sum_bc2</span><span class="p">[(</span><span class="o">*</span><span class="n">wk</span><span class="p">,</span> <span class="o">*</span><span class="p">[])])</span>
+
+    <span class="k">def</span> <span class="nf">_simulate_bsrm_uni</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum</span> <span class="o">*</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">frequency_interval</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span><span class="p">)</span>
+        <span class="n">phi_e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">phi</span> <span class="o">*</span> <span class="mf">1.0</span><span class="n">j</span><span class="p">)</span>
+        <span class="n">biphase_e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">biphase</span> <span class="o">*</span> <span class="mf">1.0</span><span class="n">j</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">sum_bc2</span><span class="p">)</span> <span class="o">*</span> <span class="n">phi_e</span>
+        <span class="n">bc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bc2</span><span class="p">)</span>
+
+        <span class="n">phi_e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;i...-&gt;...i&#39;</span><span class="p">,</span> <span class="n">phi_e</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;i...-&gt;...i&#39;</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">ranges</span><span class="p">):</span>
+            <span class="n">wk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">k</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="n">wk</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]):</span>
+                <span class="n">wj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                <span class="n">wi</span> <span class="o">=</span> <span class="n">wk</span> <span class="o">-</span> <span class="n">wj</span>
+                <span class="n">b</span><span class="p">[(</span><span class="o">*</span><span class="n">wk</span><span class="p">,</span> <span class="o">*</span><span class="p">[])]</span> <span class="o">=</span> <span class="n">b</span><span class="p">[(</span><span class="o">*</span><span class="n">wk</span><span class="p">,</span> <span class="o">*</span><span class="p">[])]</span> <span class="o">+</span> <span class="n">bc</span><span class="p">[(</span><span class="o">*</span><span class="n">wi</span><span class="p">,</span> <span class="o">*</span><span class="n">wj</span><span class="p">)]</span> <span class="o">*</span> <span class="n">biphase_e</span><span class="p">[(</span><span class="o">*</span><span class="n">wi</span><span class="p">,</span> <span class="o">*</span><span class="n">wj</span><span class="p">)]</span> <span class="o">*</span> <span class="n">phi_e</span><span class="p">[(</span><span class="o">*</span><span class="n">wi</span><span class="p">,</span> <span class="o">*</span><span class="p">[])]</span> <span class="o">*</span> \
+                                <span class="n">phi_e</span><span class="p">[(</span><span class="o">*</span><span class="n">wj</span><span class="p">,</span> <span class="o">*</span><span class="p">[])]</span>
+
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;...i-&gt;i...&#39;</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">b</span> <span class="o">*</span> <span class="n">coeff</span>
+        <span class="n">b</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">b</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftn</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_time_intervals</span><span class="p">)</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BSRM.run"><a class="viewcode-back" href="../../stochastic_process_doc.html#UQpy.StochasticProcess.BSRM.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute the random sampling in the ``BSRM`` class.</span>
+
+<span class="sd">        The ``run`` method is the function that performs random sampling in the ``BSRM`` class. If `nsamples` is</span>
+<span class="sd">        provided, the ``run`` method is automatically called when the ``BSRM`` object is defined. The user may also call</span>
+<span class="sd">        the ``run`` method directly to generate samples. The ``run`` method of the ``BSRM`` class can be invoked many</span>
+<span class="sd">        times and each time the generated samples are appended to the existing samples.</span>
+
+<span class="sd">        ** Input:**</span>
+
+<span class="sd">        * **nsamples** (`int`):</span>
+<span class="sd">            Number of samples of the stochastic process to be simulated.</span>
+
+<span class="sd">            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the</span>
+<span class="sd">            existing samples.</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">            The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the</span>
+<span class="sd">            ``BSRM`` class.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">nsamples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: Number of samples must be defined.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nsamples</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: nsamples should be an integer.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: Running 3rd-order Spectral Representation Method.&#39;</span><span class="p">)</span>
+
+        <span class="n">samples</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">case</span> <span class="o">==</span> <span class="s1">&#39;uni&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: Starting simulation of uni-variate Stochastic Processes.&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: The number of dimensions is :&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span><span class="p">)</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span>
+                <span class="n">size</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+                               <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_frequency_intervals</span><span class="p">))</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulate_bsrm_uni</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">samples</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span> <span class="n">samples</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">,</span> <span class="n">phi</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: 3rd-order Spectral Representation Method Complete.&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="KLE"><a class="viewcode-back" href="../../stochastic_process_doc.html#UQpy.StochasticProcess.KLE">[docs]</a><span class="k">class</span> <span class="nc">KLE</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class to simulate stochastic processes from a given auto-correlation function based on the Karhunen-Loeve</span>
+<span class="sd">    Expansion</span>
+
+<span class="sd">    **Input:**</span>
+
+<span class="sd">    * **nsamples** (`int`):</span>
+<span class="sd">        Number of samples of the stochastic process to be simulated.</span>
+
+<span class="sd">        The ``run`` method is automatically called if `nsamples` is provided. If `nsamples` is not provided, then the</span>
+<span class="sd">        ``KLE`` object is created but samples are not generated.</span>
+
+<span class="sd">    * **correlation_function** (`list or numpy.ndarray`):</span>
+<span class="sd">        The correlation function of the stochastic process of size (`number_time_intervals`, `number_time_intervals`)</span>
+
+<span class="sd">    * **time_interval** (`float`):</span>
+<span class="sd">        The length of time discretization.</span>
+
+<span class="sd">    * **threshold** (`int`):</span>
+<span class="sd">        The threshold number of eigenvalues to be used in the expansion.</span>
+
+<span class="sd">    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):</span>
+<span class="sd">        Random seed used to initialize the pseudo-random number generator. Default is None.</span>
+
+<span class="sd">        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the</span>
+<span class="sd">        object itself can be passed directly.</span>
+
+<span class="sd">    * **verbose** (Boolean):</span>
+<span class="sd">        A boolean declaring whether to write text to the terminal.</span>
+
+<span class="sd">    **Attributes:**</span>
+
+<span class="sd">    * **samples** (`ndarray`):</span>
+<span class="sd">        Array of generated samples.</span>
+
+<span class="sd">    * **xi** (`ndarray`):</span>
+<span class="sd">        The independent gaussian random variables used in the expansion.</span>
+
+<span class="sd">    **Methods**</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: Test this for non-stationary processes.</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">correlation_function</span><span class="p">,</span> <span class="n">time_interval</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">correlation_function</span> <span class="o">=</span> <span class="n">correlation_function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_interval</span> <span class="o">=</span> <span class="n">time_interval</span>
+        <span class="k">if</span> <span class="n">threshold</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">number_eigen_values</span> <span class="o">=</span> <span class="n">threshold</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">number_eigen_values</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">correlation_function</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;UQpy: random_state must be None, an int or an np.random.RandomState object.&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xi</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xi</span><span class="p">):</span>
+        <span class="n">lam</span><span class="p">,</span> <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">correlation_function</span><span class="p">)</span>
+        <span class="n">lam</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span>
+        <span class="n">lam</span> <span class="o">=</span> <span class="n">lam</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">phi</span><span class="p">[:,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">number_eigen_values</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">sqrtm</span><span class="p">(</span><span class="n">lam</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">number_eigen_values</span><span class="p">]),</span> <span class="n">xi</span><span class="p">))</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">samples</span>
+
+<div class="viewcode-block" id="KLE.run"><a class="viewcode-back" href="../../stochastic_process_doc.html#UQpy.StochasticProcess.KLE.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute the random sampling in the ``KLE`` class.</span>
+
+<span class="sd">        The ``run`` method is the function that performs random sampling in the ``KLE`` class. If `nsamples` is</span>
+<span class="sd">        provided when the ``KLE`` object is defined, the ``run`` method is automatically called. The user may also call</span>
+<span class="sd">        the ``run`` method directly to generate samples. The ``run`` method of the ``KLE`` class can be invoked many</span>
+<span class="sd">        times and each time the generated samples are appended to the existing samples.</span>
+
+<span class="sd">        ** Input:**</span>
+
+<span class="sd">        * **nsamples** (`int`):</span>
+<span class="sd">            Number of samples of the stochastic process to be simulated.</span>
+
+<span class="sd">            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the</span>
+<span class="sd">            existing samples.</span>
+
+<span class="sd">        **Output/Returns:**</span>
+
+<span class="sd">            The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the</span>
+<span class="sd">            ``KLE`` class.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">nsamples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: Number of samples must be defined.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nsamples</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: nsamples should be an integer.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: Running Karhunen Loeve Expansion.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: Starting simulation of Stochastic Processes.&#39;</span><span class="p">)</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_eigen_values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">))</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulate</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">samples</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xi</span> <span class="o">=</span> <span class="n">xi</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span> <span class="n">samples</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">xi</span><span class="p">,</span> <span class="n">xi</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;UQpy: Stochastic Process: Karhunen-Loeve Expansion Complete.&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Translation"><a class="viewcode-back" href="../../stochastic_process_doc.html#UQpy.StochasticProcess.Translation">[docs]</a><span class="k">class</span> <span class="nc">Translation</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class to translate Gaussian Stochastic Processes to non-Gaussian Stochastic Processes</span>
+
+<span class="sd">    **Input:**</span>
+
+<span class="sd">    * **dist_object** (`list or numpy.ndarray`):</span>
+<span class="sd">        An instance of the UQpy ``Distributions`` class defining the marginal distribution to which the Gaussian</span>
+<span class="sd">        stochastic process should be translated to.</span>
+
+<span class="sd">    * **time_interval** (`float`):</span>
+<span class="sd">        The value of time discretization.</span>
+
+<span class="sd">    * **frequency_interval** (`float`):</span>
+<span class="sd">        The value of frequency discretization.</span>
+
+<span class="sd">    * **number_time_intervals** (`int`):</span>
+<span class="sd">        The number of time discretizations.</span>
+
+<span class="sd">    * **number_frequency_intervals** (`int`):</span>
+<span class="sd">        The number of frequency discretizations.</span>
+
+<span class="sd">    * **power_spectrum_gaussian** (&#39;list or numpy.ndarray&#39;):</span>
+<span class="sd">        The power spectrum of the gaussian stochastic process to be translated.</span>
+
+<span class="sd">        `power_spectrum_gaussian` must be of size (`number_frequency_intervals`).</span>
+
+<span class="sd">    * **correlation_function_gaussian** (&#39;list or numpy.ndarray&#39;):</span>
+<span class="sd">        The auto correlation function of the Gaussian stochastic process to be translated.</span>
+
+<span class="sd">        Either the power spectrum or the auto correlation function of the gaussian stochastic process needs to be</span>
+<span class="sd">        defined.</span>
+
+<span class="sd">        `correlation_function_gaussian` must be of size (`number_time_intervals`).</span>
+
+<span class="sd">    * **samples_gaussian** (`list or numpy.ndarray`):</span>
+<span class="sd">        Samples of Gaussian stochastic process to be translated.</span>
+
+<span class="sd">        `samples_gaussian` is optional. If no samples are passed, the ``Translation`` class will compute the correlation</span>
+<span class="sd">        distortion.</span>
+
+<span class="sd">    **Attributes:**</span>
+
+<span class="sd">    * **samples_non_gaussian** (`numpy.ndarray`):</span>
+<span class="sd">        Translated non-Gaussian stochastic process from Gaussian samples.</span>
+
+<span class="sd">    * **power_spectrum_non_gaussian** (`numpy.ndarray`):</span>
+<span class="sd">        The power spectrum of the translated non-Gaussian stochastic processes.</span>
+
+<span class="sd">    * **correlation_function_non_gaussian** (`numpy.ndarray`):</span>
+<span class="sd">        The correlation function of the translated non-Gaussian stochastic processes obtained by distorting the Gaussian</span>
+<span class="sd">        correlation function.</span>
+
+<span class="sd">    * **scaled_correlation_function_non_gaussian** (`numpy.ndarray`):</span>
+<span class="sd">        This obtained by scaling the correlation function of the non-Gaussian stochastic processes to make the</span>
+<span class="sd">        correlation at &#39;0&#39; lag to be 1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">time_interval</span><span class="p">,</span> <span class="n">frequency_interval</span><span class="p">,</span> <span class="n">number_time_intervals</span><span class="p">,</span>
+                 <span class="n">number_frequency_intervals</span><span class="p">,</span> <span class="n">power_spectrum_gaussian</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">correlation_function_gaussian</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">samples_gaussian</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="o">=</span> <span class="n">dist_object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_interval</span> <span class="o">=</span> <span class="n">time_interval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frequency_interval</span> <span class="o">=</span> <span class="n">frequency_interval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_time_intervals</span> <span class="o">=</span> <span class="n">number_time_intervals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_frequency_intervals</span> <span class="o">=</span> <span class="n">number_frequency_intervals</span>
+        <span class="k">if</span> <span class="n">correlation_function_gaussian</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">power_spectrum_gaussian</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Either the Power Spectrum or the Autocorrelation function should be specified&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">correlation_function_gaussian</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum_gaussian</span> <span class="o">=</span> <span class="n">power_spectrum_gaussian</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">correlation_function_gaussian</span> <span class="o">=</span> <span class="n">wiener_khinchin_transform</span><span class="p">(</span><span class="n">power_spectrum_gaussian</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span>
+                                                                           <span class="bp">self</span><span class="o">.</span><span class="n">number_frequency_intervals</span><span class="p">)</span> <span class="o">*</span>
+                                                                           <span class="bp">self</span><span class="o">.</span><span class="n">frequency_interval</span><span class="p">,</span>
+                                                                           <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_time_intervals</span><span class="p">)</span> <span class="o">*</span>
+                                                                           <span class="bp">self</span><span class="o">.</span><span class="n">time_interval</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">power_spectrum_gaussian</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">correlation_function_gaussian</span> <span class="o">=</span> <span class="n">correlation_function_gaussian</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum_gaussian</span> <span class="o">=</span> <span class="n">inverse_wiener_khinchin_transform</span><span class="p">(</span><span class="n">correlation_function_gaussian</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span>
+                                                                             <span class="bp">self</span><span class="o">.</span><span class="n">number_frequency_intervals</span><span class="p">)</span> <span class="o">*</span>
+                                                                             <span class="bp">self</span><span class="o">.</span><span class="n">frequency_interval</span><span class="p">,</span>
+                                                                             <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_time_intervals</span><span class="p">)</span> <span class="o">*</span>
+                                                                             <span class="bp">self</span><span class="o">.</span><span class="n">time_interval</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_function_gaussian</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">correlation_function_gaussian</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">samples_gaussian</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples_shape</span> <span class="o">=</span> <span class="n">samples_gaussian</span><span class="o">.</span><span class="n">shape</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples_gaussian</span> <span class="o">=</span> <span class="n">samples_gaussian</span><span class="o">.</span><span class="n">flatten</span><span class="p">()[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples_non_gaussian</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_translate_gaussian_samples</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">correlation_function_non_gaussian</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled_correlation_function_non_gaussian</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_autocorrelation_distortion</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum_non_gaussian</span> <span class="o">=</span> <span class="n">inverse_wiener_khinchin_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">correlation_function_non_gaussian</span><span class="p">,</span>
+                                                                             <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span>
+                                                                                       <span class="bp">self</span><span class="o">.</span><span class="n">number_frequency_intervals</span><span class="p">)</span>
+                                                                             <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency_interval</span><span class="p">,</span>
+                                                                             <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span>
+                                                                                       <span class="bp">self</span><span class="o">.</span><span class="n">number_time_intervals</span><span class="p">)</span>
+                                                                             <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_interval</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_translate_gaussian_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">standard_deviation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">correlation_function_gaussian</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">samples_cdf</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_gaussian</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">standard_deviation</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="s1">&#39;icdf&#39;</span><span class="p">):</span>
+            <span class="n">non_gaussian_icdf</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="s1">&#39;icdf&#39;</span><span class="p">)</span>
+            <span class="n">samples_non_gaussian</span> <span class="o">=</span> <span class="n">non_gaussian_icdf</span><span class="p">(</span><span class="n">samples_cdf</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;UQpy: The marginal dist_object needs to have an inverse cdf defined.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">samples_non_gaussian</span>
+
+    <span class="k">def</span> <span class="nf">_autocorrelation_distortion</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">correlation_function_gaussian</span> <span class="o">=</span> <span class="n">scaling_correlation_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">correlation_function_gaussian</span><span class="p">)</span>
+        <span class="n">correlation_function_gaussian</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">correlation_function_gaussian</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.999</span><span class="p">,</span> <span class="mf">0.999</span><span class="p">)</span>
+        <span class="n">correlation_function_non_gaussian</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">correlation_function_gaussian</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">]):</span>
+            <span class="n">correlation_function_non_gaussian</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">correlation_distortion</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span>
+                                                                          <span class="n">correlation_function_gaussian</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="s1">&#39;moments&#39;</span><span class="p">):</span>
+            <span class="n">non_gaussian_moments</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="s1">&#39;moments&#39;</span><span class="p">)()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;UQpy: The marginal dist_object needs to have defined moments.&#39;</span><span class="p">)</span>
+        <span class="n">scaled_correlation_function_non_gaussian</span> <span class="o">=</span> <span class="n">correlation_function_non_gaussian</span> <span class="o">*</span> <span class="n">non_gaussian_moments</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">correlation_function_non_gaussian</span><span class="p">,</span> <span class="n">scaled_correlation_function_non_gaussian</span></div>
+
+
+<div class="viewcode-block" id="InverseTranslation"><a class="viewcode-back" href="../../stochastic_process_doc.html#UQpy.StochasticProcess.InverseTranslation">[docs]</a><span class="k">class</span> <span class="nc">InverseTranslation</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class to perform Iterative Translation Approximation Method to find the underlying  Gaussian Stochastic Processes</span>
+<span class="sd">    which upon translation would yield the necessary non-Gaussian Stochastic Processes.</span>
+
+<span class="sd">    **Input:**</span>
+
+<span class="sd">    * **dist_object** (`list or numpy.ndarray`):</span>
+<span class="sd">        An instance of the ``UQpy`` ``Distributions`` class defining the marginal distribution of the non-Gaussian</span>
+<span class="sd">        stochastic process.</span>
+
+<span class="sd">    * **time_interval** (`float`):</span>
+<span class="sd">        The value of time discretization.</span>
+
+<span class="sd">    * **frequency_interval** (`float`):</span>
+<span class="sd">        The value of frequency discretization.</span>
+
+<span class="sd">    * **number_time_intervals** (`int`):</span>
+<span class="sd">        The number of time discretizations.</span>
+
+<span class="sd">    * **number_frequency_intervals** (`int`):</span>
+<span class="sd">        The number of frequency discretizations.</span>
+
+<span class="sd">    * **power_spectrum_non_gaussian** (&#39;list or numpy.ndarray&#39;):</span>
+<span class="sd">        The power spectrum of the non-Gaussian stochastic processes.</span>
+
+<span class="sd">    * **correlation_function_non_gaussian** (&#39;list or numpy.ndarray&#39;):</span>
+<span class="sd">        The auto correlation function of the non-Gaussian stochastic processes.</span>
+
+<span class="sd">        Either the power spectrum or the auto correlation function of the Gaussian stochastic process needs to be</span>
+<span class="sd">        defined.</span>
+
+<span class="sd">    * **samples_non_gaussian** (`list or numpy.ndarray`):</span>
+<span class="sd">        Samples of non-Gaussian stochastic processes.</span>
+
+<span class="sd">        `samples_non_gaussian` is optional. If no samples are passed, the ``InverseTranslation`` class will compute the</span>
+<span class="sd">        underlying Gaussian correlation using the ITAM.</span>
+
+<span class="sd">    **Attributes:**</span>
+
+<span class="sd">    * **samples_gaussian** (`numpy.ndarray`):</span>
+<span class="sd">        The inverse translated Gaussian samples from the non-Gaussian samples.</span>
+
+<span class="sd">    * **power_spectrum_gaussian** (`numpy.ndarray`):</span>
+<span class="sd">        The power spectrum of the inverse translated Gaussian stochastic processes.</span>
+
+<span class="sd">    * **correlation_function_gaussian** (`numpy.ndarray`):</span>
+<span class="sd">        The correlation function of the inverse translated Gaussian stochastic processes.</span>
+
+<span class="sd">    * **scaled_correlation_function_non_gaussian** (`numpy.ndarray`):</span>
+<span class="sd">        This obtained by scaling the correlation function of the Gaussian stochastic processes to make the correlation</span>
+<span class="sd">        at &#39;0&#39; distance to be 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_object</span><span class="p">,</span> <span class="n">time_interval</span><span class="p">,</span> <span class="n">frequency_interval</span><span class="p">,</span> <span class="n">number_time_intervals</span><span class="p">,</span>
+                 <span class="n">number_frequency_intervals</span><span class="p">,</span> <span class="n">correlation_function_non_gaussian</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">power_spectrum_non_gaussian</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">samples_non_gaussian</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span> <span class="o">=</span> <span class="n">dist_object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">number_frequency_intervals</span><span class="p">)</span> <span class="o">*</span> <span class="n">frequency_interval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">number_time_intervals</span><span class="p">)</span> <span class="o">*</span> <span class="n">time_interval</span>
+        <span class="k">if</span> <span class="n">correlation_function_non_gaussian</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">power_spectrum_non_gaussian</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Either the Power Spectrum or the Autocorrelation function should be specified&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">correlation_function_non_gaussian</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum_non_gaussian</span> <span class="o">=</span> <span class="n">power_spectrum_non_gaussian</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">correlation_function_non_gaussian</span> <span class="o">=</span> <span class="n">wiener_khinchin_transform</span><span class="p">(</span><span class="n">power_spectrum_non_gaussian</span><span class="p">,</span>
+                                                                               <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">power_spectrum_non_gaussian</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">correlation_function_non_gaussian</span> <span class="o">=</span> <span class="n">correlation_function_non_gaussian</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum_non_gaussian</span> <span class="o">=</span> <span class="n">inverse_wiener_khinchin_transform</span><span class="p">(</span><span class="n">correlation_function_non_gaussian</span><span class="p">,</span>
+                                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_function_non_gaussian</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">correlation_function_non_gaussian</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">samples_non_gaussian</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples_shape</span> <span class="o">=</span> <span class="n">samples_non_gaussian</span><span class="o">.</span><span class="n">shape</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples_non_gaussian</span> <span class="o">=</span> <span class="n">samples_non_gaussian</span><span class="o">.</span><span class="n">flatten</span><span class="p">()[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples_gaussian</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_translate_non_gaussian_samples</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum_gaussian</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_itam_power_spectrum</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">auto_correlation_function_gaussian</span> <span class="o">=</span> <span class="n">wiener_khinchin_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum_gaussian</span><span class="p">,</span>
+                                                                            <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">correlation_function_gaussian</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_correlation_function_gaussian</span> <span class="o">/</span> \
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">auto_correlation_function_gaussian</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_inverse_translate_non_gaussian_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="s1">&#39;cdf&#39;</span><span class="p">):</span>
+            <span class="n">non_gaussian_cdf</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span> <span class="s1">&#39;cdf&#39;</span><span class="p">)</span>
+            <span class="n">samples_cdf</span> <span class="o">=</span> <span class="n">non_gaussian_cdf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_non_gaussian</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;UQpy: The marginal dist_object needs to have an inverse cdf defined.&#39;</span><span class="p">)</span>
+        <span class="n">samples_g</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">icdf</span><span class="p">(</span><span class="n">samples_cdf</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">samples_g</span>
+
+    <span class="k">def</span> <span class="nf">_itam_power_spectrum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">target_s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_spectrum_non_gaussian</span>
+        <span class="n">i_converge</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">max_iter</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="n">target_r</span> <span class="o">=</span> <span class="n">wiener_khinchin_transform</span><span class="p">(</span><span class="n">target_s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+        <span class="n">r_g_iterate</span> <span class="o">=</span> <span class="n">target_r</span>
+        <span class="n">s_g_iterate</span> <span class="o">=</span> <span class="n">target_s</span>
+        <span class="n">r_ng_iterate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">target_r</span><span class="p">)</span>
+        <span class="n">s_ng_iterate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">target_s</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iter</span><span class="p">):</span>
+            <span class="n">r_g_iterate</span> <span class="o">=</span> <span class="n">wiener_khinchin_transform</span><span class="p">(</span><span class="n">s_g_iterate</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">target_r</span><span class="p">)):</span>
+                <span class="n">r_ng_iterate</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">correlation_distortion</span><span class="p">(</span><span class="n">dist_object</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_object</span><span class="p">,</span>
+                                                         <span class="n">rho</span><span class="o">=</span><span class="n">r_g_iterate</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">r_g_iterate</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">s_ng_iterate</span> <span class="o">=</span> <span class="n">inverse_wiener_khinchin_transform</span><span class="p">(</span><span class="n">r_ng_iterate</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+
+            <span class="n">err1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">target_s</span> <span class="o">-</span> <span class="n">s_ng_iterate</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">err2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">target_s</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">err1</span> <span class="o">/</span> <span class="n">err2</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.0005</span><span class="p">:</span>
+                <span class="n">i_converge</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="n">s_g_next_iterate</span> <span class="o">=</span> <span class="p">(</span><span class="n">target_s</span> <span class="o">/</span> <span class="n">s_ng_iterate</span><span class="p">)</span> <span class="o">*</span> <span class="n">s_g_iterate</span>
+
+            <span class="c1"># Eliminate Numerical error of Upgrading Scheme</span>
+            <span class="n">s_g_next_iterate</span><span class="p">[</span><span class="n">s_g_next_iterate</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">s_g_iterate</span> <span class="o">=</span> <span class="n">s_g_next_iterate</span>
+
+            <span class="k">if</span> <span class="n">i_converge</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="k">return</span> <span class="n">s_g_iterate</span></div>
+
+
+<span class="k">def</span> <span class="nf">wiener_khinchin_transform</span><span class="p">(</span><span class="n">power_spectrum</span><span class="p">,</span> <span class="n">frequency</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A function to transform the power spectrum to a correlation function by the Wiener Khinchin transformation</span>
+
+<span class="sd">    ** Input:**</span>
+
+<span class="sd">    * **power_spectrum** (`list or numpy.array`):</span>
+
+<span class="sd">        The power spectrum of the signal.</span>
+
+<span class="sd">    * **frequency** (`list or numpy.array`):</span>
+
+<span class="sd">        The frequency discretizations of the power spectrum.</span>
+
+<span class="sd">    * **time** (`list or numpy.array`):</span>
+
+<span class="sd">        The time discretizations of the signal.</span>
+
+<span class="sd">    **Output/Returns:**</span>
+
+<span class="sd">    * **correlation_function** (`list or numpy.array`):</span>
+
+<span class="sd">        The correlation function of the signal.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">frequency_interval</span> <span class="o">=</span> <span class="n">frequency</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">frequency</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">fac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frequency</span><span class="p">))</span>
+    <span class="n">fac</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">frequency</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">fac</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">frequency</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">fac</span> <span class="o">=</span> <span class="n">fac</span> <span class="o">*</span> <span class="n">frequency_interval</span> <span class="o">/</span> <span class="mi">3</span>
+    <span class="n">correlation_function</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)):</span>
+        <span class="n">correlation_function</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">fac</span><span class="p">,</span> <span class="n">power_spectrum</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">frequency</span> <span class="o">*</span> <span class="n">time</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">correlation_function</span>
+
+
+<span class="k">def</span> <span class="nf">inverse_wiener_khinchin_transform</span><span class="p">(</span><span class="n">correlation_function</span><span class="p">,</span> <span class="n">frequency</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A function to transform the autocorrelation function to a power spectrum by the Inverse Wiener Khinchin</span>
+<span class="sd">    transformation.</span>
+
+<span class="sd">    ** Input:**</span>
+
+<span class="sd">    * **correlation_function** (`list or numpy.array`):</span>
+
+<span class="sd">        The correlation function of the signal.</span>
+
+<span class="sd">    * **frequency** (`list or numpy.array`):</span>
+
+<span class="sd">        The frequency discretizations of the power spectrum.</span>
+
+<span class="sd">    * **time** (`list or numpy.array`):</span>
+
+<span class="sd">        The time discretizations of the signal.</span>
+
+<span class="sd">    **Output/Returns:**</span>
+
+<span class="sd">    * **power_spectrum** (`list or numpy.array`):</span>
+
+<span class="sd">        The power spectrum of the signal.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">time_length</span> <span class="o">=</span> <span class="n">time</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">fac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">))</span>
+    <span class="n">fac</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">fac</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">fac</span> <span class="o">=</span> <span class="n">fac</span> <span class="o">*</span> <span class="n">time_length</span> <span class="o">/</span> <span class="mi">3</span>
+    <span class="n">power_spectrum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frequency</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frequency</span><span class="p">)):</span>
+        <span class="n">power_spectrum</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">fac</span><span class="p">,</span> <span class="n">correlation_function</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">time</span> <span class="o">*</span> <span class="n">frequency</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+    <span class="n">power_spectrum</span><span class="p">[</span><span class="n">power_spectrum</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">power_spectrum</span>
+
+
+<span class="k">def</span> <span class="nf">scaling_correlation_function</span><span class="p">(</span><span class="n">correlation_function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A function to scale a correlation function such that correlation at 0 lag is equal to 1</span>
+
+<span class="sd">    ** Input:**</span>
+
+<span class="sd">    * **correlation_function** (`list or numpy.array`):</span>
+
+<span class="sd">        The correlation function of the signal.</span>
+
+<span class="sd">    **Output/Returns:**</span>
+
+<span class="sd">    * **scaled_correlation_function** (`list or numpy.array`):</span>
+
+<span class="sd">        The scaled correlation functions of the signal.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">scaled_correlation_function</span> <span class="o">=</span> <span class="n">correlation_function</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">correlation_function</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">scaled_correlation_function</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../index.html">
+    <img class="logo" src="../../_static/logo.jpg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Uncertainty quantification with Python </p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=SURG&repo=UQpy&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation_doc.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runmodel_doc.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../distributions_doc.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samplemethods_doc.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../transformations_doc.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stochastic_process_doc.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../surrogates_doc.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reliability_doc.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../inference_doc.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dimension_reduction_doc.html">DimensionReduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities_doc.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../news_doc.html">News</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Michael D. Shields.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/SURG/UQpy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,1207 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>DimensionReduction &#8212; UQpy v3.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Utilities" href="utilities_doc.html" />
+    <link rel="prev" title="Inference" href="inference_doc.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-UQpy.DimensionReduction">
+<span id="dimensionreduction"></span><span id="dimension-reduction-doc"></span><h1>DimensionReduction<a class="headerlink" href="#module-UQpy.DimensionReduction" title="Permalink to this headline">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">DimensionReduction</span></code> is the module for <code class="docutils literal notranslate"><span class="pre">UQpy</span></code> to perform the dimensionality reduction of high-dimensional data.</p>
+<p>This module contains the classes and methods to perform pointwise and multi point data-based dimensionality reduction
+via projection onto Grassmann manifolds and Diffusion Maps, respectively. Further, interpolation in the tangent space
+centered at a given point on the Grassmann manifold can be performed, as well as the computation of kernels defined on
+the Grassmann manifold to be employed in techniques using subspaces.</p>
+<p>The module currently contains the following classes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Grassmann</span></code>: Class for for analysis of samples on the Grassmann manifold.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DiffusionMaps</span></code>: Class for multi point data-based dimensionality reduction.</p></li>
+</ul>
+<p>This module contains the classes and methods to perform the point-wise and multi point data-based dimensionality reduction via projection onto the Grassmann manifold and Diffusion Maps, respectively. Further, interpolation in the tangent space centered at a given point on the Grassmann manifold can be performed.</p>
+<p>The module <code class="docutils literal notranslate"><span class="pre">UQpy.DimensionReduction</span></code> currently contains the following classes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Grassmann</span></code>: Class for for analysis of samples on the Grassmann manifold.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DiffusionMaps</span></code>: Class for multi point data-based dimensionality reduction.</p></li>
+</ul>
+<div class="section" id="grassmann">
+<h2>Grassmann<a class="headerlink" href="#grassmann" title="Permalink to this headline">¶</a></h2>
+<p>In differential geometry the Grassmann manifold <span class="math notranslate nohighlight">\(\mathcal{G}_{n,p}\)</span> refers to a collection of <span class="math notranslate nohighlight">\(p\)</span>-dimensional subspaces embedded in a <span class="math notranslate nohighlight">\(n\)</span>-dimensional vector space. The <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> class contains methods to perform the projection of matrices onto the Grassmann manifold via singular value decomposition (SVD), where their dimensionality are reduced. Further, a tangent space, where standard interpolation can be performed, is constructed at a given reference point. Therefore, the mapping from the Grassmann manifold to the tangent space and from the tangent space to the manifold are performed via the logarithmic and exponential mapping, respectively. Moreover, additional quantities such as the Karcher mean, which correspond to the point on the Grassmann manifold minimizing the squared distances to the other points on the same manifold. Further, the kernel defined on the Grassmann manifold is implemented to estimate an affinity matrix to be used in kernel-based machine learning techniques.</p>
+<p>A tangent space <span class="math notranslate nohighlight">\(\mathcal{T}_{\mathcal{X}}\mathcal{G}(p,n)\)</span>, which is a flat inner-product space, is defined as a set of all tangent vectors at <span class="math notranslate nohighlight">\(\mathcal{X}\)</span> <a class="footnote-reference brackets" href="#id9" id="id1">1</a>, <a class="footnote-reference brackets" href="#id10" id="id2">2</a>, <a class="footnote-reference brackets" href="#id11" id="id3">3</a>; such as</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{T}_{\mathcal{X}}\mathcal{G}(p,n) = \{\mathbf{\Gamma} \in \mathbb{R}^{n \times p} : \mathbf{\Gamma}^T\mathbf{\Psi}=\mathbf{0}\}\]</div>
+<p>Where a point <span class="math notranslate nohighlight">\(\mathcal{X} = \mathrm{span}\left(\mathbf{\Psi}\right) \in \mathcal{G}(p,n)\)</span> is invariant to the choice of basis such that <span class="math notranslate nohighlight">\(\mathrm{span}\left(\mathbf{\Psi}\right) = \mathrm{span}\left(\mathbf{R\Psi}\right)\)</span>, with <span class="math notranslate nohighlight">\(\mathbf{R} \in SO(p)\)</span>, where <span class="math notranslate nohighlight">\(SO(p)\)</span> is the special orthogonal group.</p>
+<p>One can write the exponential map (from the tangent space to the manifold) locally as (<a class="footnote-reference brackets" href="#id12" id="id4">4</a>, <a class="footnote-reference brackets" href="#id13" id="id5">5</a>)</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{exp}_{\mathcal{X}_0}(\mathbf{\Gamma}) = \mathbf{\Psi}_1\]</div>
+<p>Denoting <span class="math notranslate nohighlight">\(\mathbf{\Gamma}\)</span> by its singular value decomposition <span class="math notranslate nohighlight">\(\mathbf{\Gamma} = \mathbf{U}\mathbf{S}\mathbf{V}^T\)</span> one can write a point on the Grassmann manifold <span class="math notranslate nohighlight">\(\mathbf{\Psi}_1\)</span>, considering a reference point <span class="math notranslate nohighlight">\(\mathbf{\Psi}_0\)</span>, as</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{\Psi}_1 = \mathrm{exp}_{\mathcal{X}_0}(\mathbf{U}\mathbf{S}\mathbf{V}^T) = \mathbf{\Psi}_0\mathbf{V}\mathrm{cos}\left(\mathbf{S}\right)\mathbf{Q}^T+\mathbf{U}\mathrm{sin}\left(\mathbf{S}\right)\mathbf{Q}^T\]</div>
+<p>Equivalently, the logarithmic map <span class="math notranslate nohighlight">\(\mathrm{log}_\mathcal{X}:\mathcal{G}(p,n) \rightarrow \mathcal{T}_{\mathcal{X}}\mathcal{G}(p,n)\)</span> is defined locally as</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{log}_\mathcal{X}(\mathbf{\Psi}_1) = \mathbf{U}\mathrm{tan}^{-1}\left(\mathbf{S}\right)\mathbf{V}^T\]</div>
+<p>One can write the geodesic as</p>
+<div class="math notranslate nohighlight">
+\[\gamma(t)=\mathrm{span}\left[\left(\mathbf{\Psi}_0\mathbf{V}\mathrm{cos}(t\mathbf{S})+\mathbf{U}\mathrm{sin}(t\mathbf{S})\right)\mathbf{V}^T\right]\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathbf{\Psi}_0\)</span>, if <span class="math notranslate nohighlight">\(t=0\)</span>, and <span class="math notranslate nohighlight">\(\mathbf{\Psi}_1\)</span>, <span class="math notranslate nohighlight">\(t=1\)</span>.</p>
+<p>The geodesic distance <span class="math notranslate nohighlight">\(d_{\mathcal{G}(p,n)}\left(\mathbf{\Psi}_0,\mathbf{\Psi}_1\right)\)</span> between two points on $mathcal{G}(p,n)$ corresponds to the distance over the geodesic <span class="math notranslate nohighlight">\(\gamma(t)\)</span> and it is given by</p>
+<div class="math notranslate nohighlight">
+\[d_{\mathcal{G}(p,n)}\left(\mathbf{\Psi}_0,\mathbf{\Psi}_1\right) = ||\mathbf{\Theta}||_2\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathbf{\Theta} = \left(\theta_1, \theta_2, \dots, \theta_p \right)\)</span> contains the principal angles. Several definitions of distance on <span class="math notranslate nohighlight">\(\mathcal{G}(p,n)\)</span> can be found in the literature.</p>
+<p>In several applications the use of subspaces is essential to describe the underlying geometry of data. However, it is well-known that subspaces do not follow the Euclidean geometry because they lie on the Grassmann manifold. Therefore, working with subspaces requires the definition of an embedding structure of the Grassmann manifold into a Hilbert space. Thus, using positive definite kernels is studied as a solution to this problem. In this regard, a real-valued positive definite kernel is defined as a symmetric function <span class="math notranslate nohighlight">\(k:\mathcal{X}\times \mathcal{X} \rightarrow \mathbb{R}\)</span> if and only if <span class="math notranslate nohighlight">\(\sum^n_{I,j=1}c_i c_j k(x_i,x_j) \leq 0\)</span> for <span class="math notranslate nohighlight">\(n \in \mathbb{N}\)</span>, <span class="math notranslate nohighlight">\(x_i in \mathcal{X}\)</span> and <span class="math notranslate nohighlight">\(c_i \in \mathbb{R}\)</span>. Further, the Grassmann kernel can be defined as a function <span class="math notranslate nohighlight">\(k:\mathcal{G}(p,n)\times \mathcal{G}(p,n) \rightarrow \mathbb{R}\)</span> if it is well-defined and positive definite <a class="footnote-reference brackets" href="#id14" id="id6">6</a>.</p>
+<div class="section" id="grassmann-class-descriptions">
+<h3>Grassmann Class Descriptions<a class="headerlink" href="#grassmann-class-descriptions" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> class is imported using the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">DimensionReduction</span> <span class="k">import</span> <span class="n">Grassmann</span>
+</pre></div>
+</div>
+<p>One can use the following command to instantiate the class <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code></p>
+<dl class="class">
+<dt id="UQpy.DimensionReduction.Grassmann">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.DimensionReduction.</code><code class="sig-name descname">Grassmann</code><span class="sig-paren">(</span><em class="sig-param">distance_method=None</em>, <em class="sig-param">kernel_method=None</em>, <em class="sig-param">interp_object=None</em>, <em class="sig-param">karcher_method=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mathematical analysis on the Grassmann manifold.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> class contains methods of data analysis on the Grassmann manifold, which is a special case of flag
+manifold. The projection of matrices onto the Grassmann manifold is performed via singular value decomposition(SVD),
+where their dimensionality are reduced. Further, the mapping from the Grassmann manifold to a tangent space
+constructed at a given reference point (logarithmic mapping), as well as the mapping from the tangent space to the
+manifold (exponential mapping) are implemented as methods. Moreover, an interpolation can be performed on the
+tangent space taking advantage of the implemented logarithmic and exponential maps. Additional quantities such
+as the Karcher mean, distance, and kernel, all defined on the Grassmann manifold, can be obtained using
+implemented methods. When the class <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> is instantiated some attributes are set using the method
+<code class="docutils literal notranslate"><span class="pre">manifold</span></code>, where the dimension of the manifold as well as the samples are input arguments.</p>
+<p><strong>Input:</strong></p>
+<ul>
+<li><dl>
+<dt><strong>distance_method</strong> (<cite>callable</cite>)</dt><dd><p>Defines the distance metric on the manifold. The user can pass a callable object defining the distance metric
+using two different ways. First, the user can pass one of the methods implemented in the class <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code>, they are:</p>
+<ul class="simple">
+<li><p><cite>grassmann_distance</cite>;</p></li>
+<li><p><cite>chordal_distance</cite>;</p></li>
+<li><p><cite>procrustes_distance</cite>;</p></li>
+<li><p><cite>projection_distance</cite></p></li>
+<li><p><cite>binet_cauchy_distance</cite>.</p></li>
+</ul>
+<p>In this regard,
+the class <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> is instantiated and the attributes are set using the method <code class="docutils literal notranslate"><span class="pre">manifold</span></code>. Thus,
+an object containing the attribute <cite>distance_method</cite> is passed as <cite>Grassmann.distance_method</cite>. Second, the user
+can pass either a method of a class or a function. For example, if the user wish to
+use <cite>grassmann_distance</cite> to compute the distance, one can use the following command:</p>
+<p>On the other hand, if the user implemented a function
+(e.g., <cite>user_distance</cite>) to compute the distance, <cite>distance_method</cite> must assume the following value
+<cite>distance_method = user_distance</cite>, which must be pre-loaded using import. In this regard, the
+function input must contain the first (x0) and second (x1) matrices as arguments (e.g, user_distance(x0,x1))</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>kernel_method</strong> (<cite>callable</cite>)</dt><dd><p>Object of the kernel function defined on the Grassmann manifold. The user can pass a object using two different
+ways. First, the user can pass one of the methods implemented in the class <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code>, they are:</p>
+<ul class="simple">
+<li><p><cite>projection_kernel</cite>;</p></li>
+<li><p><cite>binet_cauchy_kernel</cite>.</p></li>
+</ul>
+<p>In this regard, the object is passed as <cite>Grassmann.kernel_method</cite>.
+Second, the user can pass callable objects either as a method of a class or as a function.
+For example, if the user wish to use <cite>projection_kernel</cite> to estimate the kernel matrix, one can use the
+following command:</p>
+<p>On the other hand, if the user implemented
+a function (e.g., <cite>user_kernel</cite>) to compute the kernel matrix, <cite>kernel_method</cite> must assume the following value
+<cite>kernel_object = user_kernel</cite>, which must be pre-loaded using import. In this regard, the function
+input must contain the first (x0) and second (x1) matrices as arguments (e.g, user_kernel(x0,x1))</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>interp_object</strong> (<cite>object</cite>)</dt><dd><p>Interpolator to be used in the Tangent space. The user can pass an object defining the interpolator
+via four different ways.</p>
+<ul class="simple">
+<li><p>Using the <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> method <code class="docutils literal notranslate"><span class="pre">linear_interp</span></code> as Grassmann(interp_object=Grassmann.linear_interp).</p></li>
+<li><p>Using an object of <code class="docutils literal notranslate"><span class="pre">UQpy.Kriging</span></code> as Grassmann(interp_object=Kriging_Object)</p></li>
+<li><p>Using an object of <code class="docutils literal notranslate"><span class="pre">sklearn.gaussian_process</span></code> as Grassmann(interp_object=Sklearn_Object)</p></li>
+<li><p>Using an user defined object (e.g., user_interp). In this case, the function must contain the following
+arguments: <cite>coordinates</cite>, <cite>samples</cite>, and <cite>point</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>karcher_method</strong> (<cite>callable</cite>)</dt><dd><p>Optimization method used in the estimation of the Karcher mean. The user can pass a callable object via
+two different ways. First, the user can pass one of the methods implemented in the class <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code>,
+they are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gradient_descent</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stochastic_gradient_descent</span></code>.</p></li>
+</ul>
+<p>Second, the user can pass callable objects either as a method of a class or as a function. It is worth
+mentioning that the method <code class="docutils literal notranslate"><span class="pre">gradient_descent</span></code> also allows the accelerated descent method due to Nesterov.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Attributes:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>p</strong> (<cite>int</cite> or <cite>str</cite>)</dt><dd><p>Dimension of the p-planes defining the Grassmann manifold G(n,p).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>ranks</strong> (<cite>list</cite>)</dt><dd><p>Dimension of the embedding dimension for the manifolds G(n,p) of each sample.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>samples</strong> (<cite>list</cite> of <cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Input samples defined as a <cite>list</cite> of matrices.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>nargs</strong> (<cite>int</cite>)</dt><dd><p>Number of matrices in <cite>samples</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>max_rank</strong> (<cite>int</cite>)</dt><dd><p>Maximum value of <cite>ranks</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>psi</strong> (<cite>list</cite>)</dt><dd><p>Left singular eigenvectors from the singular value decomposition of each sample in <cite>samples</cite>
+representing a point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>sigma</strong> (<cite>list</cite>)</dt><dd><p>Singular values from the singular value decomposition of each sample in <cite>samples</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>phi</strong> (<cite>list</cite>)</dt><dd><p>Right singular eigenvector from the singular value decomposition of each sample in <cite>samples</cite>
+representing a point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.binet_cauchy_distance">
+<em class="property">static </em><code class="sig-name descname">binet_cauchy_distance</code><span class="sig-paren">(</span><em class="sig-param">x0</em>, <em class="sig-param">x1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.binet_cauchy_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.binet_cauchy_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the Binet-Cauchy distance.</p>
+<p>One of the distances defined on the Grassmann manifold is the projection distance.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>x0</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>x1</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>distance</strong> (<cite>float</cite>)</dt><dd><p>Projection distance between x0 and x1.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.binet_cauchy_kernel">
+<em class="property">static </em><code class="sig-name descname">binet_cauchy_kernel</code><span class="sig-paren">(</span><em class="sig-param">x0</em>, <em class="sig-param">x1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.binet_cauchy_kernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.binet_cauchy_kernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the value of the Binet-Cauchy kernel between x0 and x1.</p>
+<p>One of the kernels defined on a manifold is the Binet-Cauchy kernel.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>x0</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>x1</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>distance</strong> (<cite>float</cite>)</dt><dd><p>Kernel value for x0 and x1.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.chordal_distance">
+<em class="property">static </em><code class="sig-name descname">chordal_distance</code><span class="sig-paren">(</span><em class="sig-param">x0</em>, <em class="sig-param">x1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.chordal_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.chordal_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the chordal distance.</p>
+<p>One of the distances defined on the Grassmann manifold is the chordal distance.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>x0</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>x1</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>distance</strong> (<cite>float</cite>)</dt><dd><p>Chordal distance between x0 and x1.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.distance">
+<code class="sig-name descname">distance</code><span class="sig-paren">(</span><em class="sig-param">points_grassmann=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the distance between points on the Grassmann manifold.</p>
+<p>This method computes the pairwise distance of points projected on the Grassmann manifold. The input arguments
+are passed through a <cite>list</cite> of <cite>list</cite> or a <cite>list</cite> of <cite>ndarray</cite>. When the user call this method a list containing
+the pairwise distances is returned as an output argument where the distances are stored as
+[{0,1},{0,2},…,{1,0},{1,1},{1,2},…], where {a,b} corresponds to the distance between the points ‘a’ and
+‘b’. Further, users are asked to provide the distance definition when the class <cite>Grassmann</cite> is instatiated.
+The current built-in options are the <cite>grassmann_distance</cite>, <cite>chordal_distance</cite>, <cite>procrustes_distance</cite>,
+<cite>projection_distance</cite>, and <cite>binet_cauchy_distance</cite>, but the users have also the option to implement their own
+distance definition. In this case, the user must be aware that the matrices in <cite>points_grassmann</cite> must represent
+points on the Grassmann manifold. For example, given the points on the Grassmann manifold one can compute the
+pairwise distances in the following way:</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>points_grassmann</strong> (<cite>list</cite> or <cite>NoneType</cite>)</dt><dd><p>Matrices (at least 2) corresponding to the points on the Grassmann manifold. If <cite>points_grassmann</cite> is not
+provided it means that the samples in <cite>manifold</cite> are employed, and the pairwise distances of the points on
+the manifold defined by the left and right singular eigenvectors are computed.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>points_distance</strong> (<cite>list</cite>)</dt><dd><p>Pairwise distances if <cite>points_grassmann</cite> is provided.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>points_distance_psi</strong> (<cite>list</cite>)</dt><dd><p>Pairwise distance of points on the manifold defined by the left singular eigenvectors if <cite>points_grassmann</cite>
+is not provided.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>points_distance_phi</strong> (<cite>list</cite>)</dt><dd><p>Pairwise distance of points on the manifold defined by the right singular eigenvectors if <cite>points_grassmann</cite>
+is not provided.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.exp_map">
+<em class="property">static </em><code class="sig-name descname">exp_map</code><span class="sig-paren">(</span><em class="sig-param">points_tangent=None</em>, <em class="sig-param">ref=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.exp_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.exp_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Map points on the tangent space onto the Grassmann manifold.</p>
+<p>It maps the points on the tangent space, passed to the method using points_tangent, onto the Grassmann manifold.
+It is mandatory that the user pass a reference point where the tangent space was created.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>points_tangent</strong> (<cite>list</cite>)</dt><dd><p>Matrices (at least 2) corresponding to the points on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>ref</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>A point on the Grassmann manifold used as reference to construct the tangent space.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>points_manifold</strong>: (<cite>list</cite>)</dt><dd><p>Point on the tangent space.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.frechet_variance">
+<em class="property">static </em><code class="sig-name descname">frechet_variance</code><span class="sig-paren">(</span><em class="sig-param">point_grassmann</em>, <em class="sig-param">points_grassmann</em>, <em class="sig-param">distance_fun</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.frechet_variance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.frechet_variance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the Frechet variance.</p>
+<p>The Frechet variance corresponds to the summation of the square distances, on the manifold, to a given
+point also on the manifold. This method is employed in the minimization scheme used to find the Karcher mean.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>point_grassmann</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold where the Frechet variance is computed.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>points_grassmann</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Points on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>distance_fun</strong> (<cite>callable</cite>)</dt><dd><p>Distance function.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>frechet_var</strong> (<cite>list</cite>)</dt><dd><p>Frechet variance.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.gradient_descent">
+<em class="property">static </em><code class="sig-name descname">gradient_descent</code><span class="sig-paren">(</span><em class="sig-param">data_points</em>, <em class="sig-param">distance_fun</em>, <em class="sig-param">kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.gradient_descent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.gradient_descent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the Karcher mean using the gradient descent method.</p>
+<p>This method computes the Karcher mean given a set of points on the Grassmann manifold. In this regard, the
+<code class="docutils literal notranslate"><span class="pre">gradient_descent</span></code> method is implemented herein also considering the acceleration scheme due to Nesterov.
+Further, this method is called by the method <code class="docutils literal notranslate"><span class="pre">karcher_mean</span></code>.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>data_points</strong> (<cite>list</cite>)</dt><dd><p>Points on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>distance_fun</strong> (<cite>callable</cite>)</dt><dd><p>Distance function.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>kwargs</strong> (<cite>dictionary</cite>)</dt><dd><p>Contains the keywords for the used in the optimizers to find the Karcher mean.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>mean_element</strong> (<cite>list</cite>)</dt><dd><p>Karcher mean.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.grassmann_distance">
+<em class="property">static </em><code class="sig-name descname">grassmann_distance</code><span class="sig-paren">(</span><em class="sig-param">x0</em>, <em class="sig-param">x1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.grassmann_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.grassmann_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the Grassmann distance.</p>
+<p>One of the distances defined on the Grassmann manifold is the Grassmann distance.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>x0</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>x1</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>distance</strong> (<cite>float</cite>)</dt><dd><p>Grassmann distance between x0 and x1.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.interpolate">
+<code class="sig-name descname">interpolate</code><span class="sig-paren">(</span><em class="sig-param">coordinates</em>, <em class="sig-param">point</em>, <em class="sig-param">element_wise=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.interpolate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.interpolate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolate a point on the Grassmann manifold given the samples in the ambient space (sample space).</p>
+<p>Interpolate a <cite>point</cite> on the Grassmann manifold given the <cite>coordinates</cite>, support points, and the <cite>samples</cite>.
+Further, the user must select the option <cite>element_wise</cite> to perform the interpolation in the entries of the input
+matrices, if <cite>point</cite> and <cite>samples</cite> are matrices. The samples related to <cite>coordinates</cite> are set using
+<cite>manifold</cite>. For example, the following command is used to perform the interpolation.</p>
+<p>On the other hand, if a scikit learn gaussian_process object is provided, one can use the following commands:</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>coordinates</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Coordinate of the support samples.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>point</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point to be interpolated.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>element_wise</strong> (<cite>bool</cite>)</dt><dd><p>Element wise interpolation.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>interpolated</strong> (<cite>list</cite>)</dt><dd><p>Interpolated point.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.interpolate_sample">
+<code class="sig-name descname">interpolate_sample</code><span class="sig-paren">(</span><em class="sig-param">coordinates</em>, <em class="sig-param">samples</em>, <em class="sig-param">point</em>, <em class="sig-param">element_wise=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.interpolate_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.interpolate_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolate a point on the tangent space.</p>
+<p>Once the points on the Grassmann manifold are projected onto the tangent space standard interpolation can be
+performed. In this regard, the user should provide the data points, the coordinates of each input data point,
+and the point to be interpolated. Furthermore, additional parameters, depending on the selected interpolation
+method, can be provided via kwargs. In comparison to <code class="docutils literal notranslate"><span class="pre">interpolate</span></code>, here the samples prodived are points on
+the TANGENT SPACE.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>coordinates</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Coordinates of the input data points.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>samples</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Matrices corresponding to the points on the tangent space.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>point</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Coordinates of the point to be interpolated.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>element_wise</strong> (<cite>bool</cite>)</dt><dd><p>Boolean variable for the element wise intepolation of a matrix.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>interp_point</strong> (<cite>ndarray</cite>)</dt><dd><p>Interpolated point on the tangent space.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.karcher_mean">
+<code class="sig-name descname">karcher_mean</code><span class="sig-paren">(</span><em class="sig-param">points_grassmann=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.karcher_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.karcher_mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the Karcher mean.</p>
+<p>This method computes the Karcher mean given a set of points on the Grassmann manifold. The Karcher mean is
+estimated by the minimization of the Frechet variance, where the Frechet variance corresponds to the sum of the
+square distances, defined on the Grassmann manifold, to a given point. The command to compute the Karcher mean
+given a seto of points on the Grassmann manifold is.</p>
+<p>In this case two values are returned corresponding to the ones related to the manifolds defined by the left and
+right singular eigenvectors.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>points_grassmann</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Matrices (at least 2) corresponding to the points on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>kwargs</strong> (<cite>dictionary</cite>)</dt><dd><p>Contains the keywords for the used in the optimizers to find the Karcher mean. If <code class="docutils literal notranslate"><span class="pre">gradient_descent</span></code> is
+employed the keywords are <cite>acc</cite>, a boolean variable for the accelerated method; <cite>tol</cite>, tolerance with
+default value equal to 1e-3; and <cite>maxiter</cite>, maximum number of iterations with default value equal to 1000.
+If <cite>stochastic_gradient_descent</cite> is employed instead, <cite>acc</cite> is not used.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>kr_mean</strong> (<cite>list</cite>)</dt><dd><p>Karcher mean.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>kr_mean_psi</strong> (<cite>list</cite>)</dt><dd><p>Karcher mean for left singular eigenvectors if <cite>points_grassmann</cite> is not provided.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>kr_mean_phi</strong> (<cite>list</cite>)</dt><dd><p>Karcher mean for right singular eigenvectors if <cite>points_grassmann</cite> is not provided.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.kernel">
+<code class="sig-name descname">kernel</code><span class="sig-paren">(</span><em class="sig-param">points_grassmann=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.kernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.kernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute a kernel matrix on the Grassmann manifold.</p>
+<p>This method computes the kernel matrix of points on the Grassmann manifold. The input arguments are passed
+through a list. When the user call this method a ndarray containing the kernel matrix is returned as an
+output argument. Further, users are asked to provide the kernel method when the class Grassmann is instatiated.
+The current built-in options are the <cite>projection_kernel</cite> and the <cite>binet_cauchy_kernel</cite>, but the users have
+the option to implement their own kernel definition. However, the user must be aware that the points used
+to compute the kernel must be the points on the same manifold; therefore, it is important to ensure that the
+dimension of all the input matrices are the same. Therefore, the following commands can be used:</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>points_grassmann</strong> (<cite>list</cite> or <cite>NoneType</cite>)</dt><dd><p>Matrices (at least 2) corresponding to the points on the Grassmann manifold. If <cite>points_grassmann</cite> is not
+provided it means that the samples set by <cite>manifold</cite> is employed and kernel matrices are computed for the
+points on the manifold defined by the left and right singular eigenvectors are computed.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>kernel_matrix</strong> (<cite>list</cite>)</dt><dd><p>Kernel matrix if <cite>points_grassmann</cite> is provided.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>kernel_matrix_psi</strong> (<cite>list</cite>)</dt><dd><p>Kernel matrix on the manifold defined by the left singular eigenvectors if <cite>points_grassmann</cite>
+is not provided.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>kernel_matrix_phi</strong> (<cite>list</cite>)</dt><dd><p>Kernel matrix on the manifold defined by the right singular eigenvectors if <cite>points_grassmann</cite>
+is not provided.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.linear_interp">
+<em class="property">static </em><code class="sig-name descname">linear_interp</code><span class="sig-paren">(</span><em class="sig-param">coordinates</em>, <em class="sig-param">samples</em>, <em class="sig-param">point</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.linear_interp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.linear_interp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolate a point using the linear interpolation.</p>
+<p>For the linear interpolation the user are asked to provide the data points, the coordinates of the data points,
+and the coordinate of the point to be interpolated.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>coordinates</strong> (<cite>ndarray</cite>)</dt><dd><p>Coordinates of the input data points.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>samples</strong> (<cite>ndarray</cite>)</dt><dd><p>Matrices corresponding to the points on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>point</strong> (<cite>ndarray</cite>)</dt><dd><p>Coordinates of the point to be interpolated.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>interp_point</strong> (<cite>ndarray</cite>)</dt><dd><p>Interpolated point.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.log_map">
+<em class="property">static </em><code class="sig-name descname">log_map</code><span class="sig-paren">(</span><em class="sig-param">points_grassmann=None</em>, <em class="sig-param">ref=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.log_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.log_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mapping points from the Grassmann manifold on the tangent space.</p>
+<p>It maps the points on the Grassmann manifold, passed to the method using the input argument <cite>points_grassmann</cite>,
+onto the tangent space constructed on ref (a reference point on the Grassmann manifold).
+It is mandatory that the user pass a reference point to the method. Further, the reference point and the points
+in <cite>points_grassmann</cite> must belong to the same manifold.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>points_grassmann</strong> (<cite>list</cite>)</dt><dd><p>Matrices (at least 2) corresponding to the points on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>ref</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>A point on the Grassmann manifold used as reference to construct the tangent space.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>points_tan</strong>: (<cite>list</cite>)</dt><dd><p>Point on the tangent space.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.manifold">
+<code class="sig-name descname">manifold</code><span class="sig-paren">(</span><em class="sig-param">p=None</em>, <em class="sig-param">samples=None</em>, <em class="sig-param">append_samples=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.manifold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.manifold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the grassmann manifold and project the samples on it via singular value decomposition.</p>
+<p>This method project samples onto the Grassmann manifold via singular value decomposition. The input arguments
+are passed through the argument <cite>samples</cite> containing a list of lists or a list of ndarrays. Moreover, this
+method serves to set the manifold and to verify the consistency of the input data. This method can be called
+using the following command:</p>
+<p>In this case, append_samples is a boolean variable used to define if new sample will replace the previous ones
+or will just get appended (<cite>append_samples=True</cite>).</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>p</strong> (<cite>int</cite> or <cite>str</cite> or <cite>NoneType</cite>)</dt><dd><p>Dimension of the p-planes defining the Grassmann manifold G(n,p). This parameter can assume an integer value
+larger than 0 or the strings <cite>max</cite>, when <cite>p</cite> assumes the maximum rank of the input matrices, or <cite>min</cite> when
+it assumes the minimum one. If <cite>p</cite> is not provided <cite>ranks</cite> will store the ranks of each input
+matrix and each sample will lie on a distinct manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>samples</strong> (<cite>list</cite>)</dt><dd><p>Input samples defined as a <cite>list</cite> of matrices. In this regard, <cite>samples</cite> is a
+collection of matrices stored as a <cite>list</cite>. Moreover, The shape of the input matrices stored
+in samples are verified and compared for consistency with <cite>p</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>append_samples</strong> (<cite>bool</cite>)</dt><dd><p>The attributes are replaced when manifold is called if <cite>append_samples</cite> is False, otherwise the lists are
+appended.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.procrustes_distance">
+<em class="property">static </em><code class="sig-name descname">procrustes_distance</code><span class="sig-paren">(</span><em class="sig-param">x0</em>, <em class="sig-param">x1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.procrustes_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.procrustes_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the Procrustes distance.</p>
+<p>One of the distances defined on the Grassmann manifold is the Procrustes distance.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>x0</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>x1</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>distance</strong> (<cite>float</cite>)</dt><dd><p>Procrustes distance between x0 and x1.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.projection_distance">
+<em class="property">static </em><code class="sig-name descname">projection_distance</code><span class="sig-paren">(</span><em class="sig-param">x0</em>, <em class="sig-param">x1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.projection_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.projection_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the projection distance.</p>
+<p>One of the distances defined on the Grassmann manifold is the projection distance.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>x0</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>x1</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>distance</strong> (<cite>float</cite>)</dt><dd><p>Projection distance between x0 and x1.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.projection_kernel">
+<em class="property">static </em><code class="sig-name descname">projection_kernel</code><span class="sig-paren">(</span><em class="sig-param">x0</em>, <em class="sig-param">x1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.projection_kernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.projection_kernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the value of the projection kernel between x0 and x1.</p>
+<p>One of the kernels defined on a manifold is the projection kernel.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>x0</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>x1</strong> (<cite>list</cite> or <cite>ndarray</cite>)</dt><dd><p>Point on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>distance</strong> (<cite>float</cite>)</dt><dd><p>Kernel value for x0 and x1.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.Grassmann.stochastic_gradient_descent">
+<em class="property">static </em><code class="sig-name descname">stochastic_gradient_descent</code><span class="sig-paren">(</span><em class="sig-param">data_points</em>, <em class="sig-param">distance_fun</em>, <em class="sig-param">kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#Grassmann.stochastic_gradient_descent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.Grassmann.stochastic_gradient_descent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the Karcher mean using the stochastic gradient descent method.</p>
+<p>This method computes the Karcher mean given a set of points on the Grassmann manifold. In this regard, the
+<code class="docutils literal notranslate"><span class="pre">stochastic_gradient_descent</span></code> method is implemented herein. Further, this method is called by the method
+<code class="docutils literal notranslate"><span class="pre">karcher_mean</span></code>.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>data_points</strong> (<cite>list</cite>)</dt><dd><p>Points on the Grassmann manifold.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>distance_fun</strong> (<cite>callable</cite>)</dt><dd><p>Distance function.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>kwargs</strong> (<cite>dictionary</cite>)</dt><dd><p>Contains the keywords for the used in the optimizers to find the Karcher mean.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>mean_element</strong> (<cite>list</cite>)</dt><dd><p>Karcher mean.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="diffusionmaps">
+<h2>DiffusionMaps<a class="headerlink" href="#diffusionmaps" title="Permalink to this headline">¶</a></h2>
+<p>In nonlinear dimensionality reduction Diffusion Maps corresponds to a technique used to reveal the intrinsic structure of data sets based on a diffusion process over the data. In particular, the eigenfunctions of Markov matrices defining a random walk on the data are used to obtain a coordinate system represented by the diffusion coordinates revealing the embedded geometry of the data. Moreover, the diffusion coordinates are defined on a Euclidean space where usual metrics define the distances between pairs of data points. Thus, the diffusion maps create a connection between the spectral properties of the diffusion process and the intrinsic geometry of the data resulting in a multiscale representation of the data.</p>
+<p>To present this method let’s assume measure space <span class="math notranslate nohighlight">\((X, \mathcal{A}, \mu)\)</span>, where <span class="math notranslate nohighlight">\(X\)</span> is the dataset, <span class="math notranslate nohighlight">\(\mathcal{A}\)</span> is a <span class="math notranslate nohighlight">\(\sigma-\)</span>, and <span class="math notranslate nohighlight">\(\mu\)</span> a measure; and a non-negative symmetric kernel <span class="math notranslate nohighlight">\(k: X \times X \rightarrow \mathbb{R}\)</span> representing the pairwise affinity of the data points in a symmetric graph; one can define the connectivity between two points as the transition probability in a random walk using the kernel <span class="math notranslate nohighlight">\(k\)</span>. Therefore, the diffusion maps technique can be based on a normalized graph Laplacian construction <a class="footnote-reference brackets" href="#id15" id="id7">7</a>, <a class="footnote-reference brackets" href="#id16" id="id8">8</a>, where</p>
+<div class="math notranslate nohighlight">
+\[p(x, y) = \frac{k(x,y)}{\int_X k(x,y)d\mu(y)}\]</div>
+<p>with</p>
+<div class="math notranslate nohighlight">
+\[\int_X p(x,y)d\mu(y) = 1\]</div>
+<p>can be viewed as the one-step transition probability . Therefore, to construct the transition probability one can resort to the graph Laplacian normalization. In this regard, one can consider that <span class="math notranslate nohighlight">\(L_{i,j} = k(x_i,x_j)\)</span> must be normalized such that <span class="math notranslate nohighlight">\(\tilde{L}_{i,j} = D^{-\alpha}LD^{-\alpha}\)</span>, where</p>
+<p>is a diagonal matrix. Next, a new matrix $D$ is obtained from <span class="math notranslate nohighlight">\(\tilde{L}\)</span>, thus</p>
+<div class="math notranslate nohighlight">
+\[\tilde{D}_{i,i} = \sum_j \tilde{L}_{i,j}\]</div>
+<p>Therefore, the transition probability <span class="math notranslate nohighlight">\(M_{i,j} = p(x_j,t|x_i)\)</span> can be obtained after the graph Laplacian normalization of <span class="math notranslate nohighlight">\(\tilde{L}\)</span> such as</p>
+<div class="math notranslate nohighlight">
+\[M = \tilde{D}^{-1}\tilde{L}\]</div>
+<p>From the eigendecomposition of <span class="math notranslate nohighlight">\(M\)</span>, one can obtain the eigenvectors <span class="math notranslate nohighlight">\((\psi_0, \psi_1, \dots, \psi_N)\)</span> and their respective eigenvalues <span class="math notranslate nohighlight">\((\lambda_0, \lambda_1, \dots, \lambda_N)\)</span>. However, only <span class="math notranslate nohighlight">\(k\)</span> eigenvectors and eigenvalues suffice. Thus, the diffusion coordinates are given by <span class="math notranslate nohighlight">\(\Psi_i = \lambda_i \psi_i\)</span> with <span class="math notranslate nohighlight">\(i=1,\dots,k\)</span>.</p>
+<div class="section" id="diffusion-maps-class-descriptions">
+<h3>Diffusion Maps Class Descriptions<a class="headerlink" href="#diffusion-maps-class-descriptions" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">DiffusionMaps</span></code> class is imported using the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">DimensionReduction</span> <span class="k">import</span> <span class="n">DiffusionMaps</span>
+</pre></div>
+</div>
+<p>One can use the following command to instantiate the class <code class="docutils literal notranslate"><span class="pre">DiffusionMaps</span></code></p>
+<dl class="class">
+<dt id="UQpy.DimensionReduction.DiffusionMaps">
+<em class="property">class </em><code class="sig-prename descclassname">UQpy.DimensionReduction.</code><code class="sig-name descname">DiffusionMaps</code><span class="sig-paren">(</span><em class="sig-param">alpha=0.5</em>, <em class="sig-param">n_evecs=2</em>, <em class="sig-param">sparse=False</em>, <em class="sig-param">k_neighbors=1</em>, <em class="sig-param">kernel_object=None</em>, <em class="sig-param">kernel_grassmann=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#DiffusionMaps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.DiffusionMaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform the diffusion maps on the input data to reveal its lower dimensional embedded geometry.</p>
+<p>In this class, the diffusion maps create a connection between the spectral properties of the diffusion process and
+the intrinsic geometry of the data resulting in a multiscale representation of it. In this regard, an affinity
+matrix containing the degree of similarity of the data points is either estimated based on the euclidean distance,
+using a Gaussian kernel, or it is computed using any other Kernel definition passed to the main
+method (e.g., defining a kernel on the Grassmann manifold).</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>alpha</strong> (<cite>float</cite>)</dt><dd><p>Assumes a value between 0 and 1 and corresponding to different diffusion operators. In this regard, one can use
+this parameter to take into consideration the distribution of the data points on the diffusion process.
+It happens because the distribution of the data is not necessarily dependent on the geometry of the manifold.
+Therefore, if alpha` is equal to 1, the Laplace-Beltrami operator is approximated and the geometry of the
+manifold is recovered without taking the distribution of the points into consideration. On the other hand, when
+<cite>alpha</cite> is equal to 0.5 the Fokker-Plank operator is approximated and the distribution of points is taken into
+consideration. Further, when <cite>alpha</cite> is equal to zero the Laplace normalization is recovered.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>n_evecs</strong> (<cite>int</cite>)</dt><dd><p>The number of eigenvectors and eigenvalues used in the representation of the diffusion coordinates.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>sparse</strong> (<cite>bool</cite>)</dt><dd><p>Is a boolean variable to activate the <cite>sparse</cite> mode of the method.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>k_neighbors</strong> (<cite>int</cite>)</dt><dd><p>Used when <cite>sparse</cite> is True to select the k samples close to a given sample in the construction
+of an sparse graph defining the affinity of the input data. For instance, if <cite>k_neighbors</cite> is equal to 10, only
+the closest ten points of a given point are connect to a given point in the graph. As a consequence, the
+obtained affinity matrix is sparse which reduces the computational effort of the eigendecomposition of the
+transition kernel of the Markov chain.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>kernel_object</strong> (<cite>function</cite>)</dt><dd><p>An object of a callable object used to compute the kernel matrix. Three different options are provided:</p>
+<ul>
+<li><p>Using the <code class="docutils literal notranslate"><span class="pre">DiffusionMaps</span></code> method <code class="docutils literal notranslate"><span class="pre">gaussian_kernel</span></code> as
+DiffusionMaps(kernel_object=DiffusionMaps.gaussian_kernel);</p></li>
+<li><p>Using an user defined function as DiffusionMaps(kernel_object=user_kernel);</p></li>
+<li><p>Passing a <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> class object DiffusionMaps(kernel_object=Grassmann_Object). In this case, the user has
+to select <code class="docutils literal notranslate"><span class="pre">kernel_grassmann</span></code> in order to define which kernel matrix will be used because when the the
+<code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> class is used in a dataset a kernel matrix can be constructed with both the left and right
+singular eigenvectors.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>kernel_grassmann</strong> (<cite>str</cite>)</dt><dd><p>It assumes the values ‘left’ and ‘right’ for the left and right singular eigenvectors used to compute the kernel
+matrix, respectively. Moreover, if ‘sum’ is selected, it means that the kernel matrix is composed by the sum of
+the kernel matrices estimated using the left and right singular eigenvectors. On the other hand, if ‘prod’ is used
+instead, it means that the kernel matrix is composed by the product of the matrices estimated using the left and
+right singular eigenvectors.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Attributes:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>kernel_matrix</strong> (<cite>ndarray</cite>)</dt><dd><p>Kernel matrix.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>transition_matrix</strong> (<cite>ndarray</cite>)</dt><dd><p>Transition kernel of a Markov chain on the data.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>dcoords</strong> (<cite>ndarray</cite>)</dt><dd><p>Diffusion coordinates</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>evecs</strong> (<cite>ndarray</cite>)</dt><dd><p>Eigenvectors of the transition kernel of a Markov chanin on the data.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>evals</strong> (<cite>ndarray</cite>)</dt><dd><p>Eigenvalues of the transition kernel of a Markov chanin on the data.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<dl class="method">
+<dt id="UQpy.DimensionReduction.DiffusionMaps.gaussian_kernel">
+<code class="sig-name descname">gaussian_kernel</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">epsilon=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#DiffusionMaps.gaussian_kernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.DiffusionMaps.gaussian_kernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the Gaussian Kernel matrix.</p>
+<p>Estimate the affinity matrix using the Gaussian kernel. If no <cite>epsilon</cite> is provided the method estimates a
+suitable value taking the median of the square value of the pairwise euclidean distances of the points in the
+input dataset.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>data</strong> (<cite>list</cite>)</dt><dd><p>Input data.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>epsilon</strong> (<cite>float</cite>)</dt><dd><p>Parameter of the Gaussian kernel.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>Kernel matrix</strong> (<cite>ndarray</cite>)</dt><dd><p>Kernel matrix.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="UQpy.DimensionReduction.DiffusionMaps.mapping">
+<code class="sig-name descname">mapping</code><span class="sig-paren">(</span><em class="sig-param">data=None</em>, <em class="sig-param">epsilon=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UQpy/DimensionReduction.html#DiffusionMaps.mapping"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UQpy.DimensionReduction.DiffusionMaps.mapping" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform diffusion maps to reveal the embedded geometry of datasets.</p>
+<p>In this method, the users have the option to work with input data defined by subspaces obtained via projection
+of input data points on the Grassmann manifold, or directly with the input data points. For example,
+considering that a <code class="docutils literal notranslate"><span class="pre">Grassmann</span></code> object is provided using the following command:</p>
+<p>one can instantiate the DiffusionMaps class and run the diffusion maps as follows:</p>
+<p>On the other hand, if the user wish to pass a dataset (samples) to compute the diffusion coordinates using the Gaussian
+kernel, one can use the following commands:</p>
+<p>In the latest case, if <cite>epsilon</cite> is not provided it is estimated based on the median of the square of the
+euclidian distances between data points.</p>
+<p><strong>Input:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>data</strong> (<cite>list</cite>)</dt><dd><p>Data points in the ambient space.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>epsilon</strong> (<cite>floar</cite>)</dt><dd><p>Parameter of the Gaussian kernel.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Output/Returns:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>dcoords</strong> (<cite>ndarray</cite>)</dt><dd><p>Diffusion coordinates.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>evals</strong> (<cite>ndarray</cite>)</dt><dd><p>eigenvalues.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>evecs</strong> (<cite>ndarray</cite>)</dt><dd><p>eigenvectors.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="footnote brackets">
+<dt class="label" id="id9"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><ol class="upperalpha simple" start="10">
+<li><p>Maruskin, Introduction to Dynamical Systems and Geometric Mechanics, Solar Crest Publishing, LLC, 2012:p.165.</p></li>
+</ol>
+</dd>
+<dt class="label" id="id10"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dd><ol class="upperalpha simple" start="2">
+<li><p>Wang, Y. Hu, J. Gao, Y. Sun, B. Yin, Low rank represen6tation on Grassmann   manifolds: An extrinsic perspective, 2015, 167arXiv:1504.01807.168.</p></li>
+</ol>
+</dd>
+<dt class="label" id="id11"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
+<dd><ol class="upperalpha simple" start="19">
+<li><p>Sommer, T. Fletcher, X. Pennec, 1 - introduction to differential and Riemannian  geometry, in: X. Pennec, S. Sommer, T. Fletcher (Eds.), Riemannian Geometric Statistics in Medical Image Analysis, Academic Press, 2020, p.3–37.</p></li>
+</ol>
+</dd>
+<dt class="label" id="id12"><span class="brackets"><a class="fn-backref" href="#id4">4</a></span></dt>
+<dd><ol class="upperalpha simple" start="4">
+<li><p>Giovanis, M. Shields, Uncertainty  quantification for complex systems with very high dimensional response using Grassmann manifold variations, Journal of Computational Physics, 2018, 364, p.393–415.</p></li>
+</ol>
+</dd>
+<dt class="label" id="id13"><span class="brackets"><a class="fn-backref" href="#id5">5</a></span></dt>
+<dd><ol class="upperalpha simple" start="2">
+<li><p>Wang, Y. Hu, J. Gao, Y. Sun, B. Yin, Low rank representation on Grassmann manifolds: An extrinsic perspective, 2015, 167arXiv:1504.01807.</p></li>
+</ol>
+</dd>
+<dt class="label" id="id14"><span class="brackets"><a class="fn-backref" href="#id6">6</a></span></dt>
+<dd><ol class="upperalpha simple" start="13">
+<li><ol class="upperalpha simple" start="20">
+<li><p>Harandi, M. Salzmann, S. Jayasumana, R. Hartley, H. Li, Expanding the family of Grassmannian kernels: An embedding perspective, 2014, 1622014.arXiv:1407.1123.</p></li>
+</ol>
+</li>
+</ol>
+</dd>
+<dt class="label" id="id15"><span class="brackets"><a class="fn-backref" href="#id7">7</a></span></dt>
+<dd><ol class="upperalpha simple" start="18">
+<li><ol class="upperalpha simple" start="18">
+<li><p>Coifman, S. Lafon. Diffusion maps. Applied Computational Harmonic Analysis, 2006, 21(1), p.5–30.</p></li>
+</ol>
+</li>
+</ol>
+</dd>
+<dt class="label" id="id16"><span class="brackets"><a class="fn-backref" href="#id8">8</a></span></dt>
+<dd><ol class="upperalpha simple" start="18">
+<li><ol class="upperalpha simple" start="18">
+<li><p>Coifman, I. G. Kevrekidis, S. Lafon, M. Maggioni, and B. Nadler, Diffusionmaps, reduction coordinates, and low dimensional representation of stochastic systems, Multiscale Modeling and Simulation, 2008, 7(2), p.842–864.</p></li>
+</ol>
+</li>
+</ol>
+</dd>
+</dl>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.jpg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Uncertainty quantification with Python </p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=SURG&repo=UQpy&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation_doc.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runmodel_doc.html">RunModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributions_doc.html">Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samplemethods_doc.html">SampleMethods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transformations_doc.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stochastic_process_doc.html">StochasticProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="surrogates_doc.html">Surrogates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reliability_doc.html">Reliability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference_doc.html">Inference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DimensionReduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#grassmann">Grassmann</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#diffusionmaps">DiffusionMaps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utilities_doc.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="news_doc.html">News</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="inference_doc.html" title="previous chapter">Inference</a></li>
+      <li>Next: <a href="utilities_doc.html" title="next chapter">Utilities</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Michael D. Shields.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/dimension_reduction_doc.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/SURG/UQpy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>
