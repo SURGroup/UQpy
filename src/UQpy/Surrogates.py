@@ -643,7 +643,6 @@ class Kriging:
 
         # Design parameter (R * gamma = Y - F * beta = residual)
         self.gamma = np.linalg.solve(c.T, (y_dash - np.matmul(f_dash, self.beta)))
-        # self.gamma = np.matmul(c_inv.T, (y_dash - np.matmul(f_dash, self.beta)))
 
         # Computing the process variance (Eq: 3.13, DACE)
         self.err_var = np.zeros(output_dim)
@@ -794,11 +793,6 @@ class Kriging:
             return stack
 
         def derivatives(x_, s_, params):
-            # x_, s_ = np.atleast_2d(x_), np.atleast_2d(s_)
-            # # Create stack matrix, where each block is x_i with all s
-            # stack = np.tile(np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)) - np.tile(s_, (
-            #     np.size(x_, 0),
-            #     1, 1))
             stack = check_samples_and_return_stack(x_, s_)
             # Taking stack and creating array of all thetaj*dij
             after_parameters = params * abs(stack)
@@ -821,11 +815,6 @@ class Kriging:
 
         if self.corr_model == 'Exponential':
             def c(x, s, params, dt=False, dx=False):
-                # x_, s_ = np.atleast_2d(x_), np.atleast_2d(s_)
-                # # Create stack matrix, where each block is x_i with all s
-                # stack = np.tile(np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)) - np.tile(s_, (
-                #     np.size(x_, 0),
-                #     1, 1))
                 stack = check_samples_and_return_stack(x, s)
                 rx = np.exp(np.sum(-params * abs(stack), axis=2))
                 if dt:
@@ -837,11 +826,6 @@ class Kriging:
                 return rx
         elif self.corr_model == 'Gaussian':
             def c(x, s, params, dt=False, dx=False):
-                # x_, s_ = np.atleast_2d(x_), np.atleast_2d(s_)
-                # # Create stack matrix, where each block is x_i with all s
-                # stack = np.tile(np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)) - np.tile(s_, (
-                #     np.size(x_, 0),
-                #     1, 1))
                 stack = check_samples_and_return_stack(x, s)
                 rx = np.exp(np.sum(-params * (stack ** 2), axis=2))
                 if dt:
@@ -853,11 +837,6 @@ class Kriging:
                 return rx
         elif self.corr_model == 'Linear':
             def c(x, s, params, dt=False, dx=False):
-                # x_, s_ = np.atleast_2d(x_), np.atleast_2d(s_)
-                # # Create stack matrix, where each block is x_i with all s
-                # stack = np.tile(np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)) - np.tile(s_, (
-                #     np.size(x_, 0),
-                #     1, 1))
                 stack = check_samples_and_return_stack(x, s)
                 # Taking stack and turning each d value into 1-theta*dij
                 after_parameters = 1 - params * abs(stack)
