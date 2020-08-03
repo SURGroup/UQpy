@@ -405,8 +405,8 @@ class LHS:
         * **nsamples** (`int`):
             Number of samples to be drawn from each distribution.
 
-            If the ``run`` method is invoked multiple times, the newly generated samples will be overwrite the
-            existing samples.
+            If the ``run`` method is invoked multiple times, the newly generated samples will overwrite the existing
+            samples.
 
         **Output/Returns:**
 

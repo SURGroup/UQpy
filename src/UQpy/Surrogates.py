@@ -88,12 +88,12 @@ class SROM:
         An list or array containing weights associated with matching the moments about the origin for each
         component.
 
-        `weights_moments` in list or array of shape `(2, d), where each weight corresponds to the weight
+        `weights_moments` is a list or array of shape `(2, d), where each weight corresponds to the weight
         :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
 
         If `weights_moments` is `(1, d)`, it is assumed that moments of all order are equally weighted.
 
-        Default: weights_moments = Square of reciprocal of elements of moments.
+        Default: `weights_moments` = [[1/(moment[0][i]^2)], [1/(moment[1][i]^2)]] for i = 1, 2, ..., d.
 
     * **weights_correlation** (`ndarray` or `list` of `float`):
         A list or array containing weights associated with matching the correlation of the random variables.
@@ -101,7 +101,7 @@ class SROM:
         `weights_correlation` is a list or array of shape `(d, d)` where each weight corresponds to the weight
         :math:`w_R(i, j)` assigned for matching the correlation between component `i` and component `j`
 
-        Default: weights_correlation = `(d, d)` array with all elements equal to 1.
+        Default: `weights_correlation` = `(d, d)` array with all elements equal to 1.
 
     * **correlation** (`ndarray` or `list of floats`):
         Correlation matrix between random variables.
@@ -203,12 +203,12 @@ class SROM:
             An list or array containing weights associated with matching the moments about the origin for each
             component.
 
-            `weights_moments` in list or array of shape `(2, d), where each weight corresponds to the weight
+            `weights_moments` is a list or array of shape `(2, d), where each weight corresponds to the weight
             :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
 
             If `weights_moments` is `(1, d)`, it is assumed that moments of all order are equally weighted.
 
-            Default: weights_moments = Square of reciprocal of elements of moments.
+            Default: `weights_moments` = [[1/(moment[0][i]^2)], [1/(moment[1][i]^2)]] for i = 1, 2, ..., d.
 
         * **weights_correlation** (`ndarray` or `list` of `float`):
             A list or array containing weights associated with matching the correlation of the random variables.
@@ -216,7 +216,7 @@ class SROM:
             `weights_correlation` is a list or array of shape `(d, d)` where each weight corresponds to the weight
             :math:`w_R(i, j)` assigned for matching the correlation between component `i` and component `j`
 
-            Default: weights_correlation = `(d, d)` array with all elements equal to 1.
+            Default: `weights_correlation` = `(d, d)` array with all elements equal to 1.
 
         """
         from scipy import optimize
@@ -408,7 +408,7 @@ class Kriging:
         Default: True.
 
     * **nopt** (`int`):
-            Number of times optimization problem is to be solved with a random starting point.
+            Number of times MLE optimization problem is to be solved with a random starting point.
 
             Default: 1.
 
@@ -420,13 +420,13 @@ class Kriging:
     **Attributes:**
 
     * **beta** (`ndarray`):
-            Regression coefficients
+            Regression coefficients.
 
     * **err_var** (`ndarray`):
-            Variance in the error (assumed to be gaussian process)
+            Variance of the Gaussian random process.
 
     * **C_inv** (`ndarray`):
-            Inverse of cholesky decomposition of the Correlation matrix
+            Inverse Cholesky decomposition of the correlation matrix.
 
     **Methods:**
 
@@ -514,10 +514,10 @@ class Kriging:
         **Inputs:**
 
         * **samples** (`ndarray`):
-                `ndarray` containing the training points.
+            `ndarray` containing the training points.
 
         * **values** (`ndarray`):
-                `ndarray` containing the model evaluations at the training points.
+            `ndarray` containing the model evaluations at the training points.
 
         **Output/Return:**
 
@@ -667,7 +667,7 @@ class Kriging:
         * **x** (`list` or `numpy array`):
             Points at which to predict the model response.
 
-        * **return_std** (`list` or `numpy array`):
+        * **return_std** (`Boolean`):
             Indicator to estimate standard deviation.
 
         **Outputs:**
@@ -690,7 +690,7 @@ class Kriging:
         y = np.einsum('ij,jk->ik', fx, self.beta) + np.einsum('ij,jk->ik', rx, self.gamma)
         if self.normalize:
             y = self.value_mean + y * self.value_std
-        if x.shape[1] == 1:
+        if x_.shape[1] == 1:
             y = y.flatten()
         if return_std:
             r_dash = np.matmul(self.C_inv, rx.T)
@@ -700,7 +700,7 @@ class Kriging:
             mse = self.err_var * np.atleast_2d(1 + norm2 - norm1).T
             if self.normalize:
                 mse = self.value_std * np.sqrt(mse)
-            if x.shape[1] == 1:
+            if x_.shape[1] == 1:
                 mse = mse.flatten()
             return y, mse
         else:
@@ -736,7 +736,7 @@ class Kriging:
         y_grad = np.einsum('ikj,jm->ik', jf, self.beta) + np.einsum('ijk,jm->ki', drdx.T, self.gamma)
         if self.normalize:
             y_grad = y_grad * self.value_std/self.sample_std
-        if x.shape[1] == 1:
+        if x_.shape[1] == 1:
             y_grad = y_grad.flatten()
         return y_grad
 
@@ -785,12 +785,21 @@ class Kriging:
 
     # Defining Correlation model (Gaussian Process)
     def _corr(self):
-        def derivatives(x_, s_, params):
-            x_, s_ = np.atleast_2d(x_), np.atleast_2d(s_)
+        def check_samples_and_return_stack(x, s):
+            x_, s_ = np.atleast_2d(x), np.atleast_2d(s)
             # Create stack matrix, where each block is x_i with all s
             stack = np.tile(np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)) - np.tile(s_, (
                 np.size(x_, 0),
                 1, 1))
+            return stack
+
+        def derivatives(x_, s_, params):
+            # x_, s_ = np.atleast_2d(x_), np.atleast_2d(s_)
+            # # Create stack matrix, where each block is x_i with all s
+            # stack = np.tile(np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)) - np.tile(s_, (
+            #     np.size(x_, 0),
+            #     1, 1))
+            stack = check_samples_and_return_stack(x_, s_)
             # Taking stack and creating array of all thetaj*dij
             after_parameters = params * abs(stack)
             # Create matrix of all ones to compare
@@ -812,11 +821,12 @@ class Kriging:
 
         if self.corr_model == 'Exponential':
             def c(x, s, params, dt=False, dx=False):
-                x, s = np.atleast_2d(x), np.atleast_2d(s)
-                # Create stack matrix, where each block is x_i with all s
-                stack = np.tile(np.swapaxes(np.atleast_3d(x), 1, 2), (1, np.size(s, 0), 1)) - np.tile(s, (
-                    np.size(x, 0),
-                    1, 1))
+                # x_, s_ = np.atleast_2d(x_), np.atleast_2d(s_)
+                # # Create stack matrix, where each block is x_i with all s
+                # stack = np.tile(np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)) - np.tile(s_, (
+                #     np.size(x_, 0),
+                #     1, 1))
+                stack = check_samples_and_return_stack(x, s)
                 rx = np.exp(np.sum(-params * abs(stack), axis=2))
                 if dt:
                     drdt = - abs(stack) * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
@@ -827,11 +837,12 @@ class Kriging:
                 return rx
         elif self.corr_model == 'Gaussian':
             def c(x, s, params, dt=False, dx=False):
-                x, s = np.atleast_2d(x), np.atleast_2d(s)
-                # Create stack matrix, where each block is x_i with all s
-                stack = np.tile(np.swapaxes(np.atleast_3d(x), 1, 2), (1, np.size(s, 0), 1)) - np.tile(s, (
-                    np.size(x, 0),
-                    1, 1))
+                # x_, s_ = np.atleast_2d(x_), np.atleast_2d(s_)
+                # # Create stack matrix, where each block is x_i with all s
+                # stack = np.tile(np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)) - np.tile(s_, (
+                #     np.size(x_, 0),
+                #     1, 1))
+                stack = check_samples_and_return_stack(x, s)
                 rx = np.exp(np.sum(-params * (stack ** 2), axis=2))
                 if dt:
                     drdt = -(stack ** 2) * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
@@ -842,11 +853,12 @@ class Kriging:
                 return rx
         elif self.corr_model == 'Linear':
             def c(x, s, params, dt=False, dx=False):
-                x, s = np.atleast_2d(x), np.atleast_2d(s)
-                # Create stack matrix, where each block is x_i with all s
-                stack = np.tile(np.swapaxes(np.atleast_3d(x), 1, 2), (1, np.size(s, 0), 1)) - np.tile(s, (
-                    np.size(x, 0),
-                    1, 1))
+                # x_, s_ = np.atleast_2d(x_), np.atleast_2d(s_)
+                # # Create stack matrix, where each block is x_i with all s
+                # stack = np.tile(np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)) - np.tile(s_, (
+                #     np.size(x_, 0),
+                #     1, 1))
+                stack = check_samples_and_return_stack(x, s)
                 # Taking stack and turning each d value into 1-theta*dij
                 after_parameters = 1 - params * abs(stack)
                 # Define matrix of zeros to compare against (not necessary to be defined separately,
@@ -909,26 +921,27 @@ class Kriging:
                 drdt = (-6 * zeta_matrix + 6 * zeta_matrix ** 2) * dtheta_derivs
                 drdx = (-6 * zeta_matrix + 6 * zeta_matrix ** 2) * dx_derivs
                 # Also, create matrix for values of equation, 1 - 3zeta**2 + 2zeta**3, for loop
-                zeta_function = 1 - 3 * zeta_matrix ** 2 + 2 * zeta_matrix ** 3
-                rx = np.prod(zeta_function, 2)
+                zeta_function_cubic = 1 - 3 * zeta_matrix ** 2 + 2 * zeta_matrix ** 3
+                rx = np.prod(zeta_function_cubic, 2)
                 if dt:
                     # Same as previous example, loop over zeta matrix by shifting index
                     for i in range(len(params) - 1):
-                        drdt = drdt * np.roll(zeta_function, i + 1, axis=2)
+                        drdt = drdt * np.roll(zeta_function_cubic, i + 1, axis=2)
                     return rx, drdt
                 if dx:
                     # Same as previous example, loop over zeta matrix by shifting index
                     for i in range(len(params) - 1):
-                        drdx = drdx * np.roll(zeta_function, i + 1, axis=2)
+                        drdx = drdx * np.roll(zeta_function_cubic, i + 1, axis=2)
                     return rx, drdx
                 return rx
         else:
             def c(x, s, params, dt=False, dx=False):
-                x, s = np.atleast_2d(x), np.atleast_2d(s)
-                # Create stack matrix, where each block is x_i with all s
-                stack = np.tile(np.swapaxes(np.atleast_3d(x), 1, 2), (1, np.size(s, 0), 1)) - np.tile(s, (
-                    np.size(x, 0),
-                    1, 1))
+                # x_, s_ = np.atleast_2d(x_), np.atleast_2d(s_)
+                # # Create stack matrix, where each block is x_i with all s
+                # stack = np.tile(np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)) - np.tile(s_, (
+                #     np.size(x_, 0),
+                #     1, 1))
+                stack = check_samples_and_return_stack(x, s)
                 # In this case, the zeta value is just abs(stack)*parameters, no comparison
                 zeta_matrix = abs(stack) * params
                 # So, dtheta and dx are just |dj| and theta*sgn(dj), respectively
