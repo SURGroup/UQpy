@@ -1452,7 +1452,7 @@ class STS:
         else:
             self.nsamples_per_stratum = [1] * self.strata_object.volume.shape[0]
 
-    # Creating dummy method for create_samplesu01. These methods are overwritten in child classes.
+    # Creating dummy method for create_samplesU01. These methods are overwritten in child classes.
     def create_samplesu01(self, nsamples_per_stratum, nsamples):
         """
         Executes the specific stratified sampling algorithm. This method is overwritten by each child class of ``STS``.
@@ -2200,9 +2200,14 @@ class VoronoiRSS(RSS):
             # Compute the centroids and the volumes of each simplex cell in the mesh
             self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
             self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
+            from scipy.spatial import qhull, ConvexHull
             for j in range(self.mesh.nsimplex):
-                self.mesh.centroids[j, :], self.mesh.volumes[j] = \
-                    DelaunayStrata.compute_delaunay_centroid_volume(self.points[self.mesh.vertices[j]])
+                try:
+                    ConvexHull(self.points[self.mesh.vertices[j]])
+                    self.mesh.centroids[j, :], self.mesh.volumes[j] = \
+                        DelaunayStrata.compute_delaunay_centroid_volume(self.points[self.mesh.vertices[j]])
+                except qhull.QhullError:
+                    self.mesh.centroids[j, :], self.mesh.volumes[j] = np.mean(self.points[self.mesh.vertices[j]]), 0
 
             # If the quantity of interest is a dictionary, convert it to a list
             qoi = [None] * len(self.runmodel_object.qoi_list)
@@ -2344,9 +2349,14 @@ class VoronoiRSS(RSS):
             # Compute the centroids and the volumes of each simplex cell in the mesh
             self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
             self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
+            from scipy.spatial import qhull, ConvexHull
             for j in range(self.mesh.nsimplex):
-                self.mesh.centroids[j, :], self.mesh.volumes[j] = \
-                    DelaunayStrata.compute_delaunay_centroid_volume(self.points[self.mesh.vertices[j]])
+                try:
+                    ConvexHull(self.points[self.mesh.vertices[j]])
+                    self.mesh.centroids[j, :], self.mesh.volumes[j] = \
+                        DelaunayStrata.compute_delaunay_centroid_volume(self.points[self.mesh.vertices[j]])
+                except qhull.QhullError:
+                    self.mesh.centroids[j, :], self.mesh.volumes[j] = np.mean(self.points[self.mesh.vertices[j]]), 0
 
             # Determine the simplex to break and draw a new sample
             s = np.zeros(self.mesh.nsimplex)
@@ -2832,6 +2842,9 @@ class AKMCS:
         self.krig_object.fit(self.samples, self.qoi)
         self.krig_model = self.krig_object.predict
 
+        # kwargs = {"n_add": self.n_add, "parameters": self.kwargs, "samples": self.samples, "qoi": self.qoi,
+        #           "dist_object": self.dist_object}
+
         # ---------------------------------------------
         # Primary loop for learning and adding samples.
         # ---------------------------------------------
@@ -2840,16 +2853,18 @@ class AKMCS:
             # Initialize the population of samples at which to evaluate the learning function and from which to draw
             # in the sampling.
 
-            self.learning_set = LHS(dist_object=self.dist_object, nsamples=self.nlearn,
-                                    random_state=self.random_state).samples
+            lhs = LHS(dist_object=self.dist_object, nsamples=self.nlearn, random_state=self.random_state)
+            self.learning_set = lhs.samples.copy()
 
             # Find all of the points in the population that have not already been integrated into the training set
             rest_pop = np.array([x for x in self.learning_set.tolist() if x not in self.samples.tolist()])
 
             # Apply the learning function to identify the new point to run the model.
 
-            new_point, lf, ind = self.learning_function(self.krig_model, rest_pop, self.n_add, self.kwargs,
-                                                        self.samples, self.qoi, self.dist_object)
+            # new_point, lf, ind = self.learning_function(self.krig_model, rest_pop, **kwargs)
+            new_point, lf, ind = self.learning_function(self.krig_model, rest_pop, n_add=self.n_add,
+                                                        parameters=self.kwargs, samples=self.samples, qoi=self.qoi,
+                                                        dist_object=self.dist_object)
 
             # Add the new points to the training set and to the sample set.
             self.samples = np.vstack([self.samples, np.atleast_2d(new_point)])
@@ -2884,7 +2899,7 @@ class AKMCS:
     # LEARNING FUNCTIONS
     # ------------------
     @staticmethod
-    def eigf(surr, pop, n_add, parameters, samples, qoi, dist_object):
+    def eigf(surr, pop, **kwargs):
         """
         Expected Improvement for Global Fit (EIGF) learning function. See [7]_ for a detailed explanation.
 
@@ -2930,6 +2945,10 @@ class AKMCS:
             EIGF learning function evaluated at the new sample points.
 
         """
+        samples = kwargs['samples']
+        qoi = kwargs['qoi']
+        n_add = kwargs['n_add']
+
         g, sig = surr(pop, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
@@ -2957,7 +2976,7 @@ class AKMCS:
         return new_samples, eigf_lf, indicator
 
     @staticmethod
-    def u(surr, pop, n_add, parameters, samples, qoi, dist_object):
+    def u(surr, pop, **kwargs):
         """
         U-function for reliability analysis. See [3] for a detailed explanation.
 
@@ -3003,6 +3022,9 @@ class AKMCS:
             U learning function evaluated at the new sample points.
 
         """
+        n_add = kwargs['n_add']
+        parameters = kwargs['parameters']
+
         g, sig = surr(pop, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
@@ -3021,7 +3043,7 @@ class AKMCS:
         return new_samples, u_lf, indicator
 
     @staticmethod
-    def weighted_u(surr, pop, n_add, parameters, samples, qoi, dist_object):
+    def weighted_u(surr, pop, **kwargs):
         """
         Probability Weighted U-function for reliability analysis. See [5]_ for a detailed explanation.
 
@@ -3066,6 +3088,11 @@ class AKMCS:
             `indicator = True` specifies that the stopping criterion has been met and the AKMCS.run method stops.
 
         """
+        n_add = kwargs['n_add']
+        parameters = kwargs['parameters']
+        samples = kwargs['samples']
+        dist_object = kwargs['dist_object']
+
         g, sig = surr(pop, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
@@ -3084,7 +3111,7 @@ class AKMCS:
         rows = u_[:, 0].argsort()[:n_add]
 
         indicator = False
-        if min(u[:, 0]) >= parameters['u_stop']:
+        if min(u[:, 0]) >= parameters['weighted_u_stop']:
             indicator = True
 
         new_samples = pop[rows, :]
@@ -3092,7 +3119,7 @@ class AKMCS:
         return new_samples, w_lf, indicator
 
     @staticmethod
-    def eff(surr, pop, n_add, parameters, samples, qoi, dist_object):
+    def eff(surr, pop, **kwargs):
         """
         Expected Feasibility Function (EFF) for reliability analysis, see [6]_ for a detailed explanation.
 
@@ -3138,6 +3165,9 @@ class AKMCS:
             EFF learning function evaluated at the new sample points.
 
         """
+        n_add = kwargs['n_add']
+        parameters = kwargs['parameters']
+
         g, sig = surr(pop, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
@@ -3163,7 +3193,7 @@ class AKMCS:
         return new_samples, eff_lf, indicator
 
     @staticmethod
-    def eif(surr, pop, n_add, parameters, samples, qoi, dist_object):
+    def eif(surr, pop, **kwargs):
         """
         Expected Improvement Function (EIF) for Efficient Global Optimization (EFO). See [4]_ for a detailed
         explanation.
@@ -3209,6 +3239,10 @@ class AKMCS:
         * **eif_lf** (`ndarray`)
             EIF learning function evaluated at the new sample points.
         """
+        n_add = kwargs['n_add']
+        parameters = kwargs['parameters']
+        qoi = kwargs['qoi']
+
         g, sig = surr(pop, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
