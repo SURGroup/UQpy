@@ -2183,11 +2183,11 @@ class DirectPOD(POD):
         Executes the Direct POD method in the ''Direct'' class.
 
         **Output/Returns:**
-        * **Utilde** (`ndarray`):
+        * **reconstructed_solutions** (`ndarray`):
             Second order tensor containing the reconstructed solution snapshots in their initial spatial and
             temporal dimensions.
 
-        * **Atilde** (`ndarray`):
+        * **reduced_solutions** (`ndarray`):
             An array containing the solution snapshots reduced in the spatial dimension.
 
         """
@@ -2246,12 +2246,12 @@ class DirectPOD(POD):
                     print("Number of dimensions is {}".format(x * y))
 
 
-            Utilde_ = np.dot(A[:, :self.modes], PHI[:, :self.modes].T)
-            Atilde = np.dot(U,PHI[:, :self.modes])
+            reconstructed_solutions_ = np.dot(A[:, :self.modes], PHI[:, :self.modes].T)
+            reduced_solutions = np.dot(U,PHI[:, :self.modes])
 
-            Utilde = np.zeros((x, y, z))
+            reconstructed_solutions = np.zeros((x, y, z))
             for i in range(z):
-                Utilde[0:x, 0:y, i] = Utilde_[i, :].reshape((x, y))
+                reconstructed_solutions[0:x, 0:y, i] = reconstructed_solutions_[i, :].reshape((x, y))
 
             if self.verbose:
                 print("UQpy: Successful execution of Direct POD!")
@@ -2260,7 +2260,7 @@ class DirectPOD(POD):
             if self.verbose:
                 print('Dataset reconstruction: {:.3%}'.format(perc[self.modes - 1] / 100))
 
-            return Utilde, Atilde
+            return reconstructed_solutions, reduced_solutions
 
 
 class SnapshotPOD(POD):
@@ -2293,11 +2293,11 @@ class SnapshotPOD(POD):
         Executes the Snapshot POD method in the ''Snapshot'' class.
 
         **Output/Returns:**
-        * **Utilde** (`ndarray`):
+        * **reconstructed_solutions** (`ndarray`):
             Second order tensor containing the reconstructed solution snapshots in their initial spatial and
             temporal dimensions.
 
-        * **Atilde** (`ndarray`):
+        * **reduced_solutions** (`ndarray`):
             An array containing the solution snapshots reduced in the temporal dimension.
 
         """
@@ -2355,17 +2355,17 @@ class SnapshotPOD(POD):
                     print("Number of dimensions is {}".format(z))
 
             PHI_s = np.dot(U.T, A_s)
-            Utilde_ = np.dot(A_s[:, :self.modes], PHI_s[:, :self.modes].T)
-            Atilde_ = (np.dot(U.T, A_s[:, :self.modes])).T
+            reconstructed_solutions_ = np.dot(A_s[:, :self.modes], PHI_s[:, :self.modes].T)
+            reduced_solutions_ = (np.dot(U.T, A_s[:, :self.modes])).T
 
-            Utilde = np.zeros((x, y, z))
-            Atilde = np.zeros((x, y, self.modes))
+            reconstructed_solutions = np.zeros((x, y, z))
+            reduced_solutions = np.zeros((x, y, self.modes))
 
             for i in range(z):
-                Utilde[0:x, 0:y, i] = Utilde_[i, :].reshape((x, y))
+                reconstructed_solutions[0:x, 0:y, i] = reconstructed_solutions_[i, :].reshape((x, y))
 
             for i in range(self.modes):
-                Atilde[0:x, 0:y, i] = Atilde_[i, :].reshape((x, y))
+                reduced_solutions[0:x, 0:y, i] = reduced_solutions_[i, :].reshape((x, y))
 
             if self.verbose:
                 print("UQpy: Successful execution of Snapshot POD!")
@@ -2373,7 +2373,7 @@ class SnapshotPOD(POD):
             if self.verbose:
                 print('Dataset reconstruction: {:.3%}'.format(perc[self.modes - 1] / 100))
 
-            return Utilde, Atilde
+            return reconstructed_solutions, reduced_solutions
 
 
 class HOSVD(POD):
@@ -2409,11 +2409,11 @@ class HOSVD(POD):
             A boolean declaring whether to return the reconstruction error.
 
         **Output/Returns:**
-        * **Utilde** (`ndarray`):
+        * **reconstructed_solutions** (`ndarray`):
             Second order tensor containing the reconstructed solution snapshots in their initial spatial and
             temporal dimensions.
 
-        * **Atilde** (`ndarray`):
+        * **reduced_solutions** (`ndarray`):
             An array containing the reduced solutions snapshots. The array's dimensions depends on the dimensions
             of input second order tensor and not on the input number of modes or reconstruction percentage.
 
@@ -2472,7 +2472,7 @@ class HOSVD(POD):
                     print("Warning: A number of modes greater than the number of temporal dimensions was given.")
                     print("Number of temporal dimensions is {}.".format(x))
 
-            Atilde = np.dot(U3, Sig_3_)
+            reduced_solutions = np.dot(U3, Sig_3_)
             U3hat = np.dot(U3[:, :self.modes], Sig_3_[:self.modes, :self.modes])
             S3hat = np.dot(np.linalg.inv(Sig_3_[:self.modes, :self.modes]), S3[:self.modes, :])
 
@@ -2480,9 +2480,9 @@ class HOSVD(POD):
             C = np.dot(S3hat, B.T)
             D = np.dot(U3hat[:, :], C)
 
-            Utilde = np.zeros((x, y, z))
+            reconstructed_solutions = np.zeros((x, y, z))
             for i in range(z):
-                Utilde[0:x, 0:y, i] = D[i, :].reshape((x, y))
+                reconstructed_solutions[0:x, 0:y, i] = D[i, :].reshape((x, y))
 
             if self.verbose:
                 print("UQpy: Successful execution of HOSVD!")
@@ -2496,4 +2496,4 @@ class HOSVD(POD):
                     error_rec = np.sqrt(((Sig_3[self.modes:]) ** 2).sum()) / np.sqrt(((Sig_3) ** 2).sum())
                     print("Reduced-order reconstruction error: {0:.3%}".format(error_rec))
 
-            return Utilde, Atilde
+            return reconstructed_solutions, reduced_solutions
