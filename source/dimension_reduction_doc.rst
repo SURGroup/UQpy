@@ -5,13 +5,15 @@ DimensionReduction
 
 .. automodule:: UQpy.DimensionReduction
 
-This module contains the classes and methods to perform the point-wise and multi point data-based dimensionality reduction via projection onto the Grassmann manifold and Diffusion Maps, respectively. Further, interpolation in the tangent space centered at a given point on the Grassmann manifold can be performed.
+This module contains the classes and methods to perform the point-wise and multi point data-based dimensionality reduction via projection onto the Grassmann manifold and Diffusion Maps, respectively. Further, interpolation in the tangent space centered at a given point on the Grassmann manifold can be performed. In addition, dataset reconstruction and dimension reduction can be performed via the Proper Orthogonal Decomposition method and the Higher-order Singular Value Decomposition for solution snapshots in the form of second-order tensors.
 
 The module ``UQpy.DimensionReduction`` currently contains the following classes:
 
 * ``Grassmann``: Class for for analysis of samples on the Grassmann manifold.
 
 * ``DiffusionMaps``: Class for multi point data-based dimensionality reduction.
+
+* ``POD``: Class for data reconstruction and data dimension reduction.
 
 
 Grassmann
@@ -109,7 +111,7 @@ POD
 	
 The ``POD`` class is the parent class of the ``DirectPOD``, ``SnapshotPOD`` and ``HOSVD`` classes that perform the Direct POD, Snapshot POD and Higher-order Singular Value Decomposition (HOSVD) respectively.
 
-The Proper Orthogonal Decomposition (POD) is a post-processing technique which takes a given dataset and extracts a set of orthogonal basis functions and the corresponding coefficients. The idea of this method, is to analyze large amounts of data in order to gain a better understanding of the simulated processes. POD method has two variants, the Direct POD and Snapshot POD. In cases where the dataset is large, the Snapshot POD is recommended as it is much faster. 
+The Proper Orthogonal Decomposition (POD) is a post-processing technique which takes a given dataset and extracts a set of orthogonal basis functions and the corresponding coefficients. The idea of this method, is to analyze large amounts of data in order to gain a better understanding of the simulated processes and reduce noise. POD method has two variants, the Direct POD and Snapshot POD. In cases where the dataset is large, the Snapshot POD is recommended as it is much faster. 
 
 The Higher-order Singular Value Decomposition (HOSVD) is the generalization of the matrix SVD, also called an orthogonal Tucker decomposition. HOSVD is used in cases where the solution snapshots are most naturally condensed into generalized matrices (tensors) and do not lend themselves naturally to vectorization. 
 
