@@ -29,6 +29,8 @@ The module currently contains the following classes:
 
 * ``DiffusionMaps``: Class for multi point data-based dimensionality reduction.
 
+* ``POD``: Class for dimension reduction of solution snapshots.
+
 """
 
 import copy
@@ -2080,3 +2082,418 @@ class DiffusionMaps:
         normalized_kernel = d_alpha.dot(kernel_mat.dot(d_alpha))
 
         return normalized_kernel
+
+
+########################################################################################################################
+########################################################################################################################
+#                                                     POD                                                              #
+########################################################################################################################
+########################################################################################################################
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import normalize
+from UQpy.Utilities import svd
+import functools
+
+
+class POD:
+    """
+    Performs Direct and Snapshot Proper Orthogonal Decomposition (POD) as well as Higher-order Singular Value
+    Decomposition (HOSVD) for dimension reduction of datasets.
+
+    **Input:**
+
+    * **input_sol** (`ndarray`) or (`list`):
+        Second order tensor or list containing the solution snapshots. Third dimension or length of list corresponds
+        to the number of snapshots.
+
+    * **verbose** (`Boolean`):
+        A boolean declaring whether to write text to the terminal.
+
+    **Methods**
+    """
+
+    def __init__(self, input_sol, verbose=True, **kwargs):
+
+        self.input_sol = input_sol
+        self.verbose = verbose
+        self.kwargs = kwargs
+
+    @staticmethod
+    def unfold(data):
+        """
+        Method for unfolding second order tensors.
+
+         **Input:**
+        * **data** (`int`):
+            Input second order tensor to be unfolded.
+
+        **Output/Returns:**
+        * **M0, M1, M2** (`ndarrays`):
+            Returns the 2-dimensional unfolded matrices.
+
+        """
+
+        if type(data) == list:
+            x, y, z = data[0].shape[0], data[0].shape[1], len(data)
+            data_ = np.zeros((x, y, z))
+            for i in range(z): data_[:, :, i] = data[i]
+            del data
+            data = np.copy(data_)
+
+        D0, D1, D2 = [0, 2, 1], [1, 2, 0], [2, 0, 1]
+        Z0, Z1, Z2 = np.transpose(data, D0), np.transpose(data, D1), np.transpose(data, D2)
+
+        M0 = Z0.reshape(data.shape[0], data.shape[2] * data.shape[1])
+        M1 = Z1.reshape(data.shape[1], data.shape[2] * data.shape[0])
+        M2 = Z2.reshape(data.shape[2], data.shape[0] * data.shape[1])
+
+        return M0, M1, M2
+
+
+class DirectPOD(POD):
+    """
+    Direct POD child class generates a set of spatial modes and time coefficients to approximate the solution.
+
+    **Input:**
+    * **input_sol** (`ndarray`) or (`list`):
+        Second order tensor or list containing the solution snapshots. Third dimension or length of list corresponds
+        to the number of snapshots.
+
+    * **modes** (`int`):
+        Number of POD modes used to approximate the input solution. Must be less than or equal
+        to the number of grid points.
+
+    * **reconstr_perc** (`float`):
+        Dataset reconstruction percentage
+
+    """
+
+    def __init__(self, input_sol, modes=10**10, reconstr_perc=10**10, verbose=False):
+
+        super().__init__(input_sol, verbose)
+        self.verbose = verbose
+        self.modes = modes
+        self.reconstr_perc = reconstr_perc
+
+    def run(self):
+
+        """
+        Executes the Direct POD method in the ''Direct'' class.
+
+        **Output/Returns:**
+        * **Utilde** (`ndarray`):
+            Second order tensor containing the reconstructed solution snapshots in their initial spatial and
+            temporal dimensions.
+
+        * **Atilde** (`ndarray`):
+            An array containing the solution snapshots reduced in the spatial dimension.
+
+        """
+
+        if type(self.input_sol) == list:
+
+            x, y, z = self.input_sol[0].shape[0], self.input_sol[0].shape[1], len(self.input_sol)
+            U = np.zeros((z, x * y))
+
+            for i in range(z): U[i, :] = self.input_sol[i].ravel()
+
+        else:
+            x, y, z = self.input_sol.shape[0], self.input_sol.shape[1], self.input_sol.shape[2]
+            U = np.zeros((z, x * y))
+
+            for i in range(z): U[i, :] = self.input_sol[:, :, i].ravel()
+
+        C = np.dot(U.T, U) / (z - 1)
+        eigval, PHI = np.linalg.eig(C)
+        PHI = PHI.real
+        eigval_ = eigval.real
+        A = np.dot(U, PHI)
+
+        if self.modes <= 0:
+            print('Warning: Invalid input, the number of modes must be positive.')
+            return [],[]
+
+        elif self.reconstr_perc <= 0:
+            print('Warning: Invalid input, the reconstruction percentage is defined in the range (0,100].')
+            return [], []
+
+        elif self.modes != 10**10 and self.reconstr_perc != 10**10:
+            print('Warning: Either a number of modes or a reconstruction percentage must be chosen, not both.')
+            return [], []
+
+        elif type(self.modes) != int:
+            print('Warning: The number of modes must be an integer.')
+            return [], []
+
+        else:
+
+            perc = []
+            for i in range(x * y):
+                perc.append((eigval_[:i + 1].sum() / eigval_.sum()) * 100)
+
+            percentage = min(perc, key=lambda x: abs(x - self.reconstr_perc))
+
+            if self.modes == 10**10:
+
+                self.modes = perc.index(percentage) + 1
+
+            else:
+
+                if self.modes > x * y:
+                    print("Warning: A number of modes greater than the number of dimensions was given.")
+                    print("Number of dimensions is {}".format(x * y))
+
+
+            Utilde_ = np.dot(A[:, :self.modes], PHI[:, :self.modes].T)
+            Atilde = np.dot(U,PHI[:, :self.modes])
+
+            Utilde = np.zeros((x, y, z))
+            for i in range(z):
+                Utilde[0:x, 0:y, i] = Utilde_[i, :].reshape((x, y))
+
+            if self.verbose:
+                print("UQpy: Successful execution of Direct POD!")
+                if z < x * y and x * y > 1000: print("Snapshot POD is recommended.")
+
+            if self.verbose:
+                print('Dataset reconstruction: {:.3%}'.format(perc[self.modes - 1] / 100))
+
+            return Utilde, Atilde
+
+
+class SnapshotPOD(POD):
+    """
+    Snapshot POD child class generates a set of temporal modes and spatial coefficients to approximate the solution.
+    (Faster that direct POD)
+
+    **Input:**
+    * **input_sol** (`ndarray`) or (`list`):
+        Second order tensor or list containing the solution snapshots. Third dimension or length of list corresponds
+        to the number of snapshots.
+
+    * **modes** (`int`):
+        Number of POD modes used to approximate the input solution. Must be less than or equal
+        to the number of grid points.
+
+    * **reconstr_perc** (`float`):
+        Dataset reconstruction percentage.
+   """
+
+    def __init__(self, input_sol, modes=10**10, reconstr_perc=10**10, verbose=False):
+
+        super().__init__(input_sol, verbose)
+        self.verbose = verbose
+        self.modes = modes
+        self.reconstr_perc = reconstr_perc
+
+    def run(self):
+        """
+        Executes the Snapshot POD method in the ''Snapshot'' class.
+
+        **Output/Returns:**
+        * **Utilde** (`ndarray`):
+            Second order tensor containing the reconstructed solution snapshots in their initial spatial and
+            temporal dimensions.
+
+        * **Atilde** (`ndarray`):
+            An array containing the solution snapshots reduced in the temporal dimension.
+
+        """
+        if type(self.input_sol) == list:
+
+            x, y, z = self.input_sol[0].shape[0], self.input_sol[0].shape[1], len(self.input_sol)
+            U = np.zeros((z, x * y))
+
+            for i in range(z): U[i, :] = self.input_sol[i].ravel()
+
+        else:
+            x, y, z = self.input_sol.shape[0], self.input_sol.shape[1], self.input_sol.shape[2]
+            U = np.zeros((z, x * y))
+
+            for i in range(z): U[i, :] = self.input_sol[:, :, i].ravel()
+
+        C_s = np.dot(U, U.T) / (z - 1)
+
+        eigval, A_s = np.linalg.eig(C_s)
+        A_s = A_s.real
+        eigval_ = eigval.real
+
+        if self.modes <= 0:
+            print('Warning: Invalid input, the number of modes must be positive.')
+            return [],[]
+
+        elif self.reconstr_perc <= 0:
+            print('Warning: Invalid input, the reconstruction percentage is defined in the range (0,100].')
+            return [], []
+
+        elif self.modes != 10**10 and self.reconstr_perc != 10**10:
+            print('Warning: Either a number of modes or a reconstruction percentage must be chosen, not both.')
+            return [], []
+
+        elif type(self.modes) != int:
+            print('Warning: The number of modes must be an integer.')
+            return [], []
+
+        else:
+
+            perc = []
+            for i in range(z):
+                perc.append((eigval_[:i + 1].sum() / eigval_.sum()) * 100)
+
+            percentage = min(perc, key=lambda x: abs(x - self.reconstr_perc))
+
+            if self.modes == 10**10:
+
+                self.modes = perc.index(percentage) + 1
+
+            else:
+
+                if self.modes > z:
+                    print("Warning: A number of modes greater than the number of dimensions was given.")
+                    print("Number of dimensions is {}".format(z))
+
+            PHI_s = np.dot(U.T, A_s)
+            Utilde_ = np.dot(A_s[:, :self.modes], PHI_s[:, :self.modes].T)
+            Atilde_ = (np.dot(U.T, A_s[:, :self.modes])).T
+
+            Utilde = np.zeros((x, y, z))
+            Atilde = np.zeros((x, y, self.modes))
+
+            for i in range(z):
+                Utilde[0:x, 0:y, i] = Utilde_[i, :].reshape((x, y))
+
+            for i in range(self.modes):
+                Atilde[0:x, 0:y, i] = Atilde_[i, :].reshape((x, y))
+
+            if self.verbose:
+                print("UQpy: Successful execution of Snapshot POD!")
+
+            if self.verbose:
+                print('Dataset reconstruction: {:.3%}'.format(perc[self.modes - 1] / 100))
+
+            return Utilde, Atilde
+
+
+class HOSVD(POD):
+    """
+    HOSVD child class is used for higher-order singular value decomposition on the input solutions tensor.
+
+    **Inputs:**
+    * **input_sol** (`ndarray`) or (`list`):
+        Second order tensor or list containing the solution snapshots. Third dimension or length of list corresponds
+        to the number of snapshots.
+
+    * **modes** (`int`):
+        Number of modes to keep for dataset reconstruction.
+
+    * **reconstr_perc** (`float`):
+        Dataset reconstruction percentage
+
+    """
+
+    def __init__(self, input_sol, modes=10**10, reconstr_perc=10**10, verbose=False):
+
+        super().__init__(input_sol, verbose)
+        self.verbose = verbose
+        self.modes = modes
+        self.reconstr_perc = reconstr_perc
+
+    def run(self, get_error=False):
+        """
+        Executes the HOSVD method in the ''HOSVD'' class.
+
+        **Input:**
+        * **get_error** (`Boolean`):
+            A boolean declaring whether to return the reconstruction error.
+
+        **Output/Returns:**
+        * **Utilde** (`ndarray`):
+            Second order tensor containing the reconstructed solution snapshots in their initial spatial and
+            temporal dimensions.
+
+        * **Atilde** (`ndarray`):
+            An array containing the reduced solutions snapshots. The array's dimensions depends on the dimensions
+            of input second order tensor and not on the input number of modes or reconstruction percentage.
+
+        """
+        self.get_error = get_error
+
+        if type(self.input_sol) == list:
+            x, y, z = self.input_sol[0].shape[0], self.input_sol[0].shape[1], len(self.input_sol)
+        else:
+            x, y, z = self.input_sol.shape[0], self.input_sol.shape[1], self.input_sol.shape[2]
+
+        A1, A2, A3 = POD.unfold(self.input_sol)
+
+        U1, Sig_1, V1 = np.linalg.svd(A1, full_matrices=True)
+        U2, Sig_2, V2 = np.linalg.svd(A2, full_matrices=True)
+        U3, Sig_3, V3 = np.linalg.svd(A3, full_matrices=True)
+
+        Sig_3_ = np.diag(Sig_3)
+        hold = np.dot(np.linalg.inv(U3), A3)
+        kron_ = np.kron(U1, U2)
+
+        S3 = np.array(np.dot(hold, np.linalg.inv(kron_.T)))
+
+        if self.modes <= 0:
+            print('Warning: Invalid input, the number of modes must be positive.')
+            return [],[]
+
+        elif self.reconstr_perc <= 0:
+            print('Warning: Invalid input, the reconstruction percentage is defined in the range (0,100].')
+            return [], []
+
+        elif self.modes != 10**10 and self.reconstr_perc != 10**10:
+            print('Warning: Either a number of modes or a reconstruction percentage must be chosen, not both.')
+            return [], []
+
+        elif type(self.modes) != int:
+            print('Warning: The number of modes must be an integer.')
+            return [], []
+
+        else:
+
+            if self.modes == 10**10:
+                error_ = []
+                for i in range(0, x):
+                    error_.append(np.sqrt(((Sig_3[i + 1:]) ** 2).sum()) / np.sqrt(((Sig_3) ** 2).sum()))
+                    if i == x:
+                        error_.append(0)
+                error = [i * 100 for i in error_]
+                error.reverse()
+                perc = error.copy()
+                percentage = min(perc, key=lambda x:abs(x-self.reconstr_perc))
+                self.modes = perc.index(percentage) + 1
+
+            else:
+                if self.modes > x:
+                    print("Warning: A number of modes greater than the number of temporal dimensions was given.")
+                    print("Number of temporal dimensions is {}.".format(x))
+
+            Atilde = np.dot(U3, Sig_3_)
+            U3hat = np.dot(U3[:, :self.modes], Sig_3_[:self.modes, :self.modes])
+            S3hat = np.dot(np.linalg.inv(Sig_3_[:self.modes, :self.modes]), S3[:self.modes, :])
+
+            B = np.kron(U1, U2)
+            C = np.dot(S3hat, B.T)
+            D = np.dot(U3hat[:, :], C)
+
+            Utilde = np.zeros((x, y, z))
+            for i in range(z):
+                Utilde[0:x, 0:y, i] = D[i, :].reshape((x, y))
+
+            if self.verbose:
+                print("UQpy: Successful execution of HOSVD!")
+
+            if self.modes == 10**10:
+                if self.verbose:
+                    print('Dataset reconstruction: {0:.3%}'.format(percentage / 100))
+
+            else:
+                if get_error == True:
+                    error_rec = np.sqrt(((Sig_3[self.modes:]) ** 2).sum()) / np.sqrt(((Sig_3) ** 2).sum())
+                    print("Reduced-order reconstruction error: {0:.3%}".format(error_rec))
+
+            return Utilde, Atilde
