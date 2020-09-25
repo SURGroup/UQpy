@@ -138,7 +138,7 @@ Let us consider the solution of a numerical model of a differential equation :ma
 
 where :math:`\Phi_{k}{\mathtt{x}}` are the spatial POD modes and :math:`\alpha_{k}(t)` are the time coefficients.
 
-The above decomposition is achieved by maximizing the ``energy" that can be captured by the first :math:`n` spatial POD modes :math:`[9]_`. POD modes are orthonormal and thus one can write
+The above decomposition is achieved by maximizing the ``energy" that can be captured by the first :math:`n` spatial POD modes [9]_. POD modes are orthonormal and thus one can write
 
 .. math::  \iiint_{\mathtt{x}} \Phi_{k_{1}}{\mathtt{x}} \Phi_{k_{2}}{\mathtt{x}} d\mathtt{x} = \begin{cases}
     1, & \text{if k_1 = k_2}.\\
@@ -180,7 +180,7 @@ One can use the following command to instantiate the class ``DirectPOD``
 SnapshotPOD
 --------------------------------
 	
-The Snapshot Proper Orthogonal Decomposition (POD) method is the second variant of the POD method which considers the decomposition of a dataset into deterministic temporal modes and random spatial coefficients. Essentially, this method interchanges the time and position. In most problems the number of solution snapshots :math:`n` is less than the number of dimensions :math:`m = N_x \times N_y` where :math:`N_x, N_y` are the grid dimensions. Thus, by using the ``SnapshotPOD`` class one can reconstruct solutions much faster :math:`[10]_`.
+The Snapshot Proper Orthogonal Decomposition (POD) method is the second variant of the POD method which considers the decomposition of a dataset into deterministic temporal modes and random spatial coefficients. Essentially, this method interchanges the time and position. In most problems the number of solution snapshots :math:`n` is less than the number of dimensions :math:`m = N_x \times N_y` where :math:`N_x, N_y` are the grid dimensions. Thus, by using the ``SnapshotPOD`` class one can reconstruct solutions much faster [10]_.
 
 For the Snapshot POD the covariance matrix :math:`\mathbf{C_s}`, is calculated as follows 
 
@@ -239,8 +239,8 @@ The HOSVD provides a set of bases :math:`\mathbf{U}^{(1)},...,\mathbf{U}^{(N-1)}
 
 where :math:`\mathbf{U}(N))(\ksi_k)` has dimension :math:`n \times 1`, where n is the number of snapshots and corresponds to the kth column of :math:`\mathbf{U}(N)` and is the number of independent bases that account for the desired accuracy of the reconstruction.
 
-More information can be found in :math:`[11]_[12]_`.
-
+More information can be found in [11]_, [12]_.
+ 
 
 HOSVD Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
