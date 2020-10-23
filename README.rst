@@ -91,7 +91,8 @@ For assistance with the UQpy software package, please raise an issue on the Gith
 .. image:: https://img.shields.io/conda/dn/conda-forge/UQpy?style=plastic   :alt: Conda
 .. image:: https://img.shields.io/github/downloads/SURGroup/UQpy/v3.0.1/total?style=plastic   :alt: GitHub Releases (by Release)
 
-.. image:: https://img.shields.io/pypi/pyversions/UQpy?style=plastic   :alt: PyPI - Python Version
+.. image:: https://img.shields.io/pypi/v/UQpy?style=plastic   :alt: PyPI
+.. image:: https://img.shields.io/conda/v/conda-forge/UQpy?style=plastic   :alt: Conda
 
 .. |logo| image:: logo.jpg
     :scale: 25 %
