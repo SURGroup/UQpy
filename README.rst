@@ -87,7 +87,7 @@ Help and Support
 
 For assistance with the UQpy software package, please raise an issue on the Github Issues page. Please use the appropriate labels to indicate which module you are specifically inquiring about.
 
-.. image:: https://img.shields.io/pypi/dm/UQpy   :alt: PyPI - Downloads
+.. image:: https://img.shields.io/pypi/dm/UQpy?style=plastic   :alt: PyPI - Downloads
 
 
 .. |logo| image:: logo.jpg
