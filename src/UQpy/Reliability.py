@@ -914,7 +914,7 @@ class FORM(TaylorSeries):
         u = np.zeros([self.n_iter + 1, self.dimension])
         u[0, :] = seed
         g_record.append(0.0)
-        dg_u_record = np.zeros([self.n_iter, self.dimension])
+        dg_u_record = np.zeros([self.n_iter + 1, self.dimension])
 
         while not conv_flag:
             if self.verbose:
@@ -944,7 +944,8 @@ class FORM(TaylorSeries):
 
             # 2. evaluate Limit State Function and the gradient at point u_k and direction cosines
             dg_u, qoi = self.derivatives(point_u=u[k, :], point_x=self.x, runmodel_object=self.runmodel_object,
-                                         nataf_object=self.nataf_object, order='first', verbose=self.verbose)
+                                         nataf_object=self.nataf_object, df_step=self.df_step, order='first',
+                                         verbose=self.verbose)
             g_record.append(qoi)
 
             dg_u_record[k + 1, :] = dg_u
@@ -1039,10 +1040,10 @@ class FORM(TaylorSeries):
             if self.verbose:
                 print('Error:', error_record[-1])
 
-            if conv_flag is True:
+            if conv_flag is True or k > self.n_iter:
                 break
 
-        if k == self.n_iter:
+        if k > self.n_iter:
             print('UQpy: Maximum number of iterations {0} was reached before convergence.'.format(self.n_iter))
             self.error_record = error_record
             self.u_record = [u_record]
@@ -1189,7 +1190,7 @@ class SORM(TaylorSeries):
 
         hessian_g = self.derivatives(point_u=self.DesignPoint_U, point_x=self.DesignPoint_X,
                                      runmodel_object=model, nataf_object=self.nataf_object,
-                                     order='second', point_qoi=self.g_record[-1][-1])
+                                     order='second', df_step=self.df_step, point_qoi=self.g_record[-1][-1])
 
         matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(dg_u_record[-1])
         kappa = np.linalg.eig(matrix_b[:self.dimension-1, :self.dimension-1])
