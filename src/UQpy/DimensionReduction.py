@@ -174,7 +174,7 @@ class Grassmann:
                 raise TypeError('UQpy: A callable kernel object must be provided.')
         
         # Interpolation.
-        skl_str = "<class 'sklearn.gaussian_process.gpr.GaussianProcessRegressor'>"
+        skl_str = "<class 'sklearn.gaussian_process._gpr.GaussianProcessRegressor'>"
         self.skl = str(type(interp_object))==skl_str
         if interp_object is not None:
             if callable(interp_object) or isinstance(interp_object, Kriging) or self.skl:
