@@ -132,17 +132,17 @@ DirectPOD
 	
 The Direct Proper Orthogonal Decomposition (POD) is the first variant of the POD method and is used for the extraction of a set of orthogonal spatial basis functions and corresponding time coefficients from a dataset. The ``DirectPOD`` class is used for dimensionality reduction of datasets obtained by numerical simulations, given a desired level of accuracy.
 
-Let us consider the solution of a numerical model of a differential equation :math:`\mathbf{u}(\mathtt{x},t)`, where :math:`\mathtt{x} = \mathnormal{(x,y,z)}` is the position vector where the function is evaluated and :math:`t` is the time. The idea behind the POD is to decompose the random vector field :math:`\mathbf{u}(\mathtt{x},t)`, into a set of deterministic spatial functions :math:`\Phi_{k}{\mathtt{x}}`, multiplied by random time coefficients :math:`\alpha_{k}(t)`, so that:
+Let us consider the solution of a numerical model of a differential equation :math:`\mathbf{u}(\mathtt{x},t)`, where :math:`\mathtt{x} = (x,y,z)` is the position vector where the function is evaluated and :math:`t` is the time. The idea behind the POD is to decompose the random vector field :math:`\mathbf{u}(\mathtt{x},t)`, into a set of deterministic spatial functions :math:`\Phi_{k}{\mathtt{x}}`, multiplied by random time coefficients :math:`\alpha_{k}(t)`, so that:
 
 .. math:: \mathbf{u}(\mathtt{x},t) =  \sum_{k=1}^{\infty}\alpha_{k}(t)\Phi_{k}{\mathtt{x}}
 
 where :math:`\Phi_{k}{\mathtt{x}}` are the spatial POD modes and :math:`\alpha_{k}(t)` are the time coefficients.
 
-The above decomposition is achieved by maximizing the ``energy" that can be captured by the first :math:`n` spatial POD modes [9]_. POD modes are orthonormal and thus one can write
+The above decomposition is achieved by maximizing the energy that can be captured by the first :math:`n` spatial POD modes [9]_. POD modes are orthonormal and thus one can write
 
 .. math::  \iiint_{\mathtt{x}} \Phi_{k_{1}}{\mathtt{x}} \Phi_{k_{2}}{\mathtt{x}} d\mathtt{x} = \begin{cases}
-    1, & \text{if k_1 = k_2}.\\
-    0, & \text{if k_1 \ne k_2}
+    1, & \text{if $k_1 = k_2$}.\\
+    0, & \text{if $k_1 \ne k_2$}
   \end{cases}
 
 Furthermore, at each time coefficient :math:`\alpha_{k}(t)` only depends on the spatial mode :math:`\Phi_{k}{\mathtt{x}}`. By multiplying the decomposition equation with :math:`\Phi_{k}{\mathtt{x}}` and integrating over space one obtains the following
@@ -192,7 +192,8 @@ The eigenvalue problem is solved and the temporal modes (eigenvectors) are calcu
 
 Spatial coefficients are therefore calculated as :math:`\Phi_s = \mathbf{U}^T A_s`. Finally, a predefined number of :math:`k`-POD temporal modes and spatial coefficients can be considered for the reconstruction of data as follows
 
-.. math:: \mathbf{\sim{u}}(\mathtt{x},t) =  \sum_{i=1}^{k}A_s(t)\Phi__s{\mathtt{x}}
+.. math:: \mathbf{\sim{u}}(\mathtt{x},t) = \sum_{i=1}^{k} A_s(t) \Phi_s \mathtt{x}
+
 
 SnapshotPOD Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -210,34 +211,34 @@ One can use the following command to instantiate the class ``SnapshotPOD``
 HOSVD
 --------------------------------
 	
-The Higher-order Singular Value Decomposition is a generalization of the classical SVD. Instead of vectorizing the solution snapshot into two-dimensional matrices we instead perform the dimension reduction directly to the generalized matrix, namely a  tensor. Let :math:`\mathfrac{A} \in \mathbb{R}^{I_1 \times I_2 \times ,..,\times I_N}` be an input Nth-order tensor containing the solution snapshots from a numerical simulation. The HOSVD decomposes :math:`\mathfrac{A}` as
+The Higher-order Singular Value Decomposition is a generalization of the classical SVD. Instead of vectorizing the solution snapshot into two-dimensional matrices we instead perform the dimension reduction directly to the generalized matrix, namely a  tensor. Let :math:`A \in \mathbb{R}^{I_1 \times I_2 \times ,..,\times I_N}` be an input Nth-order tensor containing the solution snapshots from a numerical simulation. The HOSVD decomposes :math:`A` as
 
-.. math:: \mathfrac{A} = \mathfrac{S} \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)}...\times_N \mathbf{U}^{(N)}
+.. math:: A = S \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)}...\times_N \mathbf{U}^{(N)}
 
 where :math:`\times_N` denotes an n-mode tensor-matrix product.
 
 By the above equation and the commutative property of n-mode product, one can obtain the
 following relation
 
-.. math:: \mathfrac{S} = \mathfrac{A} \times_1 \mathbf{U}^{(1)}^T...\times_N \mathbf{U}^{(N)}^T
+.. math:: S = A \times_1 {\mathbf{U}^{(1)}}^{T} ...\times_N {\mathbf{U}^{(N)}}^{T}
 
-By using the properties of the n-mode product together with the definitions of Kronecker product, one can compute the n-mode unfolding of :math:`\mathfrac{A}` as
+By using the properties of the n-mode product together with the definitions of Kronecker product, one can compute the n-mode unfolding of :math:`A` as
 
-.. math:: \mathfrac{A}_{n} = \mathbf{U}^{(n)} \mathfrac{S}_{n} (\mathbf{U}^{(n+1)} \otimes \cdot\cdot\cdot \otimes \mathbf{U}^{(N)} \otimes \mathbf{U}^{(1)} \otimes \cdot\cdot\cdot \otimes \mathbf{U}^{(n-1)})^T
+.. math:: A_{n} = \mathbf{U}^{(n)} S_{n} (\mathbf{U}^{(n+1)} \otimes \cdot\cdot\cdot \otimes \mathbf{U}^{(N)} \otimes \mathbf{U}^{(1)} \otimes \cdot\cdot\cdot \otimes \mathbf{U}^{(n-1)})^T
 
-The ordering and orthogonality properties of :math:`\mathfrac{S}` imply that :math:`\mathfrac{S(n)}` has mutually orthogonal rows with Frobenius norms equal to :math:`\sigma_1^{n},\sigma_2^{n},...,\sigma_{I_n}^{n}`. Since the right and left resulting matrices in the above equation are both orthogonal the following can be defined
+The ordering and orthogonality properties of :math:`S` imply that :math:`S(n)` has mutually orthogonal rows with Frobenius norms equal to :math:`\sigma_1^{n},\sigma_2^{n},...,\sigma_{I_n}^{n}`. Since the right and left resulting matrices in the above equation are both orthogonal the following can be defined
 
 .. math:: \Sigma^{(n)} = \text{diag}(\sigma_1^{n},\sigma_2^{n},...,\sigma_{I_n}^{n})
 
 Classical SVD must be performed to the unfolded matrices as 
 
-.. math:: \mathfrac{A} = \mathbf{U}^{(n)} \Sigma^{(n)} \mathbf{V}^{(n)}^T
+.. math:: A = \mathbf{U}^{(n)} \Sigma^{(n)} {\mathbf{V}^{(n)}}^T
 
 The HOSVD provides a set of bases :math:`\mathbf{U}^{(1)},...,\mathbf{U}^{(N-1)}` spanning each dimension of the snapshots plus a basis, :math:`\mathbf{U}^{(N)}`, spanning across the snapshots and the orthogonal core tensor, which generalizes the matrix of singular values. Finally, the reconstructed tensor can be computed as follows
 
-.. math:: \mathfrac{W}(\ksi_k) = \Sigma \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)} \cdot\cdot\cdot \times_N \mathbf{U}^{(N)}(\ksi_k) 
+.. math:: W(\xi_{k}) = \Sigma \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)} \cdot\cdot\cdot \times_N \mathbf{U}^{(N)}( \xi_{k}) 
 
-where :math:`\mathbf{U}(N))(\ksi_k)` has dimension :math:`n \times 1`, where n is the number of snapshots and corresponds to the kth column of :math:`\mathbf{U}(N)` and is the number of independent bases that account for the desired accuracy of the reconstruction.
+where :math:`\mathbf{U}(N))( \xi_{k})` has dimension :math:`n \times 1`, where n is the number of snapshots and corresponds to the kth column of :math:`\mathbf{U}(N)` and is the number of independent bases that account for the desired accuracy of the reconstruction.
 
 More information can be found in [11]_, [12]_.
  
@@ -254,6 +255,7 @@ One can use the following command to instantiate the class ``HOSVD``
 .. autoclass:: UQpy.DimensionReduction.HOSVD
     :members: 
 
+|
 
 .. [1] J. Maruskin, Introduction to Dynamical Systems and Geometric Mechanics, Solar Crest Publishing, LLC, 2012:p.165.
 
