@@ -337,22 +337,21 @@ def _bi_variate_normal_pdf(x1, x2, rho):
 
 def _get_a_plus(a):
     eig_val, eig_vec = np.linalg.eig(a)
-    q = np.array(eig_vec)
-    x_diagonal = np.array(np.diag(np.maximum(eig_val, 0)))
+    q = np.matrix(eig_vec)
+    x_diagonal = np.matrix(np.diag(np.maximum(eig_val, 0)))
 
     return q * x_diagonal * q.T
 
 
 def _get_ps(a, w=None):
-    w05 = np.array(w ** .5)
-
+    w05 = np.matrix(w ** .5)
     return w05.I * _get_a_plus(w05 * a * w05) * w05.I
 
 
 def _get_pu(a, w=None):
     a_ret = np.array(a.copy())
     a_ret[w > 0] = np.array(w)[w > 0]
-    return np.array(a_ret)
+    return np.matrix(a_ret)
 
 
 def _nn_coord(x, k):
