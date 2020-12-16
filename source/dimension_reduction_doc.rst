@@ -127,8 +127,9 @@ One can use the following command to instantiate the class ``POD``
 .. autoclass:: UQpy.DimensionReduction.POD
     :members: 
 
+
 DirectPOD
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	
 The Direct Proper Orthogonal Decomposition (POD) is the first variant of the POD method and is used for the extraction of a set of orthogonal spatial basis functions and corresponding time coefficients from a dataset. The ``DirectPOD`` class is used for dimensionality reduction of datasets obtained by numerical simulations, given a desired level of accuracy.
 
@@ -178,7 +179,7 @@ One can use the following command to instantiate the class ``DirectPOD``
     
     
 SnapshotPOD
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	
 The Snapshot Proper Orthogonal Decomposition (POD) method is the second variant of the POD method which considers the decomposition of a dataset into deterministic temporal modes and random spatial coefficients. Essentially, this method interchanges the time and position. In most problems the number of solution snapshots :math:`n` is less than the number of dimensions :math:`m = N_x \times N_y` where :math:`N_x, N_y` are the grid dimensions. Thus, by using the ``SnapshotPOD`` class one can reconstruct solutions much faster [10]_.
 

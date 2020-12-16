@@ -2125,14 +2125,15 @@ class POD:
         """
         Method for unfolding second order tensors.
 
-         **Input:**
+        **Input:**
+
         * **data** (`ndarray`) or (`list`):
             Input second order tensor to be unfolded.
 
         **Output/Returns:**
+
         * **M0, M1, M2** (`ndarrays`):
             Returns the 2-dimensional unfolded matrices.
-
         """
 
         if type(data) == list:
