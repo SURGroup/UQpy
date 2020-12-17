@@ -7,9 +7,9 @@ Uncertainty Quantification with python (UQpy)
 
 ====
 
-:Authors: Michael D. Shields, Dimitris G. Giovanis, Audrey Olivier, Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu, Ketson RM dos Santos
+:Authors: Michael D. Shields, Dimitris G. Giovanis, Audrey Olivier, Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu, Ketson RM dos Santos, Katiana Kontolati
 :Contact: UQpy.info@gmail.com
-:Version: 3.0
+:Version: 3.0.1
 
 
 Description
@@ -87,7 +87,12 @@ Help and Support
 
 For assistance with the UQpy software package, please raise an issue on the Github Issues page. Please use the appropriate labels to indicate which module you are specifically inquiring about.
 
+.. image:: https://img.shields.io/pypi/dm/UQpy?style=plastic   :alt: PyPI - Downloads
+.. image:: https://img.shields.io/conda/dn/conda-forge/UQpy?style=plastic   :alt: Conda
+.. image:: https://img.shields.io/github/downloads/SURGroup/UQpy/v3.0.1/total?style=plastic   :alt: GitHub Releases (by Release)
 
+.. image:: https://img.shields.io/pypi/v/UQpy?style=plastic   :alt: PyPI
+.. image:: https://img.shields.io/conda/v/conda-forge/UQpy?style=plastic   :alt: Conda
 
 .. |logo| image:: logo.jpg
     :scale: 25 %
