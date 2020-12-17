@@ -345,6 +345,7 @@ def _get_a_plus(a):
 
 def _get_ps(a, w=None):
     w05 = np.matrix(w ** .5)
+
     return w05.I * _get_a_plus(w05 * a * w05) * w05.I
 
 
