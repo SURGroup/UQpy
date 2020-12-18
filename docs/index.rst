@@ -24,6 +24,7 @@ Table of contents
    reliability_doc
    inference_doc
    dimension_reduction_doc
+   sensitivity_doc
    utilities_doc
    news_doc
 
