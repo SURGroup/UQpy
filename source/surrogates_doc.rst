@@ -255,52 +255,40 @@ Hermite Class Descriptions
 
 Calculation of the PCE coefficients
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Several methods exist for the calculation of the PCE coefficients. In UQpy, three non-intrusive methods can be used, namely the Ordinary Least Squares (OLS) (``PolyChaosOls`` class), the LASSO regression (``PolyChaosLasso`` class) and Ridge regression (``PolyChaosRidge`` class) methods. While with OLS, coefficients are computed based on a simple algebraic calculation, the LASSO and Ridge regression require optimization, for which we are implementing gradient descent.
+Several methods exist for the calculation of the PCE coefficients. In UQpy, three non-intrusive methods can be used, namely the Least Squares regression (``PolyChaosLstsq`` class), the LASSO regression (``PolyChaosLasso`` class) and Ridge regression (``PolyChaosRidge`` class) methods. 
 
 
-Ordinary Least Squares (OLS)
+Least Squares Regression 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Ordinary Least Squares (OLS) is a method for estimating the parameters of a linear regression model. Theo goal is to minimize the sum of squares of the differences of the observed dependent variable and the predictions of the regression model. Another perspective, and somewhat more appropriate in the context of Polynomial Chaos Expansion, is that OLS, results in an approximate solution to an overdetermined system of linear equations :math:`X \beta \approx y`, where :math:`\beta` is the unknown. 
+Least Squares regression is a method for estimating the parameters of a linear regression model. The goal is to minimize the sum of squares of the differences of the observed dependent variable and the predictions of the regression model. In other words, we seek for the vector :math:`\beta`, that approximatively solves the equation :math:`X \beta \approx y`. If matrix :math:`X` is square then the solution is exact. 
 
-If we assume that the system cannot be solved exactly, since the number of equations :math:`n` is much larger than the number of unknowns :math:`p`, we are seeking the solution that is associated with the smallest difference between the right-hand-side and left-hand-side of the equation. Therefore, we are looking for the solution that satisfies the following
-
+If we assume that the system cannot be solved exactly, since the number of equations :math:`n` is not equal to the number of unknowns :math:`p`, we are seeking the solution that is associated with the smallest difference between the right-hand-side and left-hand-side of the equation. Therefore, we are looking for the solution that satisfies the following
 
 .. math:: \hat{\beta} = \underset{\beta}{\arg\min} \| y - X \beta \|_{2}
 
 where :math:`\| \cdot \|_{2}` is the standard :math:`L^{2}` norm in the :math:`n`-dimensional Eucledian space :math:`\mathbb{R}^{n}`. The above function is also known as the cost function of the linear regression.
 
-
-In UQpy, the above problem is solved by a simple algebraic calculation. First, we perform a QR decomposition on the design matrix :math:`X` as
-
-.. math:: X = Q R
-
-where :math:`Q` is an orthogonal matrix (i.e. :math:`{\displaystyle Q^{\textsf {T}}Q=QQ^{\textsf {T}}=I}{\displaystyle Q^{\textsf {T}}Q=QQ^{\textsf {T}}=I})` and :math:`R` is an upper triangular matrix, also called right triangular matrix.
-
-Finally, we compute the unknown coefficients :math:`\hat{\beta}` as follows
-
-.. math:: \hat{\beta} = R^{-1} Q^{T} y
-
-In the context of Polynomial Chaos Expansion (PCE) the above coefficients corresponds to the polynomial coefficients. The above method can be used from the class ``PolyChaosOls``.
+The equation may be under-, well-, or over-determined. In the context of Polynomial Chaos Expansion (PCE) the computed vector corresponds to the polynomial coefficients. The above method can be used from the class ``PolyChaosLstsq``.
 
 
-PolyChaosOls Class Descriptions
+PolyChaosLstsq Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: UQpy.Surrogates.PolyChaosOls
+.. autoclass:: UQpy.Surrogates.PolyChaosLstsq
     :members:
 
 
 Lasso Regression
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A drawback of using OLS for calculating the PCE coefficients, is that this method considers all the features (polynomials) to be equally relevant for the prediction. This technique often results to overfitting and complex models that do not have the ability to generalize well on unseen data. For this reason, the Least Absolute Shrinkage and Selection Operator or LASSO can be employed (from the ``PolyChaosLasso`` class). This method, introduces an :math:`L_{1}` penalty term (which encourages sparcity) in the loss function of linear regression as follows
+A drawback of using Least Squares regression for calculating the PCE coefficients, is that this method considers all the features (polynomials) to be equally relevant for the prediction. This technique often results to overfitting and complex models that do not have the ability to generalize well on unseen data. For this reason, the Least Absolute Shrinkage and Selection Operator or LASSO can be employed (from the ``PolyChaosLasso`` class). This method, introduces an :math:`L_{1}` penalty term (which encourages sparcity) in the loss function of linear regression as follows
 
 .. math:: \hat{\beta} = \underset{\beta}{\arg\min} \{ \frac{1}{N} \| y - X \beta \|_{2} + \lambda \| \beta \|_{1} \}
 
 
 where :math:`\lambda` is called the regularization strength.
 
-Parameter :math:`\lambda` controls the level of penalization. When it is close to zero, Lasso regression is identical to OLS while in the extreme case when it is set to be infinite all coefficients are equal to zero. 
+Parameter :math:`\lambda` controls the level of penalization. When it is close to zero, Lasso regression is identical to Least Squares regression, while in the extreme case when it is set to be infinite all coefficients are equal to zero. 
 
 The Lasso regression model needs to be trained on the data, and for this gradient descent is used for the optimization of coefficients. In gradient descent, the gradient of the loss function with respect to the weights/coefficients :math:`\nabla Loss_{\beta}` is used and deducted from :math:`\beta^{i}` at each iteration as follows
 

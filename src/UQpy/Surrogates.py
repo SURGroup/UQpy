@@ -1019,7 +1019,7 @@ class PCE:
         if self.verbose:
             print('UQpy: Running PCE.fit')
 
-        if type(self.method) == PolyChaosOls:
+        if type(self.method) == PolyChaosLstsq:
             self.C = self.method.run(x, y)
 
         elif type(self.method) == PolyChaosLasso or type(self.method) == PolyChaosRidge:
@@ -1048,7 +1048,7 @@ class PCE:
 
         a = self.method.poly_object.evaluate(x_test)
 
-        if type(self.method) == PolyChaosOls:
+        if type(self.method) == PolyChaosLstsq:
             y = a.dot(self.C)
 
         elif type(self.method) == PolyChaosLasso or type(self.method) == PolyChaosRidge:
@@ -1057,14 +1057,15 @@ class PCE:
         return y
 
 
-class PolyChaosOls:
+class PolyChaosLstsq:
     """
-    Class to calculate the PCE coefficients with ordinary least squares (OLS).
+    Class to calculate the PCE coefficients via the least-squares solution to the linear matrix equation.
+    The equation may be under-, well-, or over-determined.
 
     **Inputs:**
 
     * **poly_object** ('class'):
-        Object from the 'Polynomial' class.
+    Object from the 'Polynomial' class
 
     **Methods:**
 
@@ -1075,7 +1076,7 @@ class PolyChaosOls:
 
     def run(self, x, y):
         """
-        Implements the ordinary least squares (OLS) method to compute the PCE coefficients.
+        Least squares solution to compute the PCE coefficients.
 
         **Inputs:**
 
@@ -1092,12 +1093,7 @@ class PolyChaosOls:
 
         """
         a = self.poly_object.evaluate(x)
-        if a.shape[0] < a.shape[1]:
-            raise ValueError("UQpy: Underdetermined system! The number of training samples must be greater than the "
-                             "number of polynomials (i.e. >{}).".format(a.shape[1]))
-
-        q, r = np.linalg.qr(a)  # QR decomposition
-        c_ = np.dot(np.linalg.inv(r), np.dot(q.T, y))
+        c_, res, rank, sing = np.linalg.lstsq(a, y)
         c_ = c_.reshape(-1, 1)
 
         return c_
