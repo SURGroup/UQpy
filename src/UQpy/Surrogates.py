@@ -1065,7 +1065,7 @@ class PolyChaosLstsq:
     **Inputs:**
 
     * **poly_object** ('class'):
-    Object from the 'Polynomial' class
+        Object from the 'Polynomial' class
 
     **Methods:**
 
