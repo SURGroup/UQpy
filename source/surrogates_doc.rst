@@ -208,7 +208,7 @@ Kriging Class Descriptions
 Polynomial Chaos Expansion - PCE
 ----------------------------------------
 
-Polynomial Chaos Expansions (PCE) represent a class of methods which employ orthonormal polynomials to construct approximate response surfaces (metamodels or surrogate models) to identify a mapping between inputs and outputs of a numerical model [2]_. PCE methods can be directly used for moment estimation and sensitivity analysis (Sobol indices). A PCE object can be instantiated from the class ``PCE``.
+Polynomial Chaos Expansions (PCE) represent a class of methods which employ orthonormal polynomials to construct approximate response surfaces (metamodels or surrogate models) to identify a mapping between inputs and outputs of a numerical model [2]_. PCE methods can be directly used for moment estimation and sensitivity analysis (Sobol indices). A PCE object can be instantiated from the class ``PCE``. The method can be used for models of both one-dimensional and multi-dimensional outputs.
 
 Let us consider a computational model :math:`Y = \mathcal{M}(x)`, with :math:`Y \in \mathbb{R}` and a random vector with independent components :math:`X \in \mathbb{R}^M` described by the joint probability density function :math:`f_X`. The polynomial chaos expansion of :math:`\mathcal{M}(x)` is
 
