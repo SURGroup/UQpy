@@ -974,15 +974,17 @@ class Kriging:
         return c
 
 
-########################################################################################################################
-########################################################################################################################
-#                                         Polynomial Chaos Expansion (PCE)                                             #
-########################################################################################################################
-########################################################################################################################
+##############################################################################
+##############################################################################
+#                   Polynomial Chaos Expansion (PCE)                         #
+##############################################################################
+##############################################################################
+
 
 class PCE:
     """
-    Constructs a surrogate model based on the Polynomial Chaos Expansion (PCE) method.
+    Constructs a surrogate model based on the Polynomial Chaos Expansion (PCE)
+    method.
 
     **Inputs:**
 
@@ -992,6 +994,7 @@ class PCE:
     **Methods:**
 
     """
+
     def __init__(self, method, verbose=False):
         self.method = method
         self.verbose = verbose
@@ -1000,8 +1003,9 @@ class PCE:
 
     def fit(self, x, y):
         """
-        Fit the surrogate model using the training samples and the corresponding model values.
-        This method calls the 'run' method of the input method class.
+        Fit the surrogate model using the training samples and the
+        corresponding model values. This method calls the 'run' method of the
+        input method class.
 
         **Inputs:**
 
@@ -1013,7 +1017,8 @@ class PCE:
 
         **Output/Return:**
 
-        The ``fit`` method has no returns and it creates an `ndarray` with the PCE coefficients.
+        The ``fit`` method has no returns and it creates an `ndarray` with the
+        PCE coefficients.
         """
 
         if self.verbose:
@@ -1022,7 +1027,8 @@ class PCE:
         if type(self.method) == PolyChaosLstsq:
             self.C = self.method.run(x, y)
 
-        elif type(self.method) == PolyChaosLasso or type(self.method) == PolyChaosRidge:
+        elif type(self.method) == PolyChaosLasso or \
+                type(self.method) == PolyChaosRidge:
             self.C, self.b = self.method.run(x, y)
 
         if self.verbose:
@@ -1051,7 +1057,8 @@ class PCE:
         if type(self.method) == PolyChaosLstsq:
             y = a.dot(self.C)
 
-        elif type(self.method) == PolyChaosLasso or type(self.method) == PolyChaosRidge:
+        elif type(self.method) == PolyChaosLasso or \
+                type(self.method) == PolyChaosRidge:
             y = a.dot(self.C) + self.b
 
         return y
@@ -1059,8 +1066,9 @@ class PCE:
 
 class PolyChaosLstsq:
     """
-    Class to calculate the PCE coefficients via the least-squares solution to the linear matrix equation.
-    The equation may be under-, well-, or over-determined.
+    Class to calculate the PCE coefficients via the least-squares solution to
+    the linear matrix equation. The equation may be under-, well-, or
+    over-determined.
 
     **Inputs:**
 
@@ -1070,6 +1078,7 @@ class PolyChaosLstsq:
     **Methods:**
 
     """
+
     def __init__(self, poly_object, verbose=False):
         self.poly_object = poly_object
         self.verbose = verbose
@@ -1084,7 +1093,8 @@ class PolyChaosLstsq:
             `ndarray` containing the training points (samples).
 
         * **y** (`ndarray`):
-            `ndarray` containing the model evaluations (labels) at the training points.
+            `ndarray` containing the model evaluations (labels) at the
+            training points.
 
         **Outputs:**
 
@@ -1094,14 +1104,16 @@ class PolyChaosLstsq:
         """
         a = self.poly_object.evaluate(x)
         c_, res, rank, sing = np.linalg.lstsq(a, y)
-        c_ = c_.reshape(-1, 1)
+        if c_.ndim == 1:
+            c_ = c_.reshape(-1, 1)
 
         return c_
 
 
 class PolyChaosLasso:
     """
-    Class to calculate the PCE coefficients with the Least Absolute Shrinkage and Selection Operator (LASSO) method.
+    Class to calculate the PCE coefficients with the Least Absolute Shrinkage
+    and Selection Operator (LASSO) method.
 
     **Inputs:**
 
@@ -1111,7 +1123,9 @@ class PolyChaosLasso:
     **Methods:**
 
     """
-    def __init__(self, poly_object, learning_rate=0.01, iterations=1000, penalty=1, verbose=False):
+
+    def __init__(self, poly_object, learning_rate=0.01, iterations=1000,
+                 penalty=1, verbose=False):
         self.poly_object = poly_object
         self.learning_rate = learning_rate
         self.iterations = iterations
@@ -1133,9 +1147,11 @@ class PolyChaosLasso:
         * **iterations** (`int`):
             Number of iterations of the optimization algorithm.
 
-        * **penalty** (`float`): Penalty parameter controls the strength of regularization. When it is close to zero,
-            then the Lasso regression converges to the Linear regression, while when it goes to infinity,
-            PCE coefficients converge to zero.
+        * **penalty** (`float`):
+            Penalty parameter controls the strength of regularization. When it
+            is close to zero, then the Lasso regression converges to the linear
+            regression, while when it goes to infinity, PCE coefficients
+            converge to zero.
 
         **Outputs:**
 
@@ -1147,23 +1163,41 @@ class PolyChaosLasso:
         """
 
         xx = self.poly_object.evaluate(x)
-
-        y = y.reshape(-1, 1)
         m, n = xx.shape
-        w = np.zeros(n).reshape(-1, 1)
-        b = 0
 
-        for _ in range(self.iterations):
+        if y.ndim == 1 or y.shape[1] == 1:
+            y = y.reshape(-1, 1)
+            w = np.zeros(n).reshape(-1, 1)
+            dw = np.zeros(n).reshape(-1, 1)
+            b = 0
 
-            y_pred = (xx.dot(w) + b).reshape(-1, 1)
+            for _ in range(self.iterations):
+                y_pred = (xx.dot(w) + b)
 
-            dw = (-(2 * xx.T.dot(y - y_pred)) + self.penalty) / m
-            db = - 2 * np.sum(y - y_pred) / m
+                for i in range(n):
+                    if w[i] > 0:
+                        dw[i] = (-(2 * (xx.T[i, :]).dot(y - y_pred)) + self.penalty) / m
+                    else:
+                        dw[i] = (-(2 * (xx.T[i, :]).dot(y - y_pred)) - self.penalty) / m
 
-            w = w - self.learning_rate * dw
-            b = b - self.learning_rate * db
+                db = - 2 * np.sum(y - y_pred) / m
 
-        w = w.reshape(-1, 1)
+                w = w - self.learning_rate * dw
+                b = b - self.learning_rate * db
+
+        else:
+            n_out_dim = y.shape[1]
+            w = np.zeros((n, n_out_dim))
+            b = np.zeros(n_out_dim).reshape(1, -1)
+
+            for _ in range(self.iterations):
+                y_pred = (xx.dot(w) + b)
+
+                dw = (-(2 * xx.T.dot(y - y_pred)) - self.penalty) / m
+                db = - 2 * np.sum((y - y_pred), axis=0).reshape(1, -1) / m
+
+                w = w - self.learning_rate * dw
+                b = b - self.learning_rate * db
 
         return w, b
 
@@ -1180,7 +1214,8 @@ class PolyChaosRidge:
      **Methods:**
      """
 
-    def __init__(self, poly_object, learning_rate=0.01, iterations=1000, penalty=1, verbose=False):
+    def __init__(self, poly_object, learning_rate=0.01, iterations=1000,
+                 penalty=1, verbose=False):
         self.poly_object = poly_object
         self.learning_rate = learning_rate
         self.iterations = iterations
@@ -1202,9 +1237,11 @@ class PolyChaosRidge:
         * **iterations** (`int`):
             Number of iterations of the optimization algorithm.
 
-        * **penalty** (`float`): Penalty parameter controls the strength of regularization. When it is close to zero,
-            then the Lasso regression converges to the Linear regression, while when it goes to infinity,
-            PCE coefficients converge to zero.
+        * **penalty** (`float`):
+            Penalty parameter controls the strength of regularization. When it
+            is close to zero, then the ridge regression converges to the linear
+            regression, while when it goes to infinity, PCE coefficients
+            converge to zero.
 
         **Outputs:**
 
@@ -1217,28 +1254,40 @@ class PolyChaosRidge:
         """
 
         xx = self.poly_object.evaluate(x)
-
-        y = y.reshape(-1, 1)
         m, n = xx.shape
-        w = np.zeros(n).reshape(-1, 1)
-        b = 0
 
-        for _ in range(self.iterations):
-            y_pred = (xx.dot(w) + b).reshape(-1, 1)
+        if y.ndim == 1 or y.shape[1] == 1:
+            y = y.reshape(-1, 1)
+            w = np.zeros(n).reshape(-1, 1)
+            b = 0
 
-            dw = (-(2 * xx.T.dot(y - y_pred)) + (2 * self.penalty * w)) / m
-            db = - 2 * np.sum(y - y_pred) / m
+            for _ in range(self.iterations):
+                y_pred = (xx.dot(w) + b).reshape(-1, 1)
 
-            w = w - self.learning_rate * dw
-            b = b - self.learning_rate * db
+                dw = (-(2 * xx.T.dot(y - y_pred)) + (2 * self.penalty * w)) / m
+                db = - 2 * np.sum(y - y_pred) / m
 
-        w = w.reshape(-1, 1)
+                w = w - self.learning_rate * dw
+                b = b - self.learning_rate * db
+
+        else:
+            n_out_dim = y.shape[1]
+            w = np.zeros((n, n_out_dim))
+            b = np.zeros(n_out_dim).reshape(1, -1)
+
+            for _ in range(self.iterations):
+                y_pred = (xx.dot(w) + b)
+
+                dw = (-(2 * xx.T.dot(y - y_pred)) + (2 * self.penalty * w)) / m
+                db = - 2 * np.sum((y - y_pred), axis=0).reshape(1, -1) / m
+
+                w = w - self.learning_rate * dw
+                b = b - self.learning_rate * db
 
         return w, b
 
 
 class Polynomials:
-
     """
     Class for polynomials used for the PCE method.
 
@@ -1260,7 +1309,8 @@ class Polynomials:
     @staticmethod
     def standardize_normal(x, mean, std):
         """
-        Static method: Standardize data based on the standard normal distribution N(0,1).
+        Static method: Standardize data based on the standard normal
+        distribution N(0,1).
 
         **Input:**
 
@@ -1284,7 +1334,8 @@ class Polynomials:
     @staticmethod
     def standardize_uniform(x, m, scale):
         """
-        Static method: Standardize data based on the uniform distribution U(-1,1).
+        Static method: Standardize data based on the uniform distribution
+        U(-1,1).
 
         **Input:**
 
@@ -1303,7 +1354,7 @@ class Polynomials:
             Standardized data.
 
         """
-        return (x-m) / (scale/2)
+        return (x - m) / (scale / 2)
 
     @staticmethod
     def normalized(degree, x, a, b, pdf_st, p):
@@ -1341,7 +1392,8 @@ class Polynomials:
         m = np.zeros((degree, degree))
         for i in range(degree):
             for j in range(degree):
-                int_res = integrate.quad(lambda k: p[i](k) * p[j](k) * pdf_st(k), a, b, epsabs=1e-15, epsrel=1e-15)
+                int_res = integrate.quad(lambda k: p[i](k) * p[j](k) * pdf_st(k),
+                                         a, b, epsabs=1e-15, epsrel=1e-15)
                 m[i, j] = int_res[0]
             pol_normed.append(p[i] / np.sqrt(m[i, i]))
 
@@ -1382,8 +1434,9 @@ class Polynomials:
 
     def evaluate(self, x):
         """
-        Calculates the design matrix. Rows represent the input samples and columns the multiplied polynomials
-        whose degree must not exceed the maximum degree of polynomials.
+        Calculates the design matrix. Rows represent the input samples and
+        columns the multiplied polynomials whose degree must not exceed the
+        maximum degree of polynomials.
 
         **Inputs:**
 
@@ -1398,7 +1451,8 @@ class Polynomials:
 
         if not type(self.dist_object) == JointInd:
             if type(self.dist_object) == Normal:
-                return Hermite(self.degree, self.dist_object).get_polys(x)[0]  # design matrix (data x polynomials)
+                return Hermite(self.degree, self.dist_object).get_polys(x)[0]
+                # design matrix (data x polynomials)
 
             if type(self.dist_object) == Uniform:
                 return Legendre(self.degree, self.dist_object).get_polys(x)[0]
@@ -1412,10 +1466,12 @@ class Polynomials:
             for i in range(len(self.dist_object.marginals)):
 
                 if isinstance(self.dist_object.marginals[i], Normal):
-                    a.append(Hermite(self.degree, self.dist_object.marginals[i]).get_polys(x[:, i])[0])
+                    a.append(Hermite(self.degree,
+                                     self.dist_object.marginals[i]).get_polys(x[:, i])[0])
 
                 elif isinstance(self.dist_object.marginals[i], Uniform):
-                    a.append(Legendre(self.degree, self.dist_object.marginals[i]).get_polys(x[:, i])[0])
+                    a.append(Legendre(self.degree,
+                                      self.dist_object.marginals[i]).get_polys(x[:, i])[0])
 
                 else:
                     raise TypeError('Warning: This distribution is not supported.')
@@ -1426,7 +1482,8 @@ class Polynomials:
 
             p_ = np.arange(0, p, 1).tolist()
             res = list(itertools.product(p_, repeat=m))
-            sum_ = [int(math.fsum(res[i])) for i in range(len(res))]  # sum of poly orders
+            # sum of poly orders
+            sum_ = [int(math.fsum(res[i])) for i in range(len(res))]
             indices = sorted(range(len(sum_)), key=lambda k: sum_[k])
             res_new = [res[indices[i]] for i in range(len(res))]
             comb = [(0,) * m]
@@ -1437,7 +1494,7 @@ class Polynomials:
                 comb.append(tuple(t))
 
             for i in range(len(res_new)):
-                if 1 < int(math.fsum(res_new[i])) <= p-1:
+                if 1 < int(math.fsum(res_new[i])) <= p - 1:
                     rev = res_new[i][::-1]
                     comb.append(rev)
 
@@ -1451,9 +1508,9 @@ class Polynomials:
 
 
 class Hermite(Polynomials):
-
     """
-    Class of univariate polynomials appropriate for data generated from a normal distribution.
+    Class of univariate polynomials appropriate for data generated from a
+    normal distribution.
 
     **Inputs:**
 
@@ -1483,8 +1540,8 @@ class Hermite(Polynomials):
         **Outputs:**
 
         (`list`):
-            Returns a list of 'ndarrays' with the design matrix and the normalized polynomials.
-
+            Returns a list of 'ndarrays' with the design matrix and the
+            normalized polynomials.
         """
         a, b = -np.inf, np.inf
         mean_ = Polynomials.get_mean(self)
@@ -1498,13 +1555,13 @@ class Hermite(Polynomials):
         for i in range(self.degree):
             p.append(special.hermitenorm(i, monic=False))
 
-        return Polynomials.normalized(self.degree, x_,  a, b, pdf_st, p)
+        return Polynomials.normalized(self.degree, x_, a, b, pdf_st, p)
 
 
 class Legendre(Polynomials):
-
     """
-    Class of univariate polynomials appropriate for data generated from a uniform distribution.
+    Class of univariate polynomials appropriate for data generated from a
+    uniform distribution.
 
     **Inputs:**
 
@@ -1537,27 +1594,28 @@ class Legendre(Polynomials):
         **Outputs:**
 
         (`list`):
-            Returns a list of 'ndarrays' with the design matrix and the normalized polynomials.
+            Returns a list of 'ndarrays' with the design matrix and the
+            normalized polynomials.
 
         """
         a, b = -1, 1
         m, scale = Polynomials.get_mean(self), Polynomials.scale(self)
         x_ = Polynomials.standardize_uniform(x, m, scale)
 
-        uni = Uniform(a, b-a)
+        uni = Uniform(a, b - a)
         pdf_st = uni.pdf
 
         p = []
         for i in range(self.degree):
             p.append(special.legendre(i, monic=False))
 
-        return Polynomials.normalized(self.degree, x_,  a, b, pdf_st, p)
+        return Polynomials.normalized(self.degree, x_, a, b, pdf_st, p)
 
 
 class ErrorEstimation:
-
     """
-    Class for estimating the error of a PCE surrogate, based on a validation dataset.
+    Class for estimating the error of a PCE surrogate, based on a validation
+    dataset.
 
     **Inputs:**
 
@@ -1571,7 +1629,6 @@ class ErrorEstimation:
         self.surr_object = surr_object
 
     def validation(self, x, y):
-
         """
         Returns the validation error.
 
@@ -1589,15 +1646,20 @@ class ErrorEstimation:
             Validation error.
 
         """
-        y = y.reshape(-1, 1)
+        if y.ndim == 1 or y.shape[1] == 1:
+            y = y.reshape(-1, 1)
+
         y_val = self.surr_object.predict(x)
 
         n_samples = x.shape[0]
-        mu_yval = (1 / n_samples) * np.sum(y)
+        mu_yval = (1 / n_samples) * np.sum(y, axis=0)
         eps_val = (n_samples - 1) / n_samples * (
-                    (np.sum((y - y_val) ** 2)) / (np.sum((y - mu_yval) ** 2)))
+                (np.sum((y - y_val) ** 2, axis=0)) / (np.sum((y - mu_yval) ** 2, axis=0)))
 
-        return round(eps_val, 7)
+        if y.ndim == 1 or y.shape[1] == 1:
+            eps_val = float(eps_val)
+
+        return np.round(eps_val, 7)
 
 
 class MomentEstimation:
@@ -1617,7 +1679,8 @@ class MomentEstimation:
 
     def get(self):
         """
-        Returns the first two moments of the PCE surrogate which are directly estimated from the PCE coefficients.
+        Returns the first two moments of the PCE surrogate which are directly
+        estimated from the PCE coefficients.
 
         **Outputs:**
 
@@ -1626,8 +1689,14 @@ class MomentEstimation:
 
         """
         if self.surr_object.b is not None:
-            mean = self.surr_object.C[0][0] + self.surr_object.b
+            mean = self.surr_object.C[0, :] + np.squeeze(self.surr_object.b)
         else:
-            mean = self.surr_object.C[0][0]
-        variance = np.sum(self.surr_object.C[1:]**2)
-        return round(mean, 6), round(variance, 6)
+            mean = self.surr_object.C[0, :]
+
+        variance = np.sum(self.surr_object.C[1:] ** 2, axis=0)
+
+        if self.surr_object.C.ndim == 1 or self.surr_object.C.shape[1] == 1:
+            variance = float(variance)
+            mean = float(mean)
+
+        return np.round(mean, 4), np.round(variance, 4)
