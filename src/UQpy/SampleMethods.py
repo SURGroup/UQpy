@@ -2812,6 +2812,7 @@ class AKMCS:
 
         """
 
+        from UQpy.Surrogates import Kriging
         self.nsamples = nsamples
 
         if samples is not None:
@@ -2881,7 +2882,10 @@ class AKMCS:
                 self.qoi = self.runmodel_object.qoi_list
 
             # Retrain the surrogate model
-            self.krig_object.fit(self.samples, self.qoi, nopt=1)
+            if isinstance(self.krig_object, Kriging):
+                self.krig_object.fit(self.samples, self.qoi, nopt=1)
+            else:
+                self.krig_object.fit(self.samples, self.qoi)
             self.krig_model = self.krig_object.predict
 
             # Exit the loop, if error criteria is satisfied
@@ -2946,7 +2950,7 @@ class AKMCS:
 
         """
         samples = kwargs['samples']
-        qoi = kwargs['qoi']
+        qoi = kwargs['qoi'].reshape([samples.shape[0], 1])
         n_add = kwargs['n_add']
 
         g, sig = surr(pop, True)
