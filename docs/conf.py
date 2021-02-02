@@ -23,7 +23,7 @@ author = 'Michael D. Shields, Dimitrs G. Giovanis, Audrey Olivier, B.S. Aakash, 
          'Ketson RM dos Santos'
 
 # The full version, including alpha/beta/rc tags
-release = 'v3.0'
+release = 'v3.0.3'
 
 
 # -- General configuration ---------------------------------------------------
@@ -94,7 +94,7 @@ html_sidebars = {
 source_suffix = '.rst'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = 'source/index'
  
 # -- Options for HTMLHelp output ---------------------------------------------
 
