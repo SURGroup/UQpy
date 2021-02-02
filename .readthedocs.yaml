@@ -1,7 +1,7 @@
 version: 2
 sphinx:
   builder: html
-  configuration: docs/conf.py
+  configuration: docs/source/conf.py
   fail_on_warning: False
 build:
   image: latest

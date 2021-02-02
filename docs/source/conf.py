@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('./src/UQpy/'))
+sys.path.insert(0, os.path.abspath('./src/UQpy/docs'))
 
 
 # -- Project information -----------------------------------------------------
@@ -23,7 +23,7 @@ author = 'Michael D. Shields, Dimitrs G. Giovanis, Audrey Olivier, B.S. Aakash, 
          'Ketson RM dos Santos'
 
 # The full version, including alpha/beta/rc tags
-release = 'v3.0'
+release = 'v3.0.3'
 
 
 # -- General configuration ---------------------------------------------------
